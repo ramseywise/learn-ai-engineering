@@ -234,6 +234,7 @@ class Server:
     def stop(self):
         subprocess.run([f"{BIN}/pg_ctl", "-w", "-D", self.dir, "-m", "fast", "stop"], capture_output=True)
 
+# --- pg_load ---
 ids = iter(range(1, 10**12))
 
 def hammer(server, commit_mode, acked, stop):
@@ -387,19 +388,21 @@ def failover_trial(sync, freeze):
     stop.set()
     t.join()
     time.sleep(0.5)
+    t0 = time.perf_counter()
     tool("pg_ctl", "-w", "-D", standby.dir, "promote")
+    promote = time.perf_counter() - t0
     with standby.connect() as c:
         present = {r[0] for r in c.execute("SELECT id FROM trips")}
     standby.stop()
-    return len(acked), during_stall, sum(i not in present for i in acked)
+    return len(acked), during_stall, sum(i not in present for i in acked), promote
 
-print(f"{'replication':34s} {'acknowledged':>13s} {'in the stall':>13s} {'lost after failover':>20s}")
+print(f"{'replication':34s} {'acknowledged':>13s} {'in the stall':>13s} {'lost after failover':>20s} {'promote s':>10s}")
 for label, sync, freeze in [("asynchronous", False, False),
                             ("asynchronous, standby stalled 1 s", False, True),
                             ("synchronous", True, False),
                             ("synchronous, standby stalled 1 s", True, True)]:
-    a, stalled, lost = failover_trial(sync, freeze)
-    print(f"{label:34s} {a:13,d} {stalled:13,d} {lost:20,d}")
+    a, stalled, lost, promote = failover_trial(sync, freeze)
+    print(f"{label:34s} {a:13,d} {stalled:13,d} {lost:20,d} {promote:10.2f}")
 
 # --- pg_bad_delete ---
 primary = Server("pd", 5620).init()

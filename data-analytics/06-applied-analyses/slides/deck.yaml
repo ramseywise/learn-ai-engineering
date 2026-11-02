@@ -1,13 +1,13 @@
-# Applied Analyses lecture deck. Covers notes 01-06.
+# Applied Analyses lecture deck. Covers notes 01-10.
 # Build: make slides PILLAR=data-analytics/06-applied-analyses STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Fernhill Home, a fictional retailer, from the seeded generator in practice/retail.py.
 # Part 2 uses the open South German Credit data. Costs and margins are assumptions and are named as such.
 deck:
   title: Applied Analyses
-  subtitle: Six business questions, each taken through to a recommendation
+  subtitle: Ten business questions, each taken through to a recommendation
   tagline: |-
-    Forecast · Score · Retain · Convert · Segment · Query
+    Forecast · Score · Retain · Convert · Segment · Query · Survive · Sequence · Attribute · Operate
   reference: "Notes: data-analytics/06-applied-analyses"
   output: applied-analyses.pptx
   notes: >-
@@ -161,23 +161,6 @@ parts:
           At 10:1 the gap is wider, 0.403 against 0.500. So the first conversation is about the true cost of a bad loan.
           Recommendation: approve above score 548 and treat that as provisional.
 
-      - layout: table
-        title: The Basel vocabulary
-        kicker: From score to capital
-        header: ["Term", "Meaning", "Note"]
-        widths: [2, 5, 4]
-        rows:
-          - ["PD", "Probability of default over a year", "What the scorecard estimates, after correction"]
-          - ["LGD", "Share lost if default happens", "Needs recovery data, which we lack"]
-          - ["EAD", "Amount owed at default", "For a term loan, close to the balance"]
-          - ["K", "Capital for unexpected loss", "8.06% at PD 10%; 3.45% at PD 0.5%; LGD 60% assumed"]
-        takeaway: PD, LGD and EAD price expected loss, and the IRB formula turns them into capital for unexpected loss.
-        source: notes/02-credit-scoring.md
-        recall: Why does capital rise more slowly than PD?
-        notes: >-
-          The K figures use the other-retail formula as in the note, with an assumed LGD of 60%. Expected loss is covered by
-          pricing and provisions, and capital covers the unexpected part.
-
       - layout: cards
         title: Measuring a scorecard
         kicker: Discrimination and drift
@@ -190,7 +173,7 @@ parts:
         recall: Does a stable PSI mean the model still works?
         notes: >-
           PSI watches the inputs, or the score distribution. It can't see a change in the relation between score and
-          default, which needs outcomes, and those arrive late.
+          default, which needs outcomes, and those arrive late. One Basel note before we move on: PD, LGD and EAD price expected loss, and the IRB formula turns them into capital for unexpected loss. With an assumed LGD of 60%, K is 8.06% at a PD of 10% and 3.45% at a PD of 0.5%, so capital rises more slowly than PD.
 
   - title: Cohort and retention
     summary: The triangle · Rate and mix · Survival · Budget
@@ -486,24 +469,351 @@ parts:
           The one side is repeated, so its sums grow. Refunds were correct in both queries, so a spot check on refunds would
           have passed. Aggregate the many side to the one side's grain before joining.
 
+  - title: Survival and event history
+    summary: Censoring · One hazard ratio · When it wears off · Months and pounds
+    notes: >-
+      Fernhill has a subscription box, and a welcome call that some new subscribers receive. The question is whether the call keeps them, and many of the answers are still in the future.
+    slides:
+      - layout: statement
+        title: What is the welcome call worth?
+        kicker: The problem
+        statement: "Adjusted for who gets called, its hazard ratio is 0.81. That number describes no subscriber at any tenure."
+        attribution: "Fernhill subscription box, simulated, 5,061 subscribers. Unadjusted 0.681, adjusted 0.811"
+        takeaway: A single hazard ratio averages an effect that changes with time, so ask when the effect happens and what it is worth.
+        source: notes/07-survival-and-event-history.md
+        recall: Why is a single hazard ratio of 0.81 a poor description of the welcome call?
+        notes: >-
+          The call is not random: 37.9% of paid subscribers get one, 57.4% of organic and 78.2% of email. So the unadjusted number flatters it, and even the adjusted one is an average across a curve.
+
+      - layout: code
+        title: Treat the censored as ended and the mean halves
+        kicker: Censoring
+        recall: What do mean tenure among the churned, censoring as end, and Kaplan-Meier give against the true 401.8 days?
+        lang: Text output
+        code: |-
+          mean, days
+          among churned only       212.8
+          censored taken as end    250.9
+          true                     401.8
+
+                         estimate  truth
+          KM median           255    248
+          restricted mean   361.1  355.0
+        bullets:
+          - "Both shortcuts answer **a different question**."
+          - "Without a long enough window, **report a restricted mean**."
+        takeaway: Subscribers still active have not ended, so use Kaplan-Meier and quote a median or restricted mean.
+        source: notes/07-survival-and-event-history.md
+        notes: >-
+          The channels differ: Kaplan-Meier medians are 139 days for paid, 288 organic, 350 email and 286 referral, with a log-rank chi-square of 296.7. A customer who leaves for another reason is a different problem: competing risks give 0.620 for a cancellation, where treating the other exit as censored gives 0.726. And the shifted beta-geometric forecast at month 36 reads 0.121 against a Kaplan-Meier 0.087, so check any parametric curve against the data.
+
+      - layout: image
+        title: The call works for ninety days, and then it stops
+        kicker: Time-varying effects
+        recall: What is the call's hazard ratio before and after 90 days, and what test flagged the problem?
+        image: ../../sources/images/applied-survival-wear-off.png
+        caption: Hazard ratio of the call by tenure band.
+        bullets:
+          - "**0 to 90 days:** 0.535 [0.472, 0.606]."
+          - "**After:** 1.024, 0.984, 1.076."
+          - "**`check_assumptions`** fails only on the call, p below 5e-5."
+          - "**Truth:** 0.6, recovered at 0.600 over 20 seeds."
+        takeaway: The call's whole effect sits in the first ninety days, and a test of proportional hazards tells you to look.
+        source: notes/07-survival-and-event-history.md
+        notes: >-
+          With a time-varying term, the call's early hazard ratio is 0.535 and its late one 1.024. Everything after ninety days is consistent with no effect, which also tells you when a second call might be worth trying.
+
+      - layout: table
+        title: Months and pounds decide; hazard ratios do not
+        kicker: The decision
+        recall: How many box-months and pounds of margin does a call add, against what assumed cost?
+        header: ["Gain from the call", "Estimate [interval]", "Truth"]
+        widths: [5, 4, 2.4]
+        highlight: [3]
+        rows:
+          - ["Still subscribed, month 12", "0.059 [0.033, 0.083]", "0.053"]
+          - ["Still subscribed, month 24", "0.033", "0.029"]
+          - ["Box-months in 24 months", "1.48 [0.91, 1.95]", "1.30"]
+          - ["Margin per call", "£14.85 [£9.09, £19.52]", "assumed cost £4.00"]
+        takeaway: The call looks worth extending, and the way to extend it is a randomised rollout, because this estimate is observational.
+        source: notes/07-survival-and-event-history.md
+        notes: >-
+          If the estimate is causal, net margin on the 2,235 subscribers with no call is about £24,000. Both the 35% margin and the £4 are assumptions, so put your own in. The answer changes below about 0.4 box-months of gain. A price rise on the 1,582 on the books gains £16.95, £23.56 or £24.14 depending on the scenario in the chapter.
+
+  - title: States and sequences
+    summary: The pooled chain · Hidden types · Holdout · Clusters or mixtures
+    notes: >-
+      Customers move between active, lapsed and churned. A transition matrix turns that into a value, and it is right only if all customers behave alike.
+    slides:
+      - layout: statement
+        title: One transition matrix misprices the customer
+        kicker: The problem
+        statement: "A single Markov chain values a new customer at £431. The true value is £513."
+        attribution: Fernhill, simulated, with four customer types in the generator
+        takeaway: A pooled chain averages customers who behave differently, so its forecast is wrong even when each transition looks right.
+        source: notes/08-states-and-sequences.md
+        recall: How far off was the pooled chain's customer value, and why?
+        notes: >-
+          The stay-active rate by previous state is 0.772, 0.521 and 0.679 in the pooled data, which looks like memory. Within the steady type it is 0.857, 0.859 and 0.880, so the apparent memory is mixed types. Over twelve other seeds, the pooled chain averages £415.8 against a true £515.0, so the bias is real.
+
+      - layout: code
+        title: Four types hide inside the average
+        kicker: Mixed populations
+        recall: What are the shares and values of the four customer types, and what does N = (I − Q)⁻¹ give you?
+        lang: Text output
+        code: |-
+          type          share   value
+          steady        23.9%   £1,486
+          drifter       27.4%   £230
+          one_and_done  31.6%   £53
+          comeback      17.0%   £458
+
+          months to churn: pooled 11.31, true 13.91
+        bullets:
+          - "**N = (I − Q)⁻¹** gives months in each state."
+          - "**Lapsed** values run £5 to £1,259; pooled says £413."
+        takeaway: The same state means different things by type, so a lapsed customer's value depends on who they are.
+        source: notes/08-states-and-sequences.md
+        notes: >-
+          The fundamental matrix is the shortcut for expected time in each state before churn. The range for lapsed customers is the slide's main point: a campaign priced at £413 is wrong for almost everyone it reaches.
+
+      - layout: image
+        title: Mixtures and type chains beat the pooled chain on holdout
+        kicker: Holdout
+        recall: Fitting on months 0 to 8, how close did each model come to survival at month 17?
+        image: ../../sources/images/applied-sequence-holdout.png
+        caption: Fit on months 0 to 8, then forecast. Each model against what happened.
+        bullets:
+          - "**Alive at 17:** observed 0.247."
+          - "**Pooled 0.178**, type chains 0.257, mixture 0.280."
+          - "**Revenue:** 126.17; pooled 94.76, type chains 128.34, mixture 131.31."
+        takeaway: Test a sequence model on later months, because the pooled chain's error only shows once its customers have had time to differ.
+        source: notes/08-states-and-sequences.md
+        notes: >-
+          Type chains need the true type, which a real analyst does not have, so read that line as the ceiling. The mixture needs no labels and gets within 4% of revenue, while overshooting survival.
+
+      - layout: compare
+        title: Clusters describe, mixtures predict
+        kicker: Choosing a method
+        recall: What went wrong when clusters were fed into value estimates, and what range does a mixture give?
+        emphasis: right
+        left:
+          title: Feed clusters into the value
+          bullets:
+            - "Value £901, 1.75 times the truth"
+            - "One cluster reaches £3,936"
+            - "Agreement with true types: ARI about 0.40"
+          tag: Fine for description
+        right:
+          title: Fit a mixture of chains
+          bullets:
+            - "£454 to £592, depending on k"
+            - "12 seeds: mean £504.7, truth £515.0"
+            - "Quote the range, not one k"
+          tag: Fit for the forecast
+        takeaway: Clusters are a useful description and a poor input, so use a mixture for value and quote the range across k.
+        source: notes/08-states-and-sequences.md
+        notes: >-
+          One more thing a state model must allow: 22.0% of customers ever called churned later ordered again, so check that churned really is absorbing before you build on it.
+
+  - title: Marketing measurement
+    summary: Attribution · Incrementality · Mix models · A geo test · Moving budget · Customer value
+    notes: >-
+      The finance lead asks where next quarter's budget should go, after a year of moving money to paid social because the dashboard said it closes almost half of all sales.
+    slides:
+      - layout: statement
+        title: The dashboard credits paid social with half of sales
+        kicker: The problem
+        statement: "Last touch gives paid social 48.4% of conversions, and Shapley gives 32.6%. The true share is 16.9%."
+        attribution: Fernhill, simulated, 8,000 paths
+        takeaway: Attribution shares out conversions that would often have happened anyway, so it cannot say what a channel causes.
+        source: notes/09-marketing-measurement.md
+        recall: What do last touch and Shapley credit to paid social, against the true incremental share?
+        notes: >-
+          Both methods must hand out all 899 conversions, while the truth says about half would have happened with no touch at all. Dalessandro and colleagues reach the same place from theory and recast the result as channel importance rather than cause.
+
+      - layout: image
+        title: Shapley is fairer, and still about twice the truth
+        kicker: Attribution
+        recall: Across 12 seeds, how do last touch, Shapley and a noisy-or fit with intent compare with the truth?
+        image: ../../sources/images/applied-attribution-vs-truth.png
+        caption: Share of conversions credited to each channel, against the true incremental share.
+        bullets:
+          - "**12 seeds, paid social:** last touch 47.5%, Shapley 29.0%, truth 16.8%."
+          - "**Shapley is about twice the truth.**"
+          - "**Noisy-or with intent:** 18.0%, ranging 6.3% to 25.5%."
+        takeaway: Even the true form with an unobservable variable pins down a 1% lift poorly, and this takes an experiment.
+        source: notes/09-marketing-measurement.md
+        notes: >-
+          The noisy-or fit uses a variable you would never observe, and it is still unreliable on any single seed. That is the argument for a geo test.
+
+      - layout: code
+        title: Priors and a geo test bring the averages down
+        kicker: Mix models
+        recall: How does the geo test enter the mix model, and what did it do to paid social's average ROAS?
+        lang: Text output
+        code: |-
+          average ROAS, about 31 params, 157 weeks
+                       paid social    email
+          default      2.71           20.36
+          Jin priors   1.75           7.21
+          + geo test   1.37           6.94
+          truth        1.29           4.0
+        bullets:
+          - "**Geo test:** iROAS 1.491 [1.43, 1.57]."
+          - "It enters as **a likelihood term**, via `add_lift_test_measurements`, not as a prior."
+          - "Only the tested channel's average tightens."
+        takeaway: A geo test fixes the average return over the tested spend, and leaves everything beyond that to the curve.
+        source: notes/09-marketing-measurement.md
+        notes: >-
+          Chan and Perry warn that mix models are correlational and cite 7 to 10 data points per parameter as a minimum. OLS gives email 0.46, and correlation between paid and email spend is minus 0.72, which is why the channels are hard to separate. Sampling needed care: largest R-hat 1.6 under PyMC's default and 1.04 under nutpie before the priors were changed.
+
+      - layout: image
+        title: The marginal stays uncertain, and email's is poorly known
+        kicker: What the budget needs
+        recall: What is paid social's marginal ROAS with the geo test, and why should you not lean on email's 6.51?
+        image: ../../sources/images/applied-mmm-roas-recovery.png
+        caption: Fitted against true ROAS, with 90% intervals. Only paid social's average tightens.
+        bullets:
+          - "**Paid marginal:** 0.86 [0.62, 1.08], true 0.71."
+          - "**Email marginal:** 6.51 [3.12, 9.53], true 3.38, about twice. Seeds 100 to 103: 2.09 to 3.47."
+          - "**Caveat:** an earlier run gave slightly different figures (6.43), unexplained. Don't lean on the second decimal."
+        takeaway: The decision needs the marginal, the data know it least, and email's marginal here is poorly known.
+        source: notes/09-marketing-measurement.md
+        notes: >-
+          The earlier run used the same seeds, before some late chart edits, and we could not explain the difference; two full runs of the final script gave identical output. Paid social's true figures at £7,300 are an average of 1.31 and a marginal of 0.71. With a gross margin of 61%, a pound of spend pays for itself only at a revenue ROAS of 1.63, and even the geo test's 1.49 is below that.
+
+      - layout: table
+        title: Move £500 to £1,000, and the risk grows quickly after
+        kicker: The recommendation
+        recall: Over what range does moving money from paid social to email pay, and what happens at £4,000 a week?
+        header: ["Moved a week", "True gain", "Model median", "P(gain)"]
+        widths: [3, 3, 3, 2.4]
+        highlight: [1, 2]
+        rows:
+          - ["£250", "£550", "£908", "1.000"]
+          - ["£500", "£905", "£1,186", "0.999"]
+          - ["£1,000", "£1,232", "£1,124", "0.983"]
+          - ["£2,000", "£1,049", "£205", "0.656"]
+          - ["£4,000", "−£925", "−£2,700", "0.001"]
+        takeaway: Recommend a move of £500 to £1,000 a week and test it, because the model's sizing beyond that rests on curves the data barely see.
+        source: notes/09-marketing-measurement.md
+        notes: >-
+          The true best split would add about £1,280 a week. These are simulated tables. A test at current spend showing paid social's marginal above break-even would change the recommendation.
+
+      - layout: compare
+        title: Customer value passes a test built to be passed
+        kicker: Customer value
+        recall: Why does a 0.3% holdout error for BG/NBD say little here, and what value would you quote?
+        emphasis: left
+        left:
+          title: BG/NBD and Gamma-Gamma
+          bullets:
+            - "Holdout orders 1,841, forecast 1,847, +0.3%"
+            - "These data are BG/NBD by construction"
+            - "So this tests the code, not the idea"
+          tag: Scored on its own generator
+        right:
+          title: The number to quote
+          bullets:
+            - "Margin value £173 [£163, £184]"
+            - "Truth £162, just outside"
+            - "Quote about £155 to £185"
+          tag: Wider than the interval
+        takeaway: Quote a range wider than the interval, and do not defend a channel with its LTV to CAC, which folklore wants above 3.
+        source: notes/09-marketing-measurement.md
+        notes: >-
+          LTV to CAC by channel runs from 2.53 for paid social to 12.09 for organic, with 3.58 and 5.37 for the others, and none of that says what an extra pound would do. The interval covers sampling error given a correct model, which is why the honest range is wider.
+
+  - title: Operations and supply chain
+    summary: Newsvendor · Safety stock · Queues · The price of a packer
+    notes: >-
+      The forecast from the first chapter has now reached the warehouse floor. Three decisions: how much to order, how much to hold, and how many packers to roster.
+    slides:
+      - layout: statement
+        title: Ordering the forecast leaves money on the table
+        kicker: The problem
+        statement: "Ordering the forecast earns £48,191. Ordering at the fractile earns £49,177. Knowing demand exactly earns £49,827."
+        attribution: "Fernhill, simulated expected profit on three lines; fractile about 0.73"
+        takeaway: When a leftover costs less than a lost sale, the best order sits above the forecast, at the cost ratio.
+        source: notes/10-operations-and-supply-chain.md
+        recall: What is the critical fractile and how much did it add over ordering the forecast?
+        notes: >-
+          The gain is real and small: over seeds 100 to 111 it averaged 1.70% and was positive on 11 of 12. One real season is not a verdict: on real 2025 demand the fractile won on one line, lost on two, and ended £161 up. EOQ tells a similar story, taking cost from £10,767 to £9,860, about £907 a year.
+
+      - layout: image
+        title: A 95% target gives 79% in the season that matters
+        kicker: Safety stock
+        recall: What service does a 95% reorder point deliver in and out of season, and what does a seasonal one cost?
+        image: ../../sources/images/applied-safety-stock-service.png
+        caption: Delivered service against target, by season.
+        bullets:
+          - "**At 95%:** off-season 94.8%, in-season 79.4%."
+          - "**Asking 99%** gets in-season to about 89%."
+          - "**A seasonal reorder point:** 94.7% for about £374 a year."
+          - "**95% to 99%:** +£2,005 on £4,839."
+        takeaway: Fix the seasonal mean before buying more buffer, because the formula's failure is in the mean and the buffer is expensive.
+        source: notes/10-operations-and-supply-chain.md
+        notes: >-
+          The reorder point uses a year-round mean while in-season demand runs 60% higher. About a third of the safety stock is there only because deliveries vary, and leaving that out is the commonest mistake.
+
+      - layout: code
+        title: The queue is busiest where the utilisation is not
+        kicker: Queues
+        recall: Which day has the longest recorded wait, and why does utilisation alone not tell you?
+        lang: Text output
+        code: |-
+          day  packers  rho    recorded  Erlang C
+          Mon  6        0.849  2.91      3.89
+          Tue  5        0.720  1.17      1.62
+          Wed  4        0.838  4.35      4.93
+          Thu  4        0.784  1.98      3.49
+          Fri  4        0.725  1.96      1.89
+        bullets:
+          - "**Wed beats Mon** on wait in 10 of 12 seeds."
+          - "Fewer packers wait longer **at the same utilisation**."
+          - "**Little's law** gap: 8.88e-16."
+        takeaway: Waiting depends on crew size as well as utilisation, so read a queue model day by day.
+        source: notes/10-operations-and-supply-chain.md
+        notes: >-
+          Waits are in minutes. A check on Monday at 5 packers: utilisation is 1.03, Erlang C is infinite, and the simulation gives 18.9 minutes on a finite day. That is why five is out.
+
+      - layout: table
+        title: The plan depends on what a parcel-hour is worth
+        kicker: The recommendation
+        recall: What does a packer-day cost, and what does the plan buy for £392 a week?
+        lead: "An extra packer costs £112 a day. Break-even value of a parcel-hour: Mon £5.66, Wed £6.20, Thu £8.95, Tue £17.04, Fri £19.03."
+        header: ["Value of a parcel-hour", "Packers, Mon to Fri", "Packer-days"]
+        widths: [4, 4, 3]
+        highlight: [1]
+        rows:
+          - ["£5", "6, 5, 4, 4, 4", "23"]
+          - ["£7", "7, 5, 5, 4, 4", "25"]
+          - ["£10", "7, 5, 5, 5, 4", "26"]
+          - ["£20", "7, 6, 5, 5, 5", "28"]
+        takeaway: The data do not say what waiting is worth, so show the plan at each value and let the business choose.
+        source: notes/10-operations-and-supply-chain.md
+        notes: >-
+          The recommended plan takes mean wait from 2.96 to 0.95 minutes and packer-days from 23 to 27, for £392 a week, on assumed contracts. Pack time is the other thing to confirm: 3.5 minutes in the operations data against 4.97 on the packing line changes the answer.
+
   - title: Wrap-up
     agenda: false
     divider: false
     slides:
       - layout: cards
         title: Rules of thumb
-        kicker: Six analyses, one shape
+        kicker: Ten analyses, one shape
         cards:
           - {title: Decide first, body: "Write down the decision. If no result could change it, stop.", accent: D4621A}
           - {title: Beat a baseline, body: "Compare with last year's numbers, approve-all, or doing nothing.", accent: 2A78D6}
           - {title: Check against the known, body: "A synthetic truth, a published table, or a second implementation.", accent: 0F8A7E}
           - {title: Price it and bound it, body: "Turn a rate into money, then say what would change the answer.", accent: 7A5AF8}
         takeaway: Every analysis needs a decision, a baseline, a check against something known, a price, and honest limits.
-        source: notes/06-sql-for-analytics.md
-        recall: Pick one of the six analyses. What was its baseline, and what was its check?
+        source: notes/10-operations-and-supply-chain.md
+        recall: Pick one of the ten analyses. What was its baseline, and what was its check?
         notes: >-
           Baselines were seasonal naive, approve-all, the exponential, desktop, and a holdout. Checks were the generator's
-          known truth, Fader and Hardie's published table, and a pandas reimplementation.
+          known truth, Fader and Hardie's published table, and a pandas reimplementation. The later chapters add holdouts, geo tests and seeds, and each says what would change its recommendation.
 
       - layout: bullets
         title: Where next
@@ -514,7 +824,7 @@ parts:
           - "Take the modelling further: **data science**, starting with machine learning."
           - "Run the scripts in `practice/`, and try each chapter's exercises."
         takeaway: Keep the shape of these analyses as the methods get harder, and practise on the scripts before moving on.
-        source: notes/06-sql-for-analytics.md
+        source: notes/10-operations-and-supply-chain.md
         recall: Which chapter would you redo on your own company's data first, and why?
         notes: >-
           The UCI Online Retail dataset linked in the references is a good way to repeat chapters 3 and 5 on data that isn't
