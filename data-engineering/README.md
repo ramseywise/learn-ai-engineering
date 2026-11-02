@@ -105,9 +105,9 @@ Tools are easier to compare within a layer than across one. Snowflake against Ai
 
 ### [06 ML platform](06-ml-platform/README.md)
 
-**Objectives:** build point-in-time features (Kleppmann 2017, ch. 11, pp. 475–476); track experiments and models ([Wilson](https://www.manning.com/books/machine-learning-engineering-in-action)); compare batch and online serving; detect drift ([Gama et al.](http://eprints.bournemouth.ac.uk/22491/)); select appropriate platform maturity.
+**Objectives:** build point-in-time features (Kleppmann 2017, ch. 11, pp. 475–476); track experiments and models ([Wilson](https://www.manning.com/books/machine-learning-engineering-in-action)); compare batch and online serving; detect drift ([Gama et al.](http://eprints.bournemouth.ac.uk/22491/)); select appropriate platform maturity; walk one system from framing to monitoring ([Sculley et al.](https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html)); read a platform's services against these ideas.
 
-**Learning:** [chapters and practice](06-ml-platform/README.md), including the DataTalks MLOps coursework. **Evidence:** a point-in-time-safe training dataset, registered run/model, served prediction, and diagnosis of drift versus pipeline failure.
+**Learning:** [chapters and practice](06-ml-platform/README.md), including the DataTalks MLOps coursework. **Evidence:** a point-in-time-safe training dataset, registered run/model, served prediction, and diagnosis of drift versus pipeline failure, then a 75-minute system plan for a new problem, marked against the [guide](06-ml-platform/notes/06-ml-system-framing-to-monitoring.md#the-75-minute-case).
 
 ### [07 Architecture and governance](07-architecture-and-governance/README.md)
 
@@ -136,6 +136,7 @@ Each pillar's README has its own full list. These are the ones that cross stages
 | Contain before you diagnose, and never fix raw in place | [05](05-quality-and-observability/notes/03-incident-playbooks.md) |
 | One function computes a feature everywhere, joined as of the prediction time | [06](06-ml-platform/notes/01-feature-stores.md) |
 | On a drift alert, check for a pipeline fault before retraining | [06](06-ml-platform/notes/04-drift.md) |
+| Frame the decision and price each mistake before choosing a model; keep a random audit, since corrections hide what nobody looked at | [06](06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) |
 | Name the system of record for each fact; everything else is derived and can be rebuilt | [04](04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
 | A mesh is an ownership model, not a storage choice; contracts come before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
 | Hashed is not anonymous: pseudonymised data stays personal data | [07](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md) |

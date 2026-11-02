@@ -18,7 +18,7 @@ has two orders on the same date.
 
 ```sql
 CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, ordered_at TEXT);
-INSERT INTO orders VALUES (1, 1, '2026-01-01'), (2, 1, '2026-03-01'), (3, 2, '2026-02-01'), (4, 3, '2026-01-15');
+INSERT INTO orders VALUES (1, 1, '2026-01-01'), (2, 1, '2026-03-01'), (3, 2, '2026-02-01'), (4, 3, '2026-01-15'), (5, 1, '2026-02-01');
 ```
 
 ## Tests

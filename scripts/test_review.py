@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the findings log, the drill checks and the reviewer eval scorer: python3 scripts/test_review.py"""
+"""Tests for the findings log, drill checks, eval scorer and signals report: python3 scripts/test_review.py"""
 import json
 import sys
 import tempfile
@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent / "practice"))
 import check_drills as cd
 import findings as fl
 import score_eval as se
+import signals as sg
 
 
 def finding(**over):
@@ -136,6 +137,44 @@ class EvalScoring(unittest.TestCase):
     def test_split_counts_each_finding(self):
         report = "FINDINGS\n- file: a\n  line: 1\n- file: b\n  line: 2\n"
         self.assertEqual(len(se.split_findings(report)), 2)
+
+
+class Signals(unittest.TestCase):
+    def test_drill_log_never_keeps_the_note(self):
+        log = "| Date | QID | Aid | Score | Note |\n|---|---|---|---|---|\n| 2026-08-13 | a | 3 | D✓ T✗ | private words |\n"
+        rows = sg.parse_drill_log(log)
+        self.assertEqual(rows, [{"date": "2026-08-13", "qid": "a", "aid": "3", "score": "D✓ T✗"}])
+
+    def test_drill_flagged_on_latest_attempt_only(self):
+        rows = [{"date": "1", "qid": "a", "aid": "3", "score": "T✗"}, {"date": "2", "qid": "a", "aid": "0", "score": "T✓"},
+                {"date": "1", "qid": "b", "aid": "—", "score": "T✗ S✗ D✓"}]
+        lines = sg.drill_section(rows, {"b": "practice/drills/b.md"})
+        self.assertEqual(len(lines), 2)
+        self.assertIn("b:", lines[1])
+        self.assertIn("practice/drills/b.md", lines[1])
+
+    def test_card_needs_enough_attempts(self):
+        def grade(front, result):
+            return {"deck": "d", "front": front, "source": "", "result": result}
+        rows = [grade("few", "missed")] * 2 + [grade("many", "missed")] * 2 + [grade("many", "knew")]
+        lines = sg.flashcard_section(rows, Path("/nonexistent"))
+        self.assertEqual(len(lines), 2)
+        self.assertIn('"many"', lines[1])
+
+    def test_deck_location_finds_the_slide(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            deck = Path(tmp) / "gen" / "01-a" / "slides" / "deck.yaml"
+            deck.parent.mkdir(parents=True)
+            deck.write_text("slides:\n  - layout: bullets\n    title: Why rerank?\n")
+            where = sg.deck_location(Path(tmp), "learn-ai-engineering/gen/01-a/notes/x.md", "", "Why rerank?")
+            self.assertEqual(where, "gen/01-a/slides/deck.yaml:3")
+
+    def test_only_real_searches_count(self):
+        rows = [{"tool": "eval", "query": "x", "n_results": 0}, {"tool": "search_wiki", "query": "gap", "n_results": 0},
+                {"tool": "search_wiki", "query": "ok", "n_results": 3}, {"tool": "sweep"}]
+        lines = sg.search_section(rows)
+        self.assertIn("2 real wiki searches, 1 found nothing", lines[0])
+        self.assertEqual(lines[1:], ['- 1x "gap"'])
 
 
 if __name__ == "__main__":

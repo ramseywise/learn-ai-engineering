@@ -13,6 +13,8 @@ sources:
   - https://docs.localstack.cloud/
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), appendix (MLOps principles)"
   - https://arxiv.org/abs/2005.04118
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-availability-change.html
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -504,6 +506,24 @@ The project rubric in module 7 is a good definition of "production-shaped" for a
 
 The "best practices" row is module 6, one for one. The monitoring row is the only place the course asks for level 4 behaviour.
 
+## Mapping the pillar onto SageMaker
+
+If your team runs on AWS, the question is which piece of [Amazon SageMaker AI](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html) stands where each idea in this pillar stood. This is a map, and it doesn't aim to be a tutorial. It comes from AWS's documentation as read on 2026-11-02, nothing here was run on AWS, and it leaves out prices. Services change, so check the linked page before you rely on a row. Warehouses have their own map, in [mapping the ideas onto Redshift](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md#mapping-the-ideas-onto-redshift).
+
+| What this pillar teaches | SageMaker AI component | What stays your job |
+|---|---|---|
+| [Point-in-time features and online lookups](01-feature-stores.md#what-a-feature-store-is) | [Feature Store](https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store.html): feature groups, an online store that keeps the latest records, and an append-only offline store in your S3 bucket, in Parquet, that Athena can query | Testing your as-of join on your own rows. A store doesn't choose the event time for you |
+| [Tracking runs](02-experiment-tracking-and-model-registry.md#tracking-with-mlflow) | [Managed MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html). The older [Experiments SDK](https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html) tracks only in Studio Classic, and AWS recommends MLflow in the new Studio | Logging what you need to rerun the model |
+| [The registry and rollback](02-experiment-tracking-and-model-registry.md#rollback-and-why-the-registry-labels-but-does-not-deploy) | [Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html): model groups, versions, lineage and an approval status. MLflow can register into it automatically | The gate. An approval status records a decision and doesn't make one |
+| [Batch scoring](03-batch-and-online-serving.md#batch-score-a-table) | [Batch transform](https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html): large datasets, with no persistent endpoint | Choosing batch at all, by when the answer is needed |
+| [Online serving](03-batch-and-online-serving.md#online-a-web-service) | [Inference options](https://docs.aws.amazon.com/sagemaker/latest/dg/model-deploy-feature-matrix.html): real-time endpoints, asynchronous for large inputs, serverless for idle periods between spurts | Returning the model version with each prediction |
+| [Shadow](03-batch-and-online-serving.md#rolling-out-a-new-model) | [Shadow tests](https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html): a copy of each request goes to the shadow variant in the same endpoint, and only the production variant's response returns. Real-time only: not serverless or asynchronous | The limit in feedback loops still applies, since a shadow never sees the results of its choices |
+| [Canary and rollback](03-batch-and-online-serving.md#rolling-out-a-new-model) | [Deployment guardrails](https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails.html): [blue/green with a canary step](https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails-blue-green-canary.html), a baking period, and CloudWatch alarms that return all traffic to the old fleet | The docs describe a share of traffic. If an entity has to stay on one side, check that, or use the [stable hash](03-batch-and-online-serving.md#rolling-out-a-new-model) yourself |
+| [Drift and label delay](04-drift.md#monitoring-error-when-labels-arrive) | [Model Monitor](https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html) covers data quality, model quality, bias drift and feature attribution drift. **AWS has [closed it to new customers](https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-availability-change.html)**: existing customers keep it, with no new features planned. AWS points to open-source monitoring solutions, including MLflow Apps with Evidently, plus QuickSight and CloudWatch | Deciding what an alert costs. A new AWS account plans around the alternatives, and [the drift chapter's](04-drift.md#drift-that-doesnt-matter-and-damage-with-no-drift) argument doesn't depend on the tool |
+| [The retraining pipeline](04-drift.md#what-to-do-about-it-retraining-policy) | [Pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html): workflow orchestration for ML, with versioning and lineage | When to retrain and what the gate checks |
+
+The useful habit is the third column. Each of these services moves work off your plate, and none of them makes a decision this pillar taught you to make. [An ML system from framing to monitoring](06-ml-system-framing-to-monitoring.md) walks through those decisions on one problem.
+
 ## Run labels
 
 | Material | Needs |
@@ -514,6 +534,7 @@ The "best practices" row is module 6, one for one. The monitoring row is the onl
 | Module 6 Terraform, `deploy_manual.sh`, `test_cloud_e2e.sh` | AWS account; S3 state bucket created beforehand |
 | Module 6 CI/CD | GitHub repo and AWS secrets; workflows upstream only |
 | Module 7 project | Your choice of cloud; peer-reviewed against the rubric |
+| The SageMaker mapping | Read from AWS's docs on 2026-11-02. Nothing was run on AWS |
 | The Python in this chapter | `uv run --with pandas --with scikit-learn --with torch python file.py` |
 
 ## Rules of thumb
@@ -567,4 +588,4 @@ The "best practices" row is module 6, one for one. The monitoring row is the onl
 
 ## Next
 
-This chapter closes the ML platform pillar. [The architecture chapter](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) asks how an organisation arranges many such pipelines, and who owns each part. The path also continues in [data science](../../../data-science/README.md), where the models these pipelines serve are built and evaluated, and in [AI engineering](../../../ai-engineering/README.md), where the same tracking, serving and monitoring patterns apply to LLM systems; evaluation and its maturity ladder live in [the Eval pillar of generative AI](../../../generative-ai/08-eval/README.md).
+[An ML system from framing to monitoring](06-ml-system-framing-to-monitoring.md): the tools are all on the table. The last chapter takes one invoice problem through every stage, from the question to the correction loop, and ends with a timed case.

@@ -4,7 +4,7 @@
 
 **Why.** A model trusts its inputs without question and keeps answering when they are wrong. Most of what breaks in production ML breaks around the model and not in it, and it usually breaks silently, so each of these pieces exists to make a silent failure visible or reversible.
 
-**The story.** One model that predicts taxi trip duration goes from a notebook to a monitored service. Its first offline score, 2.79, is a lie: a leaky join makes production come in at 5.48, and a point-in-time join with one shared feature function brings both to 3.81. Then we track runs, register versions and let a gate reject a retrain that is newer but worse, and roll back in one line. Serving asks when the answer is needed, and shows the model is the cheapest part of a request. Drift monitoring first cries wolf, firing every day on healthy data, then misses a doubled error because the inputs never moved. Finally the maturity model and the ML Test Score ask how much of this a given team should automate.
+**The story.** One model that predicts taxi trip duration goes from a notebook to a monitored service. Its first offline score, 2.79, is a lie: a leaky join makes production come in at 5.48, and a point-in-time join with one shared feature function brings both to 3.81. Then we track runs, register versions and let a gate reject a retrain that is newer but worse, and roll back in one line. Serving asks when the answer is needed, and shows the model is the cheapest part of a request. Drift monitoring first cries wolf, firing every day on healthy data, then misses a doubled error because the inputs never moved. Then the maturity model and the ML Test Score ask how much of this a given team should automate. Finally, a second problem, reading supplier invoices, goes through every stage from the first question to the correction loop, and a 75-minute case lets you try that alone.
 
 ## Reading order
 
@@ -15,6 +15,7 @@
 | 3 | [Batch and online serving](notes/03-batch-and-online-serving.md) | When is the answer needed, and how do you roll out a new version safely? |
 | 4 | [Drift](notes/04-drift.md) | How do you know the world moved, and when does that matter? |
 | 5 | [The MLOps maturity model and best practices](notes/05-mlops-maturity-and-best-practices.md) | How much should you automate, and how do you test it? |
+| 6 | [An ML system from framing to monitoring](notes/06-ml-system-framing-to-monitoring.md) | What are the stages of one real system, in order, and what does each hand to the next? |
 
 ## Builds on and feeds into
 
@@ -24,6 +25,12 @@
 |---|---|
 | [DA 06/02 Credit scoring](../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | PSI on a model's scores |
 | [DS 01/10 Imbalance, errors and drift](../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | Simulated shifts on a credit model |
+| [DS 01/11 Choosing a metric](../../data-science/01-classical-ml/notes/11-choosing-a-metric.md) and [DS 01/12 Reading the errors](../../data-science/01-classical-ml/notes/12-reading-the-errors.md) | The gate's metric and its slices, for chapter 6 |
+| [DS 01/13 Automate, review or reject](../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) | The priced router in chapter 6 |
+| [DS 01/14 Learning from corrections](../../data-science/01-classical-ml/notes/14-learning-from-corrections.md) | The audit and the correction loop in chapter 6 |
+| [DS 05/04 Entity matching and learning to rank](../../data-science/05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md) | Matching bank lines to invoices in chapter 6 |
+| [AIE 08/02 Document understanding](../../ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md) | The invoice reader and its checks in chapter 6 |
+| [GA 08/02 Defining correct](../../generative-ai/08-eval/notes/02-defining-correct.md) | Success criteria and the two-expert test in chapter 6 |
 
 **Feeds into**
 
@@ -46,6 +53,9 @@
 - Inputs that do not move prove nothing. Only labels show concept drift.
 - Start with scheduled retraining, and add triggers only with good monitoring.
 - Score maturity by the weakest section, and aim for level 2 to 3 before level 4.
+- Frame the decision and its prices before choosing a model, and choose the route per sub-task.
+- An improved upstream model is a change for everything downstream. Version it and recalibrate.
+- Keep a random audit. A correction rate is an alarm, and silence isn't correctness.
 
 ## Deck and practice
 
@@ -59,5 +69,7 @@
 - Shankar et al., *Operationalizing Machine Learning*
 - Gama et al., *A Survey on Concept Drift Adaptation*
 - Kleppmann, *Designing Data-Intensive Applications*, ch. 11
+- Sculley et al., *Hidden Technical Debt in Machine Learning Systems*
+- Breck et al., *The ML Test Score*
 
 Everything else: [references.md](references.md).

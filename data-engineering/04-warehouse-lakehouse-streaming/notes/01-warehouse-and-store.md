@@ -383,7 +383,7 @@ DISTKEY (vendor_id)  rows per node [0, 299145, 700855, 0]
 
 Three-quarters of the fact rows move if a join has to redistribute by key, which is the same shuffle cost as [Spark's](#what-happens-under-a-groupby-and-a-join). Distributing both tables on the join key moves none, and [AWS describes this as collocating](https://docs.aws.amazon.com/redshift/latest/dg/c_choosing_dist_sort.html) matching values on the same slice. `ALL` copies the small dimension to every node, which also avoids the shuffle and costs storage multiplied by node count. The last two lines are the trap: a key with few values piles everything on a couple of nodes, and the query runs as slowly as the fullest node. The docs give compound sort keys as the default, and interleaved keys take significantly longer to `VACUUM REINDEX`. [Armenatzoglou et al. (SIGMOD 2022)](https://www.amazon.science/publications/amazon-redshift-re-invented) describe how Redshift moved toward deriving these choices automatically, so `AUTO` is a reasonable starting point now; the manual choices still explain what `AUTO` is doing and why a query got slow.
 
-SageMaker's place in this picture is an ML platform question, so that mapping belongs with [the ML platform pillar](../../06-ml-platform/README.md).
+SageMaker's place in this picture is an ML platform question, so that mapping belongs with [the ML platform pillar](../../06-ml-platform/notes/05-mlops-maturity-and-best-practices.md#mapping-the-pillar-onto-sagemaker).
 
 ## Models inside the warehouse
 

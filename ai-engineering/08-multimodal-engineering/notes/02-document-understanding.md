@@ -310,4 +310,4 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 
 ## Next
 
-[Chapter 3 — Multimodal RAG](03-multimodal-rag.md) takes a collection of documents and asks how to find the right page when the answer is in a chart or a table.
+[Chapter 3 — Multimodal RAG](03-multimodal-rag.md) takes a collection of documents and asks how to find the right page when the answer is in a chart or a table. For what happens to this pipeline around the reader, from pricing a mistake to rollout and monitoring, see [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

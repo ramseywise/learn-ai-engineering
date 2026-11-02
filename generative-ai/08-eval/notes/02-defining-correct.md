@@ -269,4 +269,4 @@ Combine dimensions only at the end, explicitly ([04](04-graders.md#combining-gra
 
 ## Next
 
-[03-eval-datasets.md](03-eval-datasets.md): turning criteria into a dataset that represents your users.
+[03-eval-datasets.md](03-eval-datasets.md): turning criteria into a dataset that represents your users. [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) applies these four questions to one invoice system and follows it through to monitoring.

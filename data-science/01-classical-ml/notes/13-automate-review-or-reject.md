@@ -375,4 +375,4 @@ And the win depends on the person. The assumed analyst is better than the model,
 
 ## Next
 
-[Learning from corrections](14-learning-from-corrections.md): what the people in the review queue teach the model, what they can't, and how to measure the invoices nobody looks at.
+[Learning from corrections](14-learning-from-corrections.md): what the people in the review queue teach the model, what they can't, and how to measure the invoices nobody looks at. To see where this router sits in a whole system, from the first question to monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

@@ -399,4 +399,4 @@ Margin: $0.685 \times 866 \approx 593$ lines. Top score: $0.403 \times 866 \appr
 
 ## Next
 
-You can now retrieve, rank and evaluate lists. The next step in the course is language modelling proper, and the ranking ideas return as reranking and retrieval metrics: carry on with [the LLM fundamentals pillar in generative AI](../../../generative-ai/01-llm-fundamentals/README.md).
+You can now retrieve, rank and evaluate lists. The next step in the course is language modelling proper, and the ranking ideas return as reranking and retrieval metrics: carry on with [the LLM fundamentals pillar in generative AI](../../../generative-ai/01-llm-fundamentals/README.md). [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) puts the bank-line matcher in its place among the other jobs of one invoice system.
