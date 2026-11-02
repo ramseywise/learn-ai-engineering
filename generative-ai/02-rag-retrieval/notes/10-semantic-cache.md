@@ -1,22 +1,22 @@
 ---
 origin: notion-export
 sources:
-  - own work notes (support-agent RAG project)
+  - own work notes (production support-agent evaluation, anonymised)
   - https://aclanthology.org/2023.nlposs-1.24/
 confidence: medium
 cleaned: 2026-11-01
 ---
 # 10 — Semantic cache for support agents
 
-Tallybook's support bot answers "how do I get a refund on my annual plan?" dozens of times a day, in dozens of wordings, and each time it runs the whole pipeline: rewrite, retrieve, grade, generate. In our project that corrective round trip took about 3 to 6 seconds and at least two LLM calls for an answer the system had already produced and graded. An exact-match cache does not help, because no two customers type the same sentence. So you embed the question and reuse the stored answer when a past question is close enough.
+Tallybook's support bot answers "how do I get a refund on my annual plan?" dozens of times a day, in dozens of wordings, and each time it runs the whole pipeline: rewrite, retrieve, grade, generate. In a production support agent these notes draw on, that corrective round trip took about 3 to 6 seconds and at least two LLM calls for an answer the system had already produced and graded. An exact-match cache does not help, because no two customers type the same sentence. So you embed the question and reuse the stored answer when a past question is close enough.
 
 The danger is the phrase "close enough". A customer asks about cancelling an invoice, the nearest stored question is about cancelling a subscription, and the bot confidently tells them how to close their account. Retrieval failures tend to look like a weak answer. A cache failure looks like a perfect answer to a different question, delivered in 50 milliseconds, with nothing downstream to catch it. The whole design of this chapter follows from that asymmetry.
 
-The first half is the idea rebuilt on Tallybook, with a real small embedder and measured numbers. The second half keeps the original plan from our support-agent project, which is a useful example of how to scope such an experiment: a hypothesis, a flag, an ablation and merge criteria. The cache idea has a citable open-source origin in [GPTCache](https://aclanthology.org/2023.nlposs-1.24/) (Bang, NLP-OSS workshop at EMNLP 2023).
+The first half is the idea rebuilt on Tallybook, with a real small embedder and measured numbers. The second half keeps the experiment plan written for that production agent, with its identity removed, which is a useful example of how to scope such an experiment: a hypothesis, a flag, an ablation and merge criteria. The sizes and targets in that plan are its own, the raw data is not in this repository, and none of it comes from Tallybook. The cache idea has a citable open-source origin in [GPTCache](https://aclanthology.org/2023.nlposs-1.24/) (Bang, NLP-OSS workshop at EMNLP 2023).
 
-> **Hackathon experiment slot.** Zero-RAG-cost path for queries that closely match the golden dataset.
+> **The experiment.** Zero-RAG-cost path for queries that closely match the golden dataset.
 >
-> **Prerequisite**: `golden-dataset.md` pipeline must complete first — specifically `semantic_cache_seed.jsonl` (high-scoring SA responses, composite ≥ 0.75).
+> **Prerequisite**: the golden dataset pipeline must complete first, because it produces the cache seed (high-scoring agent responses, composite ≥ 0.75).
 >
 > **Hypothesis**: A meaningful fraction of incoming queries are paraphrases of already-answered questions from the golden set. Routing those directly to a cache hit saves the full CRAG round-trip (~3–6s, 2+ LLM calls) without quality loss because the cached answers are already grader-validated.
 
@@ -33,7 +33,7 @@ planner ──▶ cache_lookup ──▶ hit (sim ≥ 0.85)? ──YES──▶ 
                                         │              │              │
                                   how_to/regulatory  definition  escalation
                                         │              │              │
-                               help_center KB    product_wiki   skip retrieval
+                               help_center KB    glossary       skip retrieval
                                         │         (context       → respond
                                         ▼           enrichment)
                               retrieve (CRAG) ──▶ answer ──▶ END
@@ -45,13 +45,13 @@ planner ──▶ cache_lookup ──▶ hit (sim ≥ 0.85)? ──YES──▶ 
 
 **Tier 3 — CRAG** (full pipeline, LLM calls): only reached when cache misses and routing resolves to an answerable intent.
 
-For Tier 1: after `planner` classifies intent as `answerable`, a new `cache_lookup` node embeds the query and does a cosine nearest-neighbour search over the pre-built embeddings from `semantic_cache_seed.jsonl`. If the top match exceeds `SEMANTIC_CACHE_THRESHOLD` (default `0.85`), return the cached answer directly — no retrieval, no grading, no answer LLM call. Below threshold, or when `SEMANTIC_CACHE_ENABLED=false`, the query flows to Tier 2.
+For Tier 1: after `planner` classifies intent as `answerable`, a new `cache_lookup` node embeds the query and does a cosine nearest-neighbour search over the pre-built embeddings of the seed. If the top match exceeds `SEMANTIC_CACHE_THRESHOLD` (default `0.85`), return the cached answer directly — no retrieval, no grading, no answer LLM call. Below threshold, or when `SEMANTIC_CACHE_ENABLED=false`, the query flows to Tier 2.
 
 ---
 
 ## A cache in thirty lines
 
-The mechanism is a matrix multiply. Store normalised question vectors, multiply by the new question's vector, and take the best row. With a few hundred rows there is no reason for an ANN index: the project's seed held about 150 to 200 rows, and [note 09](09-vector-database-comparison.md#how-far-exact-search-goes) shows that a scan of 10,000 vectors takes a fraction of a millisecond. Each row keeps what it needs later: the answer, the documents behind it, and the date it was built.
+The mechanism is a matrix multiply. Store normalised question vectors, multiply by the new question's vector, and take the best row. With a few hundred rows there is no reason for an ANN index: the production seed held about 150 to 200 rows, and [note 09](09-vector-database-comparison.md#how-far-exact-search-goes) shows that a scan of 10,000 vectors takes a fraction of a millisecond. Each row keeps what it needs later: the answer, the documents behind it, and the date it was built.
 
 ```python
 import numpy as np
@@ -172,7 +172,7 @@ lowest paraphrases:
   0.883 password reset steps
 ```
 
-Three things stand out. Unrelated questions are easy, topping out near 0.63, so the threshold's job is not to reject those. The two distributions that matter overlap: "import invoices" scores higher than a true paraphrase like "password reset steps", and BANK-113 matches BANK-112 at 0.929. And at 0.85, the default from the project plan, the sweep serves four wrong answers out of twelve hard cases. Even 0.90 has the same four. Only at 0.95 do false hits reach zero, and by then just four paraphrases of twelve still hit. These numbers belong to bge-small on this set. The project used `multilingual-e5-base` on Danish queries, and a threshold never moves between models.
+Three things stand out. Unrelated questions are easy, topping out near 0.63, so the threshold's job is not to reject those. The two distributions that matter overlap: "import invoices" scores higher than a true paraphrase like "password reset steps", and BANK-113 matches BANK-112 at 0.929. And at 0.85, the default from the original plan, the sweep serves four wrong answers out of twelve hard cases. Even 0.90 has the same four. Only at 0.95 do false hits reach zero, and by then just four paraphrases of twelve still hit. These numbers belong to bge-small on this set. The production agent used `multilingual-e5-base` on non-English queries, and a threshold never moves between models.
 
 This is why the plan below sweeps the threshold over `[0.75, 0.80, 0.85, 0.90, 0.95]` and does not trust a default. It is also why a cost argument should decide the setting. A false hit costs a wrong answer and maybe a support ticket. A miss costs a few seconds and the price of the normal pipeline. So start high, accept a low hit rate, and lower it only with evidence.
 
@@ -223,7 +223,7 @@ The rule catches the code, the plan and the direction, and the last line shows w
 
 ## Staleness and scope
 
-A cached answer is a snapshot of the documents it came from. Our project's open question was to log a warning when the file is older than 30 days. Age alone is a weak signal, since an answer can go wrong the day after the build and stay correct for years. If each row records its source documents, you can invalidate by what actually changed.
+A cached answer is a snapshot of the documents it came from. The original plan's open question was to log a warning when the file is older than 30 days. Age alone is a weak signal, since an answer can go wrong the day after the build and stay correct for years. If each row records its source documents, you can invalidate by what actually changed.
 
 ```python
 from dataclasses import dataclass
@@ -266,22 +266,20 @@ How do I rotate an API key?          2026-06-02 built 2026-01-10  source changed
 What is my outstanding balance?      2026-04-08 built 2026-10-20  other tenant
 ```
 
-The third row is the security version of a false hit. Caching a personal answer in a shared cache hands one customer's balance to another. The project's seed held only general support answers, which is the simple rule to copy: cache only answers that do not depend on who is asking. If you must cache per user, make the tenant part of the key and check it before serving, as this code does.
+The third row is the security version of a false hit. Caching a personal answer in a shared cache hands one customer's balance to another. The production seed held only general support answers, which is the simple rule to copy: cache only answers that do not depend on who is asking. If you must cache per user, make the tenant part of the key and check it before serving, as this code does.
 
 ---
 
 ## Offline phase — build the cache index
 
-**Input**: `data/datasets/bkh/semantic_cache_seed.jsonl` (output of the golden dataset pipeline — grader-validated SA responses, composite ≥ 0.75)
-
-**Notebook**: `nbks/sa/build_semantic_cache.ipynb`
+**Input**: the cache seed, which is the output of the golden dataset pipeline: grader-validated agent responses with composite ≥ 0.75.
 
 ### Embed queries
 
 ```python
-# illustrative: needs the project's semantic_cache_seed.jsonl and a download of multilingual-e5-base
+# illustrative: needs your own seed file and a download of multilingual-e5-base
 from sentence_transformers import SentenceTransformer
-model = SentenceTransformer("intfloat/multilingual-e5-base")  # handles Danish
+model = SentenceTransformer("intfloat/multilingual-e5-base")  # handles non-English queries
 queries = [row["query"] for row in seed]
 embeddings = model.encode(queries, normalize_embeddings=True)  # (N, 768) float32
 ```
@@ -294,7 +292,7 @@ No clustering needed — the golden dataset pipeline already deduplicated via st
 # illustrative: needs `seed` and `embeddings` from the block above
 import numpy as np, json
 np.savez(
-    "data/corpus/datastores/semantic_cache.npz",
+    "data/semantic_cache.npz",
     embeddings=embeddings.astype("float32"),
     queries=np.array([r["query"] for r in seed]),
     answers=np.array([r["response"] for r in seed]),
@@ -309,15 +307,13 @@ Typical size: ~150–200 rows → single matrix multiply at query time, no FAISS
 
 ## Runtime module
 
-**File**: `src/support_agents/kb_lg/semantic_cache.py`
-
 ```python
 # illustrative: needs semantic_cache.npz from the offline phase and sentence-transformers
 """Semantic cache: ANN lookup over grader-validated QA embeddings.
 
 SEMANTIC_CACHE_ENABLED=true  (default false)
 SEMANTIC_CACHE_THRESHOLD     (default 0.85, sweep 0.75–0.95)
-SEMANTIC_CACHE_PATH          (default data/corpus/datastores/semantic_cache.npz)
+SEMANTIC_CACHE_PATH          (default data/semantic_cache.npz)
 SEMANTIC_CACHE_MODEL         (default intfloat/multilingual-e5-base)
 """
 import os, json
@@ -327,7 +323,7 @@ from sentence_transformers import SentenceTransformer
 
 _ENABLED   = os.getenv("SEMANTIC_CACHE_ENABLED", "false").lower() == "true"
 _THRESHOLD = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.85"))
-_PATH      = os.getenv("SEMANTIC_CACHE_PATH", "data/corpus/datastores/semantic_cache.npz")
+_PATH      = os.getenv("SEMANTIC_CACHE_PATH", "data/semantic_cache.npz")
 _MODEL     = os.getenv("SEMANTIC_CACHE_MODEL", "intfloat/multilingual-e5-base")
 
 @dataclass
@@ -376,22 +372,22 @@ def lookup(query: str) -> CacheResult | None:
 
 ## Graph changes
 
-### `state.py`
+### State
 
 Add two fields:
 ```python
-# illustrative: fields on the project's LangGraph State
+# illustrative: fields on your LangGraph State
 cache_hit: bool          # True when semantic cache short-circuited retrieval
 cache_similarity: float  # cosine sim of match (0.0 when no hit)
 ```
 
-### `agent.py`
+### Node and routing
 
 New node and updated routing:
 
 ```python
-# illustrative: needs the project's kb_lg package and LangGraph State
-from kb_lg.semantic_cache import lookup as _cache_lookup
+# illustrative: needs the runtime module above and your LangGraph State
+from semantic_cache import lookup as _cache_lookup
 
 async def cache_node(state: State) -> State:
     result = _cache_lookup(state["query"])
@@ -421,7 +417,7 @@ def route_after_cache(state: State) -> str:
 
 Graph wiring addition:
 ```python
-# illustrative: extends the project's LangGraph builder
+# illustrative: extends your LangGraph builder
 _builder.add_node("cache", cache_node)
 _builder.add_conditional_edges("planner", route_after_planner,
     {"cache": "cache", "respond": "respond"})
@@ -433,7 +429,7 @@ _builder.add_conditional_edges("cache", route_after_cache,
 
 ## Source routing — Tier 2
 
-> The taxonomy below is the full Phase C spec from `kb-content-taxonomy.md` (now archived). The same `multilingual-e5-base` model loaded for the cache is reused — no second model, no LLM call.
+> The same `multilingual-e5-base` model loaded for the cache is reused: no second model, no LLM call.
 
 A miss does not have to mean "search everything". Once a query vector exists, it costs almost nothing to compare it with a few more vectors: one average per intent, built from example questions. The router then picks the source before retrieval runs. Here it is on Tallybook, with a floor that sends unsure queries to flat search. The labelled test queries are separate from the exemplars.
 
@@ -505,12 +501,12 @@ Ten out of ten looks decisive, and it isn't: ten test queries can only tell you 
 ```text
 domain:
   accounting        — general bookkeeping, accounts, chart of accounts
-  vat               — moms, momsindberetning, momsopgørelse, momsfradrag
-  invoicing         — faktura, kreditnota, EAN, tilbud, rykker
-  payroll           — løn, ansatte, B-skat, kørselsgodtgørelse
-  banking           — bankafstemning, postering, kontoudtog, kassekladde
-  reporting         — årsregnskab, årsrapport, resultatopgørelse, afslutning
-  subscription      — abonnement
+  vat               — VAT, VAT returns, VAT statements, input VAT deductions
+  invoicing         — invoices, credit notes, e-invoicing IDs, quotes, payment reminders
+  payroll           — wages, employees, withholding tax, mileage allowance
+  banking           — bank reconciliation, postings, bank statements, cash book
+  reporting         — annual accounts, annual report, income statement, year-end close
+  subscription      — plans and billing
   escalation        — human handoff, friction
 
 intent_type:
@@ -529,53 +525,52 @@ intent_type:
 | Few-shot LLM classifier | ~$0.01/item | High | Medium |
 | Embedding centroid (reuse `multilingual-e5-base`) | Free inference | High | Medium |
 
-**Key architectural decision:** eval coverage analysis and runtime source routing share the same classifier artifact (`evals/graders/taxonomy/intent_classifier.py`). The taxonomy does double duty — coverage gap analysis in eval pipeline and KB source routing at request time. Don't build two separate classifiers.
+**Key architectural decision:** eval coverage analysis and runtime source routing share the same classifier artifact. The taxonomy does double duty — coverage gap analysis in eval pipeline and KB source routing at request time. Don't build two separate classifiers.
 
 ### Intent → source mapping
 
 | `intent_type` | Bedrock KB source | Behaviour |
 |---|---|---|
-| `how_to` | help center (`WOHA5CGA4I`) | Standard CRAG retrieval |
-| `regulatory` | help center + pricing (`SWYMRRPC0O`) | Both sources, re-rank by domain |
-| `definition` | ProductWiki (`KB_GLOSSARY`) as **context enrichment** only | Retrieve top-1 ProductWiki passage as background context, then retrieve help center for answer |
-| `lookup` | pricing (`SWYMRRPC0O`) | Pricing source only |
+| `how_to` | help center | Standard CRAG retrieval |
+| `regulatory` | help center + pricing | Both sources, re-rank by domain |
+| `definition` | product glossary as **context enrichment** only | Retrieve top-1 glossary passage as background context, then retrieve help center for answer |
+| `lookup` | pricing | Pricing source only |
 | `escalation` | skip retrieval | Route directly to escalation node |
 | `low_confidence` | all three sources | Fallback to flat search (current behaviour) |
 
-**Key insight:** ProductWiki is never the primary retrieval target. For `definition` queries it provides a context frame; the actual answer still comes from help center articles. This prevents glossary pages from crowding out instructional articles.
+**Key insight:** the product glossary is never the primary retrieval target. For `definition` queries it provides a context frame; the actual answer still comes from help center articles. This prevents glossary pages from crowding out instructional articles.
 
 ### Offline phase — build intent centroids
 
-**Input:** golden 597 queries with `compare_category` labels + the 4,700-item support corpus A pool (has domain/intent labels).
+**Input:** the golden set of 597 queries with category labels, plus a pool of 4,700 historical support conversations with domain and intent labels.
 
 ```python
-# illustrative: needs the project's labelled Danish exemplars and a download of multilingual-e5-base
+# illustrative: needs your own labelled exemplars and a download of multilingual-e5-base
 from sentence_transformers import SentenceTransformer
 import numpy as np, json
 
 model = SentenceTransformer("intfloat/multilingual-e5-base")
 
-# Load exemplar queries per intent_type (from support corpus A labelled pool)
+# Load exemplar queries per intent_type (from the labelled historical pool)
 exemplars = {
-    "how_to":     [...],   # "Hvordan opretter jeg en faktura?"
-    "definition": [...],   # "Hvad er bankafstemning?"
-    "regulatory": [...],   # "Hvornår skal jeg indberette moms?"
-    "lookup":     [...],   # "Hvad koster Pro-abonnementet?"
-    "escalation": [...],   # "Jeg vil gerne tale med en person"
+    "how_to":     [...],   # "How do I create an invoice?"
+    "definition": [...],   # "What is bank reconciliation?"
+    "regulatory": [...],   # "When do I have to file VAT?"
+    "lookup":     [...],   # "How much does the Pro plan cost?"
+    "escalation": [...],   # "I would like to talk to a person"
 }
 
 centroids = {
     k: model.encode(queries, normalize_embeddings=True).mean(axis=0)
     for k, queries in exemplars.items()
 }
-np.savez("data/corpus/datastores/intent_centroids.npz", **centroids)
+np.savez("data/intent_centroids.npz", **centroids)
 ```
 
 ### Runtime classifier
 
 ```python
 # illustrative: needs `centroids` from the offline phase and a download of multilingual-e5-base
-# src/support_agents/kb_lg/source_router.py
 import os
 
 import numpy as np
@@ -583,7 +578,7 @@ from sentence_transformers import SentenceTransformer
 
 SOURCE_MAP = {
     "how_to":     ["help_center"],
-    "definition": ["help_center", "product_wiki"],   # product_wiki = context enrichment
+    "definition": ["help_center", "glossary"],   # glossary = context enrichment
     "regulatory": ["help_center", "pricing"],
     "lookup":     ["pricing"],
     "escalation": [],
@@ -595,11 +590,11 @@ def route(query: str, model: SentenceTransformer, centroids: dict) -> tuple[str,
     sims = {k: float(vec @ c) for k, c in centroids.items()}
     best = max(sims, key=sims.get)
     if sims[best] < CONFIDENCE_FLOOR:
-        return "low_confidence", ["help_center", "pricing", "product_wiki"]
+        return "low_confidence", ["help_center", "pricing", "glossary"]
     return best, SOURCE_MAP[best]
 ```
 
-`ROUTER_CONFIDENCE_FLOOR` maps directly to the existing `ROUTING_CONFIDENCE_THRESHOLD` pattern — low-confidence routes fall through to flat search.
+Low-confidence routes fall through to flat search, so a bad route costs precision and never loses the document.
 
 ### Ablation: do we need an LLM for source routing?
 
@@ -625,7 +620,7 @@ If B ≈ C ≈ D on quality: ship B (keyword, zero infra). If C > B and C ≈ D:
 
 ## Eval — what to measure
 
-Run against `hackathon_eval.jsonl` (500 labeled queries from the golden dataset pipeline).
+Run against 500 labelled queries from the golden dataset pipeline.
 
 | Metric | Target |
 |--------|--------|
@@ -638,9 +633,9 @@ Run against `hackathon_eval.jsonl` (500 labeled queries from the golden dataset 
 
 Run the 50-task eval at `[0.75, 0.80, 0.85, 0.90, 0.95]`. Plot hit rate vs. composite quality. Pick the threshold that maximises `hit_rate × quality` without degrading miss-path MRR.
 
-### AB notebook cell additions
+### Split the results
 
-In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True` vs `cache_hit == False` subsets and shows separate composite scores + MRR for each.
+Split results into `cache_hit == True` and `cache_hit == False` subsets and report composite scores and MRR for each. A blended score hides a good hit subset paying for a regressed miss path.
 
 ---
 
@@ -653,36 +648,17 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 
 ---
 
-## Hackathon day sequence
+## Order of work
 
-### Pre-hackathon (requires golden dataset pipeline complete)
-- [ ] `semantic_cache_seed.jsonl` built and validated
-- [ ] `build_semantic_cache.ipynb` run → `semantic_cache.npz` committed to Drive / repo LFS
-- [ ] `sentence-transformers` + deps pinned in `pyproject.toml`
-- [ ] `SEMANTIC_CACHE_*` vars added to `.env.hackathon.example`
-
-### Day 1 — Build
-- [ ] Implement `kb_lg/semantic_cache.py`
-- [ ] Add `cache_hit` + `cache_similarity` to `State`
-- [ ] Wire `cache_node` into `agent.py`
-- [ ] Smoke test: send 5 queries from the seed set, confirm hits; send 5 novel queries, confirm misses
-- [ ] Run 50-task eval at default threshold
-
-### Day 1–2 — Tune
-- [ ] Threshold sweep
-- [ ] Grade cache hits with calibrated tier (`--tier calibrated`) on a 20-query sample
-
-### Day 2 — Demo
-- [ ] AB notebook: hit rate chart, latency improvement, 3 hit/miss examples
-- [ ] 500-task final eval if hit rate ≥ 10% and quality holds
+Build the seed first, because the whole hypothesis depends on its quality. Then smoke test with queries you know the answer to: five from the seed should hit and five novel ones should miss. Run the 50-task eval at the default threshold before sweeping, and grade cache hits with the calibrated tier on a small sample. Only spend the 500-task run if the hit rate reaches 10% and quality holds, since a cache that rarely hits is not worth its false-hit risk.
 
 ---
 
 ## Open questions
 
 - **Cache staleness**: if the product changes, cached answers become wrong. Add a `build_date` field to the npz and log a warning if the file is > 30 days old. Rebuild cadence TBD.
-- **Language mismatch**: seed is Danish; if a user writes in English, similarity will be lower and queries will fall through to CRAG — which is correct behaviour. Track hit rate by detected `query_language` in the AB notebook to confirm.
-- **Seed size**: if the golden dataset pipeline yields < 50 high-scoring rows (e.g. support corpus A responses are generally low quality), the cache hit rate on real traffic will be negligible. In that case, expand the seed by running the SA agent on the full 500-query stratified set and using its responses (rather than original support corpus A responses) as the cache source.
+- **Language mismatch**: a seed in one language and users writing in another means lower similarity, so those queries fall through to CRAG, which is correct behaviour. Track hit rate by detected `query_language` to confirm.
+- **Seed size**: if the golden dataset pipeline yields < 50 high-scoring rows (historical support responses are often low quality, for example), the cache hit rate on real traffic will be negligible. In that case, expand the seed by running the agent on the full 500-query stratified set and using its responses (rather than the original historical responses) as the cache source.
 
 ---
 
@@ -692,8 +668,8 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 - **Near misses that differ in one token.** Symptom: BANK-113 gets the BANK-112 answer. Guard identifiers, plan names and directions with an exact check.
 - **Caching personal answers.** Symptom: one customer sees another's data. Cache only general answers, or put the tenant in the key.
 - **A cache that outlives its sources.** Symptom: old policy served after the document changed. Store source ids and invalidate when a source is updated; add an age limit as a backstop.
-- **Seeding from unvalidated answers.** Symptom: the cache serves your worst answers fast and forever. Seed only from graded answers, as the project did with a composite of 0.75 or higher.
-- **Measuring only hit rate.** Symptom: hit rate rises and support tickets rise with it. Score the hit subset separately, as the AB cell below does.
+- **Seeding from unvalidated answers.** Symptom: the cache serves your worst answers fast and forever. Seed only from graded answers, as the original plan did with a composite of 0.75 or higher.
+- **Measuring only hit rate.** Symptom: hit rate rises and support tickets rise with it. Score the hit subset separately, as the split above does.
 - **Regressing the miss path.** Symptom: cached queries look great while the rest got slower or worse. Require MRR on misses to hold.
 - **Building a second classifier.** Symptom: eval coverage and runtime routing drift apart. Share one classifier artifact, as the plan says.
 
@@ -704,7 +680,7 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 1. In the threshold sweep, add a `SAME` entry `("reset password", 2)` and a `NEAR` entry `("How do I reset my password on the mobile app?")`. Predict the effect at 0.85, then run it.
 2. Extend `CRITICAL` so the `"How do I reset my API key?"` case is blocked. What does your rule cost on the paraphrases?
 3. In the router block, set `FLOOR = 0.80`. What happens to the routes, and what does that cost?
-4. Using the project's numbers, a miss costs about 4.5 s and two LLM calls. If you had a hit rate of 30% with one wrong answer per 100 hits, what would you need to know to decide whether to ship?
+4. Using the production numbers, a miss costs about 4.5 s and two LLM calls. If you had a hit rate of 30% with one wrong answer per 100 hits, what would you need to know to decide whether to ship?
 
 <details>
 <summary>Answers</summary>
@@ -722,7 +698,7 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 
 | Question | Answer |
 |---|---|
-| What does a semantic cache save? | The whole retrieval and generation path on a hit: in our project about 3 to 6 s and two or more LLM calls, for the price of one embedding and a matrix multiply. |
+| What does a semantic cache save? | The whole retrieval and generation path on a hit: in the production agent about 3 to 6 s and two or more LLM calls, for the price of one embedding and a matrix multiply. |
 | How does it differ from an exact cache? | It matches on meaning, so it catches paraphrases, and it can match wrongly. An exact cache never serves the wrong answer. |
 | What is the main risk? | A false hit: a near-identical question with a different meaning gets a confident wrong answer, and no later stage checks it. |
 | How do you set the threshold? | Sweep it on labelled paraphrases and hard near misses for your model, then choose on the relative cost of a wrong answer and a miss. |

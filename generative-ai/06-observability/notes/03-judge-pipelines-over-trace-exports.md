@@ -15,7 +15,7 @@ cleaned: 2026-11-01
 
 By the end of chapter 2, Acme Books had a release gate that passed the billing category while billing answers were going wrong in production. A golden set can only test what someone thought to write down. To learn what is actually going wrong, and how often, you have to read production, and at 100 turns a day nobody reads everything. So you build something that does: a pipeline of judges that goes through the export each week and tells a person which turns to look at. The design question is how to make that trustworthy and affordable, since a judge that cries wolf on a third of the traffic gets switched off.
 
-The source is a hallucination-analysis pipeline built for a bank's RAG support assistant (gustavobrieva1/langfuse-evaluation). Its README marks it **"Internal use only"**, so this note keeps only the architecture and schemas, written generically. The client's prompts, data and results aren't reproduced. Judge theory (rubrics, calibration, bias) is in [generative-ai/08-eval 05 — LLM-as-judge](../../08-eval/notes/05-llm-as-judge.md) and grounding metrics in [07 — evaluating RAG and grounding](../../08-eval/notes/07-evaluating-rag-and-grounding.md).
+The source is a hallucination-analysis pipeline built for a bank's RAG support assistant (gustavobrieva1/langfuse-evaluation). Its README marks it **"Internal use only"**, so this note keeps only the architecture and schemas, written generically. The client's prompts, data and results aren't reproduced. Judge theory (rubrics, bias, calibration) is in [generative-ai/08-eval 05 — LLM as judge](../../08-eval/notes/05-llm-as-judge.md) and [15 — calibrating a judge](../../08-eval/notes/15-calibration-against-human-labels.md) and grounding metrics in [07 — evaluating RAG and grounding](../../08-eval/notes/07-evaluating-rag-and-grounding.md).
 
 The offline judges in [`judges.py`](../practice/support_agent/judges.py) are deterministic rules that behave the way a first-pass and a verifying model plausibly would. They let us measure the *pipeline design* against planted failures. They say nothing about how well any real model judges, which you must measure on your own traces.
 
@@ -63,8 +63,8 @@ for release in ["v1", "v2.0"]:
 ```text
 v1 input : {"user_question": "What is the default payment term?"}
 v1 output: {"lastMessage": "The default payment term is 14 days. Change it under Invoice settings.", "sources": ["https://help.acme ...
-v2.0 input : {"structured_response": {"advisor_query": "Hvor mange brugere er der på Standard planen?"}
-v2.0 output: {"structured_response": {"answer": "Standard planen har 5 users. Du tilføjer brugere under Indstillinger og Team.", "sou ...
+v2.0 input : {"structured_response": {"advisor_query": "Hoeveel gebruikers zitten er op het Standard-ab
+v2.0 output: {"structured_response": {"answer": "Het Standard-abonnement heeft 5 users. Voeg gebruikers toe onder Instellingen en Tea ...
 ```
 
 A parser written for the first shape returns nothing for the second, and doesn't complain. So the ETL tries several paths per field. The pattern comes from the upstream extractor.
@@ -349,10 +349,10 @@ print("lenient false alarms by language:", pd.Series([t.language for t in false_
  stance  first_precision  first_recall  verifications  final_precision  final_recall  cost_usd
  strict            0.929         0.929             42            0.929         0.929      1.48
 lenient            0.086         0.929            454            0.929         0.929      8.56
-lenient false alarms by language: {'da': 389, 'en': 26}
+lenient false alarms by language: {'nl': 389, 'en': 26}
 ```
 
-The lenient judge arrives at the same final answer at about six times the cost, because the verifier cleans up after it. Without the verifier its precision would make the report useless. Almost all the false alarms are Danish turns, whose answers share few words with English help articles. That's the general lesson: a judge's false alarm rate is rarely uniform, and an A/B on an aggregate would miss where it fails. If you change the judge, you also change the trend line, so A/B the judge prompt before you trust a month-on-month chart.
+The lenient judge arrives at the same final answer at about six times the cost, because the verifier cleans up after it. Without the verifier its precision would make the report useless. Almost all the false alarms are Dutch turns, whose answers share few words with English help articles. That's the general lesson: a judge's false alarm rate is rarely uniform, and an A/B on an aggregate would miss where it fails. If you change the judge, you also change the trend line, so A/B the judge prompt before you trust a month-on-month chart.
 
 ---
 

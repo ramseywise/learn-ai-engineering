@@ -23,7 +23,7 @@ A prompt change ships because three test questions looked better, and a week lat
 Eval engineering means building that measurement. You decide what correct means, collect tasks that represent real use, choose graders you can trust, run them repeatedly, and read the results honestly. Then you wire them into the places where decisions get made: CI, releases and production monitoring. It is an engineering discipline, not a QA afterthought, for three reasons:
 
 1. **The outputs are non-deterministic.** One run proves nothing. You need rates, repeats and error bars ([09](09-reading-results.md)).
-2. **"Correct" is often a judgment.** So the graders are themselves models or people, and they need measuring too ([05](05-llm-as-judge.md)).
+2. **"Correct" is often a judgment.** So the graders are themselves models or people, and they need measuring too ([15](15-calibration-against-human-labels.md)).
 3. **The eval is software.** It has bugs, it drifts and it gets gamed. Treat a score drop as a claim about the eval before treating it as a claim about the system ([12](12-failure-modes.md)).
 
 ```mermaid
@@ -134,7 +134,7 @@ Each arrow is a chapter:
 |---|---|
 | Define correct, error analysis, failure taxonomy | [02](02-defining-correct.md) |
 | Build tasks | [03](03-eval-datasets.md) |
-| Grade | [04](04-graders.md), [05](05-llm-as-judge.md) |
+| Grade | [04](04-graders.md), [05](05-llm-as-judge.md), [15](15-calibration-against-human-labels.md) |
 | Agent trajectories, k trials | [06](06-evaluating-agents.md) |
 | RAG and grounding | [07](07-evaluating-rag-and-grounding.md) |
 | Capture traces | [08](08-tracing-and-observability.md) |

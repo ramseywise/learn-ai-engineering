@@ -20,6 +20,7 @@ Complete analyses, each going from a business question through a dataset to a re
 | 8 | [States and sequences](notes/08-states-and-sequences.md) | Which journeys lead to a second order, and what is a customer in each state worth? |
 | 9 | [Marketing measurement](notes/09-marketing-measurement.md) | Where should next quarter's budget go, and what is a new customer worth? |
 | 10 | [Operations and supply chain](notes/10-operations-and-supply-chain.md) | How much of each product should the warehouse hold, and how many packers on a Monday? |
+| 11 | [Metric trees and defining metrics](notes/11-metric-trees.md) | Which number should the shop run on, what feeds it, and what would catch it being gamed? |
 
 Chapter 5 also holds a separate case, [segmenting B2B customers by behaviour](notes/05-segmentation-and-rfm.md#case-segmenting-b2b-customers-by-behaviour), which tests whether cohorts found by clustering deserve trust on synthetic data.
 

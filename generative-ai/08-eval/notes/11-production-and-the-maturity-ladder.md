@@ -84,7 +84,7 @@ Keep the **random sample separate** when you report rates. The rule-based sample
 Neither humans nor judges are enough on their own:
 
 1. **Human layer.** People review a rule-based sample (errors, long dialogues, negative feedback), label pass/fail and the reason. This finds new failure patterns and produces calibration data. A rule-based sample can't estimate the rate on what it skips, so add a small random one ([DS 01/14](../../../data-science/01-classical-ml/notes/14-learning-from-corrections.md#audit-a-random-sample)).
-2. **Judge layer.** Calibrated LLM judges score a much wider slice of traffic, using the human labels as their calibration basis ([05](05-llm-as-judge.md#keep-it-calibrated)).
+2. **Judge layer.** Calibrated LLM judges score a much wider slice of traffic, using the human labels as their calibration basis ([15](15-calibration-against-human-labels.md#keep-it-calibrated)).
 
 Judges alone drift: nobody notices the criteria moving. Humans alone don't cover real traffic at scale. Run both, and track human–judge agreement on the overlap as its own metric.
 
@@ -199,7 +199,7 @@ Two steps come before an A/B test, and one comes after it (*Building Application
 | **Implicit** (rephrasing, abandonment, escalation, copy) | Plentiful | Ambiguous: a short session may be success or giving up |
 | **Downstream outcomes** (ticket reopened, refund reversed) | Closest to value | Delayed, hard to attribute |
 
-Feedback is a sampling rule and a calibration label ([05](05-llm-as-judge.md#the-procedure)), not a metric to optimize directly. Optimizing 👍 rate rewards flattery.
+Feedback is a sampling rule and a calibration label ([15](15-calibration-against-human-labels.md#the-procedure)), not a metric to optimize directly. Optimizing 👍 rate rewards flattery.
 
 Attach feedback to the trace, and to the span it is about where you can, so a 👎 lands next to the retrieval or tool call that caused it (LangSmith supports this; *Learning LangChain*, ch. 10).
 

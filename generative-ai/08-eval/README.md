@@ -32,7 +32,7 @@ Four questions, in order. Each one depends on the answer before:
 |---|---|---|
 | **What does correct mean?** | Graders measure noise; two experts disagree | [02](notes/02-defining-correct.md) |
 | **Which tasks represent real use?** | Precise answers to the wrong question | [03](notes/03-eval-datasets.md) |
-| **Can the grader be trusted?** | Confidently wrong scores | [04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [14](notes/14-calibrating-judges-with-checks-and-critiques.md) |
+| **Can the grader be trusted?** | Confidently wrong scores | [04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [15](notes/15-calibration-against-human-labels.md), [14](notes/14-calibrating-judges-with-checks-and-critiques.md) |
 | **Is the difference real?** | Shipping noise | [09](notes/09-reading-results.md) |
 
 ---
@@ -52,7 +52,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - Include **negative and boundary cases**, or "does it more often" looks like an improvement.
 - A gate scores only rows that are **eligible** for it. Version the dataset; keep a held-out split.
 
-**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md))
+**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [15](notes/15-calibration-against-human-labels.md))
 - **Code first.** A judge only where code can't check it.
 - **One judge, one criterion, binary verdict**, critique before verdict, a `CANNOT_GRADE` escape.
 - **An uncalibrated judge never gates a release.** Calibrate against 100–200 human labels; report TPR and TNR.
@@ -148,7 +148,11 @@ Note 14 has its own script, [practice/judge_checks_and_critiques.py](practice/ju
 **Grading**
 
 4. [Graders](notes/04-graders.md) — code, model and human graders; layering; the grader interface; grader states; combining scores; binary vs. scales.
-5. [LLM-as-judge and calibration](notes/05-llm-as-judge.md) — judge shapes, prompt structure, decomposition, known biases, calibration against human labels (TPR, TNR, κ), correcting the pass rate, keeping it calibrated.
+5. [LLM as judge](notes/05-llm-as-judge.md) — judge shapes, prompt structure, decomposition, known biases, pairwise ranking with Elo and Bradley–Terry, judge cost.
+
+Read straight after 05:
+
+15. [Calibrating a judge against human labels](notes/15-calibration-against-human-labels.md) — the procedure, TPR, TNR and κ, correcting the pass rate, keeping it calibrated, multi-family judging.
 
 **Applying it**
 
@@ -179,7 +183,7 @@ Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-
 
 ### Copy-ready snippets
 
-Trimmed templates live inline in the chapter that teaches them: the failure-taxonomy skeleton in [02](notes/02-defining-correct.md#the-failure-taxonomy), the row schema and its enums in [03](notes/03-eval-datasets.md), the judge prompt and calibration record in [05](notes/05-llm-as-judge.md#writing-the-judge-prompt), and the gate contract and CI workflow in [10](notes/10-evals-in-ci.md).
+Trimmed templates live inline in the chapter that teaches them: the failure-taxonomy skeleton in [02](notes/02-defining-correct.md#the-failure-taxonomy), the row schema and its enums in [03](notes/03-eval-datasets.md), the judge prompt in [05](notes/05-llm-as-judge.md#writing-the-judge-prompt), the calibration record in [15](notes/15-calibration-against-human-labels.md#the-procedure), and the gate contract and CI workflow in [10](notes/10-evals-in-ci.md).
 
 ### Related
 - [support-agent-observability.md](../06-observability/notes/05-support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.

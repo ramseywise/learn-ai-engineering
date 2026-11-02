@@ -16,7 +16,7 @@ cleaned: 2026-11-02
 ---
 # 14 — Calibrating Judges with Checks and Critiques
 
-> [Note 05](05-llm-as-judge.md#the-procedure) gives the calibration procedure: label, split, iterate on dev, score test once. This note assumes it and doesn't repeat it. It adds three sources of evidence to the step where you read disagreements, and a test of how far to trust one of them.
+> [Note 15](15-calibration-against-human-labels.md#the-procedure) gives the calibration procedure: label, split, iterate on dev, score test once. This note assumes it and doesn't repeat it. It adds three sources of evidence to the step where you read disagreements, and a test of how far to trust one of them.
 
 Note 05's calibration tells you how often a judge is wrong. It says little about why, or what to change. Three things you already have can help: the code checks that ran on the same rows, the judge's errors split by flags in the data, and the critique the judge wrote (its short written reason for the verdict). Each is useful and each can mislead. A code check can only test what code can see. A slice can be a coincidence or another slice in disguise. A critique can be an account written after the fact, one that leaves out what actually moved the verdict. So this note treats all three as evidence for finding what to fix, and human labels stay the only thing that settles which judge is right.
 
@@ -112,7 +112,7 @@ both FAIL, but the label says PASS (strict judge)
   t00689 planted=wrong_route: This refund is above what I can approve, so I have passed it to a colleague.
     cited ['policy'], retrieved ['api-limits', 'add-user']
 
-code pass, lenient judge FAIL, by language: {'da': 151, 'en': 10}
+code pass, lenient judge FAIL, by language: {'nl': 151, 'en': 10}
   label PASS on 161 of 161
   English rows: {'This refund is above what I can approve, so I have passed it to a colleague.': 10}
 ```
@@ -121,7 +121,7 @@ The three false passes say 30 days where the cited document says 14. The strict 
 
 Row `t00689` is different. Check and judge both fail it, while the label says PASS. It's an answer citing a policy page that was never retrieved, on a trace whose planted fault was wrong routing, so the generator didn't count it as a grounding failure. A human reviewer might well side with the judge, as [GA 06/03](../../06-observability/notes/03-judge-pipelines-over-trace-exports.md) says of the same answer. Agreement between check and judge doesn't settle that. A person does, and the answer may change the label instead of the judge.
 
-The lenient judge's 161 disagreements with code are all labelled PASS, and 151 of them are Danish. Part 2 comes back to that.
+The lenient judge's 161 disagreements with code are all labelled PASS, and 151 of them are Dutch. Part 2 comes back to that.
 
 ### Four limits on this cross
 
@@ -152,7 +152,7 @@ Limit (c): random sample against disagreement queue (lenient judge, all 1,400 ro
 
 The queue shows TPR 0 and TNR 0 for a judge whose real values are 0.694 and 0.929, because where the code is right, as here, every queued row is a judge error. It's still the best place to find the fix.
 
-The random sample is honest but imprecise. In 72 of 2,000 draws of 105 rows, there's no failed row at all. The corrected pass rate ([05](05-llm-as-judge.md#correcting-the-pass-rate)) ranges from 0.81 to 1.15 around a true 0.970, and the correction has no ceiling, so report it with an interval.
+The random sample is honest but imprecise. In 72 of 2,000 draws of 105 rows, there's no failed row at all. The corrected pass rate ([15](15-calibration-against-human-labels.md#correcting-the-pass-rate)) ranges from 0.81 to 1.15 around a true 0.970, and the correction has no ceiling, so report it with an interval.
 
 There is one proper middle course. Label every row code failed plus a random sample of the rest, and weight by the known odds of selection. That's still a probability sample, so it can give rates. The stratified line does this. Its TNR is exactly 0.93 in every draw, only because code catches every planted failure here, and it helps less with the corrected rate, where TPR is the noisy term. Weighting needs each row's chance of inclusion, so it can't rescue a queue assembled by hand. [EvalGen's appendix](../sources/shankar-2024-who-validates-the-validators.pdf) got higher alignment from non-random than from random sampling of grades when *choosing* assertions. That's a different job from estimating a rate: targeted rows for choosing, probability samples for measuring.
 
@@ -176,8 +176,8 @@ So say how many tests you ran and correct for them. The script runs a Fisher exa
 === Part 2: lenient judge by slice, on dev ===
 19 slice-against-rest tests; p is Holm-adjusted across all of them
 flag             level              TPR     95% CI       p    TNR     95% CI       p
-language         da              10/161  0.03-0.11   <.001    6/6  0.61-1.00   1.000
 language         en             367/378  0.95-0.98   <.001  12/15  0.55-0.93   1.000
+language         nl              10/161  0.03-0.11   <.001    6/6  0.61-1.00   1.000
 route            account        104/150  0.62-0.76   1.000    0/0          -       -
 route            billing        130/174  0.68-0.81   1.000  10/13  0.50-0.92   1.000
 route            refund           39/78  0.39-0.61   0.001    4/4  0.51-1.00   1.000
@@ -201,14 +201,14 @@ are the length and route slices the language slice again? TPR, English rows only
 
 Four things to read here.
 
-- **The language slice is real for these rules.** TPR is 10/161 on Danish against 367/378 on English. This is GA 06/03's finding again: 389 of the lenient judge's 415 false alarms overall are Danish, because the overlap rule compares Danish answers with documents in another language.
+- **The language slice is real for these rules.** TPR is 10/161 on Dutch against 367/378 on English. This is GA 06/03's finding again: 389 of the lenient judge's 415 false alarms overall are Dutch, because the overlap rule compares Dutch answers with documents in another language.
 - **Two other slices are partly language in disguise.** Short answers and the 12 to 13 word bucket look significant, but among English rows the two buckets are 55/55 and 252/252. What's left in English is the 14-plus word bucket (60/71) and the refund route (38/48), and those are the refund escalation line. You find this by cutting one flag within another, as with confounding in any observational table.
 - **TNR gets no verdict.** No TNR slice is significant, and the intervals are too wide to show otherwise: 12/15 and 6/6 can't be told apart. "No significant difference" here means the sample can't say. The account route has no labelled failures on dev, so its TNR doesn't exist.
 - **One flag does nothing.** Every answer in this data has a citation, so that slice has one level and no test. On real data, keep the flag and report that it's empty.
 
 ## Part 3: code the critiques
 
-This extends [step 4 of note 05's procedure](05-llm-as-judge.md#the-procedure). Read critiques on every disagreement, and on a sample of agreements too, because a right verdict can rest on a wrong reason. Code them the way [note 02 codes outputs](02-defining-correct.md#find-failure-modes-by-reading-error-analysis): open coding first, then group the tags into categories. People's standards shift as they read, as [EvalGen's study of criteria drift](../sources/shankar-2024-who-validates-the-validators.pdf) found, so expect the tags to move.
+This extends [step 4 of note 15's procedure](15-calibration-against-human-labels.md#the-procedure). Read critiques on every disagreement, and on a sample of agreements too, because a right verdict can rest on a wrong reason. Code them the way [note 02 codes outputs](02-defining-correct.md#find-failure-modes-by-reading-error-analysis): open coding first, then group the tags into categories. People's standards shift as they read, as [EvalGen's study of criteria drift](../sources/shankar-2024-who-validates-the-validators.pdf) found, so expect the tags to move.
 
 The table is a starting set of tags and proposed fixes. **The fixes are hypotheses to test, not findings.** The last column gives what the sources read for this note support, and it's thin. Change one thing, then see whether it wins on dev.
 
@@ -221,7 +221,7 @@ The table is a starting set of tags and proposed fixes. **The fixes are hypothes
 | Right verdict, wrong reason | Add a few-shot example from train showing the right reason | None found |
 | Mentions something that shouldn't count (source, length, style) | Name it as out of scope, then rerun the cue test | Weak. [Turpin et al.](../../../ai-engineering/01-prompt-engineering/sources/turpin-2023-language-models-don-t-always.pdf) found that warning about a named bias helped, but may not generalise to biases you didn't name. Answering models, not judges |
 
-Then count the tags, fix the largest class, and log the tag counts next to TPR and TNR in the [calibration record](05-llm-as-judge.md#the-procedure). The rule from [DS 01/12](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#learning-from-errors-without-fitting-to-them) applies: fix a class of error and never the rows you read, keep test untouched, and each change must win on dev.
+Then count the tags, fix the largest class, and log the tag counts next to TPR and TNR in the [calibration record](15-calibration-against-human-labels.md#the-procedure). The rule from [DS 01/12](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#learning-from-errors-without-fitting-to-them) applies: fix a class of error and never the rows you read, keep test untouched, and each change must win on dev.
 
 In the script a rule assigns the tags, where a person would read, and the evidence list plays the part of the critique.
 
@@ -366,4 +366,4 @@ And the limits on those rules:
 
 ## Next
 
-[../README.md](../README.md): back to the pillar's chapter map. For the procedure this note builds on, see [05](05-llm-as-judge.md#calibrate-against-human-labels).
+[../README.md](../README.md): back to the pillar's chapter map. For the procedure this note builds on, see [15](15-calibration-against-human-labels.md#calibrate-against-human-labels).

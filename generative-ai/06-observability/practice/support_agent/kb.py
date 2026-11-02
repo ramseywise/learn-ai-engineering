@@ -1,8 +1,8 @@
 """The help centre of Acme Books, a fictional invoicing product.
 
 Each document carries a `fact`: the number or rule an answer must not change.
-Answers come in English and Danish; the documents are English only, which is what
-makes word-overlap grounding checks misfire on Danish answers (chapters 3 and 5).
+Answers come in English and Dutch; the documents are English only, which is what
+makes word-overlap grounding checks misfire on Dutch answers (chapters 3 and 5).
 """
 
 BASE = "https://help.acmebooks.example"
@@ -12,7 +12,7 @@ DOCS = [
     {"url": f"{BASE}/billing/credit-notes", "route": "billing", "fact": "30 days",
      "text": "Issue a credit note from the Invoices page within 30 days of the invoice date."},
     {"url": f"{BASE}/billing/vat-rates", "route": "billing", "fact": "25 percent",
-     "text": "Danish invoices apply VAT at 25 percent unless the customer is VAT exempt."},
+     "text": "Standard invoices apply VAT at 25 percent unless the customer is VAT exempt."},
     {"url": f"{BASE}/billing/payment-terms", "route": "billing", "fact": "14 days",
      "text": "The default payment term is 14 days and can be changed under Invoice settings."},
     # account
@@ -46,30 +46,30 @@ DISTORTED = {
 }
 
 QUESTIONS = {
-    f"{BASE}/billing/credit-notes": ("How long do I have to issue a credit note?", "Hvor lang tid har jeg til at lave en kreditnota?"),
-    f"{BASE}/billing/vat-rates": ("What VAT rate goes on a Danish invoice?", "Hvilken moms skal der på en dansk faktura?"),
-    f"{BASE}/billing/payment-terms": ("What is the default payment term?", "Hvad er standard betalingsfristen?"),
-    f"{BASE}/account/add-user": ("How many users are on the Standard plan?", "Hvor mange brugere er der på Standard planen?"),
-    f"{BASE}/account/reset-password": ("How long is my reset link valid?", "Hvor længe er mit nulstillingslink gyldigt?"),
-    f"{BASE}/account/close-account": ("What happens to my data if I close my account?", "Hvad sker der med mine data hvis jeg lukker min konto?"),
-    f"{BASE}/technical/bank-sync": ("How often do bank transactions sync?", "Hvor ofte synkroniseres banktransaktioner?"),
-    f"{BASE}/technical/csv-import": ("How large a CSV can I import?", "Hvor stor en CSV fil kan jeg importere?"),
-    f"{BASE}/technical/api-limits": ("What is the API rate limit?", "Hvad er grænsen for API kald?"),
-    f"{BASE}/refund/policy": ("Can you refund my payment of {amount} EUR?", "Kan I refundere min betaling på {amount} EUR?"),
-    f"{BASE}/refund/window": ("How long after paying can I get a refund?", "Hvor længe efter betaling kan jeg få pengene tilbage?"),
+    f"{BASE}/billing/credit-notes": ("How long do I have to issue a credit note?", "Hoe lang heb ik om een creditnota te maken?"),
+    f"{BASE}/billing/vat-rates": ("What VAT rate goes on a standard invoice?", "Welk btw-tarief staat er op een standaardfactuur?"),
+    f"{BASE}/billing/payment-terms": ("What is the default payment term?", "Wat is de standaard betalingstermijn?"),
+    f"{BASE}/account/add-user": ("How many users are on the Standard plan?", "Hoeveel gebruikers zitten er op het Standard-abonnement?"),
+    f"{BASE}/account/reset-password": ("How long is my reset link valid?", "Hoe lang is mijn resetlink geldig?"),
+    f"{BASE}/account/close-account": ("What happens to my data if I close my account?", "Wat gebeurt er met mijn gegevens als ik mijn account sluit?"),
+    f"{BASE}/technical/bank-sync": ("How often do bank transactions sync?", "Hoe vaak worden banktransacties gesynchroniseerd?"),
+    f"{BASE}/technical/csv-import": ("How large a CSV can I import?", "Hoe groot kan een CSV-bestand zijn dat ik importeer?"),
+    f"{BASE}/technical/api-limits": ("What is the API rate limit?", "Wat is de limiet voor API-aanroepen?"),
+    f"{BASE}/refund/policy": ("Can you refund my payment of {amount} EUR?", "Kunnen jullie mijn betaling van {amount} EUR terugbetalen?"),
+    f"{BASE}/refund/window": ("How long after paying can I get a refund?", "Hoe lang na betaling kan ik mijn geld terugkrijgen?"),
 }
 
 # Answer templates. {fact} is filled with the true or the distorted value.
 ANSWERS = {
-    f"{BASE}/billing/credit-notes": ("You can issue a credit note from the Invoices page within {fact} of the invoice date.", "Du kan lave en kreditnota under Fakturaer inden for {fact} efter fakturadatoen."),
-    f"{BASE}/billing/vat-rates": ("Danish invoices carry VAT at {fact} unless the customer is VAT exempt.", "Danske fakturaer har moms på {fact}, medmindre kunden er momsfritaget."),
-    f"{BASE}/billing/payment-terms": ("The default payment term is {fact}. Change it under Invoice settings.", "Standard betalingsfristen er {fact}. Du ændrer den under fakturaindstillinger."),
-    f"{BASE}/account/add-user": ("The Standard plan includes {fact}. Add users under Settings, then Team.", "Standard planen har {fact}. Du tilføjer brugere under Indstillinger og Team."),
-    f"{BASE}/account/reset-password": ("A reset link stays valid for {fact} after it is sent.", "Et nulstillingslink er gyldigt i {fact}, efter det er sendt."),
-    f"{BASE}/account/close-account": ("A closed account keeps its data for {fact} before permanent deletion.", "En lukket konto beholder sine data i {fact} før endelig sletning."),
-    f"{BASE}/technical/bank-sync": ("Bank transactions sync every {fact}. Reconnect the bank if a sync fails.", "Banktransaktioner synkroniseres hver {fact}. Forbind banken igen hvis det fejler."),
-    f"{BASE}/technical/csv-import": ("CSV imports accept files up to {fact} with one header row.", "CSV import tager filer op til {fact} med en overskriftsrække."),
-    f"{BASE}/technical/api-limits": ("The API allows {fact} per minute for each access token.", "API'et tillader {fact} i minuttet for hver adgangsnøgle."),
-    f"{BASE}/refund/policy": ("I can approve refunds up to {fact}. Larger refunds go to a human agent.", "Jeg kan godkende refusioner op til {fact}. Større refusioner går til en medarbejder."),
-    f"{BASE}/refund/window": ("Subscription payments can be refunded within {fact} of payment.", "Abonnementsbetalinger kan refunderes inden for {fact} efter betaling."),
+    f"{BASE}/billing/credit-notes": ("You can issue a credit note from the Invoices page within {fact} of the invoice date.", "Je kunt een creditnota maken onder Facturen binnen {fact} na de factuurdatum."),
+    f"{BASE}/billing/vat-rates": ("Standard invoices carry VAT at {fact} unless the customer is VAT exempt.", "Standaardfacturen hebben {fact} btw, tenzij de klant ervan is vrijgesteld."),
+    f"{BASE}/billing/payment-terms": ("The default payment term is {fact}. Change it under Invoice settings.", "De standaard betalingstermijn is {fact}. Wijzig die onder Factuurinstellingen."),
+    f"{BASE}/account/add-user": ("The Standard plan includes {fact}. Add users under Settings, then Team.", "Het Standard-abonnement heeft {fact}. Voeg gebruikers toe onder Instellingen en Team."),
+    f"{BASE}/account/reset-password": ("A reset link stays valid for {fact} after it is sent.", "Een resetlink blijft nog {fact} geldig nadat hij is verstuurd."),
+    f"{BASE}/account/close-account": ("A closed account keeps its data for {fact} before permanent deletion.", "Een gesloten account bewaart zijn gegevens nog {fact} voor definitieve verwijdering."),
+    f"{BASE}/technical/bank-sync": ("Bank transactions sync every {fact}. Reconnect the bank if a sync fails.", "Banktransacties worden elke {fact} gesynchroniseerd. Koppel opnieuw als het mislukt."),
+    f"{BASE}/technical/csv-import": ("CSV imports accept files up to {fact} with one header row.", "CSV-imports accepteren bestanden tot maximaal {fact} met precies een koprij."),
+    f"{BASE}/technical/api-limits": ("The API allows {fact} per minute for each access token.", "API-limiet: maximaal {fact} per minuut, per afzonderlijk toegangstoken."),
+    f"{BASE}/refund/policy": ("I can approve refunds up to {fact}. Larger refunds go to a human agent.", "Ik kan terugbetalingen tot {fact} goedkeuren. Grotere terugbetalingen gaan door naar een medewerker."),
+    f"{BASE}/refund/window": ("Subscription payments can be refunded within {fact} of payment.", "Abonnementsbetalingen kunnen binnen {fact} na betaling worden terugbetaald."),
 }

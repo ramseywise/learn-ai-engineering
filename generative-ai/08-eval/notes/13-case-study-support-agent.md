@@ -4,7 +4,7 @@ cleaned: 2026-11-01
 
 # 13 · Case Study: Evaluating a Multi-Agent Support System
 
-> One team applied notes 01–12 to a real system and recorded what they did, mistakes included. The system is a RAG-grounded, multi-agent customer-support assistant. It has a root agent that routes to domain sub-agents (invoices, customers, products, quotes) and a help-centre agent that answers from retrieved articles. Three implementations ran side by side: an ADK agent, a LangGraph agent and a plain RAG baseline. They shared one schema and one eval set. Project-specific paths have been stripped. The design decisions and the numbers are as the team recorded them.
+> One team applied notes 01–12 to a real system and recorded what they did, mistakes included. The system is a RAG-grounded, multi-agent customer-support assistant. It has a root agent that routes to domain sub-agents (invoices, customers, products, quotes) and a help-centre agent that answers from retrieved articles. Three implementations ran side by side: an ADK agent, a LangGraph agent and a plain RAG baseline. They shared one schema and one eval set. The system's identity and its project-specific paths have been removed, and the raw data is not in this repo. The design decisions and the numbers are as the team recorded them.
 
 The notes teach the method. This note shows where the method bends when it meets a real backlog, a small calibration sample and a grader that was being fed the wrong input.
 
@@ -136,7 +136,7 @@ Thirteen stable labels, grouped by the gate that owns the fix ([02](02-defining-
 |---|---|---|---|
 | Heuristic integrity | `citation_hallucination` | 0.95 | Cited URLs must come from the retrieved set |
 | | `missing_citation` | 0.90 | Substantive answers must cite |
-| | `language_consistency` | 0.95 | A Danish query must not get an English answer |
+| | `language_consistency` | 0.95 | A query in one language must not get an answer in another |
 | | `boundary_adherence` | 0.80 | Decline/escalate boundary |
 | | `f1_correctness` | 0.70 | Token-level heuristic |
 | | `citation_recall` | 0.50 | Cited sources match expected URLs |
@@ -146,7 +146,7 @@ Thirteen stable labels, grouped by the gate that owns the fix ([02](02-defining-
 | | `ragas_faithfulness`, `ragas_context_precision` | 0.50 | Passage text required |
 | Experimental | `epa`, `conciseness`, `intent`, `agent_behavior` | 0.65–0.80 | Tracking only until calibrated |
 
-The policy line: **a threshold change without liked/disliked separation evidence is commentary, not release policy.** Changing a grader prompt or threshold triggers a calibration run before the metric can gate again ([05](05-llm-as-judge.md#calibrate-against-human-labels)).
+The policy line: **a threshold change without liked/disliked separation evidence is commentary, not release policy.** Changing a grader prompt or threshold triggers a calibration run before the metric can gate again ([15](15-calibration-against-human-labels.md#calibrate-against-human-labels)).
 
 ---
 

@@ -64,6 +64,7 @@ Harbour is a support agent for an online shop. It reads help articles, looks up 
 | 4 | [Tool and execution sandboxing](notes/04-tool-and-execution-sandboxing.md) | How do you enforce limits that don't depend on the model behaving? |
 | 5 | [Red-teaming tools](notes/05-red-teaming-tools.md) | How do you find failures, and how much does a clean run prove? |
 | 6 | [Incident response](notes/06-incident-response.md) | What do you do when one gets through? |
+| 7 | [Compliance and regulation](notes/07-compliance-and-regulation.md) | Who is legally on the hook, what must they be able to show, and by when? |
 
 Read in order. Each chapter assumes the Harbour system and the paths from chapter 1. If you need only the practical minimum, read chapters 1 and 4.
 

@@ -8,7 +8,8 @@ You are normalising one pillar so it looks and works like the others. Read
 "Definition of done" section. The best worked examples are
 `ai-engineering/02-context-engineering/` and `ai-engineering/05-graph-engineering/`.
 
-Check each note with `make chapter-check PILLAR=<pillar>` and list what falls short of the chapter standard.
+Check each note with `make chapter-check PILLAR=<pillar>` and list what falls short of the chapter standard. Run
+`python3 scripts/curriculum_map.py issues --pillar <pillar>` for what falls short in how the notes connect, and fix it through `/curriculum fix <pillar>`.
 
 The pillar's content is the point. Do not rewrite notes that already work. Move, rename,
 add frontmatter, write the missing README and references.md, and fold vendored material

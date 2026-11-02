@@ -108,7 +108,7 @@ def _seed_failure(rng, ts, route, language):
         "retry_loop": 0.02,
         "wrong_route": 0.03,
         "missed_escalation": (0.12 if v2 else 0.03) if route == "refund" else 0.0,
-        "language_mismatch": 0.05 if language == "da" else 0.0,
+        "language_mismatch": 0.05 if language == "nl" else 0.0,
         "slow_tool": 0.08 if route == "billing" and ts >= VENDOR_STALL else 0.0,
     }
     u = rng.random()
@@ -153,7 +153,7 @@ def _answer_generation(b, rng, cache_broken, context_tokens, output_tokens):
 def make_turn(rng, trace_no, ts):
     release, commit, prompt_version = _release(ts)
     true_route = rng.choices(list(ROUTES), weights=list(ROUTES.values()))[0]
-    language = "da" if rng.random() < 0.30 else "en"
+    language = "nl" if rng.random() < 0.30 else "en"
     failure = _seed_failure(rng, ts, true_route, language)
     route = true_route
     if failure == "wrong_route":
@@ -162,7 +162,7 @@ def make_turn(rng, trace_no, ts):
     doc = rng.choice(BY_ROUTE[true_route])
     if failure == "missed_escalation":  # only a refund above the limit can be wrongly kept
         doc = next(d for d in BY_ROUTE["refund"] if d["url"].endswith("/policy"))
-    lang_i = 1 if language == "da" else 0
+    lang_i = 1 if language == "nl" else 0
     amount = None
     question = QUESTIONS[doc["url"]][lang_i]
     if "{amount}" in question:
@@ -228,12 +228,12 @@ def make_turn(rng, trace_no, ts):
     escalated = needs_human and failure != "missed_escalation"
     if escalated:
         answer = ("This refund is above what I can approve, so I have passed it to a colleague."
-                  if answer_i == 0 else "Denne refusion er større end jeg kan godkende, så jeg har sendt den til en kollega.")
+                  if answer_i == 0 else "Deze terugbetaling is hoger dan ik kan goedkeuren, dus ik heb hem nu doorgegeven aan een collega.")
         citations = [f"{BASE}/refund/policy"]
         b.add("create_ticket", "tool", _lognormal(rng, 210, 0.3), tool_args={"queue": "refunds", "amount_eur": amount},
               tool_result={"ticket": f"T-{rng.randint(10000, 99999)}"})
     elif failure == "missed_escalation":
-        answer = ("I have approved your refund." if answer_i == 0 else "Jeg har godkendt din refusion.") + " " + answer
+        answer = ("I have approved your refund." if answer_i == 0 else "Ik heb je terugbetaling goedgekeurd.") + " " + answer
 
     _answer_generation(b, rng, cache_broken, rng.randint(380, 1100), rng.randint(110, 420))
     b.add("grounding_check", "guardrail", _lognormal(rng, 12, 0.3))

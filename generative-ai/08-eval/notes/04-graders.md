@@ -46,7 +46,7 @@ An LLM judge costing thousands of calls a night reports that an answer "seems we
 | Grader | How it scores | Strength | Weakness | Use when |
 |---|---|---|---|---|
 | **Code** | String/regex match, schema check, unit tests, state check, numeric tolerance | Deterministic, fast, free, hard to argue with | Only checks what you can express exactly | There's a clear right answer or a checkable property |
-| **Model** (LLM-as-judge) | A model scores against a rubric, compares two outputs, or votes | Handles meaning, tone, completeness | Biased, costly, needs calibration ([05](05-llm-as-judge.md)) | The quality is semantic and no code can check it |
+| **Model** (LLM-as-judge) | A model scores against a rubric, compares two outputs, or votes | Handles meaning, tone, completeness | Biased, costly, needs calibration ([15](15-calibration-against-human-labels.md)) | The quality is semantic and no code can check it |
 | **Human** | Expert review, annotation | The ground truth for subjective quality | Slow, expensive, inconsistent at scale | Building the reference, calibrating judges, ambiguous cases |
 
 A fourth kind sits between code and model: the **separated evaluator agent**, which *operates* the output (runs the app, clicks through it, runs the code) instead of reading it ([03/05](../../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md#separating-generation-from-evaluation)). It's a model, but its verdict rests on observed behavior.
@@ -173,7 +173,7 @@ Not every grader is trustworthy enough to gate on. Give each one an explicit sta
 | State | Meaning | Can gate releases? |
 |---|---|---|
 | **Heuristic** | Deterministic code check | Yes |
-| **Calibrated** | LLM judge with evidence it agrees with humans ([05](05-llm-as-judge.md)) | Yes, at the calibrated threshold |
+| **Calibrated** | LLM judge with evidence it agrees with humans ([15](15-calibration-against-human-labels.md)) | Yes, at the calibrated threshold |
 | **Experimental** | New or uncalibrated judge | **No.** Tracking and investigation only |
 
 A threshold change without fresh calibration evidence moves the grader back to experimental. Release decisions must name which state each cited metric is in.

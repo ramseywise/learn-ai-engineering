@@ -11,7 +11,7 @@ Observability for LLM applications means you can see what happened inside a run:
 
 > **Observability is the infrastructure; eval is the discipline.** The questions you can answer about an agent next month are fixed by what you log today.
 
-One failed fortnight runs through all six chapters. Acme Books, a fictional invoicing product, runs a support agent in Danish and English, and we follow 1,400 synthetic turns from 5 to 18 October 2026. On 11 October a vendor behind `get_invoice` starts to stall. On 14 October release v2.0 puts a timestamp in the system prompt, which breaks the prompt cache, and changes the retriever, which raises wrong answers on billing and refunds. On 17 October v2.1 removes the timestamp, the spend recovers, and the answers stay wrong. Each chapter asks what one tool could see of that fortnight and what it could not.
+One failed fortnight runs through all six chapters. Acme Books, a fictional invoicing product, runs a support agent in Dutch and English, and we follow 1,400 synthetic turns from 5 to 18 October 2026. On 11 October a vendor behind `get_invoice` starts to stall. On 14 October release v2.0 puts a timestamp in the system prompt, which breaks the prompt cache, and changes the retriever, which raises wrong answers on billing and refunds. On 17 October v2.1 removes the timestamp, the spend recovers, and the answers stay wrong. Each chapter asks what one tool could see of that fortnight and what it could not.
 
 The pillar follows one data model, trace → span → score and dataset → run, through six uses:
 
@@ -108,7 +108,7 @@ Everything else: [references.md](references.md).
 ## Resource map
 
 ### Related notes elsewhere
-- Eval theory: [generative-ai/08-eval](../08-eval/README.md), especially [05 LLM-as-judge](../08-eval/notes/05-llm-as-judge.md), [07 evaluating RAG and grounding](../08-eval/notes/07-evaluating-rag-and-grounding.md), [08 tracing and observability](../08-eval/notes/08-tracing-and-observability.md) and [13 case study: support agent](../08-eval/notes/13-case-study-support-agent.md).
+- Eval theory: [generative-ai/08-eval](../08-eval/README.md), especially [05 LLM as judge](../08-eval/notes/05-llm-as-judge.md), [15 calibrating a judge](../08-eval/notes/15-calibration-against-human-labels.md), [07 evaluating RAG and grounding](../08-eval/notes/07-evaluating-rag-and-grounding.md), [08 tracing and observability](../08-eval/notes/08-tracing-and-observability.md) and [13 case study: support agent](../08-eval/notes/13-case-study-support-agent.md).
 - LangSmith, the alternative platform: [04-agentic-frameworks 05](../04-agentic-frameworks/notes/05-langsmith.md).
 - MCP as a protocol: [ai-engineering/02-context-engineering 09](../../ai-engineering/02-context-engineering/notes/09-protocols.md).
 

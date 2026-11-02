@@ -213,14 +213,14 @@ Every retrieval, ranking, judge and guardrail metric in the later subjects is th
 
 | | Credit model | Retrieval and RAG | LLM judge | Guardrail |
 |---|---|---|---|---|
-| Positive class | Will default | Chunk is relevant | Output passes ([GA 08/05](../../../generative-ai/08-eval/notes/05-llm-as-judge.md)'s convention) | Input is an attack |
+| Positive class | Will default | Chunk is relevant | Output passes ([GA 08/15](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md)'s convention) | Input is an attack |
 | Predicted positive | Declined | Retrieved in top k | Judge passes it | Guard blocks it |
 | False positive | Good customer declined | Irrelevant chunk spends context budget | Judge passes a bad output | Benign message blocked |
 | False negative | Defaulter approved | Relevant chunk missed, so the answer can't be grounded | Judge fails a good output | Attack gets through |
 | True negative | Good customer approved | Rest of the corpus, so huge accuracy means nothing | Judge fails a bad output | Benign message allowed |
 | Threshold | Score cut-off | k | Judge prompt and any score cut-off | Guard threshold |
 
-Each later note has its own version. [GA 08/07](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics) sets out hit rate, recall and precision at k, [GA 02/03](../../../generative-ai/02-rag-retrieval/notes/03-keyword-semantic-and-hybrid-search.md) compares retrievers, [AIE 02/12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md#metrics-by-lever) reads low precision as budget spent on distractors, [GA 08/05](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) treats the judge as a classifier, and [AIE 09/03](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) tunes a guard. The questions carry over too: state the positive class before naming the errors, since the judge row flips it, set the threshold from what the errors cost, and be suspicious of any number that true negatives can inflate. The [next chapter](12-reading-the-errors.md) takes the same table and reads what falls into its cells.
+Each later note has its own version. [GA 08/07](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics) sets out hit rate, recall and precision at k, [GA 02/03](../../../generative-ai/02-rag-retrieval/notes/03-keyword-semantic-and-hybrid-search.md) compares retrievers, [AIE 02/12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md#metrics-by-lever) reads low precision as budget spent on distractors, [GA 08/15](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md) treats the judge as a classifier, and [AIE 09/03](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) tunes a guard. The questions carry over too: state the positive class before naming the errors, since the judge row flips it, set the threshold from what the errors cost, and be suspicious of any number that true negatives can inflate. The [next chapter](12-reading-the-errors.md) takes the same table and reads what falls into its cells.
 
 ## Pitfalls
 

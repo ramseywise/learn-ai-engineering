@@ -426,4 +426,6 @@ Dmitriev et al.'s [Dirty Dozen](https://doi.org/10.1145/3097983.3098024) is the 
 
 ## Next
 
+For building a metric tree and defining each metric precisely outside an experiment, see [Metric trees and defining metrics](../../06-applied-analyses/notes/11-metric-trees.md).
+
 [Chapter 3: Experimentation at Scale](03-experimentation-at-scale.md) moves from one test to a platform: variance reduction with CUPED, safe ways to look early, what to do when an SRM fires, and overlapping tests.

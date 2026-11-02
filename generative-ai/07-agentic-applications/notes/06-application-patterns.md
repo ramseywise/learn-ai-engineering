@@ -318,4 +318,4 @@ The chapter cites two papers, not yet read for this course: Wu et al., *Grounded
 
 ## Next
 
-That closes the pillar: from a bounded search agent to where an agent sits in someone's work. Go back to [01, the internet search agent](01-internet-search-agent.md) with these questions in mind, or go on to the engineering layer in [ai-engineering](../../../ai-engineering/README.md), which covers the loops, harnesses and graphs behind these applications.
+You now know where an agent can sit in someone's work. The remaining question comes first in any real project: is it worth building, and what would that cost? Go on to [scoping an AI product](07-scoping-an-ai-product.md).

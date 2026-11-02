@@ -13,6 +13,11 @@ Nothing leaves the repo. A reading with no home stays in the ledger as `parked` 
 knowing: interest 2–3) or `skipped` (not for this course). If `status --list parked` shows a
 body of sources with no home, propose a new pillar (see the
 structure decisions in `.claude/skills/pillar/references/pillar-layout.md`). Do not create one without the user.
+`/curriculum place "<topic>"` gives the evidence for that proposal.
+
+For `discover <home>`, the citation graph and OpenAlex search only find scholarly work. When a note's open question needs
+standards, vendor documentation or current facts, dispatch `web-researcher`, and add the readings it confirms through
+`discover.py curated`.
 
 ---
 

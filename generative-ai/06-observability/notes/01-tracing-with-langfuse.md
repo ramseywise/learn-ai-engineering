@@ -22,7 +22,7 @@ This pillar works one incident from the first trace to the dashboard that should
 
 ## The case study: a fortnight at Acme Books
 
-Acme Books is a fictional invoicing product with Danish and English customers. Its support agent routes each message with a small model, searches a help centre, calls account tools, answers with a larger model, and checks the answer before sending it. Nothing here calls a model. The package in [practice/support_agent/](../practice/support_agent/) is a stub that produces the telemetry such an agent would, with failures planted at known rates and the truth recorded in `seeded_failure`, so that each later chapter can measure how much of the planted damage its checks find.
+Acme Books is a fictional invoicing product with Dutch and English customers. Its support agent routes each message with a small model, searches a help centre, calls account tools, answers with a larger model, and checks the answer before sending it. Nothing here calls a model. The package in [practice/support_agent/](../practice/support_agent/) is a stub that produces the telemetry such an agent would, with failures planted at known rates and the truth recorded in `seeded_failure`, so that each later chapter can measure how much of the planted damage its checks find.
 
 Every code block in these chapters reads the same fortnight of 1,400 turns, from 5 to 18 October 2026.
 
@@ -91,7 +91,7 @@ t00081  account/en  v1  outcome=resolved  7.0s  $0.0107
   answer          generation      6646 ms  in=866 read=4200 write=0 out=321
   grounding_check guardrail         12 ms
 
-t00994  account/da  v2.0  outcome=resolved  7.4s  $0.0293
+t00994  account/nl  v2.0  outcome=resolved  7.4s  $0.0293
   input_guardrail guardrail         10 ms
   route           generation       338 ms  in=71 read=420 write=0 out=8
   kb_search       retriever        152 ms
@@ -354,18 +354,18 @@ for name, (fires, planted) in checks.items():
     r = precision_recall([fires(t) for t in traces], [t.seeded_failure in planted for t in traces])
     print(f"{name:<25} precision {r['precision']:.2f}  recall {r['recall']:.2f}  (tp {r['tp']}, fp {r['fp']}, fn {r['fn']})")
 
-da = [t for t in traces if t.language == "da" and t.seeded_failure != "language_mismatch"]
-print("false language alarms on healthy Danish turns:", sum(t.scores["language_consistency"] == 0 for t in da), "of", len(da))
+nl = [t for t in traces if t.language == "nl" and t.seeded_failure != "language_mismatch"]
+print("false language alarms on healthy Dutch turns:", sum(t.scores["language_consistency"] == 0 for t in nl), "of", len(nl))
 ```
 
 ```text
 citation_hallucination    precision 0.86  recall 1.00  (tp 18, fp 3, fn 0)
 language_consistency      precision 0.23  recall 0.86  (tp 18, fp 61, fn 3)
 retrieval_quality < 0.5   precision 1.00  recall 1.00  (tp 81, fp 0, fn 0)
-false language alarms on healthy Danish turns: 61 of 402
+false language alarms on healthy Dutch turns: 61 of 402
 ```
 
-Look at the language check. A stopword guess is fine in English and raises many false alarms on Danish, because short Danish sentences share few markers. It would be a mistake to page anyone on this score. It is still useful as a trend, and [chapter 5](05-support-agent-observability.md) turns that into a written policy for which checks may block a release. The citation check has the opposite profile. It rarely lies, but it only catches an invented URL, and a real URL paired with a changed number passes straight through. That gap is why chapter 3 exists. Don't read much into the perfect retrieval line: the stub gives a bad retrieval a low score by construction, and a real retriever's scores overlap far more.
+Look at the language check. A stopword guess is fine in English and raises many false alarms on Dutch, because short Dutch sentences share few markers. It would be a mistake to page anyone on this score. It is still useful as a trend, and [chapter 5](05-support-agent-observability.md) turns that into a written policy for which checks may block a release. The citation check has the opposite profile. It rarely lies, but it only catches an invented URL, and a real URL paired with a changed number passes straight through. That gap is why chapter 3 exists. Don't read much into the perfect retrieval line: the stub gives a bad retrieval a low score by construction, and a real retriever's scores overlap far more.
 
 Writing a score back is one call. The SDK batches it to the scores endpoint.
 

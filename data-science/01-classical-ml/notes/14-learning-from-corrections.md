@@ -272,7 +272,7 @@ Now close the loop. Each month the model retrains on its last four months of dat
 We ran two versions: the fraud type falling on any round-amount invoice, and only on those that otherwise look clean. The second is the harder case for a queue, because the model sends about 80% of them straight to pay.
 
 ```text
-Eight months, 10,000 invoices each, retrained monthly on the last three months. New fraud type from month 3, anywhere. Mean of 8 seeds, judged on fresh true outcomes
+Eight months, 10,000 invoices each, retrained monthly on the last four months. New fraud type from month 3, anywhere. Mean of 8 seeds, judged on fresh true outcomes
                           paid  reviewed  error_paid  new_type_paid   auc  cost_with_audit
 policy             month
 true labels        2     0.591     0.397       0.013          0.589 0.855            3.334
@@ -307,7 +307,7 @@ audit 2% minus audit 5%: +0.005 (sd 0.101, 3/8 seeds)
 ```
 
 ```text
-Eight months, 10,000 invoices each, retrained monthly on the last three months. New fraud type from month 3, only on invoices that look clean. Mean of 8 seeds, judged on fresh true outcomes
+Eight months, 10,000 invoices each, retrained monthly on the last four months. New fraud type from month 3, only on invoices that look clean. Mean of 8 seeds, judged on fresh true outcomes
                           paid  reviewed  error_paid  new_type_paid   auc  cost_with_audit
 policy             month
 true labels        2     0.591     0.397       0.013          0.781 0.855            3.334

@@ -36,8 +36,9 @@ Start with an agent whose cost is bounded because the graph is fixed. Open the l
 | 04 | [A coding agent](notes/04-coding-agent.md) | Reproduce, localize, patch, verify; the agent-computer interface; edits that fail safely; what each sandbox layer stops; held-out tests; supervision | SWE-agent; OpenDev; Shen & Tamkin; [practice/coding-agent](practice/coding-agent/) |
 | 05 | [A data-analysis agent](notes/05-data-analysis-agent.md) | Profiling, read-only access below the level of the text, agreeing the metric, a validator that recomputes, charts, guards | Biswal et al.; Liu et al.; [practice/data-analysis-agent](practice/data-analysis-agent/) |
 | 06 | [Application patterns](notes/06-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); NLU routers; explanations and trust; one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman ch. 9; dialogue and HAI papers |
+| 07 | [Scoping an AI product](notes/07-scoping-an-ai-product.md) | User, problem, metric and constraint; token and cost arithmetic with dated prices; ROI and its assumptions; build or buy; phased rollout cost; adoption as a funnel. All figures computed for a labelled hypothetical | Huyen; Brynjolfsson et al.; Becker et al.; vendor pricing pages |
 
-Note 06 is the synthesis, so read it last, or read it first if you are designing the UI around one of these agents. Papers and upstream repos are in [references.md](references.md).
+Note 06 is the synthesis, so read it after the agents, or first if you are designing the UI around one of them. Note 07 asks whether to build one at all, so read it last, or first if you are scoping a real project. Papers and upstream repos are in [references.md](references.md).
 
 ## Builds on and feeds into
 

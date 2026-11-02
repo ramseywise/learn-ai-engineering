@@ -1,22 +1,24 @@
-# Classical ML lecture deck. Covers notes 01-12.
+# Classical ML lecture deck. Covers notes 01-14.
 # Build: make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: predict who earns over $50k on the adult census, from a dummy at 0.759 accuracy
 # to boosting at AUC 0.93, then the full training loop on it. A credit case at a 3% default rate covers errors and drift.
+# Generated invoices with invented prices carry the review queue and corrections parts (notes 13 and 14).
 # Numbers on the slides are from runs in the notes, or attributed papers.
 deck:
   title: Classical Machine Learning
   subtitle: Fit a model on a table, measure it honestly, explain it
   tagline: |-
-    Will it hold · Is it cheating · No labels · Many trees · Why this answer · Train and tune · What it hides
+    Will it hold · Is it cheating · No labels · Many trees · Why this answer · Train and tune · What it hides · Who decides · What corrections teach
   reference: "Notes: data-science/01-classical-ml"
   output: classical-ml.pptx
   notes: >-
     Today we take one question, will this person earn over 50 thousand dollars, and we follow it from a first
     model to one we can defend to a reviewer. An analyst can describe last year's census. A data scientist has to
     predict people the model never saw, and has to know whether the prediction holds. Each part of this lecture
-    answers one doubt about the number we report. The last two parts put it together: how to train and tune a model
-    you can trust, and what that number hides when the event you care about is rare.
+    answers one doubt about the number we report. The later parts put it together: how to train and tune a model
+    you can trust, what that number hides when the event you care about is rare, which decisions the model may take
+    alone, and what people's corrections can and cannot teach it.
 
 parts:
   - title: Will it hold on new people?
@@ -109,27 +111,11 @@ parts:
         source: notes/03-feature-engineering-and-pipelines.md
         notes: >-
           Trees cannot extrapolate, so a timestamp past the training range gives them nothing to split on. No model finds
-          the commute pattern from the raw number. Someone who rides a bike writes it in one line.
-
-      - layout: table
-        title: Features can beat models on Citi Bike
-        recall: Which feature set let a linear model catch up with the forest?
-        lead: Rentals per 3-hour slot for one station, August 2015. The first 184 slots train and the rest test, in time order.
-        header: [Features, Model, Test R²]
-        widths: [5, 3, 2]
-        rows:
-          - [POSIX timestamp, Forest, "-0.04"]
-          - [Hour, Forest, "0.60"]
-          - [Hour and weekday, Forest, "0.84"]
-          - [Hour and weekday as numbers, Linear, "0.13"]
-          - [One-hot hour and weekday, Ridge, "0.62"]
-          - [One-hot pairs, Ridge, "0.85"]
-        highlight: [5]
-        takeaway: With the right encoding a linear model matches the forest, and each coefficient stays readable.
-        source: notes/03-feature-engineering-and-pipelines.md
-        notes: >-
-          Linear on weekday as a number is poor, because Monday isn't numerically related to Sunday. One-hot encoding fixes
-          that, and pairs of hour and weekday let it express the commute. It then edges the forest on this split.
+          the commute pattern from the raw number. Someone who rides a bike writes it in one line. This is rentals per 3-hour
+          slot for one station, August 2015, the first 184 slots training and the rest testing. Hour alone gets the forest to
+          0.60. A linear model on hour and weekday as numbers gets 0.13, because Monday isn't numerically related to Sunday.
+          One-hot encoding with ridge gets 0.62, and one-hot pairs of hour and weekday get 0.85, which edges the forest on this
+          split while each coefficient stays readable.
 
       - layout: image
         title: On pure noise, a leaky selection step reports R² 0.90
@@ -139,25 +125,11 @@ parts:
         bullets:
           - "**Select, then cross-validate:** selection saw every fold's target."
           - "**Cross-validate the pipeline:** selection is refit inside each fold, and the score is honest."
-        takeaway: Any step with a fit must be refit inside each fold, or the score includes the answer.
+          - "**fit** runs `fit_transform` on each step. **predict** runs only `transform`."
+        takeaway: Any step with a fit goes in a pipeline, refit inside each fold, and the chain ships as one object.
         source: notes/03-feature-engineering-and-pipelines.md
         notes: >-
-          This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With scaling the bias is small, and with selection it is enormous. The note's single run on seed 42 gets 0.89 and -0.03, and the book's own run gets 0.91 and -0.25. Ten datasets give the bars here.
-
-      - layout: image
-        title: A pipeline fits on train and only transforms on test
-        recall: What does Pipeline do during cross-validation that manual preprocessing does not?
-        image: ../../sources/images/mueller-guido-pipeline.png
-        caption: Training and prediction in a pipeline (Müller and Guido, ch. 6)
-        bullets:
-          - "**fit** runs `fit_transform` on each step, then fits the model."
-          - "**predict** runs only `transform`, then the model."
-          - "The fitted chain is also the artefact you deploy."
-        takeaway: A pipeline removes the leakage bug by construction, and it ships as one object.
-        source: notes/03-feature-engineering-and-pipelines.md
-        notes: >-
-          Pipelines exist for this reason. The chain does the right thing in each fold, you can tune preprocessing jointly
-          with the model, and the same object goes to production.
+          This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With scaling the bias is small, and with selection it is enormous. The note's single run on seed 42 gets 0.89 and -0.03, and the book's own run gets 0.91 and -0.25. Ten datasets give the bars here. Pipelines exist for this reason. The chain does the right thing in each fold, you can tune preprocessing jointly with the model, and the same object goes to production.
 
       - layout: code
         title: On adult census the dummy is already 0.759
@@ -175,30 +147,16 @@ parts:
 
           # dummy accuracy 0.759 | model accuracy 0.847
           # AUC 0.901 | AP 0.754 (a random ranker's AP is 0.241)
-        takeaway: Always beat a dummy, and report a ranking metric alongside accuracy on imbalanced data.
+          # threshold 0.50: precision 0.725, recall 0.584
+          # threshold 0.61, tuned on validation: precision 0.783, recall 0.484
+        takeaway: Beat a dummy, report a ranking metric too, and choose the threshold on validation from what each error costs.
         source: notes/04-model-evaluation.md
         notes: >-
           Three quarters of the people earn under the line, so always answering no gets 0.759. The model is about nine
-          points better. AUC and average precision say the ranking is strong. That does not yet tell us what to do with it.
-
-      - layout: table
-        title: The threshold turns a score into a decision
-        recall: What did holding precision near 80% cost in recall?
-        lead: "Precision: of those flagged, how many are real. Recall: of the real ones, how many were caught. The threshold was picked on validation to reach 80% precision, then reported once on test."
-        header: [Threshold, Precision, Recall]
-        widths: [4, 3, 3]
-        rows:
-          - ["Default, 0.50", "0.725", "0.584"]
-          - ["Tuned on validation, 0.61", "0.783", "0.484"]
-        highlight: [1]
-        takeaway: Choose the threshold from the cost of each error on validation data, and report test once.
-        source: notes/04-model-evaluation.md
-        notes: >-
-          Holding the flagged group to about 80 percent precision costs a tenth of recall. Note the test precision of 0.783
-          misses the 0.80 validation target, which is what validation being optimistic looks like at small scale.
+          points better. AUC and average precision say the ranking is strong. That does not yet tell us what to do with it. The threshold turns a score into a decision. Precision is, of those flagged, how many are real. Recall is, of the real ones, how many were caught. Holding the flagged group to about 80 percent precision costs a tenth of recall. Note the test precision of 0.783 misses the 0.80 validation target, which is what validation being optimistic looks like at small scale.
 
   - title: What if there are no labels?
-    summary: Transform or group · k-means and DBSCAN · Anomalies · A music library
+    summary: k-means and DBSCAN · Anomalies · Isolation forest · A music library
     notes: >-
       Sometimes no one has labelled anything. There is then no score to tell us whether we are right. What can we still do?
     slides:
@@ -263,40 +221,51 @@ parts:
           when positives are few or may look new. Use a classifier when you have many stable positives.
 
       - layout: image
-        title: Three ways to choose k gave three answers
-        kicker: "Case: clustering a music library"
-        recall: What did BIC, silhouette and seed agreement each pick for k on the music library?
-        lead: The job was to suggest tracks that belong in a saved playlist, from a library of 2,182 tracks with nine audio features.
-        image: ../../sources/images/wise-music-clustering-lab-fig1.png
-        caption: "Lowest BIC at k = 11. Best silhouette at 2 or 3. Best seed agreement at 2. The dashed line is the project's k = 8."
-        takeaway: The project's k = 8 matches its eight genre groups, which is a product reason, so state it as one.
+        title: An isolation forest ties on round data and wins in the gaps
+        recall: What does an isolation forest measure, and where did it beat and lose to a Gaussian?
+        image: ../../sources/images/classical-iforest-limits.png
+        caption: "Left: clumped anomalies, AUC 1.000 at 16 rows per tree, 0.928 at 4,096. Right: 60 noise columns take the forest from 0.965 to 0.489. Run `practice/isolation_forest.py`."
+        bullets:
+          - "**Server data:** forest AUC 0.878, Gaussian 0.870, same F1 of 0.875. No win, on nine anomalies."
+          - "**Anomalies in a gap between two regimes:** Gaussian per feature 0.000, forest 1.000."
+          - "**Anomalies far out:** full-covariance Gaussian 1.000, forest 0.929."
+        takeaway: Pick by the shape of your normal data, and choose columns first on a wide table, since noise columns take the forest to chance.
         source: notes/05-unsupervised-learning.md
         notes: >-
-          A real project and real data, a personal recommender: a Gaussian mixture narrows the candidates and one LightGBM
-          model per playlist ranks them. Three criteria, three answers. BIC measures fit and is lowest at 11, though 11 to 13
-          sit within seed noise and k=13 has a cluster of 11 tracks. Silhouette measures distance, so it favours k-means by
-          construction. The check worth copying is to shuffle each column separately, which destroys any real groups.
-          Silhouette falls from 0.258 to 0.107, so the library has some structure, but BIC still picks k=7. A BIC minimum
-          doesn't show that groups exist.
+          The Gaussian asks how likely a point is. An isolation forest asks how easy it is to cut off. Pick a random column and a
+          random split, and repeat until each point sits alone. Anomalies need few splits, so a short average path flags them (Liu,
+          Ting and Zhou, 2008; their defaults are 100 trees on 256 sampled rows each). There's no win on the server data, and that's
+          the first result: the AUC gap is smaller than the spread between forest seeds, which run from 0.870 to 0.887. An AUC of
+          0.000 in the gap is the worst possible, because the valley is near the overall mean, so a single Gaussian rates those
+          points as the most normal in the table. A long-tailed column breaks the full Gaussian too, at 0.493 against the forest's
+          0.952. Fewer rows per tree can be better, because a dense clump stops looking few as rows grow. The tables other than the
+          server data are generated by the script, five seeds each.
 
       - layout: table
         title: The clusters looked sure and added nothing to the ranker
         kicker: "Case: clustering a music library"
         recall: What did cluster posteriors add to the playlist ranker, and what does a 0.992 posterior prove?
-        lead: One LightGBM model per playlist ranks tracks, at AUC 0.870 on audio alone. Each row is one check from the case.
+        lead: "The job: suggest tracks for a saved playlist, from 2,182 tracks with nine audio features. One LightGBM model per playlist ranks at AUC 0.870 on audio alone."
         header: [Check, Measured, What it means]
         widths: [3.6, 4, 3.8]
         rows:
+          - [Choose k, "Lowest BIC at 11, best silhouette at 2 or 3, best seed agreement at 2", "The project's 8 is a product choice"]
           - [Raw or scaled columns, "Match to clusters on track length alone: 0.988 raw, 0.072 scaled", "Unscaled, milliseconds are the clustering"]
           - [Project's 47 columns or nine audio, "Match to decade: 0.714 or 0.039", Your columns decide what clusters mean]
           - [Median top posterior, "0.992, with seed agreement of 0.718", "Confident inside one model, not proven right"]
           - [Add cluster posteriors to the ranker, "AUC -0.001 (95% CI -0.007 to +0.005)", Trees already carve the raw features]
           - ["Swap audio for map position, genre group, year", "AUC +0.050 (95% CI 0.028 to 0.075)", Losing the audio features cost nothing here]
           - [Playlist-mean columns, AUC 1.000, "A leak: one playlist, identical values"]
-        highlight: [3]
+        highlight: [4]
         takeaway: With no labels, test clusters on a later task, because here that task showed the ranker did not need them.
         source: notes/05-unsupervised-learning.md
         notes: >-
+          A real project and real data, a personal recommender: a Gaussian mixture narrows the candidates and one LightGBM
+          model per playlist ranks them. Three criteria gave three answers for k. BIC measures fit and is lowest at 11, though 11 to 13
+          sit within seed noise and k=13 has a cluster of 11 tracks. Silhouette measures distance, so it favours k-means by
+          construction. Shuffle each column separately, which destroys any real groups, and silhouette falls from 0.258 to 0.107,
+          but BIC still picks k=7, so a BIC minimum doesn't show that groups exist. The project's k = 8 matches its eight genre
+          groups, which is a product reason, so state it as one.
           The surprise is that the clusters earned no place in the ranker. Spotify cut audio features from new apps in
           November 2024, so the lab tested whether losing them hurts, and on this task it doesn't. Two caveats. The same person
           wrote the genre taxonomy and filed the playlists, which flatters the proxies. And the non-members are tracks saved
@@ -304,7 +273,7 @@ parts:
           at any AUC of 1.000 twice.
 
   - title: Why do many trees win?
-    summary: Bagging and boosting · Four libraries · Ordered encoding · Tuning
+    summary: Bagging and boosting · Four libraries · Ordered encoding
     notes: >-
       Back to the census. A logistic regression gave AUC 0.901. How far can trees take it, and does the library you pick matter?
     slides:
@@ -338,7 +307,7 @@ parts:
         source: notes/06-ensembles.md
         notes: >-
           On adult census with no tuning beyond a lower learning rate, sklearn's histogram booster reaches 0.927 against
-          0.896 for a 300-tree forest on one-hot features. Now which library?
+          0.896 for a 300-tree forest on one-hot features. More forest trees can only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over: at a rate of 0.05 boosting peaks at 0.928 with 200 trees and falls to 0.920 at 2,000. A forest on ordinal-coded columns reaches 0.900 at 500. That's why rounds get early stopping rather than a grid. Now which library?
 
       - layout: table
         title: Four libraries tie, within the noise of one seed
@@ -357,70 +326,35 @@ parts:
         source: notes/07-boosting-in-practice.md
         notes: >-
           No library won every seed. LightGBM led seed 0, CatBoost seed 1, XGBoost seed 3, and the classic booster seeds 2 and
-          4. Speed differs by a factor of 30, measured on a busy laptop, so treat that as rough. The script is in practice.
+          4. Speed differs by a factor of 30, measured on a busy laptop, so treat that as rough. The script is in practice. Every library shares the same second-order core: we fit a one-tree XGBoost model in the note and recompute its leaves by hand, -1.1513 and 1.1729, and they match. They differ in how they find splits fast. Tune in order: learning rate, then rounds, leaves, leaf size, sampling, L1 and L2. Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927, so on adult census the whole search moves AUC by under 0.003.
 
-      - layout: compare
+      - layout: code
         title: A leaky encoding drops test AUC from 0.927 to 0.811
         recall: Why does a mean-of-target encoding leak, and how does ordering stop it?
-        lead: A meaningless ID of about 3,000 levels is added to adult census and encoded two ways.
-        emphasis: right
-        left:
-          title: Greedy target mean
-          bullets:
-            - Each row's own label is in its feature
-            - Train AUC **0.967**
-            - Test AUC **0.811**
-          tag: Leak
-        right:
-          title: Ordered target mean
-          bullets:
-            - Each row uses only earlier rows
-            - Train AUC **0.953**
-            - Test AUC **0.925**
-          tag: CatBoost's fix
+        lead: "A meaningless ID of about 3,000 levels is added to adult census. A greedy target mean puts each row's own label in its feature. An ordered one uses only earlier rows."
+        lang: python
+        code: |
+          def ordered(ids, y, seed=0, a=1.0):   # the same mean, using only earlier rows
+              order = np.random.default_rng(seed).permutation(len(ids))
+              total, count, out = {}, {}, np.zeros(len(ids))
+              for i in order:
+                  k = ids[i]
+                  out[i] = (total.get(k, 0.0) + a * prior) / (count.get(k, 0) + a)
+                  total[k] = total.get(k, 0.0) + y.values[i]
+                  count[k] = count.get(k, 0) + 1
+              return out
+
+          # no ID      train AUC 0.950  test AUC 0.927
+          # greedy     train AUC 0.967  test AUC 0.811
+          # ordered    train AUC 0.953  test AUC 0.925
         takeaway: Any encoding that reads the target has to be fitted out of fold, whichever library you use.
         source: notes/07-boosting-in-practice.md
         notes: >-
           With no ID column the test AUC is 0.927. The greedy encoding lets the model memorise. CatBoost's paper quantifies
           this: greedy statistics are 1.1 percent worse in log-loss on Adult and 40 percent worse on Amazon.
 
-      - layout: code
-        title: A boosting leaf is one Newton step, as you can check
-        recall: What are g and h, and what is the best leaf weight?
-        lead: For each row, g and h are the first and second derivatives of the loss at the current prediction.
-        lang: python
-        code: |
-          # w* = -sum(g) / (sum(h) + lambda)   (Chen and Guestrin, 2016)
-          p = 0.5                           # prediction before the tree
-          g, h = p - y0, np.full(1000, p * (1 - p))
-          leaf_ids = booster.predict(xgb.DMatrix(x), pred_leaf=True)
-          for side in np.unique(leaf_ids):
-              I = leaf_ids == side
-              print(side, -g[I].sum() / (h[I].sum() + 1.0))
-
-          # by hand -1.1513, in the model -1.1513
-          # by hand  1.1729, in the model  1.1729
-        takeaway: Every library shares this second-order core, and differs in how it finds splits fast.
-        source: notes/07-boosting-in-practice.md
-        notes: >-
-          We fit a one-tree XGBoost model and recompute its leaves by hand. They match. LightGBM adds gradient-based sampling
-          and feature bundling, and grows leaf-wise. CatBoost uses symmetric trees and ordered statistics.
-
-      - layout: image
-        title: Boosting peaks at 200 trees; a forest just stops improving
-        recall: Why not grid-search rounds and learning rate together, and why do extra boosting rounds hurt when extra forest trees don't?
-        image: ../../sources/images/classical-trees-vs-rounds.png
-        caption: "Adult census, test AUC: boosting at rate 0.05 peaks at 0.928 with 200 trees and falls to 0.920 at 2,000. A forest reaches 0.900 at 500. Run `practice/trees_vs_rounds.py`."
-        bullets:
-          - "**Rounds:** early stopping, patience 50, keep the best round."
-          - "**Tune in order:** rate, then rounds, leaves, leaf size, sampling, L1 and L2."
-        takeaway: On adult census the whole search moves AUC by under 0.003, so spend your time on features and leakage first.
-        source: notes/06-ensembles.md, notes/07-boosting-in-practice.md
-        notes: >-
-          More forest trees can only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over, which is why rounds get early stopping rather than a grid. Use a learning rate of 0.1 to search and 0.02 to 0.05 to finish, 8 to 64 leaves, min_child_samples from 5 to 200, and rows and columns sampled at 0.5 to 1.0. Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927, while rounds change by a factor of 17. Harder problems reward tuning more, but expect a good default to be close. This forest uses ordinal-coded columns, so its 0.900 differs a little from the one-hot 0.896 in the note.
-
   - title: Why this answer?
-    summary: Permutation importance · Partial dependence · SHAP · Do explanations help?
+    summary: Permutation importance · Partial dependence · SHAP
     notes: >-
       We have a good model with hundreds of trees, and a reviewer asks why it rejected this applicant. You cannot read it.
       What can you say, and how can you avoid fooling yourself?
@@ -486,25 +420,14 @@ parts:
         notes: >-
           This is a false positive, a 66-year-old married professional predicted at 0.543. Lundberg and Lee's theorem says
           Shapley values are the unique additive attribution with local accuracy, missingness and consistency. TreeExplainer
-          makes it exact and fast for trees. It does not make the numbers causal.
-
-      - layout: table
-        title: Explanations do not reliably help the reader
-        recall: Which explanation styles did Wang and Yin find help on low-expertise tasks?
-        header: [Study, Setup, Finding]
-        widths: [3, 4, 6]
-        rows:
-          - ["Miller, 2019", Survey of social science on explanation, "People want contrastive, selected, causal answers"]
-          - ["Dodge et al., 2019", "160+ MTurk workers, four styles", "Global and local reveal different fairness issues"]
-          - ["Wang and Yin, 2021", "Four types, recidivism and forest cover", "On low expertise, none reliably met all three goals"]
-        takeaway: Test an explanation on the person it is for, by the decisions they make with it.
-        source: notes/08-model-interpretability.md
-        notes: >-
-          A SHAP bar chart answers none of what Miller lists by default. So when someone has to act on it, offer the contrast:
-          you would have been approved if. Evaluate with them, and not just your satisfaction with the chart.
+          makes it exact and fast for trees. It does not make the numbers causal. And explanations do not reliably help the reader.
+          Miller (2019) finds people want contrastive, selected, causal answers. Dodge et al. (2019), with 160+ MTurk workers, find
+          global and local styles reveal different fairness issues. Wang and Yin (2021) find that on low-expertise tasks none of four
+          types reliably met all three goals. So when someone has to act on it, offer the contrast, you would have been approved if,
+          and test the explanation on that person by the decisions they make with it.
 
   - title: How do you train and tune it?
-    summary: Splits · Learning curves · Folds · Regularisation · Early stopping · Search
+    summary: Splits · Learning curves · Folds · Regularisation · The training loop
     notes: >-
       You know the families and you can explain a model. Now the job itself. Think of a student and an exam: practice
       questions for learning, a mock exam for checking, one real exam that counts. A student who memorises the practice
@@ -591,62 +514,6 @@ parts:
           decay by the learning rate, so don't copy a good value between setups.
 
       - layout: code
-        title: In scikit-learn, more patience made the model worse
-        kicker: "Patience: rounds to wait for improvement"
-        recall: Why does more patience give a worse HistGradientBoosting model, and what is the fix?
-        lead: Validation log loss, lower is better. All three runs agree that the best round was 16.
-        lang: python
-        code: |
-          base = dict(learning_rate=0.3, max_leaf_nodes=63, min_samples_leaf=5)
-          for pat in (5, 25, 100):
-              m = HGB(max_iter=1000, early_stopping=True, n_iter_no_change=pat,
-                      validation_fraction=0.15, **base).fit(X_train, y_train)
-              best = int(np.argmax(m.validation_score_))
-
-          # patience  stopped at  best round  loss as fitted  loss cut back to best
-          #        5          21          16          0.2960                 0.2918
-          #       25          41          16          0.3083                 0.2918
-          #      100         116          16          0.3561                 0.2918
-          # no early stopping, 1000 rounds: 0.8426
-        takeaway: scikit-learn's HGB stops training but keeps the rounds it ran while waiting, so always cut back to the best round.
-        source: notes/09-training-and-tuning.md
-        notes: >-
-          This is a trap, because nothing warns you. Patience exists because real validation curves wobble: Prechelt shows one
-          with 16 local minima before overfitting truly starts. But here the extra rounds stay in the model. Check what your
-          library does. LightGBM gives you best_iteration_. Prechelt's advice is to always keep the best weights. The rows
-          that decide when to stop have been used, so they cannot also give your final score.
-
-      - layout: compare
-        title: Search methods tie, and the winner still flatters itself
-        kicker: Cawley and Talbot, 2010
-        recall: At equal budget how did grid, random and TPE compare, and why is the winner's score optimistic?
-        lead: Two grids, random and TPE each got 32 fits and five seeds. Half the validation rows chose the winner, and the other half reported it.
-        emphasis: right
-        left:
-          title: Grid, random and TPE at equal budget
-          bullets:
-            - Search rows, all within **0.0003**
-            - Report rows, all within **0.0016**
-            - Each beat default settings by 0.0025 to 0.0041
-            - "Search mostly avoids bad settings: worst trials average 0.8995 to 0.9118"
-          tag: A tie, on this data at this budget
-        right:
-          title: "The winner's curse"
-          bullets:
-            - "Chosen on 100 rows, it claims **0.9308** and truly scores **0.9223**"
-            - "Optimism is 0.0085 at 100 rows and 0.0013 at 1,000"
-            - You chose it partly for its luck on those rows
-          tag: Tuning on too few rows finds luck
-        takeaway: Use random or TPE on a fixed budget, and score the winner on rows the search never saw.
-        source: notes/09-training-and-tuning.md
-        notes: >-
-          Three things explain the tie. The plateau is wide, and the learning rate carries about 0.61 of the importance, a rough
-          estimate. The grid's values came from knowing what good boosting settings look like, which a new problem won't give
-          you. And TPE's first 10 trials are random by default. Random remains the baseline for an unfamiliar problem: a grid
-          tried 2 learning rates and random tried 32. Cawley and Talbot show the selection bias is often as large as the
-          differences between algorithms. Nested cross-validation is the other honest option, at 0.9274 here for 125 fits.
-
-      - layout: code
         title: The training loop as a 10-step checklist
         recall: What are the ten steps of the training loop, from split to ship?
         lang: checklist
@@ -665,12 +532,16 @@ parts:
         takeaway: If a later step moves the score less than the spread, stop and ship.
         source: notes/09-training-and-tuning.md
         notes: >-
-          This is what you do on Monday. Step 6 was measured on 1,500 rows. Step 8's gain is on report rows. Step 9 refits on
+          This is what you do on Monday. Step 6 was measured on 1,500 rows. Step 7 hides a trap: scikit-learn's HGB stops training but
+          keeps the rounds it ran while waiting, so patience of 5, 25 and 100 gives log loss 0.2960, 0.3083 and 0.3561, and cutting
+          back to the best round gives 0.2918 each time. Step 8: grid, random and TPE tied at 32 fits and five seeds, all within
+          0.0003 on search rows. And the winner flatters itself. Chosen on 100 rows it claims 0.9308 and truly scores 0.9223, an
+          optimism of 0.0085, against 0.0013 at 1,000 rows (the point of Cawley and Talbot, 2010). Step 8's gain is on report rows. Step 9 refits on
           train plus validation and reads the test rows once. Reading the test pile while still deciding is the pitfall that
           makes the live score come in lower. You now have a number you can defend. Next, what it hides.
 
   - title: What does the number hide?
-    summary: Error costs · Rare events · Threshold or SMOTE · Leaks and probabilities · Drift
+    summary: Error costs · Threshold or SMOTE · Drift · Metrics · Reading errors
     notes: >-
       A lender wants to spot the few borrowers who won't pay back. Think of a smoke alarm in a house that almost never has a
       fire. One that never rings is right nearly every day and useless on the day that counts. One that rings at every slice
@@ -687,7 +558,10 @@ parts:
         notes: >-
           The 3 percent is our choice. It changes the base rate and nothing else, so every absolute rate here belongs to that
           thinned population and not to any real book. A boosted model at the default threshold of 0.5 catches none of the
-          defaulters. Its ranking is fine. What's missing is a decision rule.
+          defaulters. Its ranking is fine. What's missing is a decision rule. Count events, not rows. Detecting a 20 percent cut in
+          defaults takes 11,452 rows per arm at 3 percent and 1,284 at 22 percent, which is similar in events, 343 and 282. ROC-AUC
+          has an SD of 0.039 with 50 defaulters and 0.018 with 200. This test set of 4,818 rows holds only 145 defaulters, so report
+          the event count and the SD of the score.
 
       - layout: compare
         title: Type I and Type II errors are business costs
@@ -715,26 +589,6 @@ parts:
           the rate of good customers declined goes from 1.5 to 9.7 percent, and it pays more at this ratio. The best alpha isn't
           a statistical constant like 5 percent. It comes from the price list. A thin margin of 150 makes the ratio 20:1 and the
           threshold 1/21. We carry both ratios.
-
-      - layout: table
-        title: "Rows are not events: count the defaulters"
-        recall: Why does a rare outcome make you count events and not rows?
-        lead: On a rare outcome, the defaulters set how much you can detect, how noisy your score is and how well you can train.
-        header: [Question, Measured, Lesson]
-        widths: [4, 4.2, 3.6]
-        rows:
-          - [Rows to detect a 20% cut in defaults, "**11,452** per arm at 3%, 1,284 at 22%", "Events are similar: 343 and 282"]
-          - [Noise in a test score, "ROC-AUC SD **0.039** with 50 defaulters, 0.018 with 200", A test set is as big as its defaulters]
-          - ["All 434 defaulters, 434 good customers", "ROC-AUC 0.759, against 0.762 with all 14,018", Good customers saturate early]
-          - ["All good customers, 25 defaulters", "ROC-AUC **0.676**", Defaulters do not]
-          - ["No defaults among 1,000 approved", "The true rate could still be 0.3%", The rule of three]
-        highlight: [3]
-        takeaway: Report the event count and the SD of the score, since this 4,818-row test set holds only 145 defaulters.
-        source: notes/10-imbalance-errors-and-drift.md
-        notes: >-
-          With 50 defaulters the noise of 0.039 is more than any gap between the methods coming next. To detect a difference you
-          need a few hundred events or several seeds. And in lending the outcome takes months to arrive, so an experiment is
-          slower than the count suggests. The table also explains why undersampling can be cheap and thinning positives costly.
 
       - layout: image
         title: The threshold matters far more than resampling
@@ -818,20 +672,10 @@ parts:
           - ["The median", "0.996", "2.286", "**1.125**", "0.824", "1.125"]
           - ["90th percentile", "3.586", "2.925", "2.505", "**0.477**", "4.994"]
           - ["Best for MAPE", "0.367", "2.538", "1.323", "1.174", "**0.684**"]
-        takeaway: Choosing a metric chooses the quantity you forecast, and 84% of outcomes sit above MAPE's favourite.
+        takeaway: Choosing a metric chooses the quantity you forecast, and a metric you tune against also chooses a threshold.
         source: notes/11-choosing-a-metric.md
         notes: >-
-          Each column has a different winner, and the winner is the forecast built for that column. RMSE picks the mean, MAE the median, pinball its quantile. MAPE's favourite is 0.367, far under the median of 0.996, so about 84 percent of outcomes sit above it. Run practice/metric_map.py for these.
-
-      - layout: image
-        title: Balanced accuracy's threshold costs twice approving everyone
-        recall: Why does tuning a threshold on accuracy, balanced accuracy or MCC give three different decisions, and which responds to the cost ratio?
-        image: ../../sources/images/metric-map-threshold.png
-        caption: "The 3% credit data, 5:1 costs. Tuned on validation, accuracy declines nobody, and balanced accuracy declines 27% at 303 per 1,000. Run `practice/metric_map.py`."
-        takeaway: A metric you tune against also chooses a threshold, so only tune on a metric that holds your costs.
-        source: notes/11-choosing-a-metric.md
-        notes: >-
-          A metric doesn't just report a threshold. If you tune against it, it chooses one. Accuracy's pick declines nobody. Balanced accuracy's declines 27 percent of applicants and costs twice the 150.5 of approving everyone. MCC's pick is close to the cost-tuned one at 5:1, 150.1 against 148.8, and further at 20:1, 467.6 against 428.2, because MCC has no cost in it and cannot respond when the ratio changes. Dots mark each line's best on the test set, so they sit a little apart from the validation choices in the caption.
+          Each column has a different winner, and the winner is the forecast built for that column. RMSE picks the mean, MAE the median, pinball its quantile. MAPE's favourite is 0.367, far under the median of 0.996, so about 84 percent of outcomes sit above it. Run practice/metric_map.py for these. The same goes for thresholds. On the 3 percent credit data at 5 to 1 costs, tuned on validation, accuracy's pick declines nobody. Balanced accuracy's declines 27 percent of applicants at 303 per 1,000, twice the 150.5 of approving everyone. MCC's pick is close to the cost-tuned one at 5 to 1, 150.1 against 148.8, and further at 20 to 1, 467.6 against 428.2, because MCC has no cost in it and cannot respond when the ratio changes. So only tune on a metric that holds your costs.
 
       - layout: image
         title: A noise fix gained 18.6 on rows read and lost 8.3 unread
@@ -845,6 +689,224 @@ parts:
         source: notes/12-reading-the-errors.md
         notes: >-
           Look at the mean bars. Any slice picked for being bad looks fixable on the rows we read: it was bad by chance, and that badness doesn't repeat. We expected the real-mechanism fix to survive, and it did not, with 13 seeds above zero and 17 below. Boosted trees had already taken most of what those columns hold. Reuse a holdout to accept 20 rounds of noise patches and it reports a gain of 16.5, while a fresh half shows -1.9, so a held-out set can only select so many times before it becomes another training set.
+
+  - title: Should a person decide?
+    summary: Three routes · Two thresholds · A full queue · What dashboards miss
+    notes: >-
+      A triage nurse doesn't diagnose everyone. Clear cases go home, clear emergencies go straight through, and the unclear ones
+      wait for a doctor. So far our models could only say yes or no. Now we give them a third answer, ask a person. The running
+      example is invoices, and it's a simulation: we generated the invoices and invented every price. Nothing in the method is
+      about invoices, though the numbers describe this generator only.
+    slides:
+      - layout: statement
+        title: Reviewing everything beat one threshold. Why?
+        kicker: The problem
+        recall: Why did a clerk on every invoice beat a model with one threshold, and what beat them both?
+        statement: "A clerk on every invoice costs 4.471 euros each. A model with one threshold costs 5.802. Two thresholds with a review band between them cost 3.312."
+        attribution: Own simulation, with invoices and prices invented. Mean of 20 seeds on 50,000 test invoices
+        takeaway: A third answer, ask a person, changes the question from how accurate the model is to which decisions it may take alone.
+        source: notes/13-automate-review-or-reject.md
+        notes: >-
+          The clerk beating the model isn't a law. It follows from a cheap clerk who catches 90 percent, and a higher review price
+          would reverse it. A word on vocabulary: in the papers, reject means abstain and pass to a person. Here reject means
+          sending an invoice back, which is an automated decision.
+
+      - layout: image
+        title: Price each route and the thresholds follow
+        recall: How do you get the pay and reject thresholds, and what does an imperfect clerk do to them?
+        image: ../../sources/images/review-queue-three-routes.png
+        caption: "Each route's expected cost is a straight line in the probability of a problem. Generated invoices, invented prices. Run `practice/review_queue.py`."
+        bullets:
+          - "**Prices:** paying a problem 150, sending back a good invoice 30, a clerk's four minutes 3."
+          - "**This clerk** catches 90%: pay below **0.027**, reject above **0.595**."
+          - "**A perfect clerk:** 0.020 and 0.900."
+          - "**No review route:** reject above 0.167."
+        takeaway: Write each route's cost as a line, take the crossings, and use the person's measured catch rate, not a perfect one.
+        source: notes/13-automate-review-or-reject.md
+        notes: >-
+          This is an old result, usually cited to Chow in 1970. Bartlett and Wegkamp state the symmetric form: never abstain if abstaining
+          costs more than half an error. Our version lets the errors cost different amounts and the person be imperfect. Notice how low
+          the pay threshold sits: we pay alone only under 2.7 percent, against a base rate of 6 percent. That follows from the 50 to 1
+          ratio of a paid problem to a review, not from anything about this model. At a review price of 20, a clerk who catches 60 or 75
+          percent has no band at all, so the rule falls back to one threshold. You can price a review route before you build the screen.
+
+      - layout: table
+        title: Better policy saved 2.49 euros, a perfect model at most 0.07
+        recall: How did the gain from changing policy compare with the most a better model could add?
+        lead: Seven policies on the same 50,000 test invoices, mean of 20 seeds. The model's AUC is 0.858, and the true probabilities reach only 0.861.
+        header: [Policy, Decided alone, Reviewed, Error on paid, Euros per invoice]
+        widths: [4.4, 1.6, 1.4, 1.6, 1.8]
+        rows:
+          - [Pay everything, "1.000", "0.000", "0.061", "9.076"]
+          - [Review everything, "0.000", "1.000", "n/a", "4.471"]
+          - [One threshold, "1.000", "0.000", "0.030", "5.802"]
+          - ["Two, perfect clerk assumed", "0.506", "0.494", "0.011", "3.427"]
+          - ["Two, priced", "0.619", "0.381", "0.013", "**3.312**"]
+          - ["Two, searched on validation", "0.607", "0.393", "0.013", "3.341"]
+          - ["Two, priced, true probability", "0.625", "0.375", "0.013", "3.242"]
+        highlight: [4]
+        takeaway: The share decided alone fell from 100% to 62% and that is what bought the saving, so treat it as a constraint and not a goal.
+        source: notes/13-automate-review-or-reject.md
+        notes: >-
+          Two thresholds beat one on every seed. Assuming a perfect clerk costs 0.115 euros and never opens the reject route. A grid
+          search on 10,000 validation invoices wins on only 2 of 20 seeds, because it fits the validation noise, so with calibrated scores
+          and known prices the formula needs fewer labels. Then the real credit file, at its natural 22.1 percent default rate, with an
+          analyst we assumed: review 60, catching 70 percent. Two thresholds again beat one on all 20 seeds, by 93.58 per applicant, but
+          only 24 percent is decided alone. With a weaker assumed analyst the saving falls to 17.94. Don't carry the invoice numbers into
+          your system. Carry the method, then measure the catch rate and the review time.
+
+      - layout: code
+        title: A full queue should hold the coin flips, not the riskiest
+        recall: Under a capacity limit, which cases should go to review?
+        lang: output
+        code: |
+          Review capacity, seed 0
+          Outside capacity, one threshold decides
+
+          capacity  rule             cost   low_p  high_p
+          0.200     expected saving  3.370  0.056  0.503
+          0.200     highest score    3.493  0.064  0.953
+          0.050     expected saving  4.661  0.137  0.257
+          0.050     highest score    5.279  0.290  0.953
+          0.020     expected saving  5.157  0.155  0.201
+          0.020     highest score    5.562  0.491  0.953
+        bullets:
+          - "**Highest score:** a person can only agree at p of 0.953, so the queue costs money and changes little."
+          - "**Expected saving:** at 2% the band tightens around 1/6, where pay and reject cost the same."
+        takeaway: Rank the queue by expected saving, since at 5% capacity the highest scores cost 5.279 against 4.661.
+        source: notes/13-automate-review-or-reject.md
+        notes: >-
+          The instinct is the riskiest first, and that's wrong. These are the invoices where the decision without a person is closest to
+          a coin flip in euros. The queue that feels most useful to reviewers, because they keep finding real problems, is the one that
+          wastes them. Costs can also vary by invoice. Scale a paid problem with the amount and set thresholds row by row: the error rate
+          on paid invoices gets worse, 1.9 percent against 1.2, and the money lost on them falls from 1.194 to 0.763, with total cost going from 3.404 to 2.726.
+          So a target like under 1.5 percent error can point the wrong way.
+
+      - layout: table
+        title: The worst failures leave the dashboard green
+        recall: Which changes can a dashboard without labels not see, and what does each take to fix?
+        lead: "PSI measures how far the scores moved, and needs no labels. Each row is one change, with the truth known because we simulated it. Error on paid is 0.014 with no change."
+        header: [Change, What you would see, What is true, What it takes]
+        widths: [3, 3.2, 3.2, 3.2]
+        rows:
+          - [Class weights, "AUC 0.855 against 0.857", "Pays 0.3% not 60%, cost 6.714", "Platt scaling, cost 3.348"]
+          - [Newer suppliers, "PSI 0.251, the alarm rings", "Error on paid stays 0.014", Nothing. The model handled it]
+          - [Twice the problems, "PSI 0.009, looks stable", "Error on paid 0.027", "Recalibrate: error 0.016, paid share 23%"]
+          - [New fraud type, "PSI 0.001, paid share flat", "**Error on paid 0.033**", "New labels and a retrain. Platt leaves 0.029"]
+          - ["Largest share that looks safe", "Meets the target on validation", "Broke it on 33.5% to 69% of draws", "A bound (SGR). At 1% on 2,000 labels it pays nothing"]
+          - ["Conformal set at 90% coverage", "Promise met", "Covers 3.4% of true problems", "Calibrate per class: 95.5% at alpha 0.05"]
+        highlight: [3]
+        takeaway: Check calibration near the thresholds and buy labels on automated cases, because no score monitor can see a new fraud type.
+        source: notes/13-automate-review-or-reject.md
+        notes: >-
+          Read the rows against what a dashboard can see. The largest PSI came with an unchanged error rate, so a high PSI is not bad news.
+          The new fraud type is the silent one: nothing the model sees has changed, only what those inputs mean. Recalibration lifts every
+          score and can't single out the round-amount invoices. On a contract number instead of a price, Selection with Guaranteed Risk
+          (Geifman and El-Yaniv, 2017) never broke its target over 200 draws, but with a 2 percent target it took 10,000 labels to pay 65
+          percent against a possible 81. Certify 2 percent on 50,000 labels, introduce the new fraud, and the router pays 77 percent at
+          3.77 percent error. So the certificate describes data that no longer arrives. Conformal costs 3.231 at best against the priced
+          3.171, so it doesn't earn its place as a router. Next: where the labels come from.
+
+  - title: What do corrections teach?
+    summary: Agreement · Noisy labels · Rules · Active learning · Correction rate · Random audit
+    notes: >-
+      A restaurant learns about its food from complaints. A plate that came back without one wasn't necessarily good, and a chef who
+      treats silence as praise keeps serving a bad dish. Every correction a reviewer makes looks like a free training label, and it is,
+      for the cases the model chose to show them. This runs mostly on the same generated invoices, because a simulation is the only place
+      we know the truth about invoices nobody checked. The clerk is simulated too.
+    slides:
+      - layout: statement
+        title: What if silence is not approval?
+        kicker: The problem
+        recall: What did a dashboard that counts silence as correct report, against the truth?
+        statement: "Count silence as correct and the error on paid invoices reads 0.14%. The truth is 1.37%."
+        attribution: "Own simulation, where 10% of problems surface later. A random audit of 530 invoices reads 0.0138, at 0.032 euros per invoice"
+        takeaway: Corrections cover only what the model showed people, so measure the rest with a random audit chosen before anyone looks.
+        source: notes/14-learning-from-corrections.md
+        notes: >-
+          In one month a clerk sees 71.5 percent of the problems. Another 14.2 percent were paid with nobody looking, and no correction will
+          ever mention them. Silence is wrong by a factor of ten, and very precisely wrong, as its narrow range shows. The audit is unbiased
+          and noisy, 0.0034 to 0.0255 over 500 draws. If the same clerk audits, you inherit their misses, 0.0124, so use a second person or
+          seeded problems. A sample of suspicious invoices measures how suspicious invoices behave, so it can't give you a rate.
+
+      - layout: table
+        title: Agreement is not correctness, and a plain vote beat learned weights
+        recall: What can kappa not see, what does label noise break, and why did learned weights lose to a majority vote?
+        lead: Each row is one check on labels, all on the generated invoices. Cost is euros per invoice at the priced thresholds.
+        header: [Check, Measured, What it means]
+        widths: [3.8, 4.6, 3.8]
+        rows:
+          - [Two annotators with a shared blind spot, "Highest kappa, **0.797**. Recall **0.000** on 13% of problems", Seed known problems]
+          - [Same pair of annotators on 200 double labels, "Kappa anywhere from 0.312 to 0.740", The rare class drives it]
+          - [Flip 5% of labels at random, "AUC 0.857 to 0.851, pays 0.1%, cost 4.414", "5,000 true labels restore 3.386"]
+          - [Miss problems on small invoices, "AUC 0.830, cost 3.607 calibrated on true labels", Calibration can't fix ranking]
+          - [Confident learning, "Precision 0.121 to 0.347. Plain rule wins on symmetric noise", A list to review and not a rule]
+          - ["Eight rules: vote or learned weights", "Vote **3.773**, learned weights **4.119**", "At 1.02 votes per row, weights lost"]
+        highlight: [0]
+        takeaway: Check annotators against a source of truth outside the pair, and keep a small set of trusted labels for calibration.
+        source: notes/14-learning-from-corrections.md
+        notes: >-
+          Kappa measures whether people agree, so two people trained the same way can agree on the same mistake. On confident learning, this
+          isn't the paper's result: its image results are far higher, and we think the noise in the outcome is why, though we didn't test
+          that. Learned weights losing is against the method's name. Ours is an independent EM sketch, not Snorkel's model, and the paper's
+          own analysis predicts it at low label density. Add four copies of one rule and the learned weights collapse to an AUC of 0.562, because
+          the model reads the copies' agreement as accuracy. We wrote the rules while knowing the generator, and every row was calibrated
+          on 5,000 true labels, so both flatter the rules. The vote at 3.773 sits between 1,000 clerk labels at 4.021 and 5,000 at 3.696.
+
+      - layout: image
+        title: Uncertainty sampling won on invoices and lost on real credit
+        recall: Does labelling the rows a model is least sure about beat random labelling?
+        image: ../../sources/images/corrections-active-learning.png
+        caption: "Boosted model, 100 labels bought at a time. The credit file is real data, the invoices are generated. Run `practice/learning_from_corrections.py`."
+        bullets:
+          - "**Invoices at 2,000 labels:** AUC +0.020 and 0.206 euros cheaper, on all ten seeds."
+          - "**Credit:** AUC -0.012 boosted and -0.026 logistic, losing on all ten seeds."
+          - "**Biased set:** 46 to 48% defaulters against 22%."
+        takeaway: You can't know which case you are in without a comparison, and the comparison needs a random sample anyway.
+        source: notes/14-learning-from-corrections.md
+        notes: >-
+          We can't name the cause from this run. The survey by Settles has seen it before, and it admits publication bias may flatter active learning. The
+          cost column on credit is more mixed: boosted is better by 0.802 on 6 of 10 seeds, on a cost near 244, and logistic is worse by 4.346. Two worries didn't appear on
+          invoices: batches of 500 did as well as batches of 100, and missing 30 percent of problems left the gain at 0.022. A review queue is
+          already an active learner of a sort, since the model chose the rows people see. Keep such a set for training, never estimate a rate from it, and use a random set for calibration.
+
+      - layout: code
+        title: Correction rate can't tell a tired clerk from a good model
+        recall: Why is the human correction rate a weak metric?
+        lead: The clerk's catch rate falls from 0.9 to 0.3 and the final error doubles. The correction rate barely moves, and it goes the wrong way.
+        lang: output
+        code: |
+          case                           correction_rate  problems_in_accepted  final_error
+          strong model, clerk catch 0.9            0.210                 0.012        0.023
+          strong model, clerk catch 0.6            0.213                 0.049        0.036
+          strong model, clerk catch 0.3            0.217                 0.083        0.049
+          weak model, clerk catch 0.9              0.182                 0.011        0.024
+          weak model, clerk catch 0.6              0.181                 0.043        0.038
+        takeaway: A falling correction rate can mean a better model, a worse model or a clerk who stopped looking, so seed known problems.
+        source: notes/14-learning-from-corrections.md
+        notes: >-
+          The two effects cancel. A clerk who catches a problem the model suggested paying registers a correction, and so does a clerk who waves
+          through a problem the model suggested rejecting. The weak model was trained on 2,000 invoices, and its correction rate of 0.182 reads as an
+          improvement. It's a useful signal that something changed. It can't say what.
+
+      - layout: image
+        title: Silence recovered by month 8, slowly and at a price
+        recall: Did counting silence as correct stay blind to a new fraud type, and what did it cost?
+        image: ../../sources/images/corrections-silent-acceptance.png
+        caption: "Eight months, 10,000 invoices each, mean of 8 seeds, all simulated. The new fraud type arrives in month 3."
+        bullets:
+          - "**We expected** permanent blindness. No: at month 8 silence costs 3.905, the audit 3.890."
+          - "**Month 5:** silence still pays 33% of the new type, the audit 1.1%."
+          - "**Reviewed rows only:** by month 5 it sends 95.6% to review."
+          - "**Months 3 to 8, against a 5% audit:** silence +0.311, reviewed only +0.292, never retrained +1.146."
+        takeaway: Retrain from something and keep a small random sample for measurement, since 2% and 5% audits trained about equally well.
+        source: notes/14-learning-from-corrections.md
+        notes: >-
+          So the case against silence isn't permanent blindness. It's slower recovery, a lasting error on paid of 1.7 percent against 1.2, and
+          a wrong measurement. Those are the left panel's numbers. In the harder right panel silence still pays 68.5 percent at month 5 against 7.9, and costs +0.393.
+          How large an audit? For a drift from 1.3 to 3.3 percent, 100 invoices catch it 42 percent of the time, and 1,000 catch it almost always, for 3,000 euros per period.
+          One result we can't fully explain: the audit policy pays less than the true-labels ceiling at month 8, 45.7 percent against 57.8. Failures also make good test
+          cases, as a gate only: three candidates passed a 30-case suite at 1.000 and their costs ran from 4.146 to 3.864, so only fresh data can rank them.
 
   - title: Take it with you
     agenda: false
@@ -860,14 +922,14 @@ parts:
             body: Choose on validation or CV, and report test a single time.
           - title: Fit inside the fold
             body: Any step with a fit goes in the pipeline, resampling included.
-          - title: Cost sets the threshold
-            body: Tune it from what each error costs, and leave the data alone.
+          - title: Cost sets the routes
+            body: Price each error and each review, and leave the data alone.
           - title: Family before tuning
             body: "Tuning gained 0.0009, the family 0.025. Compare across seeds."
           - title: Keep watching
-            body: SHAP describes the model, not the world. Score monitors miss most drift.
+            body: Score monitors miss most drift, so audit a random sample nobody chose.
         takeaway: Most of classical ML's failures are in the measurement, not in the model.
-        source: notes/09-training-and-tuning.md, notes/10-imbalance-errors-and-drift.md, notes/11-choosing-a-metric.md
+        source: notes/09-training-and-tuning.md, notes/10-imbalance-errors-and-drift.md, notes/11-choosing-a-metric.md, notes/13-automate-review-or-reject.md, notes/14-learning-from-corrections.md
         notes: >-
           If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
           choosing a cleverer algorithm.
@@ -878,10 +940,10 @@ parts:
         bullets:
           - "**Deep learning:** the MLP grows into backprop, CNNs and sequence models."
           - "**NLP:** tree and linear models meet text, with bag-of-words and TF-IDF."
-          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then `practice/credit-default-lab/` and `practice/music-clustering-lab/`. Then `practice/metric_map.py` and `practice/reading_errors.py`."
+          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then `practice/credit-default-lab/` and `practice/music-clustering-lab/`. Then `practice/metric_map.py`, `practice/reading_errors.py`, `practice/review_queue.py` and `practice/learning_from_corrections.py`."
           - "**Exercises:** try the Try-it section at the end of each note."
         takeaway: Pipelines, metrics and calibration carry over unchanged to every neural model that follows.
         source: notes/10-imbalance-errors-and-drift.md
         notes: >-
-          The classical families are done. Everything we did about splits, leakage and metrics comes along with us. The next
+          The classical families are done. Everything we did about splits, leakage, metrics and thresholds comes along with us. The next
           pillar starts from the small MLP and builds up from backprop by hand.

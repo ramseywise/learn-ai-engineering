@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test chapter-check link-check crosswalk learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
+.PHONY: help lint test chapter-check link-check curriculum crosswalk learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -23,6 +23,10 @@ chapter-check:  ## Check notes against the chapter standard: make chapter-check 
 
 link-check:  ## Verify relative links in markdown files exist on disk
 	@python3 scripts/link_check.py
+
+curriculum:  ## Rebuild the curriculum map and print integration issues: make curriculum [PILLAR=data-science/01-classical-ml]
+	@python3 scripts/curriculum_map.py build
+	@python3 scripts/curriculum_map.py issues $(if $(PILLAR),--pillar $(PILLAR))
 
 crosswalk:  ## Validate practice/ units and links, then regenerate practice/CROSSWALK.md
 	@python3 scripts/practice/crosswalk.py

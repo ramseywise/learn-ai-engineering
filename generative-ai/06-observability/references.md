@@ -84,5 +84,5 @@ Copied from `generative-ai/resources.md` (retired 2026-10-31), section *06 — O
 |---|---|
 | Learning-LangFuse results | n=20, one judge sample per item, judge is the 8B baseline model. Read as a method demo, not a model comparison |
 | langfuse-evaluation cost figure (~$3.70 per 1k conversations) | Author's estimate for Gemini Flash/Pro pricing at the time; recompute for current prices |
-| Note 05 | Adapted from own reference specs for a support-agent eval platform; file paths in them are that project's and illustrative here |
+| Note 05 | Adapted from own reference specs for a support-agent eval platform, anonymised; schemas are written generically |
 | All numbers from the fortnight (notes 01–06) | Synthetic traces and rule-based judge stubs from `practice/`. They show how methods behave, not how a real agent performs |

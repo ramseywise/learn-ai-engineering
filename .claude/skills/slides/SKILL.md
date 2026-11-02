@@ -23,7 +23,8 @@ just `02`), a path such as `data-science/03-nlp`, or a programming module such a
 `programming/sql/01-select`. Below, `<pillar>` means that full path, and `make slides PILLAR=`
 takes any of these forms. A pillar that does not yet match `.claude/skills/pillar/references/pillar-layout.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
 and pick the first. If `slides/deck.yaml` already exists, you are **revising** it. Read it
-first and keep what still matches the notes.
+first and keep what still matches the notes. A deck inherits its notes' errors, so if the pillar has not been through
+`/review-note`, say so in your report. It does not block the deck.
 
 ## Step 2 — Read the pillar
 
@@ -69,7 +70,9 @@ per sheet, in `<pillar>/slides/.preview/`. That folder is gitignored.
 
 1. Fix every `WARN slide N …` line. Each one means text didn't fit even at the minimum size.
    Cut words; don't fight the layout.
-2. **Read every contact sheet** with the Read tool. A run with no warnings is not proof the
+2. **Dispatch `deck-reviewer`** with the pillar path. It reads every contact sheet and returns problems with the smallest
+   YAML fix, so the images stay out of this session. Check that `SHEETS READ` covers them all. If the agent is unavailable,
+   read every contact sheet yourself with the Read tool. A run with no warnings is not proof the
    slides look right. Check for:
    - text crowding a card edge
    - an orphaned word on its own line

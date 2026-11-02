@@ -1,13 +1,13 @@
 """Free online scores: heuristics that need no model and run on every trace."""
 
-DANISH_MARKERS = {"jeg", "du", "og", "er", "på", "af", "til", "der", "det", "en", "hvis", "med", "før", "eller", "kan", "har", "inden", "for"}
+DUTCH_MARKERS = {"ik", "je", "en", "is", "op", "van", "te", "de", "het", "een", "als", "met", "voor", "of", "kan", "heeft", "binnen", "naar", "mijn"}
 ENGLISH_MARKERS = {"the", "you", "is", "of", "to", "and", "can", "for", "with", "a", "it", "before", "are", "up", "what", "how"}
 
 
 def language_of(text):
-    """Guess en or da from stopwords. Crude on purpose, and cheap enough for every turn."""
+    """Guess en or nl from stopwords. Crude on purpose, and cheap enough for every turn."""
     words = {w.strip(".,?!").lower() for w in text.split()}
-    return "da" if len(words & DANISH_MARKERS) > len(words & ENGLISH_MARKERS) else "en"
+    return "nl" if len(words & DUTCH_MARKERS) > len(words & ENGLISH_MARKERS) else "en"
 
 
 def citation_hallucination(trace):

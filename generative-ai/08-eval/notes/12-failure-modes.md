@@ -172,7 +172,7 @@ Every prompt tweak you keep because it scored better on the eval set is fitting 
 - If dev and test diverge, you've overfit. Freshen dev from production.
 - Small suites overfit faster: on 50 tasks, one lucky flip is 2 points.
 - Every score you report from the test set leaks some information about it. ARC Prize used the same 100 private tasks from 2020 to 2024 and disclosed roughly 10,000 scores against them, enough for teams to fit the private set ([arXiv:2505.11831](https://arxiv.org/abs/2505.11831) (Chollet et al., 2025-05)). Limit how often anyone sees test scores, and rotate the set eventually.
-- Same for judges: tune on the dev split of human labels, report on test ([05](05-llm-as-judge.md#the-procedure)).
+- Same for judges: tune on the dev split of human labels, report on test ([15](15-calibration-against-human-labels.md#the-procedure)).
 
 ---
 
@@ -206,9 +206,9 @@ Benchmark maintainers can keep part of the data private and evaluate submissions
 
 | Problem | Fix |
 |---|---|
-| Judge model silently updated | Pin the version; re-calibrate on change ([05](05-llm-as-judge.md#keep-it-calibrated)) |
+| Judge model silently updated | Pin the version; re-calibrate on change ([15](15-calibration-against-human-labels.md#keep-it-calibrated)) |
 | Provider model update changes the system's behaviour | Re-run the suite on every model change. Chen et al. (2023) found GPT-3.5 and GPT-4 scores changed significantly on many benchmarks between March and June 2023. Moving from GPT-3.5-turbo-0301 to -1106 cost Voiceflow 10% on intent classification while it improved GoDaddy's support bot (*AI Engineering*, ch. 4): the same update can help one app and hurt another |
-| Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift)) |
+| Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift); [Shankar et al.](https://arxiv.org/abs/2404.12272), UIST 2024: criteria move as people grade) |
 | Uncalibrated judge used as a release gate | Grader states: experimental never gates ([04](04-graders.md#grader-states-which-ones-can-block-a-release)) |
 | Judge from the same family as the SUT | Different model family ([05](05-llm-as-judge.md#known-biases)) |
 | Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](13-case-study-support-agent.md#calibration-results)) |

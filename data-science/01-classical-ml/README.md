@@ -53,7 +53,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | Chapter | Why |
 |---|---|
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Recall and precision at k are the confusion matrix at one cut-off |
-| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | A judge's matrix, with PASS as positive |
+| [GA 08/15 Calibrating a judge](../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md#what-to-measure) | A judge's matrix, with PASS as positive |
 | [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | The retrieval reading of the same table |
 | [AIE 09/03 Guardrail models](../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) | The guard's reading of the same table |
 | [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Low recall and low precision as cells of the table |

@@ -68,7 +68,8 @@ parts:
                   optimizer.step()
           model.eval()                  # before scoring
           with torch.no_grad():
-              acc = (model(X_te).argmax(1) == y_te).float().mean()
+              pred = model(X_te).argmax(1)
+              acc = (pred == y_te).float().mean()
         bullets:
           - "**Digits MLP:** train 0.985, test 0.972."
           - "**Forget `eval()`** and batch norm quietly costs points, as part 2 shows."
@@ -135,11 +136,11 @@ parts:
         recall: What does `eval()` change in batch norm, and what does forgetting it cost?
         lang: python
         code: |-
-          model = run(bnnet())        # BatchNorm1d in each layer
-          model.eval()                # running averages
+          model = run(bnnet())  # BatchNorm1d in each layer
+          model.eval()          # running averages
           # batch 32: test 0.983
 
-          model.train()               # the bug: batch statistics
+          model.train()         # the bug: batch statistics
           # batch 32: test 0.892
           # batch  2: eval 0.809, train mode 0.717
         bullets:
@@ -359,7 +360,7 @@ parts:
           saying before quoting the ImageNet results, whose runs used different architectures.
 
   - title: How does a network carry memory?
-    summary: The recurrent cell · Forget-gate bias · Attention
+    summary: The recurrent cell · Forget-gate bias · Attention · Autoencoders
     notes: >-
       Sequences have an order and any length. The problem with recurrent networks is keeping memory alive.
     slides:
@@ -448,6 +449,60 @@ parts:
         notes: >-
           The whole experiment runs in seconds. And we can read the weights: year digits look at the year, month digits at the
           month, day digits at the day. With only 500 pairs neither one solves it, because that's only 42 updates.
+
+      - layout: code
+        title: An autoencoder beats PCA only where the code is tight
+        kicker: The bottleneck on its own
+        recall: Where did the autoencoder beat PCA on reconstruction, and what should you compute first?
+        lead: "An encoder squeezes the input to a small vector, the code, and a decoder rebuilds it. The loss is the difference, so no labels are needed."
+        lang: python
+        code: |-
+          def make_ae(code, hidden=128):
+              return nn.Sequential(
+                  nn.Linear(64, hidden), nn.ReLU(), nn.Linear(hidden, code), nn.ReLU(),
+                  nn.Linear(code, hidden), nn.ReLU(), nn.Linear(hidden, 64), nn.Sigmoid())
+
+          # held-out squared error per image, mean (sd) over five splits, 1,797 digits
+          # code 2   autoencoder 2.807 (0.513)   PCA 3.399 (0.029)
+          # code 4   autoencoder 1.739 (0.393)   PCA 2.432 (0.018)
+          # code 8   autoencoder 1.233 (0.112)   PCA 1.569 (0.025)
+          # code 16  autoencoder 0.764 (0.198)   PCA 0.738 (0.008)
+          # code 32  autoencoder 0.315 (0.067)   PCA 0.171 (0.004)
+        takeaway: Compute PCA first, since at a code of 32 it is ahead with far less variation between runs and no training.
+        source: notes/05-sequence-models.md
+        notes: >-
+          The seq2seq model squeezed a sentence through one vector and suffered for it. An autoencoder makes that squeeze the whole point. It can't copy through a narrow code, so it has to learn what is regular in the data. Hinton and Salakhutdinov set this out as a non-linear PCA and reached a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA. Our digits are far smaller than MNIST, so don't compare the scale of these numbers with theirs.
+
+      - layout: table
+        title: Corrupting the input stops a wide network from copying
+        kicker: Denoising
+        recall: What replaces the bottleneck in a denoising autoencoder, and what does it cost on clean images?
+        lead: "A wide network, 256 hidden units. Test images have 30% of pixels zeroed. Handing back the corrupted image scores an error of 4.495 against the clean one."
+        header: ["Trained on", "Error, clean input", "Error, corrupted input", "Distance from the corrupted input"]
+        widths: [3, 2, 2, 3]
+        highlight: [1]
+        rows:
+          - ["Clean input (plain)", "0.077", "3.771", "0.216"]
+          - ["30% of pixels zeroed (denoising)", "0.545", "**0.927**", "3.756"]
+        takeaway: The plain network copies the holes and the denoising one repairs them, paying with a worse rebuild of clean images, 0.545 against 0.077.
+        source: notes/05-sequence-models.md
+        notes: >-
+          Vincent and colleagues asked what happens if you drop the bottleneck. Now copying fails even with a code wider than the input, so the corruption is the constraint, and it applies only during training. Their model selection chose very wide layers, 2,000 units for 784 pixels. Stacked denoising layers beat ordinary stacked autoencoders on most of their tasks, though not all. The denoising network has learned a different job, which is why clean images get worse.
+
+      - layout: image
+        title: The best reconstruction is not the best detector
+        kicker: Anomaly score
+        recall: Why does a wider code rebuild better and detect worse, and how should you choose its size?
+        image: ../../sources/images/dl-autoencoder-bottleneck.png
+        caption: "Hide one digit from training, then score by reconstruction error. Mean over all ten digits, five splits each. Run `practice/autoencoder.py`."
+        bullets:
+          - "**PCA:** error keeps falling, yet AUC drops from 0.885 at code 8 to 0.743 at 32."
+          - "**Autoencoder:** AUC falls from 0.954 at code 16 to 0.910 at 32."
+          - "**Hardest digit:** the 1, at 0.848."
+        takeaway: A code wide enough to rebuild everything rebuilds the anomalies too, so choose its size on labelled anomalies if you have some.
+        source: notes/05-sequence-models.md
+        notes: >-
+          Neither paper proposes this, as both are after representations, so this is the course's own test. Train on normal data only, and the model fails on what doesn't resemble it. The autoencoder peaks at 0.956 at a code of 8, and it beats PCA at every size here. The digit 1 is hardest, plausibly because its few strokes are easy to rebuild from the others. For tables, try an isolation forest or a Gaussian first, and reach for this on images or other raw signals. To sample from the code, the VAE is in the Bayesian analysis pillar.
 
   - title: What does a model need to read text?
     summary: Token ids · Four models · Frozen encoders · Fine-tuning
@@ -551,7 +606,7 @@ parts:
             body: "Sweep by factors of ten. Use AdamW rather than L2 in Adam."
             accent: 0F7490
           - title: Keep the control
-            body: "Baseline, from-scratch and several seeds. Transfer and contrastive learning both lost in small runs here."
+            body: "Baseline, from-scratch, PCA and several seeds. Transfer and contrastive learning both lost in small runs here."
             accent: 5B21B6
           - title: Match data to architecture
             body: "Sharing for images, memory for sequences, attention for alignment."

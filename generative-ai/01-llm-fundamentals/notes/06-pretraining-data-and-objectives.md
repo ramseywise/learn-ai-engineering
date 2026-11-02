@@ -1,11 +1,11 @@
 ---
 origin: synthesis
 sources:
-  - https://arxiv.org/abs/2203.02155
-  - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 1, 5–7"
+  - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 5–7"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 1, 5–8"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 1–2"
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 2–3"
+  - https://arxiv.org/abs/2203.02155
   - https://github.com/rasbt/LLMs-from-scratch
   - https://arxiv.org/abs/2412.15115
   - https://arxiv.org/abs/2404.14219
@@ -14,11 +14,6 @@ sources:
   - https://arxiv.org/abs/2401.16380
   - https://arxiv.org/abs/1910.02054
   - https://arxiv.org/abs/1711.05101
-  - https://arxiv.org/abs/1706.02677
-  - https://arxiv.org/abs/1812.06162
-  - https://arxiv.org/abs/1804.04235
-  - https://arxiv.org/abs/2505.02222
-  - https://arxiv.org/abs/2607.20548
   - https://arxiv.org/abs/2012.07805
   - https://doi.org/10.18653/v1/2022.acl-long.577
   - https://arxiv.org/abs/2406.10209
@@ -32,22 +27,12 @@ sources:
   - https://arxiv.org/abs/2411.12580
   - https://arxiv.org/abs/2305.10266
   - https://arxiv.org/abs/2306.11644
-  - https://arxiv.org/abs/2404.10102
-  - https://arxiv.org/abs/2608.07222
-  - https://arxiv.org/abs/2503.10061
-  - https://arxiv.org/abs/2301.03728
-  - https://arxiv.org/abs/2104.10350
   - https://arxiv.org/abs/2402.00838
   - https://arxiv.org/abs/2501.00656
   - https://arxiv.org/abs/2312.06550
-  - https://arxiv.org/abs/2307.09288
-  - https://arxiv.org/abs/2310.06825
-  - https://arxiv.org/abs/2309.03852
   - https://arxiv.org/abs/2508.06471
   - https://arxiv.org/abs/1910.10683
   - https://doi.org/10.18653/v1/2021.naacl-main.41
-  - https://arxiv.org/abs/2205.01068
-  - https://arxiv.org/abs/2211.05100
   - https://arxiv.org/abs/2204.02311
   - https://arxiv.org/abs/2305.06161
   - https://arxiv.org/abs/2411.04905
@@ -61,7 +46,7 @@ cleaned: 2026-11-01
 
 > Pretraining buys knowledge, supervised fine-tuning buys format, preference optimization buys judgment, and LoRA makes the last two affordable. Know which stage a problem belongs to before you reach for fine-tuning.
 
-A team asks whether they should train their own support model on five years of tickets. Before anyone reaches for a GPU, it helps to know what the question means: what training optimises, what it needs, and what it costs. Pretraining is the stage that builds the base model every later stage inherits, and it takes almost all of the compute. Its loop is short enough to fit on a slide, while the scale it runs at is what makes it a capital decision. This chapter starts with the loop, runs it on the smallest data that shows every moving part, then scales the arithmetic up until the reasons few organisations do this are plain.
+A team asks whether they should train their own support model on five years of tickets. Before anyone reaches for a GPU, it helps to know what the question means: what training optimises, what it needs, and what it costs. Pretraining is the stage that builds the base model every later stage inherits, and it takes almost all of the compute. Its loop is short enough to fit on a slide, while the scale it runs at is what makes it a capital decision. This chapter starts with the loop, runs it on the smallest data that shows every moving part, then looks at the data it reads. [Chapter 15](15-pretraining-runs-cost-and-scale.md) scales the arithmetic up until the reasons few organisations do this are plain.
 
 ---
 
@@ -143,13 +128,9 @@ Things worth knowing about the loss:
 
 - **Save the optimizer state with the weights.** AdamW keeps two running statistics per parameter. Resume from weights alone and the first steps behave like a fresh optimizer (*LLMs from Scratch*, ch. 5). LLM360 made that mistake at scale: Amber's training code saved no optimizer state, so AdamW restarted from scratch at every resume. The authors suspect this caused the NaN losses that made them drop 4 of 360 data chunks ([arXiv:2312.06550](https://arxiv.org/abs/2312.06550) (Liu et al., 2023, preprint)). That state is most of the training memory. With mixed precision, Adam needs about 16 bytes per parameter: 2 for fp16 weights, 2 for fp16 gradients, and 12 for the fp32 master weights, momentum and variance. A 1.5B GPT-2 therefore needs at least 24 GB before activations, against 3 GB for its fp16 weights. ZeRO's answer is to shard that state across the data-parallel GPUs instead of copying it to each one. Sharding the optimizer state cuts per-GPU model-state memory 4×, and sharding the gradients as well cuts it 8×, at the same communication volume as plain data parallelism. With that, models of up to 13B trained with no model parallelism on 32 GB V100s, where plain data parallelism ran out of memory above 1.4B ([arXiv:1910.02054](https://arxiv.org/abs/1910.02054) (Rajbhandari et al., SC 2020)). Sharding the weights too (stage 3, the scheme PyTorch FSDP's full sharding follows) was described but not yet built at publication. The "W" in AdamW is *decoupled* weight decay. Under Adam, an L2 penalty is divided by the adaptive denominator, so weights with large gradients are barely regularized. Shrinking the weights directly, outside the gradient, cut test error by about 15% relative on CIFAR-10 and ImageNet 32×32 ResNets, and made the best learning rate independent of the best decay ([arXiv:1711.05101](https://arxiv.org/abs/1711.05101) (Loshchilov & Hutter, ICLR 2019)). That evidence is image classification only; the LLM default came by adoption.
 
-Real pretraining runs add data curation (deduplication, quality filtering, mixing code and text), learning-rate warmup and cosine decay, gradient clipping and mixed precision. Clipping does not prevent every blow-up. PaLM 540B's loss spiked about 20 times during training, at irregular intervals and sometimes late, although none of the smaller models spiked. The fix was to restart about 100 steps before the spike and skip 200–500 batches. Replaying those same batches from an earlier checkpoint caused no spike, so the authors blame the combination of data and parameter state, not bad data. PaLM also dropped all bias terms and added an auxiliary *z-loss* (10⁻⁴ · log²Z) that keeps the softmax normalizer near 1, both for stability ([arXiv:2204.02311](https://arxiv.org/abs/2204.02311) (Chowdhery et al., JMLR 2023)). Raschka also loads the released GPT-2 weights into the hand-built model, which proves the architecture in [chapter 02](02-attention-and-the-transformer-block.md) matches the real one (*LLMs from Scratch*, ch. 5).
+Real pretraining runs add data curation (deduplication, quality filtering, mixing code and text), learning-rate warmup and cosine decay ([chapter 15](15-pretraining-runs-cost-and-scale.md#the-batch-and-the-optimizer)), gradient clipping and mixed precision. Clipping does not prevent every blow-up. PaLM 540B's loss spiked about 20 times during training, at irregular intervals and sometimes late, although none of the smaller models spiked. The fix was to restart about 100 steps before the spike and skip 200–500 batches. Replaying those same batches from an earlier checkpoint caused no spike, so the authors blame the combination of data and parameter state, not bad data. PaLM also dropped all bias terms and added an auxiliary *z-loss* (10⁻⁴ · log²Z) that keeps the softmax normalizer near 1, both for stability ([arXiv:2204.02311](https://arxiv.org/abs/2204.02311) (Chowdhery et al., JMLR 2023)). Raschka also loads the released GPT-2 weights into the hand-built model, which proves the architecture in [chapter 02](02-attention-and-the-transformer-block.md) matches the real one (*LLMs from Scratch*, ch. 5).
 
-**Most "open" models release only the weights, which hides those steps.** LLM360 scored 16 open models, from GPT-J (2021) to Yi (2023), on seven artifacts: code, configs, weight checkpoints, optimizer checkpoints, data mix, data order and the data itself. Disclosure shrank as the models got stronger. Llama 2, Qwen, Mistral and Yi released weights and little else. LLM360's Amber (6.7B, 1.26T tokens) released all seven, with 360 checkpoints. It copied LLaMA's hyperparameters and still trailed LLaMA-7B, 45.2 to 49.7 averaged over four leaderboard tasks. The authors blame LLaMA's undisclosed data ([arXiv:2312.06550](https://arxiv.org/abs/2312.06550) (Liu et al., 2023, preprint)). OLMo released its 2.7T-token corpus (Dolma), more than 500 checkpoints, its training logs and a reproducible data order, under Apache 2.0 ([arXiv:2402.00838](https://arxiv.org/abs/2402.00838) (Groeneveld et al., ACL 2024)). OLMo 2 closed most of the gap. Its 7B model, trained on 4.05T tokens, averaged 62.9 on ten benchmarks against Llama 3.1 8B's 61.8, with about a quarter of the training compute (1.8 against 7.2 × 10²³ FLOPs). The last 5–10% of that compute is a *mid-training* stage: the learning rate decays to zero on a smaller mix of filtered web pages, academic text and synthetic math, and three or four such runs are averaged into the final model ([arXiv:2501.00656](https://arxiv.org/abs/2501.00656) (OLMo et al., 2024, preprint)). Open-weight frontier reports give that stage much more. GLM-4.5, a 355B mixture-of-experts model with 32B active, pretrained on 22T tokens: 15T of general text, then 7T with code, maths and science upweighted. Its highest-quality web bucket was repeated more than 3.2 times. It then mid-trained on about 1.1T more tokens. That was 500B of repository-level code with issues and pull requests, 500B of synthetic reasoning traces and 100B of long documents and agent trajectories, while the context grew from 4K to 32K and then 128K ([arXiv:2508.06471](https://arxiv.org/abs/2508.06471) (GLM-4.5 Team, 2025, preprint)). It used Muon, and kept cosine decay after a warmup-stable-decay schedule underfit in early tests. The report has no ablation of the mid-training stages. The FLOPs are 6ND estimates and the benchmarks are Ai2's own suite, though four of the ten were held out from development.
-
-**Batch size and learning rate move together, up to a limit.** Goyal et al. trained ResNet-50 on ImageNet with a batch of 8,192 on 256 GPUs in one hour and matched the batch-256 top-1 error (23.74% vs 23.60%). They multiplied the learning rate by the batch-size ratio and ramped it up linearly over the first 5 epochs. Without the warmup, error was 24.84%; past 8k it rose anyway, to 27.55% at 32k ([arXiv:1706.02677](https://arxiv.org/abs/1706.02677) (Goyal et al., 2017, preprint)). This is where the linear warmup in LLM recipes comes from, although the evidence is SGD on images. McCandlish et al. explain where the limit sits. The *gradient noise scale*, the gradient's variance divided by its squared norm, predicted the critical batch size to within an order of magnitude on tasks ranging from about 20 (an SVHN autoencoder) to over 10 million (Dota 5v5). At that batch, training takes twice the minimum number of steps and twice the minimum data. The noise scale grows as the loss falls, often 10× over a run, so later training tolerates bigger batches ([arXiv:1812.06162](https://arxiv.org/abs/1812.06162) (McCandlish et al., 2018, preprint)). Their model rests on training loss and a local quadratic approximation.
-
-**Newer optimizers go after AdamW's memory and its batch limit.** Adafactor stores only row and column averages of the squared gradient, O(n + m) memory for an n × m matrix instead of O(nm), and can drop momentum. On a WMT'14 En→De Transformer, the factored version without momentum matched Adam (BLEU 25.4 vs 25.4, with warmup). Without warmup, its β₂ = 0.999 setting collapsed (BLEU 0.2) unless updates were clipped (22.4) ([arXiv:1804.04235](https://arxiv.org/abs/1804.04235) (Shazeer & Stern, ICML 2018)). Muon keeps a single momentum buffer and orthogonalizes each matrix update with a Newton–Schulz iteration. Across models of 100M–4B parameters and batches up to 16M tokens, it reached AdamW's loss with 10–15% fewer tokens, and the gap held beyond the critical batch. Hyperparameters transferred with μP up to 3.7B ([arXiv:2505.02222](https://arxiv.org/abs/2505.02222) (Essential AI, 2025, preprint)). Both comparisons are on training loss. NVIDIA took Muon and SOAP to an 8B dense model, a 30B-A3B MoE and a 72B-A8B hybrid on 1–3T tokens. Both stayed stable up to batches of about 100M tokens, where AdamW degraded. Downstream gains were uneven: the 72B-A8B hybrid with Muon at twice the batch scored 4.5 points higher than AdamW on coding and 3.3 points lower on math. Plain SOAP diverged at 8B until they changed how it estimates its preconditioner. They also scale the learning rate by the square root of the batch ratio, not Goyal's linear rule, for large batch jumps ([arXiv:2607.20548](https://arxiv.org/abs/2607.20548) (Khona et al., 2026, preprint)).
+**Most "open" models release only the weights, which hides those steps.** LLM360 scored 16 open models, from GPT-J (2021) to Yi (2023), on seven artifacts: code, configs, weight checkpoints, optimizer checkpoints, data mix, data order and the data itself. Disclosure shrank as the models got stronger. Llama 2, Qwen, Mistral and Yi released weights and little else. LLM360's Amber (6.7B, 1.26T tokens) released all seven, with 360 checkpoints. It copied LLaMA's hyperparameters and still trailed LLaMA-7B, 45.2 to 49.7 averaged over four leaderboard tasks. The authors blame LLaMA's undisclosed data ([arXiv:2312.06550](https://arxiv.org/abs/2312.06550) (Liu et al., 2023, preprint)). OLMo released its 2.7T-token corpus (Dolma), more than 500 checkpoints, its training logs and a reproducible data order, under Apache 2.0 ([arXiv:2402.00838](https://arxiv.org/abs/2402.00838) (Groeneveld et al., ACL 2024)). OLMo 2 closed most of the gap. Its 7B model, trained on 4.05T tokens, averaged 62.9 on ten benchmarks against Llama 3.1 8B's 61.8, with about a quarter of the training compute (1.8 against 7.2 × 10²³ FLOPs). The last 5–10% of that compute is a *mid-training* stage: the learning rate decays to zero on a smaller mix of filtered web pages, academic text and synthetic math, and three or four such runs are averaged into the final model ([arXiv:2501.00656](https://arxiv.org/abs/2501.00656) (OLMo et al., 2024, preprint)). Open-weight frontier reports give that stage much more. GLM-4.5, a 355B mixture-of-experts model with 32B active, pretrained on 22T tokens: 15T of general text, then 7T with code, maths and science upweighted. Its highest-quality web bucket was repeated more than 3.2 times. It then mid-trained on about 1.1T more tokens. That was 500B of repository-level code with issues and pull requests, 500B of synthetic reasoning traces and 100B of long documents and agent trajectories, while the context grew from 4K to 32K and then 128K ([arXiv:2508.06471](https://arxiv.org/abs/2508.06471) (GLM-4.5 Team, 2025, preprint)). It used [Muon](15-pretraining-runs-cost-and-scale.md#the-batch-and-the-optimizer), and kept cosine decay after a warmup-stable-decay schedule underfit in early tests. The report has no ablation of the mid-training stages. The FLOPs are 6ND estimates and the benchmarks are Ai2's own suite, though four of the ten were held out from development.
 
 Not every curation step is a guaranteed win. Pythia trained eight model sizes, from 70M to 12B parameters, twice each: once on the Pile (300B tokens) and once on a near-deduplicated Pile of 207B tokens, run for about 1.5 epochs so that it also reached 300B. Both runs used the same data order and saved 154 checkpoints ([arXiv:2304.01373](https://arxiv.org/abs/2304.01373) (Biderman et al., 2023-04)). On eight standard benchmarks, deduplication showed "no clear benefit", and seeing the data a second time did no visible harm. Galactica pushed repetition further on a small, curated corpus: 106B tokens, 83% of them scientific papers, run for about 4.25 epochs (450B tokens). **Validation loss kept falling through four epochs at every size from 125M to 120B, and the 120B model first overfit at the start of the fifth, where it was stopped** ([arXiv:2211.09085](https://arxiv.org/abs/2211.09085) (Taylor et al., 2022, preprint)). The authors expected the opposite from earlier work on repeated data and leave the cause open, guessing at data quality or the scientific modalities. The exception was a held-out protein-sequence set, whose perplexity started rising at the fourth epoch, and there is no matched run on uncurated web text. The same suite showed that memorized 32-token sequences turn up at a steady rate through training, fitting a Poisson process. So putting sensitive data early or late in training does not change how much of it gets memorized. Each size was trained with one seed; the authors estimate that 25 seeds would have cost about $10 million. The 12B model alone took 72,300 A100-hours.
 
@@ -188,79 +169,12 @@ Two limits are closing in, according to Huyen (*AI Engineering*, ch. 2). **Data:
 
 ---
 
-### What it costs
-
-Count training compute in **FLOPs** (operations) and hardware speed in **FLOP/s** (operations per second); the two are easy to confuse (*AI Engineering*, ch. 2). GPT-3 175B took 3.14 × 10²³ FLOPs. Huyen's estimate for redoing it on 256 H100s at a peak of 60 TFLOP/s, with no failures, is about 236 days, and at 70% utilization and $2 per H100-hour, over $4 million. Two cautions. First, 60 TFLOP/s is roughly the H100's 32-bit rate; training runs in BF16 on tensor cores, whose dense peak is on the order of 1,000 TFLOP/s, so the real time and cost would be an order of magnitude lower. Second, the book's cost formula multiplies by 256 days, not the 236 in its own text. Read the example as a method, not a quote.
-
-Raschka's estimate for an open model (*LLMs from Scratch*, ch. 5): Llama 2 7B took 184,320 A100 GPU-hours on 2 trillion tokens, about $690,000 at $30 an hour for an 8×A100 cloud server. He cites an estimate of about $4.6 million in cloud credits for GPT-3's pretraining (*LLMs from Scratch*, ch. 1). The 184,320 is from Meta's own table, which puts the whole Llama 2 family (7B, 13B, 34B and 70B, each on 2T tokens) at 3.3M A100-hours and 539 tCO2e. Those figures assume every GPU drew its rated peak power (350–400 W), and they leave out cooling, networking and the rest of the server ([arXiv:2307.09288](https://arxiv.org/abs/2307.09288) (Touvron et al., 2023, preprint)).
-
-Growing the model during training is one way to cut the bill. FLM-101B trained a 16B model on 245B tokens, then expanded it with function-preserving operators to 51B (40B more tokens) and to 101B (27B more). The run took 21.5 days on 192 A800 GPUs, against an estimated 76.7 days for a 101B model from scratch, for about $100K ([arXiv:2309.03852](https://arxiv.org/abs/2309.03852) (Li et al., 2023, preprint)). The headline, 80% of the baselines' scores for 10% of their FLOPs, flatters the result. On four leaderboard tasks it averaged 43.9, against 54.3 for Llama 2 7B, which had about 4× the training compute of FLM's English share. Its MMLU of 28.3 is close to chance (25%), and there was no from-scratch 101B run to compare against.
-
-The same accounting gives the carbon bill. Energy is hours × processors × measured average power × the data centre's overhead (PUE). Emissions are energy × the grid's carbon intensity. Patterson et al. put GPT-3's training at 1,287 MWh and 552 tCO2e: 10,000 V100s for 14.8 days, at PUE 1.1 and 0.429 kg CO2e per kWh. Some of those inputs are guesses: the GPU count comes from an NVIDIA press release, and 0.429 is the US average because the Azure site was not reported. **They estimate that the choice of model, data centre and processor can shrink the footprint by about 100–1000×.** They also cut an earlier, widely quoted estimate for a neural-architecture search by 88× ([arXiv:2104.10350](https://arxiv.org/abs/2104.10350) (Patterson et al., 2021, preprint)). The grid matters as much as the GPUs. In OLMo's comparison table, BLOOM-176B used 433 MWh but emitted only 30 t on France's low-carbon grid, against 380 t for Gopher's 1,066 MWh.
-
-OLMo-7B's A100 run in Australia took 104 MWh and emitted about 70 t, while its twin on LUMI's hydro-powered MI250Xs counted as zero (about 3.5 t at a typical hydro intensity of 0.024 kg/kWh) ([arXiv:2402.00838](https://arxiv.org/abs/2402.00838) (Groeneveld et al., ACL 2024)). OLMo 2 added water: 202 kL for the 7B and 892 kL for the 13B, next to 52 and 101 tCO2e. On the same table, Llama 3.1 8B used 1,022 MWh and 420 tCO2e, against 131 MWh for OLMo 2 7B ([arXiv:2501.00656](https://arxiv.org/abs/2501.00656) (OLMo et al., 2024, preprint)). These are lower bounds. They count the final run's electricity only, not hardware manufacture, failed and tuning runs, or inference, and Patterson et al. are Google authors measuring mostly Google hardware. OPT-175B shows what the final-run figure leaves out. Meta trained it on 992 80GB A100s, at up to 147 TFLOP/s per GPU, and estimated 75 tCO2e, against 500 t it attributes to GPT-3 (Patterson's table says 552) and 380 t for Gopher.
-
-Over two months, hardware failures forced at least 35 manual restarts and the cycling of more than 100 hosts. Loss divergences were handled by lowering the learning rate and rewinding to an earlier checkpoint. Counting ablations, baselines and downtime, the authors put their own total at roughly 2× the 75 t ([arXiv:2205.01068](https://arxiv.org/abs/2205.01068) (Zhang et al., 2022, preprint)). BLOOM's report counts more of the life cycle. Training the 176B model took 3.5 months on 384 A100s, and it estimates 81 tCO2e. Of that, 25 t was electricity for training (OLMo's table lists 30 t), 11 t was hardware manufacture and 45 t was the cluster's idle draw. The final run was about 37% of the project's compute emissions. At 57 gCO2e/kWh, its 433 MWh emitted about a third of OPT's 70 t (BLOOM's figure for OPT) from 324 MWh at 231 g.
-
-It had one loss spike and 1–2 GPU failures a week, absorbed by spare nodes and checkpoints every three hours. The authors credit bfloat16 for the stability: their earlier float16 runs at 104B had diverged irreversibly ([arXiv:2211.05100](https://arxiv.org/abs/2211.05100) (BigScience Workshop, 2022, preprint)). PaLM 540B used 2.56 × 10²⁴ FLOPs: 1,200 hours on 6,144 TPU v4 chips plus 336 on 3,072, including downtime. It was trained in an Oklahoma data centre (PUE 1.08) running on 89% carbon-free energy at 0.079 tCO2e/MWh, and the estimate is 271 tCO2e. The same paper introduced *model FLOPs utilization* (MFU): achieved tokens per second divided by what the chips' peak FLOP/s would allow, without counting recomputed activations. PaLM reached 46.2%. By the paper's own calculation, GPT-3 reached 21.3% and Megatron-Turing NLG 30.2% ([arXiv:2204.02311](https://arxiv.org/abs/2204.02311) (Chowdhery et al., JMLR 2023)). MT-NLG's own paper reports 113–126 TFLOP/s per A100, 36–40% of the 16-bit peak, on 280–420 eight-GPU servers. Each copy of the model spanned 280 GPUs, split 8 ways by tensor slicing inside a server and 35 ways by pipeline stage across servers ([arXiv:2201.11990](https://arxiv.org/abs/2201.11990) (Smith et al., 2022, preprint)). The two figures measure different things: MFU leaves out recomputed activations, and the paper does not say which configuration ran the full 270B tokens.
-
----
-
-### Scaling, in practice
-
-Chinchilla ([chapter 03](03-scale-and-the-model-zoo.md#scale)) trained 400 models from 70M to over 16B parameters on 5B to 500B tokens and found the compute-optimal ratio is about 20 training tokens per parameter, scaled together: double the model, double the data (*AI Engineering*, ch. 2). Three qualifications from Huyen:
-
-- **Compute-optimal is not deployment-optimal.** Llama was deliberately trained past the Chinchilla point: a smaller model on more tokens costs more to train but less to run. Sardana et al. (2023) rewrote the scaling law to include expected inference demand. Mistral 7B is the case for it. On Mistral's own re-run of every benchmark it beat Llama 2 13B on all of them (MMLU 60.1% against 55.6%), and on reasoning and MMLU it scored like a Llama 2 more than 3× its size. On knowledge (NaturalQuestions, TriviaQA) the factor was only 1.9×, which the authors put down to how much a 7B model can store ([arXiv:2310.06825](https://arxiv.org/abs/2310.06825) (Jiang et al., 2023, preprint)). They call scaling a three-way problem: capability, training cost and inference cost. They never disclosed the training data or token count, so the training-cost side cannot be checked. Llama 3 8B's 15T tokens is close to 2,000 tokens per parameter. Qwen2.5 trained every size on the same 18T tokens, which is about 36,000 tokens per parameter at 0.5B ([arXiv:2412.15115](https://arxiv.org/abs/2412.15115) (Qwen Team, 2024-12)). The payoff is at deployment. Quantized to 4 bits, phi-3-mini takes about 1.8GB and runs at more than 12 tokens per second on an iPhone 14 ([arXiv:2404.14219](https://arxiv.org/abs/2404.14219) (Abdin et al., 2024-04)).
-- **Returns diminish.** Going from a cross-entropy of about 3.4 to 2.8 nats takes ten times more data, yet users notice the difference.
-- **Hyperparameters cannot be searched at full size.** Teams tune on small models and extrapolate. Microsoft and OpenAI's μTransfer moved hyperparameters found on a 40M model to a 6.7B one.
-
-**The 20 survived a re-check, but the formula is shakier than it looks.** Chinchilla's parametric fit had been mis-optimized. Refitted, it agrees with the other two approaches on about 20 tokens per parameter, though with an interval of 4 to 40 at 1e26 FLOPs ([arXiv:2404.10102](https://arxiv.org/abs/2404.10102) (Besiroglu et al., 2024, preprint); details in [chapter 03](03-scale-and-the-model-zoo.md#scale)). The fitted law also adds a size term to a data term, so the benefit of more data cannot depend on model size. Skaling raises that sum to a fitted power k. On Farseer's 404 runs up to 6.4B parameters, k came out at 0.41, and extrapolation error to the largest models fell from 1.48% to 0.47% MAPE. One order of magnitude past the data, at 2e25 FLOPs, the recommended token-to-parameter ratios sit more than 10× apart: about 380 for Chinchilla's fit, against 20–40 for Skaling and for a fit-free estimate read off the runs ([arXiv:2608.07222](https://arxiv.org/abs/2608.07222) (Videau et al., 2026, preprint)). Skaling fitted only to an L-shaped grid of cheap runs (small models swept over data, short runs swept over size), about a tenth of the fitting compute, still matched or beat Chinchilla fitted to the full grid. That result depends on the data. On Chinchilla's own measurements (k = 0.77) and on Farseer's code subset, k is 0.77 to 0.90 and the gain disappears. On the authors' own grid the recommended ratio moves in the opposite direction with compute, so the sign of the correction depends on data and recipe.
-
-**"Compute-optimal" also depends on which loss you scale.** Roberts et al. ran IsoFLOP sweeps from 6e18 to 3e21 FLOPs on a Llama-3-style recipe, with models from 40M to 8B parameters, and fitted a separate optimum for each skill. Knowledge QA wanted more parameters and code wanted more tokens. The gap held after they equalized the share of each skill's data in the mix; the two optima only lined up when code made up about 2.1× as much of the mix as knowledge data. At the smallest budget, changing the datamix moved one skill's optimal parameter count by almost 50%, and just changing the validation set moved the optimal parameter count by more than 30%. At the three largest budgets it still moved it by more than 10% ([arXiv:2503.10061](https://arxiv.org/abs/2503.10061) (Roberts et al., 2025, preprint)). Mixed-modal training adds a term for interaction between modalities. Over 250 runs on seven modalities, with laws fitted on models up to 6.7B and tested at 30B, Aghajanyan et al. found modalities compete in small models and help each other past a size their law predicts. For speech and text, the predicted point was about 28B parameters on 45B tokens, and a 30B model trained on 50B tokens did cross from competition into synergy ([arXiv:2301.03728](https://arxiv.org/abs/2301.03728) (Aghajanyan et al., ICML 2023)). All of this is perplexity, mostly at one epoch.
-
-*Building AI Agents* (ch. 3) adds the emergent-abilities debate covered in [chapter 03](03-scale-and-the-model-zoo.md) and the Kaplan law; it adds nothing to either.
-
----
-
-## Worked example: price a pretraining run before you plan one
-
-Every figure above reduces to the same few multiplications, so it is worth having them as code. Using Raschka's and Meta's numbers for Llama 2 7B, and counting memory per parameter for a 1.5B model trained with Adam (weights, gradients and two running statistics at 32 bits each):
-
-```python
-def cloud_cost(gpu_hours, gpus_per_server, price_per_server_hour):
-    return gpu_hours / gpus_per_server * price_per_server_hour
-
-def adam_memory_gb(params, bytes_per_value=4):
-    weights, gradients, adam_stats = 1, 1, 2
-    return params * (weights + gradients + adam_stats) * bytes_per_value / 1e9
-
-print(f"Llama 2 7B at $30/hour for 8×A100:  ${cloud_cost(184_320, 8, 30):>10,.0f}")
-print(f"Training memory, 1.5B params with Adam: {adam_memory_gb(1.5e9):.0f} GB, before any activations")
-print(f"Tokens per parameter, Llama 2 7B on 2T: {2e12 / 7e9:.0f}")
-
-support_tokens = 5 * 365 * 20_000 * 300    # 5 years, 20k tickets/day, 300 tokens each
-print(f"Five years of tickets: {support_tokens:,} tokens = {support_tokens / 2e12:.2%} of Llama 2's data")
-```
-
-```text
-Llama 2 7B at $30/hour for 8×A100:  $   691,200
-Training memory, 1.5B params with Adam: 24 GB, before any activations
-Tokens per parameter, Llama 2 7B on 2T: 286
-Five years of tickets: 10,950,000,000 tokens = 0.55% of Llama 2's data
-```
-
-The last line answers the question that opened the chapter. The ticket volume there is an assumption, chosen to be generous. Even so, a company's own text is a fraction of a percent of what a useful base model takes, so that data will not pretrain one. It might suit continued pretraining or fine-tuning, which is what the next chapter covers.
-
----
-
 ## Pitfalls
 
 - **Skipping the `ln(vocab)` check.** A loss that starts wrong is telling you there is a bug, long before the expensive part begins.
 - **Using only training loss.** Keep a held-out split from the same distribution, and watch it for the gap.
 - **Reading perplexity across tokenizers.** It depends on the vocabulary, so scores from different tokenizers are not comparable.
 - **Splitting after shuffling overlapping windows.** The same text ends up on both sides of the split and the validation score looks better than it is. Split first, then cut windows.
-- **Confusing FLOPs with FLOP/s.** One measures the work and the other the speed. Copying a cost example without noticing which is which can leave you an order of magnitude out.
-- **Quoting a headline cost as if it were a quote.** Most published costs are estimates, built on utilisation, price and hardware assumptions. Keep the setup attached to the number.
 - **Saving weights without the optimizer state.** A resumed run then behaves as if its optimizer were new.
 
 ---
@@ -269,14 +183,12 @@ The last line answers the question that opened the chapter. The ticket volume th
 
 1. In the training block, set `steps=0` in the training loop's `batches` call. What is the printed loss, and why?
 2. Change the model so that it cannot learn: replace `model(input_ids)` with `model(input_ids).detach().requires_grad_()`. What happens to the loss?
-3. Meta's table puts the whole Llama 2 family at 3.3M A100-hours. Price that with `cloud_cost` and compare it to the 7B alone.
 
 <details>
 <summary>Answers</summary>
 
 1. Train loss stays at the untrained value, about 3.2 here, close to ln(22) = 3.09 for this text's 22 characters. Nothing has trained.
 2. The loss stays at the untrained value. The gradient stops at the detached tensor, so the weights never change, which is a common bug behind a flat curve.
-3. `cloud_cost(3.3e6, 8, 30)` is about $12.4M, roughly 18 times the 7B's $691,200, under the same price assumption.
 
 </details>
 
@@ -289,12 +201,10 @@ The last line answers the question that opened the chapter. The ticket volume th
 | What is the training objective of pretraining? | Cross-entropy of the next token at every position, with labels being the input shifted by one, so no human labels are needed |
 | What is teacher forcing, and why does it make training parallel? | Each position sees the true previous tokens, so one masked forward pass scores all positions at once. Generation has to wait for its own output |
 | What should the loss be before training? | About `ln(vocab)`. A different value suggests a bug |
-| What dominates the cost of a run? | Compute-hours times price, set by parameters, tokens and hardware utilisation. Pretraining is about 98% of the compute for InstructGPT |
 | Why does training need far more memory than inference? | Weights, gradients and optimizer state for every parameter, and activations. Adam alone keeps two extra values per weight |
-| Why not pretrain on your company's data? | It is several orders of magnitude too small. Continue pretraining or fine-tune instead |
 
 ---
 
 ## Next
 
-[07 — Continued pretraining and supervised fine-tuning](07-sft-and-instruction-tuning.md) starts from an existing base model and teaches it a domain and a format.
+[15 — The pretraining run: batch, cost and scale](15-pretraining-runs-cost-and-scale.md) prices the loop at real scale and answers the question about the tickets.

@@ -44,7 +44,7 @@ Measured 2026-11-02 by reading the notes, not by word count.
 | Panel data | Clustered SEs in 02/06; DiD as a design in [03/04](data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | Fixed effects and two-way fixed effects with `linearmodels`, event studies |
 | A map of metrics by target | Detail in each chapter. The closest thing to "pick the model by the dependent variable" is the flowchart at the top of [02/06](data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md), which covers regression-family models only. The *Which model, when* table in [DS 01/02](data-science/01-classical-ml/notes/02-supervised-learning.md) sorts by model, not by target | One chapter organised by target; see the coverage table in §2.5 |
 | Reading errors | Definitions of Type I and II in [DA 02/05](data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md). The matrix and its formulas in [DS 01/04](data-science/01-classical-ml/notes/04-model-evaluation.md). Error counts priced by threshold in [DS 01/10](data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md). One false positive explained in [DS 01/08](data-science/01-classical-ml/notes/08-model-interpretability.md). Confusion pairs counted on digits in [DS 02/03](data-science/02-deep-learning/notes/03-structuring-ml-projects.md). A confusion table read in [DS 03/02](data-science/03-nlp/notes/02-text-classification.md). Open coding of traces in [GA 08/02](generative-ai/08-eval/notes/02-defining-correct.md) | A procedure for tabular data: profile the four cells, read the rows, slice, diagnose, and confirm on data you did not read. See §2.5, note 12 |
-| Judge calibration | [GA 08/05](generative-ai/08-eval/notes/05-llm-as-judge.md) calibrates against human labels and logs each prompt change with its TPR and TNR. [GA 08/04](generative-ai/08-eval/notes/04-graders.md) runs code first and stops early. [GA 06/03](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) sends flagged turns to a stronger judge and has code overrule a flag that contradicts the claim list. [AIE 01/08](ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md) turns judge feedback into prompt rewrites | Heuristics as a test of the judge; a rule for code and judge disagreeing; slicing judge errors by flag as a routine step; coding the critiques; testing whether a critique reports what drove the verdict |
+| Judge calibration | [GA 08/15](generative-ai/08-eval/notes/15-calibration-against-human-labels.md) calibrates against human labels and logs each prompt change with its TPR and TNR. [GA 08/04](generative-ai/08-eval/notes/04-graders.md) runs code first and stops early. [GA 06/03](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) sends flagged turns to a stronger judge and has code overrule a flag that contradicts the claim list. [AIE 01/08](ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md) turns judge feedback into prompt rewrites | Heuristics as a test of the judge; a rule for code and judge disagreeing; slicing judge errors by flag as a routine step; coding the critiques; testing whether a critique reports what drove the verdict |
 | Survival and event history | [06/03](data-analytics/06-applied-analyses/notes/03-cohort-and-retention.md) fits the shifted-beta-geometric curve to aggregate retention | Individual-level time-to-event: Kaplan-Meier, log-rank, Cox proportional hazards, censoring, time-varying covariates, competing risks; `lifelines` |
 | Markov chains and sequences | None (RL's MDP chapter in generative-ai is the only Markov material) | Customer-state transition matrices, absorbing states, Markov CLV (Pfeifer and Carraway); social sequence analysis and optimal matching (Abbott) for journeys and careers |
 | Lifetime value | [06/03](data-analytics/06-applied-analyses/notes/03-cohort-and-retention.md) prices cohorts; BG/NBD is a pointer | Fitting BG/NBD and Gamma-Gamma with `pymc-marketing`; LTV as a Markov reward; LTV to CAC under uncertainty |
@@ -235,7 +235,7 @@ The note has to state four limits:
 **2. Slice judge errors by flag.** Language, route, length, whether a citation is present, and the code
 check's result. Report TPR and TNR for each slice on dev, using DS 01/12's procedure and GA 08/09's
 multiple-comparison warning. GA 06/03 already has the example: 389 of the lenient judge's 415 false alarms
-are Danish turns. That finding becomes the worked case for a routine step.
+are Dutch turns. That finding becomes the worked case for a routine step.
 
 **3. Code the critiques.** Read them on every disagreement and on a sample of agreements, because a matching
 verdict can still rest on a wrong reason. This extends step 4 of note 05's procedure, which sorts
@@ -280,7 +280,7 @@ to claim anything about faithfulness.
 |---|---|---|
 | [GA 08/04 Graders](generative-ai/08-eval/notes/04-graders.md) | GA 08/14 (new) | One line in *Layer them, don't choose*: stop early in production, but not during calibration |
 | [GA 08/02 Defining correct](generative-ai/08-eval/notes/02-defining-correct.md) | GA 08/14 (new) | Open coding also applies to the judge's critiques |
-| [GA 06/03 Judge pipelines](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) | GA 08/14 (new) | The override and the Danish false alarms are instances of parts 2 and 3 |
+| [GA 06/03 Judge pipelines](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) | GA 08/14 (new) | The override and the Dutch false alarms are instances of parts 2 and 3 |
 | [AIE 01/08 Prompt optimization](ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md) | GA 08/14 (new) | An optimiser fed judge feedback inherits unfaithful critiques, so test the judge first. Add to the failure-category checklist and the GEPA pitfall |
 | [AIE 01/09 Evaluating prompts](ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | GA 08/14 (new) | From its judge section to this one |
 | [AIE 01/03 Core techniques](ai-engineering/01-prompt-engineering/notes/03-core-techniques.md) | GA 08/14 (new) | Its warning about rationalisation, and Turpin et al., applied to judges |
@@ -369,7 +369,7 @@ No note says so today, so this thread gets explicit links in both directions.
 
 | | Credit model | Retrieval and RAG | LLM judge | Guardrail |
 |---|---|---|---|---|
-| Positive class | Will default | Chunk is relevant | Output passes (the convention in GA 08/05) | Input is an attack |
+| Positive class | Will default | Chunk is relevant | Output passes (the convention in GA 08/15) | Input is an attack |
 | "Predicted positive" | Declined | Retrieved in the top k | Judge passes it | Guard blocks it |
 | False positive | Good customer declined | Irrelevant chunk spends context budget | Judge passes a bad output | Benign message blocked |
 | False negative | Defaulter approved | Relevant chunk missed, so the answer cannot be grounded | Judge fails a good output | Attack gets through |
@@ -397,7 +397,7 @@ Two points to state where the thread is taught:
 | [DS 05/03 Two-tower and evaluation](data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | DS 01/04, DS 01/12 (new) | Its recall-for-retrieval and precision-for-ranking split, stated as cells of the table |
 | [GA 02/01 RAG pipeline](generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md), [GA 08/07 Evaluating RAG](generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | DS 01/04, DS 01/12 (new) | The retrieval column above, at the point recall@k is defined |
 | [GA 08/02 Defining correct](generative-ai/08-eval/notes/02-defining-correct.md), [GA 08/03 Eval datasets](generative-ai/08-eval/notes/03-eval-datasets.md) | DS 01/12 (new), DS 02/03 | 08/02's error analysis descends from this procedure, and 08/03's dev and held-out split is the same answer to the overfitting question |
-| [GA 08/05 LLM as judge](generative-ai/08-eval/notes/05-llm-as-judge.md) | DS 01/04, DS 01/12 (new), DA 02/02 | The judge's matrix is the same table with PASS as the positive class, and its correction formula is the base-rate argument. Coding the critiques (§2.7) is the reading-errors habit applied to the judge |
+| [GA 08/15 Calibrating a judge](generative-ai/08-eval/notes/15-calibration-against-human-labels.md) | DS 01/04, DS 01/12 (new), DA 02/02 | The judge's matrix is the same table with PASS as the positive class, and its correction formula is the base-rate argument. Coding the critiques (§2.7) is the reading-errors habit applied to the judge |
 | [GA 08/09 Reading results](generative-ai/08-eval/notes/09-reading-results.md) | DS 01/12 (new), DA 02/05 | Slicing and its multiple-comparison warning are the same step |
 | [AIE 01/09 Evaluating prompts](ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | DS 01/12 (new) | Fix classes of failure, not the examples in the eval set |
 | [AIE 02/12 Evaluating context](ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | DS 01/04, DS 01/11 (new) | Its low-recall and low-precision reading is the retrieval column above |
@@ -562,7 +562,7 @@ For GA 08/14 once it exists:
 
 ## 7. Next round: production ML gaps
 
-Status: 2026-11-02, agreed in outline, not started. It doesn't belong to the 15 phases in §5, so the final pass (phases 14 and 15) leaves it alone. Start it after phase 15, because 7.1 and 7.2 build on DS 01/11 and DS 01/12.
+Status: 2026-11-02, partly done. Written: DS 01/13, DS 01/14, DS 05/04, and the 7.3 additions to DS 01/05, DS 02/05 and AIE 08/02. Not done, because `data-engineering/` and the ledger stay off limits while other sessions run: DE 06/06, the SageMaker and Redshift mapping, and the ledger rows. Deck rebuilds are in progress.
 
 The gaps came from checking the course against one job description, [Senior ML Engineer, Embedded AI at Pennylane](https://jobs.ashbyhq.com/pennylane/57614043-7914-40b1-94a2-ed5203c4c0d4): document understanding, classification, matching, scoring, and learning from user corrections. The audit searched the notes and read the sections behind thin results, without reading every note in full. Each chapter works an invoice-style example, but teaches the general method, so the course doesn't turn into preparation for one company.
 

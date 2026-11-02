@@ -308,4 +308,4 @@ Learn from other people's incidents too. The [AI Incident Database](https://inci
 
 ## Next
 
-That closes the pillar. To make the regression cases run on every change, go to the [Eval pillar in generative-ai](../../../generative-ai/08-eval/README.md), or return to the [pillar README](../README.md) for the rules of thumb.
+An incident can also start legal clocks, and a customer may ask what you could have shown. Go on to [compliance and regulation](07-compliance-and-regulation.md), which covers who is on the hook, under which rule, and by when.

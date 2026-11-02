@@ -1,7 +1,7 @@
 ---
 origin: own coursework
 sources:
-  - notion-export: support agents observability
+  - own reference specs for a support-agent eval platform (anonymised)
   - ./01-tracing-with-langfuse.md
   - https://arxiv.org/abs/2411.05285
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
@@ -13,7 +13,7 @@ cleaned: 2026-11-01
 
 > The contract that makes chapters 1 to 4 possible: what a two-framework support agent must log, a validator that catches a trace missing those fields, how eval runs are identified and reproduced, and a promotion policy for when a grounding check may start blocking answers.
 
-Every query in the last four chapters worked because the turn had recorded its route, release, prompt version and tokens. Nobody gets that by accident. The project behind this chapter ran several support agents on more than one framework, and left alone, each framework suggests its own way to instrument. Picture one agent logging `prompt_version`, another `promptVersion`, and a third not logging it at all. Asking which prompt version raised escalations then becomes a data-cleaning project. Chapter 3's ETL, with its fallback paths, is what that looks like after the fact. Here the same agreement is written down in advance, along with the harder question of who decides when a check is good enough to stop an answer from reaching a customer.
+Every query in the last four chapters worked because the turn had recorded its route, release, prompt version and tokens. Nobody gets that by accident. Take a team running several support agents on more than one framework. Left alone, each framework suggests its own way to instrument. Picture one agent logging `prompt_version`, another `promptVersion`, and a third not logging it at all. Asking which prompt version raised escalations then becomes a data-cleaning project. Chapter 3's ETL, with its fallback paths, is what that looks like after the fact. Here the same agreement is written down in advance, along with the harder question of who decides when a check is good enough to stop an answer from reaching a customer.
 
 This chapter is a schema contract for what every agent logs and how eval runs are identified, reproduced and compared. Platform wiring lives in the tooling notes: [chapter 1](01-tracing-with-langfuse.md) for Langfuse (primary) and [05-langsmith.md](../../04-agentic-frameworks/notes/05-langsmith.md) for LangSmith (secondary).
 
@@ -128,7 +128,7 @@ Every agent call, regardless of framework, must emit these fields. They are the 
 |---|---|---|
 | `run_id` | `str` | `uuid4`, unique per invocation |
 | `session_id` | `str` | conversation thread id (passed in by caller) |
-| `agent` | `str` | `"kb_adk"` \| `"kb_lg"` \| `"kb_rag"` \| `"support_lg"` \| `"support_adk"` |
+| `agent` | `str` | `"tool_loop"` \| `"graph"` \| `"rag_pipeline"` |
 | `model` | `str` | model name/ARN used for generation |
 | `prompt_version` | `str` | `PROMPT_VERSION` constant from the agent module |
 | `git_commit` | `str` | short SHA; ties log entry to exact code state |
@@ -194,7 +194,7 @@ The trace records one turn. An experiment needs a further record: exactly what w
 
 ### ExperimentRun: top-level experiment identity
 
-`ExperimentRun` wraps every eval invocation so runs are reproducible and diffable across ablations. `RagConfig` captures full configuration for a single retrieval experiment. Extend it rather than replacing the existing shallow `RagConfig` in `evals/pipelines/lib/models.py`.
+`ExperimentRun` wraps every eval invocation so runs are reproducible and diffable across ablations. `RagConfig` captures full configuration for a single retrieval experiment. If you already have a shallow config type, extend it rather than keeping two.
 
 ```python
 from dataclasses import asdict, dataclass, replace
@@ -231,11 +231,11 @@ class RagConfig:
 @dataclass
 class ExperimentRun:
     run_id: str                      # uuid4, unique per eval invocation
-    experiment_name: str             # human label, e.g. "hc-rag-chunking-v3"
+    experiment_name: str             # human label, e.g. "rag-chunking-v3"
     created_at: str                  # ISO 8601 UTC
     git_commit: str                  # short SHA
     dataset: str                     # path to .jsonl eval set
-    pipeline: str                    # "kb_rag" | "kb_adk" | "kb_lg" | "bedrock_kb"
+    pipeline: str                    # "rag_pipeline" | "tool_loop" | "graph" | "bedrock_kb"
     rag_config: RagConfig | None = None
     bedrock_config: object | None = None
     notes: str = ""
@@ -247,7 +247,7 @@ def config_diff(a, b):
 
 v1 = RagConfig(chunker="recursive", chunk_size=800, embedding_model="embed-a", retrieval_k=5, reranker="cross-encoder", reranker_top_k=3)
 v2 = replace(v1, retrieval_k=2, reranker="")
-run = ExperimentRun("r-101", "retriever-swap", "2026-10-13T09:00:00Z", "c93be17", "evals/golden.jsonl", "kb_rag", rag_config=v2)
+run = ExperimentRun("r-101", "retriever-swap", "2026-10-13T09:00:00Z", "c93be17", "evals/golden.jsonl", "rag_pipeline", rag_config=v2)
 print(run.experiment_name, run.git_commit)
 print(config_diff(v1, v2))
 ```
@@ -261,7 +261,7 @@ The settings shown are invented for the example. The point is the last line: whe
 
 ### BedrockConfig: Bedrock request tracing
 
-`BedrockConfig` captures everything needed to reproduce a Bedrock call and trace it in AWS. Populate `request_id` and `latency_ms` from the response metadata. The sampling fields are a snapshot of what the project sent to older models on Bedrock. Opus 5.5 takes no `temperature` or `top_p`, so they'd stay at their defaults there.
+`BedrockConfig` captures everything needed to reproduce a Bedrock call and trace it in AWS. Populate `request_id` and `latency_ms` from the response metadata. The sampling fields are what you would send to older models on Bedrock. Opus 5.5 takes no `temperature` or `top_p`, so they'd stay at their defaults there.
 
 ```python
 from dataclasses import dataclass, field
@@ -361,7 +361,7 @@ Fetch the leaf, and return `parent_id`'s text as the model's context. A determin
 
 What you can measure depends on what the platform exposes. A managed knowledge base hides much of what a judge needs.
 
-| Capability | kb_rag (custom) | Bedrock KB |
+| Capability | Custom pipeline | Bedrock KB |
 |---|---|---|
 | `chunk_id` / `parent_id` | Can implement | Opaque |
 | Retrieved passage text | `sources[].text` | URL only |
@@ -380,11 +380,11 @@ A check that logs can be wrong for free. A check that blocks, sending the custom
 
 **Pattern:** implement, observe the false-positive rate in production, and promote to an escalation trigger only after confirming that rate is acceptable.
 
-**Current state in the source project:** Tiers 1–2 (hallucinated citation IDs, missing citations) are hard fails. Tier 3 (quote overlap = 0) is a hard fail. Tier 3 partial (paraphrase) and Tier 4 (relevance score, language mismatch, suggestion URLs) are log-only.
+**A typical starting point:** Tiers 1–2 (hallucinated citation IDs, missing citations) are hard fails. Tier 3 (quote overlap = 0) is a hard fail. Tier 3 partial (paraphrase) and Tier 4 (relevance score, language mismatch, suggestion URLs) are log-only.
 
-**Why:** overly aggressive grounding checks in a multilingual (Danish/English) context with paraphrase-heavy answers would cause excessive `contact_support` escalations. The log-only phase provides evidence to calibrate thresholds before they affect users.
+**Why:** overly aggressive grounding checks in a multilingual context with paraphrase-heavy answers would cause excessive `contact_support` escalations. The log-only phase provides evidence to calibrate thresholds before they affect users.
 
-The policy gets sharper when written as code that reads the logged scores. Measure each check per segment, and let the worst segment decide, since a check that's right in English and wrong in Danish should not block Danish customers.
+The policy gets sharper when written as code that reads the logged scores. Measure each check per segment, and let the worst segment decide, since a check that's right in English and wrong in Dutch should not block Dutch customers.
 
 ```python
 import pandas as pd
@@ -403,13 +403,13 @@ rows = []
 for name, (fires, planted) in CHECKS.items():
     truth = df["seeded_failure"].isin(planted)
     per_language = {}
-    for language in ["en", "da"]:
+    for language in ["en", "nl"]:
         seg = df["language"] == language
         tp, fp = (fires & truth & seg).sum(), (fires & ~truth & seg).sum()
         per_language[language] = (tp / (tp + fp) if tp + fp else float("nan"), int(tp + fp))
     ready = all(p >= MIN_PRECISION and n >= MIN_FIRES for p, n in per_language.values())
     rows.append({"check": name, "precision_en": round(per_language["en"][0], 2), "fires_en": per_language["en"][1],
-                 "precision_da": round(per_language["da"][0], 2), "fires_da": per_language["da"][1],
+                 "precision_nl": round(per_language["nl"][0], 2), "fires_nl": per_language["nl"][1],
                  "decision": "may block" if ready else "log only"})
 print(pd.DataFrame(rows).to_string(index=False))
 
@@ -418,54 +418,43 @@ print("healthy turns sent to a person if language_consistency blocked:", int(wro
 ```
 
 ```text
-                 check  precision_en  fires_en  precision_da  fires_da  decision
+                 check  precision_en  fires_en  precision_nl  fires_nl  decision
 citation_hallucination          0.77        13          1.00         8  log only
   language_consistency           NaN         0          0.23        79  log only
  retrieval_quality<0.5          1.00        60          1.00        21 may block
 healthy turns sent to a person if language_consistency blocked: 61 in a fortnight
 ```
 
-Read the table against the policy. `language_consistency` never fires on English here and is right less than a quarter of the time on Danish, so it stays log-only, and the last line says what blocking on it would cost. `citation_hallucination` is held back by its English precision, even though its Danish fires are all correct. Only the retrieval check passes, and that's precision alone: this table says nothing about what it misses. The thresholds are decisions you'd revisit, not constants. In production you don't have planted labels. The precision comes from people labelling a sample of what each check fired on, which is what layer 1 of the evaluation strategy is for. Record the decision and the evidence with the date, because a promotion is a release like any other and can be rolled back.
+Read the table against the policy. `language_consistency` never fires on English here and is right less than a quarter of the time on Dutch, so it stays log-only, and the last line says what blocking on it would cost. `citation_hallucination` is held back by its English precision, even though its Dutch fires are all correct. Only the retrieval check passes, and that's precision alone: this table says nothing about what it misses. The thresholds are decisions you'd revisit, not constants. In production you don't have planted labels. The precision comes from people labelling a sample of what each check fired on, which is what layer 1 of the evaluation strategy is for. Record the decision and the evidence with the date, because a promotion is a release like any other and can be rolled back.
 
 ---
 
-## An implementation status from the source project
+## Rolling the contract out
 
-The original notes tracked how far this contract had got in one real multi-framework project. It's kept as an example of what such a tracker looks like, and because the pending list shows the order someone chose. The names in the first table are from the project's older v2 SDK code: `lf.trace()` is now `start_as_current_observation` with `propagate_attributes`, and `lf_trace.span()` is `start_observation`.
+A contract like this arrives in stages, and the order matters more than the list. Here is what each kind of agent needs, then an order that works. The SDK names in the first table are current: an older v2 SDK called the same calls `lf.trace()` and `lf_trace.span()`, and you will still meet those in existing code.
 
-### What was live
+### What each agent shape needs
 
-| Item | Agent | Where | Notes |
-|------|-------|-------|-------|
-| `lf.trace()` root with full metadata | kb_adk | `main.py:_run_turn` | prompt_version, retrieval_mode, thinking_budget, tokens, failure_reason |
-| `lf_trace.span()` KB child spans | kb_adk | `agent.py:_search_bedrock/rag` | per tool call: queries, passage_count, top_score, urls, duration_ms |
-| `retrieval_quality` score | kb_adk | `main.py` | kb_top_score from highest-scoring tool call |
-| `CallbackHandler` root + node spans | kb_lg | `main.py:_run_turn` | all graph nodes auto-captured |
-| `retrieval_quality` score (CRAG formula) | kb_lg | `main.py` | `(relevant×1.0 + ambiguous×0.5) / total` |
-| `@observe` root + RAG internals | kb_rag | `main.py:_run_turn` | session_id, prompt_version |
-| Online scoring (3 heuristics) | all | `observability.push_online_scores()` | citation_hallucination, missing_citation, language_consistency |
-| Remote prompt fetch at startup | kb_adk, kb_lg | `get_root_agent()`, `_get_answer_prompt()` | via `get_langfuse_prompt()` in observability.py |
+| Item | Agent shape | Records |
+|------|-------|-------|
+| `start_as_current_observation` root with full metadata | Tool-loop agent | prompt_version, retrieval_mode, thinking_budget, tokens, failure_reason |
+| `start_observation` child spans around each knowledge-base call | Tool-loop agent | Per tool call: queries, passage_count, top_score, urls, duration_ms |
+| `retrieval_quality` score | Tool-loop agent | The top score from the highest-scoring tool call |
+| `CallbackHandler` on the root and nodes | Graph agent | All graph nodes, captured automatically |
+| `retrieval_quality` score from the corrective grader | Graph agent | `(relevant×1.0 + ambiguous×0.5) / total` |
+| `@observe` on the root and the retrieval internals | Deterministic RAG pipeline | session_id, prompt_version |
+| Online scoring (3 heuristics) | All | citation_hallucination, missing_citation, language_consistency |
+| Remote prompt fetch at startup | Any agent with a managed prompt | The fetched version goes into the trace metadata |
 
-### What was pending
+### An order that works
 
-| Priority | Item | Where |
-|---|---|---|
-| P0 | Surface `retrieved_urls` in kb_rag `main.py` → enable citation scores | `kb_rag/main.py` + `agent.py:run_turn()` |
-| P0 | Wire `ExperimentRun` wrapper into eval runners | `evals/pipelines/eval_quality.py`, `eval_stats.py` |
-| P1 | Capture `BedrockConfig.request_id` from `x-amzn-requestid` header | `clients/bedrock_kb.py` |
-| P1 | Add `git_commit` to trace metadata (all agents) | `observability.configure_runtime()` |
-| P1 | Add `ChunkRecord` with `chunk_id`, `parent_id`, `level` | `core/chunking/schemas.py` |
-| P2 | Expand `RagConfig` with `overlap`, `parent_chunk_size`, `hybrid_alpha`, `dim` | `evals/pipelines/lib/models.py` |
-| P2 | Wire retrieval-run metadata into local RAG/eval outputs | `evals/pipelines/evaluation.py`, `src/support_agents/kb_rag/rag/ingestion/` |
+1. **Surface `retrieved_urls` in every agent.** Without them no citation score can run, and a pipeline that hides them looks clean when it isn't.
+2. **Wrap every eval runner in `ExperimentRun`.** Until runs are identified, nothing downstream can be compared.
+3. **Capture what ties a run to the world.** That means `BedrockConfig.request_id` from the `x-amzn-requestid` header, and `git_commit` in the metadata of every agent.
+4. **Add `ChunkRecord` with `chunk_id`, `parent_id` and `level`,** so that retrieval results stay comparable across re-ingests.
+5. **Expand `RagConfig` last,** with overlap, parent chunk size, hybrid alpha and embedding dimension, and write the retrieval-run metadata into the eval output. These matter once you are running chunking ablations and not before.
 
-### Related files in that project
-
-| File | Role |
-|---|---|
-| `evals/pipelines/lib/models.py` | `RagConfig`, `QATask`, `EvalReport`: extend here |
-| `evals/metrics/retrieval.py` | Retrieval metrics and URL matching helpers |
-| `evals/pipelines/evaluation.py` | Live local eval runner that writes graded output JSON |
-| `core/preprocessing/bkh/pii_scrub.py` | Call before any external LLM grader (GDPR layer) |
+One rule sits outside the order. Scrub personal data before any trace reaches an external LLM grader, because a judge is one more processor of what customers typed, and under GDPR that needs the same care as the agent.
 
 ---
 

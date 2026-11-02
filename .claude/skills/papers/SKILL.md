@@ -73,13 +73,16 @@ home that cites it; a paper cited in a second home may need its point made there
 ## Step 2 — Read
 
 For each paper:
-1. Extract the PDF text (poppler isn't installed, so the Read tool can't render PDFs):
+1. Dispatch one `source-reader` per paper with the PDF path and the target note, at most 3 at a time. It reads the
+   whole PDF and returns claims, numbers, setups, verbatim quotes, limits and figure candidates. You keep the judgement
+   and the writing, so the raw PDF stays out of this session. Check `COVERAGE` in its report: a partial read is not a
+   read. If the agent is unavailable, or a quote looks wrong, extract the text yourself
+   (poppler isn't installed, so the Read tool can't render PDFs):
    ```bash
    uv run -q --with pypdf python -c "import sys,pypdf; r=pypdf.PdfReader(sys.argv[1]); print(len(r.pages),'pages'); print('\n'.join(p.extract_text() for p in r.pages[:int(sys.argv[2])]))" <pdf> 5
    ```
-   The first ~5 pages usually cover abstract, setup and results; read the limitations
-   section too. Pull out: the claim, the headline numbers, the setup they hold under,
-   and what the paper does *not* show.
+   Pass a page count that covers the whole paper. Pull out: the claim, the headline numbers,
+   the setup they hold under, and what the paper does *not* show.
 2. **Trace the origin.** Look up what the paper builds on in the citation graph:
    ```bash
    sqlite3 scripts/papers/citations.db "SELECT d.title, d.year, d.venue, d.in_repo FROM cites c
@@ -159,6 +162,9 @@ python3 scripts/papers/potw.py mark integrated <key> [<key> ...]
 python3 scripts/papers/citegraph.py refs --home <home> --write   # refresh "Where the ideas come from"
 make link-check
 ```
+
+Before marking a batch integrated, dispatch one `citation-checker` per note you touched, with the list of citations you
+just added (not "all"). Fix what it finds. Report any `unverifiable` row: it is not a pass.
 
 Report, per paper: verdict (verified / sharpens / extends / contradicts / skipped), the note and
 section changed, and one line on what changed. Call out every **contradicts** first.

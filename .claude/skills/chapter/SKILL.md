@@ -39,14 +39,16 @@ carry the chapter, the verdict is **verified**. Mark it `integrated` either way.
 
 ## Step 2 — Read the chapter
 
-Extract the text. Chapter PDFs saved from the O'Reilly reader are often one very tall
-page, so read by character range, not by page:
+Dispatch one `source-reader` with the chapter PDF and the triage's `note`. It reads the whole chapter and returns claims,
+numbers, setups, verbatim quotes, code and figure candidates, so the raw chapter stays out of this session. Check `COVERAGE`
+in its report. If the agent is unavailable, or a quote looks wrong, extract the text yourself. Chapter PDFs saved from the
+O'Reilly reader are often one very tall page, so read by character range, not by page:
 
 ```bash
 uv run -q --with pypdf python -c "import sys,pypdf; t='\n'.join(p.extract_text() for p in pypdf.PdfReader(sys.argv[1]).pages); print(len(t),'chars'); print(t[int(sys.argv[2]):int(sys.argv[3])])" <pdf> 0 40000
 ```
 
-Read the whole chapter, in slices. As you go, list:
+Either way, the whole chapter gets read, in slices, and you end with:
 - the chapter's claims, each with its numbers and the setup they hold under
 - code worth keeping: short, runnable or near-runnable, illustrating one idea
 - figures that explain something faster than prose:
@@ -115,6 +117,9 @@ from `.claude/skills/pillar/references/pillar-layout.md`.
 python3 scripts/papers/potw.py mark integrated <key>
 make link-check
 ```
+
+If you wrote a **new note**, run `/curriculum integrate <note path>` before closing out. Dispatch one `citation-checker` per
+note you touched, with the list of citations you just added. Report any `unverifiable` row: it is not a pass.
 
 Report: the chapter, then per note the verdicts and a line on what changed, the figures
 added, and anything dropped and why. List every **contradicts** first. Do not commit. The

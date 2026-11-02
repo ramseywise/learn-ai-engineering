@@ -655,4 +655,4 @@ These are simulated tables, the contracts are assumed, real demand won't match t
 
 ## Next
 
-That's the last of the applied analyses. Each ended with a decision and a check against something known, and the forecast in chapter 1 has now reached the warehouse floor. Go on to [data science](../../../data-science/README.md), which takes up the models behind these analyses in depth.
+The forecast in chapter 1 has now reached the warehouse floor. One question is left, and it sits behind all of them: which numbers should the shop be run on? Go on to [metric trees and defining metrics](11-metric-trees.md).

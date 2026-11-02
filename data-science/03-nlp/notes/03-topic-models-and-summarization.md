@@ -238,7 +238,7 @@ k=20  c_v=0.318  log perplexity bound=-8.44
 k=40  c_v=0.325  log perplexity bound=-8.74
 ```
 
-On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, and it dips and recovers, so there is no clean knee. The log perplexity bound falls steadily and would select nothing useful either. That is common on short text, and the answer is to read topics at a couple of settings rather than obey a curve. Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
+On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, so there is no clean knee. This seed dips at twenty and recovers at forty, but that wiggle is noise: over three seeds the mean falls from 0.352 to 0.322 and the seeds sit about 0.01 apart. The log perplexity bound falls steadily and would select nothing useful either. That is common on short text, and the answer is to read topics at a couple of settings rather than obey a curve. Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
 
 ### Visualising
 

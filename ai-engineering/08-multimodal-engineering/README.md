@@ -79,6 +79,7 @@ the checks into one scorecard. Attacks that arrive through an image, a document 
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | The pipeline multimodal RAG extends |
 | [GA 07/03 Real-time multimodal agents](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) | The voice case |
 | [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Judging multimodal output |
+| [GA 08/15 Calibrating a judge](../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md#beyond-text) | One calibration set per modality |
 
 **Feeds into**
 

@@ -1,20 +1,22 @@
 # Time series and recommenders lecture deck. Covers notes/01-time-series-ml.md,
-# notes/02-collaborative-filtering-and-matrix-factorisation.md, notes/03-two-tower-and-evaluation.md.
+# notes/02-collaborative-filtering-and-matrix-factorisation.md, notes/03-two-tower-and-evaluation.md,
+# notes/04-entity-matching-and-learning-to-rank.md.
 # Build: make slides PILLAR=data-science/05-time-series-and-recommenders STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
-# Running examples: hourly bike rentals (UCI), a synthetic customer cash-flow case, then MovieLens 100K.
+# Running examples: hourly bike rentals (UCI), a synthetic customer cash-flow case, MovieLens 100K, then a generated payment ledger.
 # Every number was measured by running the code in the notes, except those attributed to a paper.
 deck:
   title: Time Series and Recommenders
   subtitle: When rows are not exchangeable
   tagline: |-
-    Forecast honestly · Rank what people see · Know that it worked
+    Forecast honestly · Rank what people see · Know that it worked · Match records
   reference: "Notes: data-science/05-time-series-and-recommenders"
   output: time-series-and-recommenders.pptx
   notes: >-
-    Two problems today, one lesson. First a bike operator who needs tomorrow's demand by midnight, then a film site that
-    wants a top ten list for each person. Both break the habit of shuffling rows and holding some out. In both, the usual
-    failure is an evaluation that flatters the model, so the procedure matters more than the architecture.
+    Three problems today, one lesson. First a bike operator who needs tomorrow's demand by midnight, then a film site that
+    wants a top ten list for each person, then a ledger of bank lines to match to invoices with no shared ID. All three break
+    the habit of shuffling rows and holding some out. In all three, the usual failure is an evaluation that flatters the model,
+    so the procedure matters more than the architecture.
 
 parts:
   - title: Forecasting without fooling yourself
@@ -500,6 +502,128 @@ parts:
           Netflix describes offline experiments as assuming members would have behaved the same way under the new algorithm. YouTube reports that live results do not always correlate with offline ones.
           Netflix also estimates that recommendations influence about 80 percent of hours streamed.
 
+  - title: Which invoice, if any?
+    summary: Blocking · Evidence in bits · Ranking · Constraints · Abstaining
+    notes: >-
+      Now there is no user and no catalogue, only bank lines and invoices with no shared ID. We retrieve, rank and then decide whether to link at all. The ledger is generated, so the true links are known exactly and no real supplier or payment is in it.
+    slides:
+      - layout: statement
+        title: 99.5% accurate on pairs, and 27% of lines are wrong. Why?
+        kicker: The problem
+        recall: Why can a pair classifier score above 99% and still get a quarter of bank lines wrong?
+        statement: "A pair classifier scored 99.5% accuracy, and only 72.7% of bank lines ended up with exactly the right invoices."
+        attribution: "Generated ledger, one seed, 866 test lines. Answering no to every pair scores 98.7%."
+        takeaway: Nearly every pair is a non-match, so score whole lines and ask whether each one ended up with exactly the right set of invoices.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          This is the job of a clerk with a stack of bank lines and a stack of invoices. A wrong link is also two errors, not one. Of 101 wrong top picks, 97 invoices were wrongly marked paid and 101 lines had their true invoices left open. About three quarters of the wrong picks, 0.752, were the right supplier and the wrong invoice, so what is left is telling near-identical invoices apart. The threshold also handed 62 lines several invoices, and only 2 of those were real batches.
+
+      - layout: image
+        title: Blocking cuts 17 million pairs and caps all that follows
+        recall: What does blocking cost, and which two numbers do you read together?
+        image: ../../sources/images/recsys-match-blocking.png
+        caption: "All pairs 17,372,000. Recall of true links, seed 0: 0.9447 at 12 candidates, 0.9782 at 157 and still 0.9782 at 250. Run `practice/04_matching_lab.py`."
+        bullets:
+          - "**All keys together:** keep 97.3% of true links at 78 candidates per line"
+          - "**Best reduction, 99.99%:** keeps only 39.6%"
+          - "**Recall by kind:** batch 0.8707, part 0.9235, single 0.9981"
+        takeaway: Anything outside the block is rejected unseen, so read reduction beside recall, split by kind of payment.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          Blocking means comparing only pairs that share some cheap property, such as a close amount or a similar name. Recall is the share of true links still inside the block. Fellegi and Sunter already had this accounting in 1969: pairs outside the block are links you decided against without looking. Going from 157 to 250 candidates buys nothing, because the links still missing fail on another key, with a split amount, a hidden name and no reference. Only a new kind of key could reach them.
+
+      - layout: code
+        title: Evidence adds up in bits, and the middle goes to a person
+        kicker: Fellegi and Sunter, 1969
+        recall: What are m and u, and why did Fellegi and Sunter use three outcomes?
+        lead: "m is how often an agreement level appears among true matches, u among non-matches. Each extra bit of log2(m/u) doubles the odds."
+        lang: output
+        code: |-
+          Weights in bits, from labelled training pairs
+            amount     exact 5.52       within 3% -0.59      far -1.79
+            name       strong 2.49      none -0.36           weak -3.9
+            reference  all digits 11.27 one digit off 8.95   missing 0.0   other -12.04
+            date       near due 1.16    later -2.54          far -5.87
+
+          Three decisions, thresholds set on validation, read on test
+          link    9.25 bits or more      305 pairs   precision 1.000
+          review  in between            6864 pairs   of which true 0.073
+          reject  below -2.00 bits     57176 pairs   true pairs lost 17 of 824
+        takeaway: A reference one digit off still multiplies the odds by about 500, and independent weights leave a review pile that ranking has to shrink.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          This reads like the odds form of Bayes' rule, adding evidence field by field if the fields are independent given match status. The link region is clean, but it holds only 305 of 824 true pairs, with nearly 7,000 pairs sent to review for 866 lines. These weights know nothing about the other candidates on the same line. Notice that a weak name scores below no name at all. That comes from the block, which selected on the same fields, so read the weights as conditional on the block. We did not run a language model here. Ditto is the reference for messy text, and its authors warn it may not capture numeric-heavy matching well.
+
+      - layout: cards
+        title: Three ways to train a ranker differ in what one example is
+        recall: What is one training example in pointwise, pairwise and listwise ranking, and why can't NDCG be optimised directly?
+        cards:
+          - title: Pointwise
+            body: One candidate and its label. Fit a classifier and sort. It never looks at the rest of the list.
+          - title: Pairwise
+            body: Two candidates from one bank line. The target is which should come first. This is RankNet.
+          - title: Listwise
+            body: A whole list, with a loss that depends on all of it. Here, XE-NDCG.
+          - title: LambdaMART
+            body: Boosted trees on pairwise gradients, each multiplied by how much NDCG would change if the two swapped.
+        takeaway: The bank line is the query and its invoices the documents, and the setups differ in whether the model learns from an item, a pair or a list.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          Each candidate gets a grade: 2 for a true link, 1 for another invoice from the right supplier, 0 for anything else. Sorting makes NDCG, in Burges's words, everywhere either discontinuous or flat, so it has no useful gradient. LambdaRank's fix is blunt: write no loss, just write down the gradient you want. Bruch's objection is that this leaves no objective to analyse. It works anyway. An ensemble of LambdaMART rankers won a track of the 2010 Yahoo challenge, though Burges's paper presents no experiments of its own.
+
+      - layout: table
+        title: LambdaMART won, and most of its gain is training on pairs
+        kicker: Measured
+        recall: Where did LambdaMART's gain over pointwise trees come from, and what did the NDCG factor add?
+        lead: "Mean over five generated ledgers. Train on the earliest 60% of lines, test on the last 20%, scoring only lines whose true link survived the block."
+        header: [Model, NDCG@5, Top-1]
+        widths: [3, 1, 1]
+        rows:
+          - [Closest amount, "0.5397", "0.4714"]
+          - [Fellegi-Sunter weights, "0.8703", "0.8332"]
+          - [Pointwise trees, "0.9129", "0.8513"]
+          - ["Pairwise linear (RankNet)", "0.9374", "0.8440"]
+          - ["Pairwise trees, no NDCG factor", "0.9416", "0.8541"]
+          - [Pairwise trees + NDCG factor, "0.9451", "0.8600"]
+          - [LambdaMART (LightGBM), "**0.9469**", "0.8628"]
+          - [Listwise trees (XE-NDCG), "0.9413", "0.8495"]
+        highlight: [6]
+        takeaway: Moving to pairs added about 0.03, and the famous NDCG factor only 0.0035, so the training example mattered more than the weight.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          LambdaMART wins on NDCG in all five paired comparisons, but read where the gain comes from. The biggest step is having features at all, from 0.54 to 0.87. A pairwise linear model at 0.9374 beats pointwise trees at 0.9129, so here the objective matters more than the model family. Pointwise linear scored 0.9101. The factor's 0.0035 is real, about an eighth of what moving to pairs bought. Listwise lost all five ledgers by 0.0056, though Bruch's web search benchmarks went the other way, 48.23 against 48.08 and 73.37 against 73.00, so the gap is small and depends on the data. Top-1 is noisier: the trees sit within about 0.015 with a standard deviation over 0.02, so don't claim an order from it. We chose this generator's difficulties, so run it on your own data before trusting the close results.
+
+      - layout: table
+        title: The obvious one-to-one constraint lost, 678 to 689
+        recall: Why did one-to-one assignment lower the score, and for which kind of payment?
+        lead: "Hungarian assignment uses each line and each invoice at most once. Top picks counted right, one generated ledger, LambdaMART scores."
+        header: [Kind of payment, Lines, Independent top pick, One-to-one]
+        widths: [3, 1, 2, 2]
+        rows:
+          - [Single, "635", "585", "594"]
+          - [Batch, "35", "19", "25"]
+          - [Part payment, "120", "**85**", "**59**"]
+          - [All lines with a true link, "790", "**689**", "**678**"]
+        highlight: [2]
+        takeaway: Two lines paying one invoice is what the constraint forbids, so check any hard constraint against the real shape of the data, kind by kind.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          We expected assignment to win, and it lost. Independent picks left 98 invoices claimed by more than one line, so the repair looked obvious. Singles and batches did improve, but the constraint is false for the part you most need to get right. For batches the fix is arithmetic, not learning. Search the supplier's invoices for a unique set that sums to the payment, and batches go from 0 to 22 of 35 fully right, with no wrong sets and one single lost. The 8 ambiguous lines go to a person. We have not measured exempting likely part payments from the constraint.
+
+      - layout: image
+        title: The margin over second links far more lines safely
+        recall: What should a matcher abstain on, and did the better ranker help by itself?
+        image: ../../sources/images/recsys-match-abstain.png
+        caption: "Coverage is the share of bank lines linked automatically. Generated ledger, one seed, 866 test lines, 76 with no invoice. Run `practice/04_matching_lab.py`."
+        bullets:
+          - "**At 99% precision:** margin links 68.5%, top score 40.3%, same model"
+          - "**At 90%:** the top score covers more, 87.8% against 83.7%"
+          - "**Ranker's NDCG gain:** no help here, pointwise probability links 40.9% at 99%"
+        takeaway: Ranking always returns something, even for payroll, so decide whether to link from a separate signal and check it on a coverage curve.
+        source: notes/04-entity-matching-and-learning-to-rank.md
+        notes: >-
+          A ranker only promises order within a bank line, so comparing raw scores across lines asks something it was not trained for. The margin is how far the top candidate is ahead of the second. The ranker did not change at all, and a better question of its output gained 28 points of coverage at 99 percent precision. Where to stand on that curve is a business decision based on the price of a wrong link and the price of review, which is DS 01/13. The corrections people make in the queue become your next labels, with the selection bias DS 01/14 measures.
+
   - title: Rules of thumb
     agenda: false
     divider: false
@@ -515,13 +639,13 @@ parts:
           - title: Trees before networks
             body: Divide by a level and beat them in the same backtest.
           - title: Score what people see
-            body: Full-catalogue ranking, not RMSE or sampled negatives.
+            body: Full catalogue and whole bank lines, not RMSE, sampled negatives or pair accuracy.
           - title: Correct the sampler
             body: LogQ in training, for in-batch softmax.
           - title: Offline chooses, live decides
             body: Log propensities and budget for an A/B test.
-        takeaway: In forecasts and in lists, score what the decision will really see, and keep simple baselines in every table.
-        source: notes/03-two-tower-and-evaluation.md
+        takeaway: In forecasts, lists and matches, score what the decision will really see, and keep simple baselines in every table.
+        source: notes/03-two-tower-and-evaluation.md, notes/04-entity-matching-and-learning-to-rank.md
         notes: >-
           Both halves of today came down to the same two habits: an evaluation that matches the real decision, and a simple method to beat.
       - layout: bullets
@@ -532,7 +656,8 @@ parts:
           - "**Experiment statistics:** the A/B ladder in data analytics, experimentation and causality"
           - "**Bandits:** the RL pillar in generative AI develops exploration and replay"
           - "**Language models:** LLM fundamentals in generative AI"
-        takeaway: Next, carry these habits to text features, experiments and bandits.
+          - "**Pricing the review queue:** automate, review or reject, in classical ML"
+        takeaway: Next, carry these habits to text features, experiments, bandits and review queues.
         source: notes/03-two-tower-and-evaluation.md
         notes: >-
           Each of these picks up a thread from today. The A/B ladder and the bandit replay are the two that follow most directly from the last part.

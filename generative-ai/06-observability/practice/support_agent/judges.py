@@ -103,7 +103,7 @@ def fast_hallucination(conv, stance="strict"):
 
     strict: a fixed procedure, checking numbers and citations against the documents.
     lenient: when in doubt, flag. Also flags low word overlap with the documents,
-    which is what a Danish answer over English documents always has.
+    which is what a Dutch answer over English documents always has.
     """
     retrieved = {d["url"] for d in conv.documents}
     doc_numbers = set().union(*(_numbers(d["text"]) for d in conv.documents)) if conv.documents else set()

@@ -398,7 +398,7 @@ After 20 rounds the reused half reports a gain of 16.5 per 1,000, and the fresh 
 
 | Step here | In retrieval and LLM evals |
 |---|---|
-| Name the errors | State the positive class. A judge's false positive passes a bad output ([GA 08/05](../../../generative-ai/08-eval/notes/05-llm-as-judge.md)) |
+| Name the errors | State the positive class. A judge's false positive passes a bad output ([GA 08/15](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md)) |
 | Profile the cells | Missed chunks against found chunks, and distractors against useful ones ([GA 02/01](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), [GA 08/07](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics)) |
 | Read rows | [Read the transcripts](../../../generative-ai/08-eval/notes/09-reading-results.md#read-the-transcripts), random ones before the dramatic ones |
 | Slice and count | [Slice before you conclude](../../../generative-ai/08-eval/notes/09-reading-results.md#slice-before-you-conclude), with the correction for many slices |

@@ -95,7 +95,7 @@ parts:
         source: notes/01-image-input.md
 
   - title: The PDF that lost a row
-    summary: Three routes · Tail latency · Arithmetic checks · Field scores
+    summary: Three routes · Tail latency · Arithmetic checks · Field scores · A runnable pipeline
     notes: >-
       Now the assistant gets whole PDFs. Copying the text gives you drawing order. Sending the page to a
       vision model gives a fluent transcript that may have skipped a row.
@@ -186,6 +186,87 @@ parts:
             - "Matches the cost of a wrong payment"
         takeaway: Use edit distance to pick an engine, and field F1 to decide whether you can ship.
         source: notes/02-document-understanding.md
+      - layout: flow
+        title: A pipeline you can run, with no vision model in it
+        kicker: End to end
+        lead: "180 generated invoices in three layouts, as born-digital PDFs and rendered scans. Both extractors are short rules written for these layouts."
+        steps:
+          - {label: Route, sub: "text layer, else OCR", accent: "1E3A5F"}
+          - {label: Extract, sub: "one rule without positions, one with", accent: "0F7490"}
+          - {label: Check, sub: "a shorter reconcile", accent: "D4621A"}
+          - {label: Retry, sub: "scan again at twice the resolution", accent: "5B21B6"}
+          - {label: Person, sub: "if it still fails", accent: "94A3B8"}
+        caption: "No vision model is called, so the image route stops at a real open OCR engine, RapidOCR. Code: `practice/invoice_pipeline.py`."
+        takeaway: The documents are generated and no vision model ran, so treat these scores as a test of the code.
+        source: notes/02-document-understanding.md
+        notes: >-
+          This puts the chapter together end to end, and you can read every step. Be clear about what it is not.
+          A course script shouldn't need a paid key, so no vision model is called and the image route stops at
+          OCR. The sample is small and generated: three layouts, one font, one written extractor, 180 documents.
+          Real supplier documents have a long tail of formats.
+      - layout: table
+        title: On perfect text, positions alone moved F1 from 0.667 to 1.000
+        kicker: Measured
+        lead: "Field F1 on the first attempt, exact match after normalising number format. Seven of the nine rows."
+        header: [Layout, Page, Text only, With positions]
+        widths: [4, 3, 2, 3]
+        rows:
+          - ["Label over value", "Born digital", "0.667", "1.000"]
+          - ["Label over value", "Scan", "0.644", "0.987"]
+          - ["Label over value", "Poor scan", "0.627", "0.965"]
+          - ["Label beside value", "Born digital", "1.000", "1.000"]
+          - ["Label beside value", "Poor scan", "0.940", "0.940"]
+          - ["Two columns", "Born digital", "1.000", "1.000"]
+          - ["Two columns", "Poor scan", "0.924", "0.927"]
+        highlight: [0]
+        takeaway: Positions matter when a label sits over its value, and our two-column layout turned out harmless.
+        source: notes/02-document-understanding.md
+        notes: >-
+          The first row is the opening claim of the chapter, measured. Born-digital text is perfect, and the score
+          without positions is still 0.667. Two columns turned out harmless, as a label and its value stay
+          neighbours when drawn in order. Our position rule is a hand-written version of what LayoutLM learns. On
+          the FUNSD forms task, with 149 training forms, F1 rose from 0.6026 for BERT to 0.7866 with layout.
+      - layout: code
+        title: Checks caught 46 of 48 bad documents, and the misses matter
+        kicker: Measured
+        lang: text
+        code: |
+          documents with a wrong field:  48 of 180
+            caught by the checks:        46
+            clean documents failed:      0
+            wrong on documents passed:   iban 1, vendor 1
+
+          vendor field on scans
+            F1, ignoring spaces, case:   1.000
+            character for character:     0.542
+        bullets:
+          - "**Arithmetic can't see** a vendor name or an IBAN"
+          - "**Those fields** need their own checks, such as IBAN check digits or a supplier list"
+          - "**Normalisation** is part of your metric, so write the rule down"
+        takeaway: Each field the arithmetic can't reach needs a check of its own.
+        source: notes/02-document-understanding.md
+        notes: >-
+          These are first-attempt counts. No false alarms, and the two misses are the point, because both are
+          fields no sum touches. The vendor's 1.000 is partly the scoring rule. OCR ran the words of the bold
+          heading together on many scans, and only 0.542 were right character for character.
+      - layout: image
+        title: Retrying before review kept the F1 at about 23 times less cost
+        kicker: On assumed prices
+        image: ../sources/images/docs-invoice-route-cost.png
+        caption: "The prices are assumptions: CPU 0.1 per hour, review 3 minutes at 30.0 per hour. No vision model was called. Cost axis is a log scale."
+        bullets:
+          - "**Review alone:** 25.6% of documents, 0.383 per document"
+          - "**Retry first:** 1.1% reviewed, 0.0167 per document"
+          - "**A vision model** this good pays for itself below about 1.43 per retried document"
+        takeaway: People are the cost, so a failed check is worth most when it triggers another attempt first.
+        source: notes/02-document-understanding.md
+        notes: >-
+          Replace these prices with your own. Compute differences are invisible next to review. Going from 0.383
+          to 0.0167 saves 0.367 per document across the 25.6% retried, or about 1.43 per retried document, and
+          that is what a better second route may cost on these assumptions. We never ran a vision model, so that
+          price is a ceiling and not a measurement. Skipping OCR saved compute and barely changed accuracy here,
+          0.172 against 0.258 seconds a page at 0.978 against 0.977. Clean renders of a clean font are easy for
+          OCR, and the seconds vary with your machine.
 
   - title: The answer inside a chart
     summary: What to index · ColPali evidence · Late interaction · Cost

@@ -125,7 +125,7 @@ The last table explains why rates that look small can still matter. An attacker 
 
 **Attack success depends on the setup.** HarmBench, [arXiv:2402.04249](https://arxiv.org/abs/2402.04249) (Mazeika et al., ICML 2024), exists because the field lacked a standard way to compare methods. It compares 18 red-teaming methods against 33 target models and defences using one setup. When you read a claimed attack success rate, ask about the target, the judge, the number of attempts allowed and the set of behaviours.
 
-**The judge has error rates too.** Most automated red-teaming grades outcomes with a model, and a bad judge inflates or hides results. Treat it like any other judge, measure it against human labels, and look at a sample of its passes. The [Eval pillar's judge chapter](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) covers this. For actions, skip the judge entirely if you can: whether an email went out is a fact in a log.
+**The judge has error rates too.** Most automated red-teaming grades outcomes with a model, and a bad judge inflates or hides results. Treat it like any other judge, measure it against human labels, and look at a sample of its passes. The [Eval pillar's calibration chapter](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md) covers this. For actions, skip the judge entirely if you can: whether an email went out is a fact in a log.
 
 **Tuning on the test set flatters you.** A defence tuned with access to a benchmark's items can look better than it is. Keep part of your red-team set held out from whoever tunes the defences.
 
