@@ -385,7 +385,7 @@ cluster size 1000, intra-cluster corr 0.01: variance x 11.0
 cluster size 1000, intra-cluster corr 0.001: variance x 2.0
 ```
 
-Even a small ρ is expensive for large clusters. With a design effect of 11, a million users carry the information of about 91,000. Analyse at the cluster level or with cluster-robust errors, for the same reason that chapter 1 refused to analyse pageviews when it randomised users.
+Even a small ρ is expensive for large clusters. With a design effect of 11, a million users carry the information of about 91,000. Analyse at the cluster level or with cluster-robust errors, for the same reason that chapter 1 refused to analyse pageviews when it randomised users. [Multilevel models](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#intraclass-correlation-is-the-design-effects-input) estimate ρ as a parameter, and they [read each segment or market's effect](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#the-ab-application-reading-many-segments) with partial pooling.
 
 ## Many tests at once
 

@@ -255,7 +255,7 @@ The fixed effects still agree, and the variance parts now do not. `MixedLM` repo
 | The question | Use | Why | Watch for |
 |---|---|---|---|
 | A population-average effect, and the groups are a nuisance | Clustered standard errors | Coefficients unchanged, standard errors honest, few assumptions | Too few clusters |
-| An effect within groups, and the group effect may be correlated with the predictor | Fixed effects, or a within-between random-effects model | Compares each group only with itself, so a fixed difference between groups cannot bias it | Cannot estimate anything constant within a group, and still needs clustered SEs |
+| An effect within groups, and the group effect may be correlated with the predictor | [Fixed effects](../../02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md), or a within-between random-effects model | Compares each group only with itself, so a fixed difference between groups cannot bias it | Cannot estimate anything constant within a group, and still needs clustered SEs |
 | The group-level estimates themselves, or the spread between groups | Multilevel model | Gives a stabilised number for each group and an estimate of τ | Needs exchangeable groups and enough of them |
 
 Run them on one design, over 400 datasets. The predictor is a discount with a true effect of 2 within a market. In the second block, markets with a higher underlying level also get bigger discounts.

@@ -57,7 +57,7 @@ The four are layers, not alternatives:
 | LLM judge | Fully | Medium | Subjective criteria at volume |
 | Human sample | Poorly | High | **Calibrates** the judge. 5–10% of graded rows, not a review queue |
 
-Run code graders first and stop early: an answer that fails the schema doesn't need a judge to tell you it's bad. That saves judge budget for the rows that need judgment.
+Run code graders first and stop early: an answer that fails the schema doesn't need a judge to tell you it's bad. That saves judge budget for the rows that need judgment. During calibration, do the opposite and run the judge on those rows too, because a row where code and judge disagree shows which of them to fix ([14](14-calibrating-judges-with-checks-and-critiques.md#part-1-run-the-code-checks-against-the-judge)).
 
 The same order works when you build the layers. Oshin & Campos advise starting with heuristic (code) evaluators, then adding human review, and only then an LLM judge that automates the human review you now understand (*Learning LangChain*, ch. 10).
 

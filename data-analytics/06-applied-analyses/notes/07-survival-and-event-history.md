@@ -492,7 +492,7 @@ gain in survival at month 3: 0.114; at month 36: 0.021
 
 The crude gap at day 360 is 13.1 points. The adjusted gain is 5.9, the truth is 5.3. So more than half of what the head of customer success saw on her chart was who got called. The short effect does leave a lasting mark, though: the hazards become equal after day 90, but the extra people kept through those ninety days go on subscribing, which adds up to about 1.5 boxes within two years.
 
-A causal reading needs an assumption the code cannot check: that channel and plan account for everything that decides who gets called. In this generator that is true by construction, which is why the adjusted answer lands on the truth. With real data, subscribers who answer the phone may be more engaged to begin with, and that would flatter the call in a way no column here could fix.
+A causal reading needs an assumption the code cannot check: that channel and plan account for everything that decides who gets called. In this generator that is true by construction, which is why the adjusted answer lands on the truth. With real data, subscribers who answer the phone may be more engaged to begin with, and that would flatter the call in a way no column here could fix. [Matching and weighting](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md) covers that assumption, and how to ask what a hidden trait would have to do to undo the result.
 
 ## Pricing the call and the price rise
 

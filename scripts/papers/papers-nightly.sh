@@ -25,8 +25,8 @@ export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0
 STOP_HOUR="${STOP_HOUR:-8}"
 HOMES=(post-training llm-fundamentals eval agents inference multimodal agentic-apps
        prompt context rag loop classical-ml safety ml-systems harness graph frameworks
-       analytics data-systems)
-TIERS=(1 2 3 4 5 6)
+       analytics data-systems programming)
+read -ra TIERS <<< "${TIERS:-1 2 3 4 5 6}"  # TIERS="1 2" limits a run
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
 cd "$REPO"

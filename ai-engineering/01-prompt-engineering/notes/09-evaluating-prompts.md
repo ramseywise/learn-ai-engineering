@@ -98,7 +98,7 @@ The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 again
 
 ## LLM-as-judge
 
-**Never let the model know it's grading its own work.** The book ranks the framings: a judge is most accurate grading a third party, a bit worse grading "the user", and much worse grading itself. Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to recant at any hint of doubt. Frame the work as a third party's.
+**Never let the model know it's grading its own work.** The book ranks the framings: a judge is most accurate grading a third party, a bit worse grading "the user", and much worse grading itself. Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to recant at any hint of doubt. Frame the work as a third party's. [Calibrating judges with checks and critiques](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict) tests whether a judge's written reason reports what drove its verdict.
 
 **SOMA** — a rubric recipe:
 
@@ -203,6 +203,7 @@ Lessons:
 - **Picking a winner from a small blind A/B.** Symptom: you ship a prompt on five samples per arm. It's a bug finder, and one rater who also wrote the prompts can't separate two decent prompts. Fix: use it to find deviations, then decide with a harness.
 - **Reading a table of averages as a result.** Symptom: acting on Phoenix & Taylor's 0.043 against 0.052 with no run count or spread, on three cases where the winner changes by case. Fix: report runs and error bars, and check whether the metric measures what you're testing.
 - **Comparing "already updated" with "not yet" users.** Symptom: an effect that is really self-selection, since quick updaters behave differently. Fix: randomize among users who have the update, and leave the rest out.
+- **Patching the examples you read.** Symptom: the score rises because the prompt now names those cases, and the gain doesn't carry to new inputs. Fix: fix a class of failure and score the change on rows you didn't read ([Reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#learning-from-errors-without-fitting-to-them) in data science).
 - **Generating eval data with a candidate model.** Symptom: that model wins. Fix: use a different generator, or record the bias.
 
 ## Try it

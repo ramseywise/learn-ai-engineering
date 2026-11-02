@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://arxiv.org/abs/2405.15793 (Yang et al., SWE-agent, NeurIPS 2024)
   - https://arxiv.org/abs/2310.06770 (Jimenez et al., SWE-bench, ICLR 2024)
+  - https://arxiv.org/abs/2209.11515 (Kang et al., LIBRO, ICSE 2023)
   - https://arxiv.org/abs/2603.05344 (Bui, Building Effective AI Coding Agents, 2026, preprint)
   - https://arxiv.org/abs/2601.20245 (Shen & Tamkin, How AI Impacts Skill Formation, 2026, preprint)
   - practice/coding-agent (written for this note, runs offline against a toy repo)
@@ -69,6 +70,8 @@ Output:
 ```
 
 The order of those four steps is not arbitrary. Yang et al. inspected SWE-agent's trajectories over SWE-bench and found the same arc: agents start by reproducing the issue or localizing the code, then spend the rest of the run in edit and execute cycles (Yang et al., [SWE-agent](https://arxiv.org/abs/2405.15793), NeurIPS 2024). Reproducing first matters because it turns a prose bug report into a failing command, which is the only thing that can later show the fix worked. An agent that skips it has no way to know.
+
+Turning a report into a failing test is hard on its own, and sampling is what makes it work. LIBRO prompted Codex with a bug report and two example report-to-test pairs, sampled 50 candidate tests at temperature 0.7, and kept those that compiled and failed on the buggy code. **It reproduced 251 of 750 Defects4J bugs (33.5%), and the number of samples mattered more than the number of examples**: with 10 samples, two examples reproduced 173 bugs and zero reproduced 124, and bugs reproduced kept rising with the log of the sample count with no plateau in sight (Kang et al., [LIBRO](https://arxiv.org/abs/2209.11515), ICSE 2023). Agreement told it when to trust the result. When the failing tests clustered on the same error, the bug was usually reproduced (precision 0.84 at recall 0.42 when it demanded a cluster of more than 10). On 31 bugs filed after Codex's training cutoff it reproduced 10. The evidence is Java and one model, and tests that needed external files or helper code mostly failed.
 
 ```mermaid
 flowchart LR

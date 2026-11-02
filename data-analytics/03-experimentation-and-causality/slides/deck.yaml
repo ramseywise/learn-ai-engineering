@@ -1,13 +1,13 @@
-# Experimentation and Causality lecture deck. Covers notes 01-04.
+# Experimentation and Causality lecture deck. Covers notes 01-05.
 # Build: make slides PILLAR=data-analytics/03-experimentation-and-causality STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
-# Running example: Larkspur, a fictional online plant shop. All Larkspur numbers come from
-# synthetic data with fixed seeds in the notes.
+# Running examples: Larkspur, a fictional online plant shop, and Fernhill Home's loyalty club
+# in the matching part. All numbers come from synthetic data with fixed seeds in the notes.
 deck:
   title: Experiments and Causality
   subtitle: Did the change cause the result?
   tagline: |-
-    Test · Measure · Scale · Infer
+    Test · Measure · Scale · Infer · Match
   reference: "Notes: data-analytics/03-experimentation-and-causality"
   output: experimentation-and-causality.pptx
   notes: >-
@@ -382,6 +382,129 @@ parts:
         notes: >-
           Regression alone isn't on this list as a design. A coefficient is a conditional association until a design or randomisation makes it causal.
 
+  - title: Matching and weighting
+    summary: Overlap · Balance · Six designs on one scorecard · What bias remains · What the checks refute
+    notes: >-
+      Now a question with data but no randomisation, where the generator is ours, so every design can be scored against a truth a real analyst never sees.
+    slides:
+      - layout: statement
+        title: The club's £95.54 is mostly who joins
+        kicker: The problem
+        statement: "Six months after Fernhill's loyalty club opened, members had spent £95.54 more than non-members. The generator says the true effect on joiners is £23.38."
+        attribution: "Fernhill Home, simulated: 9,456 customers, 3,746 joined. True ATT £23.38, ATE £15.96, ATC £11.10"
+        takeaway: People who choose a programme already differ, so fix who is compared with whom before reading any outcome.
+        recall: How large was the naive gap at Fernhill, and what were the true ATT, ATE and ATC?
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          The three truths differ because the people who join benefit more, so say which one you want before you pick a design. Adjusting will remove about £70, and the argument after that is about what remains.
+
+      - layout: image
+        title: Few non-joiners stand in for the likeliest joiners
+        recall: How many joiners and non-joiners scored above 0.9, and what does that do to weighting?
+        image: ../../sources/images/causal-club-overlap.png
+        caption: Estimated probability of joining, by group.
+        bullets:
+          - "**970 joiners** above 0.9; **40 non-joiners**."
+          - "**29 joiners** score above the highest non-joiner."
+          - "A non-joiner at 0.997 **counts as about 330**."
+        takeaway: Any design that keeps every joiner must lean on a few non-joiners, and any design that does not has changed the question.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          Look at this chart before you run anything, because it sets the trade for the rest of the part. The scores run from 0.024 to 0.999 for joiners and 0.012 to 0.997 for non-joiners.
+
+      - layout: image
+        title: Fix the design on balance alone
+        recall: What thresholds does Rubin's guideline use, and how many of the ten covariates failed them?
+        image: ../../sources/images/causal-club-love-plot.png
+        caption: Love plot. One row per covariate, one mark per design.
+        bullets:
+          - "**Before:** a full SD gap on orders (1.00) and spend (1.12)."
+          - "**Nine of ten** fail 0.25 on SMD; **four** fail variance ratio."
+          - "None of this reads the outcome."
+        takeaway: Design on the covariates with the outcome hidden, and remember balance covers only what you observed.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          Stuart reports Rubin's 2001 guideline: regression adjustment can be trusted when the absolute standardised difference is below 0.25 and the variance ratio lies between 0.5 and 2. A regression here would extrapolate, so we use a stricter line of 0.1 for the designs.
+
+      - layout: code
+        title: Every design pays in joiners or in effective controls
+        recall: What did CEM give up to get balance, and how many controls were 5,710 weighted controls worth?
+        lang: Text output
+        code: |-
+          design              kept  eff_n  max|SMD|
+          CEM                 2202   1106     0.024
+          PS match, repl.     3682    246     0.069
+          PS match, no repl.  1972   1972     0.018
+          Propensity weights  3746    107     0.167
+          Entropy balancing   3746    267     0.000
+        bullets:
+          - "**5,710 weighted controls** are worth 107."
+          - "**CEM kept 59%** of joiners; truth for them is **£17.31**, not £23.38."
+        takeaway: Report effective sample and who was kept, because dropping joiners changes the question rather than the bias.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          Effective sample is the sum of weights squared over the sum of squared weights. One non-joiner holds 8.6% of the control weight under propensity weights. Estimates then run from £15 to £32, and most of that spread is not bias: CEM's £20.96 and no-replacement matching's £18.26, which kept 53% with a truth of £15.32, target different people.
+
+      - layout: image
+        title: Every sound design lands high
+        recall: What was the mean gap to the truth for the sound ATT designs, and what happened when engagement was added?
+        image: ../../sources/images/causal-club-estimates.png
+        caption: Gap to the truth on 20 datasets, by design.
+        bullets:
+          - "**Sound ATT designs:** £3.15 to £4.31 high."
+          - "**A perfect −£0.11** was luck; that design averages £4.31."
+          - "**Add engagement:** entropy falls from £3.59 to £0.15."
+        takeaway: When every design misses the same way the bias is shared, and only the missing variable removes it.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          Plain propensity weights are the worst sound option here, with a mean gap of £8.27 and a standard deviation of £7.76. Balancing logged history moved the groups further apart on what nobody logged: the engagement gap rose from 0.29 to 0.48 standard deviations. The arithmetic checks out: £8 per standard deviation times 0.48 gives £3.81, close to the £3.59 we measured.
+
+      - layout: compare
+        title: The bad control that helped, and the world where it kills
+        recall: Why can controlling for post-treatment sessions help in one world and destroy the estimate in another?
+        lead: "Same customers and the same true ATT of £23.38. Only the role of next-period sessions differs."
+        emphasis: right
+        left:
+          title: Sessions do not cause spend
+          bullets:
+            - "Sessions are a proxy for engagement"
+            - "Regression gap falls from £4.20 to £2.01"
+          tag: Looks like a fix
+        right:
+          title: The club works through sessions
+          bullets:
+            - "£14.10 of spend per session"
+            - "With sessions: **£0.79**"
+            - "Without sessions: £31.60"
+          tag: Erases the effect
+        takeaway: The data cannot tell these two worlds apart, so look for a proxy measured before treatment.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          An analyst who saw the first result could conclude that post-treatment controls are safe. The second world shows why the rule stands.
+
+      - layout: compare
+        title: "A passed check says what it refutes, and no more"
+        recall: What do an E-value of 1.79 and a passed placebo test rule out, and what bias did they miss?
+        emphasis: right
+        left:
+          title: What the checks returned
+          bullets:
+            - "E-value 1.79; lower limit 1.64"
+            - "Rosenbaum Γ 2.35"
+            - "Placebo (17.59 to 0.18) and random cause both passed"
+          tag: All on a biased estimate
+        right:
+          title: What was actually true
+          bullets:
+            - "Real bias about 15%"
+            - "E-value to reach the truth: only 1.20"
+            - "Engagement odds in pairs: median 1.68, 90th 3.34"
+          tag: Plausibly weak confounder
+        takeaway: Say what a check refutes, because these rule out a zero effect or a broken pipeline and not an estimate 15% high.
+        source: notes/05-matching-and-weighting.md
+        notes: >-
+          The true ratio of means is 1.207. Gamma times delta got the size roughly right, £4.16 against £3.11 on this dataset, but only with the true values plugged in, and an analyst has to guess them. Library defaults matter too: DoWhy's clipping turned £18.75 into £39.24.
+
   - title: Wrap-up
     agenda: false
     divider: false
@@ -390,13 +513,13 @@ parts:
         title: Rules of thumb
         cards:
           - {title: Run the SRM first, body: "Stop if it fails. Everything downstream depends on it.", accent: "D4621A"}
-          - {title: Read ratio parts, body: "Show numerator and denominator every time.", accent: "D4621A"}
-          - {title: Agree metrics early, body: "One OEC, guardrails with margins, decided in advance.", accent: "D4621A"}
+          - {title: Agree metrics early, body: "One OEC, guardrails with margins. Show both parts of a ratio.", accent: "D4621A"}
           - {title: Use the pre-period, body: "CUPED can halve variance, at no traffic cost.", accent: "D4621A"}
           - {title: Plan your looks, body: "Sequential methods, or a fixed end date.", accent: "D4621A"}
           - {title: Draw the graph, body: "It chooses controls and exposes the assumption.", accent: "D4621A"}
+          - {title: Balance before outcome, body: "Fix the design on balance alone, and say who was kept.", accent: "D4621A"}
         takeaway: Most experiment failures are design and reading errors, and every one has a check you can automate.
-        source: notes/03-experimentation-at-scale.md
+        source: notes/05-matching-and-weighting.md
         notes: >-
           These six catch most of what goes wrong. Everything here applies to online evaluation of LLM features too.
 
@@ -412,6 +535,6 @@ parts:
           accent: "1E3A5F"
           body: "Every chapter block runs as written. Change a seed and a parameter, and predict the result before you run it."
         takeaway: The next step is to rerun the chapters' simulations with your own company's numbers.
-        source: notes/04-correlation-and-causation.md
+        source: notes/05-matching-and-weighting.md
         notes: >-
           The Bayesian pillar picks up the same Larkspur checkout data, so you can compare the two answers directly.

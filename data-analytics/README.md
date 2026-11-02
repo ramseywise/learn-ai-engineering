@@ -2,7 +2,7 @@
 
 > What a data analyst has to know: get data into a frame, describe it, test a claim, model a relationship, forecast it, explain it to someone, and know when the numbers lie.
 
-Position in the path: [programming/python](../programming/python/README.md) modules 01 to 03 come first. [Data science](../data-science/README.md), [data engineering](../data-engineering/README.md) and [generative AI](../generative-ai/README.md) build on this subject.
+Position in the path: [programming/python](../programming/python/README.md) modules 01 to 03 come first, and [SQL](../programming/sql/README.md) helps alongside. [Data science](../data-science/README.md), [data engineering](../data-engineering/README.md) and [generative AI](../generative-ai/README.md) build on this subject.
 
 ## What it is
 
@@ -10,18 +10,47 @@ An analyst is handed a question and some data, and owes back an answer that some
 
 The thread through all of them is the last clause of the framing, knowing when the numbers lie. A many-to-many join inflates revenue without raising an error. A mean of rates ranks regions wrongly. A test stopped at the first small p-value finds effects that are not there. A chart with two y axes implies a relationship its author chose. None of these announce themselves, so each pillar teaches the check along with the method.
 
+## Course outcomes
+
+By the end of the course, you can:
+
+1. Create a reproducible analysis-ready dataset and verify that transformations preserved its meaning.
+2. Describe variation and uncertainty, select an appropriate statistical method, and qualify a quantitative claim.
+3. Design and validate an experiment; distinguish association from credible causal evidence.
+4. Build and diagnose Bayesian models, then make decisions with explicit uncertainty and costs.
+5. Create clear, truthful visualisations and use them to make a recommendation.
+6. Complete an end-to-end analysis with a baseline, validation, operational implication, and limitations.
+
+## Before you begin
+
+**Required:** Python fundamentals through modules 01 to 03 of [Programming: Python](../programming/python/README.md). You should be comfortable with variables, functions, collections, files, and a terminal. No pandas or statistics course is assumed.
+
+**Helpful alongside this course:** [Programming: SQL](../programming/sql/README.md). Unit 06 applies analytical SQL; the SQL track teaches the language in depth.
+
+**Course language:** Python. The main tools are pandas, NumPy, SciPy, statsmodels, PyMC, matplotlib, seaborn, Plotly, and DuckDB. Each pillar README covers its own setup and how to run its practice.
+
+## How to use the course
+
+| Activity | What you do | What it shows |
+|---|---|---|
+| Chapters | Work through the notes and their examples in order. | You understand the concept and its worked application. |
+| Deck review | Use the deck as a lecture recap and recall prompt. | You can explain the central idea without copying code. |
+| Drills | Complete the chapter `Try it` exercises and interpretation checks. | You can select and apply a technique in a focused problem. |
+| Labs | Create an analysis, chart, model, or decision brief. | You can combine techniques and defend a result. |
+| Portfolio evidence | Save the unit's required output with assumptions and limits. | You can demonstrate analytical practice. |
+
 ## The six pillars
 
-| Pillar | The analyst's job | What you learn | Chapters | Deck |
-|---|---|---|---|---|
-| [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | 7 | [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) |
-| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | 6 | [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) |
-| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 4 | [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) |
-| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | 6 | [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) |
-| [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | 5 | [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) |
-| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | 6 | [deck](06-applied-analyses/slides/applied-analyses.pptx) |
+| Pillar | The analyst's job | What you learn | Portfolio evidence |
+|---|---|---|---|
+| [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | Cleaned dataset and validated analysis |
+| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | Statistical analysis memo |
+| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | Experiment brief or causal-design critique |
+| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | Diagnosed PyMC decision analysis |
+| [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
+| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | End-to-end analysis portfolio |
 
-Read them in order the first time. [CURRICULUM.md](CURRICULUM.md) gives the sequence, the practice for each step and how you know you are done. [references.md](references.md) is the shared book library, with free courses and videos.
+Read them in order the first time. Units 01 to 03 are the core sequence. Take Unit 04 after Unit 03; it revisits inference and A/B testing through a Bayesian decision framework. Take Unit 05 before or alongside Unit 06.
 
 ## Two ways to answer the same question
 
@@ -36,61 +65,132 @@ Pillars 02 and 03 and pillar 04 answer the same questions by different routes, a
 
 Name the distribution, fix the sample size before you look, and report effect sizes with intervals and not bare p-values.
 
-## Syllabus
-
-These are the chapters on disk as of 2 November 2026.
+## Units
 
 ### [01 Python for data analysis](01-python-for-data-analysis/README.md)
 
-1. [Series and DataFrame](01-python-for-data-analysis/notes/01-series-and-dataframe.md)
-2. [Loading and Cleaning](01-python-for-data-analysis/notes/02-loading-and-cleaning.md)
-3. [Indexing and Selection](01-python-for-data-analysis/notes/03-indexing-and-selection.md)
-4. [Reshaping and Joins](01-python-for-data-analysis/notes/04-reshaping-and-joins.md)
-5. [Groupby and Aggregation](01-python-for-data-analysis/notes/05-groupby-and-aggregation.md)
-6. [Time Series](01-python-for-data-analysis/notes/06-time-series.md)
-7. [Plotting](01-python-for-data-analysis/notes/07-plotting.md)
+**Purpose:** Turn a raw export into a table you can safely analyse. Cleaning, joins, aggregation, time, and charts are correctness problems, not merely API calls ([McKinney](https://wesmckinney.com/book/); [Wickham](https://doi.org/10.18637/jss.v059.i10) on tidy shape).
+
+**Learning objectives.** After this unit, you can:
+
+1. Inspect a DataFrame's shape, types, labels, and missingness before using it.
+2. Load a messy export into a rerunnable cleaning workflow and account for every changed or removed row.
+3. Select, filter, and update data safely using label- and position-based indexing.
+4. Reshape and join tables while specifying join semantics, validating cardinality, and reconciling totals.
+5. Compute grouped summaries and rates correctly, including when groups or denominators are missing.
+6. Work safely with time-indexed data and answer a question with an appropriate chart.
+
+**Review and practice:** [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) · chapter `Try it` exercises · progressive [practice notebooks](01-python-for-data-analysis/practice/).
+
+**Mastery lab:** From a raw retail-style export, create a documented analysis-ready table. Show a rerunnable cleaning workflow, validated join, correctly aggregated metric, and one chart with a plain-language interpretation.
+
+**Evidence:** Preserve the cleaning function, before/after row counts, and a reconciled business total. State `how` and `validate` for the join; show the numerator and denominator for a rate.
+
+**Key sources:** Wes McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/) · Jake VanderPlas, [*Python Data Science Handbook*](https://jakevdp.github.io/PythonDataScienceHandbook/) · Wickham, [*Tidy Data*](https://doi.org/10.18637/jss.v059.i10) · [Kaggle Learn: Pandas](https://www.kaggle.com/learn/pandas).
 
 ### [02 Probability and statistics](02-probability-and-statistics/README.md)
 
-1. [Descriptive Statistics and EDA](02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md)
-2. [Probability Foundations](02-probability-and-statistics/notes/02-probability-foundations.md)
-3. [Distributions and Sampling](02-probability-and-statistics/notes/03-distributions-and-sampling.md)
-4. [Estimation](02-probability-and-statistics/notes/04-estimation.md)
-5. [Hypothesis Testing](02-probability-and-statistics/notes/05-hypothesis-testing.md)
-6. [Regression and GLMs](02-probability-and-statistics/notes/06-regression-and-glms.md)
+**Purpose:** Make claims about data you have not seen without overstating what a sample says. This is the vocabulary for later experiments, models, and evaluations.
+
+**Learning objectives.** After this unit, you can:
+
+1. Audit an extract's unit of observation and distribution, then choose summaries that represent it honestly.
+2. Use conditional probability, expectation, and variance to reason about uncertainty and base rates.
+3. Match common analytical measures to probability distributions and identify when sampling assumptions fail.
+4. Estimate quantities with intervals, bootstrap procedures, and sample-size reasoning.
+5. Select, run, and interpret a hypothesis test, including an appropriate multiple-comparison correction ([Wasserstein and Lazar](https://doi.org/10.1080/00031305.2016.1154108) on what a p-value does not say).
+6. Fit and interpret linear, logistic, and Poisson regression models with useful uncertainty checks ([James et al.](https://www.statlearning.com/)).
+
+**Review and practice:** [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) · chapter `Try it` exercises and interview checks · optional guided [statistical-analysis notebook](02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb).
+
+**Mastery lab:** Audit an unfamiliar extract, state the estimand and independent unit, report a point estimate and interval, answer one predeclared comparison, then fit and interpret a suitable regression with diagnostics.
+
+**Evidence:** A statistical memo containing the unit of analysis, distribution or visual checks, interval, justified test or model, effect size, and limits of the conclusion.
+
+**Key sources:** Bruce & Bruce, *Practical Statistics for Data Scientists* · Downey, [*Think Stats*](https://allendowney.github.io/ThinkStats/) · James et al., [*An Introduction to Statistical Learning with Applications in Python*](https://www.statlearning.com/) · [MIT 18.650](https://ocw.mit.edu/courses/18-650-statistics-for-applications-fall-2016/) · Wasserstein and Lazar, [ASA Statement on p-Values](https://doi.org/10.1080/00031305.2016.1154108).
 
 ### [03 Experimentation and causality](03-experimentation-and-causality/README.md)
 
-1. [A/B Testing](03-experimentation-and-causality/notes/01-ab-testing.md)
-2. [Metrics and KPI Design](03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md)
-3. [Experimentation at Scale](03-experimentation-and-causality/notes/03-experimentation-at-scale.md)
-4. [Correlation, Confounding and Causation](03-experimentation-and-causality/notes/04-correlation-and-causation.md)
+**Purpose:** Answer whether a change caused an outcome. Learn the discipline that makes an A/B result trustworthy and the assumptions required when randomisation is unavailable.
+
+**Learning objectives.** After this unit, you can:
+
+1. Design an A/B test: randomisation unit, estimand, MDE, sample size, stopping rule, and reporting plan ([Kohavi et al. 2009](https://doi.org/10.1007/s10618-008-0114-1)).
+2. Select a north-star metric, guardrail, and diagnostic metric; interpret ratios and denominator changes correctly.
+3. Validate an experiment before trusting its outcome, including SRM, balance, and unit-of-analysis checks ([Dmitriev et al.](https://doi.org/10.1145/3097983.3098024)).
+4. Apply CUPED and suitable sequential testing, and explain interference and overlapping-experiment risks.
+5. Draw a causal graph and distinguish confounders, mediators, and colliders.
+6. Choose and qualify DiD, IV, RD, weighting, or synthetic control, naming its identifying assumption ([Cunningham](https://mixtape.scunning.com/)).
+
+**Review and practice:** [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) · runnable chapter examples and drills, including the Larkspur checkout experiment and causal-reasoning examples.
+
+**Mastery lab:** Analyse a checkout experiment and write a launch/no-launch brief. For an observational question, instead submit a causal diagram, proposed design, and the assumption that makes the estimate interpretable.
+
+**Evidence:** State the decision, OEC and guardrails, sample-size and stopping logic; validate assignment; report effect and uncertainty; and explain the recommendation or why evidence is insufficient.
+
+**Key sources:** Kohavi, Tang, and Xu, [*Trustworthy Online Controlled Experiments*](https://experimentguide.com/) · Kohavi et al., [*Controlled Experiments on the Web*](https://doi.org/10.1007/s10618-008-0114-1) · Dmitriev et al., [*A Dirty Dozen*](https://doi.org/10.1145/3097983.3098024) · Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) · [Brady Neal's course](https://www.bradyneal.com/causal-inference-course).
 
 ### [04 Bayesian analysis](04-bayesian-analysis/README.md)
 
-1. [Bayesian Inference](04-bayesian-analysis/notes/01-bayesian-inference.md)
-2. [MCMC and PyMC](04-bayesian-analysis/notes/02-mcmc-and-pymc.md)
-3. [Priors and Bandits](04-bayesian-analysis/notes/03-priors-and-bandits.md)
-4. [Bayesian A/B Testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md)
-5. [Loss Functions and Bayesian Decisions](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md)
-6. [Bayesian Machine Learning](04-bayesian-analysis/notes/06-bayesian-machine-learning.md)
+**Purpose:** Revisit inference as a decision problem. Use prior information, posterior uncertainty, diagnostics, and losses to answer what should be done, not only whether a null hypothesis is surprising ([Davidson-Pilon](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers)).
+
+**Learning objectives.** After this unit, you can:
+
+1. Express an analytical question as a generative model and compute or simulate a posterior.
+2. Fit a basic Bayesian model in PyMC and interpret posterior probabilities and credible intervals.
+3. Diagnose sampling quality with R-hat, ESS, traces, and divergences, then improve an ill-behaved model.
+4. Select, justify, and pressure-test priors with prior-predictive simulation.
+5. Compare variants in a Bayesian A/B test using probability of superiority, lift uncertainty, and expected loss.
+6. Translate posterior uncertainty into a decision by defining an appropriate loss function.
+
+**Review and practice:** [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) · fixed-seed chapter examples · optional advanced [Bayesian ML coursework](04-bayesian-analysis/practice/BayesianML/README.md).
+
+**Mastery lab:** Reanalyse the checkout A/B case with a PyMC model. Run prior-predictive and sampler checks, quantify posterior uncertainty, define the cost of each mistake, and make a ship/no-ship recommendation.
+
+**Evidence:** Submit a reproducible model, diagnostic summary, posterior answer, loss-based recommendation, and a brief comparison with the fixed-horizon frequentist analysis. The advanced coursework is optional archival material, not required practice.
+
+**Key sources:** Davidson-Pilon, [*Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) · [McElreath's lectures](https://www.youtube.com/playlist?list=PLDcUM9US4XdPz-KxHM4XHt7uUVGWWVSus) · Gelman et al., [*Bayesian Data Analysis*](https://sites.stat.columbia.edu/gelman/book/) · [Aalto Bayesian Data Analysis](https://avehtari.github.io/BDA_course_Aalto/) · [PyMC examples](https://www.pymc.io/projects/examples/en/latest/gallery.html).
 
 ### [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md)
 
-1. [Grammar of graphics and chart choice](05-visualisation-and-storytelling/notes/01-grammar-and-chart-choice.md)
-2. [Matplotlib and seaborn](05-visualisation-and-storytelling/notes/02-matplotlib-and-seaborn.md)
-3. [Plotly and interactive charts](05-visualisation-and-storytelling/notes/03-plotly-and-interactive.md)
-4. [JavaScript: D3, Vega-Lite and Observable Plot](05-visualisation-and-storytelling/notes/04-javascript-d3-vega-lite-observable-plot.md)
-5. [Dashboards and storytelling with data](05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md)
+**Purpose:** Make an analytical result legible and useful. Select encodings, build static and interactive charts, and shape them into an argument without overstating what the data says.
+
+**Learning objectives.** After this unit, you can:
+
+1. Match a question and data type to a chart using perceptually strong encodings and honest scales ([Cleveland and McGill](https://doi.org/10.1080/01621459.1984.10478080)).
+2. Build clear static charts with matplotlib and seaborn, including annotations and uncertainty where needed.
+3. Design interactive charts with useful filtering, tooltips, and accessible fallbacks.
+4. Explain when to use Python plotting libraries, D3, Vega-Lite, or Observable Plot, and implement a small web chart.
+5. Design a dashboard and narrative that give a decision-maker context, evidence, recommendation, and limitations ([Knaflic](https://www.storytellingwithdata.com/books)).
+
+**Review and practice:** [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) · chapter exercises · runnable [practice scripts and dashboard](05-visualisation-and-storytelling/practice/).
+
+**Mastery lab:** Take one decision from an earlier unit and create a concise visual narrative or dashboard: audience and decision, chart choice, source and transformation notes, recommendation, and the limitation most likely to change it.
+
+**Evidence:** A reviewer can understand the main claim without the code, trace it to a valid measure, and identify the action, uncertainty, and guardrail. Include chart source and an accessible static fallback for interactive work.
+
+**Key sources:** Knaflic, [*Storytelling with Data*](https://www.storytellingwithdata.com/books) · Wilke, [*Fundamentals of Data Visualization*](https://clauswilke.com/dataviz/) · Munzner, [*Visualization Analysis and Design*](https://www.cs.ubc.ca/~tmm/vadbook/) · Cleveland and McGill, [*Graphical Perception*](https://doi.org/10.1080/01621459.1984.10478080) · [Kaggle Learn: Data Visualization](https://www.kaggle.com/learn/data-visualization).
 
 ### [06 Applied analyses](06-applied-analyses/README.md)
 
-1. [Forecasting: how many people does the warehouse need?](06-applied-analyses/notes/01-forecasting.md)
-2. [Credit scoring: which applications should a bank approve?](06-applied-analyses/notes/02-credit-scoring.md)
-3. [Cohort and retention: did we lose customers, or buy worse ones?](06-applied-analyses/notes/03-cohort-and-retention.md)
-4. [Funnel and conversion: why a flat headline can hide a broken page](06-applied-analyses/notes/04-funnel-and-conversion.md)
-5. [Segmentation and RFM: who to contact, and who would have bought anyway](06-applied-analyses/notes/05-segmentation-and-rfm.md)
-6. [SQL for analytics: the revenue bridge, and the patterns behind it](06-applied-analyses/notes/06-sql-for-analytics.md)
+**Purpose:** Do the complete job. Each case begins with a decision and ends with a recommendation, using earlier units to establish a baseline, validate results, and make value concrete.
+
+**Learning objectives.** After this unit, you can:
+
+1. Frame an analytical request as a decision, metric, baseline, and validation plan.
+2. Forecast demand with multiple baselines, rolling-origin backtests, and an operational recommendation ([Hyndman and Athanasopoulos](https://otexts.com/fpp3/)).
+3. Build and evaluate a credit-scorecard-style analysis while distinguishing predictive performance, calibration, drift, and policy constraints.
+4. Diagnose retention and conversion with cohorts and funnels, separating rate from mix and association from causation ([Fader and Hardie](https://doi.org/10.1002/dir.20074)).
+5. Segment customers responsibly, validate later usefulness, and distinguish targeting from persuadability.
+6. Use analytical SQL to reconcile changes in a business total and explain their drivers.
+
+**Review and practice:** [deck](06-applied-analyses/slides/applied-analyses.pptx) · runnable [case-study scripts](06-applied-analyses/practice/) and their generated or documented datasets.
+
+**Mastery portfolio:** Complete at least two cases, including forecasting or credit scoring and one of cohort, funnel, segmentation, or SQL. For each: frame the decision, show a baseline, validate against something known, quantify an operational or financial implication, recommend an action, and state what could overturn it.
+
+**Evidence:** A reproducible analysis, decision memo, and clear visual. Reconcile reported totals to the source, distinguish prediction from a causal claim, and place uncertainty beside the recommendation.
+
+**Key sources:** Hyndman and Athanasopoulos, [*Forecasting: Principles and Practice*](https://otexts.com/fpp3/) · Grömping, [*South German Credit Data*](http://www1.beuth-hochschule.de/FB_II/reports/Report-2019-004.pdf) · Fader and Hardie, [*How to Project Customer Retention*](https://doi.org/10.1002/dir.20074) · Fader, Hardie, and Lee, [*RFM and CLV*](https://doi.org/10.1509/jmkr.2005.42.4.415) · [Mode SQL tutorial](https://mode.com/sql-tutorial/).
 
 ## Rules of thumb
 
@@ -113,19 +213,20 @@ These are the chapters on disk as of 2 November 2026.
 | Beat a baseline first, and backtest over many origins because one split is one anecdote | [06](06-applied-analyses/README.md#rules-of-thumb) |
 | Split a change in any aggregate into rate and mix before you explain it | [06](06-applied-analyses/README.md#rules-of-thumb) |
 
-## Layout
+## Completion standard and next steps
 
-```text
-data-analytics/
-├── README.md         this file
-├── CURRICULUM.md     the sequenced path
-├── references.md     the shared book library, courses and videos
-├── sources/          PDFs and images/ shared by all six pillars
-└── 0N-<pillar>/      README.md, references.md, notes/, practice/, slides/
-```
+You have completed the course when your portfolio demonstrates the six unit outcomes: a reproducible data-preparation analysis, a statistical memo, an experiment or causal-design brief, a diagnosed Bayesian decision analysis, a visual recommendation, and two end-to-end applied cases. Correct code alone is not enough: every piece should name its decision, unit of analysis, checks, uncertainty, and limitations.
 
-Each pillar's README says how to run its practice, and its `references.md` maps books and papers to chapters.
+Continue to [Data Science](../data-science/README.md) for predictive modelling and model research; [Data Engineering](../data-engineering/README.md) for pipelines and infrastructure; or [Generative AI](../generative-ai/README.md) for LLM-powered applications.
 
-## Interview guide
+## Primary texts
 
-[1-foundations](../practice/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation, in the local `practice/` folder.
+- McKinney, *Python for Data Analysis*: the base text for Unit 01; its pandas advice predates pandas 3, so the notes correct it where needed
+- Bruce and Bruce, *Practical Statistics for Data Scientists*: Units 02, 03 and 06
+- Reinhart, *Statistics Done Wrong*: how statistical claims fail, Units 02 and 03
+- Pearl, Glymour and Jewell, *Causal Inference in Statistics: A Primer*: the causal reasoning in Unit 03
+- Davidson-Pilon, *Bayesian Methods for Hackers*: the spine of Unit 04
+- Knaflic, *Storytelling with Data*: Unit 05
+- Hyndman and Athanasopoulos, *Forecasting: Principles and Practice*: Unit 06
+
+Everything else, including free courses and videos: [references.md](references.md). Each pillar's own `references.md` maps its sources to its chapters.

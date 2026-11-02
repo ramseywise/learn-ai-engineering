@@ -32,7 +32,7 @@ Larkspur's analyst slices a flat experiment by twenty segments and reports that 
 | Power (1 − β) | chance of detecting an effect of a given size; see [experimentation at scale](../../03-experimentation-and-causality/notes/03-experimentation-at-scale.md) |
 | Effect size | how big the difference is, independent of N (Cohen's d, h, lift) |
 
-Type I and Type II errors are the off-diagonal cells of the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) in data science, with the decision rule in place of a model.
+Type I and Type II errors are the off-diagonal cells of the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) in data science, with the decision rule in place of a model. [Reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#the-procedure) opens those two cells for a model and reads the rows inside them.
 
 Larkspur's new checkout gives a first example, on order values for 400 buyers in each arm.
 

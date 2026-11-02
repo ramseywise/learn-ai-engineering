@@ -69,7 +69,7 @@ Raw agreement of 0.85 sounds good, but two people who pass most outputs would ag
 
 ## Find failure modes by reading: error analysis
 
-You can't list failure modes in advance. You find them by reading outputs, as [error analysis](../../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md#error-analysis-count-before-you-build) does for a neural network's mistakes in data science. The method Husain and Shankar teach (borrowed from qualitative research):
+You can't list failure modes in advance. You find them by reading outputs, as [error analysis](../../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md#error-analysis-count-before-you-build) does for a neural network's mistakes in data science, and [reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#the-procedure) for a classifier's. The method Husain and Shankar teach (borrowed from qualitative research):
 
 1. **Collect ~100 traces.** Real ones if you have them, synthetic if you don't yet ([03](03-eval-datasets.md#synthetic-data-done-right)).
 2. **Open coding.** Read each trace and write a short free-text note on the *first* thing that went wrong. Don't use categories yet. "Cited the 2023 pricing page", "asked for the order ID it already had".
@@ -88,7 +88,7 @@ flowchart LR
 
 Note the *first* failure only. Later failures in a trajectory are often caused by the first, and counting them inflates the wrong category.
 
-Reading a small sample has a known weakness. [Errudite](https://aclanthology.org/P19-1073/) (Wu et al., ACL 2019) argues that it "can yield biased and incomplete conclusions", and when question-answering experts re-created one published error group from the same description, theirs ranged from 13.8% to 45.2% of all errors, so write each category as a precise rule and count it over all traces, including those that passed.
+Reading a small sample has a known weakness. [Errudite](https://aclanthology.org/P19-1073/) (Wu et al., ACL 2019) argues that it "can yield biased and incomplete conclusions", and when question-answering experts re-created one published error group from the same description, theirs ranged from 13.8% to 45.2% of all errors, so write each category as a precise rule and count it over all traces, including those that passed. [Part 3 of note 14](14-calibrating-judges-with-checks-and-critiques.md#part-3-code-the-critiques) applies the same coding to a judge's critiques.
 
 Step 4 changes the roadmap, and the arithmetic is one line. The counts below are invented, and the costs are one team's estimates, not measurements:
 

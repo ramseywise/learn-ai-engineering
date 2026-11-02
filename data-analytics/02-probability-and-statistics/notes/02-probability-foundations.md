@@ -161,7 +161,7 @@ The base rate here is "how often are the ideas we test really good", and it is u
 
 ## Independence
 
-A and B are independent if P(A and B) = P(A) P(B), or equivalently if knowing one leaves the other's probability unchanged. This is an assumption about the world, and in analytics it is usually the assumption most at risk.
+A and B are independent if P(A and B) = P(A) P(B), or equivalently if knowing one leaves the other's probability unchanged. This is an assumption about the world, and in analytics it is usually the assumption most at risk. Two common failures get their own chapters. Rows in one group resemble each other, which [multilevel models](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#intraclass-correlation-is-the-design-effects-input) measure as the intraclass correlation. A customer's next state depends on the current one, which [states and sequences](../../06-applied-analyses/notes/08-states-and-sequences.md#the-transition-matrix) models as a Markov chain.
 
 Pairwise independence does not give mutual independence. Take two fair coins and let the third bit be their exclusive-or.
 

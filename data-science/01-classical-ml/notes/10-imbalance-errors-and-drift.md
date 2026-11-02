@@ -84,7 +84,7 @@ model at 0.5: accuracy 0.97  defaulters caught 0.0
      0.050     0.108    452     79  0.097 0.545          105479
 ```
 
-Pushing the threshold down trades β for α. At 0.05 the lender catches 45% of defaulters but pays more: α goes from 1.5% to 9.7%, and 452 good customers lost outweigh 50 more defaulters caught at this ratio. The "best" α isn't a statistical constant like 5%. It comes from the price list.
+Pushing the threshold down trades β for α. At 0.05 the lender catches 45% of defaulters but pays more: α goes from 1.5% to 9.7%, and 452 good customers lost outweigh 50 more defaulters caught at this ratio. The "best" α isn't a statistical constant like 5%. It comes from the price list. This chapter prices the errors, and [Reading the errors](12-reading-the-errors.md#the-procedure) reads them: who those rows are, and why the model got them wrong.
 
 ## Significance, power and what a rare event needs
 

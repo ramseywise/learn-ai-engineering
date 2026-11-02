@@ -251,7 +251,7 @@ KS on predictions, p=0.315
 MAE on labels: reference 2.35 -> current 4.71 minutes
 ```
 
-Inputs show no drift. Predictions show none either, with an identical p-value, because for this model they are a monotonic function of the one input. And the error has doubled. This is Gama's real concept drift, invisible without performance feedback. The second experiment reverses it:
+Inputs show no drift. Predictions show none either, with an identical p-value, because for this model they are a monotonic function of the one input. And the error has doubled. This is Gama's real concept drift, invisible without performance feedback, which means a metric on fresh labels ([model evaluation](../../../data-science/01-classical-ml/notes/04-model-evaluation.md) in data science). The second experiment reverses it:
 
 ```python
 # Now the inputs move, but the relationship holds and the model is linear.

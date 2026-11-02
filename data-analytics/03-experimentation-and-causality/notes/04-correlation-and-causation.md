@@ -632,4 +632,4 @@ Cunningham's [Mixtape](https://mixtape.scunning.com/) is the natural next read, 
 
 ## Next
 
-[Matching and weighting](05-matching-and-weighting.md) takes the no-unmeasured-confounders route further: one observational question answered six ways on Fernhill's loyalty club, scored against a known truth.
+[Matching and weighting](05-matching-and-weighting.md) takes the no-unmeasured-confounders route further: one observational question answered six ways on Fernhill's loyalty club, scored against a known truth. [Survival and event history](../../06-applied-analyses/notes/07-survival-and-event-history.md) meets the same assumption when the outcome is a time to leaving.

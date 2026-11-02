@@ -213,7 +213,7 @@ Ex7 then compresses a 128×128 bird photo by clustering its pixels' RGB values i
 
 **Failure cases.** k-means assumes clusters are round, of similar size and similar density, because it only uses distance to the centre. It fails on stretched clusters, clusters of different density and non-convex shapes (`two_moons`). Results depend on initialisation, hence `n_init`.
 
-[Segmentation and RFM](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) puts k-means to work on a retailer's customers and asks whether its segments beat hand-drawn rules.
+[Segmentation and RFM](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) puts k-means to work on a retailer's customers and asks whether its segments beat hand-drawn rules. [States and sequences](../../../data-analytics/06-applied-analyses/notes/08-states-and-sequences.md#clustering-into-journey-types) clusters customers by the order of what they did. There the input is a distance matrix and not a table of coordinates, so k-means is out and hierarchical clustering takes over.
 
 ### Agglomerative clustering
 

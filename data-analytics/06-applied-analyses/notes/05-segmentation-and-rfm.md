@@ -303,7 +303,7 @@ The sample size column confirms that a clean test is possible, just about: 589 p
 
 - **Decision rule.** The contacted half needs to beat the holdout by at least 8.1 points of order rate over the next six months, the window the base rates come from. If so, extend to the whole group and repeat for later cohorts. If not, drop paid contact to this group and use only email, whose cost is close to zero.
 - **Why not At risk?** They bought again at 2.6%, and they'd have to more than quadruple to break even. The backward-bending curves in Fader, Hardie and Lee explain why this isn't an accident.
-- **Limits.** The £1.50 cost and 35% margin are assumptions. Breakeven counts one extra order per contact and ignores longer-term value, so it is conservative for a customer who stays. A six-month window is short, and it does not measure anyone's value beyond December. One seasonal half-year also includes Black Friday, so don't expect the same base rates in spring.
+- **Limits.** The £1.50 cost and 35% margin are assumptions. Breakeven counts one extra order per contact and ignores longer-term value, so it is conservative for a customer who stays. A six-month window is short, and it does not measure anyone's value beyond December. One seasonal half-year also includes Black Friday, so don't expect the same base rates in spring. A segment is also a snapshot, and [states and sequences](08-states-and-sequences.md) follows customers as they move between states.
 
 ## Case: segmenting B2B customers by behaviour
 

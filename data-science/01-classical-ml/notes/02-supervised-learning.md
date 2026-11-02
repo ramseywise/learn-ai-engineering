@@ -25,6 +25,8 @@ Blocks run top to bottom from this `notes/` folder, on the breast-cancer data th
 
 ## The two tasks
 
+The target picks the task, and after it the loss, the metric and the baseline. [Choosing a metric](11-choosing-a-metric.md#the-map) has that map for every kind of target.
+
 | | Classification | Regression |
 |---|---|---|
 | Target | A class label from a fixed set | A continuous number |

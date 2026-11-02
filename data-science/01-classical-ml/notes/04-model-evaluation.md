@@ -150,7 +150,7 @@ Why bother: Varma and Simon built "null" datasets of 40 samples with no signal, 
 
 ## Metrics: keep the end goal in mind
 
-Accuracy treats every mistake the same. Business consequences rarely do.
+Accuracy treats every mistake the same. Business consequences rarely do. [Choosing a metric](11-choosing-a-metric.md#the-map) starts from the target and says which metric to reach for. This section has the detail.
 
 | Error | Also called | Cancer screening | Spam filter |
 |---|---|---|---|
@@ -252,7 +252,7 @@ logistic       accuracy 0.984  balanced 0.935  MCC 0.915
 
 The tree's accuracy of 0.918 looks close to the dummy's 0.896, and the other two columns show how wide the gap really is. [Brodersen et al.](https://doi.org/10.1109/ICPR.2010.764) (ICPR 2010) argue for balanced accuracy on this ground: when accuracy is high only because of an imbalanced test set, balanced accuracy "will drop to chance". [Chicco and Jurman](https://doi.org/10.1186/s12864-019-6413-7) (BMC Genomics 2020) argue for MCC over accuracy and F1 when you have a threshold. Neither is a cost, and each has limits.
 
-This table comes back with new labels. In a [RAG pipeline](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), a relevant chunk in the top k is a true positive, an irrelevant one a false positive and a relevant chunk left out a false negative. The cut-off k plays the part of the threshold, and the true negatives are the rest of the corpus, so many that accuracy says nothing.
+This table comes back with new labels. In a [RAG pipeline](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), a relevant chunk in the top k is a true positive, an irrelevant one a false positive and a relevant chunk left out a false negative. The cut-off k plays the part of the threshold, and the true negatives are the rest of the corpus, so many that accuracy says nothing. [Reading the errors](12-reading-the-errors.md#the-procedure) then uses the four cells as a place to work: open the rows in each one and find out why the model got them wrong.
 
 ---
 

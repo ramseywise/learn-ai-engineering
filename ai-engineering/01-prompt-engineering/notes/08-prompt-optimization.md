@@ -106,7 +106,7 @@ Compared with few-shot it's token-efficient, avoids anchoring on specific exampl
 **2. Using a model to write prompts.** This is the common sense of the term in practice:
 - Ask a strong (often reasoning) model to draft a system prompt from a task description, or to **critique and rewrite** an existing one given failing cases.
 - Vendor tools do this: Anthropic's prompt generator and prompt improver, and OpenAI's playground optimizer.
-- The **evaluator–optimizer** pattern automates it: a judge scores outputs, writes feedback, and a meta-prompt turns that feedback into a revised prompt ([06](06-chaining-and-workflows.md#workflow-patterns-anthropics-taxonomy), [07](07-prompting-reasoning-models.md#where-reasoning-models-earn-their-cost)).
+- The **evaluator–optimizer** pattern automates it: a judge scores outputs, writes feedback, and a meta-prompt turns that feedback into a revised prompt ([06](06-chaining-and-workflows.md#workflow-patterns-anthropics-taxonomy), [07](07-prompting-reasoning-models.md#where-reasoning-models-earn-their-cost)). Before you feed a judge's critique to that loop, [test whether it reports what drove the verdict](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict).
 
 ![Evaluator-optimizer prompt loop](../sources/images/dair-evaluator-optimizer-prompt-loop.jpg)
 *Each round, the judge's feedback goes to a meta-prompt that rewrites the system prompt, and the best version is logged. DAIR, Reasoning LLMs Guide.*

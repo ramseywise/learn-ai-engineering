@@ -20,7 +20,7 @@ Scikit-learn gives you `fit` and `predict`, the [pandas time series chapter](../
 
 The running example is the [UCI Bike Sharing Dataset](https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset) (Fanaee-T & Gama, *Progress in Artificial Intelligence*, 2014; CC BY 4.0): two years of hourly rentals from the Capital Bikeshare system in Washington, D.C. The decision we pretend to serve is rebalancing. Each midnight an operator needs the next 24 hours of demand, hour by hour, to plan where the vans go.
 
-[Forecasting](../../../data-analytics/06-applied-analyses/notes/01-forecasting.md#from-forecast-to-decision) follows the same idea through to a business decision, a retailer's warehouse staffing plan.
+[Forecasting](../../../data-analytics/06-applied-analyses/notes/01-forecasting.md#from-forecast-to-decision) follows the same idea through to a business decision, a retailer's warehouse staffing plan. [Operations and supply chain](../../../data-analytics/06-applied-analyses/notes/10-operations-and-supply-chain.md#one-seasons-order-the-newsvendor) does the same with stock, where the spread of the forecast's error decides the order.
 
 ## What a forecasting problem is made of
 

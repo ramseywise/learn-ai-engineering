@@ -516,7 +516,7 @@ On the holdout it gets within 4% of the observed revenue (£131.31 against £126
 
 ## Journeys as strings: optimal matching
 
-Now set the model aside and look at journeys as sequences. Sociologists have long asked how similar two life courses are, and the classic answer is **optimal matching** (OM), which Abbott introduced to the field from Levenshtein's work on strings and Needleman and Wunsch's alignment algorithm (Gabadinho et al., 2011, section 8.2). The distance between two sequences is the cheapest total cost of edits that turns one into the other, using **substitutions** (swap one state for another) and **indels** (insert or delete one).
+Now set the model aside and look at journeys as sequences. Sociologists have long asked how similar two life courses are, and the classic answer is **optimal matching** (OM), which Abbott introduced to the field from Levenshtein's work on strings and Needleman and Wunsch's alignment algorithm (Gabadinho et al., 2011, section 8.2). The distance between two sequences is the cheapest total cost of edits that turns one into the other, using **substitutions** (swap one state for another) and **indels** (insert or delete one). Despite the name, this is unrelated to the treated-and-control [matching](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md) of causal inference: nobody here is treated, and the distance compares whole histories.
 
 We use two implementations: a dozen lines of dynamic programming so you can see it, and `sequenzo` (version 0.1.42, a Python package that builds on TraMineR) for the full matrix. It installed and ran without trouble, though it prints a banner on import and when it runs, which the script silences.
 

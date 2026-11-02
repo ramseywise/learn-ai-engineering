@@ -243,7 +243,7 @@ first pass: [{'claim': '10', 'status': 'hallucination', 'document_support': 'NOT
 verifier  : {'verified': True, 'type': 'distortion', 'severity': 'critical'}
 ```
 
-`final_recommendation: review` is worth copying: it routes a disagreement to a human queue instead of guessing.
+`final_recommendation: review` is worth copying: it routes a disagreement to a human queue instead of guessing. [Calibrating judges with checks and critiques](../../08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-1-run-the-code-checks-against-the-judge) in the eval pillar measures a judge against code checks, and reads those disagreements first.
 
 Now run the whole pipeline over the fortnight and score it against the planted labels, which is the measurement you rarely get in production.
 

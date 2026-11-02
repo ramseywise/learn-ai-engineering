@@ -406,6 +406,8 @@ ridge-penalised coef {'const': -0.85, 'x': 4.92}
 
 The tell is an enormous coefficient with an absurd standard error: 28.52 with SE 171,433. `statsmodels` emits a convergence warning, but some software will return this without complaint. Regularisation fixes it by penalising extreme coefficients. Gelman, Jakulin, Pittau and Su make the Bayesian form of the argument in [A weakly informative default prior distribution for logistic and other regression models](https://arxiv.org/abs/0901.4011) (*Annals of Applied Statistics*, 2008): a change of one typical input is unlikely to shift the logit by more than about 5, so an independent Cauchy prior with scale 2.5 on standardised inputs gives stable answers even under separation. [Priors and bandits](../../04-bayesian-analysis/notes/03-priors-and-bandits.md) picks this up, and it reads the ridge penalty as a prior.
 
+[Survival and event history](../../06-applied-analyses/notes/07-survival-and-event-history.md#a-survival-model-is-a-logistic-regression-on-person-periods) puts this model to work on time to an event: give each person one row per period, and a logistic regression becomes a discrete-time hazard model.
+
 ## Poisson and other GLMs
 
 OLS, logistic and Poisson are one family. A *generalised linear model* has a linear predictor, a distribution for the outcome and a *link* function connecting them (ISLP §4.6; Efron & Hastie, ch. 8).

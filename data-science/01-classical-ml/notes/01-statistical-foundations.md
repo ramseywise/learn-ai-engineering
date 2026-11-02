@@ -29,7 +29,7 @@ This layer is mostly reading. The serious code starts in [02](02-supervised-lear
 
 > **A model is an estimate of $f$ in $y = f(x) + \varepsilon$. Learning is choosing $\hat f$ from a family of functions. Generalisation is how close $\hat f$ stays to $f$ on new $x$.**
 
-The rest of this note is about that last sentence.
+The rest of this note is about that last sentence. [The data generating process](../../../data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md#a-better-fit-is-not-better-generalisation) in data analytics makes the same point from the analyst's side: a better fit on the rows you have is not better generalisation.
 
 ---
 

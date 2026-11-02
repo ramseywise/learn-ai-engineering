@@ -16,7 +16,7 @@ The checkout test in [the previous chapter](01-ab-testing.md) used conversion be
 
 ## Four kinds of metric
 
-Dmitriev and colleagues, writing from Microsoft's experimentation team, sort metrics into four groups according to what the metric is for. The grouping matters because each kind is read with a different rule.
+Dmitriev and colleagues, writing from Microsoft's experimentation team, sort metrics into four groups according to what the metric is for. The grouping matters because each kind is read with a different rule. These are business metrics, read to decide a launch. A model's metric answers a different question, and its target and costs set it: see [choosing a metric](../../../data-science/01-classical-ml/notes/11-choosing-a-metric.md) in data science.
 
 | Kind | Question | Larkspur example | How you read it |
 |---|---|---|---|

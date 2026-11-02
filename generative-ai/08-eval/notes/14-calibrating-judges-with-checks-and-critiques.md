@@ -168,7 +168,7 @@ The strict judge agrees with check A on every row check A fails, because the rul
 
 ## Part 2: slice the judge's errors by flag
 
-Compute TPR and TNR per slice on dev, using flags you already have: language, route, answer length, whether a citation is present, and the code check result. This is the same move as reading a model's errors in DS 01/12, *Reading the errors*, and note 09's warning applies: [slice enough ways and something will look significant by chance](09-reading-results.md#too-many-slices).
+Compute TPR and TNR per slice on dev, using flags you already have: language, route, answer length, whether a citation is present, and the code check result. This is the same move as reading a model's errors in [DS 01/12, *Reading the errors*](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#step-4-slice-and-count), and note 09's warning applies: [slice enough ways and something will look significant by chance](09-reading-results.md#too-many-slices).
 
 So say how many tests you ran and correct for them. The script runs a Fisher exact test of each slice against the rest, then applies Holm's correction across the family.
 
@@ -221,7 +221,7 @@ The table is a starting set of tags and proposed fixes. **The fixes are hypothes
 | Right verdict, wrong reason | Add a few-shot example from train showing the right reason | None found |
 | Mentions something that shouldn't count (source, length, style) | Name it as out of scope, then rerun the cue test | Weak. [Turpin et al.](../../../ai-engineering/01-prompt-engineering/sources/turpin-2023-language-models-don-t-always.pdf) found that warning about a named bias helped, but may not generalise to biases you didn't name. Answering models, not judges |
 
-Then count the tags, fix the largest class, and log the tag counts next to TPR and TNR in the [calibration record](05-llm-as-judge.md#the-procedure). The rule from DS 01/12 applies: fix a class of error and never the rows you read, keep test untouched, and each change must win on dev.
+Then count the tags, fix the largest class, and log the tag counts next to TPR and TNR in the [calibration record](05-llm-as-judge.md#the-procedure). The rule from [DS 01/12](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#learning-from-errors-without-fitting-to-them) applies: fix a class of error and never the rows you read, keep test untouched, and each change must win on dev.
 
 In the script a rule assigns the tags, where a person would read, and the evidence list plays the part of the critique.
 

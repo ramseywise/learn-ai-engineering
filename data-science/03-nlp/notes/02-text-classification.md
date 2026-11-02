@@ -246,7 +246,7 @@ Drama        27     1    74     5   189     6
 Horror       11     4    11     1    17    31
 ```
 
-The hand-written metric agrees with scikit-learn. The confusion table is more useful. Most Crime films are predicted as Action, Drama or Comedy, and just 2 of 49 are found, while Adventure leaks into Action. This is what macro-F1 was warning about: accuracy looks fine because the large classes carry it, and two small classes are barely predicted. [Imbalance, errors and drift](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost) follows the same trap through to what each error costs.
+The hand-written metric agrees with scikit-learn. The confusion table is more useful. Most Crime films are predicted as Action, Drama or Comedy, and just 2 of 49 are found, while Adventure leaks into Action. This is what macro-F1 was warning about: accuracy looks fine because the large classes carry it, and two small classes are barely predicted. [Imbalance, errors and drift](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost) follows the same trap through to what each error costs. [Reading the errors](../../01-classical-ml/notes/12-reading-the-errors.md#step-3-read-rows) goes from the table to the rows: read the missed Crime films before deciding what to change.
 
 ## Worked example: the Kaggle recipe
 

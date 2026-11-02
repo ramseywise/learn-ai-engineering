@@ -96,7 +96,7 @@ Few-shot alone doesn't fix multi-step reasoning. When examples aren't enough, ad
 
 The model has fixed compute per token and no internal monologue ([01](01-how-models-read-prompts.md#property-2--autoregressive-no-lookahead-no-backtracking)). Without reasoning tokens, a yes/no answer is an intuitive guess, and any explanation after it is post-hoc rationalization. **CoT makes the model write the reasoning before the answer**, so the answer is conditioned on it.
 
-Writing it first doesn't guarantee the answer depends on it. [Lanham et al.](https://arxiv.org/abs/2307.13702) (2023) found that on three of eight multiple-choice tasks a 175B model's chain changed the final answer less than 10% of the time, against more than 60% on AQuA, and on seven of the eight a 13B model changed its answer after the chain more often than the 175B model did.
+Writing it first doesn't guarantee the answer depends on it. [Lanham et al.](https://arxiv.org/abs/2307.13702) (2023) found that on three of eight multiple-choice tasks a 175B model's chain changed the final answer less than 10% of the time, against more than 60% on AQuA, and on seven of the eight a 13B model changed its answer after the chain more often than the 175B model did. [Calibrating judges with checks and critiques](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict) applies an edit test of this kind to a judge's critiques.
 
 **Few-shot CoT** (Wei et al., 2022): examples show reason-then-answer.
 

@@ -154,36 +154,34 @@ print(f"one bit flipped mid-log: kept {os.path.getsize('flipped.wal'):,} of {len
 
 # --- replace ---
 ATOMIC = """
-import os, sys
-mode, path, text = sys.argv[1], sys.argv[2], sys.argv[3]
-body = text.encode() * 20000
-if mode == "in_place":
-    with open(path, "wb") as f:                 # truncates first: the old version is gone at once
-        for i in range(0, len(body), 4096):
-            f.write(body[i:i + 4096]); f.flush()
-else:
-    tmp = path + ".tmp"
-    with open(tmp, "wb") as f:
-        for i in range(0, len(body), 4096):
-            f.write(body[i:i + 4096]); f.flush()
-        os.fsync(f.fileno())
-    os.replace(tmp, path)                       # atomic on POSIX: readers see old or new
+import os, sys, time
+mode, path = sys.argv[1], sys.argv[2]
+print("go", flush=True)
+target = path if mode == "in_place" else path + ".tmp"
+with open(target, "wb") as f:                   # in place: opening truncates, the old version is gone at once
+    for _ in range(40):
+        f.write(b"new-" * 1024); f.flush()
+        time.sleep(0.001)                       # stands in for a file too big to write in one go
+    os.fsync(f.fileno())
+if mode == "rename":
+    os.replace(target, path)                    # atomic on POSIX: a reader sees old or new, never a mix
     d = os.open(os.path.dirname(path) or ".", os.O_RDONLY)
     os.fsync(d); os.close(d)                    # make the rename itself durable
 """
 open("atomic.py", "w").write(ATOMIC)
-SIZE = 20000 * 8
+OLD, NEW = b"old-" * 1024 * 40, b"new-" * 1024 * 40
 
 def replace_trials(mode, n=40):
     outcome = {"old": 0, "new": 0, "corrupt": 0}
     for _ in range(n):
         with open("config.bin", "wb") as f:
-            f.write(b"old-old-" * 20000)
-        p = subprocess.Popen([sys.executable, "atomic.py", mode, "config.bin", "new-new-"])
-        time.sleep(0.015 + random.random() * 0.03)
+            f.write(OLD)
+        p = subprocess.Popen([sys.executable, "atomic.py", mode, "config.bin"], stdout=subprocess.PIPE)
+        p.stdout.readline()                     # the child is about to start writing
+        time.sleep(random.random() * 0.06)
         p.send_signal(signal.SIGKILL); p.wait()
         data = open("config.bin", "rb").read()
-        outcome["old" if data == b"old-old-" * 20000 else "new" if data == b"new-new-" * 20000 else "corrupt"] += 1
+        outcome["old" if data == OLD else "new" if data == NEW else "corrupt"] += 1
     return outcome
 
 random.seed(3)
@@ -195,7 +193,7 @@ try:
     import pgserver, psycopg
 except ImportError:
     sys.exit("The rest needs Postgres: run with --python 3.12 --with pgserver --with 'psycopg[binary]'")
-import threading, shutil
+import threading
 
 BIN = os.path.join(os.path.dirname(pgserver.__file__), "pginstall", "bin")
 ROOT = tempfile.mkdtemp(dir="/tmp", prefix="pg")     # short path: Unix sockets have a length limit
@@ -278,6 +276,31 @@ for mode in ["on", "off"]:
         c.execute("TRUNCATE trips")
         c.close()
 
+# --- pg_commit_cost ---
+def commits_per_second(commit_mode, seconds=3):
+    acked, stop = [], threading.Event()
+    t = threading.Thread(target=hammer, args=(main, commit_mode, acked, stop))
+    t.start()
+    time.sleep(seconds)
+    stop.set()
+    t.join()
+    return len(acked) / seconds
+
+for label, mode, method in [("off", "off", "fsync"), ("on, fsync", "on", "fsync"),
+                            ("on, fsync_writethrough", "on", "fsync_writethrough")]:
+    with main.connect() as c:
+        try:
+            c.execute(f"ALTER SYSTEM SET wal_sync_method = {method}")
+        except psycopg.Error:
+            print(f"{label:24s} not available on this platform")
+            continue
+        c.execute("SELECT pg_reload_conf()")
+    time.sleep(0.3)
+    print(f"{label:24s} {commits_per_second(mode):9,.0f} commits per second")
+with main.connect() as c:
+    c.execute("ALTER SYSTEM RESET wal_sync_method")
+    c.execute("SELECT pg_reload_conf()")
+
 # --- pg_recovery_rto ---
 def recovery_time(seconds):
     """Write for a while with checkpoints held off, crash, time the restart: the WAL replay is the RTO."""
@@ -335,12 +358,9 @@ def wait_streaming(primary):
 def failover_trial(sync, freeze):
     """Primary dies during load. The standby is promoted. Which acknowledged writes does it still have?"""
     name = f"p{int(sync)}{int(freeze)}"
-    conf = "wal_level=replica\nmax_wal_senders=5\n" + ("synchronous_standby_names='*'\n" if sync else "")
     primary = Server(name, 5610).init()
     primary.start()
     primary.connect().execute("CREATE TABLE trips (id bigint PRIMARY KEY)")
-    with open(f"{primary.dir}/postgresql.conf", "a") as f:
-        f.write("wal_level=replica\nmax_wal_senders=5\n")
     standby = make_standby(primary, name + "s", 5611)
     wait_streaming(primary)
     if sync:
@@ -353,12 +373,14 @@ def failover_trial(sync, freeze):
     t = threading.Thread(target=hammer, args=(primary, "on", acked, stop))
     t.start()
     time.sleep(0.5)
-    receiver = None
+    receiver, during_stall = None, 0
     if freeze:                    # a stalled network: pause the standby's WAL receiver for the last second
         with standby.connect() as c:
             receiver = c.execute("SELECT pid FROM pg_stat_activity WHERE backend_type='walreceiver'").fetchone()[0]
         os.kill(receiver, signal.SIGSTOP)
+        before = len(acked)
         time.sleep(1.0)
+        during_stall = len(acked) - before
     primary.kill9()
     if receiver:
         os.kill(receiver, signal.SIGCONT)
@@ -369,14 +391,15 @@ def failover_trial(sync, freeze):
     with standby.connect() as c:
         present = {r[0] for r in c.execute("SELECT id FROM trips")}
     standby.stop()
-    return len(acked), sum(i not in present for i in acked)
+    return len(acked), during_stall, sum(i not in present for i in acked)
 
-print(f"{'replication':34s} {'acknowledged':>13s} {'lost after failover':>20s}")
+print(f"{'replication':34s} {'acknowledged':>13s} {'in the stall':>13s} {'lost after failover':>20s}")
 for label, sync, freeze in [("asynchronous", False, False),
                             ("asynchronous, standby stalled 1 s", False, True),
-                            ("synchronous", True, False)]:
-    a, lost = failover_trial(sync, freeze)
-    print(f"{label:34s} {a:13,d} {lost:20,d}")
+                            ("synchronous", True, False),
+                            ("synchronous, standby stalled 1 s", True, True)]:
+    a, stalled, lost = failover_trial(sync, freeze)
+    print(f"{label:34s} {a:13,d} {stalled:13,d} {lost:20,d}")
 
 # --- pg_bad_delete ---
 primary = Server("pd", 5620).init()

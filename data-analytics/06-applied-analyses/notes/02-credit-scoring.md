@@ -393,6 +393,8 @@ The uncorrected model rejects 42% of the applicants and costs 0.444 per applicat
 
 Be just as honest about the second line. At a 5% bad rate and a 5:1 cost ratio, approving everyone costs 0.25, and the scorecard improves on that by only 2% at its theoretical cutoff. The minimum of the curve is lower, 0.218 at a PD of 0.183, but that was found by looking at the test set, so don't quote it. A scorecard earns its keep when bads are expensive or common. At 10:1 the same comparison is 0.403 against 0.500, a saving of 19%. So the cost ratio is the first number you should ask the business for.
 
+A cut-off decides who gets declined, and the cost table doesn't say who those people are. [Reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#step-3-read-rows) in data science reads the good customers declined and the defaulters approved, on a larger credit book.
+
 ## The Basel vocabulary
 
 A bank has a second reason to care about PD. Under the Basel internal ratings-based (IRB) approach, it feeds the capital requirement. An analyst in a bank needs these words:

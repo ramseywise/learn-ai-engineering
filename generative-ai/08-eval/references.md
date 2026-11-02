@@ -61,7 +61,7 @@
 | | Bentham, Stringham & Marasović, *Chain-of-Thought Unfaithfulness as Disguised Accuracy* (TMLR 2024): Lanham's with-and-without-reasoning metric, once normalised, tracks accuracy (R² = 0.74). [PDF](sources/bentham-2024-cot-unfaithfulness-disguised-accuracy.pdf) | [2402.14897](https://arxiv.org/abs/2402.14897) | 14 |
 | | Chen et al., *Reasoning Models Don't Always Say What They Think* (Anthropic, 2025): Claude 3.7 Sonnet and DeepSeek R1 reveal hint use 25% and 39% of the time overall. Answering models, not judges. [PDF](sources/chen-2025-reasoning-models-dont-always-say.pdf) | [2505.05410](https://arxiv.org/abs/2505.05410) | 14 |
 | | Ratner et al., *Snorkel: Rapid Training Data Creation with Weak Supervision* (PVLDB 2017): correlated labelling functions mislead a model that assumes independence; the idea behind note 14's independence limit. [PDF](sources/ratner-2017-snorkel.pdf) | [1711.10160](https://arxiv.org/abs/1711.10160) | 14 |
-| | Guo et al., *On Calibration of Modern Neural Networks* (2017): confidence calibration background. [PDF](../../data-science/sources/guo-2017-calibration-modern-neural-networks.pdf) | [1706.04599](https://arxiv.org/abs/1706.04599) | 05 |
+| | Guo et al., *On Calibration of Modern Neural Networks* (2017): confidence calibration background; [DS 01/04](../../data-science/01-classical-ml/notes/04-model-evaluation.md#calibration-is-a-08-really-80) covers calibration on a classifier. [PDF](../../data-science/sources/guo-2017-calibration-modern-neural-networks.pdf) | [1706.04599](https://arxiv.org/abs/1706.04599) | 05 |
 
 ### Agents
 

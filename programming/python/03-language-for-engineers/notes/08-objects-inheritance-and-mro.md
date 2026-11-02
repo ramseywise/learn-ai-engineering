@@ -13,7 +13,7 @@ cleaned: 2026-11-02
 ---
 # 8 — Objects, inheritance and MRO
 
-> Sooner or later a `super()` call runs a method in a class you never named, a validation rule quietly stops firing because of an attribute's name, or two libraries refuse to combine with `TypeError: metaclass conflict`. All of these come from one small set of rules: how Python looks up an attribute, how it orders a class's ancestors, and how it builds a class in the first place. This chapter teaches those rules, so class behaviour becomes something you can work out instead of something you try until it passes. It also teaches what each tool costs, because most code needs less of this machinery than people expect. Code here ran on CPython 3.14.7.
+> Sooner or later a `super()` call runs a method in a class you never named, an instance attribute silently replaces a method, or two libraries refuse to combine with `TypeError: metaclass conflict`. All of these come from one small set of rules: how Python looks up an attribute, how it orders a class's ancestors, and how it builds a class in the first place. This chapter teaches those rules, so class behaviour becomes something you can work out instead of something you try until it passes. It also teaches what each tool costs, because most code needs less of this machinery than people expect. Code here ran on CPython 3.14.7.
 
 ---
 
@@ -300,7 +300,7 @@ except TypeError as err:
 Cannot create a consistent method resolution order (MRO) for bases Retrying, Logged
 ```
 
-## `super()` means "next in the MRO", not "my parent"
+## `super()` follows the MRO, not the parent
 
 `super()` looks up the MRO of the *instance's* class, finds the class where the call was written, and continues the search from the entry after it. The [docs](https://docs.python.org/3.14/library/functions.html#super) give the exact rule: if `__mro__` is `D -> B -> C -> A -> object` and the type is `B`, then `super()` searches `C -> A -> object`. So `super()` in `B` can reach `C`, which is not `B`'s parent, and `B`'s author may never have heard of it.
 
@@ -415,7 +415,7 @@ print(client.complete("hi"))
 reply to 'hi'
 ```
 
-The nesting shows the order at the point of assembly. [Patterns worth knowing](../../../software-design/notes/04-patterns-worth-knowing.md) calls this the decorator pattern. Mixins earn their place when a class really needs several independent capabilities and its base class is designed for them, as in [Hettinger's `LoggingDict`](https://rhettinger.wordpress.com/2011/05/26/super-considered-super/), which extends a built-in.
+The nesting shows the order at the point of assembly. [Patterns worth knowing](../../../software-design/notes/04-patterns-worth-knowing.md) calls this the decorator pattern. Mixins earn their place when a class really needs several independent capabilities and its base class is designed for them, as in [Hettinger's `LoggingDict`](https://rhettinger.wordpress.com/2011/05/26/super-considered-super/), which extends a built-in. Hettinger also shows the way to bring a non-cooperative class into such a hierarchy: an adapter that holds an instance and makes the `super()` calls for it.
 
 ## Descriptors: how attribute access really works
 
@@ -566,7 +566,7 @@ WithProperty      21.4 ns per read
 WithDescriptor    59.9 ns per read
 ```
 
-MEASURED_DESCRIPTOR_PROSE
+All three numbers include the `lambda` call that `timeit` makes. On this machine a property read costs about 9 ns more than a plain attribute, and a hand-written descriptor that calls `getattr` about 48 ns more, around five times the plain read. That matters in a loop over millions of records and not at all next to an LLM call that takes seconds. The numbers will differ on your machine, so measure before you optimise.
 
 A larger cost is that behaviour moves away from the code a reader is looking at: `cfg.top_p = 1.5` looks like a store and can raise. Before writing a descriptor, check whether [Pydantic or a dataclass](05-types-and-dataclasses.md) validates at the boundary well enough. Often you only need to check values once, on the way in.
 
@@ -588,7 +588,7 @@ retriever k=5 type type
 
 The [data model](https://docs.python.org/3.14/reference/datamodel.html#customizing-class-creation) lists the steps of a `class` statement: resolve the bases, determine the metaclass, prepare the namespace, run the body, then create the class object. The last step calls `__set_name__` on the attributes, then `__init_subclass__` on the parent.
 
-Before 3.6, doing anything at subclass-creation time took a metaclass. [PEP 487](https://peps.python.org/pep-0487/) observed that most metaclass uses fell into a few categories and added two simple hooks, explicitly because metaclasses combine badly. Three tools now cover almost every case, in increasing order of power. Pick the first that works.
+Before 3.6, running code automatically for every new subclass took a metaclass. [PEP 487](https://peps.python.org/pep-0487/) observed that most metaclass uses fell into a few categories and added two simple hooks, explicitly because metaclasses combine badly. Three tools now cover almost every case, in increasing order of power. Pick the first that works.
 
 | Tool | Runs | Affects | Good for |
 |---|---|---|---|
@@ -718,6 +718,7 @@ Can't instantiate abstract class Store without an implementation for abstract me
 - **Storing a descriptor's value on the descriptor.** Symptom: setting a field on one object changes it on all of them.
 - **Expecting an instance attribute to beat a `property`.** Data descriptors win. Symptom: `AttributeError: property ... has no setter`, or an assignment that goes through a setter you forgot about. Non-data descriptors such as `functools.cached_property` are the opposite: the instance `__dict__` wins, which is how that caching works.
 - **Mutable class attributes.** Symptom: state appears on objects that never touched it, the leak shown at the top of this chapter.
+- **Subclassing `dict` or `list` and overriding one method.** Hettinger's [post](https://rhettinger.wordpress.com/2011/05/26/super-considered-super/) notes that `dict.update` doesn't use an overridden `__setitem__`. Symptom: validation that fires on `d[k] = v` and not on `d.update(...)`. It is the double-counting problem above with the opposite sign.
 - **`__getattr__` confused with `__getattribute__`.** `__getattr__` runs only after normal lookup fails. `__getattribute__` runs on every access, and it recurses forever if it reads `self.x` directly. Symptom: `RecursionError`, or a global slowdown.
 - **A metaclass where `__init_subclass__` would do.** Symptom: `TypeError: metaclass conflict` as soon as someone combines your class with another library's.
 - **Zero-argument `super()` in a nested function.** The [docs](https://docs.python.org/3.14/library/functions.html#super) warn it won't work as expected inside nested functions, including generator expressions. Symptom: `TypeError` from a comprehension-style helper inside a method.
@@ -726,7 +727,7 @@ Can't instantiate abstract class Store without an implementation for abstract me
 
 1. Without running it, write the MRO of `class D(B, C)` where `class B(A)`, `class C(A)`. Then add `class E(C, B)` and `class F(D, E)`. What happens?
 2. `Bounded` from this chapter stores its value at `_temperature`. Change it to use `obj.__dict__[self.public]` as the storage key, keeping it as a data descriptor. Why doesn't that cause infinite recursion, and why would the same trick break a non-data descriptor's validation?
-3. Write `@requires_api_key`-free validation: use `__init_subclass__` to refuse any `Provider` subclass that doesn't define a `complete` method, at class-definition time.
+3. Use `__init_subclass__` to refuse any `Provider` subclass that doesn't define a `complete` method, at class-definition time.
 4. Explain why `functools.cached_property` can replace itself with a plain value after the first read, while `property` can't.
 
 <details>

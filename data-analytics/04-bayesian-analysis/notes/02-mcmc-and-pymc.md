@@ -371,7 +371,7 @@ mu   4.32   4138.61    1.0
 tau  3.63   2142.69    1.0
 ```
 
-Divergences fall from 88 to 2, and τ's ESS rises from 64 to over 2,000. The two remaining would be worth clearing with a higher `target_accept` in real work. The non-centred trick is the first thing to try in any hierarchical model.
+Divergences fall from 88 to 2, and τ's ESS rises from 64 to over 2,000. The two remaining would be worth clearing with a higher `target_accept` in real work. The non-centred trick is the first thing to try in any hierarchical model. [Multilevel models and partial pooling](07-multilevel-models-and-partial-pooling.md) teaches the model itself, using this non-centred form.
 
 ## Making MCMC converge
 

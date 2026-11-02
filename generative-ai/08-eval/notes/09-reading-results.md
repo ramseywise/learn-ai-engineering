@@ -42,7 +42,7 @@ On 50 tasks, 80% and 72% are not distinguishable. That's the most important tabl
 
 For small *n* or *p* near 0 or 1, use the **Wilson interval** instead of the normal approximation. It doesn't produce bounds outside [0, 1].
 
-See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#standard-errors-and-confidence-intervals) in data analytics for the derivation of the standard error, the [Wilson interval](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson) and [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap).
+See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#standard-errors-and-confidence-intervals) in data analytics for the derivation of the standard error, the [Wilson interval](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson) and [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap). These bars cover sampling error only. They say nothing about how the tasks got into the suite, which is the [data generating process](../../../data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md#big-is-not-the-same-as-representative) question.
 
 ---
 
@@ -193,7 +193,7 @@ A flat headline can hide a win and a loss that cancel out:
 | Non-English | 40 | 75% | 58% | **−17** |
 | **Overall** | 310 | 84% | 85% | +1 |
 
-"+1 overall" would ship a change that breaks non-English users. Always break results down by the slices you labeled ([03](03-eval-datasets.md#coverage-and-balance)), and show *n* per slice so nobody over-reads a 12-task slice.
+"+1 overall" would ship a change that breaks non-English users. Always break results down by the slices you labeled ([03](03-eval-datasets.md#coverage-and-balance)), and show *n* per slice so nobody over-reads a 12-task slice. [Reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#step-4-slice-and-count) runs the same step on a classifier, with the same warning about scanning many slices.
 
 Model cards made this the reporting standard for released models. Mitchell et al. ask for results broken down by each relevant factor (groups of people, capture instruments, environments) and by their intersections, with confidence intervals. The card also states intended and out-of-scope uses and the decision threshold the numbers assume. Their toxicity example put two versions of the same Perspective API classifier side by side on synthetic identity-term templates. Version 1 scored poorly on sentences containing "lesbian", "gay" and "homosexual". Version 5, retrained with bias mitigations, scored more evenly across the terms. A single headline score would have shown neither problem nor fix ([arXiv:1810.03993](https://arxiv.org/abs/1810.03993) (Mitchell et al., FAT* 2019)). The paper proposes a format and shows two examples. The authors say themselves that a card is only as honest as the people who write it.
 

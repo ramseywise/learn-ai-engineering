@@ -308,7 +308,7 @@ Entropy balancing (ATT)                  3.59        0.30            1.36   3.82
 
 Four things stand out.
 
-1. **Every design lands high.** That is the signature of a shared bias, and no amount of method choice removes it. The sound ATT designs average £3.15 to £4.31 above their truth. When we planned this chapter we expected £4 to £6, so the bias is somewhat smaller than our story, and the qualitative point stands.
+1. **Every design lands high.** That is the signature of a shared bias, and no amount of method choice removes it. The sound ATT designs average £3.15 to £4.31 above their truth.
 2. **The perfect score was luck.** Matching with replacement averages £4.31 like the others, and its −£0.11 is a good draw from a spread with a standard deviation of £2.42.
 3. **Plain propensity weights are the worst sound option here**, because their effective sample is so small: the mean gap is £8.27 and the standard deviation £7.76, and one dataset misses by more than £20. That −£4.63 on the first dataset was noise pointing the wrong way. It was not evidence that the method beats the bias. Trimming to scores between 0.05 and 0.95 brings the gap down to £3.15, at the price of changing the target.
 4. **Entropy balancing and regression by arm are close**, and both are far steadier than the other two designs that keep nearly all joiners, matching with replacement and plain weights. With a different overlap, the ranking could change. Twenty datasets from one generator do not make a general ranking of methods.
@@ -560,7 +560,7 @@ Tenure is pre-treatment, and including it can't open a path unless it is a colli
 
 ## Further reading
 
-[*The Effect*, chapter 14](https://theeffectbook.net/ch-Matching.html) and [Facure's handbook](https://matheusfacure.github.io/python-causality-handbook/10-Matching.html) cover this ground at a gentler pace, and Stuart's review is the map of the matching literature. Everything is listed in [references](../references.md).
+[*The Effect*, chapter 14](https://theeffectbook.net/ch-Matching.html) and [Facure's handbook](https://matheusfacure.github.io/python-causality-handbook/10-Matching.html) cover this ground at a gentler pace, and Stuart's review is the map of the matching literature. Everything is listed in [references](../references.md). Two chapters carry on from here. [Survival and event history](../../06-applied-analyses/notes/07-survival-and-event-history.md) needs the same assumption when the outcome is a time to leaving, and [panel data and fixed effects](../../02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md) removes hidden confounders that stay constant over time, if you see the same units more than once.
 
 ---
 

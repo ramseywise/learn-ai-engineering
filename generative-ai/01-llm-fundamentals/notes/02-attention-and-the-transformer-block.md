@@ -143,6 +143,8 @@ Its ablations show where the gain comes from. Configured like RoBERTa, with 512 
 
 ## The transformer block and the GPT stack
 
+This note assumes how such a network is trained, which data science teaches: [backpropagation](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md), and [AdamW and the learning-rate sweep](../../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md).
+
 A GPT is a stack of identical blocks (*LLMs from Scratch*, ch. 4):
 
 ```text

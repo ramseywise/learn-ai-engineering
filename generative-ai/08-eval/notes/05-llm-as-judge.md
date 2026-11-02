@@ -183,7 +183,7 @@ Keep one calibration record per version: PASS/FAIL label counts per split; human
 
 ### What to measure
 
-This is the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) with PASS as positive. Accuracy alone hides the failure you care about. Report the two error rates separately:
+This is the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) with PASS as positive, and [reading the errors](../../../data-science/01-classical-ml/notes/12-reading-the-errors.md#step-3-read-rows) reads each cell. Accuracy alone hides the failure you care about. Report the two error rates separately:
 
 | Metric | Meaning | Matters for |
 |---|---|---|

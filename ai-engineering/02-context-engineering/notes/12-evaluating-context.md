@@ -53,7 +53,7 @@ Fix from the bottom up. A system-level regression is usually a component regress
 | **Precision@k / MRR** | How much of the top k is noise; how high the first hit ranks | Same |
 | **Context precision / recall** (RAGAS-style) | LLM-judged relevance of the retrieved set to the question and reference answer | Reference answers |
 
-Low recall means you need better retrieval. Low precision means you're spending budget on distractors ([04](04-retrieval.md), [11](11-failure-modes.md)). In [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) terms, a chunk you needed and missed is a false negative, a distractor in the top k is a false positive, and k is the threshold.
+Low recall means you need better retrieval. Low precision means you're spending budget on distractors ([04](04-retrieval.md), [11](11-failure-modes.md)). In [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) terms, a chunk you needed and missed is a false negative, a distractor in the top k is a false positive, and k is the threshold. [Choosing a metric](../../../data-science/01-classical-ml/notes/11-choosing-a-metric.md#ranking-the-table-swept-along-the-list) in data science sweeps that table along the list.
 
 These metrics fit in a few lines. Here a retriever returned `d7, d2, d9, d4, d1, d8`, and only `d2` and `d1` are relevant.
 

@@ -164,7 +164,7 @@ Your quiz adds one more condition. With fog at 8.0% of dev errors out of 14.3%, 
 
 The most useful detail is usually a spreadsheet column for each cause you see when you look at the images, including mislabelled data. Fix labels in dev and test together, or their distributions diverge. Random label noise in a large training set is usually tolerable, while a systematic error isn't. The quiz's first question makes the general point: spend a few days on a basic model, then let this analysis prioritise, rather than designing for weeks.
 
-[Ng's *Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) sets out this method in chapters 14 to 16: the ceiling, the spreadsheet and the mislabelled column. Chapters 17 and 18 add what the quizzes don't: split a large dev set into an Eyeball set you read (about 100 mistakes give a very good sense of the main causes) and a Blackbox set you only score, because you overfit the examples you read faster.
+[Ng's *Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) sets out this method in chapters 14 to 16: the ceiling, the spreadsheet and the mislabelled column. Chapters 17 and 18 add what the quizzes don't: split a large dev set into an Eyeball set you read (about 100 mistakes give a very good sense of the main causes) and a Blackbox set you only score, because you overfit the examples you read faster. [Reading the errors](../../01-classical-ml/notes/12-reading-the-errors.md#the-procedure) runs the same method on a table of credit data, step by step.
 
 ## Data mismatch
 
