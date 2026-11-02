@@ -10,7 +10,7 @@ sources:
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://arxiv.org/abs/2610.21412
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 2 — Loop Shapes
 
@@ -66,6 +66,52 @@ escalate to human  # cap reached, not success
 ```
 
 *"Engineering is everything wrapped around"* the model (Masood). The model supplies two lines; every other line is yours.
+
+The skeleton runs. In this version the model's two lines are a stub that returns a score, so the only behavior left is the code you own. Each scenario leaves by a different door, and only one of those exits is a success.
+
+```python
+def run(maker, goal=4, max_steps=8, budget=500, stall_after=3, cost_per_pass=60):
+    """The canonical skeleton. Exits are independent, and only one is a success."""
+    best, spent, stalled, tried = 0, 0, 0, []
+    for step in range(1, max_steps + 1):
+        new_score = maker(step, best)         # the model's two lines live in here
+        spent += cost_per_pass                # update state with the outcome
+        tried.append(new_score)               # compact: only scores are kept
+        if new_score >= goal:
+            return "success", step, spent, tried
+        if new_score > best:
+            best, stalled = new_score, 0      # save: the score only goes up
+        else:
+            stalled += 1                      # a lower score is not saved: roll back
+        if spent >= budget:
+            return "budget cap: escalate", step, spent, tried
+        if stalled >= stall_after:
+            return "stall: escalate", step, spent, tried
+    return "iteration cap: escalate", step, spent, tried
+
+scenarios = {
+    "steady progress":     (lambda step, best: step, {}),
+    "stuck after one win": (lambda step, best: min(step, 1), {}),
+    "slow, expensive":     (lambda step, best: step // 2, {"cost_per_pass": 150}),
+    "slow, low cap":       (lambda step, best: step // 2, {"max_steps": 3, "stall_after": 9}),
+}
+for name, (maker, limits) in scenarios.items():
+    outcome, steps, spent, tried = run(maker, **limits)
+    print(f"{name:<20} {outcome:<24} {steps} passes, {spent} tokens, scores {tried}")
+```
+
+Output:
+
+```text
+steady progress      success                  4 passes, 240 tokens, scores [1, 2, 3, 4]
+stuck after one win  stall: escalate          4 passes, 240 tokens, scores [1, 1, 1, 1]
+slow, expensive      budget cap: escalate     4 passes, 600 tokens, scores [0, 1, 1, 2]
+slow, low cap        iteration cap: escalate  3 passes, 180 tokens, scores [0, 1, 1]
+```
+
+Read the second row as the common case in production: a loop that got one win and then did the same thing three more times. Without a stall check it would spend all eight passes. The limits here are arbitrary numbers for the demo. Set your own from cost per pass and from how long a real fix takes. The fourth row hit its cap with a score of 1, and nothing in it should report success, because a cap isn't one.
+
+Part 4's exits are *independent* for a reason: the stall check doesn't depend on the score being correct or on the agent being honest, and the budget cap doesn't depend on either of them. If one fails, another still stops the run.
 
 Even those two lines are mostly multiple-choice questions: which tool, which arguments, reflect or not, stop or not. JevAgentHarness ([arXiv:2610.21412](https://arxiv.org/abs/2610.21412) (Zhu et al., 2026-10, preprint)) counts **eight decision points** in one step of the loop and hands each to a small decision model that scores the listed options instead of generating text (in one recorded episode, a call cost 28% of an LLM call's time and 2.6% of its price):
 
@@ -127,4 +173,52 @@ Start at the left column and move right only when the task forces you to.
 
 ---
 
-→ Next: [03-the-scorekeeper.md](03-the-scorekeeper.md) — the part of the loop everything else depends on.
+## Pitfalls
+
+- **Tuning the prompt before the shape is settled.** Symptom: wording changes don't stop the hanging or thrashing. Fix: answer the four shape questions first, because a prompt cannot fix a missing line in the skeleton.
+- **An iteration cap as the only exit.** Symptom: the loop stops at random or reports its cap as completion. Fix: layered, independent exits: success check, iteration cap, budget cap, stall detector and human escalation.
+- **No distinction between recoverable errors and blockers.** Symptom: the same failed approach is retried. Fix: part 5, changing strategy by error type.
+- **Choosing Plan-then-Act for long work.** Symptom: step 3 invalidates step 5 and the plan runs anyway. Fix: Plan-and-Revise, the usual production compromise, with the plan in a file a fresh pass can revise.
+- **Adding planning and multi-agent early.** Symptom: more moving parts with no way to tell if they help. Fix: Vercel's order. Start with tool use, add reflection once that is stable, and add planning and multi-agent only after eval infrastructure exists.
+- **Handing decisions to a small model with no threshold.** Symptom: success falls even though the decision model scores well on isolated questions. In JevAgentHarness, delegating tool choices without a fitted confidence threshold cut success by 19 points. Fix: fit the threshold and measure on whole agent tasks.
+
+## Try it
+
+1. Change the script so `stuck after one win` runs with `stall_after=9`. What exit fires, and what does it cost compared with the original?
+
+   <details><summary>Answer</summary>
+
+   The iteration cap fires after 8 passes at 480 tokens, instead of the stall exit at 4 passes and 240 tokens. The run spends twice as much to reach the same score of 1.
+
+   </details>
+
+2. Pick a pattern and a planning variant for each: (a) get a failing unit test green; (b) find why a service is slow in a codebase you don't know; (c) a schema migration with ordered steps that can fail partway; (d) deleting customer data.
+
+   <details><summary>Answer</summary>
+
+   (a) Retry, with ReAct, since it is atomic with a clear pass/fail. (b) Explore-Narrow, fanning out and converging on the best lead. (c) Plan-Execute-Verify, using Plan-and-Revise because a step can invalidate later ones. (d) Human-in-the-loop, because the stakes call for a pause at the decision point.
+
+   </details>
+
+3. Take a loop you already run and mark each of the five required parts as present or missing, then read across the table's "missing it looks like" column.
+
+   <details><summary>What to look for</summary>
+
+   Match your observed symptom to the column: hanging points to termination logic, repeated failed approaches to error handling, and forgetting what it tried to context management. Add one part and re-run. The [pillar lab](../practice/loop-scorekeeper-py/README.md) has a scripted maker for each way a loop ends.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What five parts does every loop need? | A testable goal, a tool set, context management, termination logic and error handling. Missing any one, it hangs, thrashes or quietly ships garbage. |
+| How many lines of the loop are the model's? | Two: reasoning about state and choosing an action. Everything else is yours, including executing, updating state, compacting, scoring, rollback and escalation. |
+| Why several independent exits? | So one failing doesn't leave the run going. Success, iteration cap, budget cap, stall detector and human escalation fire on different signals, and only success counts as success. |
+| ReAct, Plan-then-Act or Plan-and-Revise? | ReAct adapts and can wander on long tasks. Plan-then-Act is predictable and brittle when a step invalidates a later one. Plan-and-Revise is the usual production compromise. |
+| Loop, workflow or graph for a new task? | Start with a workflow if steps are known in advance, a loop if steps depend on what the last one found, and a graph if several loops or agents must hand off. Move right only when the task forces it. |
+| You could delegate decisions in the loop to a small, cheap model. What's the catch? | The threshold. In JevAgentHarness a call cost 28% of an LLM call's time and 2.6% of its price in one recorded episode, but delegating tool choices with no fitted threshold cut success by 19 points. |
+
+## Next
+
+[03-the-scorekeeper.md](03-the-scorekeeper.md): the part of the loop everything else depends on.

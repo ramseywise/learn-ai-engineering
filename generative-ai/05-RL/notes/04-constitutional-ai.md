@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2302.05206 (HIR, hindsight instruction relabeling)
   - https://arxiv.org/abs/2309.07124 (RAIN, self-evaluating rewindable decoding)
   - https://arxiv.org/abs/2407.19594 (Meta-Rewarding, LLM-as-a-meta-judge)
+  - https://arxiv.org/abs/2410.10630 (Thinking LLMs / TPO, judge-only-sees-response DPO)
+  - https://arxiv.org/abs/2509.20357 (RLMT, online RL with thinking against a reward model)
   - https://arxiv.org/abs/2308.06259 (Humpback, instruction backtranslation)
   - https://arxiv.org/abs/2512.23707 (AI co-scientists, self-grading with privileged rubrics)
 confidence: medium
@@ -405,6 +407,10 @@ iteration it preferred the higher-scored judgment 97.7% of the time, and the jud
 climbed from 4.1 to over 4.7 on a 5-point scale. That is why judge training stopped after two
 rounds. Judge agreement with human OpenAssistant rankings peaked at iteration 2 and then fell back
 ([arXiv:2407.19594](https://arxiv.org/abs/2407.19594) (Wu et al., 2024-07, preprint)).
+
+The same loop can train a hidden thought. Thought Preference Optimization prompts Llama-3-8B-Instruct to write a thought and then a response, shows only the response to ArmoRM, and turns the best and worst full outputs into DPO pairs. Prompting for thoughts alone cut AlpacaEval 2 LC from 24.9% to 17.3%, and TPO stayed behind the no-thought baseline for two iterations. **After three or four iterations it led, 52.5% against 48.4% on AlpacaEval 2 LC and 37.3% against 33.0% on Arena-Hard**, with the baseline trained on the same judge, prompts and length control. Gains also showed in categories that do not need reasoning, such as marketing and health, although the ranking of categories changed with the judge. GSM8K got worse. Answer-only accuracy fell from 69.7% to between 10.2% and 43.4% for TPO, and to 51.3% for the direct baseline; only 2.2% of the training prompts were math. All runs are 8B, and the benchmark judge is GPT-4 Turbo ([arXiv:2410.10630](https://arxiv.org/abs/2410.10630) (Wu et al., 2024-10, preprint)).
+
+RLMT does the same online, with GRPO against a Skywork-v1 8B reward model that scores only the response, on 7.5K WildChat prompts. Every thinking run was paired with a non-thinking run on the same prompts, reward model and Gemini-distilled SFT data with the trace removed. **Thinking won on chat in nearly every pairing: Llama-3.1-8B-Instruct reached 44.0 average across WildBench, AlpacaEval 2 and ArenaHard v2, against 35.8 without thinking**, and in a blind human ranking of 50 WildBench prompts the thinking 8B won 62% against its non-thinking twin and 60% against Llama-3.1-70B-Instruct. On the same prompts it beat TPO by 8.4 chat points warm-started and 20.2 from the base model. Three limits matter. Scoring the thought as well as the response cut the chat average, so the reward model cannot judge reasoning. With the weaker ArmoRM as reward model, WildBench stayed near its SFT level in both arms. Thinking also hacked a planted "absolutely" bonus sooner, and it raised engagement-bait closers and self-praise more than the non-thinking runs did. All models are 7–8B, MATH-500 gains matched the non-thinking runs, and IFEval fell after GRPO on every backbone ([arXiv:2509.20357](https://arxiv.org/abs/2509.20357) (Bhaskar et al., COLM 2026)).
 
 A self-grader gets an edge if it sees something the policy doesn't. Goel et al. extract a research
 goal and ten goal-specific rubric items from each of about 7k ML papers. A frozen copy of

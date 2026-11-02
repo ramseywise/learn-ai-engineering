@@ -105,7 +105,15 @@ for word in ["king", "war", "father"]:
     print(word, [vocab[i - 1] for i in near if i > 0])
 ```
 
-TODO_KERAS
+```text
+50382 sentences, 1101150 tokens
+6,561,204 pairs, losses [0.289 0.245 0.234] 12s
+king ['george', 'france', 'washington', 'triumph', 'james', 'franklin']
+war ['world', 'civil', 'treaty', 'paris', 'nations', 'spanish']
+father ['frank', 'wife', 'brother', 'countess', 'wished', 'remember']
+```
+
+Twelve seconds of training on a few history-heavy books already gives real structure: "war" sits near "civil" and "treaty". The corpus decides what the words mean, so "king" sits near "george" and "france" rather than "queen". The learned table is the only thing you keep.
 
 In practice, use gensim, which is orders of magnitude faster on a CPU. The argument names changed in gensim 4, and the notebooks use the old ones.
 
@@ -122,7 +130,14 @@ for word in ["king", "war", "father"]:
     print(word, [w for w, _ in w2v.wv.most_similar(word, topn=6)])
 ```
 
-TODO_GENSIM The condensed NLP course notebooks trained the same model on NLTK's Project Gutenberg books (`most_similar("father")`) and on a news corpus (`most_similar("president")`), then plotted the vectors with t-SNE ([manifold learning](../../01-classical-ml/notes/05-unsupervised-learning.md#manifold-learning-t-sne)). On a corpus of a few books the neighbours are already sensible: family words cluster, character names cluster.
+```text
+12,390 words in 3s
+king ['prussia', 'hamilton', 'vice', 'madison', 'george', 'mckinley']
+war ['revolution', 'civil', 'campaign', 'conflict', 'diplomacy', 'independence']
+father ['brother', 'sister', 'husband', 'wife', 'mother', 'son']
+```
+
+That is three seconds for 1.1M tokens and a vocabulary four times larger, and "father" now finds only family words. Skip-gram finds what those books talk about, and no more. The condensed NLP course notebooks trained the same model on NLTK's Project Gutenberg books (`most_similar("father")`) and on a news corpus (`most_similar("president")`), then plotted the vectors with t-SNE ([manifold learning](../../01-classical-ml/notes/05-unsupervised-learning.md#manifold-learning-t-sne)). On a corpus of a few books the neighbours are already sensible: family words cluster, character names cluster.
 
 ### GloVe and FastText
 
@@ -140,7 +155,13 @@ for word in ["kingly", "kingliest", "fatherr"]:
     print(f"{word:10} in vocabulary: {known!s:6} word2vec has it: {word in w2v.wv!s:6}", [w for w, _ in ft.wv.most_similar(word, topn=4)])
 ```
 
-TODO_FASTTEXT
+```text
+kingly     in vocabulary: False  word2vec has it: False  ['abruptly', 'strictly', 'violently', 'singly']
+kingliest  in vocabulary: False  word2vec has it: False  ['kingdom', 'modest', 'quadriceps', 'livingston']
+fatherr    in vocabulary: False  word2vec has it: False  ['father', 'stepfather', 'fair', 'wostov']
+```
+
+None of these three is in the vocabulary, and word2vec could not even return a vector for them. FastText still answers, and the answers show how it works: the misspelt "fatherr" finds "father", and "kingly" finds "singly" and "abruptly". It matched the "-ly" spelling rather than kingship, so subwords carry form first. That is a real gain for typos and inflections, not a magic source of meaning.
 
 ### Embedding geometry: analogies and bias
 
@@ -176,7 +197,15 @@ for a, b, c in [("man", "woman", "king"), ("paris", "france", "tokyo"), ("big", 
     print(f"{a}:{b} :: {c}:", complete_analogy(a, b, c), "| gensim:", glove.most_similar(positive=[b, c], negative=[a], topn=1)[0][0])
 ```
 
-TODO_ANALOGY The same notebook shows the vectors encode social bias, since projecting occupations onto the `woman - man` direction separates "receptionist" from "engineer". It removes the bias component from gender-neutral words (**neutralise**) and makes gendered pairs equidistant from the neutral axis (**equalise**), after Bolukbasi et al. ([arXiv:1607.06520](https://arxiv.org/abs/1607.06520), NIPS 2016).
+```text
+(100000, 50)
+man:woman :: king: princess | gensim: queen
+paris:france :: tokyo: japan | gensim: japan
+big:bigger :: small: larger | gensim: larger
+good:best :: bad: films | gensim: ever
+```
+
+The headline example is less tidy than the folklore. On 50-d vectors, the notebook's formula answers "princess" while gensim's answers "queen". "Tokyo" works, comparatives give "larger" rather than "smaller", and "bad" fails entirely. The solver also has to exclude the input words, or it would often return them. These are useful demonstrations but not a dependable reasoning system. The same notebook shows the vectors encode social bias, since projecting occupations onto the `woman - man` direction separates "receptionist" from "engineer". It removes the bias component from gender-neutral words (**neutralise**) and makes gendered pairs equidistant from the neutral axis (**equalise**), after Bolukbasi et al. ([arXiv:1607.06520](https://arxiv.org/abs/1607.06520), NIPS 2016).
 
 ```python
 g = glove["woman"] - glove["man"]
@@ -188,11 +217,22 @@ def neutralize(e):
     return e - (e @ g) * g
 
 print("receptionist after neutralising:", round(float(cosine_similarity(neutralize(glove["receptionist"]), g)), 6))
-print("antonyms sit close:", [w for w, _ in glove.most_similar("good", topn=8)])
 print("good/bad", round(float(glove.similarity("good", "bad")), 3), " good/excellent", round(float(glove.similarity("good", "excellent")), 3))
 ```
 
-TODO_BIAS Embeddings learned from text inherit the text's associations, and any similarity system built on them does too.
+```text
+receptionist +0.331
+nurse        +0.380
+teacher      +0.179
+doctor       +0.119
+scientist    -0.052
+engineer     -0.080
+warrior      -0.209
+receptionist after neutralising: 0.0
+good/bad 0.796  good/excellent 0.806
+```
+
+Occupation words line up along the direction: receptionist and nurse towards "woman", engineer and warrior towards "man". After neutralising, the projection is zero by construction. "Good" and "bad" have a cosine of 0.80, about the same as "good" and "excellent" at 0.81, which is the antonym problem described below. Embeddings learned from text inherit the text's associations, and any similarity system built on them does too.
 
 Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([what attention fixed](../../02-deep-learning/notes/02-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
 
@@ -225,14 +265,26 @@ net = tf.keras.Sequential([
     tf.keras.layers.Dense(16, activation="relu"),
     tf.keras.layers.Dense(len(classes), activation="softmax")])
 net.compile(loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-hist = net.fit(X_tr, y_tr, validation_data=(X_te, y_te), epochs=14, batch_size=32, verbose=0).history
-for e in range(1, 14, 2):
+hist = net.fit(X_tr, y_tr, validation_data=(X_te, y_te), epochs=32, batch_size=32, verbose=0).history
+for e in range(3, 32, 4):
     print(f"epoch {e + 1:>2}  train loss {hist['loss'][e]:.3f}  val loss {hist['val_loss'][e]:.3f}  val acc {hist['val_accuracy'][e]:.3f}")
 weights = net.layers[0].get_weights()[0]             # (8000, 16). Write vecs.tsv and meta.tsv for projector.tensorflow.org
 print(weights.shape)
 ```
 
-TODO_CURVE The course notebook sees the same thing on sarcasm, and in [learning curves](../../01-classical-ml/notes/04-model-evaluation.md#learning-curves-and-bias-variance-diagnosis) you met the signature. Smaller vocabulary, shorter sequences, smaller embedding dimension or dropout flatten it.
+```text
+epoch  4  train loss 1.590  val loss 1.592  val acc 0.315
+epoch  8  train loss 1.497  val loss 1.530  val acc 0.438
+epoch 12  train loss 1.217  val loss 1.371  val acc 0.512
+epoch 16  train loss 0.919  val loss 1.283  val acc 0.524
+epoch 20  train loss 0.690  val loss 1.265  val acc 0.531
+epoch 24  train loss 0.517  val loss 1.291  val acc 0.532
+epoch 28  train loss 0.390  val loss 1.348  val acc 0.534
+epoch 32  train loss 0.298  val loss 1.429  val acc 0.519
+(8000, 16)
+```
+
+Validation loss bottoms out around epoch 20 while training loss keeps falling, and accuracy stays flat near 0.53, the overfitting signature. It also ends about where the sparse baseline in [text classification](02-text-classification.md) started, after far more training. The course notebook sees the same thing on sarcasm, and in [learning curves](../../01-classical-ml/notes/04-model-evaluation.md#learning-curves-and-bias-variance-diagnosis) you met the signature. Smaller vocabulary, shorter sequences, smaller embedding dimension or dropout flatten it.
 
 Trained for one task, the vectors organise by that task. In the projector the IMDb embedding splits into a "positive" and a "negative" pole rather than by topic. Pretrained vectors (GloVe, word2vec) carry general meaning, and task-trained ones carry what the label needed. You can initialise with pretrained vectors and freeze or fine-tune them, as the Kaggle notebook's LSTM does in [the Kaggle recipe](02-text-classification.md#worked-example-the-kaggle-recipe), and as *Emojify* does in the course.
 
@@ -269,7 +321,12 @@ for label, weighted in [("plain average", False), ("TF-IDF weighted", True)]:
     print(f"{label:16} macro-F1 {f1_score(y_te, clf.predict(mean_vectors(te_text, weighted)), average='macro'):.3f}")
 ```
 
-TODO_DOC
+```text
+plain average    macro-F1 0.428
+TF-IDF weighted  macro-F1 0.431
+```
+
+Weighted is barely ahead of plain, 0.431 against 0.428 macro-F1, and pretrained 50-d GloVe matches tuned TF-IDF's 0.42 on this task, ahead of the 0.35 we got from word2vec trained on the small corpus. Pretrained vectors bring outside knowledge, the point the next chapters build on. The small gain from weighting is a useful warning about the table's "often better".
 
 ## Similarity and distance
 
@@ -295,16 +352,25 @@ def levenshtein(u, v):
 
 print("belief/believe", levenshtein("belief", "believe"), " kitten/sitting", levenshtein("kitten", "sitting"))
 
-words_ = ["king", "queen", "banana", "the"]
-Q = np.vstack([glove[w] for w in words_])
-print("norms", dict(zip(words_, np.linalg.norm(Q, axis=1).round(2).tolist())))
-unit_q = Q / np.linalg.norm(Q, axis=1, keepdims=True)
-print("by dot, raw:     ", [words_[i] for i in np.argsort(-(Q @ Q[0]))])
-print("by cosine:       ", [words_[i] for i in np.argsort(-(unit_q @ unit_q[0]))])
-print("by -L2 on units: ", [words_[i] for i in np.argsort(np.linalg.norm(unit_q - unit_q[0], axis=1))])
+norms = np.linalg.norm(E, axis=1)
+unit_e = E / norms[:, None]
+q = glove.key_to_index["king"]
+top = lambda scores: [glove.index_to_key[i] for i in np.argsort(-scores)[:6]]
+print("median norm", round(float(np.median(norms)), 2), "| norm of 'the'", round(float(norms[glove.key_to_index["the"]]), 2))
+print("by raw dot:", top(E @ E[q]), "mean norm", round(float(norms[np.argsort(-(E @ E[q]))[:6]].mean()), 2))
+print("by cosine: ", top(unit_e @ unit_e[q]), "mean norm", round(float(norms[np.argsort(-(unit_e @ unit_e[q]))[:6]].mean()), 2))
+print("on unit vectors, -L2 gives the same order as dot:", top(-np.linalg.norm(unit_e - unit_e[q], axis=1)) == top(unit_e @ unit_e[q]))
 ```
 
-TODO_DIST The raw dot product is unbounded and grows with vector length, so it favours long vectors. In count-based vectors that means frequent, uninformative words. Cosine divides the length out. **Normalise before cosine or dot product.** With L2-normalised vectors, cosine similarity is the dot product and Euclidean distance is a monotone function of it, so all three rank neighbours identically. Vector databases rely on this.
+```text
+belief/believe 2  kitten/sitting 3
+median norm 4.75 | norm of 'the' 4.97
+by raw dot: ['king', 'emperor', 'throne', 'son', 'lord', 'prince'] mean norm 5.68
+by cosine:  ['king', 'prince', 'queen', 'ii', 'emperor', 'son'] mean norm 5.51
+on unit vectors, -L2 gives the same order as dot: True
+```
+
+The raw dot product is unbounded and grows with vector length, so it favours long vectors. On GloVe the effect is modest, because norms vary little: its neighbours have slightly longer vectors and "queen" drops out of the top six. In count-based vectors the long ones are frequent, uninformative words, and it is much worse. Cosine divides the length out. **Normalise before cosine or dot product.** With L2-normalised vectors, cosine similarity is the dot product and Euclidean distance is a monotone function of it, so all three rank neighbours identically, as the last line confirms. Vector databases rely on this.
 
 ## A content-based recommender (Sarkar ch. 7b)
 
@@ -327,6 +393,11 @@ for title in ["Minions", "Interstellar"]:
     print(title, "->", recommend(title))
 ```
 
+```text
+Minions -> ['Despicable Me 2', 'Despicable Me', 'Stuart Little 2', 'Time Bandits', 'The Jimmy Show']
+Interstellar -> ['Gattaca', 'Space Pirate Captain Harlock', 'Space Cowboys', 'Final Destination 2', 'Prometheus']
+```
+
 He then swaps cosine for **BM25**, the probabilistic ranking function behind classic search engines:
 
 $$\text{BM25}(q, d) = \sum_{t \in q} \text{idf}(t) \cdot \frac{f(t, d)\,(k_1 + 1)}{f(t, d) + k_1\left(1 - b + b \frac{|d|}{\text{avgdl}}\right)}$$
@@ -334,6 +405,8 @@ $$\text{BM25}(q, d) = \sum_{t \in q} \text{idf}(t) \cdot \frac{f(t, d)\,(k_1 + 1
 $k_1 \approx 1.2$–2 saturates term frequency, and $b \approx 0.75$ normalises for document length. BM25 is still the lexical half of hybrid retrieval, and it fits in a few lines, so here it is as a search engine over the catalogue.
 
 ```python
+from sklearn.feature_extraction.text import CountVectorizer
+
 class BM25:
     def __init__(self, docs, k1=1.5, b=0.75):
         self.k1, self.b = k1, b
@@ -356,17 +429,23 @@ class BM25:
             scores[col.indices] += self.idf[j] * f * (self.k1 + 1) / (f + norm[col.indices])
         return scores
 
-from sklearn.feature_extraction.text import CountVectorizer
-
 bm25 = BM25(catalogue.description)
 for query in ["space station crew stranded", "haunted house teenagers"]:
     best = np.argsort(-bm25.score(query))[:5]
     print(query, "->", catalogue.title.iloc[best].tolist())
-print("'motel' finds 'hotel' pages:", bool(bm25.score("motel")[catalogue.description.str.contains(r"\bhotel\b", case=False)].max() > 0
-      and not catalogue.description[bm25.score("motel") > 0].str.contains(r"\bhotel\b", case=False).all()))
+hits = bm25.score("motel") > 0
+print("documents matching 'motel':", int(hits.sum()), "| of those mentioning 'hotel':",
+      int(catalogue.description[hits].str.contains(r"\bhotel\b", case=False).sum()),
+      "| 'hotel' documents overall:", int(catalogue.description.str.contains(r"\bhotel\b", case=False).sum()))
 ```
 
-TODO_RECO
+```text
+space station crew stranded -> ['Cargo', 'Space Pirate Captain Harlock', 'Solaris', 'Star Trek Beyond', 'Deep Impact']
+haunted house teenagers -> ['House on Haunted Hill', 'The Others', 'Scary Movie 2', 'Insidious', 'Scary Movie 4']
+documents matching 'motel': 7 | of those mentioning 'hotel': 0 | 'hotel' documents overall: 36
+```
+
+BM25 finds films for a keyword query in a few milliseconds, and the recommender finds sequels. Both are lexical. Seven documents match "motel" and none of the 36 that say "hotel" are among them, so a searcher never finds those. That is this chapter's opening problem, and it is what a dense encoder fixes.
 
 | Recommender type | Uses | Cold start |
 |---|---|---|
@@ -409,7 +488,19 @@ for word in ["walked", "doctor", "river"]:
           "\n  window 15:", [w for w, _ in wide.wv.most_similar(word, topn=6)])
 ```
 
-TODO_A1
+```text
+walked
+  window 2 : ['rushed', 'stepped', 'paced', 'moved', 'drove', 'sprang']
+  window 15: ['footmen', 'glasses', 'rushed', 'stepped', 'stairs', 'hurried']
+doctor
+  window 2 : ['vicomte', 'colonel', 'bilibin', 'uncle', 'maid', 'boy']
+  window 15: ['anatole', 'tikhon', 'shinshin', 'dessalles', 'kuragin', 'drubetskaya']
+river
+  window 2 : ['valley', 'mississippi', 'snow', 'edge', 'forest', 'wood']
+  window 15: ['highroad', 'forest', 'kolocha', 'valley', 'heights', 'forests']
+```
+
+Window 2 finds words that can fill the same slot: "walked" gets "rushed", "stepped" and "paced", all past-tense motion verbs. Window 15 mixes in the surroundings of walking, such as "footmen" and "stairs", and for "doctor" it lists the characters of *War and Peace*, one of the books in the file. It is the same corpus and the same model, so this one choice decides what "similar" means. Neighbours vary a little between runs, because multi-worker training is not deterministic.
 
 </details>
 
@@ -425,7 +516,14 @@ for b in [0.0, 0.75, 1.0]:
 print("corpus mean", round(float(engine.avgdl), 1))
 ```
 
-TODO_A2
+```text
+b=0.0 33.8 words ['Solaris', 'Cargo', 'Space Pirate Captain Harlock']
+b=0.75 25.2 words ['Cargo', 'Space Pirate Captain Harlock', 'Solaris']
+b=1.0 25.2 words ['Cargo', 'Space Pirate Captain Harlock', 'Solaris']
+corpus mean 31.2
+```
+
+With `b=0` there is no length penalty, so results run longer (mean 33.8 words here). With `b=0.75` and `b=1` they are shorter (25.2 words), against a corpus mean of 31.2. Long documents contain the terms by chance more often, and `b` discounts that. The top results barely change on these short documents, and the setting matters more where length varies widely.
 
 </details>
 
@@ -440,7 +538,12 @@ for word in ["doctor", "receptionist"]:
           "| neutralised", round(float(cosine_similarity(fixed, glove["man"])), 3), round(float(cosine_similarity(fixed, glove["woman"])), 3))
 ```
 
-TODO_A3
+```text
+doctor raw man/woman 0.712 0.725 | neutralised 0.731 0.688
+receptionist raw man/woman 0.31 0.446 | neutralised 0.37 0.348
+```
+
+Neutralising made "receptionist" nearly equally similar to "man" and "woman" (0.37 and 0.35, from 0.31 and 0.45), but not exactly, and "doctor" moved from 0.71 and 0.73 to 0.73 and 0.69. "Man" and "woman" are not symmetric around the axis, because they differ in other ways, and that is what the **equalise** step in the notebook corrects. Gender is also just one direction, and removing it does not remove what related words imply.
 
 </details>
 

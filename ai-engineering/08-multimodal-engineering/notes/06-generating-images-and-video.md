@@ -182,7 +182,7 @@ Training a base model is out of reach: the book reports a cost of about $600,000
 | **LoRA** ([arXiv:2106.09685](https://arxiv.org/abs/2106.09685), Hu et al., 2021) | Low-rank update matrices added to the frozen attention weights | Tens to hundreds of MB | Called "experimental", under 10% of Civitai models. **Dated:** LoRA has since become the usual way to share a style or subject fine-tune |
 | **Hypernetworks** | A small network that generates weight offsets | Small | Experimental, rarely used |
 
-**Correction.** The book says LoRA "adds new layers into the model and trains just those new layers". It doesn't add layers. It learns a low-rank update `BA` to existing weight matrices, which can be merged back into the weights so inference costs nothing extra. See [generative-ai/01 note 02](../../../generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md#parameter-efficient-fine-tuning).
+**Correction.** The book says LoRA "adds new layers into the model and trains just those new layers". It doesn't add layers. It learns a low-rank update `BA` to existing weight matrices, which can be merged back into the weights so inference costs nothing extra. See [generative-ai/01 note 09](../../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md#parameter-efficient-fine-tuning).
 
 Practical rules from the chapter:
 

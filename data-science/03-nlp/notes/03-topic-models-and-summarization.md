@@ -71,7 +71,7 @@ PMI, count>=10: ['mild mannered', 'hong kong', 'beverly hills', 'hip hop', 'alte
 raw frequency:  ['new york', 'year old', 'high school', 'true story', 'los angeles', 'small town', 'world war', 'york city']
 ```
 
-TODO_PMI `gensim.models.Phrases` does the same at corpus scale and rewrites the text so that `new_york` becomes one token before topic modelling (Ch06b uses `min_count=20, threshold=20`).
+The unfiltered list is one-off name pairs, which is PMI's known failure. With a minimum count of 10 it finds real phrases such as "hong kong" and "alter ego". Raw frequency, even with stop words gone, surfaces the common "new york" and "high school". Both are useful, and they answer different questions. `gensim.models.Phrases` does the same at corpus scale and rewrites the text so that `new_york` becomes one token before topic modelling (Ch06b uses `min_count=20, threshold=20`).
 
 ### Weighted tag-based phrases
 
@@ -144,7 +144,7 @@ for t in range(3):
 2 ['world +0.30', 'life -0.25', 'war +0.24', 'school -0.20', 'love -0.19', 'old -0.15', 'family -0.14']
 ```
 
-TODO_LSI
+Note the mixed signs: component 2 pits world and war against life, school and love. It is a real direction in the data, but no one would call it a topic. Component 0 is negative on everything because it measures general word frequency. That readability problem is what the next two methods fix.
 
 ### LDA's generative story
 
@@ -191,7 +191,7 @@ NMF
 5 old, year, year old, boy, girl, father, old boy
 ```
 
-TODO_TOPICS On IMDb, M&G run LDA with 10 and 100 topics. Topics come out as genres and aspects ("horror", "comedy", "music", "acting/performance"), plus topics that are just "words common in negative reviews". With 100 topics some are very specific, with a topic for "Star Trek". They then show that a topic's top documents are the best way to see what it means, and that is cheap to do.
+NMF's topics are immediately nameable here: romance, true stories, world-in-peril, New York, school, and coming of age. LDA's are vaguer on this short text, with `life`, `one` and `man` appearing everywhere. Short documents give LDA few words per document to estimate each mixture, so this is not a verdict on LDA in general, but it is why NMF is worth trying first on short text. On IMDb, M&G run LDA with 10 and 100 topics. Topics come out as genres and aspects ("horror", "comedy", "music", "acting/performance"), plus topics that are just "words common in negative reviews". With 100 topics some are very specific, with a topic for "Star Trek". They then show that a topic's top documents are the best way to see what it means, and that is cheap to do.
 
 ```python
 W = nmf.transform(X_tfidf)
@@ -236,7 +236,7 @@ k=20  c_v=0.318  log perplexity bound=-8.44
 k=40  c_v=0.325  log perplexity bound=-8.74
 ```
 
-TODO_COHERENCE Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
+On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, and it dips and recovers, so there is no clean knee. The log perplexity bound falls steadily and would select nothing useful either. That is common on short text, and the answer is to read topics at a couple of settings rather than obey a curve. Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
 
 ### Visualising
 
@@ -270,7 +270,7 @@ for c in np.argsort(-sizes):
   191  school, high school, high, teacher, students         ["Harry Potter and the Philosopher's Stone", 'The Amazing Spider-Man 2', 'Monsters University']
 ```
 
-TODO_KMEANS
+The result is typical. One grab-bag cluster holds nearly half of the films, with generic terms, and the rest are tight themes. *Teenage Mutant Ninja Turtles* and *The Godfather: Part II* land together because both mention New York, a reminder that this groups by shared vocabulary rather than genre.
 
 Ward clustering on the most popular films gives a tree, which you can cut at any level. Here is how Sarkar's dendrogram over 100 popular films looks.
 
@@ -301,7 +301,7 @@ largest Ward groups of the top 100 films:
 affinity propagation on 500 films found 91 clusters, median size 5
 ```
 
-**Affinity propagation** picks the number of clusters itself from similarity "messages", and as Sarkar also finds, it tends to produce many small ones. The lessons match [comparing and evaluating clusterings](../../01-classical-ml/notes/05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster.
+**Affinity propagation** picks the number of clusters itself from similarity "messages". As Sarkar also finds, it tends to produce many small ones: here 91 clusters over 500 films, median size 5. The lessons match [comparing and evaluating clusterings](../../01-classical-ml/notes/05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster.
 
 ## Extractive summarisation
 
@@ -356,7 +356,7 @@ print("overlap at n=8:", len(set(lsa_summary(sentences, n=8)) & set(textrank_sum
 overlap at n=8: 5 of 8
 ```
 
-TODO_SUMMARY Sarkar runs both on the Wikipedia text of *The Elder Scrolls V: Skyrim*, and the condensed NLP course notebook ran TextRank with GloVe sentence vectors on a sample of the Manually Annotated Sub-Corpus. Sarkar reads his two summaries as agreeing on most chosen sentences. Check that on your own text rather than assuming it.
+Both open with the defining sentence, and at eight sentences they share five. Sarkar runs both on the Wikipedia text of *The Elder Scrolls V: Skyrim*, and the condensed NLP course notebook ran TextRank with GloVe sentence vectors on a sample of the Manually Annotated Sub-Corpus.
 
 | Method | Signal | Strength | Weakness |
 |---|---|---|---|
@@ -388,7 +388,7 @@ TODO_SUMMARY Sarkar runs both on the Wikipedia text of *The Elder Scrolls V: Sky
 - **Treating a topic as a fact.** A topic is a pattern a model found, and it needs a human reading before anyone names it in a report.
 - **Publishing one run.** LDA and k-means depend on the seed, so refit with another seed and check the same topics return.
 - **Reading LSI components as topics.** Signs mix positive and negative words, so one component can hold two opposed themes.
-- **Summarising with a method that sees only overlap.** TF-IDF TextRank favours long sentences that share many words, and its similarity misses paraphrase.
+- **Summarising with a method that sees only overlap.** TF-IDF TextRank rewards sentences that share words with many others, and its similarity misses paraphrase entirely.
 
 ## Try it
 
@@ -412,7 +412,7 @@ NMF topics matched: 11 of 12
 LDA topics matched: 7 of 12
 ```
 
-TODO_A1
+NMF matched 11 of 12 topics between seeds and LDA 7 of 12. NMF is more stable here, and LDA's five unmatched topics are exactly why you should not publish a single run. Both fits used fewer iterations than you would use in production, so LDA may improve with more.
 
 </details>
 
@@ -437,7 +437,7 @@ positives: 519
 TF-IDF features, ROC-AUC 0.912
 ```
 
-TODO_A2
+ROC-AUC falls from 0.912 with TF-IDF to 0.637 with 12 NMF features. Note that the topics were fit without seeing the label, and none is about horror specifically, so the features are compact, but they keep only what the corpus's biggest themes capture. Topic features earn their place when they are interpretable or when labelled data is very scarce, and more topics would help here.
 
 </details>
 
@@ -458,7 +458,7 @@ LSA picks      17.1
 TextRank picks 18.1
 ```
 
-TODO_A3
+On this article the effect is small: TextRank's picks average 18.1 words against a mean of 17.2, and LSA's 17.1. The sentences here are of similar length, so try a document with a wide length range before you trust or dismiss the concern.
 
 </details>
 

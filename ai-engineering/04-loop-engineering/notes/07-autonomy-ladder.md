@@ -8,7 +8,7 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 13"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 7 — The Autonomy Ladder
 
@@ -218,4 +218,53 @@ His case studies are press and vendor reports, so treat them as illustrations. Z
 
 ---
 
-→ Next: [08-self-improving-loops.md](08-self-improving-loops.md) — loops that rewrite themselves.
+## Pitfalls
+
+- **Skipping rungs.** Symptom: a doom loop, an agent running unattended on a schedule with only model judgment deciding when to stop. Fix: climb one rung at a time, and earn each handoff with a verifier.
+- **Trusting the model's sense of "done".** Symptom: rung 1's stop condition gets carried upward. Fix: Liu et al.'s survey finds that models predict their own success better than chance but often don't act on it, and they struggle to decide when to persist or move on. Use a check that returns a boolean.
+- **A verifier never seen catching anything.** Symptom: it has only ever passed, and a weak one at rung 2 silently becomes a weak one at rungs 3 and 4. Fix: observe it catching a real failure before climbing.
+- **Climbing to proactive because you can.** Symptom: credentials and cost exposure with no gain over a session-scoped timer. Fix: time-based is the right resting place for most loops, since it inherits your permissions.
+- **Confusing rung 3 with level 3.** Symptom: "we're at level 3" means two different things in one conversation. Fix: capability level 3 is about what triggers a run, and autonomy rung 3 is about who holds the session.
+- **Climbing without building the interface.** Symptom: a rung-4 owner with no audit log or policy screen. Fix: each rung needs the next role's interface, from executor through reviewer to governor.
+- **No way back down.** Symptom: when trust breaks, the only options are off or carry on. Fix: plan the descent up front, along with escalation thresholds set as policy.
+
+## Try it
+
+1. Name the rung each is on, and what must exist to climb one rung: (a) you approve tool calls in a live session; (b) `/goal` "all checks pass" in your terminal; (c) `/loop 5m` watching a deploy.
+
+   <details><summary>Answer</summary>
+
+   (a) Rung 1, needing a measurable end state to reach rung 2. (b) Rung 2, needing the same verifier to work on a clock for rung 3. (c) Rung 3, needing a verifier you trust unattended for rung 4, along with credentials someone owns and a per-run cost ceiling.
+
+   </details>
+
+2. Say whether this end state is ready for rung 2: "the report reads well". Rewrite it so that it is.
+
+   <details><summary>Answer</summary>
+
+   It isn't, because it can only be expressed as "looks right", so it stays at rung 1. A ready version: "three sections, each ending in a recommendation, all links resolve, and the numeric table matches `data.csv`." That is a check that can return a boolean. Taste stays with a human, above that floor.
+
+   </details>
+
+3. A team's Copilot pilot passed its preset thresholds and they want a wider rollout. Using the ZoomInfo illustration, say what their rollout plan should contain, whichever tool they use.
+
+   <details><summary>Answer</summary>
+
+   Preset numeric gates decided before the pilot, as with ZoomInfo's 33% suggestion acceptance and 72% developer satisfaction before widening from 50 engineers to 400+. Add an interface for the new role and a plan for moving back down. The note treats such case studies as press and vendor illustrations, so the shape is the lesson, not the numbers.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the four rungs, and what does each hand off? | Turn-based hands off tool approval, goal-based the stop condition, time-based the trigger to a clock, and proactive the trigger and the session. They're cumulative. |
+| Which rung is pivotal, and why? | Rung 2, the first unattended loop. Every rung above inherits its verifier, so a weak one there is a weak one where nobody watches it fail. |
+| Why is time-based the right resting place for most loops? | It is session-scoped and inherits your permissions, so it needs no credential grant of its own. That makes it cheaper and safer than proactive. |
+| How do rungs and capability levels differ? | Levels ask what the loop automates and rungs ask what the human handed off. A hill-climbing loop at level 4 can run at rung 1, and that's the recommended start for the evolve loop. |
+| Beyond approve or deny, what does a human need during a run? | *Learning LangChain*'s six controls: interrupt, authorize, resume, restart, edit state and fork, all of which need a checkpointer and a thread ID. |
+| Autonomy costs reliability. How do you get more of both? | Push the curve outward: streaming intermediate output, structured output, human-in-the-loop controls, a policy for mid-run input, and a verifier, which buys reliability without taking autonomy away. |
+
+## Next
+
+[08-self-improving-loops.md](08-self-improving-loops.md): loops that rewrite themselves.

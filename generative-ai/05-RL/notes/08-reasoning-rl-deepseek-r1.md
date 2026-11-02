@@ -26,6 +26,8 @@ sources:
   - https://arxiv.org/abs/2506.10910
   - https://arxiv.org/abs/2410.18982 (O1 Replication Journey: journey vs shortcut SFT)
   - https://arxiv.org/abs/2411.16489 (O1 Replication Journey Part 2: o1 distillation)
+  - https://arxiv.org/abs/2502.06773 (RLSP, exploration reward for reasoning)
+  - https://arxiv.org/abs/2504.05185 (Concise Reasoning via RL: length as PPO loss artifact)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -213,7 +215,7 @@ long CoT.
 
 - **Before R1, two open o1 replications** from GAIR tested the format first.
   - Part 1 ([arXiv:2410.18982](https://arxiv.org/abs/2410.18982) (Qin et al., 2024-10, preprint)) built "journey" traces. It grew a reasoning tree with o1-mini marking each step, walked it depth-first through one wrong branch per correct step, and had GPT-4o smooth the result. **On DeepSeekMath-7B, 327 journey traces scored 47.0% on MATH500 against 38.6% for the 327 matching shortcut paths.** DPO on outcome pairs then added 0.2 points. That is one run per arm, three epochs on 327 examples, with no variance reported.
-  - Part 2 ([arXiv:2411.16489](https://arxiv.org/abs/2411.16489) (Huang et al., 2024-11, preprint)) simply distilled o1's outputs. Tens of thousands of traces, with the exact count withheld, on Qwen2.5-Math-72B scored 13/30 on AIME 2024 against o1-preview's 12/30, a one-problem margin. SFT on about 5,000 of the math traces translated into Chinese moved Qwen2.5-72B-Instruct's WildSafety score from 92.0% to 86.5% and its ChineseFactEval accuracy from 69.1% to 62.7%. The extra reasoning invented search results.
+  - Part 2 ([arXiv:2411.16489](https://arxiv.org/abs/2411.16489) (Huang et al., 2024-11, preprint)) simply distilled o1's outputs. Tens of thousands of traces, with the exact count withheld, on Qwen2.5-Math-72B scored 13/30 on AIME 2024 against o1-preview's 12/30, a one-problem margin. SFT on about 5,000 of the math traces translated into Chinese moved Qwen2.5-72B-Instruct's WildSafety score from 92.0% to 86.5% and its ChineseFactEval accuracy from 69.1% to 62.7%. The extra reasoning invented search results. Sycophancy resistance rose from 89.7% to 92.7%, and expert scores on 100 open-ended queries rose too.
 - **s1** ([arXiv:2501.19393](https://arxiv.org/abs/2501.19393) (Muennighoff et al., EMNLP
   2025)) fine-tuned Qwen2.5-32B-Instruct on 1,000 questions with traces distilled from Gemini
   2.0 Flash Thinking, in 26 minutes on 16 H100s.
@@ -261,6 +263,12 @@ long CoT.
     base.
   - Their recipe for Llama-3.1-8B was long-CoT SFT first, then a cosine length reward with a
     repetition penalty. Without the penalty the length reward was hacked by repetition.
+- RLSP ([arXiv:2502.06773](https://arxiv.org/abs/2502.06773) (Ye et al., 2025-02, preprint)) paid for effort directly. Its PPO reward was 0.8 × correctness plus 0.2 × an exploration score, either response length or a GPT-4o grade of effort that ignored correctness.
+  - With outcome reward only, response length grew for Qwen2.5-7B-Instruct on math but not on code, and not for Llama-3.1-8B-Instruct on math. With the length term it grew in all three, and backtracking and verification appeared.
+  - **The accuracy gains are small and lack the matching outcome-only run.** On Llama-3.1-8B, QwQ long-CoT SFT took MATH-500 from 50.6% to 70.2% and RLSP added 3.2 points. On Qwen2.5-32B-Instruct, PPO on 918 old AIME problems moved AIME 2024 from 13.3% to 23.3%, which is three problems. The length reward on its own was also hacked by repetition.
+- Fatemi et al. ([arXiv:2504.05185](https://arxiv.org/abs/2504.05185) (Fatemi et al., 2025-04, tech report)) argue the growth is an optimization artifact, not reasoning. With per-token loss averaged over the response and GAE λ < 1, a negative terminal reward gives a PPO loss that shrinks like 1/length, so wrong answers push towards longer outputs and right ones towards shorter.
+  - PPO on 4 OlympiadBench problems that R1-Distill-Qwen-1.5B never solved (reward fixed at −0.5) grew responses from about 12K to 20K tokens as the loss fell. GRPO on the same problems has zero advantage, so the KL term took over and outputs collapsed below 80 tokens.
+  - Their fix is a second, short PPO phase on problems the model sometimes solves. **Eight MATH level-5 problems cut mean response length by 54% for R1-Distill-Qwen-1.5B and 40% for the 7B, with average accuracy over four benchmarks 57.0→58.4 and 71.6→72.1.** The average hides small math losses (MATH-500 84.2→81.0 at 1.5B) and rests on MMLU-STEM gains (40.6→53.1). Checkpoints were picked for shortest length at reasonable accuracy, and there is one run per setting, at 7B and below.
 
 **Weak or no reward still moves Qwen2.5-Math.** Each of these tests the sharpening reading,
 and each gain shrinks off Qwen.

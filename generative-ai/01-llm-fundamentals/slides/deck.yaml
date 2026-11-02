@@ -1,0 +1,767 @@
+# LLM Fundamentals lecture deck. Covers notes 01-14.
+# Build: make slides PILLAR=generative-ai/01-llm-fundamentals STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: a support-ticket assistant that invents a refund policy.
+deck:
+  title: LLM Fundamentals
+  subtitle: What a model is, how it is trained, and how to use one
+  tagline: It predicts · It is trained · You use it · You run it
+  reference: 'Notes: generative-ai/01-llm-fundamentals'
+  output: llm-fundamentals.pptx
+  notes: 'Today we follow one thing: a support-ticket assistant that invents a refund policy. To understand why,
+    we go through what a model is, how it gets trained, how to prompt and call it, and how to run it yourself. By
+    the end you will know which lever fits which problem, and why the assistant still needs the next pillar.'
+parts:
+- title: How a model works
+  summary: Tokens · Attention · Scale · Decoding · Hallucination
+  notes: We start from what the model sees. Everything surprising about LLMs follows from next-token prediction
+    over subword tokens.
+  slides:
+  - layout: statement
+    title: Our assistant just invented a refund policy. Why?
+    kicker: The problem
+    statement: An LLM predicts the next token. Almost everything surprising about it follows from that one sentence.
+    attribution: Plausible is what it was trained for. True was never in the loss.
+    source: notes/01-tokens-and-embeddings.md
+    notes: A team ships a ticket assistant, and it confidently cites a refund policy that does not exist. Nothing
+      crashed. To see why that was the expected behaviour, we start with what the model actually receives when a
+      customer types a sentence. Then we follow that sentence all the way through to the next token.
+  - layout: flow
+    title: From a customer message to one next token
+    recall: What are the stages between a text string and the next token?
+    steps:
+    - label: Tokens
+      sub: BPE subwords
+    - label: Embeddings
+      sub: a vector per token, plus position
+    - label: Blocks
+      sub: attention and MLP, stacked
+    - label: Logits
+      sub: a score per vocabulary item
+    - label: Sample
+      sub: pick one, append, repeat
+      accent: D4621A
+    bullets:
+    - '**Tokens**, not characters or words, are the unit of cost and context.'
+    - Each step sees only tokens, which explains trouble with **letters and counting**.
+    takeaway: The model turns tokens into vectors, mixes them with attention, and samples one next token at a time.
+    source: notes/01-tokens-and-embeddings.md
+    notes: Here is the whole forward pass on one line. Text becomes integer tokens, tokens become vectors with a
+      position signal, blocks of attention mix them, and the last position produces a score for each word in the
+      vocabulary. We sample one, append it and go round again. The next few slides open each box.
+  - layout: compare
+    title: Why tokens set both the bill and the blind spots
+    recall: Why can a model fail to reverse a string that it reads correctly?
+    lead: 'Same short sentence with GPT-4 tokenization: a median of 7 tokens in English, 72 in Burmese.'
+    emphasis: right
+    left:
+      title: What tokens give you
+      bullets:
+      - A fixed vocabulary
+      - Any string can be encoded
+      - Units with more meaning than characters
+      tag: Why BPE won
+    right:
+      title: What tokens cost you
+      bullets:
+      - Billing and limits **per token**
+      - Rare languages cost more, and often score worse
+      - Letters inside a token are not directly visible
+      tag: What to plan for
+    takeaway: Tokens make any text encodable, but they set the bill and hide the letters, so measure in tokens.
+    source: notes/01-tokens-and-embeddings.md
+    notes: 'BPE gives a fixed vocabulary that can still encode any string, and that design has two consequences.
+      Since prices and limits are per token, some languages cost far more: a short sentence took a median of 7 tokens
+      in English and 72 in Burmese. And since the letters sit inside a token, a model can read a string correctly
+      and still fail to reverse it.'
+  - layout: image
+    title: The causal mask is why one pass can train every position
+    recall: How do you test that a causal mask works?
+    image: ../sources/images/build-a-large-language-model-from-scratch-fig3-19.png
+    caption: Attention weights without and with the causal mask (Raschka, 2024, Fig. 3-19)
+    bullets:
+    - '**Query** compares with each **key**; the weights average the **values**.'
+    - '**Mask:** no position sees a later one.'
+    - '**Test:** change a later token; earlier outputs stay the same.'
+    takeaway: Attention weights tokens by relevance, and the causal mask makes one pass train every position honestly.
+    source: notes/02-attention-and-the-transformer-block.md
+    notes: 'These are attention weights for one short sentence, without the mask on the left and with it on the
+      right. The upper triangle is gone, so no position can see later ones. That one matrix lets a single forward
+      pass train each position to predict the next token. And it gives us a test: change a later token, and nothing
+      earlier may move.'
+  - layout: code
+    title: Attention is short enough to hold in your head
+    recall: Why divide by the square root of d_k?
+    lang: python
+    code: "def attend(q, k, v, mask):\n    # q, k, v: (batch, T, d_k)\n    s = q @ k.transpose(-2, -1)\n    s =\
+      \ s / k.shape[-1] ** 0.5\n    s = s.masked_fill(~mask, float('-inf'))\n    w = s.softmax(dim=-1)  # (batch,\
+      \ T, T)\n    return w @ v"
+    bullets:
+    - '**Dividing by √d_k** keeps the softmax from going one-hot.'
+    - '**T × T scores:** cost is quadratic in context.'
+    - '**Heads** repeat this with their own projections.'
+    takeaway: Attention is a masked, scaled softmax over dot products, and its T by T matrix is what makes context
+      expensive.
+    source: notes/02-attention-and-the-transformer-block.md
+    notes: 'This is scaled dot-product attention with the mask. Dot products grow with dimension, so we divide by
+      the square root of d_k to stop the softmax becoming one-hot. Anything masked goes to minus infinity, so it
+      gets zero weight after the softmax. The real cost shows here too: the score matrix is T by T, so it is quadratic
+      in context.'
+  - layout: image
+    title: A block adds an MLP, residuals and LayerNorm, and then you stack it
+    recall: What do the residual and the LayerNorm each contribute?
+    image: ../sources/images/huyen-ai-engineering-fig2-6.png
+    caption: The composition of a transformer (Huyen, AI Engineering, 2025, Fig. 2-6)
+    bullets:
+    - '**Residual:** a direct path for gradients.'
+    - '**LayerNorm:** stable activations, no batch statistics.'
+    - '**Attention** dominates the cost of a block.'
+    takeaway: 'A GPT is one block repeated: attention and an MLP, with residuals and LayerNorm to keep deep stacks
+      trainable.'
+    source: notes/02-attention-and-the-transformer-block.md
+    notes: A block is attention followed by a position-wise MLP, each with a residual and a LayerNorm. Residuals
+      give gradients a direct path through deep stacks. LayerNorm keeps activations in a stable range. GPTs are
+      this block stacked, with an embedding underneath and a linear head on top.
+  - layout: table
+    title: Parameters tell you the memory, not the ability
+    recall: How do you estimate the memory for a model's weights?
+    lead: Weights only. Serving adds the KV cache and activations.
+    header:
+    - Model
+    - fp16
+    - int8
+    - 4-bit
+    widths:
+    - 4
+    - 2
+    - 2
+    - 2
+    rows:
+    - - GPT-2 small (124M)
+      - 0.25 GB
+      - 0.12 GB
+      - 0.06 GB
+    - - Llama 2 7B
+      - 14 GB
+      - 7 GB
+      - 3.5 GB
+    - - Llama 2 70B
+      - 140 GB
+      - 70 GB
+      - 35 GB
+    takeaway: Size a model as parameters times bytes before you download it, and treat the count as memory rather
+      than ability.
+    source: notes/03-scale-and-the-model-zoo.md
+    notes: Memory for the weights is parameters times bytes per parameter. So you can size a model on the back of
+      an envelope before you download it. Note that this says nothing about ability. LLaMA's 13B beat the 175B GPT-3
+      on most benchmarks in its report, because it was trained on far more data per parameter.
+  - layout: compare
+    title: Chinchilla changed what a training budget should buy
+    recall: Why might an operator train past 20 tokens per parameter?
+    emphasis: right
+    left:
+      title: Kaplan (2020)
+      bullets:
+      - Scale models up faster than data
+      - Bigger felt safer
+      tag: Overturned
+    right:
+      title: Chinchilla (2022)
+      bullets:
+      - Scale parameters and tokens about equally
+      - '**About 20 tokens per parameter**'
+      - Inference-heavy operators may train past it
+      tag: The training optimum
+    takeaway: Chinchilla says scale data and parameters together, yet operators train past 20 tokens per parameter
+      to cut inference cost.
+    source: notes/03-scale-and-the-model-zoo.md
+    notes: Kaplan's fit suggested bigger models with less data. Chinchilla found that for a fixed compute budget
+      you should scale parameters and tokens about equally, at roughly 20 tokens per parameter. But it is a training
+      optimum. If inference traffic dwarfs training, a smaller model trained past that point costs less over its
+      life. And mixture of experts splits size from compute again.
+  - layout: flow
+    title: Prefill is parallel, decode is one token at a time
+    recall: What does the KV cache store, and what does it cost?
+    steps:
+    - label: Prompt
+      sub: all tokens known
+    - label: Prefill
+      sub: one parallel pass
+    - label: KV cache
+      sub: keys and values kept
+      accent: 94A3B8
+    - label: Decode
+      sub: one pass per token
+    bullets:
+    - '**Input tokens** are cheap in time; **output tokens** are sequential.'
+    - '**The KV cache** grows linearly with context and dominates serving memory.'
+    takeaway: Prefill reads in parallel and decode writes serially, and the KV cache trades growing memory for that
+      speed.
+    source: notes/04-decoding-and-inference-behaviour.md
+    notes: Two very different phases hide inside one request. Prefill reads the whole prompt in one parallel pass.
+      Decode produces one token per forward pass, each waiting for the last. The KV cache means a new token needs
+      to compute only its own keys and values, but the cache grows linearly with context, and it is the main memory
+      cost of serving.
+  - layout: image
+    title: Temperature reshapes the choice among the logits
+    recall: What does a temperature above 1 do to the distribution?
+    image: ../sources/images/huyen-ai-engineering-fig2-16.png
+    caption: Softmax probabilities of two tokens as temperature rises (Huyen, AI Engineering, 2025, Fig. 2-16)
+    bullets:
+    - '**Above 1** flattens, **below 1** sharpens, **0** is argmax.'
+    - '**Top-k** keeps a fixed count. **Top-p** adapts to the shape.'
+    - Temperature 0 on an API is still **not fully reproducible**.
+    takeaway: Sampling settings shape which token gets chosen, and they control variety without making the answer
+      true.
+    source: notes/04-decoding-and-inference-behaviour.md
+    notes: Temperature divides the logits before the softmax. Above 1 flattens the distribution, and below 1 sharpens
+      it. Zero is implemented as argmax. On the chart you can see two tokens with logits 1 and 2 drift towards each
+      other as temperature rises. On your own open-weight model you control this. Current Claude models no longer
+      accept it, which we return to later.
+  - layout: cards
+    title: Spending more compute and constraining the output
+    recall: What does constrained decoding guarantee, and what does it leave open?
+    cards:
+    - title: Test-time compute
+      body: Several samples per request, then choose. Quality rises with samples and so does cost.
+    - title: Constrained decoding
+      body: Mask tokens the grammar forbids at each step. Shape is guaranteed, truth is not.
+      accent: D4621A
+    - title: GQA
+      body: Several query heads share a key/value head, which shrinks the KV cache at small quality cost.
+    takeaway: Decoding-time levers trade compute or memory for quality, and constraints fix an answer's shape but
+      not its truth.
+    source: notes/04-decoding-and-inference-behaviour.md
+    notes: 'Two more levers at decoding time. You can draw several samples and take the best, which spends compute
+      at inference. And you can mask tokens the grammar forbids, which guarantees the shape. Shape is all it guarantees:
+      a valid JSON object can still hold a wrong value. That distinction turns up in every structured-output system
+      we use.'
+  - layout: compare
+    title: 'Why it invents things: two hypotheses, neither settled'
+    recall: What are the two hypotheses for hallucination?
+    emphasis: left
+    left:
+      title: Snowballing
+      bullets:
+      - Cannot tell given text from generated text
+      - Each error becomes context for the next
+      tag: Self-delusion
+    right:
+      title: Imitating knowledge
+      bullets:
+      - SFT shows confident answers
+      - It learns the form without the facts
+      tag: Mismatched internal knowledge
+    takeaway: 'Treat hallucination as structural: both leading explanations come from how the model is trained,
+      so design checks.'
+    source: notes/05-hallucination-and-base-vs-assistant.md
+    notes: Back to our invented refund policy. A base model is a text-continuer, so assistant behaviour had to be
+      added in post-training. There are two main explanations for hallucination. One is that the model cannot tell
+      given text from its own, so errors snowball. The other is that fine-tuning teaches it to imitate knowledge
+      it does not have. Neither is settled, and both imply that you check its answers.
+  - layout: bullets
+    title: 'Monday: check what your model can and cannot see'
+    recall: What kind of error can self-consistency not catch?
+    bullets:
+    - '**Count tokens** in your real prompts, in each language you serve.'
+    - '**Size the model** before you download it: parameters times bytes.'
+    - '**Check the chat template** matches training. A mismatch degrades quality silently.'
+    - '**Compare samples** to flag invented facts, knowing that consistent errors pass.'
+    - '**Calibrate** self-reported confidence on your own data.'
+    takeaway: Measure tokens and memory, match the chat template, and verify facts instead of trusting a model's
+      fluency.
+    source: notes/05-hallucination-and-base-vs-assistant.md
+    notes: Here is what to do with this part next week. These checks cost almost nothing. SelfCheckGPT's idea, comparing
+      samples, is a good cheap filter, but it can't catch an error the model makes consistently. And calibrate any
+      self-reported confidence on your own data.
+- title: How it is trained and adapted
+  summary: Pretraining · SFT · Preference · LoRA
+  notes: Now we follow the weights through their stages, so we can pick the right lever instead of reaching for
+    fine-tuning first.
+  slides:
+  - layout: statement
+    title: Should we train a model on five years of tickets?
+    kicker: The problem
+    statement: Pretraining buys knowledge, supervised fine-tuning buys format, preference optimization buys judgment,
+      and LoRA makes the last two affordable.
+    attribution: Know which stage a problem belongs to before you reach for fine-tuning.
+    source: notes/06-pretraining-data-and-objectives.md
+    notes: 'Someone will ask this. Before anyone reaches for a GPU, we need to know what training optimises, what
+      it needs and what it costs. The short answer is that five years of tickets are several orders of magnitude
+      too small to pretrain a base model. The longer answer is what this part covers: which stage of training a
+      problem belongs to.'
+  - layout: flow
+    title: One set of weights passes through several stages
+    recall: About what share of InstructGPT's compute went into pretraining?
+    steps:
+    - label: Pretraining
+      sub: knowledge, about 98% of compute
+    - label: SFT
+      sub: format and behaviour
+    - label: Preference
+      sub: judgment between answers
+      accent: D4621A
+    - label: Serve
+      sub: with a chat template
+    bullets:
+    - '**Same weights** throughout: each stage inherits the last.'
+    - '**Your own training** almost always begins after pretraining.'
+    takeaway: Weights flow from pretraining to fine-tuning to preference optimization, so choose the stage that
+      matches your problem.
+    source: notes/06-pretraining-data-and-objectives.md
+    notes: Follow the weights. Pretraining takes almost all of the compute, about 98% for InstructGPT, and builds
+      the base model. Fine-tuning gives it format. Preference optimization gives it judgment. Each stage inherits
+      what came before. Parameter-efficient methods make the later stages affordable to you, since they do not need
+      retraining from scratch.
+  - layout: code
+    title: The training objective fits on one slide
+    recall: What should the loss be before training, and why?
+    lang: python
+    code: "for x, y in batches:   # y is x shifted by one\n    logits = model(x)\n    loss = F.cross_entropy(\n\
+      \        logits.view(-1, vocab),\n        y.view(-1))\n    opt.zero_grad()\n    loss.backward()\n    opt.step()"
+    bullets:
+    - '**Labels** are the input shifted by one.'
+    - '**Teacher forcing** makes training parallel.'
+    - '**Step 0 loss** should be about `ln(vocab)`.'
+    takeaway: Pretraining is next-token cross-entropy, parallel through teacher forcing, and step-0 loss near ln(vocab)
+      checks the wiring.
+    source: notes/06-pretraining-data-and-objectives.md
+    notes: The whole of pretraining is this loop. Inputs and labels are the same tokens shifted by one, so no human
+      labels are needed. Each position sees the true previous tokens, which is teacher forcing, and that is why
+      training is parallel while generation is not. Before you train, the loss should be about ln of the vocabulary
+      size.
+  - layout: image
+    title: A small corpus teaches you to memorise
+    recall: What does a widening gap between training and validation loss show?
+    image: ../sources/images/build-a-large-language-model-from-scratch-fig5-12.png
+    caption: Training and validation loss on a short story (Raschka, 2024, Fig. 5-12)
+    bullets:
+    - '**5,145 tokens, 10 epochs:** train 0.39, validation about 6.4.'
+    - '**Company data** is several orders of magnitude too small.'
+    - '**Memory:** Adam keeps two extra values per weight.'
+    takeaway: On little data a model memorises, so continue pretraining or fine-tune rather than pretraining on
+      company data.
+    source: notes/06-pretraining-data-and-objectives.md
+    notes: 'This is what overfitting looks like. On a 5,145-token story, ten epochs drive training loss to 0.39
+      while validation stalls near 6.4. The model is memorising. That is why your tickets alone will not pretrain
+      a useful model: it would learn your tickets. Training also needs far more memory than inference, since Adam
+      keeps two extra values per weight.'
+  - layout: compare
+    title: Continued pretraining adds knowledge, SFT adds behaviour
+    recall: How many SFT examples did InstructGPT use?
+    emphasis: right
+    left:
+      title: Continued pretraining
+      bullets:
+      - Raw domain text
+      - Same next-token loss
+      - Adds **knowledge**
+      tag: A domain the base lacks
+    right:
+      title: Supervised fine-tuning
+      bullets:
+      - (instruction, response) demonstrations
+      - Loss on response tokens, `ignore_index=-100`
+      - Adds **format and behaviour**
+      - 'InstructGPT: about 13,000 examples'
+      tag: A skill or form it lacks
+    takeaway: 'Same loss, different data: raw text adds knowledge, demonstrations add behaviour, so name what is
+      missing first.'
+    source: notes/07-sft-and-instruction-tuning.md
+    notes: These two get confused, and they have the same loss. Continued pretraining feeds raw domain text, and
+      adds knowledge. Supervised fine-tuning feeds demonstrations, and teaches a format. So you need to ask what
+      is missing. InstructGPT used about 13,000 demonstrations, and typical sets run from 10,000 to 100,000, though
+      much of the format gain arrives early.
+  - layout: cards
+    title: What goes wrong when you fine-tune
+    recall: What happens if you fine-tune on facts the model does not know?
+    cards:
+    - title: Unknown facts
+      body: The model fits them slowly and test accuracy falls. Early stopping or "I don't know" labels help.
+      accent: D4621A
+    - title: Forgetting
+      body: Weights that held older knowledge move. Replay old data or limit which weights move.
+    - title: Classification
+      body: Replace the head, train the last blocks, and take the loss on the last token.
+    takeaway: Fine-tuning can damage what a model already knows, so stop early, replay old data and limit which
+      weights move.
+    source: notes/07-sft-and-instruction-tuning.md
+    notes: Fine-tuning has failure modes you can plan for. Teach a model facts it doesn't know, and it fits them
+      slowly while its test accuracy falls. Moving weights makes it forget. And a classification head needs far
+      less work than a full fine-tune. Early stopping and replay are cheap, so plan for them from the start.
+  - layout: code
+    title: Preference training pays for separation, not confidence
+    recall: What value does this loss start at when the two scores are tied?
+    lang: python
+    code: "def reward_loss(r_win, r_lose):\n    # -log sigmoid(r_win - r_lose)\n    gap = r_win - r_lose\n    return\
+      \ -F.logsigmoid(gap).mean()\n\n# tied scores: loss = ln 2\n# only the gap matters"
+    bullets:
+    - '**Comparisons** are cheaper than demonstrations.'
+    - '**Starts at** `ln 2` when the scores tie.'
+    - '**Best-of-N** gets many gains with no RL training.'
+    takeaway: Preference training rewards the gap between winner and loser, which is why comparison data is such
+      good value.
+    source: notes/08-preference-optimisation-overview.md
+    notes: Comparing two acceptable answers is far cheaper than writing a good one, and it captures which of two
+      right answers people prefer. The reward-model loss pushes the winner's score above the loser's. It starts
+      at ln 2 when the scores are tied, and it depends only on their difference. Raising both does nothing.
+  - layout: compare
+    title: RLHF needs a reward model and RL, DPO needs neither
+    recall: How does DPO avoid a reward model?
+    emphasis: right
+    left:
+      title: RLHF
+      bullets:
+      - Train a reward model on ranked pairs
+      - Run PPO against it
+      - Delicate, with two models to train
+      tag: The classic route
+    right:
+      title: DPO
+      bullets:
+      - Closed-form optimal policy
+      - Classification loss on log-probability ratios
+      - Frozen reference model
+      tag: Often the practical start
+    takeaway: DPO turns preference optimization into a classification loss, so you can start without a reward model
+      or PPO.
+    source: notes/08-preference-optimisation-overview.md
+    notes: The classic route trains a reward model, then runs PPO against it, which is delicate. DPO notices that
+      the optimal policy has a closed form in the reward, so you can substitute it and get a classification loss
+      on log-probability ratios against a frozen reference. Constitutional AI replaces human harm labels with model
+      critiques against written principles. People still write those principles.
+  - layout: code
+    title: LoRA starts as a no-op and trains only a small update
+    recall: Why is the model unchanged at the start of LoRA training?
+    lang: python
+    code: "class LoRA(nn.Module):\n    def __init__(self, W, r, alpha):\n        super().__init__()\n        self.W\
+      \ = W.requires_grad_(False)\n        d_in, d_out = W.shape[1], W.shape[0]\n        self.A = nn.Parameter(\n\
+      \            torch.randn(r, d_in) * 0.01)\n        self.B = nn.Parameter(\n            torch.zeros(d_out,\
+      \ r))\n        self.scale = alpha / r\n\n    def forward(self, x):\n        update = self.B @ self.A\n   \
+      \     W = self.W + self.scale * update\n        return x @ W.T"
+    bullets:
+    - '**B starts at zero**, so step 0 is the base model.'
+    - '**Commonly targets** `q_proj` and `v_proj`.'
+    - '**QLoRA:** a 4-bit NF4 base, for less memory.'
+    takeaway: LoRA trains a small low-rank update on frozen weights, merged for serving, so most teams should start
+      there.
+    source: notes/09-peft-and-fine-tuning-in-practice.md
+    notes: Full fine-tuning needs gradients and optimizer state for every weight, several times the model's memory.
+      LoRA freezes the matrix and adds a low-rank update B times A. Because B starts at zero, the model is unchanged
+      at step 0. Trained, the update gets merged for serving, with no overhead. QLoRA holds the frozen base in 4-bit
+      NF4 for less memory in training.
+  - layout: table
+    title: Prompt, retrieve or fine-tune?
+    recall: When is fine-tuning the wrong answer?
+    lead: Try them from the top. Each row costs more than the last.
+    header:
+    - Symptom
+    - Lever
+    widths:
+    - 5.2
+    - 5
+    highlight:
+    - 1
+    rows:
+    - - Wrong format or tone
+      - '**Prompt:** instructions and examples'
+    - - Missing or stale facts
+      - '**Retrieve:** the next pillar'
+    - - Format unstable after good prompting, with thousands of examples
+      - '**Fine-tune**, with LoRA first'
+    - - Which of two right answers it prefers
+      - '**Preference optimization**'
+    takeaway: Prompt first, retrieve for facts, and fine-tune only for behaviour that good prompting could not stabilise.
+    source: notes/09-peft-and-fine-tuning-in-practice.md
+    notes: This table is the decision you came for, and it answers the question we opened with. Missing or stale
+      facts call for retrieval, whatever anyone tells you. A format that prompting can reach calls for prompting.
+      Fine-tuning is for a behaviour that stays unstable after good prompting, when you also have thousands of examples.
+      Try them in this order.
+- title: How you use it, and run it
+  summary: Prompts · Chains · A tiny GPT · The API · Open weights
+  notes: 'Finally, we put the model to work: a prompt, a chain, a build-it-yourself check, a hosted API and a local
+    runtime.'
+  slides:
+  - layout: statement
+    title: A one-line prompt returned a paragraph about billing
+    kicker: The problem
+    statement: A prompt is the conditioning context for next-token prediction. It is the cheapest change you will
+      ever make, because no weight moves.
+    attribution: Fix it, then measure it. One good output proves nothing.
+    source: notes/10-prompting-fundamentals.md
+    notes: 'Now we use the thing. Our triage prompt says only: classify this ticket. Sometimes it returns billing,
+      sometimes a paragraph about what billing is. Nothing in the model is broken. A prompt is the only thing we
+      have changed so far, and it is the cheapest change we will ever make, because no weight moves.'
+  - layout: cards
+    title: Five principles, and only one is about wording
+    recall: What are the five principles of prompting?
+    cards:
+    - title: Give direction
+      body: Say who it is, what the job is and what good looks like.
+    - title: Specify format
+      body: JSON with allowed labels. Then validate it.
+    - title: Provide examples
+      body: 3–5 varied ones when format must be reliable.
+    - title: Evaluate quality
+      body: Labelled, held-out set. Rate blind. Log parse rate and cost.
+      accent: D4621A
+    - title: Divide labor
+      body: Split tasks so each step can be checked.
+    takeaway: Give direction, format and examples, but evaluation on a labelled set is what turns a prompt into
+      something you can trust.
+    source: notes/10-prompting-fundamentals.md
+    notes: These are Phoenix and Taylor's five principles. Direction, format and examples are about what you write.
+      Evaluation and division of labor are about how you work, and they matter the most, since output is sampled.
+      Run each variant over a labelled set instead of judging from one good output.
+  - layout: flow
+    title: Wrap every call in a retry with a designed exit
+    recall: What are the three exits from the check in a parse-and-retry loop?
+    steps:
+    - label: Template
+      sub: direction, format, examples
+    - label: Model
+      sub: a paid call
+    - label: Validate
+      sub: parses, label allowed
+      accent: D4621A
+    - label: Label or human
+      sub: after capped retries
+    bullets:
+    - '**Cap retries,** and name the fallback.'
+    - '**Log** accuracy, parse rate and calls per ticket.'
+    takeaway: Validate each reply, retry up to a cap, and route the rest to a human, logging what the retries cost.
+    source: notes/10-prompting-fundamentals.md
+    notes: Here is the shape every production prompt ends up with. Template, model, then a check that it parses
+      and the label is allowed. If it fails and retries are left, go again. If retries run out, it goes to a person.
+      Every retry is a paid call, so log the calls alongside accuracy to see what the retry is costing.
+  - layout: code
+    title: LangChain makes each box a swappable Runnable
+    recall: What does the pipe operator do in LCEL?
+    lang: python
+    code: "from langchain_core.language_models.fake_chat_models \\\n  import FakeListChatModel\n\nmodel = FakeListChatModel(\n\
+      \    responses=['billing'])\nchain = prompt | model | StrOutputParser()\n\nchain.invoke({'ticket': 'charged\
+      \ twice'})\nchain.batch([a, b])\nchain.stream(a)"
+    bullets:
+    - '**A Runnable** has invoke, batch and stream.'
+    - '**Fake models** test wiring, not quality.'
+    - '**Loops or approval?** Move to LangGraph.'
+    takeaway: LCEL pipes Runnables into a chain that can batch and stream, and a fake model makes its wiring cheap
+      to test.
+    source: notes/11-langchain-basics.md
+    notes: LangChain's value is one common interface. A prompt, a model and a parser all implement invoke, batch
+      and stream, so the pipe composes them and the chain gains those methods with no new code. A fake chat model
+      makes wiring tests free and deterministic. That tests the plumbing and says nothing about answer quality.
+  - layout: table
+    title: Five checks catch most model bugs
+    recall: What should the loss be at step 0, and how do you test the causal mask?
+    lead: Each takes minutes, on a model small enough for a laptop.
+    header:
+    - Check
+    - Expected
+    - If not
+    widths:
+    - 3
+    - 4
+    - 3.4
+    rows:
+    - - Loss at step 0
+      - About `ln(vocab)`; 4.17 for 65 characters
+      - Initialization or target shift
+    - - Overfit one batch
+      - Loss falls towards 0
+      - Model or optimizer wiring
+    - - Causal mask
+      - Earlier logits unchanged
+      - Mask missing or transposed
+    - - Train vs val
+      - Tracked together
+      - Overfitting
+    - - Parameter count
+      - Matches hand calculation
+      - Tying or layer sizes
+    takeaway: Write the model once and run these checks, since a bad mask still trains and only a direct test will
+      reveal it.
+    source: notes/12-build-a-tiny-gpt.md
+    notes: The fastest way to learn the model is to write one, as Karpathy and Raschka both have you do. The chapter's
+      CPU script is about 80 lines and runs these checks. When the fine-tune produces garbage, these tell you whether
+      you have a bad mask or a bad learning rate. Note that a missing mask still trains and the loss still falls.
+  - layout: compare
+    title: The request that worked last year can now return a 400
+    recall: What replaces a forced tool_choice on current Claude models?
+    emphasis: right
+    left:
+      title: In older tutorials
+      bullets:
+      - '`tool_choice` forcing one tool'
+      - '`temperature`, `top_p`, `top_k`'
+      - Assistant prefill
+      - Thinking budgets
+      tag: 400 on current models
+    right:
+      title: What to use now
+      bullets:
+      - '`messages.parse` with a schema'
+      - Or a `strict` tool under `auto`
+      - Prompt names the tool, code checks the call
+      - Adaptive thinking
+      tag: claude-opus-5-5
+    takeaway: Current Claude models reject forced tools and sampling settings, so use structured outputs or strict
+      tools under auto.
+    source: notes/13-calling-models-from-code.md
+    notes: The hosted API moves. On current Claude models, forcing a tool with tool_choice returns a 400. So do
+      temperature, top_p and top_k on Opus 5.5, as well as assistant prefill and thinking budgets. If you copied
+      code from an older tutorial, that is a likely cause. Read the 400's message, and pin the model id so changes
+      are deliberate.
+  - layout: code
+    title: The tool loop has three details that hand-rolled code gets wrong
+    recall: What are the three details of a correct tool loop?
+    lang: python
+    code: "for turn in range(max_turns):\n    r = client.create(messages)\n    if r.stop_reason == 'refusal':\n\
+      \        return 'refused'\n    messages.append(\n        {'role': 'assistant', 'content': r.content})\n  \
+      \  if r.stop_reason != 'tool_use':\n        return text_of(r)\n    results = [run(b) for b in r.content\n\
+      \               if b.type == 'tool_use']\n    messages.append(\n        {'role': 'user', 'content': results})\n\
+      return 'hit the cap'"
+    bullets:
+    - '**Entire content** goes back.'
+    - '**One user turn** carries all results.'
+    - '**Cap turns;** send tool errors as `is_error`.'
+    takeaway: Append all assistant content, send every result in one user turn, cap the turns, and check stop_reason
+      first.
+    source: notes/13-calling-models-from-code.md
+    notes: This loop is the seed of every agent. First, append the whole assistant content, or the API can't match
+      results to calls. Second, return all results for a turn in one user message, each with its id. Third, cap
+      the turns, since a model that keeps calling tools is a cost incident. The history goes back each time, which
+      is why long loops get expensive.
+  - layout: table
+    title: Open weights are not a licence
+    recall: What three things does the Llama 3.1 licence require?
+    lead: Read from the licence pages and Hub metadata on 2026-11-02. Terms change, so check the exact repo.
+    header:
+    - Model
+    - Licence
+    - Notice
+    widths:
+    - 3
+    - 2.6
+    - 4.8
+    rows:
+    - - OLMo 2 7B
+      - Apache 2.0
+      - Permissive
+    - - Qwen2.5 7B Instruct
+      - Apache 2.0
+      - 'Sizes can differ: check the repo'
+    - - DeepSeek-R1
+      - MIT
+      - Allows commercial use and distillation
+    - - Gemma 4 E4B
+      - Apache 2.0
+      - 'Earlier Gemma: custom terms'
+    - - Llama 3.1 8B
+      - Community License
+      - 700M MAU clause, "Built with Llama", name prefix on models trained on outputs
+    takeaway: Open weights differ in terms, so read the licence of the exact repo and of its base model before you
+      build on it.
+    source: notes/14-open-weight-models-and-local-inference.md
+    notes: Legal asks if tickets may leave the network. If not, we run a model ourselves, and first we must check
+      we may. Terms differ by family and even by generation, and these were read on 2 November 2026. The Llama row
+      is the surprising one. The obligations attach to what you ship, so a fine-tune inherits them.
+  - layout: table
+    title: Will it fit? Read the real file sizes
+    recall: Why does a Q4 file need more than 4 bits per parameter?
+    lead: Qwen2.5 7B Instruct GGUF files, from the Hugging Face Hub, read 2026-11-02.
+    header:
+    - Format
+    - File GB
+    - Bits per param
+    widths:
+    - 3
+    - 3
+    - 3
+    highlight:
+    - 0
+    rows:
+    - - f16
+      - '15.24'
+      - '16.02'
+    - - Q8_0
+      - '8.10'
+      - '8.51'
+    - - Q6_K
+      - '6.25'
+      - '6.57'
+    - - Q4_K_M
+      - '4.68'
+      - '4.92'
+    - - IQ2_M
+      - '2.78'
+      - '2.92'
+    takeaway: Start with Q4_K_M, treat file size as a floor beneath the KV cache, and decide with your own eval
+      rather than the name.
+    source: notes/14-open-weight-models-and-local-inference.md
+    notes: Quantization names map to measured sizes. These are real file sizes from one community conversion of
+      a 7.61B-parameter model. Q4 takes more than 4 bits per parameter, because of per-block scale data and tensors
+      kept at higher precision. The file is a floor, since the KV cache grows with the context you ask for. Start
+      at Q4_K_M, then compare with a larger file on your own eval.
+  - layout: cards
+    title: Three runtimes, and when local beats the API
+    recall: What are the strongest reasons to run locally?
+    cards:
+    - title: Ollama
+      body: One command, and a local server on port 11434.
+    - title: llama.cpp
+      body: Control over layers and context, on the widest range of hardware.
+    - title: transformers
+      body: The route to fine-tuning. Your sampling controls are back.
+    - title: When local wins
+      body: Data rules, weight access, offline, pinning. On cost, only at high steady volume.
+      accent: D4621A
+    takeaway: Choose local for data rules and control, and work out cost with your own volume, because it rarely
+      wins on price alone.
+    source: notes/14-open-weight-models-and-local-inference.md
+    notes: 'Ollama for simplicity, llama.cpp for control and small devices, transformers for fine-tuning and research.
+      As for when to run locally at all, the strong reasons are data residency, access to the weights, offline use
+      and pinning. On cost alone the arithmetic is usually against you: with an assumed 1,000 dollars a month for
+      a server, break-even against Haiku 5.5 was about 9 million short triage tickets a month.'
+- title: Wrap-up
+  agenda: false
+  divider: false
+  slides:
+  - layout: cards
+    title: Rules of thumb to carry out of the room
+    recall: Which one sentence explains most of an LLM's surprising behaviour?
+    cards:
+    - title: Plausible, not true
+      body: Design for hallucination. Do not hope it away.
+    - title: Tokens are the unit
+      body: Of cost, latency and context. Count them.
+    - title: Check step 0
+      body: Loss near `ln(vocab)`, or there is a bug.
+    - title: Form, not facts
+      body: Fine-tune for behaviour. Retrieve facts. LoRA first.
+      accent: D4621A
+    - title: Measure prompts
+      body: Labelled set, several runs, blind rating.
+    - title: Check stop_reason
+      body: Cap loops, log usage, validate outputs.
+    takeaway: Models predict plausible tokens, so count tokens, validate outputs, measure prompts and retrieve your
+      facts.
+    source: notes/05-hallucination-and-base-vs-assistant.md
+    notes: 'If you remember only this slide, you can still debug most LLM problems you will meet. Each rule goes
+      with a part of the lecture, and each rests on the idea that we began with: the model predicts plausible next
+      tokens.'
+  - layout: bullets
+    title: Where this goes next
+    recall: What can the assistant still not do at the end of this pillar?
+    bullets:
+    - '**[02 RAG and retrieval](../../02-rag-retrieval/README.md):** knowledge the model was not trained on.'
+    - '**[03 Agentic foundations](../../03-agentic-foundations/README.md):** the tool loop, grown up.'
+    - '**[05 RL](../../05-RL/README.md):** post-training in depth.'
+    - '**[08 Eval](../../08-eval/README.md):** how you know any of it worked.'
+    - '**[ai-engineering/07](../../../ai-engineering/07-inference-engineering/README.md):** serving at scale.'
+    takeaway: The assistant still lacks your facts, so retrieval comes next, then agents, post-training depth and
+      evaluation.
+    source: notes/14-open-weight-models-and-local-inference.md
+    notes: The assistant is now well-prompted, called correctly and possibly local. It still does not know our refund
+      policy, and that was where we began. The next pillar gives it knowledge it wasn't trained on. Then agents
+      let it act, and the eval pillar tells you if any of this worked.

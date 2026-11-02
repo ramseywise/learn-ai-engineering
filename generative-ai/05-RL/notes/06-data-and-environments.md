@@ -28,6 +28,7 @@ sources:
   - https://arxiv.org/abs/2305.15717
   - https://arxiv.org/abs/2312.01700 (data management for LLM training survey)
   - https://arxiv.org/abs/2403.15042 (LLM2LLM, targeted iterative augmentation)
+  - https://arxiv.org/abs/2504.09639 (R1 answers as SFT data for non-reasoning models)
   - https://arxiv.org/abs/2404.07503 (best practices on synthetic data)
   - https://arxiv.org/abs/2408.16737 (compute-matched sampling from weaker teachers)
 confidence: medium
@@ -236,6 +237,7 @@ DistilBERT: 40% smaller, 60% faster, 97% of BERT's language understanding retain
   ([arXiv:2304.01196](https://arxiv.org/abs/2304.01196) (Xu et al., EMNLP 2023)). The
   user-simulator risks [above](#data-and-environment--algorithm) apply.
 - **Augment only what the student gets wrong.** LLM2LLM fine-tunes Llama-2-7B on a small seed set, has GPT-3.5 write one new example per seed item the student still fails, retrains from the base model, and repeats for 10 rounds. **With 74 GSM8K seeds (1%), test accuracy went from 0.99% to 19.56% after 391 generated examples; with 100 seeds it reached 23.7%, against 18.1% for augmenting every seed (AugGPT) and 19.9% for adding 471 more real examples.** Three choices mattered: iterating beat generating the same amount in one shot (23.7% vs 16.3%), augmenting only seeds beat re-augmenting generated data (23.8% vs 18.3%, which drifts and grows exponentially), and retraining from scratch beat continuing from the last checkpoint (23.8% vs 14.7%). The gains are for tens to a few thousand examples, and for GSM8K and TREC the best checkpoint was picked on the test set ([arXiv:2403.15042](https://arxiv.org/abs/2403.15042) (Lee et al., Findings of ACL 2024)).
+- **A reasoning model's answers, without its trace.** The a-m-team regenerated about 1.3M open-source prompts with DeepSeek-R1, kept only the text after `</think>`, and fine-tuned Qwen2.5-32B base on it for three epochs. Against the original community responses, **GPQA-Diamond rose from 34.3 to 40.3, GSM8K from 83.7 to 92.2 and HumanEval from 80.5 to 90.9**, with MMLU unchanged at 82.5. Prepending a Qwen2.5-7B summary of the trace lifted GPQA to 47.7 but dropped IFEval strict from 76.9 to 61.2. The non-reasoning DeepSeek-V3 answers did as well, 47.9 on GPQA and 90.9 on HumanEval, so the gain is from a stronger teacher, not from reasoning as such. It is one run per variant, and the chat scores are GPT-4-judged ([arXiv:2504.09639](https://arxiv.org/abs/2504.09639) (Wang et al., 2025-04, preprint)).
 
 > **Often, good SFT data means you don't need RL.** Before 2025, Anthropic's recipe was large-scale high-quality SFT plus RLAIF ([04-constitutional-ai.md](04-constitutional-ai.md)), with little RLVR, and its coding models were already strong. Data decides how far you can go; RL decides how much higher.
 

@@ -21,6 +21,10 @@ HERE = Path(__file__).parent
 FENCE = re.compile(r"```python\n(.*?)```\n(\n```text\n(.*?)```\n)?", re.S)
 
 
+def tidy(text):
+    return [line.rstrip() for line in text.splitlines()]
+
+
 def run(code, env):
     return subprocess.run([sys.executable, "-c", code], cwd=HERE, env=env, capture_output=True, text=True, timeout=120)
 
@@ -55,7 +59,7 @@ def main():
                 if write:
                     print(f"ok {label}")
                     return f"```python\n{code}```\n" + (f"\n```text\n{r.stdout}```\n" if r.stdout else "")
-                if (expected or "") != r.stdout:
+                if tidy(expected or "") != tidy(r.stdout):  # editors strip trailing spaces from fences
                     failures += 1
                     print(f"DIFF {label}\n--- expected\n{expected}\n--- got\n{r.stdout}")
                 else:

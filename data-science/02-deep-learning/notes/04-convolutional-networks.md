@@ -1,0 +1,404 @@
+---
+origin: own coursework (Ng Deep Learning Specialization, course 4) + curated
+sources:
+  - ../practice/ng-deep-learning/Convolutional Neural Networks/
+  - https://www.coursera.org/specializations/deep-learning
+  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - https://doi.org/10.1109/5.726791
+  - https://arxiv.org/abs/1512.03385
+  - https://arxiv.org/abs/1612.08242
+  - https://arxiv.org/abs/1503.03832
+  - https://arxiv.org/abs/1508.06576
+  - https://arxiv.org/abs/2301.00808
+  - https://arxiv.org/abs/1905.09272
+  - https://arxiv.org/abs/1911.05722
+  - https://arxiv.org/abs/2002.05709
+  - https://arxiv.org/abs/2006.11477
+confidence: high
+cleaned: 2026-11-01
+---
+# Convolutional networks
+
+> Shift a digit one pixel to the right and the MLP from the last two chapters falls from 97% to under 50%, because each of its weights is tied to one pixel position. A convolution uses the same small filter at every position, so what it learned in one place applies everywhere. Course 4 builds this from the NumPy arithmetic up to ResNets, object detection, face verification and style transfer. This chapter does the same on the digits, and at each stage shows why the design took that form.
+
+| Notebook | Builds | Key idea |
+|---|---|---|
+| Convolution model: Step by Step | `zero_pad`, `conv_single_step`, `conv_forward`, `pool_forward` and their backward passes in NumPy | Output size $\lfloor (n + 2p - f)/s \rfloor + 1$; parameter sharing; pooling has no parameters |
+| Convolution model: Application | CONV2D → RELU → MAXPOOL ×2 → FLATTEN → FC on SIGNS, in TF | Shape bookkeeping in a framework |
+| Residual Networks | ResNet-50 in Keras: identity block and convolutional block | Skip connection $a^{[l+2]} = g(z^{[l+2]} + a^{[l]})$ makes very deep nets trainable; learning the identity is easy |
+| Car detection (YOLO) | YOLOv2 post-processing on a pretrained model: box scores, filtering, IoU, non-max suppression | One forward pass predicts a 19×19×5 grid of anchor boxes |
+| Face Recognition | FaceNet-style encodings, triplet loss $\max(\lVert f(A)-f(P)\rVert^2 - \lVert f(A)-f(N)\rVert^2 + \alpha, 0)$, verification vs recognition | Learn an embedding where distance = identity ([NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md)) |
+| Neural Style Transfer | Content cost on one VGG-19 layer, style cost via Gram matrices across layers, optimise the *image* | Gradient descent on inputs, not weights |
+
+```mermaid
+flowchart LR
+    I[Image 1 x 8 x 8] --> C1[Conv 3x3, 16 filters<br/>16 x 8 x 8]
+    C1 --> P1[Max pool 2<br/>16 x 4 x 4]
+    P1 --> C2[Conv 3x3, 32 filters<br/>32 x 4 x 4]
+    C2 --> P2[Max pool 2<br/>32 x 2 x 2]
+    P2 --> F[Flatten, linear<br/>10 logits]
+```
+
+## The convolution, by hand
+
+A filter slides over the image and takes a dot product at each position. That gives two properties an MLP lacks: **sharing**, since the same weights apply everywhere, and **sparse connections**, since each output sees only a small patch. With input size $n$, filter $f$, padding $p$ and stride $s$, the output size is $\lfloor (n + 2p - f)/s \rfloor + 1$. Here is the Step by Step notebook's core, on a real digit:
+
+```python
+import numpy as np, torch, torch.nn as nn, torch.nn.functional as F
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, TensorDataset
+
+digits = load_digits()
+
+def conv_forward(image, kernel, stride=1, pad=0):
+    f = kernel.shape[0]
+    x = np.pad(image, pad)
+    n = (x.shape[0] - f) // stride + 1
+    out = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            out[i, j] = (x[i*stride:i*stride+f, j*stride:j*stride+f] * kernel).sum()
+    return out
+
+def pool_forward(image, f=2):
+    n = image.shape[0] // f
+    return np.array([[image[i*f:i*f+f, j*f:j*f+f].max() for j in range(n)] for i in range(n)])
+
+vertical_edge = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]], dtype=float)
+img = digits.images[1] / 16.0                    # a handwritten 1
+edges = conv_forward(img, vertical_edge)
+print("input", img.shape, "conv, no padding", edges.shape, "pad 1", conv_forward(img, vertical_edge, pad=1).shape,
+      "stride 2 pad 1", conv_forward(img, vertical_edge, stride=2, pad=1).shape, "pooled", pool_forward(img).shape)
+print(np.round(edges, 1))
+
+# the same numbers from PyTorch: conv2d is this loop, faster
+t = F.conv2d(torch.tensor(img).view(1, 1, 8, 8), torch.tensor(vertical_edge).view(1, 1, 3, 3))
+print("matches nn.functional.conv2d:", np.allclose(t.numpy()[0, 0], edges))
+```
+
+@@CONV@@
+
+The filter responds where brightness changes from left to right, so the 1's two sides show up with opposite signs. In a CNN those filter values are weights, learned by the same `backward()`.
+
+## A CNN on the digits
+
+The rest of the chapter uses this setup. PyTorch's image layout is `(batch, channels, height, width)`, where the course's TF code uses channels last.
+
+```python
+X_tr, X_te, y_tr, y_te = train_test_split(digits.data / 16.0, digits.target, test_size=0.3,
+                                          random_state=0, stratify=digits.target)
+X_tr = torch.tensor(X_tr, dtype=torch.float32).reshape(-1, 1, 8, 8)
+X_te = torch.tensor(X_te, dtype=torch.float32).reshape(-1, 1, 8, 8)
+y_tr, y_te = torch.tensor(y_tr), torch.tensor(y_te)
+
+def accuracy(model, X, y):
+    model.eval()
+    with torch.no_grad():
+        return (model(X).argmax(1) == y).float().mean().item()
+
+def run(model, X=X_tr, y=y_tr, epochs=30, lr=1e-3, seed=0, batch_size=32):
+    torch.manual_seed(seed)
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    loader = DataLoader(TensorDataset(X, y), batch_size=batch_size, shuffle=True, drop_last=len(X) > batch_size)
+    for _ in range(epochs):
+        model.train()
+        for xb, yb in loader:
+            loss = F.cross_entropy(model(xb), yb)
+            opt.zero_grad(); loss.backward(); opt.step()
+    return model
+
+def mlp():
+    return nn.Sequential(nn.Flatten(), nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 10))
+
+def cnn():
+    return nn.Sequential(nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+                         nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+                         nn.Flatten(), nn.Linear(32 * 2 * 2, 10))
+
+for name, build in [("MLP", mlp), ("CNN", cnn)]:
+    res = []
+    for s in range(3):
+        torch.manual_seed(s)
+        m = run(build(), seed=s, lr=3e-3)
+        res.append((accuracy(m, X_te, y_te), accuracy(m, torch.roll(X_te, 1, dims=3), y_te)))
+    a, shifted = np.mean(res, axis=0)
+    n = sum(p.numel() for p in build().parameters())
+    print(f"{name}  params {n}  test {a:.3f}  test shifted one pixel {shifted:.3f}")
+```
+
+@@CNNOUT@@
+
+With similar parameter counts, the CNN is a little better on digits as given and far better when they move by a pixel. It is not fully shift-invariant: the max pool and the final linear layer still care about position, so its accuracy falls too. On 8×8 images the parameter counts are close, because the MLP is small. For a 64×64×3 image the first dense layer of 1,000 units would need about 12 million weights, against 448 for 16 filters of 3×3×3 with biases. That's the real argument for sharing. The **Application** notebook's TF graph translates line by line with [the translation table](01-neural-networks-fundamentals.md#translating-the-ng-notebooks-to-pytorch), and the same [`tf.contrib` status](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) applies to it.
+
+The convolutional design goes back to LeCun et al. ([doi:10.1109/5.726791](https://doi.org/10.1109/5.726791) (LeCun et al., Proc. IEEE 1998)). LeNet-5 combines three ideas: local receptive fields, shared weights and subsampling. Because of weight sharing, its 345,308 connections need only about 60,000 trainable parameters. The same paper introduced MNIST, with 60,000 training and 10,000 test digits drawn from two NIST sets. LeNet-5 reached 0.95% test error, or 0.8% with distorted copies of the training images added. For comparison, a linear classifier got 12%, a one-hidden-layer MLP 4.7%, and a regular SVM 1.4% at about 14M multiply-adds per digit. Schölkopf's virtual-support-vector SVM reached 1.0% at about twice that cost, and boosting three LeNet-4s gave the best result, 0.7%. Its later sections train a whole reading pipeline end to end through graphs of candidate segmentations, an ancestor of CTC, and a check reader built that way was in commercial use from 1996. It also describes a collapse problem. If the loss only pulls the correct output's learned target closer, the network can make all targets equal and ignore its input. The fix is a discriminative loss that also pushes wrong answers away, which is the job negatives do in the contrastive methods below.
+
+## Residual networks
+
+A deeper network can represent anything a shallower one can, because the extra layers could be the identity. He et al. observed that in practice deeper plain networks train worse, and so called it a degradation problem rather than overfitting. Their fix makes the identity the easy default: a block learns a residual $F(x)$ and outputs $F(x) + x$, so driving $F$ to zero recovers the identity ([arXiv:1512.03385](https://arxiv.org/abs/1512.03385) (He et al., CVPR 2016)). The paper trained up to 152 layers on ImageNet, with a 3.57% top-5 ensemble error, and your notebook assembles ResNet-50 in Keras. The experiment works on the digits as well, and it takes a couple of minutes on a CPU:
+
+```python
+class Block(nn.Module):
+    def __init__(self, c, residual):
+        super().__init__()
+        self.residual = residual
+        self.f = nn.Sequential(nn.Conv2d(c, c, 3, padding=1), nn.BatchNorm2d(c), nn.ReLU(),
+                               nn.Conv2d(c, c, 3, padding=1), nn.BatchNorm2d(c))
+    def forward(self, x):
+        out = self.f(x)
+        return F.relu(out + x if self.residual else out)     # the only difference
+
+def deep(blocks, residual, c=16):
+    return nn.Sequential(nn.Conv2d(1, c, 3, padding=1), *[Block(c, residual) for _ in range(blocks)],
+                         nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(c, 10))
+
+for blocks in [2, 10, 30]:
+    for residual in [False, True]:
+        torch.manual_seed(0)
+        m = run(deep(blocks, residual), epochs=10)
+        print(f"{2 * blocks + 2:>2} layers {'residual' if residual else 'plain   '}  "
+              f"train {accuracy(m, X_tr, y_tr):.3f}  test {accuracy(m, X_te, y_te):.3f}")
+```
+
+@@RES@@
+
+The plain 62-layer network has low training accuracy as well as test accuracy, so the problem is optimisation rather than overfitting. That is the paper's finding, on a small scale. Skip connections carried straight into Transformers.
+
+ConvNets kept developing after ResNet. ConvNeXt V2 pairs a fully convolutional masked autoencoder, which uses sparse convolutions so that masked regions don't leak through, with a new Global Response Normalization layer that counters feature collapse, where channels go dead or redundant ([arXiv:2301.00808](https://arxiv.org/abs/2301.00808) (Woo et al., CVPR 2023)). Reported top-1 on ImageNet runs from 76.7% with a 3.7M Atto model to 88.9% with a 650M Huge.
+
+## Object detection
+
+The **Car detection** notebook post-processes YOLOv2's output ([arXiv:1612.08242](https://arxiv.org/abs/1612.08242) (Redmon and Farhadi, CVPR 2017)). A single forward pass predicts, per grid cell, 5 anchor boxes and their class scores, in a 19×19×5 grid. That makes about 1,800 boxes per image, mostly useless, so two steps filter them: threshold on score, then **non-max suppression**, which keeps the best box and removes others overlapping it by a high IoU. Both are short:
+
+```python
+def iou(a, b):
+    """Boxes are (x1, y1, x2, y2)."""
+    w = max(0, min(a[2], b[2]) - max(a[0], b[0]))
+    h = max(0, min(a[3], b[3]) - max(a[1], b[1]))
+    inter = w * h
+    area = lambda r: (r[2] - r[0]) * (r[3] - r[1])
+    return inter / (area(a) + area(b) - inter)
+
+def nms(boxes, scores, threshold=0.5):
+    order = list(np.argsort(scores)[::-1])
+    keep = []
+    while order:
+        best = order.pop(0)
+        keep.append(int(best))
+        order = [i for i in order if iou(boxes[best], boxes[i]) < threshold]
+    return keep
+
+boxes = [(10, 10, 50, 50), (12, 12, 52, 52), (100, 100, 140, 140), (11, 9, 49, 51), (105, 98, 138, 142)]
+scores = np.array([0.9, 0.75, 0.8, 0.6, 0.7])
+print("IoU of boxes 0 and 1:", round(iou(boxes[0], boxes[1]), 3))
+print("kept:", nms(boxes, scores))
+```
+
+@@NMS@@
+
+Two cars, five boxes, and two survive. `torchvision.ops.nms` does the same at speed.
+
+## Embeddings: face verification
+
+The **Face Recognition** notebook shows why a classifier can't solve this problem: you can't retrain for every new employee, and there is one photo per person. So learn a function $f$ that maps a face to a vector where distance means identity, trained with the triplet loss from FaceNet ([arXiv:1503.03832](https://arxiv.org/abs/1503.03832) (Schroff, Kobak and Philbin, CVPR 2015)). Verification thresholds one distance, and recognition finds the nearest stored person. On digits, "identity" is the digit, and 8 and 9 are withheld from training to play new people:
+
+```python
+class Embedder(nn.Module):
+    def __init__(self, k=16):
+        super().__init__()
+        self.f = nn.Sequential(nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+                               nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
+                               nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(32, k))
+    def forward(self, x):
+        return F.normalize(self.f(x), dim=1)
+
+def triplet_loss(a, p, n, margin=0.2):
+    return F.relu((a - p).pow(2).sum(1) - (a - n).pow(2).sum(1) + margin).mean()
+
+known = y_tr < 8
+Xk, yk = X_tr[known], y_tr[known]
+where = {c: (yk == c).nonzero().flatten() for c in range(8)}
+g = torch.Generator().manual_seed(0)
+def draw(c):
+    return where[c][torch.randint(len(where[c]), (1,), generator=g)].item()
+
+torch.manual_seed(0)
+emb = Embedder()
+opt = torch.optim.AdamW(emb.parameters(), lr=1e-3)
+for epoch in range(30):
+    perm = torch.randperm(len(Xk), generator=g)
+    for i in range(0, len(perm) - 32, 32):
+        batch = perm[i:i+32]
+        pos = [draw(int(c)) for c in yk[batch]]
+        neg = [draw((int(c) + int(torch.randint(1, 8, (1,), generator=g))) % 8) for c in yk[batch]]
+        loss = triplet_loss(emb(Xk[batch]), emb(Xk[pos]), emb(Xk[neg]))
+        opt.zero_grad(); loss.backward(); opt.step()
+
+def gaps(X, y):
+    emb.eval()
+    with torch.no_grad():
+        dist = torch.cdist(emb(X), emb(X))
+    same = y[:, None] == y
+    other = ~torch.eye(len(X)).bool()
+    return dist[same & other].mean().item(), dist[~same].mean().item()
+
+seen = y_te < 8
+print("seen digits    same %.3f  different %.3f" % gaps(X_te[seen], y_te[seen]))
+print("unseen 8 and 9 same %.3f  different %.3f" % gaps(X_te[~seen], y_te[~seen]))
+```
+
+@@TRIP@@
+
+Seen classes separate cleanly, and the 8s and 9s barely at all. Eight training "identities" aren't enough for the embedding to generalise to new ones, which is why face systems train on very many people. The same loss idea, with text in place of faces, trains the models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md).
+
+Self-supervised vision took the contrastive loss further, with no labels at all. CPC v2 trained a ResNet to predict the representation of a patch from the patches around it (above, below, left and right; the first version used only the context above), scored against negatives drawn from other patches and images ([arXiv:1905.09272](https://arxiv.org/abs/1905.09272) (Hénaff et al., ICML 2020)). It reached 71.5% ImageNet linear-probe accuracy, up from 48.7% for the first version. With 1% of the labels it scored 78.3% top-5 against 44.1% for supervised training, though the two runs used different architectures (over 500M parameters against ResNet-200's 60M). MoCo and SimCLR changed the positive pair to two augmented views of the same image. MoCo keeps a queue of encoded keys from past batches, so the number of negatives no longer depends on batch size. Keys come from a slowly updated copy of the encoder, with momentum 0.999 ([arXiv:1911.05722](https://arxiv.org/abs/1911.05722) (He et al., CVPR 2020)). With no momentum training failed, and at 0.9 linear accuracy was 55.2% against 59.0%. Its own linear accuracy was only 60.6%, yet its features transferred better than supervised ImageNet pretraining on 7 detection and segmentation tasks, by up to 3.7 AP on VOC when pretrained on 1B Instagram images (2.4 from ImageNet). SimCLR dropped the queue. Its negatives are the other 2(N−1) augmented images in a large batch, scored by cosine similarity with a temperature (the NT-Xent loss) ([arXiv:2002.05709](https://arxiv.org/abs/2002.05709) (Chen et al., ICML 2020)). Random cropping combined with colour distortion was the augmentation pair that mattered. The representation taken before a small projection head was over 10 points better than the one after it. A 4×-wide ResNet-50 reached 76.5% linear-probe accuracy, matching a supervised ResNet-50. Large batches mattered most for short training. With the learning rate scaled linearly with batch size, at 100 epochs batch 256 gave 57.5% against 64.8% at 8,192 (square-root scaling narrowed that to 62.8%), and at 800 epochs the gap narrowed to 66.6% against 69.0%. Speech took the CPC line and added BERT-style masking. wav2vec 2.0 encodes raw audio with a CNN into one frame per 20 ms, masks about half the frames, and has a transformer pick the true quantized frame at each masked position out of 100 distractors from the same utterance ([arXiv:2006.11477](https://arxiv.org/abs/2006.11477) (Baevski et al., NeurIPS 2020)). Only the targets are quantized. Quantizing the transformer's inputs as well raised dev WER from 7.97 to 12.18, and continuous targets made the task too easy (8.58). Pretrained on 53k hours of unlabelled LibriVox audio and fine-tuned with CTC on just 10 minutes of transcribed speech, the 317M model reached 4.8/8.2 WER on LibriSpeech test-clean/other, and with 1 hour it beat the previous best 100-hour system. Those numbers need a language model at decoding: without one, the 10-minute model scored 40.2/38.7. With all 960 labelled hours it tied supervised systems on the clean split (1.8 against 1.9) and led only on the noisy one (3.3 against 3.9). The same recipe of a contrastive loss with in-batch negatives trains the text embedding models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md).
+
+A small version of SimCLR's recipe on digits, with NT-Xent and a linear probe trained on a few labels, compared to supervised training from scratch on the same rows:
+
+```python
+def augment(x):
+    shifts = torch.randint(-1, 2, (len(x), 2))
+    out = torch.stack([torch.roll(i, tuple(s.tolist()), (1, 2)) for i, s in zip(x, shifts)])
+    return (out + 0.2 * torch.randn_like(out)).clamp(0, 1)
+
+def nt_xent(z1, z2, t=0.2):
+    z = F.normalize(torch.cat([z1, z2]), dim=1)
+    sim = z @ z.T / t
+    sim.fill_diagonal_(-9e15)                         # an example isn't its own negative
+    n = len(z1)
+    return F.cross_entropy(sim, torch.cat([torch.arange(n, 2 * n), torch.arange(n)]))
+
+def encoder():
+    return nn.Sequential(nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+                         nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.AdaptiveAvgPool2d(1), nn.Flatten())
+
+torch.manual_seed(0)
+enc, proj = encoder(), nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 16))
+opt = torch.optim.AdamW([*enc.parameters(), *proj.parameters()], lr=1e-3)
+for epoch in range(60):                               # no labels used here
+    for (xb,) in DataLoader(TensorDataset(X_tr), batch_size=128, shuffle=True, drop_last=True):
+        loss = nt_xent(proj(enc(augment(xb))), proj(enc(augment(xb))))
+        opt.zero_grad(); loss.backward(); opt.step()
+
+def probe(features, keep, seed):
+    with torch.no_grad():
+        f, ft = features(X_tr[keep]), features(X_te)
+    torch.manual_seed(seed)
+    head = nn.Linear(32, 10); o = torch.optim.AdamW(head.parameters(), lr=1e-2)
+    for _ in range(300):
+        l = F.cross_entropy(head(f), y_tr[keep]); o.zero_grad(); l.backward(); o.step()
+    return (head(ft).argmax(1) == y_te).float().mean().item()
+
+for n in [20, 50, 100]:
+    a, b = [], []
+    for s in range(5):
+        keep = torch.randperm(len(X_tr), generator=torch.Generator().manual_seed(s))[:n]
+        a.append(probe(enc, keep, s))
+        torch.manual_seed(s)
+        b.append(accuracy(run(cnn(), X_tr[keep], y_tr[keep], epochs=200, batch_size=8, seed=s), X_te, y_te))
+    print(f"{n:>3} labels: contrastive + probe {np.mean(a):.3f}  supervised CNN {np.mean(b):.3f}")
+```
+
+@@SIM@@
+
+Unlabelled pretraining helps most where labels are fewest, and the supervised model catches up as labels grow. The same shape is in CPC v2's result above, on a very different scale.
+
+## Style transfer: optimising the input
+
+**Neural Style Transfer** turns training around ([arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (Gatys, Ecker and Bethge, 2015, preprint)). The network's weights stay frozen and gradient descent changes the pixels. Content is matched by activations at one layer, and style by the **Gram matrix**: correlations between channels, which record which features occur together and throw away where. A miniature, using the digit CNN's first layer in place of VGG-19:
+
+```python
+torch.manual_seed(0)
+net = run(cnn(), lr=3e-3, epochs=10)
+for p in net.parameters(): p.requires_grad_(False)
+net.eval()
+features = net[:2]                                    # conv + ReLU
+
+def gram(a):
+    c, h, w = a.shape[1:]
+    v = a.view(c, h * w)
+    return v @ v.T / (h * w)
+
+content, style = X_te[y_te == 1][:1], X_te[y_te == 0][:1]
+img = content.clone().requires_grad_(True)            # the pixels are the parameters
+opt = torch.optim.Adam([img], lr=0.02)
+def costs(x):
+    a = features(x)
+    return F.mse_loss(a, features(content)), F.mse_loss(gram(a), gram(features(style)))
+c0, s0 = costs(img)
+for step in range(300):
+    c, s = costs(img)
+    loss = c + 10 * s
+    opt.zero_grad(); loss.backward(); opt.step()
+print(f"content cost {c0.item():.4f} to {c.item():.4f}, style cost {s0.item():.4f} to {s.item():.4f}")
+```
+
+@@STYLE@@
+
+The style cost falls as the content cost rises from zero: the image gives up some of its match to its content to match the other's channel correlations. The `step` is on `img`, and no weight moved.
+
+## Reading
+
+Buduma, *Fundamentals of Deep Learning* ([PDF](../../sources/buduma-fundamentals-of-deep-learning.pdf)), ch. 5 parallels this chapter, using TensorFlow, and ch. 6 covers embedding and representation learning.
+
+| Set | Runs |
+|---|---|
+| [`Convolutional Neural Networks`](../practice/ng-deep-learning/Convolutional%20Neural%20Networks/) (6 notebooks across weeks 1 to 4) | Legacy, reading-only as stored: helper modules, `yad2k`, datasets and pretrained weights weren't copied. Per-notebook status is in [the migration table](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) |
+
+Every digits number here came from running the code shown. The numbers attributed to a paper are that paper's own.
+
+## Pitfalls
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `Expected 4D input` or a channel-count error when porting TF code | TF is channels-last, PyTorch channels-first | `x.permute(0, 3, 1, 2)`, and use `(B, C, H, W)` |
+| `mat1 and mat2 shapes cannot be multiplied` at the first linear layer | The flatten size after pooling is wrong | Compute it with the output-size formula, or use `AdaptiveAvgPool2d(1)` or `nn.LazyLinear` |
+| Deeper plain model has worse **training** accuracy | Degradation, not overfitting | Residual connections |
+| A residual `out + x` raises a size error | Channels or stride changed in the block | Project `x` with a 1×1 convolution, as in the notebook's convolutional block |
+| Detector outputs several boxes per object | No non-max suppression, or too high an IoU threshold | NMS with a threshold of about 0.5 |
+| Triplet loss sits at the margin value | The embedding collapsed so all distances match | Normalise, use a batch with informative triplets, lower the rate |
+
+## Try it
+
+1. Compute by hand, then with PyTorch, the output shape for a 32×32×3 input through `Conv2d(3, 8, 5, stride=2, padding=2)`, then `MaxPool2d(2)`, and the number of parameters in the convolution.
+
+   <details><summary>Answer</summary>
+
+   @@A1@@
+
+   </details>
+
+2. Train the CNN on digits with shifted copies added: for each training image also add a version rolled by one pixel. What happens to the shifted test accuracy?
+
+   <details><summary>Answer</summary>
+
+   @@A2@@
+
+   </details>
+
+3. Take `nms` and set `threshold=0.1`, then `0.95`, on the example boxes. Explain the two outcomes.
+
+   <details><summary>Answer</summary>
+
+   @@A3@@
+
+   </details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Why convolutions for images? | Parameter sharing and sparse connections: far fewer weights, and a feature learned in one place applies anywhere. |
+| What is the output-size formula? | $\lfloor (n + 2p - f)/s \rfloor + 1$. |
+| What does pooling learn? | Nothing: it has no parameters. It reduces spatial size and adds some local invariance. |
+| What does a 1×1 convolution do? | Changes the channel count, cheaply, and adds a non-linearity per position. |
+| Why do skip connections help? | The identity becomes the easy default, so added depth doesn't degrade training, and gradients have a direct path. |
+| What is NMS for? | Dropping overlapping boxes for one object: keep the best, remove those above an IoU threshold, repeat. |
+| Verification vs recognition? | One-to-one against a claimed identity, versus one-to-many against a database. The second has many more chances to go wrong. |
+| What does a triplet loss optimise? | Same-identity distance to be smaller than different-identity distance by a margin. |
+| What is a Gram matrix? | Channel correlations of a feature map, used as a position-free style description. |
+| How does SimCLR get a positive pair without labels? | Two augmentations of one image, with the other images in the batch as negatives. |
+
+## Next
+
+[Sequence models](05-sequence-models.md): the same digits read one row at a time, and what a recurrent network has to remember.

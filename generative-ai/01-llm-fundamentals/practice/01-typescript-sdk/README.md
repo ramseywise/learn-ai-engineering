@@ -1,6 +1,6 @@
 # Lab 1 — Calling Claude from TypeScript
 
-> Concepts: [06 — Calling models from code](../../notes/06-calling-models-from-code.md). Run label: needs Node, `@anthropic-ai/sdk`, `tsx` and `ANTHROPIC_API_KEY`; each run makes a few paid API calls.
+> Concepts: [06 — Calling models from code](../../notes/13-calling-models-from-code.md). Run label: needs Node, `@anthropic-ai/sdk`, `tsx` and `ANTHROPIC_API_KEY`; each run makes a few paid API calls.
 
 Runnable TypeScript examples using the [Anthropic SDK](https://github.com/anthropic-ai/anthropic-sdk-node). Each file is self-contained and covers one core pattern.
 

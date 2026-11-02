@@ -211,7 +211,7 @@ optimizer state:
   and 65B on 8× RTX 3090. MeZO ([arXiv:2305.17333](https://arxiv.org/abs/2305.17333) (Malladi et al.,
   NeurIPS 2023)) uses forward passes only, fitting 30B on one A100 80GB, but it needs about 30×
   more steps and trails full fine-tuning by 10+ points on some tasks (see
-  [01 PEFT](../../01-llm-fundamentals/notes/02-training-and-adapting.md#parameter-efficient-fine-tuning)).
+  [01 PEFT](../../01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md#parameter-efficient-fine-tuning)).
 
 **LoRA.** Freeze W and learn a low-rank update BA, with rank r ≪ d. Hu et al. matched full
 fine-tuning of GPT-3 175B on several tasks with about 4.7M trainable parameters (0.0027%). Huyen's

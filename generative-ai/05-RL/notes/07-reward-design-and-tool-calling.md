@@ -23,6 +23,7 @@ sources:
   - https://arxiv.org/abs/2601.20802
   - https://arxiv.org/abs/2511.01758 (RLAC, adversarial critic picks the rubric to verify)
   - https://arxiv.org/abs/2502.19328 (RewardAgent, preference RM plus verification agents)
+  - https://arxiv.org/abs/2509.04903 (ACE-RL, checklist rewards for long-form writing)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -159,6 +160,16 @@ average across five benchmarks with 2.5% of the test executions, though by about
 frozen critic got gamed: its detection rate fell from 42% to 34%, and on biographies the generator
 "won" by stating fewer facts. With random validator labels training fell below the base model, so
 the scheme still rests on a trustworthy checker.
+
+**Checklists for open-ended writing.** ACE-RL has Qwen3-235B write about five checks per
+long-form WildChat prompt (content, structure, style), and a Qwen3-8B verifier scores each 0, 0.5
+or 1. The reward averages those scores with a length term that pays in full within 20% of the
+target word count. GRPO on 18K prompts, with prompts the base model already aced filtered out,
+**raised Qwen2.5-7B's WritingBench score from 57.0 to 81.4, against 74.5 for GRPO with a
+single LLM-judge score and 62.1 for LongWriter SFT** ([arXiv:2509.04903](https://arxiv.org/abs/2509.04903) (Chen et al., 2025-09, preprint)).
+Qwen3-8B reached 84.2. The single judge score varied less within a group, so it gave GRPO less
+signal to rank by. Every grader is a Qwen-family LLM, the verifier agreed with annotators 76% of
+the time against 85% between humans, and each setting is one run at 8B or below.
 
 **rLLM: train the workflow you already run.** Subclass its `Workflow`, implement `run()`,
 and return an `Episode` with every trajectory and reward. rLLM handles rollouts, retries

@@ -26,7 +26,7 @@ Theory stays in ai-engineering. Why an agent is a cyclic graph, how reducers mer
 1. Read notes 01–03 in order, running each demo as you go. They begin from the two DeepLearning.AI LangGraph courses, grown onto the lab's research agent.
 2. Read 04 to see the same agent on ADK, and 05 to trace both builds with LangSmith.
 3. Read 06 before choosing a framework for anything new. It compares the three builds and weighs them against the research.
-4. Read 07 when a node needs a multi-step chain, a fan-out, structured output or a plan of dependent queries. Read [01-llm-fundamentals note 04](../01-llm-fundamentals/notes/04-langchain-basics.md) first if LCEL is new.
+4. Read 07 when a node needs a multi-step chain, a fan-out, structured output or a plan of dependent queries. Read [01-llm-fundamentals note 11](../01-llm-fundamentals/notes/11-langchain-basics.md) first if LCEL is new.
 5. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Deck and practice
@@ -95,7 +95,7 @@ sources/       the papers these notes cite, as PDFs
 ### Books and courses
 - DeepLearning.AI, *AI Agents in LangGraph* → notes 01–02.
 - DeepLearning.AI × LangChain, *Long-Term Agentic Memory with LangGraph* → note 03.
-- Phoenix & Taylor, *Prompt Engineering for Generative AI* ch. 4 → notes 07 and 05. Oshin & Campos, *Learning LangChain* ch. 1 → note 07 (API flags only; the basics are in [01-llm-fundamentals note 04](../01-llm-fundamentals/notes/04-langchain-basics.md)).
+- Phoenix & Taylor, *Prompt Engineering for Generative AI* ch. 4 → notes 07 and 05. Oshin & Campos, *Learning LangChain* ch. 1 → note 07 (API flags only; the basics are in [01-llm-fundamentals note 11](../01-llm-fundamentals/notes/11-langchain-basics.md)).
 - Full citations, upstream repos and licences: [references.md](references.md).
 
 ### Coursework and practice

@@ -11,7 +11,7 @@ sources:
   - https://notes.kodekloud.com/docs/Loop-Engineering/Tie-It-All-Together/The-Whole-Loop-in-Motion/page.md
   - https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 4 — Building Blocks
 
@@ -198,4 +198,52 @@ Adding parts "just in case" makes the loop harder to debug without fixing anythi
 
 ---
 
-→ Next: [05-long-running-loops.md](05-long-running-loops.md) — keeping a loop coherent across many context windows.
+## Pitfalls
+
+- **Installing all six parts at once.** Symptom: a complex setup with no failure to justify any of it. Fix: each part exists to fix a specific failure, so add it when you see that failure.
+- **Fixing everything in one pass.** Symptom: a big diff and a score change you can't attribute. Fix: step 3 of the automation is to fix **one** small failing thing, then save.
+- **A skill written as an essay.** Symptom: the agent skims it and skips a step. Fix: numbered, testable steps ("run tests and fail if any fail"), one job per skill, with helpers pointed to rather than pasted.
+- **Full-access connectors by default.** Symptom: a triage loop that can merge and delete. Fix: read-only for triage and analysis, limited change scoped to specific repos, and a human approval plus audit for anything full access.
+- **Parallel agents in one checkout.** Symptom: file clashes, and a bad try breaks main. Fix: a worktree per agent, with the main checkout clean until a validated change is merged.
+- **Sub-agents out of habit.** Symptom: cost multiplies without context savings. Fix: use them for jobs that would cost more in the main context, with a bounded scope and a distilled return format.
+- **Force-removing a worktree blindly.** Symptom: `git worktree remove --force` throws away a passing try. Fix: a plain `remove` refuses when there are uncommitted changes, so keep `--force` for messes you meant to discard.
+
+## Try it
+
+1. Name the missing part from each symptom: (a) the agent re-guesses your commit format each pass; (b) a restart forgets what was done; (c) the loop can fix the bug but can't open a PR; (d) you're still the one pressing go.
+
+   <details><summary>Answer</summary>
+
+   (a) Skills. (b) Memory. (c) Connectors. (d) Automations. The inventory table's "fixes this failure" column maps each one.
+
+   </details>
+
+2. Write the commands that create a disposable try on a new branch, list it, and discard it when it failed with uncommitted changes.
+
+   <details><summary>Answer</summary>
+
+   `git worktree add ../try-login -b try-login`, then `git worktree list`, then `git worktree remove --force ../try-login`, because plain `remove` refuses when changes are uncommitted. If you deleted the folder by hand, `git worktree prune` clears the stale entry.
+
+   </details>
+
+3. Draw one pass of your own loop against the checklist in [the whole loop in motion](#the-whole-loop-in-motion), labelling which block supplies each step. Then cut one block and say what failure returns.
+
+   <details><summary>What to look for</summary>
+
+   A good drawing starts with the goal and scorekeeper and reads memory before acting. If you cut memory, each restart redoes work. If you cut worktrees, a bad try breaks main, and if you cut sub-agents, the maker grades itself and the main context floods. If nothing fails when you cut a block, you can leave it out.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the six building blocks? | Automations, worktrees, skills, connectors and plugins, sub-agents, and memory. Goal and scorekeeper are the foundation beneath them. |
+| Why do worktrees matter to a loop? | They make experiments disposable and concurrent: an isolated copy sharing one history, where a failed try costs one `remove` and parallel agents don't clash. |
+| Why a skill rather than one large prompt? | Consistency, since the same steps run every pass, and clarity, since the base prompt stays small and know-how loads only on a matching task. |
+| What privilege do you give a connector? | The least that does the job. Read-only for triage, limited change scoped to specific repos, and avoid full access, or put a human approval in front of it and audit it. |
+| A main loop's context keeps flooding. What do you change? | Push heavy scanning to a sub-agent that returns "3 call sites: …" instead of the files. Keep its scope bounded, its permissions minimal and its return format distilled. |
+
+## Next
+
+[05-long-running-loops.md](05-long-running-loops.md): keeping a loop coherent across many context windows.

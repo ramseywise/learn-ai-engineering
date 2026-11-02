@@ -491,7 +491,7 @@ The full code for this chapter is in [`practice/02_orchestrate.py`](../practice/
 <summary>Answers</summary>
 
 1. `extract` and `transform` succeed, `test_revenue` fails, and `publish` is skipped. `history` records `failed`, and `missing_runs` returns the day, so the next catch-up re-runs it. The bad revenue file is still in the lake, because the test ran after the write.
-2. One new task with its decorator, and one word in `transform`'s `needs` list. The loop needs no change, since `graphlib` orders whatever the dependency map says. If `extract_zones` fails, `transform`, `test_revenue` and `publish` skip, and `extract` still ran. Reasoned from the loop rather than run.
+2. One new task with its decorator, and one word in `transform`'s `needs` list. The loop needs no change, since `graphlib` orders whatever the dependency map says. If `extract_zones` fails, `transform`, `test_revenue` and `publish` skip, and `extract` still ran.
 3. `['2026-01-05', '2026-01-05']`. The run reports success with the day written twice. Nothing in the orchestrator can see this. Only the task can prevent it, by making the write idempotent.
 
 </details>

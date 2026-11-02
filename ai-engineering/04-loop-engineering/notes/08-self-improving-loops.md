@@ -19,11 +19,13 @@ sources:
   - https://arxiv.org/abs/2610.25858
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 11"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 8 — Self-Improving Loops
 
 > Capability level 4: the hill-climbing loop. The first three levels automate work; this one automates improvement. Practitioner scale first, then the frontier.
+
+A loop that runs for weeks accumulates wrong state, wasted wakeups and repeated manual corrections, and improving it by hand doesn't scale. Point a second, slower loop at the first and it can fix those, or it can invent edits that degrade a working system and game the check meant to catch them. This chapter covers capability level 4 from practitioner scale to the frontier: what to rewrite, how to verify before learning, and when a gain is real.
 
 ---
 
@@ -512,4 +514,42 @@ The risk that connects back to every scale: an **Amdahl's-law bottleneck**. Auto
 
 ---
 
-→ Next: [09-failure-modes-and-guardrails.md](09-failure-modes-and-guardrails.md) — how loops go wrong, and the rules that stop them.
+## Pitfalls
+
+- **"No change" counted as failure.** Symptom: every evolve run edits something. Fix: make `no change needed` an explicit, successful outcome.
+- **Only hiding the checker.** Symptom: a perfect score in two edits, as when a DGM agent removed the logging its checker read. Fix: keep the evaluator's inputs outside the write scope too.
+- **Crediting evolution without a baseline.** Symptom: a gain that plain retries match. Fix: Wang et al. compared at a matched budget of five attempts per task, so beat that on unseen tasks.
+- **Global edits to one shared prompt.** Symptom: old tasks regress. In Chen et al., a task family's share of GEPA's prompt fell from 100% to 14.7%. Fix: scope rules locally, and test old-task retention.
+- **Patching stable directly.** Symptom: a plausible patch breaks old behaviour in production. Fix: candidate directory, failure replay, regression suite, then canary.
+
+## Try it
+
+1. `autoresearch` ran 700 experiments for 20 real improvements. What's the hit rate, and why is it acceptable?
+
+   <details><summary>Answer</summary>
+
+   20/700 is about 2.9%. It's fine because attempts are cheap and unattended and an automatic gate rejects the rest.
+
+   </details>
+
+2. Choose the medium: (a) a refund exception with a source; (b) "never call a payment tool again after `retryable=false`".
+
+   <details><summary>Answer</summary>
+
+   (a) An experience doc. (b) Program or harness, since it is a hard constraint, as in the failure-triggered patch.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What does an evolve loop rewrite? | Files, not weights: contract, state, trigger logic and SOP steps, every 5–10 runs of the fast loop. |
+| What is the anti-busywork rule? | Make `no change needed` a successful outcome, because agents default to doing something and those invented edits degrade a working loop. |
+| Why verify before learning? | Learning from a run nobody verified can teach the wrong lesson. Verify outcome and process by code, and quality by rubric, and return a structured result. |
+| How does an agent safely modify itself? | As a release: branch from stable, patch a candidate, run checks, replay failures, run regressions, then canary. It never overwrites stable. |
+| A skill passes validation and task scores don't move. Why? | It may never be loaded or followed. Measure activation and adherence, then use a two-way model swap to find the bottleneck. |
+
+## Next
+
+[09-failure-modes-and-guardrails.md](09-failure-modes-and-guardrails.md): how loops go wrong, and the rules that stop them.

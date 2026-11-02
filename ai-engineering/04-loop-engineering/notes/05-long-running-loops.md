@@ -8,11 +8,13 @@ sources:
   - https://ghuntley.com/ralph/
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 5 — Long-Running Loops
 
 > Context is a budget, not a bucket. A loop that runs for hours must forget on purpose and remember on disk.
+
+A loop that runs for hours outlives the conversation that started it. Each pass adds tool output and errors to the transcript until the agent loses the thread, wraps up early near the limit, or stops at session end and restarts blank. Without files carrying the state, a fresh pass reruns the attempt that failed an hour ago, and a bare `while` loop keeps going after the work is finished. This chapter covers how to spend context as a budget, what goes in memory, and how the guarded Ralph script stops on the scorekeeper's word.
 
 ---
 
@@ -135,7 +137,7 @@ flowchart LR
     CAP -->|yes| ESC(["exit 1/2/3: escalate"])
 ```
 
-A complete, guarded script (save it as `ralph.sh`; Lab 4 uses it):
+A complete, guarded script (save it as `ralph.sh`):
 
 ```bash
 #!/usr/bin/env bash
@@ -210,4 +212,53 @@ Loops lean toward **reset**, because the Ralph and initializer/worker patterns a
 
 ---
 
-→ Next: [06-triggers-and-schedules.md](06-triggers-and-schedules.md) — what starts a loop when you don't.
+## Pitfalls
+
+- **The bare Ralph one-liner.** Symptom: it keeps running after the work is finished. Fix: add an iteration cap, a wall-clock or cost cap, a done check that runs the scorekeeper, a stall check and a log line per pass, as in `ralph.sh`.
+- **Taking the agent's "done" in a Ralph loop.** Symptom: the loop stops on a claim. Fix: the done check runs the scorekeeper, never the agent's own claim.
+- **Omitting "what was tried".** Symptom: a fresh pass reruns the attempt that failed an hour ago. Fix: record recent attempts in `loop-state.md`, especially failures.
+- **A transcript for a memory.** Symptom: state files grow until every pass spends its budget reading them. Fix: keep the now and recent tiers in one short file, move older entries to the archive, and read that only when needed.
+- **Context drift.** Symptom: the loop acts with full confidence on a schema or goal that changed. Fix: update or invalidate the affected notes whenever the code, schema or goal changes.
+- **Compacting only after the loop.** Symptom: raw output that has been acted on stays in the window. Fix: each pass ends by distilling what it learned, and big logs keep only head and tail in context.
+- **Doing everything in one session.** Symptom: a session runs out of context halfway through a change and leaves the repo broken. Fix: one item per session, leaving the repo committed, tested and noted.
+
+## Try it
+
+1. Fill in the five fields for a loop that has 41 of 47 auth tests passing and needs sign-off to drop a legacy cookie.
+
+   <details><summary>Answer</summary>
+
+   Goal: `All tests in tests/auth/ pass`. Last score: `41/47 passing`. What was tried: for example `Mocking the clock in test_expiry: no change`. What is next: the very next step, such as checking the token refresh path. Waiting for a human: `Approve dropping the legacy cookie`.
+
+   </details>
+
+2. Read the guarded `ralph.sh` above and list what stops it. Then say what `git log` tells you after a run.
+
+   <details><summary>Answer</summary>
+
+   The scorekeeper reporting done (exit 0), the iteration cap (1), the wall-clock cap (2) and a stall (3). Each exit has its own code, so a wrapper can tell success from the rest. `git log` is a list of validated improvements, because only passes that raised the score were saved.
+
+   </details>
+
+3. Your loop is the initializer/worker kind and spans four days. Choose compaction or reset, and say what must be on disk.
+
+   <details><summary>Answer</summary>
+
+   Reset, because the pattern already keeps state on disk and compaction drifts over repeated summaries. On disk: the feature list, progress log, scaffolding, `init` script and git history, since anything not written down is lost.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What three walls does a long-running loop hit? | Context rot, context anxiety and session end. All three have one fix: progress lives in files, not in the context window. |
+| What's in a good loop memory? | Three tiers of now, recent and archive, and five fields: goal, last score, what was tried, what is next and what's waiting for a human. It stays small, because a few precise notes beat a transcript. |
+| What is a Ralph loop, and what does it lack? | A bash loop that re-runs the agent with fresh context, with state on the filesystem. The bare form lacks a stop condition, a budget and a scorekeeper. |
+| Compaction or reset for a loop? | Reset, usually. Ralph and initializer/worker already keep state on disk, and compaction risks summary-of-a-summary drift. Reset loses only what wasn't written down. |
+| What do the initializer and worker each do? | The initializer runs once and turns the task into files. The worker runs each session, picks one unfinished item, implements and tests it, commits, updates the log and exits cleanly. |
+| What is context drift, and why is it dangerous? | Notes that no longer match the code, schema or goal. The loop then acts on a stale picture with full confidence, so update notes when those change. |
+
+## Next
+
+[06-triggers-and-schedules.md](06-triggers-and-schedules.md): what starts a loop when you don't.

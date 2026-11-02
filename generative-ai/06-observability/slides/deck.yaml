@@ -1,0 +1,666 @@
+# Observability lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=generative-ai/06-observability STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Acme Books, a fictional invoicing support agent, 1,400 synthetic turns, 5-18 October 2026.
+# Every output on a slide is real output of practice/, with stub judges and no API key.
+deck:
+  title: Observability
+  subtitle: One support agent, one bad fortnight
+  tagline: |-
+    Trace · Score · Judge · Query · Contract · Dashboard
+  reference: "Notes: generative-ai/06-observability"
+  output: observability.pptx
+  notes: >-
+    We follow one fictional support agent through one bad fortnight. A vendor stalls, a release breaks the cache, a retriever
+    change makes billing answers wrong, and a second release fixes only the part anyone could see. Each part asks what one
+    tool can see of that fortnight and what it can't. All the data is synthetic with planted failures, so we always know the
+    right answer. Read this alongside the Eval pillar, which covers how to judge the evidence we collect here.
+
+parts:
+  - title: Reading a trace
+    summary: The fortnight · One turn as a tree · Carrying the trace into tools
+    notes: >-
+      Before any tool, we need to be able to read a single turn. A trace is the record that lets you do that.
+    slides:
+      - layout: statement
+        title: A customer waited 16.5 seconds and left
+        kicker: The problem
+        statement: "The logs say the request succeeded. The answer was right. The customer had already gone. Which log line tells you why?"
+        attribution: Turn t00004 from the synthetic fortnight in practice/
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          A plain request log has one row for this turn with a 200 status. It can't show that the agent searched three times
+          and failed, or that all the retries were billed. That's the gap tracing closes.
+
+      - layout: steps
+        title: The fortnight every part returns to
+        kicker: The running example
+        recall: What changed on 11, 14 and 17 October?
+        axis: Acme Books, 1,400 synthetic turns
+        steps:
+          - title: 5 Oct, v1
+            text: Healthy baseline, prompt cache working
+          - title: 11 Oct, vendor stalls
+            text: "`get_invoice` slows down, billing only"
+          - title: 14 Oct, v2.0
+            text: Timestamp breaks the cache; retriever change distorts answers
+            accent: D4621A
+          - title: 17 Oct, v2.1
+            text: Timestamp gone, spend recovers, answers stay wrong
+            accent: 5B21B6
+        takeaway: Three different failures overlap in one fortnight, and each is visible to a different tool, which is why no single chart will do.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          Acme Books is fictional. Its agent answers in Danish and English. Failures are planted so each chapter can state the
+          right answer. Keep the three dates in mind, because we return to them with each new tool.
+
+      - layout: code
+        title: One turn, read top to bottom
+        recall: What does the tree show that a log line can't?
+        lang: text
+        code: |-
+          t00004  account/en  abandoned  16.5s  $0.0259
+            route      generation    345 ms  read=420
+            kb_search  retriever     864 ms  ERROR
+            answer     generation   1996 ms  read=4200
+            kb_search  retriever     670 ms  ERROR
+            answer     generation   1611 ms  read=4200
+            kb_search  retriever     642 ms  ERROR
+            answer     generation   1681 ms  read=4200
+            kb_search  retriever     212 ms
+            get_account tool         122 ms
+            answer     generation   8306 ms  read=4200
+        bullets:
+          - "**Three failed searches**, each paid for"
+          - "**Correct answer**, but the customer had left"
+          - A healthy turn takes 7.0 s and $0.0107
+        takeaway: Tracing turns one successful-looking request into a story of three failed retries, with the time and money each one cost.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          Some rows are trimmed to fit. The final answer was correct and the turn still failed the customer, so a judge on
+          the final text would pass it. The same turn on healthy retrieval costs less than half as much.
+
+      - layout: flow
+        title: The data model is small
+        recall: Which level does a score attach to?
+        steps:
+          - label: Session
+            sub: one conversation
+          - label: Trace
+            sub: one agent turn
+          - label: Observation
+            sub: generation, retriever, tool, guardrail
+          - label: Score
+            sub: attached to a trace or observation
+            accent: D4621A
+        bullets:
+          - Use the typed observations, so cost and retrieval each get their own view.
+          - Dong, Lu and Zhu mapped 17 tools and found no unified span layer, so agree your metadata keys yourself.
+        takeaway: Session, trace, observation and score are enough to model an agent; one trace per turn and one child per call is the whole rule.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          The Dong paper is a preprint and its taxonomy isn't validated, so we use it as a checklist. In v5 of the Langfuse SDK
+          the older lf.trace call is gone, and tutorials that use it won't run.
+
+      - layout: code
+        title: Carry the trace into tools you don't call
+        recall: Why must the reset sit in finally?
+        lang: python
+        code: |-
+          turn_root = ContextVar("turn_root", default=None)
+
+          async def kb_tool(query):
+              root = turn_root.get()
+              span = root.start_observation(
+                  name="kb_search", as_type="retriever")
+              ...
+
+          async def handle(message):
+              with lf.start_as_current_observation(
+                      name="agent_turn") as root:
+                  token = turn_root.set(root)
+                  try:
+                      ...   # the framework runs the tools
+                  finally:
+                      turn_root.reset(token)
+        takeaway: When a framework schedules tools itself, implicit context can be lost, so hold the root in a ContextVar you own and reset it in finally.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          The test for any instrumentation is two lines. The child must have the same trace id, and its parent must be the root.
+          If you forget the reset, the next turn on that worker writes into the previous trace.
+
+      - layout: table
+        title: Free online scores have uneven precision
+        recall: Why not block on language_consistency?
+        header: [Check, Precision, Recall, Note]
+        widths: [3, 1, 1, 4]
+        rows:
+          - ["`citation_hallucination`", "0.86", "1.00", "Usable"]
+          - ["`language_consistency`", "0.23", "0.86", "61 false alarms on 402 healthy Danish turns"]
+          - ["`retrieval_quality` under 0.5", "1.00", "1.00", "Perfect by construction, since the stub sets it"]
+        highlight: [1]
+        takeaway: A cheap heuristic can run on every turn, yet measure its precision per segment first, because Danish turns can trip a check that English turns never do.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          These are heuristics that need no model. Precision is measured against the planted failures. Mask personal data in the
+          client before it leaves the process, and keep errored traces whatever your sampling rate.
+
+  - title: Scoring and the gate
+    summary: Golden set · The average lies · Floors on rule categories
+    notes: >-
+      Tracing shows what happened. Now we need a way to say whether a new version is better before it ships.
+    slides:
+      - layout: statement
+        title: The new version scores higher
+        kicker: The problem
+        statement: "sa-v2 beats sa-v1 on the average, 4.08 to 3.88. It also started agreeing to refunds it must refuse. Do you ship it?"
+        attribution: 24-item golden set, stub 1-5 judge, practice/support_agent/golden.py
+        source: notes/02-scoring-datasets-experiments.md
+        notes: >-
+          The number looks like an improvement. The rest of this part is about why the average is the wrong thing to read, and
+          what to read in its place.
+
+      - layout: flow
+        title: One dataset, one run per system version
+        recall: What should a run be named after?
+        steps:
+          - label: Dataset item
+            sub: question and reference
+          - label: Task
+            sub: the version under test
+          - label: Trace
+            sub: linked to the item
+          - label: Evaluators
+            sub: judge and similarity
+          - label: Compare
+            sub: same items, by category
+            accent: D4621A
+        caption: "`lf.run_experiment` wires this loop. `run_name` names the system version under test."
+        takeaway: Run every version over the same fixed items and name each run after the version, so that any two can be compared item by item.
+        source: notes/02-scoring-datasets-experiments.md
+        notes: >-
+          Code judges are for pre-release and are versioned with the agent. Managed evaluators in the platform are for sampling
+          live traffic. Check the stop reason on every judge call and count the items left unscored.
+
+      - layout: table
+        title: Slice by category and the regression appears
+        recall: How many items sit behind the refusal number?
+        header: [Category, sa-v1, sa-v2, Change, n]
+        widths: [3, 1, 1, 1, 1]
+        rows:
+          - ["refusal", "4.75", "2.00", "-2.75", "4"]
+          - ["refund_policy", "5.00", "4.00", "-1.00", "4"]
+          - ["billing", "3.60", "4.60", "+1.00", "5"]
+          - ["language", "3.50", "4.50", "+1.00", "2"]
+          - ["account", "3.40", "4.80", "+1.40", "5"]
+          - ["technical", "3.00", "4.50", "+1.50", "4"]
+        highlight: [0]
+        takeaway: The average rose 0.21 while refusals fell 2.75 points, because the four refusal items are outvoted by twenty others.
+        source: notes/02-scoring-datasets-experiments.md
+        notes: >-
+          A bootstrap on the mean change gives +0.208 with a 95 percent interval from -0.668 to +1.043, so the average couldn't
+          justify shipping anyway. Leite's healthcare run shows the same shape at n=20: 4.25 to 4.35 overall, with refusal down
+          0.33. That's one judge sample per item, so read it as a method demo.
+
+      - layout: compare
+        title: Embedding similarity can't see a refusal
+        recall: Why does similarity rise when behaviour reverses?
+        emphasis: right
+        left:
+          title: What the metric said
+          accent: 94A3B8
+          bullets:
+            - "Similarity rose from 0.767 to 0.951"
+            - The refusal regression barely shows
+        right:
+          title: What the answers said
+          accent: D4621A
+          bullets:
+            - "**Declines:** I can't help with that here."
+            - "**Complies:** I can help with that here."
+            - "Similarity between the two: **0.895**"
+        takeaway: Two answers with opposite meanings can share almost every word, so never use embedding similarity alone on rule-bound behaviour.
+        source: notes/02-scoring-datasets-experiments.md
+        notes: >-
+          Similarity is cheap and useful for drift on free-form answers. It has no notion of whether the agent did the thing
+          it must not do. A single negation barely moves the vector.
+
+      - layout: code
+        title: A gate that reads categories
+        recall: What does a floor do that a tolerance doesn't?
+        lang: python
+        code: |-
+          BLOCKING = {"refusal": 4.0}  # floor on a rule
+
+          def gate(old, new, tolerance=0.3):
+              by_cat = lambda d: d.groupby("category")[
+                  "judge_score"].mean()
+              n, o = by_cat(new), by_cat(old)
+              problems = [c for c, f in BLOCKING.items()
+                          if n[c] < f]
+              warnings = [c for c in n.index
+                          if c not in BLOCKING
+                          and o[c] - n[c] > tolerance]
+              return problems, warnings
+        bullets:
+          - "**Blocks:** refusal 2.00 under floor 4.0"
+          - "**Read by hand:** refund_policy down 1.00"
+          - Neither branch reads the average
+        takeaway: Floors on rule categories block a release, drops elsewhere send someone to read the items, and the average decides nothing.
+        source: notes/02-scoring-datasets-experiments.md
+        notes: >-
+          Shortened from the chapter's block. Notice what the gate did not flag: billing improved on the golden set, and billing
+          gets worse in production in the next part. A golden set covers known questions before release, and it can't see the rest.
+
+  - title: Judges over production
+    summary: The export · One judge per failure · Gated verification
+    notes: >-
+      The golden set passed billing. So we need to judge what really happened in production, at a cost we can afford.
+    slides:
+      - layout: statement
+        title: Billing passed the gate and broke in production
+        kicker: The problem
+        statement: "Billing answers improved on the golden set. In production, their hallucination rate went from 1.6% to 7.6% to 12.5%."
+        attribution: Generation bugs by release, v1, v2.0, v2.1, practice/support_agent/judges.py
+        source: notes/03-judge-pipelines-over-trace-exports.md
+        notes: >-
+          A fixed list can only test what it contains. To find this we have to run judges on the traffic itself. Note the third
+          number: v2.1 made it worse, while spend went back to normal.
+
+      - layout: flow
+        title: The strong judge sees only what the fast one flagged
+        recall: Which stage can lower recall?
+        steps:
+          - label: Export
+            sub: raw traces
+          - label: ETL
+            sub: ConversationData
+          - label: Four fast judges
+            sub: relevance, completeness, escalation, grounding
+          - label: Verifier
+            sub: strong model, flagged only
+            accent: D4621A
+          - label: Report
+            sub: scores, review queue
+        bullets:
+          - A parser for v1 alone recovers 900 of 1,400 turns; fallback paths recover all 1,400.
+          - "**1,442** scores written, **42** turns sent to a person."
+        takeaway: A fast first pass on everything with a strong verifier on its positives gets most of the value for a fraction of the cost.
+        source: notes/03-judge-pipelines-over-trace-exports.md
+        notes: >-
+          The parser point is real work: schemas drift between releases, and each drift loses turns silently unless you count
+          them. A judge that fails is recorded as failed, separately from a judge that passes.
+
+      - layout: compare
+        title: One judge per failure mode
+        recall: How do the two grounding failures differ?
+        left:
+          title: Irrelevant documents
+          accent: 0EA5C9
+          body: The retriever brought the wrong passages, so the model never had the answer.
+          tag: retrieval bug, fix the index
+        right:
+          title: Relevant documents, wrong claim
+          accent: D4621A
+          body: The passages were right and the answer changed a fact anyway.
+          tag: generation bug, fix the prompt or model
+        takeaway: Keep one judge per failure mode, because each score should tell you which team and which fix, and a single quality score tells you neither.
+        source: notes/03-judge-pipelines-over-trace-exports.md
+        notes: >-
+          A composite quality score goes down and nobody knows who should act. Two judges crossed tell you whether to fix the
+          index or the prompt, which is the decision you actually need.
+
+      - layout: code
+        title: Recompute the verdict from the evidence
+        recall: Which field do we distrust, and why?
+        lang: python
+        code: |-
+          def override(data):
+              claims = data.get("evidence", [])
+              n_bad = sum(c["status"] == "hallucination"
+                          for c in claims)
+              data["grounding_ratio"] = (
+                  (len(claims) - n_bad) / len(claims)
+                  if claims else 1.0)
+              data["hallucination_detected"] = n_bad > 0
+              return data
+        bullets:
+          - The model wrote `False` beside a bad claim
+          - "`override` returns `True`, ratio `0.5`"
+        takeaway: Ask for evidence per claim before the verdict, then compute the verdict in code, so a model's summary can't contradict its own findings.
+        source: notes/03-judge-pipelines-over-trace-exports.md
+        notes: >-
+          Models do write a summary flag that disagrees with their own evidence. The schema puts evidence first and the code throws
+          away the summary flag. This is a small amount of code with a large effect on trust.
+
+      - layout: table
+        title: A lenient first pass costs six times more
+        recall: Why did final precision and recall match?
+        header: [First pass, Precision, Verified, Final P / R, Cost]
+        widths: [2, 1, 1, 1, 1]
+        rows:
+          - ["Strict", "0.929", "42", "0.929 / 0.929", "$1.48"]
+          - ["Lenient", "0.086", "454", "0.929 / 0.929", "$8.56"]
+        takeaway: Both reach the same final numbers here, yet the lenient one pays the verifier to clean up 454 flags, 389 of its false alarms being Danish turns.
+        source: notes/03-judge-pipelines-over-trace-exports.md
+        notes: >-
+          The judges are rule-based stubs and the token counts are assumed, so read this for shape. Recall can only fall at the second
+          stage: the three distortions the strict pass missed are never looked at again, so sample some negatives to see them.
+
+  - title: Traces behind MCP
+    summary: Native or small · An investigation · Tool output is context
+    notes: >-
+      The traces are data. An agent can investigate them for you, if we're careful about what it can touch.
+    slides:
+      - layout: statement
+        title: About 95 tools, read and write by default
+        kicker: The problem
+        statement: "Hand an agent your Langfuse MCP server and it can read every trace. It can also write to them, and traces contain what your customers typed."
+        attribution: Langfuse native MCP docs; langfuse-mcp-python has 34 tools, roughly half of them write
+        source: notes/04-langfuse-mcp-server.md
+        notes: >-
+          Asking an agent to look through traces is genuinely useful. But a customer message in a trace is untrusted text that
+          the model will read, and write tools are what an injection needs.
+
+      - layout: cards
+        title: Three servers you could use
+        recall: What decides between them?
+        cards:
+          - title: Native Langfuse MCP
+            body: "At `/api/public/mcp`. About 95 tools, read and write by default. Use its allowlist."
+            accent: 0EA5C9
+          - title: Community langfuse-mcp-python
+            body: "34 tools, roughly half write and some destructive. MIT, v1.0.0."
+            accent: 94A3B8
+          - title: Your own small server
+            body: "`trace_server.py`: `find_traces`, `get_trace`, `tool_errors`. All read-only."
+            accent: D4621A
+        takeaway: Prefer the smallest tool surface that answers the questions, since three read-only tools answered this whole investigation.
+        source: notes/04-langfuse-mcp-server.md
+        notes: >-
+          The small server is about what the team asks every week. A wider server is fine when you've allowlisted what a session
+          can do. The chapter builds the small one and runs it.
+
+      - layout: flow
+        title: The investigation, in three tool calls
+        recall: Why group by span before fetching a trace?
+        steps:
+          - label: tool_errors
+            sub: "kb_search ERROR 41, get_invoice WARNING 9"
+          - label: find_traces
+            sub: 22 slow billing turns
+          - label: get_trace
+            sub: "t00618 40.2 s, get_invoice 32,447 ms"
+            accent: D4621A
+        bullets:
+          - Each step narrows the next.
+          - Ten summaries cost 553 tokens; one raw export costs 936.
+        takeaway: Summarise first and fetch one trace later, because tool output is context and a raw export spends the window fast.
+        source: notes/04-langfuse-mcp-server.md
+        notes: >-
+          Token counts use the 4 characters per token rule. Errors should tell the model what to do next: a ToolError saying which
+          argument to change is worth more than a stack trace. Here the agent traces the vendor stall in three calls.
+
+      - layout: code
+        title: Filter twice
+        recall: Why refuse a tool the model can't see?
+        lang: python
+        code: |-
+          ALLOWED = {"get_trace"}
+
+          async def guarded_call(client, name, args):
+              if name not in ALLOWED:
+                  return f"Refused: {name}"
+              result = await client.call_tool(name, args)
+              return result.content[0].text
+        bullets:
+          - "Shown to the model: `['get_trace']`"
+          - "`delete_trace`: refused"
+          - "`deleted: []`"
+        takeaway: Hide the tools from the model and refuse the call anyway, because a model can name a tool it read about in a trace.
+        source: notes/04-langfuse-mcp-server.md
+        notes: >-
+          A read_only_hint annotation is a claim the server makes about itself, not a permission. Keys should be read-only and scoped
+          to one project, so that the provider enforces the rule as well.
+
+  - title: Contract and promotion
+    summary: What every trace must carry · Where people look · Log-only first
+    notes: >-
+      Everything so far assumed the fields were there. In a real system two frameworks write traces, and they won't agree unless you make them.
+    slides:
+      - layout: statement
+        title: The field you need was never logged
+        kicker: The problem
+        statement: "A contract nobody checks decays within a few releases, and you find out on the day you need the missing field."
+        attribution: "Chapter 5. The v2.0 regression is invisible without `cache_read_tokens` and `cache_write_tokens`"
+        source: notes/05-support-agent-observability.md
+        notes: >-
+          The questions you can answer next month are fixed by what you log today. The contract is how you decide that on purpose
+          and across every framework that writes traces.
+
+      - layout: code
+        title: Test the contract like code
+        recall: Where does the validator run?
+        lang: python
+        code: |-
+          def violations(trace):
+              problems = []
+              for field, kind in REQUIRED.items():
+                  value = getattr(trace, field, None)
+                  if value in (None, ""):
+                      problems.append(f"{field}: missing")
+              if trace.outcome not in OUTCOMES:
+                  problems.append("outcome: not in enum")
+              return problems
+        bullets:
+          - "`prompt_version: missing`"
+          - "`outcome: 'ok' is not in the enum`"
+          - "`route: generation with no model`"
+        takeaway: Run the validator in CI on a recorded turn from each framework, and run the same check as a daily coverage number on production.
+        source: notes/05-support-agent-observability.md
+        notes: >-
+          Shortened from the chapter. The clean fortnight has zero violations. The broken trace on the right shows what it catches.
+          One written contract saves the ETL fallback paths from part three.
+
+      - layout: table
+        title: Where a planted failure is likely to be found
+        recall: Why keep the random slice at all?
+        header: [Sample, Turns, Planted failures]
+        widths: [3, 1, 1]
+        rows:
+          - ["All traffic, at random", "1,400", "15%"]
+          - ["Outcome was error or abandoned", "193", "44%"]
+          - ["Slowest 5% of turns", "70", "70%"]
+          - ["Negative user feedback", "54", "41%"]
+        highlight: [2]
+        takeaway: Targeted samples concentrate failures nearly five times, yet keep a random slice, because it is the only one that estimates the base rate.
+        source: notes/05-support-agent-observability.md
+        notes: >-
+          People should label a sample and calibrate the judge. The judge covers everything. These are the two layers: people for
+          truth, judges for coverage. Targeted samples only find failures that have those symptoms.
+
+      - layout: flow
+        title: A check earns the right to block
+        loop: "precision drops, go back to log-only"
+        recall: Why measure precision per segment?
+        steps:
+          - label: Log only
+            sub: fires, blocks nothing
+          - label: Measure
+            sub: precision per segment
+          - label: Threshold
+            sub: "0.8 precision, 5 fires"
+          - label: May block
+            sub: in every segment
+            accent: D4621A
+        bullets:
+          - "`language_consistency`: en no fires, da 0.23 on 79. Log only."
+          - "`retrieval_quality` under 0.5: 1.00 in both. May block."
+        takeaway: Promote each check on measured per-segment precision, since blocking on language_consistency would send 61 healthy turns to a person.
+        source: notes/05-support-agent-observability.md
+        notes: >-
+          The aggregate hides the segment. A check that looks fine overall can be useless in Danish. citation_hallucination stays
+          log-only too, with 0.77 on 13 in English and 1.00 on 8 in Danish.
+
+  - title: Money and milliseconds
+    summary: Pricing a turn · Percentiles · Alerts · What a dashboard can't see · Levers
+    notes: >-
+      The same traces also tell us what the fortnight cost and how long it took. Here the traps are mostly arithmetic.
+    slides:
+      - layout: image
+        title: Three panels, one time axis
+        kicker: The problem
+        image: ../sources/images/support-agent-dashboard.png
+        caption: Rendered by practice/make_dashboard_chart.py from the synthetic traces, at list prices read on 2026-11-01
+        bullets:
+          - Spend jumps on 14 Oct and recovers at v2.1.
+          - Why did it jump, when traffic didn't?
+          - Is anything still wrong after it recovers?
+        takeaway: A spend chart says that something costs more, and only the panels beside it say whether traffic or the system caused it.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          Top panel, money. Middle panel, cost per resolved turn, which doesn't depend on traffic. Bottom panel, billing p95. We
+          work through how to compute each one correctly.
+
+      - layout: code
+        title: Three buckets of input, three prices
+        recall: What does input_tokens actually count?
+        lang: text
+        code: |-
+          input = cache_read + cache_write + input_tokens
+
+          v1 turn, read=4200 write=0
+            correct               $0.01072
+            cache as input        $0.02668
+            ignoring the cache    $0.00988
+
+          v2.0 turn, read=0 write=4200
+            correct               $0.02927
+        bullets:
+          - "`input_tokens` is only what follows the last breakpoint"
+          - Langfuse usage keys are exclusive too
+        takeaway: Price cache reads, cache writes and uncached input separately, because treating them as one is out by up to 2.5 times on a single turn.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          Opus 5.5 lists at 4 dollars base input, 5 cache write, 0.20 cache read and 20 output per million. Prices change, so read
+          the page. The timestamp moved 4,200 tokens from the 0.20 column to the 5 dollar column.
+
+      - layout: table
+        title: The bucket table finds the release at once
+        recall: Which bucket explains the jump?
+        header: [Release, USD per turn, Billing p95, Cost per resolved, Billing hallucination]
+        widths: [1, 1, 1, 1, 2]
+        rows:
+          - ["v1", "0.0093", "10.4 s", "$0.0120", "1.6%"]
+          - ["v2.0", "0.0330", "20.1 s", "$0.0429", "7.6%"]
+          - ["v2.1", "0.0094", "15.2 s", "$0.0126", "12.5%"]
+        highlight: [1]
+        takeaway: Money recovers at v2.1 and billing errors keep climbing, so a dashboard with only cost and latency would have called this fortnight fixed.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          Cache writes are 7.20 dollars of v2.0's spend. The router is 0.1 percent of spend, which is why tuning it first is a waste.
+          At an assumed 6 dollars per human ticket, model spend is 2.6 percent of the all-in cost.
+
+      - layout: compare
+        title: Percentiles don't add
+        recall: What goes wrong if you add span p95s?
+        left:
+          title: What the all-route mean said
+          accent: 94A3B8
+          bullets:
+            - "Mean 6.4 s, then 7.2 s"
+            - "All routes p95: 9.8 s, then 11.1 s"
+            - Looks like a mild slowdown
+        right:
+          title: What billing alone said
+          accent: D4621A
+          bullets:
+            - "Billing p95: **9.4 s, then 21.0 s**"
+            - "`get_invoice` share 0.02, then 0.15"
+            - "Sum of span p95s **10.7 s**, real turn p95 **13.8 s**"
+        takeaway: Report p95 per route with its turn count, and never add span percentiles, since a bad route vanishes in the mean and the sum isn't the p95.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          p99 from 25 turns ranges from 10.3 to 35.8 seconds under resampling, and from 276 turns 22.8 to 38.3. So a billing p99 on one
+          day is noise. A sum of span percentiles isn't even a safe bound: here it comes out below the real turn p95.
+
+      - layout: code
+        title: Replay the alerts on the fortnight
+        recall: Why does the ratio beat the spend alert?
+        lang: python
+        code: |-
+          RULES = {
+            "cost per resolved over 1.5x trailing median":
+                daily["usd_per_resolved"] > 1.5 * baseline,
+            "cache hit rate under 50%":
+                daily["cache_hit"] < 0.5,
+            "billing p95 over 15 s, 10+ turns":
+                (daily["billing_p95_s"] > 15)
+                & (daily["billing_n"] >= 10),
+          }
+        bullets:
+          - "Cost and cache rules: first fire **10-14**"
+          - "Billing p95: first fire **10-11**"
+          - "Projected month: 27.9, then 45.68 against 45"
+        takeaway: Replay every candidate alert on past traffic, and prefer ratios such as cache hit rate, since a traffic surge doesn't trip them.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          These thresholds were fitted to a generated fortnight, which is the wrong way round for real use. On live traffic, replay
+          a candidate threshold and count how often it would have paged. A monthly budget projection was blind until 16 October.
+
+      - layout: table
+        title: Which lever to pull
+        recall: Why is the router the wrong first target?
+        header: [Lever, USD per day, Condition]
+        widths: [3, 1, 3]
+        rows:
+          - ["Keep the prompt cache working", "+1.69", "Standing alert"]
+          - ["Answers on Sonnet 5.5", "+0.46", "Must pass the gate"]
+          - ["Judges through the Batch API", "+0.05", "Results up to a day late"]
+          - ["Fix the retry loop", "+0.03", "Better for customers too"]
+          - ["Router on Opus (the wrong way)", "-0.05", "The router is already 0.1% of spend"]
+        highlight: [0]
+        takeaway: Protect the cache first, cap the loops, batch the judges, then test cheaper models through the release gate.
+        source: notes/06-cost-and-latency-dashboards.md
+        notes: >-
+          The answer model costs 93 cents a day here. So the cache is worth almost twice the whole current bill. The dollar amounts are
+          small because this is a small synthetic agent; the ranking is what carries over.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What to carry out of this lecture
+        cards:
+          - title: Trace
+            body: One trace per turn, one child per call. Agree metadata keys on day one.
+            accent: 0EA5C9
+          - title: Score
+            body: Name runs after versions. Floors on rule categories. Read categories, not the average.
+            accent: D4621A
+          - title: Judge
+            body: One judge per failure. Evidence before verdict. Strong judge on positives only.
+            accent: 5B21B6
+          - title: Query
+            body: Read-only and scoped. Filter twice. Summaries before raw traces.
+            accent: 0F7490
+          - title: Contract
+            body: Validate in CI. Keep a random slice. Promote checks per segment on measured precision.
+            accent: 1E3A5F
+          - title: Dashboard
+            body: Three input buckets. p95 per route with n. Protect the cache first. Read beside the judges.
+            accent: D4621A
+        notes: >-
+          Each card is one part of the lecture. If you only keep one idea: the tool that shows you the money won't show you the
+          wrong answers, so you need the whole set.
+
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Eval pillar**, `generative-ai/08-eval`: how to build a grader, calibrate a judge and read a small sample."
+          - "**LangSmith**, `04-agentic-frameworks` note 05: the same ideas on the other platform."
+          - "**Run it**: `practice/check_blocks.py` runs every block in the notes, with no key."
+          - "**Applications**, `07-agentic-applications`: the projects that ship agents traced this way."
+        notes: >-
+          The practice folder needs no account. To try it on real services, the Labs section in each chapter links the upstream projects.

@@ -99,7 +99,7 @@ Those NaNs are honest, and they are important. The 2025Q3 cohort has not reached
 Read the triangle in three directions, as each one answers a different question.
 
 - **Across a row** you follow one cohort as it ages. Every row declines and then flattens.
-- **Down a column** you compare cohorts at the same age. Age 1 runs at about 15% up to 2024Q4 and then drops to about 8.4%. That is a cohort effect, a change in who arrived.
+- **Down a column** you compare cohorts at the same age. Age 1 runs at about 15% up to 2024Q4 and then drops to about 8.4%. This is where a cohort effect would show, a change in who arrived, although every 2025 cohort also arrived after the cut, so this column alone cannot separate the two.
 - **Along a diagonal** you see one calendar month across all cohorts, of different ages. Age 12 drops at 2024Q1, age 6 at 2024Q3 and age 2 or 3 at 2024Q4, which is what you would see if something happened in early 2025 and hit every customer no matter when they joined. That is a period effect.
 
 So the picture already suggests that both things happened. Be aware of the limit of the method, though: age, period and cohort are linked by the identity *age = period − cohort*, so no regression can separate all three without an extra assumption. Treat the triangle as evidence for a hypothesis you test with something outside it. Here we know the date of the budget cut, and that is what makes the diagonal interpretable.

@@ -515,9 +515,6 @@ print("rows with code 9 reaching the mart: mart was skipped, still", sql("SELECT
 ```
 
 ```text
-[0m09:39:05  9 of 12 FAIL 1 accepted_values_fact_trips_payment_type__False__0__1__2__3__4__5__6  [[31mFAIL 1[ ...
-[0m09:39:05  [[31mERROR[0m]: in test accepted_values_fact_trips_payment_type__False__0__1__2__3__4__5__6 (mod ...
-[0m09:39:05    Got 1 result, configured to fail if != 0
 success model    stg_green
 success model    stg_yellow
 success seed     taxi_zone_lookup
@@ -601,12 +598,6 @@ dbt("source", "freshness")
 ```
 
 ```text
-[0m09:39:07  1 of 2 ERROR STALE freshness of raw.green_tripdata ............................. [[31mERROR STALE ...
-[0m09:39:07  2 of 2 ERROR STALE freshness of raw.yellow_tripdata ............................ [[31mERROR STALE ...
-[0m09:39:07  [[31mERROR[0m]: in source green_tripdata (models/staging/sources.yml)
-[0m09:39:07    Status: error
-[0m09:39:07  [[31mERROR[0m]: in source yellow_tripdata (models/staging/sources.yml)
-[0m09:39:07    Status: error
 error   source   green_tripdata
 error   source   yellow_tripdata
 ```

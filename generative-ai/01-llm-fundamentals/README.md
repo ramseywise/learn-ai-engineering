@@ -7,31 +7,102 @@
 
 ## What it is
 
-What a large language model is, how it is trained and adapted, and how to instruct and call it from code. An LLM is a decoder-only transformer trained to predict the next token; pretraining gives it knowledge, supervised fine-tuning gives it the assistant format, and preference optimization gives it judgment. Prompting changes what it produces without touching the weights, and the API is a stateless request carrying the whole conversation.
+What a large language model is, how it is trained and adapted, and how to instruct, call and run it. An LLM is a decoder-only transformer trained to predict the next token. Pretraining gives it knowledge, supervised fine-tuning gives it the assistant format, and preference optimization gives it judgment. Prompts, the API and local runtimes are how you put that to work.
 
-Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in-context learning, trouble with counting characters) follows from next-token prediction over subword tokens. This pillar builds that mental model, then puts it to work: prompting principles, LangChain's building blocks, a tiny GPT written by hand and the four SDK patterns every application uses.
+## Why it matters
+
+Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in-context learning, trouble with counting characters) follows from next-token prediction over subword tokens. Once you have that model of it, you can tell which lever a problem calls for: a prompt, retrieval, a fine-tune or a different model. Every other pillar in generative-ai presumes this.
+
+## The story
+
+A team wants a support-ticket assistant. It starts with one word: what does the model see when a customer types "refund"? That leads to tokens and embeddings, then to attention, which lets a token weigh its context, and then to why size, context length and sampling behave as they do. Then the model gives a confident, wrong refund policy, and the team learns why a base model isn't an assistant. So they follow the weights through training: pretraining for knowledge, instruction tuning for format, preference optimization for judgment, and LoRA for the budget. With that, they stop reaching for fine-tuning first. They fix the prompt and measure it, wrap it in a chain, write a tiny GPT to find out what a real bug looks like, and call a hosted model with a capped loop. When legal asks whether tickets may leave the network, they know how to weigh a local model. The assistant still doesn't know this company's refund policy, and that is the next pillar's job.
 
 ---
 
-## Start here
+## Reading order
 
-1. [01 — How LLMs work](notes/01-how-llms-work.md): tokens, attention, the GPT stack, scale.
-2. [03 — Prompting fundamentals](notes/03-prompting-fundamentals.md): the five principles.
-3. [06 — Calling models from code](notes/06-calling-models-from-code.md), then run the [TypeScript lab](practice/01-typescript-sdk/).
-4. When you have an evening: [05 — Build a tiny GPT](notes/05-build-a-tiny-gpt.md).
+Read in order on a first pass. Each chapter ends with pitfalls, exercises and an interview checklist. If you already use LLMs and want to skip ahead, take 01, 05, 09, 10 and 13.
+
+**How a model works**
+
+| # | Chapter | Covers |
+|---|---|---|
+| 01 | [Tokens and embeddings](notes/01-tokens-and-embeddings.md) | Next-token prediction, BPE tokens and cost, embeddings, positional encodings (learned, sinusoidal, RoPE) |
+| 02 | [Attention and the transformer block](notes/02-attention-and-the-transformer-block.md) | Scaled dot-product, causal and multi-head attention, the block and GPT stack |
+| 03 | [Architectures, scale and the model zoo](notes/03-scale-and-the-model-zoo.md) | Encoder and decoder, reading a model's size, scaling laws, mixture of experts, alternatives to transformers |
+| 04 | [Decoding and inference behaviour](notes/04-decoding-and-inference-behaviour.md) | Prefill and decode, KV cache, temperature, top-k and top-p, test-time compute, structured output |
+| 05 | [Hallucination and base vs assistant](notes/05-hallucination-and-base-vs-assistant.md) | Why models confabulate, what a base model is not, detection and mitigation |
+
+**How it is trained and adapted**
+
+| # | Chapter | Covers |
+|---|---|---|
+| 06 | [Pretraining: data and objectives](notes/06-pretraining-data-and-objectives.md) | The training pipeline, loop and loss checks, data, cost, Chinchilla in practice |
+| 07 | [SFT and instruction tuning](notes/07-sft-and-instruction-tuning.md) | Classification and instruction fine-tuning, chat templates, continued pretraining |
+| 08 | [Preference optimisation: an overview](notes/08-preference-optimisation-overview.md) | Reward models and PPO, DPO, distillation |
+| 09 | [PEFT and fine-tuning in practice](notes/09-peft-and-fine-tuning-in-practice.md) | LoRA, QLoRA, adapters, quantization, prompt or retrieve or fine-tune |
+
+**How you use it**
+
+| # | Chapter | Covers |
+|---|---|---|
+| 10 | [Prompting fundamentals](notes/10-prompting-fundamentals.md) | Why naive prompts fail, the five principles, chain of thought, standard practices, evaluating variants |
+| 11 | [LangChain basics](notes/11-langchain-basics.md) | Chat models, templates, parsers, Runnables, LCEL and `@chain`, document chains |
+| 12 | [Build a tiny GPT](notes/12-build-a-tiny-gpt.md) | Karpathy and Raschka mapped step by step, a GPT that trains on a CPU, the checks that catch most bugs |
+| 13 | [Calling models from code](notes/13-calling-models-from-code.md) | Request and response shape, streaming, structured output, the tool loop, conversation state, production habits |
+
+**How you run it yourself**
+
+| # | Chapter | Covers |
+|---|---|---|
+| 14 | [Open-weight models and local inference](notes/14-open-weight-models-and-local-inference.md) | Licences, choosing a model, model cards, memory, GGUF, transformers, Ollama and llama.cpp, when local beats the API |
+
+---
+
+## Rules of thumb
+
+| Rule | Chapter |
+|---|---|
+| The model predicts plausible tokens, not true ones. Design for hallucination; do not hope it away | 05 |
+| Tokens are the unit of cost, latency and context. 100 tokens ≈ 75 English words | 01 |
+| Long context costs quadratic attention; do not fill the window because you can | 02, 03 |
+| Loss at step 0 should be about ln(vocab size). If not, the bug is in initialization or the target shift | 06, 12 |
+| Fine-tuning teaches form, not facts. Facts that change or need citations belong in retrieval | 09 |
+| LoRA first; full fine-tuning only with a reason | 09 |
+| Give direction before adding examples; add 3–5 varied examples when format must be reliable | 10 |
+| Never judge a prompt from one run. Run variants several times and rate blind | 10 |
+| Split tasks so each step can be checked; ask for reasoning before the answer on multi-step problems | 10 |
+| Use structured output when code consumes the answer, and still validate | 11, 13 |
+| Check `stop_reason` before trusting an output; truncation passes silently in prose | 13 |
+| Cap tool-loop iterations and log `usage` on every call | 13 |
+| Read the licence of the exact repo and its `base_model`. "Open" is not a licence | 14 |
+| Decide local vs API on data rules and volume, with your own numbers | 14 |
+
+---
+
+## Deck and practice
+
+**Deck:** [slides/llm-fundamentals.pptx](slides/llm-fundamentals.pptx), built from [slides/deck.yaml](slides/deck.yaml). Rebuild it with `make slides PILLAR=generative-ai/01-llm-fundamentals`.
+
+| Lab | What it shows | Run |
+|---|---|---|
+| Code in every chapter | Each Python block runs as written. `# illustrative` marks the few that need a key, a GPU or a local server | Copy a block to a file, then `uv run --with torch --with transformers python file.py`. Chapter 14's Hub blocks need network access |
+| [01-typescript-sdk](practice/01-typescript-sdk/) | The bridge for TypeScript readers: one request, streaming, structured output via a strict tool, the tool loop, multi-turn history | Needs Node, `npm install @anthropic-ai/sdk tsx typescript` and `ANTHROPIC_API_KEY`; makes paid API calls. `npx tsx 01-api-call.ts` |
+| [data-science/practice/nn-zero-to-hero](../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | Notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
 
 ---
 
 ## Layout
 
-```
+```text
 01-llm-fundamentals/
 ├── README.md
-├── references.md           every source, mapped to notes
-├── notes/                  01–06, read in order (07 planned)
+├── references.md           every source, mapped to chapters
+├── notes/                  01–14, read in order
+├── slides/                 deck.yaml and the built deck
 ├── practice/
-│   └── 01-typescript-sdk/  four runnable Anthropic SDK examples
-└── sources/                local PDFs (purchased chapters + papers)
+│   └── 01-typescript-sdk/  four Anthropic SDK examples
+└── sources/                local PDFs (purchased chapters and papers)
     ├── build-a-large-language-model-from-scratch/   Raschka, ch. 1–7 + appendices A–B
     ├── building-ai-agents-llms-rag-kgs/             Raieli & Iuculano, ch. 2–3
     ├── huyen-ai-engineering/                        Huyen, ch. 1–2
@@ -43,59 +114,15 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 
 ---
 
-## Syllabus
-
-| # | Note | Covers |
-|---|---|---|
-| 01 | [How LLMs work](notes/01-how-llms-work.md) | Next-token prediction; BPE tokens; embeddings and positional encodings (learned, sinusoidal, RoPE); scaled dot-product, causal and multi-head attention; the transformer block and GPT stack; encoder vs decoder; scaling laws, GPT-3, Chinchilla, LLaMA, GPT-4; where the parameters sit, weight tying, Pre-LN; prefill, decode and the KV cache; model size, memory, MoE and non-transformer alternatives; decoding (temperature, top-k, top-p, min-p), test-time compute and structured output; inconsistency and two hypotheses for hallucination; base vs assistant models |
-| 02 | [Training and adapting models](notes/02-training-and-adapting.md) | Pretraining loop, teacher forcing and loss sanity checks; an overfitting run; pretraining data and its limits; training compute and cost; Chinchilla in practice; SFT (classification and instruction) and its data cost; reward models and comparison data; InstructGPT recipe; RLHF/DPO/RLAIF in brief; LoRA, QLoRA, adapters and PEFT; quantization, pruning and distillation; prompt vs retrieve vs fine-tune; the FTI architecture |
-| 03 | [Prompting fundamentals](notes/03-prompting-fundamentals.md) | Why naive prompts fail; the five principles (direction, format, examples, evaluation, division of labor); chain-of-thought and zero-shot CoT; standard practices for lists, JSON/YAML, style unbundling, summarization, chunking, classification; links to technique depth |
-| 04 | [LangChain basics](notes/04-langchain-basics.md) | Chat models and messages; prompt templates; `with_structured_output` and output parsers; the Runnable interface; LCEL vs `@chain`; sequential and document chains; where the rest of *Learning LangChain* lives |
-| 05 | [Build a tiny GPT](notes/05-build-a-tiny-gpt.md) | Karpathy's Zero to Hero and Raschka mapped step by step; the nanoGPT config; bug-catching checks; what building it teaches |
-| 06 | [Calling models from code](notes/06-calling-models-from-code.md) | Messages API request and response shape; single call, streaming, forced-tool structured output, the tool loop, conversation state; production habits |
-| 07 | Open-weight models and local inference *(planned)* | Open vs. closed weights and licences; choosing a model (capability, context length, knowledge cutoff, price per token); the Hugging Face Hub and model cards; running a model locally with Ollama, llama.cpp and `transformers`; GGUF and 4-bit quantization from the user's side; when local beats an API. Sources: Labonne, [llm-course](https://github.com/mlabonne/llm-course); *LLM Engineer's Handbook* ch. 2 and 8 (in `sources/`); [HF LLM Course](https://huggingface.co/learn/llm-course); LLaMA, Llama 2, Llama 3.1 (queued in the ledger). Serving at scale stays in [ai-engineering/07](../../ai-engineering/07-inference-engineering/README.md) |
-
----
-
-## Rules of thumb
-
-| Rule | Note |
-|---|---|
-| The model predicts plausible tokens, not true ones. Design for hallucination; do not hope it away | 01 |
-| Tokens are the unit of cost, latency and context. 100 tokens ≈ 75 English words | 01 |
-| Long context costs quadratic attention; do not fill the window because you can | 01 |
-| Loss at step 0 should be about ln(vocab size). If not, the bug is in initialization or the target shift | 02, 05 |
-| Fine-tuning teaches form, not facts. Facts that change or need citations belong in retrieval | 02 |
-| LoRA first; full fine-tuning only with a reason | 02 |
-| Give direction before adding examples; add 3–5 varied examples when format must be reliable | 03 |
-| Never judge a prompt from one run. Run variants several times and rate blind | 03 |
-| Split tasks so each step can be checked; ask for reasoning before the answer on multi-step problems | 03 |
-| Use structured output (a forced tool or `with_structured_output`) when code consumes the answer, and still validate | 04, 06 |
-| Check `stop_reason` before trusting an output; truncation passes silently in prose | 06 |
-| Cap tool-loop iterations and log `usage` on every call | 06 |
-
----
-
 ## Resource map
-
-**Related notes**
 
 - [ai-engineering/01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md): technique depth (anatomy, output control, tools, reasoning models, optimization, adversarial prompting).
 - [ai-engineering/02-context-engineering](../../ai-engineering/02-context-engineering/README.md): what goes in the window once history and documents grow.
 - [ai-engineering/07-inference-engineering](../../ai-engineering/07-inference-engineering/README.md): KV cache, quantization, serving.
-- [05-RL](../05-RL/README.md): the post-training stage of note 02 in depth (RLHF, DPO, Constitutional AI).
-- [04-agentic-frameworks](../04-agentic-frameworks/README.md): LangGraph, the step after note 04.
+- [05-RL](../05-RL/README.md): the post-training stages of chapters 07–08 in depth (RLHF, DPO, Constitutional AI).
+- [04-agentic-frameworks](../04-agentic-frameworks/README.md): LangGraph, the step after chapter 11.
 
-**Books and courses:** Raschka (★), Phoenix & Taylor (★), Huyen's *AI Engineering* (★), Alammar & Grootendorst (★), *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, *Learning LangChain*, *LLM Engineer's Handbook*, Karpathy Zero to Hero (★), CS336. Chapter → note mapping in [references.md](references.md).
-
-**Practice**
-
-| Lab | What it shows | Run |
-|---|---|---|
-| [01-typescript-sdk](practice/01-typescript-sdk/) | One request, streaming, structured output via a forced tool, the tool loop, multi-turn history | needs Node, `npm install @anthropic-ai/sdk tsx typescript` and `ANTHROPIC_API_KEY`; makes paid API calls. `npx tsx 01-api-call.ts` |
-| [data-science/practice/nn-zero-to-hero](../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
-
-**Readings:** local PDFs in [sources/](sources/), indexed with arXiv ids in [references.md](references.md#core-papers). Papers held here but owned by other pillars are listed under [Held here, used elsewhere](references.md#held-here-used-elsewhere).
+**Readings:** every book, course and paper in [references.md](references.md), with local PDFs in [sources/](sources/). Papers held here but owned by other pillars are listed under [Held here, used elsewhere](references.md#held-here-used-elsewhere).
 
 **Interviewing guide:** [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md): attention, RLHF, prompting and model behaviour compressed for interview prep.
 

@@ -24,7 +24,7 @@ uv run --with langchain-core python demo_07_lcel.py
 
 ## Where this sits
 
-The building blocks are covered in [01-llm-fundamentals note 04](../../01-llm-fundamentals/notes/04-langchain-basics.md): chat models, prompt templates, `with_structured_output`, the Runnable methods, and LCEL vs `@chain`. This note picks up where that one stops, with the plumbing that makes multi-step chains work, drawn from *Prompt Engineering for Generative AI* (ch. 4). Everything in notes 01–03 here is a LangGraph node that could contain one of these chains.
+The building blocks are covered in [01-llm-fundamentals note 11](../../01-llm-fundamentals/notes/11-langchain-basics.md): chat models, prompt templates, `with_structured_output`, the Runnable methods, and LCEL vs `@chain`. This note picks up where that one stops, with the plumbing that makes multi-step chains work, drawn from *Prompt Engineering for Generative AI* (ch. 4). Everything in notes 01–03 here is a LangGraph node that could contain one of these chains.
 
 Both books pin 2024-era APIs. Where this note modernises a book example, it says so, and the [version table](#book-apis-and-their-current-form) at the end lists every change.
 
@@ -162,7 +162,7 @@ The book passes `RunnableConfig(max_concurrency=5)`, which is the same dictionar
 
 | Route | How | Use when | Fails by |
 |---|---|---|---|
-| **Output parser** | `parser.get_format_instructions()` into the prompt, `parser.parse()` on the text | The provider has no tool calling or JSON mode | The model ignores the instructions; you need a retry or fixing parser ([01 note 04](../../01-llm-fundamentals/notes/04-langchain-basics.md#building-block-3-structured-output-and-parsers)) |
+| **Output parser** | `parser.get_format_instructions()` into the prompt, `parser.parse()` on the text | The provider has no tool calling or JSON mode | The model ignores the instructions; you need a retry or fixing parser ([01 note 11](../../01-llm-fundamentals/notes/11-langchain-basics.md#building-block-3-structured-output-and-parsers)) |
 | **Tool calling** | `bind_tools([Schema])` then `PydanticToolsParser(tools=[Schema])` | You want several objects from one call (parallel calls), or a choice between schemas | The model calls no tool, or invents arguments |
 | **`with_structured_output`** | `model.with_structured_output(Schema)` | One object of one known shape: the default | Validation errors on weak models; check with `include_raw=True` |
 
@@ -303,7 +303,7 @@ This is HuggingGPT's task-planning stage in miniature ([graph note 05](../../../
 
 ## Map-reduce over documents
 
-The four document-chain strategies (stuff, refine, map-reduce, map-rerank) are tabulated in [01 note 04](../../01-llm-fundamentals/notes/04-langchain-basics.md#patterns-from-the-books-worth-knowing). Map-reduce is the one worth building yourself, because it is just `batch` followed by `invoke`:
+The four document-chain strategies (stuff, refine, map-reduce, map-rerank) are tabulated in [01 note 11](../../01-llm-fundamentals/notes/11-langchain-basics.md#patterns-from-the-books-worth-knowing). Map-reduce is the one worth building yourself, because it is just `batch` followed by `invoke`:
 
 ![Map step: the same extract-feature-requests prompt runs on each comment in parallel. Reduce step: a second prompt combines the extracted requests into the top feature requests](../sources/images/prompt-engineering-for-generative-ai-fig4-7.png)
 *Image Source: James Phoenix & Mike Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 4-7*
@@ -339,7 +339,7 @@ The book's version is `load_summarize_chain(chain_type="map_reduce")`, which is 
 
 ## Few-shot selection and prompt files
 
-`FewShotChatMessagePromptTemplate` and the example selectors are listed in [01 note 04](../../01-llm-fundamentals/notes/04-langchain-basics.md#building-block-2-prompt-templates). What the book adds is the limits (*Prompt Engineering for Generative AI*, ch. 4):
+`FewShotChatMessagePromptTemplate` and the example selectors are listed in [01 note 11](../../01-llm-fundamentals/notes/11-langchain-basics.md#building-block-2-prompt-templates). What the book adds is the limits (*Prompt Engineering for Generative AI*, ch. 4):
 
 - **Overfitting to the examples.** The model copies the examples' content, not just their format. The book's mitigations are to reword, to tell the model to use the examples only for format, or to fine-tune when few-shot isn't enough.
 - **Examples compete with the answer for tokens.** `LengthBasedExampleSelector` drops examples as the user input grows. Give it a token counter (the book uses tiktoken) rather than its default word count, or the budget is wrong for code and non-English text.

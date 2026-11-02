@@ -111,7 +111,7 @@ for name, mask in rules.items():
 
 ```text
 all traffic (a random sample)    n= 1400  planted failures 15%
-any ERROR span or bad outcome    n=  193  planted failures 44%
+outcome was error or abandoned   n=  193  planted failures 44%
 slowest 5% of turns              n=   70  planted failures 70%
 negative user feedback           n=   54  planted failures 41%
 ```

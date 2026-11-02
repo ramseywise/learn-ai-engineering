@@ -35,8 +35,9 @@ print(rfm[["recency", "frequency", "monetary", "future_value"]].describe().loc[[
 
 # %% scores
 def quintile(series, ascending=True):
-    """Scores 1 to 5, with ties broken by rank so that heavily tied columns still split."""
-    return pd.qcut(series.rank(method="first", ascending=ascending), 5, labels=False) + 1
+    """Scores 1 to 5. Heavily tied columns still split, with ties broken at random, not by row order."""
+    shuffled = series.sample(frac=1, random_state=SEED)
+    return pd.qcut(shuffled.rank(method="first", ascending=ascending), 5, labels=False) + 1
 
 
 rfm["R"] = quintile(rfm.recency, ascending=False)       # most recent = 5

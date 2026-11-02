@@ -49,7 +49,12 @@ for repo in ["Qwen/Qwen2.5-7B-Instruct", "deepseek-ai/DeepSeek-R1",
     print(f"{repo:<36} {licence[0]:<12} gated={info.gated}")
 ```
 
-@@OUT@@
+```text
+Qwen/Qwen2.5-7B-Instruct             apache-2.0   gated=False
+deepseek-ai/DeepSeek-R1              mit          gated=False
+meta-llama/Llama-3.1-8B-Instruct     llama3.1     gated=manual
+allenai/OLMo-2-1124-7B-Instruct      apache-2.0   gated=False
+```
 
 ---
 
@@ -65,7 +70,7 @@ Start from your constraints and treat leaderboards as a shortlist. Four numbers 
 | Cost | Price per token for an API. Hardware and staff for local | See the break-even below |
 | Licence | The section above | Must allow commercial use |
 
-Model size is a poor proxy for capability. LLaMA's 13B model beat the 175B GPT-3 on most benchmarks in its paper ([arXiv:2302.13971](https://arxiv.org/abs/2302.13971), Touvron et al., 2023), and [chapter 03](03-scale-and-model-size.md) explains why. For a narrow task like triage, a small model is often enough, and you learn that only by running your own set.
+Model size is a poor proxy for capability. LLaMA's 13B model beat the 175B GPT-3 on most benchmarks in its paper ([arXiv:2302.13971](https://arxiv.org/abs/2302.13971), Touvron et al., 2023), and [chapter 03](03-scale-and-the-model-zoo.md) explains why. For a narrow task like triage, a small model is often enough, and you learn that only by running your own set.
 
 ### Reading a model card
 
@@ -75,7 +80,7 @@ A model card is the `README.md` of a Hub repo: a YAML metadata block, then text.
 
 ## Will it fit? Memory, measured
 
-Weights dominate memory. As [chapter 03](03-scale-and-model-size.md) showed, the estimate is parameters times bytes per parameter, so a 7B model needs 14 GB at 16-bit and 3.5 GB at a pure 4-bit. Published files let you check that estimate. This script reads actual file sizes for one community set of GGUF conversions from the Hub:
+Weights dominate memory. As [chapter 03](03-scale-and-the-model-zoo.md) showed, the estimate is parameters times bytes per parameter, so a 7B model needs 14 GB at 16-bit and 3.5 GB at a pure 4-bit. Published files let you check that estimate. This script reads actual file sizes for one community set of GGUF conversions from the Hub:
 
 ```python
 from huggingface_hub import HfApi
@@ -91,9 +96,19 @@ for fmt in ["f16", "Q8_0", "Q6_K", "Q5_K_M", "Q4_K_M", "Q4_0", "Q3_K_M", "IQ2_M"
     print(f"{fmt:<10}{sizes[fmt]:>9.2f}{sizes[fmt] * 1e9 * 8 / params:>16.2f}")
 ```
 
-@@OUT@@
+```text
+format      file GB  bits per param
+f16           15.24           16.02
+Q8_0           8.10            8.51
+Q6_K           6.25            6.57
+Q5_K_M         5.44            5.72
+Q4_K_M         4.68            4.92
+Q4_0           4.44            4.67
+Q3_K_M         3.81            4.00
+IQ2_M          2.78            2.92
+```
 
-Two things to read from that. A `Q4` file takes more than 4 bits per parameter, because the format stores per-block scale data and keeps some tensors at higher precision. And the file size is a floor, because running the model also needs a KV cache that grows with the context you use ([chapter 04](04-decoding-and-inference-behaviour.md#kv-cache)), plus memory for the process. Leave headroom beyond the file size, then measure on your own machine.
+Two things to read from that. A `Q4` file takes more than 4 bits per parameter, because the format stores per-block scale data and keeps some tensors at higher precision. And the file size is a floor, because running the model also needs a KV cache that grows with the context you use ([chapter 04](04-decoding-and-inference-behaviour.md#prefill-decode-and-the-kv-cache)), plus memory for the process. Leave headroom beyond the file size, then measure on your own machine.
 
 ```text
 What a local model occupies
@@ -114,10 +129,10 @@ GGUF is the single-file format used by llama.cpp, the C/C++ runtime begun by Geo
 | `IQ1`, `IQ2`, `IQ3` | Low | Only when memory leaves no choice |
 | `Q4_K_S`, `Q4_K_M`, `IQ4_XS` | Good | The default for most models |
 | `Q5` | High | When you have the room |
-| `Q6_K` | Very high | Close to the unquantized model |
-| `Q8_0` | Highest | Often not worth the size over `Q6_K` |
+| `Q6_K` | Very high | When quality matters more than size |
+| `Q8_0` | Highest | The largest of the quantized formats |
 
-[Chapter 09](09-peft-and-fine-tuning-in-practice.md#quantization) explains why quantization works at all. Treat the quality column as a prior: your eval decides. Rerun your labelled tickets at `Q4_K_M` and at `Q8_0`, and if the numbers match, take the smaller file. Published guidance can't tell you how your task responds.
+[Chapter 09](09-peft-and-fine-tuning-in-practice.md#making-the-model-smaller) explains why quantization works at all. Treat the quality column as a prior: your eval decides. Rerun your labelled tickets at `Q4_K_M` and at `Q8_0`, and if the numbers match, take the smaller file. Published guidance can't tell you how your task responds.
 
 For GPU inference through `transformers`, the usual route is 8-bit LLM.int8() ([arXiv:2208.07339](https://arxiv.org/abs/2208.07339), Dettmers et al., NeurIPS 2022) or 4-bit NF4 from QLoRA ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314), Dettmers et al., NeurIPS 2023), both through the `bitsandbytes` library. The Handbook reports about half the memory for LLM.int8(), under 1% loss, and about 20% slower inference at the same model size.
 
@@ -161,12 +176,16 @@ with torch.no_grad():
 print("new tokens generated:", out.shape[1] - ids["input_ids"].shape[1])
 ```
 
-@@OUT@@
+```text
+parameters: 111968
+context length: 512  vocabulary: 1000
+new tokens generated: 8
+```
 
 Notice that `temperature` and `top_k` are back. On your own model, the [chapter 04](04-decoding-and-inference-behaviour.md#decoding) controls are all yours, including ones that the hosted APIs in [chapter 13](13-calling-models-from-code.md) no longer accept. The real thing differs in the repo name and hardware:
 
 ```python
-# illustrative: needs an NVIDIA GPU with about 6 GB free, bitsandbytes, and a multi-GB download
+# illustrative: needs an NVIDIA GPU with several GB free, bitsandbytes, and a multi-GB download
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 model = AutoModelForCausalLM.from_pretrained(
@@ -206,7 +225,7 @@ llama-server -m models/7B/ggml-model.gguf -c 2048     # listens on 127.0.0.1:993
 
 ## When does local beat the API?
 
-Usually for a reason other than price. The strongest cases are data that may not leave your network, a need to fine-tune weights or inspect internals, a requirement to work offline, and pinning a model forever. For price, do the arithmetic with your own volume. API prices below are the current list prices for two Claude models. The server cost is an **assumption** to replace with your own quote.
+Usually for a reason other than price. The strongest cases are data that may not leave your network, a need to fine-tune weights or inspect internals, a requirement to work offline, and pinning a model forever. For price, do the arithmetic with your own volume. API prices below are Anthropic's list prices for two Claude models as of October 2026. The server cost is an **assumption** to replace with your own quote.
 
 ```python
 PRICES = {"Haiku 5.5": (0.10, 0.50), "Sonnet 5.5": (2.00, 10.00)}   # $ per 1M input, output tokens
@@ -222,7 +241,13 @@ for tickets in [10_000, 1_000_000, 50_000_000]:
     print(f"{tickets:>11,} tickets a month: Haiku ${haiku:>10,.2f}, server ${SERVER_PER_MONTH:,.2f}")
 ```
 
-@@OUT@@
+```text
+Haiku 5.5   $0.000110 per ticket, breaks even at    9,090,909 tickets a month
+Sonnet 5.5  $0.002200 per ticket, breaks even at      454,545 tickets a month
+     10,000 tickets a month: Haiku $      1.10, server $1,000.00
+  1,000,000 tickets a month: Haiku $    110.00, server $1,000.00
+ 50,000,000 tickets a month: Haiku $  5,500.00, server $1,000.00
+```
 
 The server's line is flat and the API's rises with volume, so at some point they cross. In this setup it takes millions of tickets a month against a cheap model, and that is before staff time, and before asking if the local model is as accurate. A server also has limited throughput, which this ignores, and a busy one needs more machines. [ai-engineering/07-inference-engineering](../../../ai-engineering/07-inference-engineering/README.md) covers serving at that scale.
 
@@ -251,7 +276,7 @@ The server's line is flat and the API's rises with volume, so at some point they
 <summary>Answers</summary>
 
 1. By file size alone, both are under 8 GB (4.68 and 6.25 GB). `Q6_K` leaves about 1.75 GB for the cache and process, which is tight, so prefer `Q4_K_M`. If you have the room, run your labelled set on both and take the smaller one if the scores match.
-2. It falls from 8,130,081 to about 1,195,000 tickets a month, since each call now costs about $0.00083. Longer prompts make the API dearer per call and move break-even towards local, but the local model's cache and latency also grow.
+2. It falls from about 9.1 million to about 1.2 million tickets a month, since each call now costs about $0.00083. Longer prompts make the API dearer per call and move break-even towards local, but the local model's cache and latency also grow.
 3. Don't rely on the tag. It is set by whoever uploaded the file, and the base model's Llama licence likely still applies. Trace the chain up to the base model, read that licence, and ask legal if it matters.
 
 </details>

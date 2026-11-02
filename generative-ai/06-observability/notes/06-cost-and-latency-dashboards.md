@@ -355,8 +355,8 @@ RULES = {
     "a single turn over $0.10": daily["max_turn_usd"] > 0.10,
 }
 alerts = pd.DataFrame(RULES).T
-print(pd.DataFrame({"first": [c.idxmax()[5:] if c.any() else "-" for c in alerts.T.items().__iter__() and [alerts.loc[r] for r in alerts.index]],
-                    "days": alerts.sum(axis=1).astype(int).values}, index=alerts.index).to_string())
+first = [row.idxmax()[5:] if row.any() else "-" for _, row in alerts.iterrows()]
+print(pd.DataFrame({"first": first, "days": alerts.sum(axis=1).astype(int).values}, index=alerts.index).to_string())
 print()
 print(daily.loc["2026-10-12":"2026-10-15", ["spend", "usd_per_resolved", "cache_hit", "billing_p95_s"]].round(3).to_string())
 print()
@@ -385,7 +385,7 @@ projected month on 13 Oct: 27.9  on 16 Oct: 45.68  budget 45.0
 
 Notice which rules fired first, and which is the better signal. The cache rule is a ratio, so it doesn't depend on traffic: a marketing email that doubles your tickets moves the daily spend, and the cost per resolved stays flat, but the cache hit rate falls only when the cache breaks. Treat `cache_read_input_tokens > 0` as a standing check on any prefix you expect to be cached, since a change as small as a timestamp in the system prompt causes this regression with no error. The billing latency rule needs a route breakdown and a minimum sample, and without them it would either be hidden by other routes or fire on two slow turns. The budget rule is the slowest and the least specific, though it's the one finance will care about, so keep it as the backstop.
 
-Those thresholds are set to fit a fortnight I generated, which is the wrong way round for real use. On live traffic, replay a candidate threshold against several months, count how many days it would have fired, and read those days. An alert that fires weekly for nothing teaches people to ignore it, including on the day it matters. Every alert should also name its owner and the first thing to check, for instance "cache hit under 50%: diff the system prompt in the last release". That makes it possible to act on at 3 a.m.
+Those thresholds are set to fit a generated fortnight, which is the wrong way round for real use. On live traffic, replay a candidate threshold against several months, count how many days it would have fired, and read those days. An alert that fires weekly for nothing teaches people to ignore it, including on the day it matters. Every alert should also name its owner and the first thing to check, for instance "cache hit under 50%: diff the system prompt in the last release". That makes it possible to act on at 3 a.m.
 
 ![Three panels on one time axis over 5 to 18 October. Model spend per day jumps from about one dollar to over three during release v2.0 and returns afterwards. Spend per resolved ticket follows the same shape. The p95 latency of the billing route climbs from 11 October and stays erratic, while other routes hold near ten seconds.](../sources/images/support-agent-dashboard.png)
 
