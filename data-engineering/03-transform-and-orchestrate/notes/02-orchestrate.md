@@ -2,9 +2,9 @@
 origin: synthesis
 sources:
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/02-workflow-orchestration
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/03-orchestration
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/04-deployment/batch
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/05-monitoring
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/03-orchestration
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/04-deployment/batch
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring
   - https://docs.mage.ai/introduction/overview
   - https://docs.prefect.io/
   - https://dataintensive.net/
@@ -335,7 +335,7 @@ cd mlops && ./scripts/start.sh        # UI on http://localhost:6789
 
 Unit 3.4 is the bridge to monitoring: a sensor polls for new data and triggers retraining, which is the "conditional retraining" the MLOps project rubric rewards ([MLOps maturity](../../06-ml-platform/notes/05-mlops-maturity-and-best-practices.md)).
 
-`03-orchestration/requirements.txt` in the MLOps snapshot pins `mlflow==3.17.2`, `prefect==3.9.0`, `pandas==3.1.0`, `scikit_learn==1.9.1`, `xgboost==3.4.1`, `hyperopt==0.3.0`.
+The module's [`requirements.txt`](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/03-orchestration/requirements.txt) pins `mlflow==2.3.1`, `prefect==2.10.8`, `pandas==2.0.1`, `scikit_learn==1.2.2`, `xgboost==1.7.5`, `hyperopt==0.2.7` at upstream commit `e34bf8f`.
 
 ## Prefect (MLOps 04, 05)
 

@@ -288,6 +288,7 @@ Put together, Harbour should change as follows:
 2. In the capability example, add a tool `issue_refund(amount, account)`. Write a policy so that `account` must come from `crm` and `amount` must not come from a ticket. Test it with the fooled model.
 3. In the simulation, raise the share of honest tasks that need an address from text to 0.5. Which defence looks better now? What would you do about those tasks instead of choosing?
 4. Pick each of Harbour's tasks (policy question, order lookup, refund) and choose the most restrictive pattern from the table that still does the job.
+5. Run [`practice/injection_replay.py`](../practice/injection_replay.py), which replays 20 illustrative payloads and 8 honest tickets against a stub agent that obeys whatever it can read. Which single defence stops the most, what does each one cost, and why does one payload get through all three? Add an approval step for `issue_refund` and rerun.
 
 <details><summary>Answers</summary>
 
@@ -295,6 +296,7 @@ Put together, Harbour should change as follows:
 2. Tag the account with `sources={"crm"}` and raise `PolicyError` if `account.sources - {"crm"}` is non-empty or `"ticket" in amount.sources`. The fooled model can then produce whatever it likes without changing the outcome.
 3. The policy's utility falls to about 0.5 and the detector's stays about 0.88, so a utility-only view favours the detector. A better answer is to change the task: have a person confirm a new address once, or restrict the workflow, so that the guarantee and the utility are both kept.
 4. Policy question: action selector or context minimisation. Order lookup: plan-then-execute with identity bound in code. Refund: plan-then-execute with capability checks and human approval. Other answers are defensible if you can say what the injected text can still reach.
+5. In that run the input filter lets 14 of 20 through and breaks 1 honest ticket, because encoded and politely worded payloads have no trigger words. The provenance policy lets 8 through and breaks 2: it protects tool arguments, so it can't stop a leak in the reply. The egress allowlist lets 1 through and breaks 1, the ticket whose address appears only in its text. The survivor asks for a refund to the account on file, which every rule allows, so the only thing wrong is who wrote the request. An approval step catches it if the person sees where the text came from. These rates describe this corpus and this stub, and a low one says little about an attacker who adapts.
 
 </details>
 

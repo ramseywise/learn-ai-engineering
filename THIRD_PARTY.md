@@ -64,6 +64,7 @@ moved.
 | `generative-ai/07-agentic-applications/internet-search-agent-main` | https://github.com/omidreza-amrollahi/internet-search-agent (MIT) | 2026-10-31 | Condensed into `07-agentic-applications/notes/01-internet-search-agent.md`; the code is linked upstream as legacy (the Bing Search API was retired in August 2025). |
 | `data-analytics/Bayes/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77` | https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (MIT) | 2026-10-31 | Condensed into `data-analytics/notes/09-bayesian-inference.md` and the Bayesian notes after it. |
 | `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-10-31 | Condensed into `data-analytics/notes/09-bayesian-inference.md`. |
+| `data-engineering/06-ml-platform/practice/datatalks-mlops` (not listed above before its removal) | https://github.com/DataTalksClub/mlops-zoomcamp (**no licence**; matches commit `e34bf8f` plus line-ending, link and dependency-pin changes) | 2026-11-03 | No files. Coverage was already in `data-engineering/06-ml-platform/notes/`, `03-transform-and-orchestrate/notes/02-orchestrate.md` and `05-quality-and-observability/notes/02-monitors-and-lineage.md`; three small gaps were paraphrased with citations. Ledger: `.claude/docs/datatalks-mlops-fold.md` |
 
 ## Practice material: upstreams with no licence
 

@@ -197,12 +197,14 @@ Retrieval returns candidates. A vision model still has to read them, and everyth
 1. Increase `noise_patches` for page A from 1028 to 5000 in the MaxSim experiment. How do the two scoring methods respond?
 2. Using `index_gb`, find the corpus size where the pooled patch index reaches a 1 TB budget.
 3. Add a third ranking to `rrf` that places `p21` first. Which page leads now, and what does the `k` constant do?
+4. Run [`practice/multimodal_rag_lab.py`](../practice/multimodal_rag_lab.py), which compares seven designs on 200 synthetic pages whose answers sit in 4 patches. Which design would you ship at 1M pages, and what changes if `TEXT_SHARE` rises from 0.4 to 0.9?
 
 <details><summary>Answers</summary>
 
 1. MaxSim's score is unchanged in practice, since each query token still finds its sharp patch. The single-vector score falls further, because more background is averaged in. Late interaction scales with region sharpness, not page size.
 2. Each pooled page costs `1030/3 × 128 × 2` bytes, about 87.9 KB, so 1 TB holds about 11.4 million pages.
 3. `p3` and `p14` still lead at about 0.0323 each (`1/61 + 1/63`). `p21` now appears in two lists and scores about 0.0320 (`1/61 + 1/64`), so a first place doesn't beat them. `k` flattens the difference between ranks: a large `k` rewards appearing in many lists over a top rank in one.
+4. In that run a single vector per page gets recall@5 of 0.52 and MaxSim over every patch gets 1.00, at about 264 GB per million pages against 0.3 GB. The single-vector first stage with a MaxSim rerank of the top 20 keeps recall@5 at 1.00 at about a tenth of the brute-force query time, which is why it is the common design, though it still stores the patches for that rerank. Clustered pooling holds recall at a third of the storage, while adjacent pooling falls to 0.95, so how you pool matters. Raising `TEXT_SHARE` lifts the text-only row, which is the case the fixture can't argue against: when text states the fact, text retrieval is enough. Everything here follows from the fixture's assumptions, so check it against real pages.
 
 </details>
 

@@ -16,11 +16,13 @@ cleaned: 2026-11-01
 |---|---|---|---|
 | Huyen, *AI Engineering* (O'Reilly, 2025) | Ch. 10 frames guardrails as input and output rails and describes masking PII before an external call. Ch. 5 covers defensive prompt engineering | [✓ ch05](../01-prompt-engineering/sources/huyen-ai-engineering/ch05-prompt-engineering.pdf) · [✓ ch10](../../generative-ai/08-eval/sources/huyen-ai-engineering/ch10-ai-engineering-architecture-user-feedback.pdf) | [03](notes/03-guardrail-models.md) |
 | Wilson & Yen, *The Developer's Playbook for Large Language Model Security* (O'Reilly). Wilson leads the OWASP Top 10 for LLM Applications project | Recommended for the threat model, data leakage, supply chain and trust boundaries. Not in the repo, and the notes don't rely on it | not held | — |
+| Albada, *Building Applications with AI Agents* (O'Reilly, 2025) | Ch. 12 reports the PINT scores in [03](notes/03-guardrail-models.md#measuring-a-guard-on-your-own-traffic) | [PDF](../03-harness-engineering/sources/building-applications-with-ai-agents/) | 03 |
 
 ## Core papers
 
 | Paper | Why read it | PDF | Maps to |
 |---|---|---|---|
+| Anthropic, [Next-generation Constitutional Classifiers](https://www.anthropic.com/research/next-generation-constitutional-classifiers) (2026) | The reference design for classifier guardrails: a two-stage screen with a near-free probe in front | — | 03 |
 | Greshake et al., [Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173) (AISec@CCS 2023) | Defined indirect injection: instructions arriving through content the model retrieves. The root of chapter 2 | not held | [01](notes/01-threat-model.md) · [02](notes/02-prompt-injection-and-jailbreaks.md) |
 | ⚑ Wallace et al., [The Instruction Hierarchy: Training LLMs to Prioritize Privileged Instructions](https://arxiv.org/abs/2404.13208) (2024) | Trains models to rank system over user over tool text. It helps, and it remains a learned behaviour rather than a boundary. Abstract read | not held | [02](notes/02-prompt-injection-and-jailbreaks.md) |
 | Debenedetti et al., [AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents](https://arxiv.org/abs/2406.13352) (NeurIPS 2024) | The benchmark that reports attack success and utility together, for tool-using agents | not held | [02](notes/02-prompt-injection-and-jailbreaks.md) · [04](notes/04-tool-and-execution-sandboxing.md) · [05](notes/05-red-teaming-tools.md) |

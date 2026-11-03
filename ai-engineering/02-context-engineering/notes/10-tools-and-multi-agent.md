@@ -153,14 +153,9 @@ Most production agents are conditional loops with occasional parallel batches. P
 
 ## MCP: a protocol for moving context
 
-The Model Context Protocol standardises how context from outside the agent reaches the window. Harness 03 covers [when to choose MCP over an in-process tool](../../03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), its supply-chain risks, and the cost of loading every server's definitions eagerly ([tool discovery at scale](../../03-harness-engineering/notes/03-tool-design.md#tool-discovery-at-scale)). This section reads the protocol as context plumbing: who decides what enters the window, and what each hop costs.
+The Model Context Protocol standardises how context from outside the agent reaches the window. Harness 03 is the authoritative note. It covers [when to choose MCP over an in-process tool](../../03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), [the protocol itself](../../03-harness-engineering/notes/03-tool-design.md#the-protocol), its supply-chain risks, and the cost of loading every server's definitions eagerly ([tool discovery at scale](../../03-harness-engineering/notes/03-tool-design.md#tool-discovery-at-scale)). This section reads the protocol as context plumbing: who decides what enters the window, and what each hop costs.
 
 **Why a protocol.** The idea is borrowed from the Language Server Protocol. Without a shared interface, M models and N tools need M×N connectors; with one, M+N. Three models and four tools is 12 integrations without MCP and 7 with it (*AI Agents with MCP*, ch. 1).
-
-![MCP architecture: the host application talks to one MCP client per server; requests, responses and notifications flow client to server, elicitation and sampling requests flow server to client](../sources/images/ai-agents-with-mcp-fig2-3.png)
-*Image Source: Stratis, *AI Agents with MCP* (O'Reilly, 2025), Fig. 2-3*
-
-**Architecture.** The host is the application that holds the LLM. It runs **one client per server**, 1:1. Messages are JSON-RPC requests, responses and notifications. Each connection has a lifecycle of initialize (protocol version and capability negotiation), operate, shut down. The Python SDK's `ClientSessionGroup` drives several servers as if they were one, so two primitives with the same name raise an exception. Prefix tool names per server (`grader_…`), which also helps the model choose (*AI Agents with MCP*, ch. 4–5).
 
 **Who controls each primitive** is the context-engineering question. The spec assigns each primitive to a different party:
 
@@ -172,43 +167,7 @@ The Model Context Protocol standardises how context from outside the agent reach
 
 The book's ch. 2 calls prompts application-controlled. Its own ch. 5 and the spec say user-controlled.
 
-**Server-initiated requests.** Three client features let the server reach back through the client:
-
-- **Sampling** (`sampling/createMessage`) lets a server borrow the host's model. The spec says clients SHOULD keep a human in the loop and rate-limit.
-- **Elicitation** asks the user for structured input. The user can accept, decline or cancel, and the schema is limited to a flat subset of JSON Schema.
-- **Roots** (`file://` URIs) tell a server where it may work. They are advisory. The server is trusted to respect them, so **roots are not a security boundary** ([isolation](#context-isolation-as-a-security-boundary)).
-
-**Transports.**
-
-- **stdio** for local servers.
-- **Streamable HTTP** for remote ones. It uses one endpoint: POST carries client messages, and an optional GET opens an SSE stream. Streams resume via `Last-Event-ID`, auth is OAuth 2.1, and local servers should bind to localhost.
-- The older HTTP+SSE transport is superseded.
-
-The book's ch. 2 describes Streamable HTTP as "GETs and PUTs". The spec uses POST and GET.
-
-> **Version-dependent.** These details follow the 2025-03-26 spec that the book cites, plus the 2025-06-18 revision, which added elicitation and structured tool output. Check the current spec before relying on a detail. Drop the book's ecosystem counts; they date from mid-2025.
-
-A minimal server has one primitive of each kind (FastMCP, now the default in the Python SDK; it derives the output schema from type hints):
-
-```python
-from mcp.server.fastmcp import FastMCP
-
-mcp = FastMCP("grader")
-
-@mcp.tool()                          # model-controlled
-def grader_report_card(student: str) -> ReportCard: ...
-
-@mcp.resource("file:///rubric.md")   # application-controlled: lazy, no side effects
-def rubric() -> str: ...
-
-@mcp.prompt()                        # user-controlled
-def review(student: str) -> str: ...
-
-if __name__ == "__main__":
-    mcp.run()                        # stdio; mcp.run("streamable-http") for remote
-```
-
-The book's runnable clients and servers (ch. 3 onward) are in its upstream repo.
+Everything else about the protocol is in [harness 03](../../03-harness-engineering/notes/03-tool-design.md#the-protocol): the architecture, server-initiated requests, transports and a minimal server.
 
 ### Designing MCP servers for the window
 

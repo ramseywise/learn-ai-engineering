@@ -2,7 +2,6 @@
 origin: synthesis  # was: book-synthesis
 sources:
   - "Valliappa Lakshmanan & Hannes Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 9"
-  - https://www.anthropic.com/research/next-generation-constitutional-classifiers
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
@@ -43,6 +42,8 @@ Guardrails are defense in depth. No single one suffices, so layer specialized on
 | Output | PII filter; brand/content validation |
 
 The diagram shows the two kinds of path an attack can take. Retrieved data enters at the same point as user input, which is why [prompt injection](02-tool-use-and-react.md#prompt-injection-six-defenses) is a design problem and not only a filtering one.
+
+This is the map. The rails themselves are in [safety 03 — guardrail models](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) (where each sits, what a guard model is, how to measure one, and the reference design for classifier guardrails) and [safety 04 — tool and execution sandboxing](../../../ai-engineering/09-safety-and-security/notes/04-tool-and-execution-sandboxing.md) (the action rail).
 
 ---
 
@@ -108,16 +109,6 @@ BLOCKED by limit_length
 ```
 
 These checks are toys; production ones use a library such as NeMo Guardrails, Guardrails AI or LLM Guard, or an LLM-as-Judge prompt. Three of the book's cautions carry over regardless. Running guardrails in parallel with the main call with `asyncio.gather` does not cancel that call, so you still pay for it and only discard the result. Each layer adds latency, so screen with small models and set a latency budget. And this is an arms race, so keep a dataset of attacks and rerun it. The book's own listings are not consistent about what `apply_guardrails` returns, so treat them as sketches.
-
----
-
-## Reference design: classifier guardrails
-
-**Constitutional Classifiers** (Anthropic, 2026) is the reference design for classifier guardrails:
-
-- A natural-language constitution generates the synthetic training data.
-- The question and answer are judged together, so "food flavorings" can be read as code for reagents.
-- Screening has two stages. A near-free activation probe sees every conversation, and anything suspicious goes to a stronger classifier rather than straight to refusal. Stage one can therefore over-flag cheaply.
 
 ---
 

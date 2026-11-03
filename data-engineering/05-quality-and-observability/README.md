@@ -49,7 +49,7 @@
 ## Deck and practice
 
 - **Deck:** [slides/quality-and-observability.pptx](slides/quality-and-observability.pptx). Build with `make slides PILLAR=data-engineering/05-quality-and-observability STRICT=1 PREVIEW=1`.
-- **Practice:** [practice/](practice/) holds the code for chapters 4 to 6 and the [Postgres migration lab](practice/postgres_migration_lab.py). The monitoring coursework is [06-ml-platform/practice/datatalks-mlops/05-monitoring](../06-ml-platform/practice/datatalks-mlops/05-monitoring): the baseline notebook needs Python and `evidently<0.7`; the stack needs Docker (`docker-compose up`, then `evidently_metrics_calculation.py`). dbt tests are exercised in [03-transform-and-orchestrate/practice](../03-transform-and-orchestrate/practice).
+- **Practice:** [practice/](practice/) holds the code for chapters 4 to 6 and the [Postgres migration lab](practice/postgres_migration_lab.py). The monitoring coursework is [module 05 of the MLOps Zoomcamp](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring): the baseline notebook needs Python and `evidently<0.7`; the stack needs Docker (`docker-compose up`, then `evidently_metrics_calculation.py`). dbt tests are exercised in [03-transform-and-orchestrate/practice](../03-transform-and-orchestrate/practice).
 - **Chapter code:** every block without an `# illustrative` label runs locally on synthetic data. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
 ## Primary texts

@@ -11,7 +11,8 @@ sources:
   - https://arxiv.org/abs/2604.02460
   - https://arxiv.org/abs/2512.08296
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 8"
-  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9, 11"
+  - https://arxiv.org/abs/2503.13657
   - https://arxiv.org/abs/2303.17580
   - https://arxiv.org/abs/2406.01297
   - https://arxiv.org/abs/2408.08435
@@ -61,7 +62,7 @@ Specialise by prompt first. n8n runs every specialist on the same model at tempe
 - **Silent ending.** Any reply that isn't exactly a name ("Inventory.", "the inventory specialist") ends the run. The user's answer is then the supervisor's one-word label.
 - **Crash instead of fallback.** The conditional edge's path map lists only the three specialists. LangGraph raises on a return value the map doesn't list, so the "fallback" crashes instead of ending.
 
-The fix is a schema, not a firmer prompt. Use `with_structured_output` over a `Literal["inventory", "transportation", "supplier", "unknown"]`, and route `unknown` to a clarify or escalate node that exists in the graph. The book's prose also describes the supervisor routing a disruption to transportation "while the inventory specialist concurrently scales" the warehouse. Its code can't do that: it picks exactly one specialist, and every specialist edge goes to `END`. Concurrent specialists need fan-out ([below](#fan-out--fan-in)), not a supervisor.
+The fix is a schema, not a firmer prompt ([02 has the code](02-graph-primitives.md#a-router-fails-silently-unless-you-make-it-fail-loudly)). Use `with_structured_output` over a `Literal["inventory", "transportation", "supplier", "unknown"]`, and route `unknown` to a clarify or escalate node that exists in the graph. The book's prose also describes the supervisor routing a disruption to transportation "while the inventory specialist concurrently scales" the warehouse. Its code can't do that: it picks exactly one specialist, and every specialist edge goes to `END`. Concurrent specialists need fan-out ([below](#fan-out--fan-in)), not a supervisor.
 
 When the specialists outgrow one agent's tool list, Albada gives two remedies to try before splitting into agents: **hierarchical tool selection** (group tools behind a few coarse tools) and **semantic tool selection** (embed the tool descriptions and retrieve the top k per query). The supervisor split only pays once the tool count or the roles' prompts actually conflict.
 
@@ -118,7 +119,7 @@ Three implementation levels, in increasing order of determinism:
 
 What you lose compared with LangGraph: there is no typed shared state, no reducers, and no checkpoints. State is whatever the orchestrator chooses to pass along, which is a context firewall when you want one ([03-harness note 07](../../03-harness-engineering/notes/07-orchestration.md)) and a liability when you need resume.
 
-This workspace already runs the fan-out pattern: `/akira` (parallel haiku scanners), `/workflow-research fan-out` (parallel scouts) and `/workflow-review` (a multi-reporter pipeline). Each is a parallel review graph with a synthesiser node.
+This repo's `/review` skill has the same shape: it sends a target to independent reviewers and merges what they report.
 
 ---
 
@@ -173,7 +174,7 @@ The book treats topology as the multi-agent subset of graph engineering ([01](01
 
 ## When multi-agent beats single-agent
 
-The book's test is one question: **does the collaboration introduce information the single agent didn't have?**
+Li's test (*AI Agents in Depth*, ch. 10, Table 10-1) is one question: **does the collaboration introduce information the single agent didn't have?**
 
 | Collaboration | New information? | Evidence |
 |---|---|---|
@@ -191,9 +192,34 @@ More steps alone also plateau. Budget-aware tool-use work (Google, 2025; BAVT, 2
 
 ---
 
+## How multi-agent systems fail
+
+Cemri et al. ([arXiv:2503.13657](https://arxiv.org/abs/2503.13657), 2025) found 40–80% of tasks fail in the multi-agent systems they studied, and sorted 14 failure modes into three groups:
+
+| Category | Examples |
+|---|---|
+| Specification issues | ignoring the role or task spec, repeating steps, losing context, not recognising completion |
+| Inter-agent misalignment | conversation resets, not asking for clarification, derailment, withholding information, ignoring other agents, reasoning that does not match action |
+| Task verification | missing or weak checks, premature termination |
+
+The taxonomy comes from expert annotation of about 150 conversation traces, each averaging over 15,000 lines. No single cause dominates: failures spread across all three categories, and they are correlated. A bad architecture, for example, causes inefficient communication downstream, so fixing one mode rarely fixes the system (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11).
+
+Four named problems come specifically from orchestration:
+
+| Failure | Shape | Mitigation |
+|---|---|---|
+| **Loop oscillation** | Two nodes bounce work between them indefinitely | Iteration counters on cyclic edges; forced escalation |
+| **Context pollution** | Nested workflows leak state upward, defeating isolation | Explicit boundary schemas; return summaries only |
+| **Concurrency collision** | Parallel branches write the same state or file | JoinNode barriers; per-branch ownership of state keys |
+| **Consensus deadlock** | Reviewer agents never agree, blocking progress | Tie-break rule, majority threshold, or a final arbiter |
+
+Two more problems are specific to many agents. **Hallucinations amplify**: one agent's invention becomes the next agent's input, so cross-validate claims that cross a handoff. **Failures are hard to attribute.** The fix is to **evaluate each component and the end-to-end result separately**. If the end-to-end eval fails while every component eval passes, the bug is in a handoff or integration. If one component eval fails, you know which agent to fix. Per-step traces (each agent's plan, prompt, tool calls and results) make that analysis fast.
+
+---
+
 ## The runtime as an operating system
 
-The book maps a multi-agent runtime onto an OS:
+Li maps a multi-agent runtime onto an OS (ch. 10, Table 10-2):
 
 | OS | Agent runtime |
 |---|---|
@@ -219,7 +245,7 @@ The Actor model (Hewitt, 1973) is the precedent: isolated actors that share noth
 | **Mounted external** | `/mnt/gdrive` | External permissions apply | Eventually consistent; mostly read-only |
 | **Built-in read-only** | `/skills` | Everyone reads, no one writes | None needed |
 
-**Pass file paths, not file contents.** The manager in the book's translation lab keeps only a file index; the chapters themselves never enter its context.
+**Pass file paths, not file contents.** The manager in Li's book-translation lab keeps only a file index; the chapters themselves never enter its context.
 
 ### The control plane
 
@@ -263,10 +289,12 @@ To the manager, each sub-agent is a tool call that returns a structured summary.
 Three of its mechanisms still carry over:
 
 - **Plans as a dependency graph.** Each subtask carries an id and a list of the ids it depends on. A `<resource>` placeholder stands for an upstream output and is replaced once that task completes. Tasks with no dependencies run in parallel.
-- **Retrieve, then choose.** All the model descriptions won't fit in context, so model selection filters by task type, ranks by download count (a popularity proxy for quality), and gives only the top k descriptions to the LLM for a single choice. This is semantic tool selection before it had a name.
+- **Retrieve, then choose.** All the model descriptions won't fit in context, so model selection filters by task type, ranks by download count (a popularity proxy for quality), and gives only the top k descriptions to the LLM for a single choice. This is tool selection by retrieval before it had a name, though it ranks by popularity and not by embedding.
 - **Hybrid execution.** Remote inference endpoints are tried first, with local inference as the fallback.
 
-Its listed limits are the manager pattern's limits. **Efficiency:** three of the four stages are LLM calls. **Planning** is only as good as the controller. **Context** runs out (32K was enough for some tasks). **Instability:** the controller ignores instructions and breaks the program flow.
+Its listed limits are the manager pattern's limits. **Efficiency:** three of the four stages are LLM calls. **Planning** is only as good as the controller. **Context** runs out (the paper says even 32K tokens falls short for connecting many models). **Instability:** the controller ignores instructions and breaks the program flow.
+
+Li's labs show the two shapes:
 
 - **Sequential:** the book translation lab runs Glossary → Translation → Proofreading under a manager that holds only the file index.
 - **Parallel:** workers report over a message bus. Redis Pub/Sub has no persistence, so a worker that is down misses messages; RabbitMQ persists them. The parallel-search lab runs 10 searchers that broadcast `target_found`; the manager takes a lock, sends `terminate` to the rest, and times out any worker after 2 minutes.
@@ -423,7 +451,7 @@ From *AI Agents in Depth* ch. 10. All are linked upstream: the first three and 1
 | What is the fix for a supervisor that mis-routes? | A schema rather than a firmer prompt: `with_structured_output` over a `Literal` with an `unknown` value, routed to a clarify or escalate node that exists in the graph. |
 | What do you lose building a graph with Claude Code subagents instead of LangGraph? | Typed shared state, reducers and checkpoints. State is whatever the orchestrator passes along, which is a context firewall when you want one and a liability when you need resume. |
 | When should agents share context and when should it be isolated? | Li's rule is not to share when cumulative context would pass about half the window. Isolated agents then pass paths rather than contents, as threads versus processes would suggest. |
-| Should you add a second LLM to review the first? | Ask if the collaboration brings in information. Self-review is neutral or harmful and debate doesn't help much, but a reviewer that can run something gets execution feedback and earns its node. |
+| Should you add a second LLM to review the first? | Ask if the collaboration brings in information. Self-review is often neutral or harmful and debate doesn't help much, but a reviewer that can run something gets execution feedback and earns its node. |
 | A single agent passes 60% of your task set. Does adding a team help? | Probably not on those numbers: Kim et al. found negative returns from extra agents above about 45% single-agent performance. Measure on your own tasks before adding any. |
 | Orchestration or choreography? | Orchestration has a conductor, which is a bottleneck and a single point of failure. Choreography removes both and makes the flow harder to see, so it needs a max-handoff guard. |
 | Ten parallel workers search and one finds the target. How do the rest stop? | In the parallel-search lab, the finder broadcasts `target_found`; the manager takes a lock, sends `terminate` to the rest and times out any worker after 2 minutes. |

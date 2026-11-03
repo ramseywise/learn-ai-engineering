@@ -58,6 +58,23 @@ class CurriculumMap(unittest.TestCase):
         self.assertEqual({i["path"] for i in self.kinds("missing_next_target")},
                          {"data-science/01-a/notes/01-one.md", "data-science/01-a/notes/02-two.md"})
 
+    def test_next_may_follow_the_readme_order(self):
+        p = "data-science/03-c"
+        write(self.root, f"{p}/README.md", "[1](notes/01-a.md) [3](notes/03-c.md) [2](notes/02-b.md) [4](notes/04-d.md)\n"
+                                           "Later mention: [1](notes/01-a.md)\n")
+        write(self.root, f"{p}/notes/01-a.md", "# A\n\n## Next\n\n[c](03-c.md)\n")
+        write(self.root, f"{p}/notes/02-b.md", "# B\n\n## Next\n\n[d](04-d.md)\n")
+        write(self.root, f"{p}/notes/03-c.md", "# C\n\n## Next\n\n[out](../../04-d/README.md)\n")
+        write(self.root, f"{p}/notes/04-d.md", "# D\n\n## Next\n\n[out](../../04-d/README.md)\n")
+        write(self.root, f"{p}/notes/05-e.md", "# E\n")
+        issues = [i["path"] for i in cm.build(self.root)["issues"] if i["kind"] == "next_out_of_order"]
+        # 01 and 02 follow the README. 03 points out of the pillar but the README does not read it last.
+        self.assertIn(f"{p}/notes/03-c.md", issues)
+        self.assertNotIn(f"{p}/notes/01-a.md", issues)
+        self.assertNotIn(f"{p}/notes/02-b.md", issues)
+        # 04 is read last in the README, so it may close the pillar even with a note numbered after it.
+        self.assertNotIn(f"{p}/notes/04-d.md", issues)
+
     def test_readme_gaps(self):
         self.assertEqual([i["path"] for i in self.kinds("not_in_readme")], ["data-science/01-a/notes/04-unlisted.md"])
         self.assertEqual([i["path"] for i in self.kinds("no_cross_links")], ["data-science/02-b/README.md"])

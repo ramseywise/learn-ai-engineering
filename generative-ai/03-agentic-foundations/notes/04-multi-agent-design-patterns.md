@@ -506,17 +506,9 @@ Use cases from the book, roughly from least to most complex: parallel breadth-fi
 
 ## Why multi-agent systems fail
 
-Cemri et al. (2025) found 40–80% of tasks fail in the multi-agent systems they studied, and sorted 14 failure modes into three groups:
+Cemri et al. (2025) found 40–80% of tasks fail in the multi-agent systems they studied, and sorted 14 failure modes into three groups: specification issues, inter-agent misalignment and task verification. No single cause dominates. The full taxonomy and the fixes are in [graph 05 — how multi-agent systems fail](../../../ai-engineering/05-graph-engineering/notes/05-topology-patterns.md#how-multi-agent-systems-fail), the authoritative note.
 
-| Category | Examples |
-|---|---|
-| Specification issues | ignoring the role or task spec, repeating steps, losing context, not recognising completion |
-| Inter-agent misalignment | conversation resets, not asking for clarification, derailment, withholding information, ignoring other agents, reasoning that does not match action |
-| Task verification | missing or weak checks, premature termination |
-
-The taxonomy comes from expert annotation of about 150 conversation traces, each averaging over 15,000 lines. No single cause dominates: failures spread across all three categories, and they are correlated. A bad architecture, for example, causes inefficient communication downstream, so fixing one mode rarely fixes the system (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11).
-
-The book adds that coordination overhead grows faster than the number of agents, consistency across agents is hard, and errors compound along a chain. Its advice: if UX design, a human in the loop or adjusted expectations let a single agent do the job, use a single agent. The production view (subagents as context firewalls, when not to go multi-agent) is in [harness 07 — orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) and [context 10 — tools and multi-agent](../../../ai-engineering/02-context-engineering/notes/10-tools-and-multi-agent.md).
+*Building AI Agents with LLMs, RAG, and Knowledge Graphs* (ch. 11) adds that coordination overhead grows faster than the number of agents, consistency across agents is hard, and errors compound along a chain. Its advice: if UX design, a human in the loop or adjusted expectations let a single agent do the job, use a single agent. The production view (subagents as context firewalls, when not to go multi-agent) is in [harness 07 — orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) and [context 10 — tools and multi-agent](../../../ai-engineering/02-context-engineering/notes/10-tools-and-multi-agent.md).
 
 | Rule | Why |
 |---|---|

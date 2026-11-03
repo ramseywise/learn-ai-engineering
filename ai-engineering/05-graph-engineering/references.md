@@ -53,6 +53,7 @@
 | | SFT on graph tasks (source of ch. 7's Fig. 7.31). Via ch. 7; not yet read | [2403.04483](https://arxiv.org/abs/2403.04483) | 13 |
 | | Hamilton, nine-judge simulated court (2023). Via Raieli & Iuculano ch. 9 | [2301.05327](https://arxiv.org/abs/2301.05327) | 07 |
 | | Shen et al., *HuggingGPT* (2023). Via ch. 9 | [2303.17580](https://arxiv.org/abs/2303.17580) | 05 |
+| | Cemri et al., *Why Do Multi-Agent LLM Systems Fail?* (2025): 14 failure modes in 3 categories, from about 150 annotated traces | [2503.13657](https://arxiv.org/abs/2503.13657) | 05 |
 | | Hu, Lu & Clune, *Automated Design of Agentic Systems* (ADAS, ICLR 2025). Via Albada ch. 8 | [2408.08435](https://arxiv.org/abs/2408.08435) | 05 |
 
 <!-- citegraph:origins start -->

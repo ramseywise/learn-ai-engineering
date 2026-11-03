@@ -169,7 +169,7 @@ Labels: **offline** = runs on a laptop with no account once data is downloaded Â
 | `06-streaming` | [04](04-warehouse-lakehouse-streaming/practice/datatalks-de/06-streaming) | [Kafka](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) | Docker (Kafka / Confluent compose, Redpanda); Java for the Kafka Streams examples; ksqlDB folder is SQL only |
 | `projects/` | [02](02-ingest-and-modelling/practice/datatalks-de/projects) | Capstone | Reading: project brief and dataset list |
 
-**MLOps Zoomcamp** ([course README](06-ml-platform/practice/datatalks-mlops/README.md), all in pillar 06)
+**MLOps Zoomcamp** ([course repo at the commit these chapters read](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7), all in pillar 06)
 
 | Module | Chapter | Needs |
 |---|---|---|

@@ -58,7 +58,7 @@ RENT STANDING ORDER  615.92   58   none
         PAYROLL RUN  510.50  427   none
 ```
 
-Two things to notice. The three counts are close, yet the mapping isn't one-to-one in either direction: a batch line has several invoices and a part-paid invoice has several lines. And a line with no invoice is a correct outcome, so "which invoice?" is the wrong question. The right one is "which invoice, if any?"
+The three counts are close, yet the mapping isn't one-to-one in either direction: a batch line has several invoices and a part-paid invoice has several lines. And a line with no invoice is a correct outcome, so "which invoice?" is the wrong question. The right one is "which invoice, if any?"
 
 ## Blocking: cut the candidates, and accept what that costs
 
@@ -79,7 +79,7 @@ window + amount, name or reference  340885     0.9804   78.4907  0.9733
 
 **Recall** here is the share of true links still inside the block, the same retrieval recall as in DS 05/03. No single key is enough. Amount misses part payments and batches, name misses the hidden processor, and reference is nearly perfect when present but usually absent. Their union keeps 97.3% of true links at 78 candidates per line, a reduction of 98%.
 
-The reference key adds almost no pairs and a full point of recall. A key that is rarely present and very specific is cheap to add, because it can only rescue a link, so check for one before widening anything else.
+The reference key adds almost no pairs and a full point of recall. A rare, very specific key is cheap, because it can only rescue a link.
 
 Reduction ratio alone says nothing, as the 99.99% row shows. Always read it beside recall. And recall isn't evenly spread:
 
@@ -141,9 +141,9 @@ Fellegi-Sunter weights in bits, log2(m/u), from labelled training pairs
   date       {'near due': 1.16, 'later': -2.54, 'far': -5.87}
 ```
 
-A reference with one digit off still carries nearly 9 bits, which multiplies the odds of a match by about 500. Treating it as a mismatch, as an exact join does, would throw that away. We learned the weights from labelled pairs for brevity. The paper's own method II estimates them from frequencies in the files, with no labels at all, which is why the idea was usable in 1969 and still suits a client with no labelled history.
+A reference with one digit off still carries nearly 9 bits, which multiplies the odds of a match by about 500. Treating it as a mismatch, as an exact join does, would throw that away. We learned the weights from labels for brevity. The paper's method II estimates them from file frequencies with no labels, which still suits a client with no labelled history.
 
-Look at the name row. A weak name match scores *worse* than no match at all, which can't be right as a fact about names. It comes from the block. A pair with no name match got in on its amount or reference, so it's already a good candidate, and hidden-name lines add true links there. A pair with a weak match may have got in on that weak match alone. So $m$ and $u$ describe pairs *given the block*, and the block has selected on the same fields. That's the same selection effect as in any analysis conditioned on a filter.
+Look at the name row. A weak name match scores *worse* than no match at all, which can't be right as a fact about names. It comes from the block. A pair with no name match got in on its amount or reference, so it's already a good candidate, and hidden-name lines add true links there. A pair with a weak match may have got in on that weak match alone. So $m$ and $u$ describe pairs *given the block*, and the block has selected on the same fields.
 
 ### Three decisions, not two
 
@@ -161,9 +161,9 @@ The weights give us a clean link region, but one that holds only 305 of 824 true
 
 ### Where a language model fits
 
-Pairwise scoring can also be done by reading both records. [Ditto](https://arxiv.org/abs/2004.00584) (Li et al., *PVLDB* 2020) serialises each record as `[COL] attribute [VAL] value`, gives a pre-trained language model the two as a sequence pair, and classifies match or no match. It's the same [cross-encoder idea as a reranker](../../../generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md#reranking). The gains are largest on dirty text: on its hardest dirty benchmark, F1 rose by 31.89 points, from 53.8 to 85.69 (the abstract says up to 29% and the body's table shows more, so read the table). A case study matched two employer files of 789,409 and 412,418 records, and blocking still left 10,652,249 candidate pairs. With 20,000 labelled pairs it reached an F1 of 96.53.
+Pairwise scoring can also be done by reading both records. [Ditto](https://arxiv.org/abs/2004.00584) (Li et al., *PVLDB* 2020) serialises each record as `[COL] attribute [VAL] value`, gives a pre-trained language model the two as a sequence pair, and classifies match or no match. It's the same [cross-encoder idea as a reranker](../../../generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md#reranking). The gains are largest on dirty text: on its hardest dirty benchmark, F1 rose by 31.89 points, from 53.8 to 85.69 (the abstract says up to 29% and the body's table shows more, so read the table).
 
-Two cautions from the paper bear on payments. Its language models were trained on general English and "might not capture well" matching tasks with a lot of numeric data, and it suggests adding numeric features. And its output is a yes or no per pair, so ranking and abstaining remain your problem. We didn't run Ditto here. Our ledger's strongest signals are amounts, dates and a reference, which trees handle directly. On messy supplier names at scale, a cross-encoder's score would make a good extra feature.
+Two cautions from the paper bear on payments. Its language models were trained on general English and "might not capture well" matching tasks with a lot of numeric data, and it suggests adding numeric features. And its output is a yes or no per pair, so ranking and abstaining remain your problem. We didn't run Ditto here. Our ledger's strongest signals are amounts, dates and a reference, which trees handle directly.
 
 ## Ranking: pointwise, pairwise, listwise
 
@@ -181,9 +181,9 @@ There are three ways to set up training. They differ in what one training exampl
 
 Sorting makes NDCG, in Burges's words, "everywhere either discontinuous or flat". A small change in a score either changes nothing or swaps two documents and jumps. There's no useful gradient.
 
-Pairwise cross-entropy has a gradient, but counts every swap equally. Burges's figure 1 makes the point: a list can drop from 13 pairwise errors to 11 by moving a top document down, which is better for RankNet and worse for NDCG. LambdaRank's fix is blunt and effective. Don't write a loss at all. Write down the gradient you want: RankNet's, multiplied by $|\Delta\text{NDCG}|$, the change in NDCG if those two documents swapped places. Pairs that matter near the top pull hard, and pairs far down the list barely pull at all. Burges gives the picture of little arrows acting as forces on each document.
+Pairwise cross-entropy has a gradient, but counts every swap equally. Burges's figure 1 makes the point: a list can drop from 13 pairwise errors to 11 by moving a top document down, which is better for RankNet and worse for NDCG. LambdaRank's fix is blunt and effective. Don't write a loss at all. Write down the gradient you want: RankNet's, multiplied by $|\Delta\text{NDCG}|$, the change in NDCG if those two documents swapped places. Pairs that matter near the top pull hard, and pairs far down the list barely pull at all.
 
-**LambdaMART** feeds those gradients to gradient-boosted trees, which he describes as "just use MART, specifying appropriate gradients and the Newton step". Bruch makes the objection precisely: it "forgoes the loss function altogether and heuristically formulates the gradients", so it has no objective to analyse. It works anyway. An ensemble of LambdaMART rankers won the first track of the 2010 Yahoo! learning-to-rank challenge, as Burges reports, though his paper presents no experiments of its own.
+**LambdaMART** feeds those gradients to gradient-boosted trees, which he describes as "just use MART, specifying appropriate gradients and the Newton step". Bruch makes the objection precisely: it "forgoes the loss function altogether and heuristically formulates the gradients", so it has no objective to analyse. It works anyway: an ensemble of LambdaMART rankers won a track of the 2010 Yahoo! learning-to-rank challenge, as Burges reports.
 
 The factor is a few lines in code, which is why we can test it directly. This is the custom objective in the lab, with `rho` as $1 - P_{ij}$:
 
@@ -245,11 +245,11 @@ LambdaMART wins on NDCG, and it wins every paired comparison. The more useful re
 
 - **The biggest step is having features at all.** Closest amount scores 0.54, and adding names, dates and references with no training tricks takes Fellegi-Sunter to 0.87.
 - **The second is changing the training example.** Moving from pointwise to pairwise adds about 0.03 for trees and for linear models alike. A pairwise *linear* model at 0.9374 beats pointwise *trees* at 0.9129, so on this data the objective matters more than the model family.
-- **The famous factor is small.** $|\Delta\text{NDCG}|$ moves the same custom trees from 0.9416 to 0.9451, a gain of 0.0035. It's real, but it's about an eighth of what moving to pairs bought. The library's version is another 0.0018 ahead. It differs in detail, since by default it normalises gradients and truncates pairs far down the list.
-- **Listwise didn't win.** XE-NDCG lost all five ledgers to LambdaMART, by 0.0056. Bruch's own benchmarks went the other way, with 48.23 against 48.08 NDCG@5 on one web search set and 73.37 against 73.00 on another. Those are web search sets, not payment lists, and those gaps are small too. The honest conclusion is that this gap is small and depends on the data.
-- **Top-1 is a harsher and noisier judge.** The trees sit within about 0.015 of each other with a standard deviation of over 0.02 across ledgers. If you only link the top pick, pointwise trees are a defensible and far simpler start. Since the differences in the top-1 column are within ledger-to-ledger variation, don't claim from it that one tree objective is better.
+- **The famous factor is small.** $|\Delta\text{NDCG}|$ moves the same custom trees from 0.9416 to 0.9451, a gain of 0.0035. It's real, but it's about an eighth of what moving to pairs bought. The library's version is another 0.0018 ahead.
+- **Listwise didn't win.** XE-NDCG lost all five ledgers to LambdaMART, by 0.0056. Bruch's own benchmarks went the other way, with 48.23 against 48.08 NDCG@5 on one web search set and 73.37 against 73.00 on another. Those are web search sets, not payment lists. The gap is small and depends on the data.
+- **Top-1 is a harsher and noisier judge.** The trees sit within about 0.015 of each other with a standard deviation of over 0.02 across ledgers. If you only link the top pick, pointwise trees are a simpler start.
 
-Five generated ledgers show what happens on this generator and no more. We chose its difficulties, and a different mix could reorder the close results. Run it on your own data before you trust the order.
+We chose this generator's difficulties, and a different mix could reorder the close results. Run it on your own data before you trust the order.
 
 ## Match errors are not classification errors
 
@@ -276,7 +276,7 @@ wrong top picks 101: 97 invoices wrongly marked paid, and 101 bank lines whose t
   share of wrong picks from the right supplier 0.752
 ```
 
-Three quarters of the wrong picks are the right supplier and the wrong invoice. Identifying a supplier is mostly solved here, and telling apart two near-identical invoices from one supplier is what's left. That's a data problem as much as a model problem: if a monthly fee has been the same amount for a year and the payer left no reference, the evidence simply isn't there.
+Three quarters of the wrong picks are the right supplier and the wrong invoice. Identifying a supplier is mostly solved here, and telling apart two near-identical invoices from one supplier is what's left. If a monthly fee has been the same for a year and the payer left no reference, the evidence simply isn't there.
 
 **Decisions on different lines constrain each other.** Each line picks independently, so two lines can claim one invoice. Solving a one-to-one **assignment** instead looks like the obvious repair: the Hungarian algorithm finds the pairing with the best total score in which each line and each invoice is used at most once. It didn't help overall.
 
@@ -291,7 +291,7 @@ assigned on pointwise log-odds: 675 of 790 right
   lines by kind {'single': 635, 'part': 120, 'batch': 35}
 ```
 
-We expected assignment to win, and it lost, 678 to 689. Singles did improve, from 585 to 594, and batches from 19 to 25. But part payments fell from 85 to 59, because two lines paying one invoice is exactly what a one-to-one constraint forbids. The constraint is true of most of the data and false of the part you most need to get right. A hard constraint has to match the real shape of the problem, or it does harm. You could detect likely part payments and exempt them, though we haven't measured that here.
+We expected assignment to win, and it lost, 678 to 689. Singles did improve, from 585 to 594, and batches from 19 to 25. But part payments fell from 85 to 59, because two lines paying one invoice is exactly what a one-to-one constraint forbids. The constraint is true of most of the data and false of the part you most need to get right. A hard constraint has to match the real shape of the problem, or it does harm.
 
 **One line can match many invoices.** A batch payment's top pick is never fully right, by construction. The amounts have to add up, and that's a check you can search for: among the top candidate's supplier's invoices, look for a set that sums to the payment.
 
@@ -303,7 +303,7 @@ batch      35        0       22          0          8
 part      120       85       85          0          0
 ```
 
-Batches go from 0 to 22 of 35 fully right, with no wrong sets and a loss of one single. This is arithmetic and not learning, it's completely explainable to an auditor, and it should come before any fancier multi-label model. The search accepted a set only when it was unique, and the 8 ambiguous lines are ones where several sets add up. Send those to a person. Part payments are still partly linked at best, which needs a running balance per invoice.
+Batches go from 0 to 22 of 35 fully right, with no wrong sets and a loss of one single. This is arithmetic, explainable to an auditor, and it should come before any fancier multi-label model. The search accepted a set only when it was unique, and the 8 ambiguous lines are ones where several sets add up. Send those to a person.
 
 **Sometimes the right answer is no link.** Ranking always returns something, even for payroll, so ranking scores alone can't decide whether to link. Comparing scores across lines is also doing something the ranker wasn't trained for, as its scores are only meant to order candidates within a line. A useful extra signal is the **margin**: how far the top candidate is ahead of the second.
 
@@ -317,13 +317,13 @@ LambdaMART margin over second    coverage at precision: 0.99->0.685  0.98->0.715
 
 ![Precision of automatic links against the share of bank lines linked, for three scores: the margin over the second candidate holds precision near 1.0 up to about 0.65 of lines, ahead of the other two, which then catch up by 0.8](../../sources/images/recsys-match-abstain.png)
 
-**Coverage** is the share of lines linked automatically. At 99% precision, the margin links 68.5% of lines and the raw top score 40.3%, on the same model and the same ranking. So the ranker didn't change at all, and a better question of its output gained 28 points of coverage. The margin isn't better everywhere: at 90% precision the top score covers more, 87.8% against 83.7%. Note that the top score of LambdaMART and the pointwise probability are level here, so the ranker's NDCG gain doesn't turn into any abstaining gain by itself.
+**Coverage** is the share of lines linked automatically. At 99% precision, the margin links 68.5% of lines and the raw top score 40.3%, on the same model and the same ranking. So the ranker didn't change at all, and a better question of its output gained 28 points of coverage. The margin isn't better everywhere: at 90% precision the top score covers more, 87.8% against 83.7%. The top score and the pointwise probability are level, so the ranker's NDCG gain doesn't become an abstaining gain by itself.
 
 Choosing where to stand on that curve is a business decision based on the price of a wrong link and the price of review. That's the subject of [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md). The corrections people make in the review queue become your next training labels, with the selection bias that [DS 01/14](../../01-classical-ml/notes/14-learning-from-corrections.md) measures.
 
 ## Splitting pairs without leaking the answer
 
-We split the ledger by time because production meets tomorrow's bank lines. Catalogue matching needs more care, because the thing you hold out is a pair and each record can sit in many pairs. Give a split pair A-B to training and B-C to test, and A-C is implied before the model reads a word.
+We split the ledger by time because production meets tomorrow's bank lines. From here we switch to a generated parts catalogue, where the thing you hold out is a pair and each record can sit in many pairs. Put the matches A-B and B-C in training and A-C in test, and the answer to A-C is implied before the model reads a word.
 
 The generated catalogue in [`practice/parts_catalogue.py`](../practice/parts_catalogue.py) has this shape. A **record** is one plant's line, a **part** is one maker's product, and a **spec** is what a part must meet. Five seeds give about 1,700 records and 13,000 candidate pairs each, about 8% of them the same part. We train on one catalogue, then score a new one with new codes from the same generator. That new catalogue is the truth a split is trying to predict. One model sees similarity features, such as cosine and whether two codes agree, but never which code. The other sees which words each record holds, so it can memorise codes.
 
@@ -332,47 +332,53 @@ The generated catalogue in [`practice/parts_catalogue.py`](../practice/parts_cat
                                       f1_estimate  f1_truth  base_rate
 similarity features random pairs            0.793     0.779      0.085
 token identity      random pairs            0.489     0.239      0.085
+similarity features parts disjoint          0.859     0.728      0.104
 token identity      parts disjoint          0.548     0.466      0.104
+similarity features specs disjoint          0.783     0.771      0.101
+token identity      specs disjoint          0.461     0.456      0.101
 
---- a matcher that reads nothing: close the training labels, predict same group. No text, no model
+--- a matcher that reads nothing: join the training labels into groups, predict same group. No text, no model
               precision  recall     f1  base_rate
 random pairs        1.0   0.315  0.478      0.085
 ```
 
 A random split told the token model it scored 0.489, and on new parts it scored 0.239 (standard deviations 0.050 and 0.102 over seeds). A matcher with no model at all, joining training labels into groups, scored 0.478 on that same test. Any score near that line is mostly telling you the labels connect. The similarity model lost only 0.014, so a leak depends on the features as well as the split.
 
-Holding out whole parts narrowed the token model's gap, and also gave a model and threshold that did better on the new catalogue, 0.466 against 0.239. Its test base rate differs, so read that gap as approximate. Splitting by record alone showed us nothing, as only 3.1% of its test pairs matched.
+Holding out whole parts narrowed the token model's gap from 0.250 to 0.082, though its test base rate is higher, 0.104 against 0.085, so read that as approximate. It also gave a model and threshold that did better on the same new catalogue, 0.466 against 0.239. Splitting by record alone showed us nothing: only 3.1% of its test pairs matched, too few to compare.
+
+But parts disjoint flattered the similarity model, 0.859 against 0.728. Size isn't why, since the same model at the same threshold scored 0.725 on a new catalogue cut to the test side's size and base rate. The likely cause is that the test side got easier. Holding out parts scatters a part's look-alikes (other makers' parts for its spec, and parts differing in one attribute) across the sides, leaving 0.86 look-alike pairs per match against 1.73 in a new catalogue. Holding out whole specs keeps the first kind together, lifts that to 1.38, and closes the gaps to 0.012 and 0.005. Hold out everything a model could confuse, not just what matches.
 
 Published benchmarks show the same pattern on real data:
 
-- [Wang et al.](https://arxiv.org/abs/2205.05889) built a product corpus and sampled 250 training clusters and 100 held out. At 1:3 mismatches, text only, Ditto's F1 fell from 93.06 when all test records were seen in training to 67.82 when they came from unseen entities. They found 96% to 100% of test records in abt-buy, amazon-google and dblp-acm already appeared in training.
-- [WDC Products](https://arxiv.org/abs/2301.09521) compared seen and unseen products at 50% corner cases and the medium training set, with 500 products per split. Ditto fell from 79.16 to 70.24, word co-occurrence from 58.07 to 29.70, and Magellan, built on similarity features, stayed level at 35.83 and 36.61. Its seen split shares products but no offers, so we'd expect it to leak less than a random pair split.
+- [Wang et al.](https://arxiv.org/abs/2205.05889) built a product corpus and sampled 250 training clusters and 100 held out. At three mismatches per match, text only, Ditto's F1 fell from 93.06 when all test records were seen in training to 67.82 when they came from unseen entities. In three common benchmarks, abt-buy, amazon-google and dblp-acm, 96% to 100% of test records already appeared in training.
+- [WDC Products](https://arxiv.org/abs/2301.09521) compared seen and unseen products with half the test made of corner cases, its hard look-alikes, and the medium training set, 500 products per split. F1, on a 0 to 100 scale: Ditto fell from 79.16 to 70.24, word co-occurrence from 58.07 to 29.70, and Magellan, built on similarity features, stayed level at 35.83 and 36.61. The benchmark's seen split shares products but no individual listings, so we'd expect it to leak less than a random pair split.
 
 The fix, in order:
 
-1. **Close the labels first.** Build connected components over every match label you have, on all the data, and treat each component as one group. This is `GroupKFold` from [Classical ML](../../01-classical-ml/notes/09-training-and-tuning.md#when-to-change-the-folds), and the group is found, not given.
-2. **Assign groups to sides, then block inside each side.** Blocking after the split keeps the base rate from being an artefact of the pairs you dropped.
+1. **Close the labels first.** Link records by every match and equivalence label you have, on all the data. Each connected component, a set of records joined by any chain of labels, is one group. This is `GroupKFold` from [Classical ML](../../01-classical-ml/notes/09-training-and-tuning.md#when-to-change-the-folds), and the group is found, not given.
+2. **Assign groups to sides, then block inside each side.** Block first and you throw away every candidate pair that crosses the sides, which changes the base rate. Blocking inside a side gives the candidates production would see.
 3. **Check for near-duplicates across the sides**, as in [failure modes](../../../generative-ai/08-eval/notes/12-failure-modes.md). This step is borrowed reasoning: we found no entity-matching study that measures it, and none comparing time splits with entity-disjoint splits.
 
 Which split is honest depends on what production will meet. If a matcher only ever sees known parts, a seen-entity score may be the right one, as [Park and Marcotte](https://pmc.ncbi.nlm.nih.gov/articles/PMC3531800/) say of protein pairs, provided you state the limit. Report both when new entities will come.
 
-**Closing predictions is a different test from scoring pairs.** Merging matched records in production runs closure on the model's errors too, and one bad pair joins two groups:
+**Closing predictions is a different test from scoring pairs.** Merging records in production takes the closure of the model's decisions: if A matches B and B matches C, all three become one group, errors included. Group scores count every pair a merged group implies:
 
 ```text
---- closing the predictions, similarity model, new catalogue
-               pair_precision  pair_recall  pair_f1  group_precision  group_recall  group_f1  largest_group  true_largest
-best pair F1            0.590        0.957    0.728            0.108         0.861     0.186          123.6           7.2
-stricter, .9            0.920        0.645    0.757            0.831         0.543     0.656            9.2           7.2
-stricter, .99           0.985        0.507    0.669            0.974         0.389     0.555            6.4           7.2
+--- closing the predictions, similarity model, specs-disjoint validation, new catalogue
+                                  threshold  pair_f1  group_f1  largest_group  true_largest
+validation, pair F1                   0.206    0.754     0.332           69.0           7.2
+validation, group F1                  0.592    0.785     0.620           15.0           7.2
+new catalogue, pair F1 (peeking)      0.500    0.795     0.599           15.2           7.2
+new catalogue, group F1 (peeking)     0.738    0.774     0.671            9.0           7.2
 ```
 
-The threshold chosen for pair F1 gives a group F1 of 0.186 and one group of about 124 records, when the largest true group has about 7. We picked the stricter thresholds by hand, so tune on group scores if you merge. [GraLMatch](https://arxiv.org/abs/2406.15015) reports the same fall on real company records with DistilBERT: pairwise F1 96.53, group F1 56.92 (±38.6) before its graph cleanup and 91.64 after. Its securities data shows no such fall.
+Tuning on validation pair F1 gives a group F1 of 0.332 (sd 0.211) and a group of about 69 records, when the largest true group has about 7. Two faults stack. The threshold drifts, since a small validation side doesn't pin it down (0.206 against 0.500 when peeking). And even the peeking pair threshold gets 0.599 where the group one gets 0.671. Tuning on group F1, with no peeking, gives 0.620. [GraLMatch](https://arxiv.org/abs/2406.15015) reports a similar fall on real company records with DistilBERT: pairwise F1 96.53, group F1 56.92 (reported ±38.6) before its graph cleanup and 91.64 after. Its securities dataset shows no such fall.
 
 ## Similar is not interchangeable
 
-Two records can describe the same part, two makers' parts that meet one spec, or two parts of one size that differ in material. Only the first two are safe to swap, and text similarity rewards all three. Most specs in the catalogue have a sibling that differs in one critical attribute, such as an NBR o-ring beside an FKM one. We call such a pair **similar**, and it's the unsafe mistake.
+Two records can describe the same part, two makers' parts that meet one spec, or two parts of one size that differ in material. Only the first two are **interchangeable**, safe to swap, and text similarity rewards all three. Most specs in the catalogue have a sibling that differs in one critical attribute, such as an NBR o-ring beside an FKM one. We call such a pair **similar**, and it's the unsafe mistake.
 
-Each threshold here is set on validation for 90% recall of interchangeable pairs:
+Compare three ways to propose swaps. Cosine is the untrained comparison, between character n-gram [TF-IDF vectors](../../03-nlp/notes/01-text-representation.md). One model is taught "same shape" (same family and dimensions, so similar pairs count as positive), and one is taught interchangeable. Each threshold is set on validation for 90% recall of interchangeable pairs:
 
 ```text
 --- three targets, new catalogue
@@ -382,7 +388,7 @@ taught same shape        0.903      0.756         0.222   2279.8
 taught interchangeable   0.902      0.793         0.180   2172.0
 ```
 
-The target is a decision you make when you write the labels. Teaching the right one moved the unsafe share from 22.2% to 18.0% of proposals. That's still too high to act on, because when a record leaves out its material no score can see the clash.
+Cosine's 8.6% isn't safety. It flags 12,509 of about 13,800 candidates, so it proposes about 1,080 unsafe pairs against 391 for the interchangeable model. The target is a decision you make when you write the labels. Teaching the right one moved the unsafe share from 22.2% to 18.0% of proposals, in four of five catalogues. That's still too high to act on, because when a record leaves out its material no score can see the clash.
 
 So the score proposes and extracted facts decide. A rule reads the dimensions and critical attributes from both records: any clash rejects, all read and agreeing accepts, and anything unread goes to a person.
 
@@ -397,26 +403,22 @@ not proposed  11665.4            188.4   850.8
 
 Unsafe pairs in the accept pile fall to 2.4%, and the price is a review queue larger than that pile. Two details matter more:
 
-- **The accepted unsafe pairs come from the data.** Rerun the rule with no mistyped records and all 23 of the unsafe accepts it makes across all candidates disappear (`mistyped_rate` in the lab, set at 2%). A rule can't see through a wrong master record, so sample the accept pile as well.
+- **The accepted unsafe pairs come from the data.** The generator gives 2% of stated attributes the wrong value (`wrong` in `make_catalogue`). Across all candidates, the rule alone accepts about 23 unsafe pairs per catalogue at that rate and none at 0%. A rule can't see through a wrong value, so sample the accept pile as well.
 - **Vetoes here were mostly wrong.** Of 34 rejected proposals, 24 were interchangeable. The model already had attribute clashes as features, so what reached the veto was largely mistyped records. A hard rule on top keeps its place because it's explainable and can't drift, as [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md#shadow-and-canary) argues for limits on real-world actions, but measure what it costs.
 
-The costs aren't symmetric, since a wrongly swapped seal can stop a plant and a missed swap costs a duplicate stock line. Price the routes with [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md#price-each-route-and-the-thresholds-follow). All these numbers come from one generator whose 2% mistype rate and 15% missing rate we chose, so the shape carries over and the sizes don't.
+The costs aren't symmetric, since a wrongly swapped seal can stop a plant and a missed swap costs a duplicate stock line. Price the routes with [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md#price-each-route-and-the-thresholds-follow). All these numbers come from one generator whose 2% mistype rate and 15% missing rate we chose, and we haven't tested this on a real catalogue. Take the routing as a design to try, and measure the sizes on your own data.
 
 ## Pitfalls
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | The ranker's recall looks perfect, and production misses links | The offline test scored only lines whose link survived the block | Report block recall, by kind of payment, as a separate number. It caps everything after it |
-| A huge reduction ratio is celebrated | Reduction says nothing alone. Our best reduction, 99.99%, kept 39.6% of links | Always read it beside recall |
-| Widening the block buys nothing | Missing links fail on another key, and we saw recall stop at 157 candidates | Inspect what's still missing, and add a kind of key, not a wider threshold |
 | Pair accuracy above 99% and an unhappy client | Nearly all pairs are negatives, and always answering "no" scored 98.7% | Score whole lines: did each one end up with exactly the right set? |
-| A weak name match gets a lower weight than none | $m$ and $u$ were estimated inside a block that selected on the same field | Read weights as conditional on the block, and don't explain them as facts about names |
-| Disagreement is counted against a missing reference | Missing was coded as a mismatch | Keep missing as its own level with zero weight. `ref_digits` returns -1 for this reason |
 | Scores from one bank line are compared with another's | A ranker only promises order within a query | Abstain on a calibrated probability or on the margin, and check it on a coverage curve |
 | A one-to-one constraint lowers the score | Part payments share an invoice, so the constraint is false for them | Check a constraint against the real shape of the data, kind by kind |
 | A test that mixes past and future | A random split puts a supplier's later invoices in training, which production never has | Split by time, as in [Time series ML](01-time-series-ml.md) |
 | A matcher scores well, then drops on a new catalogue | Random pair splits let test pairs connect to training labels | Close the labels, split whole groups, then block inside each side. Check against a matcher that only joins training labels |
-| Merged groups balloon to a hundred records | The threshold was tuned on pair F1, and closure chains the errors | Tune on group scores if you merge. Ours fell from 0.728 pair F1 to 0.186 group F1 |
+| Merged groups balloon to a hundred records | The threshold was tuned on pair F1, and closure chains the errors | Tune on group scores if you merge. Ours went from 0.332 group F1 to 0.620 |
 | Look-alike parts get swapped | The labels taught similarity, or a record left the attribute out | Label interchangeability, and send any pair with an unread critical attribute to a person |
 | An excellent NDCG, all from one feature | A label-derived field leaked in, such as a "paid date" on the invoice | Build features only from what's known when the bank line arrives, then remove each group in turn and see what it's worth |
 
@@ -456,7 +458,7 @@ date window in days, candidates per line, recall of true links, seed 0
  180   111.6  0.9733
 ```
 
-Recall collapses below 90 days because the window is counted from the *issue* date and the generated payment terms are 14 to 60 days, with lateness on top. The candidates per line fall smoothly while recall falls off a cliff. A key that encodes a real process has a threshold you can read from that process, so look at the distribution of days from issue to payment before you set it.
+Recall collapses below 90 days because the window is counted from the *issue* date and the generated payment terms are 14 to 60 days, with lateness on top.  A key that encodes a real process has a threshold you can read from that process.
 
 </details>
 
@@ -468,7 +470,7 @@ Margin: $0.685 \times 866 \approx 593$ lines. Top score: $0.403 \times 866 \appr
 
 </details>
 
-4. **What does a sparse record cost?** Edit nothing in the rule, and generate catalogues where records omit each critical attribute 0%, 15% and 30% of the time. What happens to the accept pile, and does it get less safe? Run [`practice/04_part_pairs_lab.py`](../practice/04_part_pairs_lab.py).
+4. **What does a sparse record cost?** Using the rule alone, guess first: as records omit each critical attribute 0%, 15% and 30% of the time (`make_catalogue(missing=...)`), what happens to the accept pile, and does it get less safe? Check with `uv run 04_part_pairs_lab.py` from `practice/`, whose last table is [this one](../practice/04_part_pairs_lab.py).
 
 <details><summary>Answer</summary>
 
@@ -481,7 +483,7 @@ missing
 0.30        596.8     2231.6             0.326              15.8
 ```
 
-Doubling the missing rate from 15% to 30% takes the share of interchangeable pairs you can accept from 49% to 33%, and the queue grows by more than a third. The unsafe count falls only because fewer pairs get accepted at all. At 0% missing it's highest, because every mistyped attribute is now read and believed.
+Doubling the missing rate from 15% to 30% takes the share of interchangeable pairs you can accept from 49% to 33%, and the queue grows by more than a third. It doesn't get less safe: the unsafe share of the pile is 2.8%, 2.4% and 2.6%. The count falls only because fewer pairs get accepted. Even at 0% missing, 700 pairs go to review, because of spellings the extractor doesn't know (`UNKNOWN_TO_EXTRACTOR`) and typos.
 
 </details>
 
@@ -504,6 +506,9 @@ Doubling the missing rate from 15% to 30% takes the share of interchangeable pai
 | How do you handle a batch payment? | Search the supplier's candidates for a unique set of invoices that sums to the payment, and send ambiguous cases to a person. |
 | How should the system abstain? | Don't threshold raw ranker scores across queries. The margin over the second candidate raised coverage at 99% precision from 40% to 68%. |
 | When would you use a language model? | On messy text at scale, as a cross-encoder pair score or feature. Ditto's authors warn it may fit numeric-heavy tasks poorly, and it needs labels. |
+| How do you split pairs for a matcher? | Close the labels into groups, assign whole groups to sides, then block inside each side. Keep look-alikes together: holding out parts overstated our similarity model by 0.131, holding out specs by 0.012. |
+| Why not tune on pair F1 before merging? | Closure chains the errors. Tuned on pair F1 we got a group F1 of 0.332 and a group of about 69 records. Tuned on group F1, 0.620. |
+| Similar versus interchangeable? | Similar means same family and dimensions. Interchangeable means same spec, safe to swap. Text rewards both, so the score proposes and extracted attributes decide, with unread ones going to a person. |
 
 ## Next
 

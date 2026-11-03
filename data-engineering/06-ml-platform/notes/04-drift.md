@@ -5,7 +5,7 @@ sources:
   - http://eprints.bournemouth.ac.uk/22491/
   - https://arxiv.org/abs/2209.09125
   - https://www.manning.com/books/machine-learning-engineering-in-action
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/05-monitoring
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring
   - https://scipy.github.io/devdocs/reference/generated/scipy.stats.ks_2samp.html
 confidence: high
 cleaned: 2026-11-02

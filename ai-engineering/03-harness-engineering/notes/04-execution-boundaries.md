@@ -258,7 +258,7 @@ This is also what makes throughput safe. Review discipline doesn't disappear; it
 
 ## The five protection layers
 
-Independently toggleable, each with its own failure mode:
+Independently toggleable, each with its own failure mode. The models inside these layers are in [safety 03](../../09-safety-and-security/notes/03-guardrail-models.md):
 
 | Layer | Guards against |
 |---|---|
@@ -292,7 +292,7 @@ Rothman's fixes are architectural rather than more patterns:
 
 ### Measuring a pre-input filter
 
-Classifier-based injection filters can be scored. Lakera's PINT benchmark (4,314 inputs: multilingual injections, jailbreaks and hard negatives) reports **Lakera Guard at 92.5% and Llama Prompt Guard at 61.4%** (*Building Applications with AI Agents*, ch. 12). PINT is Lakera's own benchmark, so treat the ranking as vendor-reported. Microsoft's BIPIA covers *indirect* injection, the retrieved-content case. Even the best score leaves misses, which is why [Li's position](#coding-agent-specifics) stands: design so that an injected agent can't *complete* a dangerous action. For detection after the fact, plant **honeytokens**, fake secrets in the data flow whose access or exfiltration is itself the alarm.
+[Safety 03](../../09-safety-and-security/notes/03-guardrail-models.md#measuring-a-guard-on-your-own-traffic) is the authoritative note on measuring a guard, including the vendor-reported PINT scores for injection filters. Even the best score leaves misses, which is why [Li's position](#coding-agent-specifics) stands: design so that an injected agent can't *complete* a dangerous action. For detection after the fact, plant **honeytokens**, fake secrets in the data flow whose access or exfiltration is itself the alarm.
 
 ### Trust zones
 

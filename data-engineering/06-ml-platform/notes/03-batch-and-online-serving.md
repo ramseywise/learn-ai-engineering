@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/04-deployment
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/04-deployment
   - https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html
   - https://fastapi.tiangolo.com/tutorial/testing/
   - https://www.manning.com/books/machine-learning-engineering-in-action
@@ -115,6 +115,8 @@ scored_month model_version   rows  avg_pred
 March was scored twice and still has 200,000 rows, because `delete_matching` replaced the partition. Each row carries `model_version`, which costs a few bytes and makes the output a monitoring table for free: once durations arrive, you join on `ride_id` and can compute error per model version. The course's Prefect flow reads a month of trips from S3, loads the model by `RUN_ID`, and writes `taxi_type=/year=/month=/{run_id}.parquet`, with `actual_duration`, `predicted_duration`, `diff` and `model_version` on every row. It is worked through in the orchestration chapter because its lessons (logical dates, deterministic output paths, backfills) are orchestration lessons. The Spark version of the same job is `mapPartitions` in [the warehouse chapter](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md).
 
 At about a million rows per second on one laptop, a sklearn linear model is not the bottleneck in this job. Reading, feature joins and writing are. The numbers vary by machine, so measure yours.
+
+Two details of the course's [batch job](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/04-deployment/batch/score.py) are worth keeping. It takes a `run_date` and scores the month before it, and when no date is passed it uses the flow run's expected start time. [`score_backfill.py`](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/04-deployment/batch/score_backfill.py) is only a loop over months that calls the same function, so a scheduled run and a backfill are one code path with a different date, and they cannot drift apart. The trap is its `ride_id`: `uuid4()` assigns it when the file is read, so re-scoring gives every ride a new id and two scorings of one ride can't be joined. The ids above come from the month and the row number, so a rerun reproduces them.
 
 ## Precompute or compute on request
 
@@ -414,6 +416,8 @@ Canary routing hashes a stable key, not a random draw per request, so the same u
 The study adds two things to plan for. Keep a **fallback**: a previous model or a rule that answers when the model fails. And expect the gap: engineers reported production performance falling short of what offline evaluation promised. [Paleyes and colleagues' survey (ACM Computing Surveys, 2022)](https://arxiv.org/abs/2011.09926) makes the same point about continuous delivery for ML, whose changes can come from three axes, code, model and data, while conventional CD considers only the first.
 
 ## Run labels
+
+Course paths are as they stood at [upstream commit `e34bf8f`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7), the version these chapters read.
 
 | Material | Needs |
 |---|---|

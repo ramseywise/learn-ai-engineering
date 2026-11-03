@@ -326,7 +326,7 @@ The chess lesson (AutoGen L4) uses the same pattern with `make_move(move: Annota
 The Model Context Protocol moves the tool list out of the client process. A server declares tools, resources and prompts; any MCP client can list and call them.
 
 ```python
-# illustrative: needs `mcp` and a client to connect to it; `mcp.run` blocks waiting on stdio
+# illustrative: needs `mcp<2` (2.x renames FastMCP to MCPServer) and a client to connect to it; `mcp.run` blocks waiting on stdio
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("research", port=8001)
@@ -343,20 +343,12 @@ def get_topic_papers(topic: str) -> str: ...
 def generate_search_prompt(topic: str, num_papers: int = 5) -> str: ...
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")               # or "sse" for a remote server
+    mcp.run(transport="stdio")               # or "streamable-http" for a remote server
 ```
-
-The book lists three limits of MCP as of May 2025:
-
-| Limit | Workaround |
-|---|---|
-| No auth enforcement in the spec | OAuth in front of the server (Cloudflare Workers) |
-| Mostly one-way: client calls server | A2A or ACP for agent-to-agent collaboration |
-| Calls time out at 30–60 s | Streamable HTTP transport, or return a job ID and poll |
 
 **MCP does not bypass the tool call.** Albada describes MCP as a way to "inject rich, dynamic context ... directly into the model's reasoning process without invoking separate tools", unlike API calls that "require full round-trip execution" (*Building Applications with AI Agents*, ch. 2). That is wrong. An MCP tool is invoked through a `tools/call` request and its result returns as an ordinary tool result: a full round trip. Resources and prompts are separate primitives that the client or user chooses to put into context. MCP standardizes how tools and context are discovered and transported. It doesn't give the model a cheaper channel into its reasoning.
 
-For when MCP beats an in-process function, and the tool-contract rules, see [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md).
+For when MCP beats an in-process function, the protocol's architecture, transports and limits, and the tool-contract rules, see [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), the authoritative note.
 
 ---
 
@@ -487,6 +479,7 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 2. Change the error message in `execute_tool` to just `"Error"`. In a real run, what would the model likely do next, and what would it cost?
 3. Extend `parse` so that the `invented` reply is rejected. What is the simplest rule that does it, and which API feature makes the rule unnecessary?
 4. The agent keeps saying itemB's delivery time is 2 weeks after the supplier changed it to 4. Would "think step by step" help? What would?
+5. Run [`practice/tool_agent.py`](../practice/tool_agent.py), an agent whose loop, dispatch and error handling are real and whose model is scripted. Compare the two wrong-ID scenarios, then forget one `tool_result` in a parallel turn. Now lower `MAX_STEPS` to 3: which scenarios still finish?
 
 <details>
 <summary>Answers</summary>
@@ -495,6 +488,7 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 2. It has nothing to act on, so it would probably retry the same ID or guess. Each retry re-sends the whole conversation, so a vague error costs tokens and may use up the step cap.
 3. Reject any reply that contains `Observation:`, since only your code may write one. A stop sequence prevents the text from being generated, and native tool calls remove the need to parse at all.
 4. No. This is a knowledge gap, and reasoning over a stale figure gives a tidy wrong answer. Read the delivery time from a tool on each run instead of holding it in the prompt or in memory.
+5. With the helpful error the run ends after 2 calls and 458 characters on its last call. With a bare `Error` the script repeats itself until the step cap: 6 calls, 6 errors, 1,089 characters on the last call, and no answer. The missing result is rejected, because every `tool_use` needs a `tool_result` with its ID in the next message. At `MAX_STEPS = 3` every scenario that took 3 model calls or fewer still ends normally, and both non-stoppers hit the cap sooner.
 
 </details>
 

@@ -1,7 +1,7 @@
 ---
 origin: synthesis  # was: course-synthesis
 sources:
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/05-monitoring
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/04-analytics-engineering
   - https://docs.evidentlyai.com/
   - https://grafana.com/docs/grafana/latest/administration/provisioning/
@@ -395,7 +395,7 @@ The course simulates online monitoring with batch: one day of February 2022 ever
 
 ## The stack
 
-The course stores its metrics in Postgres and charts them in Grafana. Our `monitor_metrics` table is the same design in DuckDB. This stack needs Docker to run.
+The course stores its metrics in Postgres and charts them in Grafana. Our `monitor_metrics` table is the same design in DuckDB. This stack needs Docker to run, and the [`config/`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring/config) and [`dashboards/`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring/dashboards) files it mounts from the course repo.
 
 ```yaml
 services:

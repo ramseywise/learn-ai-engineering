@@ -123,6 +123,35 @@ LABEL: "clear" or "unclear"
 
 **Parse strictly.** Phoenix's `llm_classify(..., rails=["clear", "unclear"])` snaps the output to one of the rails and records anything else as unparseable. Folding an unparseable verdict into FAIL makes a formatting bug look like an agent regression. The course's Lab 5 adds a second judge on the same answer for entity correctness, the one-judge-per-criterion rule in practice.
 
+### SOMA: a rubric recipe
+
+Berryman & Ziegler's recipe (*Prompt Engineering for LLMs*, ch. 10):
+
+| | Rule | Why |
+|---|---|---|
+| **S**pecific questions | "Did it pick the heating system?" — not "Is this right?" | A generic question is as hard as the task, and more ambiguous. The exception is a task that is much easier to check than to do (is this poem a limerick?) |
+| **O**rdinal scale | 1–5, with each level described | Yes/no leaves the bar to the judge, so it drifts between runs. Five levels is a psychometrics default (they cite Redford, *Machine Psychometrics*) |
+| **M**ulti-**A**spect | Score each dimension separately — e.g. **intent** (right plan?) vs. **execution** (carried out correctly?); Copilot used relevance / truth / completeness | One composite score lets the judge silently switch criteria |
+
+Copilot Chat's split was **RTC**: relevance, truth and completeness. Avoid **Goldilocks questions** that fold "enough" and "not too much" into one axis ("Is the length right?"). Split them into "complete?" and "concise?". A bare "is it right?" also invites systematic bias: the judge may hold ambitious answers to a stricter bar than safe ones, or pass mostly-right answers while failing near-perfect ones that aren't completely right.
+
+One aspect of a SOMA judge, condensed from their Example 10-1. The task and scale come before the transcript, every level is described, and the analysis comes before the score. Run one such prompt per aspect:
+
+```text
+I need your help evaluating a smart home assistant. Grade each interaction for
+effectiveness: whether the assistant's attempted action would remedy the user's problem.
+1 = would do nothing to address the problem, or make it worse
+2 = might address a small part, leaving the main part unaddressed
+3 = good chance of addressing a substantial part
+4 = not guaranteed to work completely, but should solve most of it
+5 = will definitely solve the problem completely
+
+User: I'm a bit chilly.
+Assistant: to=functions.set_room_temp {"temp": 77}
+
+Give a thorough analysis, then end with "Effectiveness: X", where X is 1 to 5.
+```
+
 ### Decompose hard criteria
 
 For grounding and completeness, a single holistic question ("is this faithful?") is weak. Decompose:
@@ -189,12 +218,19 @@ With an LLM judge doing the voting, **swap the order** on every pair and count a
 
 The same "compare candidates to each other" idea drives GRPO in post-training ([gen-AI 05-RL](../../05-RL/README.md)).
 
-The swap check from the lab's judge:
+The swap check, condensed from the lab's judge. `ask` is your model client: it sends one prompt and returns the text.
 
 ```python
-def judge_pair(question, a, b) -> str:
-    first = judge_once(question, a, b)              # "A" | "B" | "tie"
-    second = judge_once(question, b, a)             # same pair, order swapped
+def judge_once(ask, question, first, second) -> str:
+    verdict = ask(f"Question:\n{question}\n\nAnswer A:\n{first}\n\nAnswer B:\n{second}\n\n"
+                  "Which answer is better? Output only A, B or tie.").strip().lower()
+    if verdict not in ("a", "b", "tie"):
+        raise ValueError(f"unparseable verdict: {verdict!r}")   # a grader error, not a result
+    return {"a": "A", "b": "B", "tie": "tie"}[verdict]
+
+def judge_pair(ask, question, a, b) -> str:
+    first = judge_once(ask, question, a, b)         # "A" | "B" | "tie"
+    second = judge_once(ask, question, b, a)        # same pair, order swapped
     second = {"A": "B", "B": "A"}.get(second, second)   # map back to the real answers
     return first if first == second else "tie"      # a win must survive the swap
 ```
@@ -220,6 +256,10 @@ def update(ratings, a, b, winner, k=4, init=1000):
 **Bradley–Terry** ignores order. It counts wins per pair, then fits every strength at once with a logistic regression, which is how Chatbot Arena computes its leaderboard:
 
 ```python
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+
 models = sorted(set(df.model_a) | set(df.model_b))
 def pivot(rows):                              # counts per (a, b), on the full square
     return (pd.pivot_table(rows, index="model_a", columns="model_b",

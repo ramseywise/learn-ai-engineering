@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/02-experiment-tracking
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/02-experiment-tracking
   - https://mlflow.org/docs/latest/ml/tracking/
   - https://mlflow.org/docs/latest/ml/model-registry/
   - https://www.manning.com/books/machine-learning-engineering-in-action
@@ -146,7 +146,7 @@ Then compare runs in the UI (`mlflow ui --backend-store-uri sqlite:///mlflow.db`
 | 2. Local server | `sqlite:///backend.db` | Local folder | `mlflow server --backend-store-uri sqlite:///backend.db` | Solo, but with the registry, which needs a database backend |
 | 3. Remote | Postgres on RDS | S3 bucket | `mlflow server -h 0.0.0.0 -p 5000 --backend-store-uri postgresql://USER:PASS@HOST:5432/DB --default-artifact-root s3://BUCKET` on EC2 | A team; the course's services load models from this S3 path |
 
-The course folder `02-experiment-tracking/running-mlflow-examples/` has a notebook for each scenario; `mlflow_on_aws.md` covers the EC2, RDS and S3 setup. The second scenario is the code in this chapter and needs no server, because MLflow can open the SQLite file directly. The third needs an AWS account and was not run here.
+The course folder [`02-experiment-tracking/running-mlflow-examples/`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/02-experiment-tracking/running-mlflow-examples) has a notebook for each scenario; [`mlflow_on_aws.md`](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/02-experiment-tracking/mlflow_on_aws.md) covers the EC2, RDS and S3 setup. The second scenario is the code in this chapter and needs no server, because MLflow can open the SQLite file directly. The third needs an AWS account and was not run here.
 
 ## From a run to a model
 
@@ -326,6 +326,8 @@ params.alpha  metrics.rmse
 These three are within 0.025 minutes of each other, about a second and a half on a typical ride. In practice that is a tie, and the simplest or cheapest one should win. Treating the top of a sorted table as the answer is how a team ends up running a complicated model for no measured gain. Paleyes's survey has the extreme case: Airbnb's search team found that a complex deep model failed, and got moving by simplifying to a network with one hidden layer of 32 units, largely so they could build the pipeline around it.
 
 ## Run labels
+
+Course paths are as they stood at [upstream commit `e34bf8f`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7), the version these chapters read.
 
 | Material | Needs |
 |---|---|

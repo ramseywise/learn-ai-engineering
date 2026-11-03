@@ -1,6 +1,8 @@
 ---
 origin: synthesis
 sources:
+  - https://www.anthropic.com/research/next-generation-constitutional-classifiers
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - https://arxiv.org/abs/2312.06674
   - https://arxiv.org/abs/2407.21772
   - https://arxiv.org/abs/2412.07724
@@ -105,6 +107,12 @@ Treat each number as what it is: the authors' own evaluation, on their chosen da
 
 Also on that table: OpenAI's moderation API and Perspective scored lower on most sets (0.764 and 0.728 on the authors' prompts), though OpenAI's API edged ahead on its own moderation set, 0.856 to 0.847. Vendors tend to win on their own data.
 
+**Constitutional Classifiers** ([Anthropic, 2026](https://www.anthropic.com/research/next-generation-constitutional-classifiers)) is the reference design for classifier guardrails:
+
+- A natural-language constitution generates the synthetic training data.
+- The question and answer are judged together, so "food flavorings" can be read as code for reagents.
+- Screening has two stages. A near-free activation probe sees every conversation, and anything suspicious goes to a stronger classifier rather than straight to refusal. Stage one can therefore over-flag cheaply.
+
 ## Measuring a guard on your own traffic
 
 Label a few hundred real items, include the hard borderline ones, and compute the rates. Accuracy is the wrong summary. Harmful content is rare, so a guard that passes everything scores well. The next example simulates scores from a guard with the same quality at different base rates, so that you can see what the same classifier feels like in deployment. This is the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) with an attack or harmful item as the positive class, and [the base-rate calculation](../../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md#bayes-rule-inverts-the-conditional) in data analytics is why precision behaves as it does below.
@@ -166,6 +174,8 @@ Recall and false positive rate stay put as the base rate changes, because they'r
 To choose a threshold, price the errors. State how many false alarms per 10,000 messages your reviewers or customers can absorb, then read off the recall that it buys. If the answer is unacceptable, the classifier isn't good enough for that policy, and you can route to a softer action instead of blocking. [Measuring a pre-input filter](../../03-harness-engineering/notes/04-execution-boundaries.md#measuring-a-pre-input-filter) makes the same point on the input side, and the general grading machinery is in the [Eval pillar's judge chapter](../../../generative-ai/08-eval/notes/05-llm-as-judge.md).
 
 Evaluate by category as well. An average across hate, self-harm and profanity hides the row you care about, and the published AU-PRC figures do this by necessity.
+
+**Scoring an injection filter.** Classifier-based injection filters can be scored on shared sets too. Lakera's PINT benchmark (4,314 inputs: multilingual injections, jailbreaks and hard negatives) reports **Lakera Guard at 92.5% and Llama Prompt Guard at 61.4%** (Albada, *Building Applications with AI Agents*, O'Reilly, 2025, ch. 12). PINT is Lakera's own benchmark, so treat the ranking as vendor-reported. Microsoft's BIPIA covers *indirect* injection, the retrieved-content case.
 
 ## Latency, and cascades
 

@@ -207,18 +207,7 @@ That is at least eight API calls in a row, and the generation calls dominate. Me
 
 ## Multi-agent failure modes
 
-Named problems that emerge specifically from orchestration:
-
-| Failure | Shape | Mitigation |
-|---|---|---|
-| **Loop oscillation** | Two nodes bounce work between them indefinitely | Iteration counters on cyclic edges; forced escalation |
-| **Context pollution** | Nested workflows leak state upward, defeating isolation | Explicit boundary schemas; return summaries only |
-| **Concurrency collision** | Parallel branches write the same state or file | JoinNode barriers; per-branch ownership of state keys |
-| **Consensus deadlock** | Reviewer agents never agree, blocking progress | Tie-break rule, majority threshold, or a final arbiter |
-
-All four are *harness* bugs. None is fixed by a better model, and all four get worse as agent count rises — which is the practical argument for keeping agent counts as low as the task allows.
-
-Two more problems are specific to many agents. **Hallucinations amplify**: one agent's invention becomes the next agent's input, so cross-validate claims that cross a handoff. **Failures are hard to attribute.** The fix is to **evaluate each component and the end-to-end result separately**. If the end-to-end eval fails while every component eval passes, the bug is in a handoff or integration. If one component eval fails, you know which agent to fix. Per-step traces (each agent's plan, prompt, tool calls and results) make that analysis fast.
+Loop oscillation, context pollution, concurrency collision and consensus deadlock are all *harness* bugs. None is fixed by a better model, and all four get worse as agent count rises, which is the practical argument for keeping agent counts as low as the task allows. The table of fixes, the research taxonomy and how to attribute a failure are in [graph 05 — how multi-agent systems fail](../../05-graph-engineering/notes/05-topology-patterns.md#how-multi-agent-systems-fail), the authoritative note.
 
 ---
 

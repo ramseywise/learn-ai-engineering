@@ -100,32 +100,7 @@ The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 again
 
 **Never let the model know it's grading its own work.** The book ranks the framings: a judge is most accurate grading a third party, a bit worse grading "the user", and much worse grading itself. Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to recant at any hint of doubt. Frame the work as a third party's. [Calibrating judges with checks and critiques](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict) tests whether a judge's written reason reports what drove its verdict.
 
-**SOMA** — a rubric recipe:
-
-| | Rule | Why |
-|---|---|---|
-| **S**pecific questions | "Did it pick the heating system?" — not "Is this right?" | A generic question is as hard as the task, and more ambiguous. The exception is a task that is much easier to check than to do (is this poem a limerick?) |
-| **O**rdinal scale | 1–5, with each level described | Yes/no leaves the bar to the judge, so it drifts between runs. Five levels is a psychometrics default (the book cites Redford, *Machine Psychometrics*) |
-| **M**ulti-**A**spect | Score each dimension separately — e.g. **intent** (right plan?) vs. **execution** (carried out correctly?); Copilot used relevance / truth / completeness | One composite score lets the judge silently switch criteria |
-
-Copilot Chat's split was **RTC**: relevance, truth and completeness. Avoid **Goldilocks questions** that fold "enough" and "not too much" into one axis ("Is the length right?"). Split them into "complete?" and "concise?". A bare "is it right?" also invites systematic bias: the judge may hold ambitious answers to a stricter bar than safe ones, or pass mostly-right answers while failing near-perfect ones that aren't completely right.
-
-One aspect of a SOMA judge, condensed from the book's Example 10-1. The task and scale come before the transcript, every level is described, and the analysis comes before the score. Run one such prompt per aspect:
-
-```
-I need your help evaluating a smart home assistant. Grade each interaction for
-effectiveness: whether the assistant's attempted action would remedy the user's problem.
-1 = would do nothing to address the problem, or make it worse
-2 = might address a small part, leaving the main part unaddressed
-3 = good chance of addressing a substantial part
-4 = not guaranteed to work completely, but should solve most of it
-5 = will definitely solve the problem completely
-
-User: I'm a bit chilly.
-Assistant: to=functions.set_room_temp {"temp": 77}
-
-Give a thorough analysis, then end with "Effectiveness: X", where X is 1 to 5.
-```
+**SOMA** is the rubric recipe: **S**pecific questions, an **O**rdinal scale with each level described, and **M**ulti-**A**spect scoring, one judge per dimension. Copilot Chat's split was relevance, truth and completeness. The full recipe, with a worked one-aspect judge from the book's Example 10-1, is in [GA 08/05 — SOMA](../../../generative-ai/08-eval/notes/05-llm-as-judge.md#soma-a-rubric-recipe), the authoritative note on judges.
 
 Also:
 - **Rubric before content.** The judge reads once, forward only ([01](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)), so put the aspects first, then the example.
@@ -212,7 +187,7 @@ Lessons:
    <details><summary>Answer</summary>sqrt(0.8 x 0.2 / 5 + 0.6 x 0.4 / 5) = 0.283, against a difference of 0.2, so less than one standard error. You may not conclude A is better. You can still note any format deviation you saw, since that's what the method is for. See [how many tasks](../../../generative-ai/08-eval/notes/09-reading-results.md#how-many-tasks).</details>
 2. Write the tool-call scorer for "I'm chilly" with gold `set_room_temp(77)`. Grade these: no tool, `set_oven(77)`, `set_room_temp(temp="warm")`, `set_room_temp(76)`, `set_room_temp(0)`.
    <details><summary>Answer</summary>Score the first decision with a real chance of going wrong, and void the rest: called a tool? right tool? valid syntax? So the first three fail at those stages, and 76 passes as a sane miss. The note stops before exact values, so 0°F passes this scorer: add an out-of-range check if that matters, since Fig. 10-3 treats an out-of-range value as useless.</details>
-3. Write one SOMA aspect for a meeting summarizer, in the Example 10-1 form. What goes first, and where does the score go?
+3. Write one SOMA aspect for a meeting summarizer, in the [Example 10-1 form](../../../generative-ai/08-eval/notes/05-llm-as-judge.md#soma-a-rubric-recipe). What goes first, and where does the score go?
    <details><summary>Answer</summary>Task and aspect first, for example "Coverage: does the summary include every decision made?", with each of levels 1 to 5 described, then the transcript and summary framed as someone else's work, then "Give a thorough analysis, then end with 'Coverage: X'". The rubric comes before the content since the judge reads forward only, and analysis comes before the score. Run a separate prompt for conciseness.</details>
 4. Add a level-2 check to the [prompt eval harness](../practice/prompt-eval-harness/README.md). Which scorer type would you use for a classifier and for a helpfulness rating, and how would you validate the second against people?
    <details><summary>Answer</summary>A gold match (or the label's logprob, for more power) for the classifier, and an LLM judge for helpfulness. Calibrate against several human annotators. The bar is that adding the model at temperature 0 to the pool doesn't increase disagreement, measured for example by Kendall's τ.</details>

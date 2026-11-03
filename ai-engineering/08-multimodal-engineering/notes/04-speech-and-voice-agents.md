@@ -249,12 +249,14 @@ For the agent as a whole, measure things the caller feels: time to first audio, 
 1. Change the Mimi numbers to 25 frames per second and 4 codebooks. What happens to the bit rate and the reaction floor, and what do you gain?
 2. Add a "tool call in flight" state to `Turn`. What should `barge_in` do if the agent has already called a refund tool?
 3. Compute WER on two reference sentences where one is 50 words and one is 5, each with one error. Why is averaging per-sentence WER misleading, and what should you do instead?
+4. Run [`practice/voice_turn_lab.py`](../practice/voice_turn_lab.py). Why is the p95 of a whole turn lower than the sum of the stage p95s, and when does that stop being true? In its barge-in replay, what goes wrong in the version that drops the tool result? Which of its two made-up engines would you pick for a billing line?
 
 <details><summary>Answers</summary>
 
 1. The bit rate is unchanged at 1.1 kbps (`25 × 4 × 11` bits), while the frame falls to 40 ms, halving the reaction floor. The cost is that each frame has fewer codebooks and so fewer bits, so audio quality is likely to suffer at the same rate, and the model must produce more frames per second.
 2. Stop speaking, but don't discard the tool's outcome. The action may have happened, so record the tool result in history and tell the caller the true state on the next turn. Consequential actions should normally need confirmation before this point.
 3. Per-sentence WERs are 2% and 20%, averaging to 11%, while the corpus WER is `2/55`, about 3.6%. Averaging over-weights short sentences, so divide total errors by total reference words across the corpus.
+4. Independent stages rarely peak in the same turn: with our assumed spread the stage p95s add up to 940 ms while the turn's p95 is about 733 ms. If a shared slow spell moves every stage together, the turn's p95 is about 945 ms, so don't count on the gap. The naive version keeps listening with an empty history, so the next reply knows nothing about a refund that went through. For billing, take engine B: its corpus WER is worse (0.051 against 0.035), but it recalls critical terms at 0.98 against 0.82.
 
 </details>
 

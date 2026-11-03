@@ -1,8 +1,8 @@
 ---
 origin: synthesis
 sources:
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/01-intro
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/04-deployment
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/01-intro
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/04-deployment
   - https://docs.feast.dev/getting-started/concepts/point-in-time-joins
   - https://docs.feast.dev/getting-started/quickstart
   - https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning

@@ -118,7 +118,7 @@ def train(records, pairs, groups, seed, band=None, in_batch=True, oracle=False, 
         left, right = forward(model, text[batch[:, 0]]), forward(model, text[batch[:, 1]])
         logits = left @ right.T  # each left's positive is on the diagonal, the rest of the batch are negatives
         if band:
-            extra = [mined.get(a, np.array([], int))[:] for a in batch[:, 0]]
+            extra = [mined.get(a, np.array([], int)) for a in batch[:, 0]]
             extra = [rng.permutation(e)[:n_mined] for e in extra]
             need = max((len(e) for e in extra), default=0)
             if need:
@@ -173,8 +173,32 @@ for seed in SEEDS:
             del model
     print(f"seed {seed} done, {time.time() - started:.0f}s", flush=True)
 res = pd.DataFrame(rows)
-print(f"\ntraining catalogue: {len(train_records)} records, available pairs in the last seed {len(pairs)}")
+available = int(sum(n * (n - 1) // 2 for n in train_records.groupby("spec").size()))
+print(f"\ntraining catalogue, last seed: {len(train_records)} records, {available} interchangeable pairs a label could cover")
 print("\n--- mean over seeds, new catalogue")
 print(res.groupby(["arm", "pairs"], sort=False)[["recall", "unsafe_in_top", "mined_false_negatives"]].mean().round(3).to_string())
 print("\n--- standard deviation over seeds")
 print(res.groupby(["arm", "pairs"], sort=False)[["recall", "unsafe_in_top"]].std().round(3).to_string())
+wide = res[res.arm.isin(["in-batch", "+ hardest (rank 1-10)"]) & (res.pairs == 1000)].pivot(index="seed", columns="arm", values="unsafe_in_top")
+print("\n--- look-alikes in the top 10 at 1000 pairs, seed by seed\n" + wide.round(3).to_string())
+
+# %%
+print("\n--- a family the model never trained on. 1000 pairs, in-batch. Scored only on that family in a new catalogue")
+rows = []
+for seed, family in zip(SEEDS, ["bolt", "bearing", "oring"]):
+    train_records, _ = make_catalogue(seed)
+    test_records, test_parts = make_catalogue(seed + 1000)
+    test_family = test_records[test_records.family == family].reset_index(drop=True)
+    others = train_records[train_records.family != family].reset_index(drop=True)
+    for arm, source in (("trained on all families", train_records), ("trained without this family", others)):
+        pairs, groups = labelled_pairs(source.reset_index(drop=True), 1000, np.random.default_rng(seed))
+        model, _ = train(source.reset_index(drop=True), pairs, groups, seed)
+        rows.append(dict(family=family, arm=arm, **evaluate(encode(model, test_family.text), test_family, test_parts)))
+        del model
+    rows.append(dict(family=family, arm="frozen pretrained", **evaluate(encode(SentenceTransformer(MODEL, device=DEVICE), test_family.text), test_family, test_parts)))
+    tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), sublinear_tf=True).fit_transform(test_family.text)
+    rows.append(dict(family=family, arm="TF-IDF characters, no training", **evaluate(tfidf.toarray(), test_family, test_parts)))
+held = pd.DataFrame(rows)
+print(held.pivot(index="arm", columns="family", values="recall").round(3).to_string())
+print(held.groupby("arm")[["recall", "unsafe_in_top"]].mean().round(3).to_string())
+print(f"\nall done, {time.time() - started:.0f}s")

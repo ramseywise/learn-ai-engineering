@@ -739,7 +739,7 @@ Run `06_dataops.py` first. Its final section runs the checks behind these answer
 
 1. It selects 9 resources: `stg_orders`, the two models that read it, the monthly model, the four tests and the dashboard. Only `dim_products` and the seeds stay out. That's right: a change at the root has a wide blast radius, and CI should show it.
 2. 0.67 late batches. A single late batch breaks the SLO for four weeks. The target is finer than the batch cadence can express, so either run more often or choose a target you can meet with whole batches. Pick targets by counting events.
-3. One record stays wrong for good: the one being sent when it crashed. Its fingerprint was already recorded, so the rerun skips it and sends the other 14. The rerun looks perfectly healthy. This is why the send comes first, since a repeated upsert is harmless and a lost one is silent.
+3. The lab changes 20 records and crashes after 5 sends, a new setup, so this isn't the 23 from the sync above. One record stays wrong for good: the one being sent when it crashed. Its fingerprint was already recorded, so the rerun skips it and sends the other 14. The rerun looks perfectly healthy. This is why the send comes first, since a repeated upsert is harmless and a lost one is silent.
 4. It proposes creating everything, because without state it doesn't know those objects are its own. The real Terraform relies on state in the same way to map config to real objects, which is why the docs want it stored safely. To recover, restore the state or import the objects, and don't apply this plan.
 
 </details>

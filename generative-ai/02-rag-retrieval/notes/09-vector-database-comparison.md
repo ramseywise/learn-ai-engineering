@@ -106,7 +106,7 @@ Best for: dev environments, prototypes, teams already running Postgres.
 
 Constraints in the second agent:
 - Gemini `gemini-embedding-2-preview` outputs 3072 dims → exceeds the 2,000-dim index limit of pgvector's `vector` type → **exact search only** with that column type. This is fine at that dataset size but won't scale to millions of docs. The [pgvector README](https://github.com/pgvector/pgvector) lists `halfvec` at up to 4,000 indexed dimensions, so a half-precision column is the way out if you need an index at 3072.
-- Cosine similarity via `<=>` operator.
+- Cosine distance via the `<=>` operator (lower is closer).
 - No sparse/BM25 hybrid without a separate plugin (pg_bm25 / ParadeDB).
 
 ```sql
@@ -153,9 +153,9 @@ VECTOR_STORE_BACKEND=duckdb VECTORDB_PATH=data/knowledge.duckdb uv run uvicorn m
 
 ```sql
 INSTALL vss; LOAD vss;
-CREATE TABLE docs AS SELECT * FROM read_parquet('chunks.parquet');
-ALTER TABLE docs ADD COLUMN embedding FLOAT[3072];
-CREATE INDEX ON docs USING HNSW (embedding);
+-- chunks.parquet already holds the embeddings. Parquet returns a list, and HNSW needs a fixed-size array.
+CREATE TABLE docs AS SELECT * REPLACE (embedding::FLOAT[3072] AS embedding) FROM read_parquet('chunks.parquet');
+CREATE INDEX docs_hnsw ON docs USING HNSW (embedding);
 SELECT * FROM docs ORDER BY array_distance(embedding, ?::FLOAT[3072]) LIMIT 5;
 ```
 
@@ -209,7 +209,7 @@ can I get my money back
   hybrid  ['kb-03', 'kb-04', 'kb-05']
 ```
 
-Two things to read in the output. On the error code, BM25 returns the one document that holds it and nothing else, which is why you keep a keyword path. On the refund question, BM25 has only the word "back" to go on, so it returns kb-03 for "Back off for that long". RRF then scores kb-03 and kb-04 equally, because each is first in one list and absent or lower in the other, and the tie falls the wrong way. Fusion is not magic: a weak keyword match with one hit counts as much as a strong semantic one. A reranker or a stricter keyword query fixes this.
+Two things to read in the output. On the error code, BM25 returns the one document that holds it and nothing else, which is why you keep a keyword path. On the refund question, BM25 has only the word "back" to go on, so it returns kb-03 for "Back off for that long". RRF then puts kb-03 on top. It is first in the keyword list and fifth in the dense list, which the printout's `dense(q, 3)` hides, so it scores 1/61 + 1/65 against kb-04's 1/61. Fusion is not magic: a weak keyword match with one hit counts as much as a strong semantic one. A reranker or a stricter keyword query fixes this.
 
 Keep the permissions predicate in both queries, as [note 07](07-rag-in-production.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
 
@@ -352,7 +352,7 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 <details>
 <summary>Answers</summary>
 
-1. 1,000,000 × 384 × 4 bytes is 1.54 GB, so it fits, and the scan should take about five times the 200,000 row, around 17 ms. It is a fine plan for one user and a poor one under load, because each query holds a core for that long.
+1. 1,000,000 × 384 × 4 bytes is 1.54 GB, so it fits, and the scan should take about five times the 200,000 row, around 20 ms. It is a fine plan for one user and a poor one under load, because each query holds a core for that long.
 2. The refund question now returns kb-18 in second place, the internal runbook, ahead of kb-05. That is the leak from [note 07](07-rag-in-production.md), and it takes one missing clause.
 3. `vector` with HNSW, since 1,536 is under the 2,000 limit. At 3,072 you must move to `halfvec`, shorten the embedding if the model supports it, or search exactly, and you re-embed the corpus in any case.
 

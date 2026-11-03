@@ -62,18 +62,23 @@ def front_value(front: str, key: str) -> str | None:
     return match.group(1).strip("\"'") if match else None
 
 
-def links_from(text: str, source: Path, root: Path) -> set[str]:
-    """Repo-relative paths of the local files a markdown text links to, code fences excluded."""
-    found = set()
+def links_in_order(text: str, source: Path, root: Path) -> list[str]:
+    """Repo-relative paths of the local files a markdown text links to, as written, code fences excluded."""
+    found = []
     for target in LINK.findall(FENCE.sub("", text)):
         if "://" in target or target.startswith(("/", "mailto:")):
             continue
         resolved = (source.parent / unquote(target)).resolve()
         try:
-            found.add(resolved.relative_to(root).as_posix())
+            found.append(resolved.relative_to(root).as_posix())
         except ValueError:
             pass  # a link that climbs out of the repo is link_check's concern
     return found
+
+
+def links_from(text: str, source: Path, root: Path) -> set[str]:
+    """Repo-relative paths of the local files a markdown text links to, code fences excluded."""
+    return set(links_in_order(text, source, root))
 
 
 def find_notes(root: Path) -> list[Path]:
@@ -139,8 +144,10 @@ def build(root: Path) -> dict:
         if exempt and not readme.is_file():
             readme = root / name / ".." / "README.md"
         readme_links: set[str] = set()
+        readme_order: list[str] = []
         if readme.is_file():
             readme_text = readme.read_text(encoding="utf-8")
+            readme_order = [t for t in links_in_order(readme_text, readme, root) if t in members]
             readme_links = links_from(readme_text, readme, root)
             pillar["has_cross_links"] = bool(CROSS.search(FENCE.sub("", readme_text)))
             if not pillar["has_cross_links"] and not exempt:
@@ -175,7 +182,16 @@ def build(root: Path) -> dict:
                 if not (root / target).exists():
                     add("missing_next_target", path, f"## Next links to {target}, which does not exist")
             if index + 1 < len(ordered) and ordered[index + 1] not in targets:
-                add("next_out_of_order", path, f"## Next does not link to {ordered[index + 1]}")
+                # The README sets the reading order: a note may follow it rather than the numbers.
+                follows_readme = any(a == path and b in targets for a, b in zip(readme_order, readme_order[1:]))
+                # A note the README reads last may close the pillar, pointing only outside it.
+                closes_pillar = (
+                    bool(readme_order)
+                    and list(dict.fromkeys(readme_order))[-1] == path
+                    and not any(t.startswith(f"{name}/") for t in targets)
+                )
+                if not follows_readme and not closes_pillar:
+                    add("next_out_of_order", path, f"## Next does not link to {ordered[index + 1]}")
 
         deck = root / name / "slides" / "deck.yaml"
         pillar["has_deck"] = deck.is_file()

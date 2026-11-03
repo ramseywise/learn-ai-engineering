@@ -210,12 +210,14 @@ Once the suite exists, run it in CI as [the CI note](../../../generative-ai/08-e
 1. Make a pair from any invoice image by editing one field. Write the pair into a paired scorer that counts a success only if both are correct. What does a model that always gives the first answer score?
 2. In the POPE simulation, raise the adversarial false-yes rate to 0.8. What happens to accuracy and the yes-ratio?
 3. Using `fid`, find approximately how many samples are needed for the same-distribution FID to fall under 1.0 at `dim=64`.
+4. Run [`practice/pair_eval_lab.py`](../practice/pair_eval_lab.py), which scores four fake models with known behaviour under four test designs, with bootstrap intervals. Which design exposes which shortcut, and which single score would have ranked "half reads, half prior" too kindly?
 
 <details><summary>Answers</summary>
 
 1. Zero on any pair whose answers differ, because it can be right on only one image. On a plain per-image scorer, the same model would score about 50%, which is the shortcut that pairing removes.
 2. Accuracy falls to about `(0.92 + 0.2) / 2 = 0.56` and the yes-ratio rises to about `(0.92 + 0.8) / 2 = 0.86`. The yes-ratio alone would flag this model on a balanced set.
 3. Between about 1,000 and 5,000 in the run above (1.15 at 1,000, 0.24 at 5,000), and the exact crossing depends on the seed. The bias grows with dimension, so real Inception features at 2048 dimensions need far more, which is why 50,000 is a common convention.
+4. Pairing zeroes both image-blind models, and rotating the options zeroes "always option A" but not "always the prior" (0.45), so neither test replaces the other. The absent-field test shows up in the yes-ratio, 0.48 for the reader against about 0.75 to 0.81 for the rest. The per-image score is the kind one: "half reads, half prior" gets 0.79 there, with an interval that doesn't reach the reader's 0.89, and 0.47 on pairs. These models are invented, so the point is which test catches which behaviour, and not the values.
 
 </details>
 

@@ -156,56 +156,7 @@ Traces are where cost lives. Roll up per span → per request → per user / fea
 - **Cache hit rate** for prompt caching. A prompt change that breaks the cacheable prefix can double cost overnight.
 - **Tail latency by step.** p95 is usually one slow tool or one long generation, not the whole pipeline.
 
-Rolling a trace up takes little code, and so does scrubbing it on the way out. This uses the trace in the diagram above, with assumed prices of $3 and $15 per million tokens, so its cost differs from the diagram's $0.012:
-
-```python
-import re
-
-# One trace, flattened. Tokens are recorded on model spans; retrieval carries text, not just ids.
-TRACE = {"trace_id": "t-8812", "outcome": "resolved", "spans": [
-    {"name": "chat plan", "in": 1840, "out": 120, "ms": 900},
-    {"name": "execute_tool search_help_center", "ms": 400,
-     "chunks": [{"id": "p1", "text": "Refunds go back to the card within 5 days."}]},
-    {"name": "execute_tool lookup_order", "ms": 200, "args": "order 8812 for jo@example.com"},
-    {"name": "chat answer", "in": 3210, "out": 260, "ms": 1300},
-]}
-IN_PRICE, OUT_PRICE = 3 / 1e6, 15 / 1e6      # assumed $ per token, for the example only
-
-EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
-
-def export(trace):                           # scrub as the span leaves the process
-    clean = dict(trace, spans=[])
-    for span in trace["spans"]:
-        clean["spans"].append({k: EMAIL.sub("<email>", v) if isinstance(v, str) else v
-                               for k, v in span.items()})
-    return clean
-
-def rollup(trace):
-    spans = trace["spans"]
-    cost = sum(s.get("in", 0) * IN_PRICE + s.get("out", 0) * OUT_PRICE for s in spans)
-    slowest = max(spans, key=lambda s: s["ms"])
-    return {"cost": round(cost, 4), "total_ms": sum(s["ms"] for s in spans),
-            "slowest": slowest["name"], "slowest_share": round(slowest["ms"] / sum(s["ms"] for s in spans), 2)}
-
-print(rollup(TRACE))
-print(export(TRACE)["spans"][2]["args"])
-
-def cost_per_success(traces):                # failed runs are paid for too
-    return sum(rollup(t)["cost"] for t in traces) / sum(t["outcome"] == "resolved" for t in traces)
-
-failed = dict(TRACE, outcome="abandoned")
-print("per run", rollup(TRACE)["cost"], "per success at 50%", round(cost_per_success([TRACE, failed]), 4))
-```
-
-Output:
-
-```text
-{'cost': 0.0209, 'total_ms': 2800, 'slowest': 'chat answer', 'slowest_share': 0.46}
-order 8812 for <email>
-per run 0.0209 per success at 50% 0.0418
-```
-
-The slowest span takes 46% of the time, and a 50% success rate doubles the cost of each success. The email is gone before the span reaches a backend.
+The code is in the observability pillar, and that copy is the one to follow. [GA 06 note 6](../../06-observability/notes/06-cost-and-latency-dashboards.md#price-a-turn-from-its-usage-fields) prices a turn from its usage fields and rolls it up to [cost per resolved ticket](../../06-observability/notes/06-cost-and-latency-dashboards.md#cost-per-resolved-ticket). [GA 06 note 1](../../06-observability/notes/01-tracing-with-langfuse.md#keeping-traces-safe-and-affordable) masks emails before a span leaves the process.
 
 ---
 
@@ -280,15 +231,7 @@ Redact **at span export**, not in the dashboard. OTel exporters provide hooks fo
 
    </details>
 
-2. In the script, set the answer span's input tokens to 8,210, as if a 5,000-token tool output had been added to the context. What are the cost per run and the cost per success at 50%?
-
-   <details><summary>Answer</summary>
-
-   Running it gives $0.0358 per run and $0.0716 per success, up from $0.0209 and $0.0418. No extra steps were taken, which is why the cost shows up only if tokens are recorded per span.
-
-   </details>
-
-3. A bad output fails 4 of 5 reruns. Under Albada's triage, is that a systematic bug? What about 5 of 5, and 1 of 5?
+2. A bad output fails 4 of 5 reruns. Under Albada's triage, is that a systematic bug? What about 5 of 5, and 1 of 5?
 
    <details><summary>Answer</summary>
 

@@ -62,6 +62,6 @@ cleaned: 2026-11-02
 
 | Course | Platform | Cost | Notes | Weeks |
 |---|---|---|---|---|
-| [MLOps Zoomcamp, module 05: monitoring](https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/05-monitoring) | GitHub, DataTalks.Club | Free | Evidently, Postgres, Grafana; the source of the model half of [02](notes/02-monitors-and-lineage.md) | 1 |
+| [MLOps Zoomcamp, module 05: monitoring](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/05-monitoring) | GitHub, DataTalks.Club | Free | Evidently, Postgres, Grafana; the source of the model half of [02](notes/02-monitors-and-lineage.md) | 1 |
 | [Data Engineering Zoomcamp, module 04: analytics engineering](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/04-analytics-engineering) | GitHub, DataTalks.Club | Free | dbt tests and source freshness | 1 |
 | [dbt Fundamentals](https://learn.getdbt.com/courses/dbt-fundamentals) | dbt Learn | Free | Tests and sources in a guided project | 1 |

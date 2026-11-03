@@ -60,7 +60,7 @@
 ## Deck and practice
 
 - **Deck:** [slides/ml-platform.pptx](slides/ml-platform.pptx). Build with `make slides PILLAR=data-engineering/06-ml-platform STRICT=1 PREVIEW=1`.
-- **Practice:** [practice/datatalks-mlops](practice/datatalks-mlops) is the MLOps Zoomcamp coursework, modules 01 to 07. Each module has a README. Modules 01 and 02 need Python and the taxi data. Module 03 needs an orchestrator (Prefect, or the folder's own instructions). Module 04's `web-service` needs Docker; `web-service-mlflow`, `streaming` and `batch` need AWS for the real thing. Module 05 needs Docker for its Postgres and Grafana stack. Module 06's unit tests run offline with `pipenv install --dev && pytest tests/`; its integration test needs Docker but no AWS account; its Terraform needs AWS.
+- **Practice:** The [MLOps Zoomcamp at upstream commit `e34bf8f`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7) is the coursework, modules 01 to 07; it isn't kept in this repo. Each module has a README. Modules 01 and 02 need Python and the taxi data. Module 03 needs an orchestrator (Prefect, or the folder's own instructions). Module 04's `web-service` needs Docker; `web-service-mlflow`, `streaming` and `batch` need AWS for the real thing. Module 05 needs Docker for its Postgres and Grafana stack. Module 06's unit tests run offline with `pipenv install --dev && pytest tests/`; its integration test needs Docker but no AWS account; its Terraform needs AWS.
 - **Chapter code:** every block without an `# illustrative` label runs locally on synthetic data. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
 ## Primary texts

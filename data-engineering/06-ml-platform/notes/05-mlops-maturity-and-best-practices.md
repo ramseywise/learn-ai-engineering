@@ -1,9 +1,9 @@
 ---
 origin: synthesis
 sources:
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/01-intro
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/06-best-practices
-  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/07-project
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/01-intro
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/06-best-practices
+  - https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/07-project
   - https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/mlops-maturity-model
   - https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
   - https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
@@ -374,12 +374,14 @@ services:
     environment: [SERVICES=kinesis]
 ```
 
-`integraton-test/run.sh` (the folder name is misspelt upstream) builds the image if needed, runs `docker-compose up -d`, creates the stream with `aws --endpoint-url=http://localhost:4566 kinesis create-stream`, then runs two checks:
+[`integraton-test/run.sh`](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/06-best-practices/code/integraton-test/run.sh) (misspelt at this commit; later upstream commits rename the folder `integration-test`) builds the image if needed, runs `docker-compose up -d`, creates the stream with `aws --endpoint-url=http://localhost:4566 kinesis create-stream`, then runs two checks:
 
 | Script | Checks |
 |---|---|
 | `test_docker.py` | POSTs `event.json` to the Lambda emulator and compares the response with `DeepDiff` |
 | `test_kinesis.py` | Reads the output stream from LocalStack and asserts one record with `version: Test123`, `ride_duration: 21.3` |
+
+[`test_docker.py`](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/06-best-practices/code/integraton-test/test_docker.py) calls `DeepDiff(actual, expected, significant_digits=1)` and asserts only that the diff has no `type_changes` and no `values_changed`. The tolerance is there because a model's output is a float, and an exact match would fail on a change too small to matter. Know what it lets through. Against an expected `21.3` with deepdiff 9.1.0, `21.34` passes and `21.36` fails, and a key the response gains or loses lands under `dictionary_item_removed` or `dictionary_item_added`, which those two asserts never read.
 
 On failure it prints `docker-compose logs`, tears down, and exits with the error code, so CI fails. Testing the real container against [fake cloud services](https://docs.localstack.cloud/) catches packaging, env-var and wiring bugs that unit tests miss.
 
@@ -480,6 +482,8 @@ output "lambda_function" { value = "${var.lambda_function_name}_${var.project_id
 | Environments via var files | `vars/stg.tfvars`, `vars/prod.tfvars`: `terraform apply -var-file=vars/stg.tfvars` |
 | Outputs as an interface | CD reads `lambda_function`, `model_bucket`, `ecr_repo` to know what to update |
 
+The course's [`ecr` module](https://github.com/DataTalksClub/mlops-zoomcamp/blob/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/06-best-practices/code/infrastructure/modules/ecr/main.tf) handles an ordering problem you will hit. The Lambda can't be configured without an image that already exists in ECR, yet the same apply creates the repository. So the module builds and pushes an image from a `null_resource` with a `local-exec` provisioner, re-triggered by the md5 of the handler and the Dockerfile, and an `aws_ecr_image` data source with `depends_on` makes the Lambda wait for the push. Its own comment says that in practice CI/CD does the build, and that any base image would serve for the bootstrap. That is the split to aim for: Terraform owns that the function exists, and CI/CD owns what it runs.
+
 Compare the GCP Terraform in [the ingest chapter](../../02-ingest-and-modelling/notes/01-ingest.md): same tool, different provider. The concepts carry over.
 
 `scripts/deploy_manual.sh` then sets the Lambda's `RUN_ID` with `aws lambda update-function-configuration --environment "Variables={...}"`. It picks the latest run by S3 `LastModified` and is marked "NOT FOR PRODUCTION!". In practice the run comes from the [registry alias](02-experiment-tracking-and-model-registry.md#rollback-and-why-the-registry-labels-but-does-not-deploy).
@@ -491,7 +495,7 @@ Compare the GCP Terraform in [the ingest chapter](../../02-ingest-and-modelling/
 | `ci-tests.yml` | `pull_request` to `develop` | Set up Python and pipenv; unit tests; integration test; `terraform plan` |
 | `cd-deploy.yml` | `push` to `develop` | `terraform plan` and `apply`; Docker build and ECR push; update the Lambda config |
 
-The workflow files live in the upstream repo's `.github/workflows/`, not in this snapshot. Caveats if you copy them:
+The workflow files live in the upstream repo's [`.github/workflows/`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7/.github/workflows). Caveats if you copy them:
 
 | Caveat | Fix |
 |---|---|
@@ -536,6 +540,8 @@ If your team runs on AWS, the question is which piece of [Amazon SageMaker AI](h
 The useful habit is the third column. Each of these services moves work off your plate, and none of them makes a decision this pillar taught you to make. [An ML system from framing to monitoring](06-ml-system-framing-to-monitoring.md) walks through those decisions on one problem.
 
 ## Run labels
+
+Course paths are as they stood at [upstream commit `e34bf8f`](https://github.com/DataTalksClub/mlops-zoomcamp/tree/e34bf8f540b75dfd712ffcc97d3c000ae1c2e3e7), the version these chapters read.
 
 | Material | Needs |
 |---|---|

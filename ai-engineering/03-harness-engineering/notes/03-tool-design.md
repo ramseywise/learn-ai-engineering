@@ -10,6 +10,8 @@ sources:
   - https://arxiv.org/abs/2405.15793
   - https://arxiv.org/abs/2609.11999
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 4, 5"
+  - "Kyle Stratis, AI Agents with MCP (O'Reilly, 2025), ch. 1–5 — ai-engineering/02-context-engineering/sources/ai-agents-with-mcp/"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch. 7"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -276,7 +278,62 @@ Cost: latency per hop, plus a process to operate. Default to in-process; promote
 
 Albada names the cost that pushes teams off in-process tools at scale: **duplication**. Every agent service that uses a local tool library has to deploy it, and every change means coordinating redeploys, so in practice teams quietly reimplement the same tools (*Building Applications with AI Agents*, ch. 4). That is the "multiple distinct callers" row arriving through org structure rather than architecture. His other middle option, vendor plug-in catalogues, has aged badly: the ChatGPT plug-ins he cites were retired in 2024 in favour of GPTs and, later, MCP connectors.
 
-What the protocol gives you: three primitives (**tools**, **resources**, **prompts**) over two transports (**stdio** for local servers and **Streamable HTTP** for remote ones; the older SSE transport is deprecated). Remote servers also have an OAuth-based authorization flow in the spec. Two dated claims to discount in older texts: *Building Applications with AI Agents* (ch. 4) describes MCP as "JSON-RPC 2.0 over HTTPS or WebSocket" and says the spec "does not yet mandate" a security solution. WebSocket was never a standard transport, and authorization has been in the spec since 2025, although auth on a remote server is still something you configure, not a default. What it doesn't: it is request–response, so a server notification does not wake an idle agent. Event-driven behaviour needs its own channel ([note 07](07-orchestration.md#asynchronous-agents-events-and-safe-points)).
+### The protocol
+
+![MCP architecture: the host application talks to one MCP client per server; requests, responses and notifications flow client to server, elicitation and sampling requests flow server to client](../../02-context-engineering/sources/images/ai-agents-with-mcp-fig2-3.png)
+*Image Source: Stratis, *AI Agents with MCP* (O'Reilly, 2025), Fig. 2-3*
+
+**Architecture.** The host is the application that holds the LLM. It runs **one client per server**, 1:1. Messages are JSON-RPC requests, responses and notifications. Each connection has a lifecycle of initialize (protocol version and capability negotiation), operate, shut down. The Python SDK's `ClientSessionGroup` drives several servers as if they were one, so two primitives with the same name raise an exception. Prefix tool names per server (`grader_…`), which also helps the model choose (*AI Agents with MCP*, ch. 4–5).
+
+**Primitives.** There are three: **tools**, **resources** and **prompts**. Who controls each one, and so how it enters the window, is in [context 10](../../02-context-engineering/notes/10-tools-and-multi-agent.md#mcp-a-protocol-for-moving-context).
+
+**Server-initiated requests.** Three client features let the server reach back through the client:
+
+- **Sampling** (`sampling/createMessage`) lets a server borrow the host's model. The spec says clients SHOULD keep a human in the loop and rate-limit.
+- **Elicitation** asks the user for structured input. The user can accept, decline or cancel, and the schema is limited to a flat subset of JSON Schema.
+- **Roots** (`file://` URIs) tell a server where it may work. They are advisory. The server is trusted to respect them, so **roots are not a security boundary** ([isolation](../../02-context-engineering/notes/10-tools-and-multi-agent.md#context-isolation-as-a-security-boundary)).
+
+**Transports.**
+
+- **stdio** for local servers.
+- **Streamable HTTP** for remote ones. It uses one endpoint: POST carries client messages, and an optional GET opens an SSE stream. Streams resume via `Last-Event-ID`, auth is OAuth 2.1, and local servers should bind to localhost.
+- The older HTTP+SSE transport is superseded.
+
+Stratis's ch. 2 describes Streamable HTTP as "GETs and PUTs". The spec uses POST and GET.
+
+> **Version-dependent.** These details follow the 2025-03-26 spec that Stratis cites, plus the 2025-06-18 revision, which added elicitation and structured tool output. Check the current spec before relying on a detail. Drop the book's ecosystem counts; they date from mid-2025.
+
+A minimal server has one primitive of each kind (FastMCP derives the output schema from type hints). This form needs `mcp<2`; the 2.x SDK renames `FastMCP` to `MCPServer`:
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("grader")
+
+@mcp.tool()                          # model-controlled
+def grader_report_card(student: str) -> ReportCard: ...
+
+@mcp.resource("file:///rubric.md")   # application-controlled: lazy, no side effects
+def rubric() -> str: ...
+
+@mcp.prompt()                        # user-controlled
+def review(student: str) -> str: ...
+
+if __name__ == "__main__":
+    mcp.run()                        # stdio; mcp.run("streamable-http") for remote
+```
+
+Stratis's runnable clients and servers (ch. 3 onward) are in the book's upstream repo.
+
+**Limits.** It is request–response, so a server notification does not wake an idle agent. Event-driven behaviour needs its own channel ([note 07](07-orchestration.md#asynchronous-agents-events-and-safe-points)). Lakshmanan & Hapke list three limits as of May 2025 (*Generative AI Design Patterns*, ch. 7):
+
+| Limit | Workaround |
+|---|---|
+| No auth enforcement in the spec | OAuth in front of the server (Cloudflare Workers) |
+| Mostly one-way: client calls server | A2A or ACP for agent-to-agent collaboration |
+| Calls time out at 30–60 s | Streamable HTTP transport, or return a job ID and poll |
+
+Discount two dated claims in older texts. *Building Applications with AI Agents* (ch. 4) describes MCP as "JSON-RPC 2.0 over HTTPS or WebSocket" and says the spec "does not yet mandate" a security solution. WebSocket was never a standard transport, and authorization has been in the spec since 2025, although auth on a remote server is still something you configure, not a default. That also dates the first row of the table.
 
 ### MCP supply-chain risks
 
