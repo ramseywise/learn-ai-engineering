@@ -17,6 +17,9 @@ Original research or first-party engineering writing. Cite directly.
 | [Anthropic Engineering](https://www.anthropic.com/engineering) | irregular | harness, context, eval | 2026-07-29 |
 | [LangChain blog](https://www.langchain.com/blog) | weekly | loop, graph, harness | 2026-07-29 |
 | [Addy Osmani](https://addyosmani.com/blog/) | irregular | loop, harness | 2026-07-29 |
+| [OpenAI developer blog](https://developers.openai.com/blog) | irregular | harness, prompt, inference | not yet swept |
+| [OpenAI news feed](https://openai.com/news/rss.xml), category Engineering | irregular | harness, safety, eval; `openai.com/index/` posts are cited in six notes | not yet swept |
+| [Hugging Face blog](https://huggingface.co/blog) | several a week | post-training, inference, multimodal; so far one `references.md` row in generative-ai/05-RL and no note, so it stays only if a sweep lands something | not yet swept |
 | arXiv (via librarian `cartographer`) | daily cron | all — see `librarian/` | automated |
 
 ## Tier 2 — secondary / aggregator
@@ -34,7 +37,24 @@ good, prefer citing the primary source it draws on. Value is coverage and cadenc
 
 ---
 
+## Sweep routes for reading that is not a paper
+
+`discover.py` searches OpenAlex, which indexes scholarly work, so it can't find these. Run them with
+`/readings sweep <route>`. A sweep proposes; the user chooses what comes in.
+
+| Route | Where it feeds | What to look for | How |
+|---|---|---|---|
+| `programming` | `programming/` (`PILLARS["programming"]`) | Language and framework release notes, official tutorials, engineering writing on Python, TypeScript, SQL and testing | `web-researcher`, one module at a time. Papers on the same topics still go through `discover.py` with `queries-programming.json` |
+| `interview` | `practice/interviewing/rounds/` and `guides/`; no ledger home | Published interview loops, first-party company engineering pages, rubrics | `web-researcher`, one round at a time. `practice/.gitignore` is an allowlist: clear the licence and check for anything personal before adding a line, and summarize rather than copy question banks |
+
+---
+
 ## Notes on individual sources
+
+### OpenAI
+
+Added 2026-11-03. `openai.com/news/engineering/` returns 403 to scripted fetches, so it could not be confirmed
+and is not listed. The RSS feed answers and tags posts with an Engineering category. Filter on that.
 
 ### AI Builder Club
 

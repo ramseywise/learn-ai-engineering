@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test unit chapter-check chapter-check-all link-check curriculum crosswalk crosswalk-check drill-check review-findings signals learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
+.PHONY: help lint test unit chapter-check chapter-check-all deck-check link-check curriculum crosswalk crosswalk-check drill-check review-findings signals learn ledger-check ledger-report papers-figures papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -18,7 +18,7 @@ lint:  ## Verify top-level topic directories exist
 CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science/*/ data-engineering/*/
 
 test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
-	@fail=0; for t in lint link-check crosswalk-check chapter-check-all drill-check unit; do \
+	@fail=0; for t in lint link-check crosswalk-check chapter-check-all drill-check deck-check ledger-check unit; do \
 		echo "== $$t"; $(MAKE) --no-print-directory $$t || { echo "FAILED: $$t"; fail=1; }; \
 	done; \
 	echo "== curriculum (information only)"; \
@@ -28,10 +28,16 @@ test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum 
 unit:  ## Run the tests for the repo's scripts
 	@out=$$(python3 -m unittest discover -s scripts -p 'test_*.py' 2>&1); rc=$$?; echo "$$out" | grep -E '^(Ran |OK|FAILED|FAIL:|ERROR:)'; exit $$rc
 
-chapter-check-all:  ## Hold the five pillared subjects to the chapter standard; programming/ is reported only
+chapter-check-all:  ## Hold the five pillared subjects to the chapter standard and programming/ to its frontmatter and path rules; the rest of programming/ and the advisories are reported only
 	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) | tail -1
 	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) >/dev/null
+	@python3 scripts/check_chapters.py --strict --metadata-only programming/*/ programming/python/*/ | tail -1
+	@python3 scripts/check_chapters.py --strict --metadata-only programming/*/ programming/python/*/ >/dev/null
 	@python3 scripts/check_chapters.py programming/*/ | tail -1
+	@python3 scripts/check_chapters.py --advisory $(CHAPTER_GATE) | tail -1
+
+deck-check:  ## Fail if a stamped deck no longer matches its deck.yaml; decks built before stamping are reported only
+	@python3 scripts/slides/deck_stamp.py
 
 chapter-check:  ## Check notes against the chapter standard: make chapter-check PILLAR=data-analytics/06-applied-analyses [STRICT=1]
 	@test -n "$(PILLAR)" || { echo "usage: make chapter-check PILLAR=<area>/<pillar> [STRICT=1]"; exit 1; }
@@ -76,6 +82,15 @@ papers:  ## Fetch new AI Papers of the Week, scan repo PDFs, triage, download in
 papers-status:  ## Paper ledger counts by status
 	@python3 scripts/papers/potw.py status
 
+ledger-check:  ## Check the reading ledger against the repo: note paths, homes, unledgered PDFs, uncited integrated rows, duplicate ids
+	@python3 scripts/papers/check_ledger.py
+
+ledger-report:  ## Write every ledger finding, gated or not, to scripts/papers/reports/ledger-check.md
+	@python3 scripts/papers/check_ledger.py --write-report
+
+papers-figures:  ## Figures per home: images kept and embedded per 100 integrated readings
+	@python3 scripts/papers/figures.py yield
+
 papers-route:  ## Move triaged PDFs from the scripts/papers/inbox/ to their home's sources/ [APPLY=1]
 	@python3 scripts/papers/potw.py route $(if $(APPLY),--apply)
 
@@ -85,7 +100,7 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
 
-papers-nightly-install:  ## Install the nightly /papers integration job (daily 02:30)
+papers-nightly-install:  ## Install the nightly /papers and /chapter job (daily 02:30)
 	@mkdir -p .claude/logs
 	@cp scripts/papers/com.wiseer.papers-nightly.plist ~/Library/LaunchAgents/
 	@launchctl bootout gui/$$(id -u)/com.wiseer.papers-nightly 2>/dev/null || true

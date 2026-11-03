@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Nightly /papers run: integrate downloaded PDFs into the notes, one home and tier per headless
-# Claude session (fresh context each). Every home's tier 1 comes before any home's tier 2
-# (tiers: `potw.py tier`), and within a tier the biggest backlog goes first.
+# Nightly /papers and /chapter run: integrate PDFs into the notes, one headless Claude session (fresh
+# context) per home and tier, or per chapter. Every home's tier 1 comes first (tiers: `potw.py tier`),
+# then ready book chapters one at a time, then every home's tier 2 and so on. Within a tier the biggest
+# backlog goes first; a home with nothing ready gets no session.
 #
-# Scheduled by launchd (com.wiseer.papers-nightly.plist, daily 02:30). Install with
-# `make papers-nightly-install`, remove with `make papers-nightly-uninstall`.
+# Scheduled by launchd (com.wiseer.papers-nightly.plist). Install with `make papers-nightly-install`,
+# remove with `make papers-nightly-uninstall`. The start hour is not tuned to the usage window, which
+# moves with use: a limit is detected and ends the run instead.
 #
 # Edits notes, references.md, sources/images/ and the ledger. Never commits (git
 # commit/push are disallowed below); review with `git status` in the morning.
 # A run rarely clears a big home, so each home and tier repeats until its ready count stops falling.
 # Stops starting new runs at STOP_HOUR (STOP_HOUR=24 never stops), or as soon as a run hits
-# the usage limit.
+# the usage limit, whichever pass it is in.
 
 set -uo pipefail
 
@@ -23,13 +25,10 @@ export USER="${USER:-$(id -un)}" LOGNAME="${LOGNAME:-$(id -un)}"
 export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0
 
 STOP_HOUR="${STOP_HOUR:-8}"
-HOMES=(post-training llm-fundamentals eval agents inference multimodal agentic-apps
-       prompt context rag loop classical-ml safety ml-systems harness graph frameworks
-       analytics data-systems programming)
 read -ra TIERS <<< "${TIERS:-1 2 3 4 5 6}"  # TIERS="1 2" limits a run
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
-cd "$REPO"
+cd "$REPO" || exit 1
 mkdir -p .claude/logs
 if ! mkdir "$LOCK" 2>/dev/null; then
     echo "$(date '+%F %T') another nightly run holds $LOCK; exiting"
@@ -37,57 +36,76 @@ if ! mkdir "$LOCK" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK"' EXIT
 
-# PDFs ready for /papers in a home and tier: downloaded rows, plus queued rows whose PDF is
-# already in the repo (outside the inbox, not a /chapter book chapter).
-ready() {
-    python3 - "$1" "$2" <<'EOF'
-import json, re, sys
-home, tier = sys.argv[1], int(sys.argv[2])
-n = 0
-for line in open("scripts/papers/ledger.jsonl"):
-    if not line.strip():
-        continue
-    r = json.loads(line)
-    if r.get("pillar") != home or r.get("tier") != tier:
-        continue
-    pdf = r.get("local_pdf") or ""
-    if r["status"] == "downloaded" or (
-        r["status"] == "queued" and r.get("have_pdf")
-        and not pdf.startswith("scripts/papers/inbox/") and not re.search(r"/ch\d\d-", pdf)):
-        n += 1
-print(n)
-EOF
-}
+# shellcheck source=scripts/papers/nightly-lib.sh
+source "$REPO/scripts/papers/nightly-lib.sh"
 
-PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. Do not commit or push; stage with git add only if the repo rules say so."
+PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. \`potw.py mark integrated\` refuses a key no note or references.md in its home cites, so write the citation first; use --no-citation only for a real exception, with the reason. Do not commit or push; stage with git add only if the repo rules say so."
 
-python3 scripts/papers/potw.py tier
-
-for tier in "${TIERS[@]}"; do
-    for home in "${HOMES[@]}"; do
-        while :; do
-            if [ "$(date +%H)" -ge "$STOP_HOUR" ] && [ "$(date +%H)" -lt 23 ]; then
-                echo "$(date '+%F %T') past ${STOP_HOUR}:00; stopping before $home tier $tier"
-                break 3
-            fi
-            n="$(ready "$home" "$tier")"
-            [ "$n" -gt 0 ] || break
-            echo "$(date '+%F %T') /papers $home tier:$tier ($n ready)"
-            out="$(claude -p "/papers $home tier:$tier
+LIMIT_HIT=0
+# session LABEL PROMPT: one headless claude session; sets LIMIT_HIT if it ended on a usage limit
+session() {
+    local out status
+    out="$(claude -p "$2
 
 $PROMPT_TAIL" \
-                --permission-mode auto \
-                --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" 2>&1)"
-            status=$?
-            echo "$out" | tail -40
-            left="$(ready "$home" "$tier")"
-            echo "$(date '+%F %T') /papers $home tier:$tier exit $status; $left still ready"
-            if [ $status -ne 0 ] && echo "$out" | grep -qiE "usage limit|session limit|rate limit|limit reached|resets [0-9a]"; then
-                echo "$(date '+%F %T') usage limit hit; stopping"
-                break 3
-            fi
+        --permission-mode auto \
+        --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" 2>&1)"
+    status=$?
+    echo "$out" | tail -40
+    echo "$(date '+%F %T') $1 exit $status"
+    if limit_hit "$status" "$out"; then
+        echo "$(date '+%F %T') usage limit hit, stopping: $(limit_text "$out")"
+        LIMIT_HIT=1
+    fi
+}
+
+stop_now() {
+    [ "$LIMIT_HIT" -eq 1 ] && return 0
+    if past_stop "$(date +%H)" "$STOP_HOUR"; then
+        echo "$(date '+%F %T') past ${STOP_HOUR}:00; stopping"
+        return 0
+    fi
+    return 1
+}
+
+# One chapter per session (the /chapter skill's rule). A chapter a session leaves unfinished is
+# passed over for the rest of the run: what's left needs a person.
+chapters() {
+    local skip=() pick book chapter key
+    while ! stop_now; do
+        pick="$(python3 scripts/papers/potw.py ready --next-chapter --exclude ${skip[@]+"${skip[@]}"})"
+        [ -n "$pick" ] || { echo "$(date '+%F %T') /chapter: nothing ready"; return; }
+        read -r book chapter key <<< "$pick"
+        echo "$(date '+%F %T') /chapter $book $chapter"
+        session "/chapter $book $chapter" "/chapter $book $chapter"
+        skip+=("$key")
+    done
+}
+
+papers() {
+    local tier="$1" home n left
+    for home in $(python3 scripts/papers/potw.py ready --tier "$tier"); do
+        while ! stop_now; do
+            n="$(python3 scripts/papers/potw.py ready --tier "$tier" --count "$home")"
+            [ "$n" -gt 0 ] || break
+            echo "$(date '+%F %T') /papers $home tier:$tier ($n ready)"
+            session "/papers $home tier:$tier" "/papers $home tier:$tier"
+            left="$(python3 scripts/papers/potw.py ready --tier "$tier" --count "$home")"
+            echo "$(date '+%F %T') /papers $home tier:$tier: $left still ready"
             [ "$left" -lt "$n" ] || break  # no progress: what's left needs a person
         done
     done
+}
+
+python3 scripts/papers/potw.py tier
+
+first=1
+for tier in "${TIERS[@]}"; do
+    stop_now && break
+    papers "$tier"
+    if [ "$first" -eq 1 ]; then  # chapters come ahead of the lower paper tiers, or those starve them
+        chapters
+        first=0
+    fi
 done
 python3 scripts/papers/potw.py status

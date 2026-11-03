@@ -39,13 +39,16 @@ def save_records(records, path):
 if __name__ == "__main__":
     # Minimal reproducer -- no files needed.
     batch1 = [{"id": 1, "val": "a"}, {"id": 2, "val": "b"}, {"id": 1, "val": "c"}]
-    batch2 = [{"id": 3, "val": "d"}]
+    batch2 = [{"id": 2, "val": "d"}]
 
-    print("Run 1:", dedup(batch1))
-    print("Run 2:", dedup(batch2))
+    run1 = dedup(batch1)
+    run2 = dedup(batch2)
+    print("Run 1:", run1)
+    print("Run 2:", run2)
 
     # This is what the caller expects. It currently fails -- that is the bug.
-    assert dedup([{"id": 3, "val": "d"}]) == [{"id": 3, "val": "d"}], "run 2 lost records"
+    assert run1 == [{"id": 1, "val": "a"}, {"id": 2, "val": "b"}], "run 1 kept duplicates"
+    assert run2 == batch2, "run 2 lost records"
     print("smoke test passed")
 
     # your regression test here -- it should fail before your fix and pass after

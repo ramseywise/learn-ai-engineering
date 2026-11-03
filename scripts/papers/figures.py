@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Find and extract figures from a source PDF, for notes and slides.
+"""Find and extract figures from a source PDF, for notes and slides, and report figure yield per home.
 
 Run with PyMuPDF:  uv run -q --with pymupdf python scripts/papers/figures.py <cmd> ...
 
@@ -11,6 +11,8 @@ Run with PyMuPDF:  uv run -q --with pymupdf python scripts/papers/figures.py <cm
   crop     <pdf> --page P --clip x0,y0,x1,y1 --out ...png [--dpi 200]
                                          render a page region (vector diagrams, or a figure
                                          with its labels); coordinates in PDF points, 72/in
+  yield    [--home data-science]         per home: integrated readings, images kept, images embedded
+                                         in notes, embedded per 100 readings (no PyMuPDF needed)
 
 Pages are 1-based. `list` and `page` print the page size so `crop` coordinates can be chosen
 from the rendered page. After saving, embed it in the note with the caption line `extract`
@@ -21,10 +23,14 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import pymupdf as fitz
-except ImportError:
-    sys.exit("needs PyMuPDF: uv run -q --with pymupdf python scripts/papers/figures.py ...")
+sys.path.insert(0, str(Path(__file__).parent))
+import potw  # noqa: E402
+
+fitz = None  # PyMuPDF, loaded by main() for the commands that open a PDF
+LOW_YIELD_PER_100 = 5  # flagged in `yield` once a home has this few embedded per 100 readings
+LOW_YIELD_MIN_READINGS = 20  # below this, a low rate says little
+IMAGE_EMBED = re.compile(r"!\[[^\]]*\]\(<?[^)]*sources/images/[^)]+\)")
+IMAGE_TYPES = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
 
 caption_re = re.compile(r"^\s*(Fig(?:ure)?\.?\s*(\d+(?:[-.]\d+)?))[.:]\s*(.+)", re.I)
 
@@ -105,7 +111,37 @@ def cmd_crop(doc, args):
     caption_hint(args.out)
 
 
+def figure_yield(rows, home=None):
+    """One dict per course folder. Homes sharing a folder (data-systems, ml-systems) share a line."""
+    folders = {}
+    for key, folder in potw.PILLARS.items():
+        folders.setdefault(folder, []).append(key)
+    out = []
+    for folder, keys in sorted(folders.items()):
+        if home and home not in keys:
+            continue
+        readings = sum(r.get("status") == "integrated" and r.get("pillar") in keys and bool(r.get("local_pdf"))
+                       for r in rows)
+        base = potw.REPO / folder
+        kept = sum(p.suffix.lower() in IMAGE_TYPES and p.parent.name == "images" and p.parent.parent.name == "sources"
+                   for p in base.rglob("*") if not set(p.relative_to(base).parts) & potw.PDF_SKIP_DIRS) if base.is_dir() else 0
+        embedded = sum(len(IMAGE_EMBED.findall(p.read_text(encoding="utf-8", errors="replace")))
+                       for p in potw.home_notes(folder)) if base.is_dir() else 0
+        per_100 = 100 * embedded / readings if readings else 0
+        out.append({"folder": folder, "readings": readings, "kept": kept, "embedded": embedded, "per_100": per_100,
+                    "low": readings >= LOW_YIELD_MIN_READINGS and per_100 < LOW_YIELD_PER_100})
+    return out
+
+
+def cmd_yield(args):
+    print(f"{'home':<42} {'readings':>8} {'kept':>6} {'embedded':>8} {'per 100':>8}")
+    for y in figure_yield(potw.read_jsonl(potw.LEDGER), args.home):
+        print(f"{y['folder']:<42} {y['readings']:>8} {y['kept']:>6} {y['embedded']:>8} {y['per_100']:>8.1f}"
+              + ("  LOW" if y["low"] else ""))
+
+
 def main():
+    global fitz
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name, fn in (("captions", cmd_captions), ("list", cmd_list), ("page", cmd_page),
@@ -124,7 +160,17 @@ def main():
             p.add_argument("--xref", type=int, required=True)
         if name == "crop":
             p.add_argument("--clip", required=True, help="x0,y0,x1,y1 in PDF points")
+    p = sub.add_parser("yield", help="per home: readings, images kept and embedded")
+    p.add_argument("--home", help="one home key from potw.py")
+    p.set_defaults(fn=cmd_yield)
     args = ap.parse_args()
+    if args.cmd == "yield":
+        args.fn(args)
+        return
+    try:
+        import pymupdf as fitz
+    except ImportError:
+        sys.exit("needs PyMuPDF: uv run -q --with pymupdf python scripts/papers/figures.py ...")
     with fitz.open(args.pdf) as doc:
         args.fn(doc, args)
 

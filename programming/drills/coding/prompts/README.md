@@ -16,19 +16,20 @@ hand you the mark.
 
 | File | QID | Question | Kind | Budget |
 |---|---|---|---|---|
-| `cache-lru.py` | `cache-lru` | Q4 | live coding | 25–30 min |
-| `resilience-retry.py` | `resilience-retry` | Q5 | live coding | 25–30 min |
-| `debug-dedup.py` | `debug-dedup` | Q7 | debugging | 20 min |
-| `algo-transaction-agg.py` | `algo-transaction-agg` | Q6a | practical | 35 min |
+| `cache-lru.py` | `cache-lru` | Q1 | live coding | 20–25 min |
+| `resilience-retry.py` | `resilience-retry` | Q3 | live coding | 25–30 min |
+| `debug-dedup.py` | `debug-dedup` | Q7 | debugging | 20–25 min |
+| `algo-transaction-agg.py` | `algo-transaction-agg` | Q6c | practical | 35 min |
 | `db-sqlite-scaling.py` | `db-sqlite-scaling` | Q6d | practical | 40 min |
 | `auth-token-endpoint.py` | `auth-token-endpoint` | Q6e | practical | 40 min |
-| `agentic-workflow.py` | `agentic-workflow` | Q6c | practical | 40 min |
-| `agentic-rag-offline.py` | `agentic-rag-offline` | Q6b | practical | 45 min |
+| `agentic-workflow.py` | `agentic-workflow` | Q6b | practical | 40 min |
+| `agentic-rag-offline.py` | `agentic-rag-offline` | Q6a | practical | 45 min |
 
 Question numbers refer to `questions.md` in
 `practice/interviewing/rounds/coding-challenge/`. That
 folder's `examples/` holds full worked solutions — **do not open it before an
-attempt finishes.**
+attempt finishes.** They solve the same questions with their own names and return
+shapes, so they will not pass a starter's smoke test as written.
 
 Two of these are trap-shaped: the graded mistake is one the prompt does not warn
 you about. Their docstrings stay quiet deliberately. Which two is not written

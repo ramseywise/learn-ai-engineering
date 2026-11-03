@@ -120,6 +120,10 @@ python3 scripts/papers/potw.py mark integrated <key>
 make link-check
 ```
 
+`mark integrated` refuses a key with no citation in the home's notes or `references.md`, and sets the row's `note` to
+the citing file. A refusal means the Books row or the note citation is missing: write it, then mark again.
+`--no-citation "<why>"` is for a genuine exception and is listed for the user.
+
 If you wrote a **new note**, run `/curriculum integrate <note path>` before closing out. Dispatch one `citation-checker` per
 note you touched, with the list of citations you just added. Report any `unverifiable` row: it is not a pass.
 

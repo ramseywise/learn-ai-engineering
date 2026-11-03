@@ -8,7 +8,7 @@
     python3 scripts/review/findings.py patterns
 
 Append-only JSONL, so the latest row for an id is its current state. Required fields for add: run, reviewer,
-target, kind, decision, summary. Optional: line, pattern. A rejection needs a reason. `pattern` is a short slug
+target (a repo-relative path that must exist), kind, decision, summary. Optional: line, pattern. A rejection needs a reason. `pattern` is a short slug
 naming a fault a script or spec could prevent (`preprint-missing`); run `patterns` and reuse one if it fits.
 
 Precision is applied / (applied + rejected), per reviewer. `listed` findings await the user and count for neither.
@@ -23,6 +23,7 @@ from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
 LOG = Path(__file__).resolve().parent / "findings.jsonl"
 DECISIONS = {"applied", "listed", "rejected"}
 REQUIRED = ("run", "reviewer", "target", "kind", "decision", "summary")
@@ -81,6 +82,8 @@ def add(log: Path, lines: list[str], today: str) -> list[str]:
         problem = validate(row)
         if problem:
             raise ValueError(f"line {n}: {problem}")
+        if not (ROOT / row["target"]).exists():
+            raise ValueError(f"line {n}: target {row['target']} does not exist")
         rows.append({"ts": today, "id": finding_id(row), **row})
     append(log, rows)
     return [r["id"] for r in rows]

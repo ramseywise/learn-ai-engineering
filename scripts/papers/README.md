@@ -67,8 +67,21 @@ candidates for a new pillar, with each paper's `reason`.
 `relevance` barely separates downloaded papers, so `potw.py tier` ranks each PDF ready for
 `/papers` from its citation-graph role, review status and citations (`TIERS` in potw.py): primary,
 landmark, solid, too new to tell, low signal, then surveys and benchmarks. The nightly run works
-through every home's tier 1 before any home's tier 2, and recomputes tiers when it starts. Run it
-yourself after `citegraph.py status --write`, which fills in the role and review status.
+through every home's tier 1, then ready book chapters one per session (`chapter_tier`: book in progress, filed, new
+book), then every home's tier 2, and recomputes tiers when it starts. It stops when a session reports a usage limit.
+Run `tier` yourself after `citegraph.py status --write`, which fills in the role and review status.
+
+Only `sources/<book-slug>/chNN-*.pdf` counts as a `/chapter` chapter. Flat `<book>-chNN-*.pdf` files go through `/papers`.
+
+## Ledger checks
+
+`make ledger-check` (part of `make test`) fails on a bad `note` path, an unknown home, a PDF under `sources/` with no
+row, an integrated row nothing cites, or two rows sharing a DOI or arXiv id. `make ledger-report` also lists what has a
+backlog: integrated rows with no `references.md` row, rows cited only outside their home, a `note` that does not cite
+its row, and duplicate titles. Duplicates merge by marking the loser `skipped` with `merged_into`, never by deleting.
+
+`potw.py mark integrated` uses the same search, so it refuses a key its home does not cite (`--no-citation "<why>"` for
+an exception) and sets `note` to the citing file. `potw.py scan --offline` registers new PDFs without calling arXiv.
 
 ## Status lifecycle
 
@@ -147,7 +160,9 @@ cite the peer-reviewed version.
   `primary --download` fetches the free ones into the pillar that cites them most. The rest
   are listed to fetch by hand: drop the PDF in `downloads/` (gitignored, any file name) and
   run `ingest`, which matches it by title and files it.
-- Each `references.md` gets a generated **Where the ideas come from** table (`refs --write`).
+- Each `references.md` gets a generated **Where the ideas come from** table (`refs --write`). It is a reading list, not
+  citations: its last column says read, held and unread, or not held. The block never counts as a citation in
+  `check_ledger.py` or as a seed for the graph.
 - `--subject` limits any command to the five subject homes. `fetch --include-queued` also
   seeds from queued rows, which those homes need while they hold few PDFs. A home seeded that
   way is marked *provisional* in its report.
@@ -181,6 +196,7 @@ python3 scripts/papers/citegraph.py export --html                # reports/graph
 | `/papers` | One paper into a `references.md` row and a sentence or paragraph in a note. |
 | `/pillar` | Bring a pillar folder to the standard layout (`notes/`, `sources/`, `references.md`). |
 | `/slides` | One pillar's notes into a lecture deck, kept as `.pptx` and `.pdf`. |
+| `/weekly` | Report only: tests, reviewer decisions, signals, backlog, stale decks. Changes no content. |
 
 The standard layout every skill writes to is in [pillar-layout.md](../../.claude/skills/pillar/references/pillar-layout.md).
 

@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent / "review"))
 sys.path.insert(0, str(Path(__file__).parent / "practice"))
@@ -25,6 +26,16 @@ class FindingsLog(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.log = Path(tmp.name) / "log.jsonl"
+        for name in ("a.md", "b.md", "0.md", "1.md", "2.md"):
+            (Path(tmp.name) / name).touch()
+        patcher = mock.patch.object(fl, "ROOT", Path(tmp.name))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_add_refuses_a_target_that_does_not_exist(self):
+        with self.assertRaisesRegex(ValueError, "line 2: target gone.md does not exist"):
+            fl.add(self.log, [finding(), finding(summary="other", target="gone.md")], "2026-11-02")
+        self.assertEqual(fl.read_rows(self.log), [])
 
     def test_add_is_all_or_nothing(self):
         with self.assertRaisesRegex(ValueError, "line 2"):

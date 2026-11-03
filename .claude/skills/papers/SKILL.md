@@ -163,6 +163,10 @@ python3 scripts/papers/citegraph.py refs --home <home> --write   # refresh "Wher
 make link-check
 ```
 
+`mark integrated` refuses a key with no citation in the home's notes or `references.md`, and sets the row's `note` to
+the citing file. A refusal means the citation was not written: write it, then mark again. `--no-citation "<why>"` is for
+a genuine exception and is listed for the user.
+
 Before marking a batch integrated, dispatch one `citation-checker` per note you touched, with the list of citations you
 just added (not "all"). Fix what it finds. Report any `unverifiable` row: it is not a pass.
 

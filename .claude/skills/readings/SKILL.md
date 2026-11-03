@@ -1,6 +1,6 @@
 ---
 name: readings
-description: "Work the readings backlog: show what is in the scripts/papers/inbox/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage, /readings discover <home>. Run from the learn-ai-engineering repo."
+description: "Work the readings backlog: show what is in the scripts/papers/inbox/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage, /readings discover <home>, /readings sweep <programming|interview>. Run from the learn-ai-engineering repo."
 ---
 
 You are keeping the reading backlog moving. `scripts/papers/README.md` describes
@@ -61,6 +61,19 @@ readings predate DAIR. See "Discovery for the subject homes" in `scripts/papers/
 3. `discover.py review --home <home>` and point the user at `discover/review-<home>.md`. After they
    mark it, run `review --home <home> --apply`, then `potw.py download --backlog --home <home>`.
 4. Never delete ledger rows; mark them `skipped` with a reason. A concurrent writer re-adds deleted rows.
+
+---
+
+## Sweep mode (`/readings sweep <route>`)
+
+For reading `discover.py` can't find, along the routes in the "Sweep routes" table of
+`scripts/papers/recurring-sources.md`:
+
+1. Ask `web-researcher` one question per module or round, giving it what the notes already say.
+2. List the findings for the user with source, date, licence and the note or round they would feed. Change no content.
+3. Route anything the user picks: a paper goes through `discover.py curated`; a web source is cited from the note that
+   uses it. For `practice/`, add to `practice/.gitignore` only after clearing the licence and checking for anything personal.
+4. Update **Last swept** in `recurring-sources.md`, and note what landed.
 
 ---
 

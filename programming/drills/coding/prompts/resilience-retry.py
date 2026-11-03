@@ -34,6 +34,12 @@ if __name__ == "__main__":
 
     assert flaky() == "ok"
     assert calls["n"] == 3, f"expected 3 attempts, got {calls['n']}"
+
+    @retry
+    def bare():
+        return "ok"
+
+    assert bare() == "ok", "bare @retry should work too"
     print("smoke test passed")
 
     # your edge cases here -- exhaustion, metadata preservation, non-retryable errors

@@ -46,13 +46,13 @@ if __name__ == "__main__":
 ```python
 # Minimal reproducer — I can run this in a REPL without any files
 records_batch1 = [{"id": 1, "val": "a"}, {"id": 2, "val": "b"}, {"id": 1, "val": "c"}]
-records_batch2 = [{"id": 3, "val": "d"}]
+records_batch2 = [{"id": 2, "val": "d"}]
 
 print("Run 1:", dedup(records_batch1))
 print("Run 2:", dedup(records_batch2))
 ```
 
-[NARRATE: "I'm predicting: run 1 should return records with id=1 and id=2. Run 2 should return the record with id=3. Let me see what actually happens."]
+[NARRATE: "I'm predicting: run 1 should return records with id=1 and id=2. Each call dedups its own batch, so run 2 should return the record with id=2. Let me see what actually happens."]
 
 **Actual output**:
 
@@ -61,13 +61,13 @@ Run 1: [{'id': 1, 'val': 'a'}, {'id': 2, 'val': 'b'}]
 Run 2: []
 ```
 
-[NARRATE: "Run 2 is empty even though id=3 was never seen before. That means `seen` already contains something from run 1 — it's persisting between calls. I've reproduced it. Now I know exactly where to look."]
+[NARRATE: "Run 2 is empty even though its batch holds one record and no duplicates. That means `seen` already contains something from run 1 — it's persisting between calls. I've reproduced it. Now I know exactly where to look."]
 
 ---
 
 ## Step 3: Identify the root cause
 
-[NARRATE: "The function signature is `def dedup(records, seen=set())`. In Python, mutable default arguments are evaluated once at function definition time, not on each call. So that `set()` is the same object across every call to `dedup`. After run 1, it contains `{1, 2}`. On run 2, id=3 isn't in it, so that should work — but wait, let me look again."]
+[NARRATE: "The function signature is `def dedup(records, seen=set())`. In Python, mutable default arguments are evaluated once at function definition time, not on each call. So that `set()` is the same object across every call to `dedup`. After run 1, it contains `{1, 2}`, so on run 2 id=2 is already in it and the record is dropped. Let me confirm that."]
 
 ```python
 # Check: what's in `seen` after run 1?
@@ -83,10 +83,10 @@ def dedup_debug(records, seen=s):
 dedup_debug(records_batch1)
 print("seen after run 1:", s)  # {1, 2}
 dedup_debug(records_batch2)
-print("seen after run 2:", s)  # {1, 2, 3}
+print("seen after run 2:", s)  # {1, 2}
 ```
 
-[NARRATE: "So id=3 in run 2 is not in `seen` at that point — it would be added. So run 2 should return the id=3 record. Let me check my reproducer again... ah, I see. In my reproducer the `dedup` function I'm calling is the original one with its own persistent `seen`. Let me check what's actually in the persistent seen after run 1 using the original function."]
+[NARRATE: "So `seen` already holds id=2 when run 2 starts, which is why the record is dropped. That was my copy, though. The `dedup` I'm calling is the original, with its own persistent `seen`. Let me check that one directly."]
 
 ```python
 # Introspect the default argument directly
@@ -101,7 +101,7 @@ print(sig.parameters['seen'].default)  # What's in there after run 1?
 print(dedup.__defaults__)  # After run 1: ({1, 2},)
 ```
 
-[NARRATE: "Right. So after run 1 with my test data, `seen` = {1, 2}. My run 2 has id=3, which is not in {1, 2}, so it should return the record. My reproducer result of empty must mean the real bug is slightly different. Let me re-read the actual bug report: 'second run produces empty output' — meaning the script is run twice as a process. That means each process call is fresh... unless there's something else. Let me look more carefully."]
+[NARRATE: "Right. After run 1 with my test data, `seen` = {1, 2}, and my run 2 has id=2, so it returns nothing. Now the actual bug report: 'second run produces empty output' — that could mean the script is run twice as a process, and each process starts fresh. Let me look more carefully."]
 
 [NARRATE: "Wait — I need to re-read the symptom. 'The first run produces correct output. The second run produces an empty output.' If these are two separate process invocations, the mutable default wouldn't persist. So there must be another call happening within the same process. Let me look at whether `dedup` is called more than once."]
 

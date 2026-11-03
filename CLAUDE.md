@@ -20,7 +20,7 @@ Course repo: curriculum notes, lecture decks, practice drills and the pipeline t
 - **Scripts do what can be computed.** Run them through `make`; `make help` lists the targets.
 - **Agents (`.claude/agents/`) read and report.** They never edit. Don't give a reviewer the author's reasoning.
 - **Skills (`.claude/skills/`) orchestrate, decide and edit.** Use `/papers`, `/chapter`, `/write-chapter`, `/slides`,
-  `/pillar`, `/curriculum`, `/readings` and `/review`.
+  `/pillar`, `/curriculum`, `/readings`, `/review` and `/weekly`.
 - A fault that keeps recurring becomes a script check or a spec change, not a longer reviewer prompt.
 - Learner and reviewer signals produce proposals for the user. Nothing rewrites content or agent definitions on its own.
 

@@ -31,7 +31,7 @@ DOCUMENTS = [
 _CANNED = [
     '{"answer": "Refunds take 5 business days.", "citations": ["d1"], "confidence": "high"}',
     "Sorry, I could not find that.",  # not JSON at all
-    '{"answer": "Refunds take 5 days.", "citations": ["d9"]}',  # cites a doc not retrieved
+    '{"answer": "Refunds take 5 days.", "citations": ["d9"]}',
     '{"answer": "See settings.", "citations": ["d2"], "confidence": "banana"}',
 ]
 _calls = {"n": 0}
@@ -64,10 +64,13 @@ if __name__ == "__main__":
     hits = retrieve("how long do refunds take", DOCUMENTS, k=3)
     assert hits, "expected at least one hit"
     assert hits[0]["id"] in {"d1", "d4"}, f"unexpected top hit: {hits[0]['id']}"
+    top = retrieve("how do I cancel my subscription", DOCUMENTS, k=1)
+    assert top[0]["id"] == "d2", f"unexpected top hit: {top[0]['id']}"
 
     result = retrieve_and_answer("how long do refunds take", DOCUMENTS)
     assert result is not None, "pipeline should degrade, not return None"
 
     print("smoke test passed")
 
-    # your edge cases here -- run it 4x so every canned response is exercised
+    # your edge cases here -- call the pipeline 4 times in one process so every
+    # canned response is exercised (the counter starts over on each run of this file)

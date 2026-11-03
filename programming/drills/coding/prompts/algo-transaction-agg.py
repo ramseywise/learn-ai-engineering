@@ -20,11 +20,11 @@ loud before you start coding.
 from decimal import Decimal
 
 RECORDS = [
-    {"user_id": "u1", "amount": "10.00", "occurred_at": "2026-01-05T10:00:00Z"},
-    {"user_id": "u1", "amount": "12.50", "occurred_at": "2026-01-11T10:00:00Z"},
-    {"user_id": "u1", "amount": "11.25", "occurred_at": "2026-01-19T10:00:00Z"},
+    {"user_id": "u1", "amount": "10.10", "occurred_at": "2026-01-05T10:00:00Z"},
+    {"user_id": "u1", "amount": "12.20", "occurred_at": "2026-01-11T10:00:00Z"},
+    {"user_id": "u1", "amount": "11.30", "occurred_at": "2026-01-19T10:00:00Z"},
     {"user_id": "u1", "amount": "9.75", "occurred_at": "2026-01-22T10:00:00Z"},
-    {"user_id": "u1", "amount": "980.00", "occurred_at": "2026-01-28T10:00:00Z"},
+    {"user_id": "u1", "amount": "980.20", "occurred_at": "2026-01-28T10:00:00Z"},
     {"user_id": "u2", "amount": "40.00", "occurred_at": "2026-02-02T10:00:00Z"},
     {"user_id": "u2", "amount": "not_a_number", "occurred_at": "2026-02-03T10:00:00Z"},
     {"user_id": "u2", "amount": "41.00", "occurred_at": "2026-02-09T10:00:00Z"},
@@ -54,7 +54,7 @@ def summarize(raw_records: list[dict]) -> dict:
 if __name__ == "__main__":
     summary = summarize(RECORDS)
     assert summary["rejected"] == 2, f"expected 2 rejects, got {summary['rejected']}"
-    assert summary["totals"][("u1", "2026-01")] == Decimal("1023.50")
+    assert summary["totals"][("u1", "2026-01")] == Decimal("1023.55")
     print("smoke test passed")
 
     # your edge cases here -- identical amounts, single-record users, tz handling

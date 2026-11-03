@@ -36,13 +36,14 @@ class EventStore:
 
 if __name__ == "__main__":
     store = EventStore()
-    store.ingest(EVENTS)
+    written = store.ingest(EVENTS)
+    assert written == 4, f"expected 4 newly written, got {written}"
 
     totals = store.daily_totals("u1")
     assert totals[0] == ("2026-01-05", 3500), f"got {totals[0]}"
 
     # Re-ingesting the same batch must not change anything.
-    store.ingest(EVENTS)
+    assert store.ingest(EVENTS) == 0, "re-ingest should write nothing"
     assert store.daily_totals("u1") == totals, "ingest is not idempotent"
 
     print("smoke test passed")

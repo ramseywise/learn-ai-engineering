@@ -6,6 +6,7 @@ stripes, square bullet markers, and a tinted takeaway strip.
 
     uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py \
         python scripts/slides/build_deck.py <area>/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict]
+    python scripts/slides/build_deck.py [deck.yaml ...] --check     # is each pptx built from its yaml? See deck_stamp.py
 
 The spec format and layout catalogue are in .claude/skills/slides/references/deck-spec.md.
 Text is shrunk to fit its region; anything still too big at the minimum size is reported
@@ -30,6 +31,9 @@ from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import deck_stamp  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Theme
@@ -67,7 +71,8 @@ TITLE_BAR_H = 0.95
 CRUMB_H = 0.36
 CONTENT_TOP = TITLE_BAR_H + CRUMB_H + 0.3
 CONTENT_BOTTOM = 6.8
-TAKEAWAY_H = 0.55
+TAKEAWAY_H = 0.65
+TAKEAWAY_PAD = 0.3
 FOOTER_Y = 7.02
 
 WARNINGS: list[str] = []
@@ -245,6 +250,12 @@ def bullets(slide, x, y, w, h, items, ctx, marker=ORANGE, color=INK, start=20, m
     gap = size * 0.6 / 72
     sq = size / 72 * 0.42
     cy = y
+    if not anchor_top:
+        need = -gap
+        for it in items:
+            need += est_h(it["text"], w - 0.35, size) + gap
+            need += sum(gap * 0.4 + est_h(s, w - 0.7, sub_size) for s in it["sub"])
+        cy = y + max(0, (h - need) / 2)
     for it in items:
         th = est_h(it["text"], w - 0.35, size)
         rect(slide, x, cy + size / 72 * 0.38, sq, sq, marker)
@@ -260,13 +271,20 @@ def bullets(slide, x, y, w, h, items, ctx, marker=ORANGE, color=INK, start=20, m
     return cy - gap
 
 
-def card(slide, x, y, w, h, spec, accent, ctx, header_style="stripe", body_start=17, body_min=12):
-    """White card with an accent stripe (or a solid header band) + title + body/bullets + tag."""
+def card_title_size(inner_w: float) -> int:
+    return 18 if inner_w > 4 else 16
+
+
+def card(slide, x, y, w, h, spec, accent, ctx, header_style="stripe", body_start=17, body_min=12, center=False):
+    """White card with an accent stripe (or a solid header band) + title + body/bullets + tag.
+
+    center places a short body in the middle of the card, so the card reads as full rather than half empty.
+    """
     rect(slide, x, y, w, h, WHITE, line=BORDER)
     title = spec.get("title", "")
     pad = 0.25
     inner_w = w - 2 * pad
-    title_size = 18 if inner_w > 4 else 16
+    title_size = card_title_size(inner_w)
     if header_style == "band":
         th = est_h(title, inner_w, title_size, bold=True) + 0.28
         rect(slide, x, y, w, th, accent)
@@ -286,7 +304,8 @@ def card(slide, x, y, w, h, spec, accent, ctx, header_style="stripe", body_start
     bx = x + pad + (0.05 if header_style == "stripe" else 0)
     if spec.get("bullets"):
         bullets(slide, bx, cy, inner_w - 0.05, body_bottom - cy, spec["bullets"], ctx,
-                marker=accent if accent not in (PANEL, TINT) else MUTED, start=body_start, minimum=body_min)
+                marker=accent if accent not in (PANEL, TINT) else MUTED, start=body_start, minimum=body_min,
+                anchor_top=not center)
     elif spec.get("body"):
         body = spec["body"]
         for size in range(body_start, body_min - 1, -1):
@@ -294,7 +313,8 @@ def card(slide, x, y, w, h, spec, accent, ctx, header_style="stripe", body_start
                 break
         else:
             warn(ctx, f"card '{plain(title)}' body overflows")
-        text(slide, bx, cy, inner_w - 0.05, body_bottom - cy, body, size, SLATE)
+        text(slide, bx, cy, inner_w - 0.05, body_bottom - cy, body, size, SLATE,
+             anchor=MSO_ANCHOR.MIDDLE if center else MSO_ANCHOR.TOP)
     elif spec.get("code"):
         code_block(slide, bx, cy, inner_w - 0.05, body_bottom - cy, spec["code"], ctx, start=14, minimum=10)
     if tag:
@@ -364,13 +384,18 @@ def chrome(slide, spec, ctx_info):
     bottom = CONTENT_BOTTOM
     tk = spec.get("takeaway")
     if tk:
-        size = 16
-        while size > 12 and est_lines(tk, CONTENT_W - 0.5, size) > 1:
+        # The strongest line on the slide: as large as a body at 20pt and bold. Two lines at 18pt beat one at 13pt.
+        # A table cannot shrink much, so it gives the strip less room.
+        floor = 16 if spec.get("layout") == "table" else 18
+        size = 20
+        while size > floor and est_lines(tk, CONTENT_W - 0.5, size, bold=True) > 1:
             size -= 1
-        th = max(TAKEAWAY_H, est_h(tk, CONTENT_W - 0.5, size) + 0.25)
+        while size > 14 and est_lines(tk, CONTENT_W - 0.5, size, bold=True) > 2:
+            size -= 1
+        th = max(TAKEAWAY_H, est_h(tk, CONTENT_W - 0.5, size, bold=True) + TAKEAWAY_PAD)
         ty = CONTENT_BOTTOM - th
         rect(slide, MARGIN, ty, CONTENT_W, th, TINT)
-        rect(slide, MARGIN, ty, 0.08, th, ctx_info["accent"])
+        rect(slide, MARGIN, ty, 0.12, th, ctx_info["accent"])
         text(slide, MARGIN + 0.3, ty, CONTENT_W - 0.5, th, tk, size, NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE,
              code_color=NAVY)
         bottom = ty - 0.25
@@ -398,6 +423,18 @@ def lay_bullets(slide, spec, top, bottom, ctx, info):
                  header_style="band")
 
 
+def card_body_fit(c: dict, inner_w: float, h: float, start: int, minimum: int = 12) -> int:
+    """The largest body size at which this card's body fits a card of height h."""
+    room = h - est_h(c.get("title", ""), inner_w, card_title_size(inner_w), bold=True) - 0.9 - (0.45 if c.get("tag") else 0)
+    if c.get("bullets"):
+        return bullet_layout(c["bullets"], inner_w, room, start, minimum)[1]
+    if c.get("body"):
+        for size in range(start, minimum - 1, -1):
+            if est_h(c["body"], inner_w, size) <= room:
+                return size
+    return minimum if c.get("body") else start
+
+
 def lay_compare(slide, spec, top, bottom, ctx, info):
     left, right = spec["left"], spec["right"]
     emph = spec.get("emphasis", "right")
@@ -407,8 +444,13 @@ def lay_compare(slide, spec, top, bottom, ctx, info):
     racc = NAVY if emph in ("right", "none") else PANEL
     if emph == "none":
         lacc = TEAL_DARK
-    card(slide, MARGIN, top, w, bottom - top, left, left.get("accent", lacc), ctx, header_style="band")
-    card(slide, MARGIN + w + gap, top, w, bottom - top, right, right.get("accent", racc), ctx, header_style="band")
+    # Both cards use one size, or the pair would not read as a comparison.
+    inner_w = w - 0.55
+    size = min(card_body_fit(c, inner_w, bottom - top, 22) for c in (left, right))
+    card(slide, MARGIN, top, w, bottom - top, left, left.get("accent", lacc), ctx, header_style="band",
+         body_start=size, center=True)
+    card(slide, MARGIN + w + gap, top, w, bottom - top, right, right.get("accent", racc), ctx, header_style="band",
+         body_start=size, center=True)
 
 
 def lay_cards(slide, spec, top, bottom, ctx, info):
@@ -420,11 +462,11 @@ def lay_cards(slide, spec, top, bottom, ctx, info):
     w = (CONTENT_W - gap * (cols - 1)) / cols
     h = (bottom - top - gap * (rows - 1)) / rows
     start = 20 if cols <= 3 else 18
-    # Body-only cards: take the largest font that fits, then shrink the cards to their content so a
-    # short body doesn't sit in a tall empty card.
+    # Body-only cards: take the largest font that fits, then shrink tall cards toward their content,
+    # but keep at least 3/4 of the height and centre the block, so the row fills the content area.
     if all(c.get("body") and not c.get("bullets") and not c.get("tag") for c in cards):
         inner_w = w - 0.5
-        title_size = 18 if inner_w > 4 else 16
+        title_size = card_title_size(inner_w)
 
         def need(size):
             return max(est_h(c.get("title", ""), inner_w, title_size, bold=True) + 0.38
@@ -432,11 +474,14 @@ def lay_cards(slide, spec, top, bottom, ctx, info):
 
         while start > 13 and need(start) > h:
             start -= 1
-        h = min(h, need(start) + 0.15)
+        tall = h
+        h = min(tall, max(need(start) + 0.15, 0.75 * tall))
+        top += rows * (tall - h) / 2
     for i, c in enumerate(cards):
         r, col = divmod(i, cols)
         acc = c.get("accent") or PART_ACCENTS[i % len(PART_ACCENTS)]
-        card(slide, MARGIN + col * (w + gap), top + r * (h + gap), w, h, c, acc, ctx, body_start=start)
+        card(slide, MARGIN + col * (w + gap), top + r * (h + gap), w, h, c, acc, ctx, body_start=start,
+             center=True)
 
 
 def lay_table(slide, spec, top, bottom, ctx, info):
@@ -660,7 +705,10 @@ def lay_image(slide, spec, top, bottom, ctx, info):
     side = spec.get("bullets")
     region_w = CONTENT_W if not side else CONTENT_W * 0.55
     cap = spec.get("caption")
-    region_h = bottom - top - (0.45 if cap else 0)
+    cap_size = 13
+    cap_lines = est_lines(cap, region_w, cap_size) if cap else 0
+    cap_h = est_h(cap, region_w, cap_size) + 0.1 if cap else 0
+    region_h = bottom - top - (cap_h + 0.15 if cap else 0)
     if not path.exists():
         warn(ctx, f"image not found: {path}")
         return
@@ -669,13 +717,19 @@ def lay_image(slide, spec, top, bottom, ctx, info):
     scale = min(region_w / iw, region_h / ih)
     w, h = iw * scale, ih * scale
     x = MARGIN + (region_w - w) / 2
-    rect(slide, x - 0.06, top - 0.06, w + 0.12, h + 0.12, WHITE, line=BORDER)
-    slide.shapes.add_picture(str(shrink(path, w, h)), Inches(x), Inches(top), Inches(w), Inches(h))
+    y = top + (region_h - h) / 2  # a wide image sits in the middle of its region, not at the top
+    rect(slide, x - 0.06, y - 0.06, w + 0.12, h + 0.12, WHITE, line=BORDER)
+    slide.shapes.add_picture(str(shrink(path, w, h)), Inches(x), Inches(y), Inches(w), Inches(h))
     if cap:
-        text(slide, MARGIN, top + h + 0.15, region_w, 0.4, cap, 12, MUTED, italic=True, align=PP_ALIGN.CENTER)
+        # Narrow the box to the width that still gives the same line count, so the lines balance and no word sits alone.
+        cap_w = region_w
+        while cap_lines > 1 and cap_w > 2 and est_lines(cap, cap_w - 0.1, cap_size) == cap_lines:
+            cap_w -= 0.1
+        text(slide, MARGIN + (region_w - cap_w) / 2, y + h + 0.15, cap_w, cap_h, cap, cap_size, SLATE, italic=True,
+             align=PP_ALIGN.CENTER)
     if side:
         bullets(slide, MARGIN + region_w + 0.4, top, CONTENT_W - region_w - 0.4, bottom - top, side, ctx,
-                marker=info["accent"], start=18)
+                marker=info["accent"], start=20, anchor_top=False)
 
 
 LAYOUTS = {
@@ -829,8 +883,31 @@ def build(spec_path: Path) -> Path:
 
     check_story(parts, base)
     out = base / deck.get("output", f"{base.parent.name}.pptx")
+    prs.core_properties.keywords = deck_stamp.stamp_value(spec_path)
     prs.save(out)
     return out
+
+
+# A question that asks for a list: its answer needs more than a sentence.
+LIST_QUESTION = re.compile(
+    r"^(?:name|list)\b|^what are\b|^(?:what|which)\s+(?:\w+\s+){0,2}(?:two|three|four|five|six|seven|eight|nine|ten|\d+)\s+\w+s\b",
+    re.I)
+
+
+def flashcard_problems(sl: dict) -> list[str]:
+    """What the flashcard this slide imports as gets wrong. A slide with no takeaway imports no card."""
+    takeaway = sl.get("takeaway")
+    if not takeaway or sl.get("layout", "bullets") == "statement":
+        return []
+    title = plain(sl.get("title", "")).strip()
+    recall = plain(sl.get("recall", "")).strip()
+    problems = []
+    if not recall and not title.endswith("?"):
+        problems.append("no recall, and the title is not a question, so the flashcard front is not a question")
+    question = recall or title
+    if question.endswith("?") and LIST_QUESTION.search(question) and est_lines(takeaway, CONTENT_W - 0.5, 16) == 1:
+        problems.append(f"recall asks for a list ('{question}') but the takeaway is one line")
+    return problems
 
 
 def check_story(parts: list[dict], base: Path) -> None:
@@ -850,6 +927,8 @@ def check_story(parts: list[dict], base: Path) -> None:
         # A statement is a pose, not a card; a closing part is a wrap-up.
         if part.get("agenda", True) and sl.get("layout", "bullets") != "statement" and not sl.get("takeaway"):
             warn(f"slide '{plain(sl.get('title', ''))}'", "no takeaway, so no flashcard answer")
+        for problem in flashcard_problems(sl):
+            warn(f"slide '{plain(sl.get('title', ''))}'", problem)
     for part in parts:
         if not part.get("agenda", True):
             continue
@@ -956,13 +1035,18 @@ def write_pdf(pngs: list[Path], pdf: Path, width: int = 1600) -> Path:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("spec", type=Path)
+    ap.add_argument("spec", type=Path, nargs="*", help="one deck.yaml; with --check, none means every deck")
     ap.add_argument("--preview", type=Path, metavar="DIR", help="write per-slide PNGs + contact sheets here")
     ap.add_argument("--pdf", action="store_true", help="also write <output>.pdf next to the .pptx (macOS)")
     ap.add_argument("--strict", action="store_true", help="exit 1 on any warning (overflow or story rules)")
+    ap.add_argument("--check", action="store_true", help="build nothing; exit 1 if a pptx is stale against its yaml")
     args = ap.parse_args()
 
-    out = build(args.spec)
+    if args.check:
+        sys.exit(1 if deck_stamp.check(args.spec or deck_stamp.all_specs()) else 0)
+    if len(args.spec) != 1:
+        ap.error("give exactly one deck.yaml to build")
+    out = build(args.spec[0])
     print(f"deck: {out}  ({len(Presentation(out).slides)} slides)")
     if args.preview or args.pdf:
         with tempfile.TemporaryDirectory() as tmp:

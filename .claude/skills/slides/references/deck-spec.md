@@ -155,6 +155,11 @@ bullets: [...]                      # optional: image left, bullets right
 
 A deck is the lecture a teacher would give over the notes, not the notes compressed. The builder
 warns on each rule it can check, so `STRICT=1` fails until they hold.
+It also warns on a content slide with no `recall` whose title is not a question, and on a list question
+in `recall` answered by a one-line takeaway.
+
+Each build stamps the sha256 of `deck.yaml` into the pptx. `make deck-check`, part of `make test`, fails when a
+stamped deck no longer matches its yaml, and reports decks with no stamp without failing them.
 
 - **Spine.** Every part runs problem, what breaks, principle, technique, evidence, what you do on
   Monday. The first slide of a part is a `statement` or `image` that poses the problem. The last
