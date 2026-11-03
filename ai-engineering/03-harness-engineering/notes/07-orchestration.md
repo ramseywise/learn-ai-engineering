@@ -369,6 +369,7 @@ Absent one of these, added agents multiply token cost and introduce the four fai
 | Why was Rothman's measured latency so far above the estimate? | The estimate was about 10.7 s and measured three-step runs took 148 s and 151 s with gpt-5 from Colab, with generation calls dominating. The levers are parallel independent calls, caching and smaller models. |
 | Does the Minecraft run prove agents can self-coordinate? | It shows emergent coordination can hold for a day: 229 messages across 2,783 programs. It was one run, one game, on Easy, so don't extrapolate to domains where a wrong note is costly. |
 | When do you stay with one agent? | When tasks don't need separate tools, trust levels or context isolation, because coordination overhead can exceed the parallel gain. Find the single-agent limit first. |
+| One agent's invention reaches the final answer of a multi-agent run. How do you catch it and find the culprit? | Cross-validate claims that cross a handoff. Evaluate each component and the end-to-end result separately: if end-to-end fails while every component passes, the bug is in a handoff; if one component fails, you know which agent to fix. |
 
 ## Next
 

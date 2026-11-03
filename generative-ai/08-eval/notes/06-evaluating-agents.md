@@ -403,6 +403,8 @@ An agent eval environment has five parts. Each one can be wrong on its own:
 | Why does agent cost grow faster than step count? | Every turn re-sends the whole context, so a 5,000-token tool output is billed again each later turn. Thinking tokens and detours add to it, which makes turn count and context growth the levers, not only a cheaper model. |
 | A simulated user gives a 0.47 reward. Do you trust it? | Not from one cooperative user. In GAUGE, a population of personas cut mean verifiable reward by 42%, from 0.47 to 0.27, and the judge needs to see tool calls and outcome, since a truncated transcript got 4.6/7 for satisfaction with reward 0. |
 | A simple baseline nearly matches your agent framework on accuracy. How do you decide? | Plot accuracy against cost with simple baselines. Kapoor et al. found a warming baseline at 93.2% for $2.45 against LDB at 93.3% for $6.36, so check the gap against the error bar and log tokens so that you can re-price later. |
+| Why record how each failed agent run ended? | The mix of endings varies by environment, so one failure rate hides it. AgentBench sorts runs into completed, context limit exceeded, invalid format, invalid action or task limit exceeded, which covers running out of turns or repeating itself. |
+| Beyond the task set, which suites does a tool-using agent need? | An error-handling suite with malformed input, tool errors, timeouts and empty results, plus an adversarial suite with injection and out-of-scope requests. Neither failure shows up in tasks where every tool behaves. |
 
 ## Next
 

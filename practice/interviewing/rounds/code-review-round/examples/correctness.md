@@ -50,7 +50,7 @@
 >
 > **[Info]** — Tool description says "with filters" but doesn't explain what filters are available or their format. For agent tool design (ACI), the description should include a usage example: `"Filter by metadata fields, e.g. {'department': 'engineering', 'year': 2026}"`.
 
-**What this teaches**: Tool schema and implementation drifting apart is the agent-world equivalent of API contract drift. The model can only see the schema — if the schema is stale, the tool breaks silently or throws at runtime. See [agents guide §3](../../../guides/4-agents/interview-guide.md) on ACI and tool design.
+**What this teaches**: Tool schema and implementation drifting apart is the agent-world equivalent of API contract drift. The model can only see the schema — if the schema is stale, the tool breaks silently or throws at runtime. See [tool design](../../../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md) on ACI and tool design.
 
 ---
 
@@ -95,7 +95,7 @@
 >         raise AgentError("Too many tool failures")
 > ```
 
-**What this teaches**: Agent loops need honest feedback signals. Swallowing errors in an agent context is worse than in traditional code — the model compounds the false signal across turns. The missing circuit breaker is a cost/reliability concern. See [agents guide §5](../../../guides/4-agents/interview-guide.md) on loop engineering; [security guide §4](../../../guides/7-security-safety/interview-guide.md) on denial-of-wallet.
+**What this teaches**: Agent loops need honest feedback signals. Swallowing errors in an agent context is worse than in traditional code — the model compounds the false signal across turns. The missing circuit breaker is a cost/reliability concern. See [loop pillar](../../../../../ai-engineering/04-loop-engineering/README.md) on loop engineering; [safety pillar](../../../../../ai-engineering/09-safety-and-security/README.md) on denial-of-wallet.
 
 ---
 

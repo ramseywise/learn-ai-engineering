@@ -1,6 +1,6 @@
 # System Design Round — Study Guide
 
-The method for the highest-weight technical round. Domain content lives in the [RAG](../../guides/3-rag/interview-guide.md), [agents](../../guides/4-agents/interview-guide.md), [evals](../../guides/6-evals-observability/interview-guide.md), [context/cost](../../guides/5-context-cost/interview-guide.md), and [security](../../guides/7-security-safety/interview-guide.md) guides — this guide is the *process*.
+The method for the highest-weight technical round. Domain content lives in the [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md), [harness pillar](../../../../ai-engineering/03-harness-engineering/README.md), [eval pillar](../../../../generative-ai/08-eval/README.md), [context pillar](../../../../ai-engineering/02-context-engineering/README.md), and [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) guides — this guide is the *process*.
 
 ## 1. The five-step process (45-55 min, ~8 min/step)
 
@@ -90,17 +90,17 @@ components, organized by the question you're being asked.
 
 | Component | Study guide | Example |
 |-----------|-----------|---------|
-| Retrieval pipeline (chunking, embedding, hybrid search, reranking) | [RAG guide §1-3](../../guides/3-rag/interview-guide.md) | [rag-system](examples/rag-system.md) |
-| Orchestration (workflow patterns, agent loops, tool design) | [Agents guide §1-4](../../guides/4-agents/interview-guide.md) | [agent-system](examples/agent-system.md) |
-| Eval pipeline (graders, golden sets, online scoring) | [Evals guide §2-4](../../guides/6-evals-observability/interview-guide.md) | [eval-harness](examples/eval-harness.md) |
-| Context management (token budgets, caching, compaction) | [Context/cost guide](../../guides/5-context-cost/interview-guide.md) | [scaling](examples/scaling.md) |
-| Safety layer (guardrails, trust separation, HITL) | [Security guide §3-4](../../guides/7-security-safety/interview-guide.md) | — |
-| State & memory (checkpointers, session state, memory types) | [Agents guide §6](../../guides/4-agents/interview-guide.md) | — |
-| Data pipeline (ingestion, preprocessing, feature stores) | [Data eng guide §1](../../guides/8-data-eng-mlops/interview-guide.md) | [rag-system](examples/rag-system.md) |
-| Observability & tracing (Langfuse vs Langsmith, metrics, cost) | [Evals guide §4-5](../../guides/6-evals-observability/interview-guide.md) | [eval-harness](examples/eval-harness.md) |
-| Deployment & ops (Cloud Run, CI/CD, model versioning, drift) | [Data eng guide §2](../../guides/8-data-eng-mlops/interview-guide.md) | — |
-| Integration patterns (API, MCP, webhooks, event-driven) | [Agents guide §3](../../guides/4-agents/interview-guide.md) | — |
-| Knowledge graphs (structured retrieval, entity relationships) | [RAG guide §5](../../guides/3-rag/interview-guide.md) | — |
+| Retrieval pipeline (chunking, embedding, hybrid search, reranking) | [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md) | [rag-system](examples/rag-system.md) |
+| Orchestration (workflow patterns, agent loops, tool design) | [graph vs loop](../../../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md) | [agent-system](examples/agent-system.md) |
+| Eval pipeline (graders, golden sets, online scoring) | [graders](../../../../generative-ai/08-eval/notes/04-graders.md) | [eval-harness](examples/eval-harness.md) |
+| Context management (token budgets, caching, compaction) | [context pillar](../../../../ai-engineering/02-context-engineering/README.md) | [scaling](examples/scaling.md) |
+| Safety layer (guardrails, trust separation, HITL) | [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) | — |
+| State & memory (checkpointers, session state, memory types) | [memory](../../../../ai-engineering/02-context-engineering/notes/06-memory.md) | — |
+| Data pipeline (ingestion, preprocessing, feature stores) | [data engineering](../../../../data-engineering/README.md) | [rag-system](examples/rag-system.md) |
+| Observability & tracing (Langfuse vs Langsmith, metrics, cost) | [tracing and observability](../../../../generative-ai/08-eval/notes/08-tracing-and-observability.md) | [eval-harness](examples/eval-harness.md) |
+| Deployment & ops (Cloud Run, CI/CD, model versioning, drift) | [ML platform](../../../../data-engineering/06-ml-platform/README.md) | — |
+| Integration patterns (API, MCP, webhooks, event-driven) | [tool design](../../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md) | — |
+| Knowledge graphs (structured retrieval, entity relationships) | [RAG in production](../../../../generative-ai/02-rag-retrieval/notes/07-rag-in-production.md) | — |
 
 ## 4. Bottlenecks & failure modes (memorize the tables)
 
@@ -162,7 +162,7 @@ Your own systems are the strongest material in an interview: prepare one or two 
 
 Classic prompts to dry-run:
 
-- Support chatbot for a bank ([security guide](../../guides/7-security-safety/interview-guide.md) has the governance layer)
+- Support chatbot for a bank ([safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) has the governance layer)
 - Document-QA at 10K→1M docs
 - Code-assistant for private enterprise code (residency → self-hosted vs vendor)
 - Feed/notification ranking (classic + ML hybrid)

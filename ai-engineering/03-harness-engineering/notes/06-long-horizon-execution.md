@@ -453,6 +453,7 @@ Multi-agent depth: [note 07](07-orchestration.md).
 | What does Phase 0 do, and why separate it? | It sets up the repo, including `init.sh`, and writes no feature code. Implementation maximizes verified features and initialization maximizes the reliability of later sessions; combined, the agent drifts toward visible output. |
 | What makes a session finished? | The task passes verification and the clean-state check passes: build, all tests including older ones, progress recorded, no stale artifacts, and a standard startup that works. |
 | Why does a handoff separate verified from assumed? | A generated summary blurs them, so the next session either trusts unverified work or redoes all of it. |
+| A tool returns a 2,000-line log. What should the harness do? | Keep the head and tail tokens of any output above a threshold, offload the full result to the filesystem, and leave a path the model can read if it needs more. Cost stays bounded and nothing is destroyed. |
 
 ## Next
 

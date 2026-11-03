@@ -96,4 +96,4 @@ Query → Access control check (user can see which clients?)
 
 ---
 
-**Study refs**: [RAG guide §1-5](../../../guides/3-rag/interview-guide.md) for pipeline details; [security guide §5](../../../guides/7-security-safety/interview-guide.md) for compliance; librarian wiki: RAG Retrieval Strategies, pgvector migration pattern.
+**Study refs**: [RAG pillar](../../../../../generative-ai/02-rag-retrieval/README.md) for pipeline details; [compliance](../../../../../ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md) for compliance; librarian wiki: RAG Retrieval Strategies, pgvector migration pattern.

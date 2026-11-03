@@ -318,6 +318,7 @@ Measure the cost as well as the safety. AgentDojo's authors ([arXiv:2406.13352](
 | How can a chat reply leak data without any tool? | A rendered Markdown image or link carrying data in its URL. The browser's request is the exfiltration. Allow-list at the renderer. |
 | How would you secure an MCP server you installed? | Pin a hash of each tool definition, fail closed on change, scope its credentials, restrict its network, and review new versions like code. |
 | Why treat an agent's skill library as supply chain? | Agents can self-poison by imitating bad skills, as EvoMal measured, and removing the originals doesn't fully clear it. Gate and attribute writes. |
+| How should a tool hold credentials? | Give each call a short-lived token scoped to the customer in the session, so a policy bypass still meets a database that says no. The tool layer injects it, because anything the model can read an injection can try to print. |
 
 ## Next
 

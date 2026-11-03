@@ -74,7 +74,7 @@ Based on the real SANYI drill from the librarian wiki.
 >
 > **[Info]** `summarizer.py:6` — "Never include numbers or statistics" is a policy decision embedded in code with no documentation. Is this a product requirement? If the business need changes, someone will have to find this buried in agent source code.
 
-**What this teaches**: Prompts are the quintessential Bianyi component — they change constantly during development and tuning. Hardcoding them in application code is the AI engineering equivalent of hardcoding a config value. The convention is to keep them in a loadable/swappable layer. See SANYI Bianyi layer; [agents guide §4](../../../guides/4-agents/interview-guide.md) on harness engineering — "prompt strings are tunables, not code."
+**What this teaches**: Prompts are the quintessential Bianyi component — they change constantly during development and tuning. Hardcoding them in application code is the AI engineering equivalent of hardcoding a config value. The convention is to keep them in a loadable/swappable layer. See SANYI Bianyi layer; [harness pillar](../../../../../ai-engineering/03-harness-engineering/README.md) on harness engineering — "prompt strings are tunables, not code."
 
 ---
 
@@ -111,4 +111,4 @@ Based on the real SANYI drill from the librarian wiki.
 >
 > **[Info]** — Like example 1, this threshold should probably be env-configurable. Different environments (dev vs staging vs prod) may need different pass criteria.
 
-**What this teaches**: Eval thresholds are high-consequence tunables in AI systems. Lowering a quality bar looks like a one-line change but affects what ships. The right review question isn't "is 0.4 correct?" but "how was 0.4 chosen, and what else depends on this number?" See [evals guide §2-3](../../../guides/6-evals-observability/interview-guide.md) on grader calibration.
+**What this teaches**: Eval thresholds are high-consequence tunables in AI systems. Lowering a quality bar looks like a one-line change but affects what ships. The right review question isn't "is 0.4 correct?" but "how was 0.4 chosen, and what else depends on this number?" See [graders](../../../../../generative-ai/08-eval/notes/04-graders.md) on grader calibration.

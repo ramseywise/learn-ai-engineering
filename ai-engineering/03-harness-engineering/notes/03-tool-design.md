@@ -383,6 +383,8 @@ Labs, upstream (Apache-2.0; READMEs partly in Chinese): [4-1 perception MCP serv
 | A payment tool timed out and the customer was charged three times. What went wrong? | A non-idempotent write was auto-retried. Tools without idempotency keys must not be auto-retried, and the fix is a key on the call plus a query-before-mutate check. |
 | Why are negative boundaries in a description worth writing? | Positive descriptions leave the model to infer the boundary between similar tools. WHEN NOT TO USE and DO NOT USE FOR disambiguate `search`, `grep` and `read`, and each entry should come from observed misuse. |
 | Your agent has about 100 tools and picks wrongly. What are your options? | Merge overlapping tools, namespace the rest, and stop loading every definition up front. Use progressive disclosure or discovery, keeping dynamic content out of the cached prefix. |
+| Dedicated tool or Skill plus a general executor? | Use a Skill plus executor when parameters are complex, the procedure changes often, or the model is strong enough to compose it. Use a dedicated tool when the call is frequent, parameters are simple, or a smaller model must get it right every time. |
+| How do you make tool parameters error-proof? | Prefer enums over free strings, absolute paths over relative ones, and required parameters over optional ones with surprising defaults, so the mistake is harder to make. |
 
 ## Next
 

@@ -118,4 +118,4 @@
 
 ---
 
-**Study refs**: [study guide §4](../study-guide.md) bottleneck tables; [RAG guide §5](../../../guides/3-rag/interview-guide.md) for latency budgets; [context/cost guide](../../../guides/5-context-cost/interview-guide.md) for caching and token economics; librarian wiki: Semantic Cache Pipeline, Production Hardening Patterns.
+**Study refs**: [study guide §4](../study-guide.md) bottleneck tables; [RAG in production](../../../../../generative-ai/02-rag-retrieval/notes/07-rag-in-production.md) for latency budgets; [context pillar](../../../../../ai-engineering/02-context-engineering/README.md) for caching and token economics; librarian wiki: Semantic Cache Pipeline, Production Hardening Patterns.

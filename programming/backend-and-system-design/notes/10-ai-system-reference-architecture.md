@@ -678,6 +678,7 @@ Without: ((0.95)^-50 − 1) / 0.05 ≈ 240 calls. With: 50 / 0.95 ≈ 53 calls. 
 | Then what's needed on a resumed tool call? | An idempotency key, since the step may run twice. |
 | How do you stop a prompt injection reaching a tool? | A deterministic policy between proposal and execution, the user's own identity on the call, and an allow-listed exit. |
 | How do you ship a new model version? | A regression gate against a baseline, a canary, and the model id recorded on every trace. |
+| Why route every model call through one gateway? | A gateway is one service every model call passes through, so authentication, counting, limits, provider choice and logging live in a single place rather than in each caller. |
 
 ## Next
 

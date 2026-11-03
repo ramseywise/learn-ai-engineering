@@ -214,6 +214,7 @@ Step 5 is the one that gets skipped, and it's the one that separates a context p
 | An injection filter passes all your tests. Are you safe? | No, a regex can be beaten by paraphrase. Treat instructions as code-level controls: fail closed, check both ends and restrict what tools can do. |
 | Retrieval returns 40 documents to be safe. Good idea? | Usually not, because distractors compete for attention. Rerank down to what's needed, around 3 in this chapter's example, and measure. |
 | A user says "use pnpm" at turn 12, and "we use npm" from turn 3 is still in the window. What's the fix? | That's a clash, and nothing marks turn 3 as superseded. Remove or date the stale statement, and state a precedence rule rather than relying on recency. |
+| Context poisoning or memory poisoning? | Context poisoning is a hallucination, stale fact or wrong retrieval in the window being treated as truth. Written to long-term memory it becomes durable and is re-injected every future session, so one hallucination turns into a permanent false belief. |
 
 ## Next
 

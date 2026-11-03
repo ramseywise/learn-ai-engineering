@@ -4,12 +4,12 @@
 
 | Guide | Path | What it covers for this round |
 |-------|------|-------------------------------|
-| Product & business | [../../guides/10-product-delivery/interview-guide.md](../../guides/10-product-delivery/interview-guide.md) | Problem framing, clarify-first reflex, ROI arithmetic (token math, hours-saved, error-cost), stakeholder communication |
-| System design | [../../guides/9-system-design/interview-guide.md](../../guides/9-system-design/interview-guide.md) | LLM case architecture, §3 architecture + RAG-vs-fine-tune, cost, hallucination handling, trade-off narration formula |
-| ML foundations | [../../guides/1-foundations/interview-guide.md](../../guides/1-foundations/interview-guide.md) | ML cases — baseline-first discipline, model selection (tabular SOTA is boosting), AUROC-vs-accuracy, SHAP, Ng's two case-study quizzes |
-| RAG | [../../guides/3-rag/interview-guide.md](../../guides/3-rag/interview-guide.md) | LLM case retrieval layer — chunking, embedding, reranking, what-if chains (poor retrieval, index growth, chunk truncation) |
-| Agents | [../../guides/4-agents/interview-guide.md](../../guides/4-agents/interview-guide.md) | Agent system design cases — orchestration, tool design, state management, safety |
-| Evals & observability | [../../guides/6-evals-observability/interview-guide.md](../../guides/6-evals-observability/interview-guide.md) | Offline + online eval plans, hallucination monitoring, metrics beyond accuracy |
+| Product & business | [scoping an AI product](../../../../generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md) | Problem framing, clarify-first reflex, ROI arithmetic (token math, hours-saved, error-cost), stakeholder communication |
+| System design | [system-design method](../system-design-round/study-guide.md) | LLM case architecture, §3 architecture + RAG-vs-fine-tune, cost, hallucination handling, trade-off narration formula |
+| ML foundations | [classical ML](../../../../data-science/01-classical-ml/README.md) | ML cases — baseline-first discipline, model selection (tabular SOTA is boosting), AUROC-vs-accuracy, SHAP, Ng's two case-study quizzes |
+| RAG | [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md) | LLM case retrieval layer — chunking, embedding, reranking, what-if chains (poor retrieval, index growth, chunk truncation) |
+| Agents | [harness pillar](../../../../ai-engineering/03-harness-engineering/README.md) | Agent system design cases — orchestration, tool design, state management, safety |
+| Evals & observability | [eval pillar](../../../../generative-ai/08-eval/README.md) | Offline + online eval plans, hallucination monitoring, metrics beyond accuracy |
 | Code review round | [../code-review-round/README.md](../code-review-round/README.md) | Your code-test submission is read as a PR by a senior engineer — that round's consequence-ranked reading order is the grader's lens |
 
 ## Internal notes

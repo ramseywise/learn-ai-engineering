@@ -279,6 +279,7 @@ The upstream processing module describes self-refinement (generate → critique 
 | Why might per-turn trimming cost more than no trimming at all? | Each edit rewrites the prefix so the cache misses: 1.85× the full-context baseline for last-12-responses on 100 BrowseComp-Plus tasks. A 48K summarization threshold was about 7% cheaper than full context but lost 5 accuracy points. |
 | You have a 1M-token codebase task. Summarize or use recursion? | If the answer depends on dense access throughout, try an RLM: GPT-5 scored 58.0 as one against 0.1 F1 alone or with summarize-on-overflow on OOLONG-Pairs, and 91.3% against 70.5% on BrowseComp-Plus. The costs are latency and a long tail of expensive runs. |
 | How do you test a compressor? | Plant known facts, compress, and check deterministically. TypeCompact shows why: a reported recall of 1.00 hid a mean drop of 57%. |
+| When does crash recovery stop being optional? | Past roughly thirty minutes of agent runtime, as a rule of thumb, because the probability of some interruption over a long run approaches one. |
 
 ## Next
 

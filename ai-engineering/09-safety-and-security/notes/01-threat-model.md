@@ -331,6 +331,7 @@ The assumption line is the honest part. It tells the reader which defences are d
 | OWASP LLM Top 10 or MITRE ATLAS, which do you use? | OWASP as an application checklist, ATLAS to describe the steps of an attack, often when working with a security team. NIST AI 100-2 gives the taxonomy behind both. |
 | Are reasoning traces safe to log freely? | No. Green et al. found they frequently contain sensitive user data, more so with larger reasoning budgets. Give them the same retention and access rules as the input. |
 | What makes misuse hard to catch per request? | Capability laundering splits a harmful task into harmless-looking subtasks, so no single response is harmful. Detection needs a view across requests. |
+| How do you rank an agent's attack paths on a first pass? | Enumerate source, sink and whether a human or a control sits between them, then rank by the severity of the sink. |
 
 ## Next
 

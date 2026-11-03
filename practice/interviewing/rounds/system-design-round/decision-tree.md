@@ -72,7 +72,7 @@ misses paraphrase. Reranker on top, and I'd measure whether it earns its latency
 
 **Breaks first:** stale index. Nobody notices until faithfulness drops.
 
-**Deeper:** [RAG guide §1–3](../3-rag/interview-guide.md) · [rag-system](../../rounds/system-design-round/examples/rag-system.md)
+**Deeper:** [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md) · [rag-system](../../rounds/system-design-round/examples/rag-system.md)
 
 #### R2. Chunking
 
@@ -93,7 +93,7 @@ A/B without a full rebuild.
 **Breaks first:** answers that cite the right doc but miss the sentence — chunk boundary
 split the fact.
 
-**Deeper:** [RAG guide §2](../3-rag/interview-guide.md)
+**Deeper:** [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md)
 
 #### R3. Freshness
 
@@ -110,7 +110,7 @@ then read the live record."
 
 **Breaks first:** deleted source documents still answerable from the index.
 
-**Deeper:** [RAG guide §4](../3-rag/interview-guide.md)
+**Deeper:** [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md)
 
 #### R4. Grounding
 
@@ -125,7 +125,7 @@ then read the live record."
 **Say:** "I'd rather refuse than hallucinate in this domain — a grounding gate with an
 escalation path beats a fluent wrong answer."
 
-**Deeper:** [RAG guide §5](../3-rag/interview-guide.md) · [Evals §7](../6-evals-observability/interview-guide.md)
+**Deeper:** [RAG in production](../../../../generative-ai/02-rag-retrieval/notes/07-rag-in-production.md) · [eval pillar](../../../../generative-ai/08-eval/README.md)
 
 ---
 
@@ -150,7 +150,7 @@ state, latency, and failure points — I'd want evidence one context can't hold 
 **Breaks first:** agents talking past each other with no isolation boundary; one agent's
 failure cascading silently.
 
-**Deeper:** [Agents §7](../4-agents/interview-guide.md) · [agent-system](../../rounds/system-design-round/examples/agent-system.md)
+**Deeper:** [topology patterns](../../../../ai-engineering/05-graph-engineering/notes/05-topology-patterns.md) · [agent-system](../../rounds/system-design-round/examples/agent-system.md)
 
 #### A2. Agent loop or pipeline?
 
@@ -170,7 +170,7 @@ this expensive and hard to test. I'd reach for it only where the path is truly u
 **Breaks first:** unbounded loops → denial-of-wallet. Circuit breakers and max-step limits
 from day one.
 
-**Deeper:** [Agents §1–2](../4-agents/interview-guide.md)
+**Deeper:** [graph vs loop](../../../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md)
 
 #### A3. Tool design
 
@@ -187,7 +187,7 @@ gate the small set of destructive actions — refunds, deletes, sends."
 **Breaks first:** the agent misusing a tool. Fix the *tool description* before blaming the
 model — poka-yoke the arguments so misuse is impossible.
 
-**Deeper:** [Agents §3](../4-agents/interview-guide.md)
+**Deeper:** [tool design](../../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md)
 
 #### A4. State or memory?
 
@@ -204,7 +204,7 @@ by default."
 
 **Breaks first:** `MemorySaver` in a multi-worker deploy → silently lost state.
 
-**Deeper:** [Agents §6](../4-agents/interview-guide.md)
+**Deeper:** [memory](../../../../ai-engineering/02-context-engineering/notes/06-memory.md)
 
 #### A5. Where do humans gate it?
 
@@ -219,7 +219,7 @@ by default."
 **Say:** "Business rules live in application code, not in the prompt — the model proposes,
 deterministic code validates, and the human approves anything irreversible."
 
-**Deeper:** [Security §3–4](../7-security-safety/interview-guide.md)
+**Deeper:** [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md)
 
 ---
 
@@ -242,7 +242,7 @@ beat, and sometimes it doesn't need beating."
 
 **Breaks first:** an ML system solving a problem the business didn't have.
 
-**Deeper:** [Foundations](../1-foundations/interview-guide.md)
+**Deeper:** [classical ML](../../../../data-science/01-classical-ml/README.md)
 
 #### M2. Framing the ML problem
 
@@ -258,7 +258,7 @@ beat, and sometimes it doesn't need beating."
 **Say:** "Framing drives the metric. If it's ranking, accuracy is meaningless — I'd
 optimize NDCG or recall@k depending on how many slots the surface has."
 
-**Deeper:** [Foundations](../1-foundations/interview-guide.md)
+**Deeper:** [classical ML](../../../../data-science/01-classical-ml/README.md)
 
 #### M3. Metric choice
 
@@ -275,7 +275,7 @@ threshold, and it's a product question as much as a modeling one."
 
 **Breaks first:** a great AUC on an imbalanced set that's useless in production.
 
-**Deeper:** [Foundations](../1-foundations/interview-guide.md)
+**Deeper:** [classical ML](../../../../data-science/01-classical-ml/README.md)
 
 #### M4. Training & serving
 
@@ -292,7 +292,7 @@ online serving and a feature store if the freshness requirement demands it."
 
 **Breaks first:** train/serve skew — features computed differently in the two paths.
 
-**Deeper:** [Data eng §1–2](../8-data-eng-mlops/interview-guide.md)
+**Deeper:** [data engineering](../../../../data-engineering/README.md)
 
 #### M5. Drift & retraining
 
@@ -307,7 +307,7 @@ online serving and a feature store if the freshness requirement demands it."
 **Say:** "I'd baseline metrics at validation and run the same scoring pipeline on
 production traffic — drift alerts on divergence, not on a calendar."
 
-**Deeper:** [Data eng §3](../8-data-eng-mlops/interview-guide.md)
+**Deeper:** [data engineering](../../../../data-engineering/README.md)
 
 ---
 
@@ -332,7 +332,7 @@ batch failures are far easier to reason about and replay."
 
 **Breaks first:** silent backlog growth with no queue-depth alarm.
 
-**Deeper:** [Data eng §1](../8-data-eng-mlops/interview-guide.md)
+**Deeper:** [data engineering](../../../../data-engineering/README.md)
 
 #### P2. Delivery guarantees
 
@@ -349,7 +349,7 @@ mostly a marketing term, so I'd make the handler safe to re-run instead."
 
 **Breaks first:** retries producing duplicate side effects (double emails, double charges).
 
-**Deeper:** [Data eng §1](../8-data-eng-mlops/interview-guide.md)
+**Deeper:** [data engineering](../../../../data-engineering/README.md)
 
 #### P3. Failure handling
 
@@ -393,10 +393,10 @@ mid-interview is how you forget them.
 
 | Question | Default answer | Deeper |
 |---|---|---|
-| How do you know it works? | Golden set + regression on every change | [Evals §5](../6-evals-observability/interview-guide.md) |
-| How do you know it broke? | Traces + drift alerts, 10–20% online scoring | [Evals §6](../6-evals-observability/interview-guide.md) |
-| What does it cost? | Cost per *successful task*, not per call | [Context/cost §5](../5-context-cost/interview-guide.md) |
-| What's the blast radius? | Least privilege, untrusted input never reaches a dangerous sink | [Security §2–3](../7-security-safety/interview-guide.md) |
+| How do you know it works? | Golden set + regression on every change | [eval pillar](../../../../generative-ai/08-eval/README.md) |
+| How do you know it broke? | Traces + drift alerts, 10–20% online scoring | [production evals](../../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) |
+| What does it cost? | Cost per *successful task*, not per call | [tracing and cost](../../../../generative-ai/08-eval/notes/08-tracing-and-observability.md) |
+| What's the blast radius? | Least privilege, untrusted input never reaches a dangerous sink | [threat model](../../../../ai-engineering/09-safety-and-security/notes/01-threat-model.md) |
 | What happens at 10×? | Name the bottleneck *before* they ask | [Round study guide §4](../../rounds/system-design-round/study-guide.md) |
 
 ### Test yourself

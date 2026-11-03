@@ -368,6 +368,7 @@ Past the point where recall flattens, each extra document pays for words the mod
 | How much retrieved context is optimal? | It depends on the model and data. Yu et al. saw Llama3.1-70B peak at 48K tokens on one benchmark, and document order alone added 6 F1 at 16K. |
 | Name the training paradigms for retriever and generator. | Training-free, independent, sequential in either order, and joint. Most production systems stay training-free because joint training ties the pair together. |
 | What is the smallest possible RAG? | Fetch text and format it into the prompt template. The augmentation step is an f-string. |
+| Why keep source metadata through prompt formatting? | Citations need it, and so does debugging. If formatting strips the source from a chunk, nobody can trace a claim in the answer back to where it came from. |
 
 ---
 

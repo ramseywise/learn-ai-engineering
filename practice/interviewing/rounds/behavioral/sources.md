@@ -4,7 +4,7 @@
 
 | Source | What it covers | Path |
 |--------|---------------|------|
-| Product & business study guide | Stakeholder translation, managing competing priorities, communicating technical trade-offs | [guides/10-product-delivery](../../guides/10-product-delivery/interview-guide.md) |
+| Product & business study guide | Stakeholder translation, managing competing priorities, communicating technical trade-offs | [scoping an AI product](../../../../generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md) |
 | Customer simulation round | FDE-specific behavioral probes — client adaptation, trust-building, handling rejection | [rounds/customer-simulation.md](../customer-simulation/README.md) |
 | Leadership rounds | Leadership-focused behavioral questions — team building, org influence, strategic decisions | [rounds/leadership-rounds.md](../leadership-rounds/README.md) |
 

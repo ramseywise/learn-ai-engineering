@@ -111,4 +111,4 @@ User thumbs-down → Human reviews the query+response
 
 ---
 
-**Study refs**: [evals guide §2-5](../../../guides/6-evals-observability/interview-guide.md) for grader types, three-tier taxonomy, and calibration; librarian wiki: System Design — Unified Eval Harness, RAG Evaluation; [agents guide §8](../../../guides/4-agents/interview-guide.md) on Pass@k vs Pass^k.
+**Study refs**: [graders](../../../../../generative-ai/08-eval/notes/04-graders.md) for grader types, three-tier taxonomy, and calibration; librarian wiki: System Design — Unified Eval Harness, RAG Evaluation; [harness pillar](../../../../../ai-engineering/03-harness-engineering/README.md) on Pass@k vs Pass^k.

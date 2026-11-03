@@ -26,7 +26,7 @@ The highest-consequence review area. Interviewers watch whether you check these 
 | Trust boundary violation | Untrusted content in system messages, retrieved docs as instructions | [security ex.2](examples/security.md) — untrusted content in system message |
 | Memory poisoning | Unvalidated writes to persistent memory, no sanitization or TTL | [ai-generated ex.3](examples/ai-generated.md) — unvalidated memory writes |
 | Irreversible operations | Deletes, writes, financial transactions without confirmation/audit | [correctness ex.2](examples/correctness.md) — swallowed error in agent loop |
-| Source-sink analysis | Untrusted content → dangerous sink with authority = harm | [security guide §2](../../guides/7-security-safety/interview-guide.md) — the mental model interviewers reward |
+| Source-sink analysis | Untrusted content → dangerous sink with authority = harm | [threat model](../../../../ai-engineering/09-safety-and-security/notes/01-threat-model.md) — the mental model interviewers reward |
 
 ### 3. Correctness & interfaces
 
@@ -38,7 +38,7 @@ The second review pass — does the code do what it claims?
 | Swallowed errors in loops | Agent receives fake success, compounds false signal across turns | [correctness ex.2](examples/correctness.md) — silent failure + denial-of-wallet |
 | Schema/signature drift | Changed function signatures without updating all callers | [correctness ex.3](examples/correctness.md) — `name` → `firstName`/`lastName` |
 | Cross-usage schema consistency | When a diff touches a *shared* schema/type, grep the whole repo for other usages — not just the diff's own callers, which is all a diff-scoped read naturally shows you | Parallax PR-review spec §18.2 — a downstream serializer can silently drop a renamed field on a shared response type with zero visible callers in the diff itself |
-| Missing circuit breakers | No error counter, no max retries — failing tool causes infinite loop | [correctness ex.2](examples/correctness.md); [agents guide §5](../../guides/4-agents/interview-guide.md) |
+| Missing circuit breakers | No error counter, no max retries — failing tool causes infinite loop | [correctness ex.2](examples/correctness.md); [loop pillar](../../../../ai-engineering/04-loop-engineering/README.md) |
 | API contracts | Request/response shape matches documentation and callers' expectations | [correctness ex.3](examples/correctness.md) |
 | Edge cases | Boundary values, off-by-one, unicode, timezone, large inputs | — |
 
@@ -52,7 +52,7 @@ Third pass — will the next person understand and safely modify this code?
 | Prompts hardcoded in code | Prompt strings inlined instead of in a loadable/swappable layer | [conventions ex.2](examples/conventions.md) — prompt moved from config to class attribute |
 | Eval threshold changes | Quality bar lowered without calibration evidence or version bump | [conventions ex.3](examples/conventions.md) — pass threshold halved |
 | Convention drift | Breaking established patterns without justification | SANYI Bianyi layer; [conventions ex.1](examples/conventions.md) |
-| Test/eval quality | Tests exist, test the right things, break when the code breaks | [evals guide §2](../../guides/6-evals-observability/interview-guide.md) — grader types and calibration |
+| Test/eval quality | Tests exist, test the right things, break when the code breaks | [graders](../../../../generative-ai/08-eval/notes/04-graders.md) — grader types and calibration |
 | Enforcement > documentation | Constraints in linters/types/CI, not prose docs agents ignore | [agent-harness notes](../../../../ai-engineering/03-harness-engineering/notes/02-harness-anatomy.md) — "encode invariants, don't micromanage implementations" |
 
 ### 5. Communication & feedback
@@ -78,8 +78,8 @@ Increasingly tested — the volume of code to review has exploded.
 | RAG quality blind spots | No relevance filtering, no attribution, no token budget | [ai-generated ex.2](examples/ai-generated.md) — "works in demo, fails in production" pipeline |
 | Unvalidated memory writes | User input persisted without sanitization — poisoning vector | [ai-generated ex.3](examples/ai-generated.md) — OWASP bad example pattern |
 | Intent vs. appearance | Code reads well but doesn't match the actual requirement | [ai-generated ex.1](examples/ai-generated.md) — `encoding_format` / return type mismatch |
-| Convention drift | Each generation is independent — patterns diverge across a PR | [agents guide §4](../../guides/4-agents/interview-guide.md) — ACI principles apply to reviewing LLM output |
-| Test coverage as safety net | Verify behavior, not just readability | [evals guide](../../guides/6-evals-observability/interview-guide.md) — trajectory vs outcome grading |
+| Convention drift | Each generation is independent — patterns diverge across a PR | [harness pillar](../../../../ai-engineering/03-harness-engineering/README.md) — ACI principles apply to reviewing LLM output |
+| Test coverage as safety net | Verify behavior, not just readability | [eval pillar](../../../../generative-ai/08-eval/README.md) — trajectory vs outcome grading |
 | Documented safeguards without code backing | A system prompt or doc claims a safety behavior (escalation path, input/output validation, confidence gate) — check whether it's backed by an actual deterministic code path, or exists only as a sentence the model can choose to ignore | Parallax PR-review spec §19.7 — same failure mode as a SANYI Buyi-invariant violation, just applied to an invariant nobody declared yet |
 
 ## Practice plan
@@ -90,4 +90,4 @@ Increasingly tested — the volume of code to review has exploded.
 4. **Prepare one story**: A time you caught something significant that automation missed. Use the [example 5](examples/) pattern as a template: small diff, lints clean, tests pass, convention violated.
 5. **Know your linter boundary**: Be able to say "I wouldn't flag this in review — that's what the formatter handles" and explain why that's a maturity signal.
 6. **Agent code review**: Practice reviewing tool permission configs, trust boundary handling, and memory validation in agent PRs. Use the OWASP Agent Security cheat sheet's good/bad examples.
-7. **Read**: Google [eng-practices](https://google.github.io/eng-practices/review/) for the canonical approach; [Exponent guide](https://www.tryexponent.com/blog/how-to-ace-a-code-review) for interview-specific format and scoring; the [security guide](../../guides/7-security-safety/interview-guide.md) for the invariants you check first.
+7. **Read**: Google [eng-practices](https://google.github.io/eng-practices/review/) for the canonical approach; [Exponent guide](https://www.tryexponent.com/blog/how-to-ace-a-code-review) for interview-specific format and scoring; the [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) for the invariants you check first.

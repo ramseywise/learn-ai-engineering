@@ -5,6 +5,7 @@ sources:
   - https://github.com/pgvector/pgvector
   - https://docs.pinecone.io/guides/search/hybrid-search
   - Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book
+  - https://huggingface.co/intfloat/multilingual-e5-large
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -335,6 +336,7 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 - **Discovering the dimension limit at index build.** Symptom: `CREATE INDEX` fails on Postgres after you have embedded everything. Check the embedder's dimension against the store before the first ingest.
 - **Reading "dense only" as a dead end.** Symptom: a migration to get hybrid search that two queries and RRF would have given you. Fuse in the application first.
 - **Mixing embedders in one index.** Symptom: quality drops after a model upgrade, with no errors. Vectors from two models are not comparable, so keep a model version on each record and re-embed.
+- **Dropping an embedder's input prefix.** Symptom: retrieval is weaker than the model's reputation, with no errors. E5 models are trained on prefixed text: each input starts with `query: ` or `passage: `, and the [model card](https://huggingface.co/intfloat/multilingual-e5-large) warns that without the prefixes "you will see a performance degradation". Read the card of any embedder you pick, and use the prefix it specifies.
 - **Annoy on a changing corpus.** Symptom: new documents never appear and superseded ones stay. Plan a rebuild or use HNSW.
 - **Comparing raw scores across stores.** Symptom: a threshold that worked on one store passes everything on another. Bedrock KB does not expose its raw `_score` at all, so plan around ranks.
 - **Trusting a comparison table.** Symptom: a decision based on a vendor limit that has moved, as two rows here had. Read the current documentation for the two or three stores you shortlist.
@@ -371,6 +373,7 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 | What does a managed service cost you? | Visibility: Discovery Engine is a black box, and Bedrock KB hides the raw score. You trade calibration and chunk control for zero operations. |
 | What breaks when you change embedders? | Every vector. Old and new are not comparable, so the corpus must be re-embedded and the index rebuilt. |
 | Name retrieval levers that apply to any store. | Hybrid search, reranking, multi-query, parent-child chunking, CRAG. |
+| Do you embed queries and documents the same way? | Not with every model. E5 is trained on prefixed text, so queries start with `query: ` and passages with `passage: `, and its model card warns of degraded performance without them. |
 
 ---
 

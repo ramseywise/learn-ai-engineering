@@ -483,6 +483,7 @@ Every step except the last must have `fit` and `transform`. The last needs `fit`
 | Why do polynomials help linear models and not trees? | Trees already cut in any shape and find interactions; expanded columns only add noise to them |
 | Why log-transform counts? | Skewed inputs let a few huge values dominate a linear fit; log1p makes them more symmetric and handles zeros |
 | What does `handle_unknown="ignore"` do? | Encodes an unseen category as all zeros, so production data doesn't crash |
+| Which preprocessing steps must be refit inside each fold? | Any step with a `fit`: scaling, imputation, encoding, selection, PCA, target encoding, vectorising text. A `Pipeline` does that for you. |
 
 ## Next
 

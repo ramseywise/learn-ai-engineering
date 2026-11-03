@@ -183,7 +183,7 @@ When reading individual traces, don't stop at the aggregate score — walk the *
 - [Anthropic — Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — trajectory vs. outcome grading, reading traces not just scores.
 - [Langfuse — What does a good trace look like?](https://langfuse.com/docs/observability/best-practices) — practical trace-reading and debugging guidance.
 - (course: [11-production-and-the-maturity-ladder](../../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)) — two-layer manual/LLM-judge evaluation strategy and online sampling rules (negative-feedback triggers, high-cost dialogues, time-window sampling, 48h post-change review).
-- (guide: [evals and observability](../../guides/6-evals-observability/interview-guide.md)) — condensed observability section with the same sampling rules.
+- (guide: [eval pillar](../../../../generative-ai/08-eval/README.md)) — condensed observability section with the same sampling rules.
 
 </details>
 

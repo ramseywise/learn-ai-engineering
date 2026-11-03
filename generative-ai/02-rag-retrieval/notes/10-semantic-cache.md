@@ -710,6 +710,7 @@ Build the seed first, because the whole hypothesis depends on its quality. Then 
 | What is a centroid router? | The mean embedding of example queries per intent; a query takes the closest one, or falls to flat search below a floor. It reuses the embedding with no LLM call. |
 | How do you decide between keyword, centroid and LLM routing? | Run an ablation on source precision, MRR, quality and latency. Ship the cheapest variant that ties. |
 | What should block a merge? | Regression on the miss path, a hit subset below baseline quality, or hit latency above budget. |
+| Where does a semantic cache sit in the request path? | In this support agent it is Tier 1, ahead of any LLM or retrieval call: embed the query, cosine match against the golden seed, and return the cached answer on a hit of 0.85 or more. |
 
 ---
 

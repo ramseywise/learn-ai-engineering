@@ -306,6 +306,7 @@ All-or-nothing scoring also changes what progress looks like over model versions
 | What is a veto item? | A must-pass gate on a quality dimension: if it fires the total is zero. Hallucination is the classic one, and HealthBench's negative criteria of up to −10 points work in a similar spirit. |
 | How do grader states work? | Heuristic code checks can gate, calibrated judges can gate at their calibrated threshold, and experimental ones are tracked but can't block a release. Changing a threshold without calibration evidence sends a grader back to experimental. |
 | A new model has +5 relevance and −5 grounding, and the composite is flat. Ship? | No, not on the composite. Report the dimensions, because this is worse for anyone who needs correct answers. A hybrid rule with a grounding floor would have caught it. |
+| Why do grader disagreements improve a rubric? | Each disagreement exposes an edge case the rubric didn't settle. Resolved over time, they turn it from principles into a casebook of edge cases. |
 
 ## Next
 

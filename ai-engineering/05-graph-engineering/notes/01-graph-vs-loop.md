@@ -242,6 +242,7 @@ prompt → context → harness → loop → **graph**. The harness ([03-harness]
 | What justifies adding a node? | One of five signals: distinct specialties, parallel fan-out plus join, per-step model or tool variation, auditable control flow, or an overloaded verifier. |
 | A team's eval pass rate is low and they propose four specialist agents. What do you do first? | Run the decision tree. If one verifier is judging several criteria, split it inside the loop and re-measure, because that is far cheaper than splitting the system. |
 | How is an agent graph different from a knowledge graph? | Agent graph nodes are computation and its edges are permitted transitions; a knowledge graph's nodes are entities and its edges are typed relationships. They meet when the KG becomes the shared state agents coordinate through. |
+| Workflow or agent? | In Anthropic's split, a workflow orchestrates models and tools through predefined code paths and an agent directs its own process. A graph can mix them: fixed paths where you know the route, an agent node where you don't. |
 
 ## Next
 

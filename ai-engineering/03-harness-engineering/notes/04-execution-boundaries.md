@@ -452,6 +452,7 @@ Consequences for harness design:
 | Why does `$(echo rm) -rf /` matter? | It shows shell composition defeats keyword blacklists. A production gate parses each command's flags and arguments to find its real effect. |
 | Proposer-Reviewer or Sidecar for a risky tool? Give the trade-off. | Proposer-Reviewer runs in series with the conversation, suits high-stakes, low-frequency actions and has higher injection exposure. Sidecar sees only structured call fields and runs in parallel at low latency, so it suits every call to a risky tool class. Either way, use a different model family and a circuit breaker. |
 | What makes autonomy affordable? | Rollback: git branch-per-agent, sandbox snapshots and editable memory. An agent that can act but not be undone forces a human gate on every action. |
+| What does persistent memory add to the lethal triad? | It is a fourth amplifier: an injected instruction can lie dormant in `MEMORY.md` and fire sessions later. So content written to memory deserves the same trust review as external input. |
 
 ## Next
 

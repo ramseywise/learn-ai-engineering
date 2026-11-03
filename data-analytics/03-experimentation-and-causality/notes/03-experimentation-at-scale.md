@@ -519,6 +519,7 @@ Online evaluation of LLM features is this chapter over again. A prompt change is
 | What is interference, and what do you do about it? | One user's arm affects another's outcome. Randomise by cluster or switchback and accept the design effect. |
 | Do overlapping tests ruin each other? | Rarely. Independent salted hashes keep assignment balanced. Monitor interactions and keep known conflicts in one layer. |
 | Why doesn't the sum of lifts match growth? | The winner's curse: selection on significance inflates each measured lift. Use holdouts and shrinkage. |
+| How do you make experiments cheaper to run? | Remove noise that has nothing to do with the treatment. CUPED does it with activity from before assignment, but the gain depends on the correlation: with ρ = 0.3 variance falls by only 9%. |
 
 ---
 

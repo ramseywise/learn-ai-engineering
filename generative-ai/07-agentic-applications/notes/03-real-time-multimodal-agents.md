@@ -400,6 +400,7 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 | Action chunking versus sudden change? | Use shorter chunks near contact, re-plan on visual anomaly triggers, and blend overlapping chunks. |
 | What did SeeAct show about GUI agents? | With oracle grounding GPT-4V completed 51.1% of live-site tasks, with a large gap to real grounding. Finding the element, rather than choosing the action, was the bottleneck at that time. |
 | Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used multiple rollouts at a 100-step budget, so it says little about cost or wall-clock time. Measure time per task and steps per task alongside the success rate. |
+| Does "click first, look later" apply to every action? | No. It needs a gate for anything you cannot undo, and what appears on the screen is untrusted input too, since a page can carry instructions for the agent. |
 
 ---
 

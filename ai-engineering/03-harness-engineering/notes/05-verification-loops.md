@@ -481,6 +481,7 @@ The general principle: **in any domain where a human must sign off, traceability
 | A verifier is blocking good work. When do you delete it? | When its false positives cost more than the defects it catches. PRINCE deleted its LLM SQL reviewer because it kept flagging valid queries, adding cost and latency with no accuracy gain. |
 | How do you stop an agent stuck on the same bug? | Track per-file edit counts or a `hash(tool, args)` fingerprint and prompt "reconsider your approach" after N. After two failed retries, assume a bad spec. A hard stop alone doesn't force re-planning. |
 | Why is a retry budget per invocation? | Otherwise five tools with three retries each become fifteen attempts. Add a circuit breaker after 5 consecutive failures, with a 60s cooldown, then fail fast. |
+| Both the eval and the agent look broken. Which do you fix first? | The eval system. If it is broken, fix it before touching the agent, because you should never steer on a distorted signal. |
 
 ## Next
 

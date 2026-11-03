@@ -460,6 +460,7 @@ After 1,500 iterations gradient descent has not quite reached the closed-form an
 | Why is naive Bayes fast and often fine? | One pass of per-class statistics. Its independence assumption is wrong but the ranking is often good |
 | Which model first on a new table? | A linear model or kNN to learn the data, then a forest or boosting |
 | Gradient descent vs normal equation? | Iterative with a learning rate, vs closed form at about cubic cost in features |
+| What does Elastic Net add to ridge and lasso? | It applies both penalties at once, aiming for lasso's sparsity with ridge's stability. Its two settings in scikit-learn are `alpha` and `l1_ratio`. |
 
 ## Next
 

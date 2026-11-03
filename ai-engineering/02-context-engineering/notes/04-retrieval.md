@@ -326,6 +326,7 @@ Tool design determines whether just-in-time retrieval is viable; a tool returnin
 | What does latency look like at long context? | LOFT saw roughly 4 s, 12 s and 100 s at 32k, 128k and 1M. A long-context design has to be acceptable at that latency before accuracy matters. |
 | When does retrieval structurally fail? | On aggregation and rule induction, where the answer isn't in any chunk. Distill those at index time, for example the count of 90 black cats or the nurse rule. |
 | Why add context to chunks before embedding? | Anthropic reports top-20 retrieval failures down 49% with contextual embeddings and contextual BM25, and 67% with a reranker, at about $1 per million document tokens with prompt caching. A chunk alone often lacks the identifier that makes it findable. |
+| Two retrieved documents contradict each other. What do you do? | Surface the conflict rather than silently picking one. To stop it recurring, tag chunks with a version and effective and expiry dates and filter at query time, since a superseded policy left in the index gets retrieved alongside its replacement. |
 
 ## Next
 

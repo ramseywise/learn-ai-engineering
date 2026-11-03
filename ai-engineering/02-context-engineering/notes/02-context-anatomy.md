@@ -325,6 +325,7 @@ The upstream "molecule" material comes down to three rules:
 | What does a status bar buy, and how do you keep it accurate? | In Li and Shi (11 models, about 24k evals), weak models gained 40-54 points and strong models kept accuracy while cutting reasoning tokens 80-90%. Maintain it in code from observations, and monitor it, since errors above about 10% are worse than no bar. |
 | Why would sub-agents be byte-aligned with their parent? | So their side queries reuse the parent's cached prefix. Same prompt, tools, model config and message prefix means a cache hit instead of a fresh prefill. |
 | Flatten messages to `USER: ... ASSISTANT: ...` text to save effort? | No. The main damage is leaving the trained format, which leads to ignored tool results, repeated actions and text where a call was needed. Use the API's structured roles. |
+| How much cheaper is a cached read? | About one-tenth of fresh prefill at Anthropic, DeepSeek and OpenAI's GPT-5 family, as a rough figure that ignores any cache-write premium. Anthropic needs explicit `cache_control` breakpoints. |
 
 ## Next
 

@@ -442,6 +442,7 @@ Public multi-turn benchmarks stress later turns, questions that aren't standalon
 | How do you structure user facts for reliability? | When questions aggregate, use typed state: User as Code regenerates typed Python from a fact log and reached about 99% on aggregation against 6-43% for retrieval-based memory, because a count becomes one expression. |
 | What's the highest-leverage part of an index-plus-detail memory? | The one-line hook, because it decides whether the detail file ever gets opened. |
 | Do you evaluate a memory system on overall answer accuracy only? | No. Evaluate at three levels, including hit rate. In Peng's test Opus 5.5 reading Zep's GPT-4o-mini graph scored 45% against GPT-4o-mini's 43%, so a stronger reader can't recover what a weak writer never stored. |
+| How do short-term and long-term memory differ? | The trajectory is an append-only log that is never rewritten, while long-term memory is an archive that gets rewritten, merged and pruned. Working memory is the filtered subset of both that is in the window right now. |
 
 ## Next
 

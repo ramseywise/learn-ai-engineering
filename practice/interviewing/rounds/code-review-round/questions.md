@@ -37,7 +37,7 @@ In a code review interview, the "question" is usually the code itself — you're
 
 Automation handles syntax and formatting. Human review handles intent, conventions, and consequences."
 
-**Study ref**: [study guide §1](study-guide.md) — the dangerous class; [evals guide §2](../../guides/6-evals-observability/interview-guide.md) on grader types (what code tests can and can't verify).
+**Study ref**: [study guide §1](study-guide.md) — the dangerous class; [graders](../../../../generative-ai/08-eval/notes/04-graders.md) on grader types (what code tests can and can't verify).
 
 ---
 
@@ -120,7 +120,7 @@ Note that a question isn't a fourth confidence tier — it's how I *communicate*
 
 My approach: verify behavior against *intent* (not just 'does it read well?'), check every API call against actual docs, insist on test coverage as the safety net, and look for convention drift across the PR. The review skill matters more now, not less — the volume of reviewable code has exploded."
 
-**Study ref**: [study guide §6](study-guide.md) on AI-generated code review; [agents guide §4](../../guides/4-agents/interview-guide.md) on ACI — tool descriptions written for junior devs maps directly to reviewing AI output.
+**Study ref**: [study guide §6](study-guide.md) on AI-generated code review; [harness pillar](../../../../ai-engineering/03-harness-engineering/README.md) on ACI — tool descriptions written for junior devs maps directly to reviewing AI output.
 
 ---
 
@@ -156,4 +156,4 @@ The ideal story: a small diff that linted clean and tests passed, but violated a
 6. **Prompt/config tunables** — are thresholds and prompts changeable without a deploy, or hardcoded in business logic?
 7. **Documented safeguards without code backing** — if the system prompt, a doc, or a config comment *claims* a safety behavior exists (an escalation path, a confidence gate, an input/output validator), I go check whether there's an actual deterministic code path enforcing it, or whether it's just a sentence the model can choose to ignore under the right adversarial input. This is the one I'd expect a line-by-line reviewer to miss — the prompt text reads as if the safeguard exists."
 
-**Study ref**: [security guide §3-4](../../guides/7-security-safety/interview-guide.md) on defense stack and operational boundaries; [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html); SANYI Buyi layer for invariants that must be code-enforced.
+**Study ref**: [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) on defense stack and operational boundaries; [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html); SANYI Buyi layer for invariants that must be code-enforced.

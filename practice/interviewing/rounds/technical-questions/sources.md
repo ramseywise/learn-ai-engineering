@@ -22,8 +22,8 @@ The domain study guides are the primary content source for this round. Each guid
 | `evals` | LLM-as-judge, RAGAS, golden sets, online vs offline eval, calibration. Q17–20 source. |
 | `security` | Prompt injection, PII handling, trust boundaries, least-privilege tool design. Q21–23 source. |
 | `ml-fundamentals` | Bias-variance, precision-recall, regularization, cross-validation. Q27–30 source. |
-| `1-foundations` | [Guide](../../guides/1-foundations/interview-guide.md): spoken answers to 18 ML Fundamentals questions, plus metrics, imbalance, calibration, drift. |
-| `11-stats-experimentation` | [Guide](../../guides/11-stats-experimentation/interview-guide.md): distributions, intervals, p-values, power, A/B design, CUPED, peeking, multiple comparisons, Bayesian A/B. The DS stats screen. |
+| `1-foundations` | [classical ML](../../../../data-science/01-classical-ml/README.md): spoken answers to 18 ML Fundamentals questions, plus metrics, imbalance, calibration, drift. |
+| `11-stats-experimentation` | [experimentation](../../../../data-analytics/03-experimentation-and-causality/README.md): distributions, intervals, p-values, power, A/B design, CUPED, peeking, multiple comparisons, Bayesian A/B. The DS stats screen. |
 
 ---
 

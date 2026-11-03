@@ -617,6 +617,7 @@ Where the fixes landed:
 | What is calibration, and how do you fix it? | Whether scores match frequencies. Reliability diagram; Platt, isotonic, or temperature scaling |
 | How do you read a learning curve? | High and converged means bias, so more data will not help. A large gap means variance, so more data will help |
 | How do you split for grouped or temporal data? | So production's situation holds: by subject, or past-to-future |
+| Recall or specificity? | Recall is $TP/(TP+FN)$, the share of real positives caught. Specificity is $TN/(TN+FP)$, the share of negatives left alone. The first counts misses and the second counts false alarms. |
 
 ## Next
 

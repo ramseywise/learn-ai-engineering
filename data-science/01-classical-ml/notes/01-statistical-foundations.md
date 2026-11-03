@@ -311,6 +311,7 @@ Return to these after each later note: a technique you have just used makes the 
 | Relation of ridge and lasso to Bayes? | MAP estimates under a Gaussian prior (ridge) and a Laplace prior (lasso) |
 | What is minimising cross-entropy equivalent to? | Maximum likelihood of the labels under the model |
 | What does scikit-learn's estimator API buy? | `fit`, `predict`, `transform` are uniform, so estimators chain in pipelines and plug into search |
+| Supervised or unsupervised learning? | Supervised learning learns $x \to y$ from labelled pairs, with a class or a number as the target. Unsupervised learning has no $y$ and finds structure in $x$ alone. |
 
 ## Next
 

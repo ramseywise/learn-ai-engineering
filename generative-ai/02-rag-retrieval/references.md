@@ -42,6 +42,7 @@
 | | [RAGAS docs](https://docs.ragas.io/): faithfulness, answer relevance, context precision and recall | 06, 07, 08 |
 | | [ContextCite](https://gradientscience.org/contextcite/) (MIT Madry lab): attributing a statement to context spans | 06 |
 | | Kamradt, [*5 Levels of Text Splitting*](https://github.com/FullStackRetrieval-com/RetrievalTutorials), cited by the course | 05 |
+| | Wang et al., [`intfloat/multilingual-e5-large` model card](https://huggingface.co/intfloat/multilingual-e5-large) (Hugging Face): E5 inputs take a `query: ` or `passage: ` prefix, and performance degrades without it | 09 |
 | | [bm25s](https://github.com/xhluca/bm25s): the BM25 library the M2 labs use | 03 |
 | | [LlamaIndex](https://docs.llamaindex.ai/), [Haystack](https://docs.haystack.deepset.ai/): RAG frameworks; not used by any note, listed as alternatives to hand-rolled pipelines | — |
 | | [Docling](https://github.com/docling-project/docling): PDF and Office parsing into structured chunks; the open alternative to the parser tiers in 01 | — |

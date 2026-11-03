@@ -365,6 +365,7 @@ Automating this loop (an agent proposing fixes and an eval accepting or rejectin
 | Shadow, canary or A/B? | Shadow gets real inputs but shows you no user reaction, canary exposes 1 to 5% of traffic to catch failures, and A/B measures outcomes with guardrails. They go in that order. |
 | Should you optimize thumbs-up rate? | No. Feedback is sparse and skewed, and optimizing 👍 rewards flattery. Use it as one signal alongside graded samples and outcomes such as resolution. |
 | Your A/B test won on plan length, and session cost rose. Which one counts? | Session cost. Plan length is the mechanism and cost is the target, since shorter plans can cause more edit loops. |
+| How should review change after a model or prompt change? | Raise it to elevated or full review for the first 48 hours. Keep the random sample separate when you report rates, because rule-based samples are skewed toward failures. |
 
 ## Next
 

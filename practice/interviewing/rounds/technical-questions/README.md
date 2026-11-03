@@ -18,7 +18,7 @@ Real screen question lists run: "What is RAG? Graph+RAG? Chain of Thought? Refle
 |-----|-----|-----|-----|
 | ●   | ●   | ◐   | ●   |
 
-AIE/FDE versions skew LLM-era topics; MLE adds classical depth; DS versions fold into the stats/SQL screen, so drill the [stats & experimentation guide](../../guides/11-stats-experimentation/interview-guide.md) and the [foundations guide](../../guides/1-foundations/interview-guide.md), which has spoken answers to the 18 ML Fundamentals questions.
+AIE/FDE versions skew LLM-era topics; MLE adds classical depth; DS versions fold into the stats/SQL screen, so drill the [experimentation](../../../../data-analytics/03-experimentation-and-causality/README.md) and the [classical ML](../../../../data-science/01-classical-ml/README.md), which has spoken answers to the 18 ML Fundamentals questions.
 
 ## Folder contents
 

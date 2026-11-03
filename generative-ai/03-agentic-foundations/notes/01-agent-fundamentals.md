@@ -447,6 +447,7 @@ The loop above has no opinion about what a tool is allowed to do, so that has to
 | Why do token costs grow quadratically with run length? | The whole trajectory is re-sent on each turn, so the input grows with every step and is paid for every time |
 | Where does a permission belong? | Below the model, in credentials and tools. A prompt can be edited or overridden ([07](07-guardrails-and-autonomy.md)) |
 | How should you pick a model? | Evaluate on your own tasks, weigh price against quality per role, and treat speed as latency, since rounds run in sequence |
+| Where do production systems sit on the autonomy spectrum? | Nearly every one sits in the middle, which Koenigstein calls orchestrated autonomy: the model chooses freely inside regions you designed, but it can't redesign its control graph or invent new topologies. |
 
 ---
 

@@ -38,7 +38,7 @@ Highest-weight round for AIE/MLE. For FDE the case study and customer simulation
 - [examples/](examples/) — worked system design walkthroughs by topic
 - [questions.md](questions.md) — sample prompts with model answer structures
 
-**Topic knowledge lives in [pillar 9](../../guides/9-system-design/)**, not here — including
+**Topic knowledge lives in [system-design method](study-guide.md)**, not here — including
 the [decision tree](../../guides/9-system-design/04-decision-tree.md) (four spines, walked
 node by node), distributed-systems fundamentals, and API design. This folder is *how to
 perform in the room*; the pillar is *what you need to know*.
