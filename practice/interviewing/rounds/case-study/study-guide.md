@@ -146,6 +146,21 @@ The last milestone should include a measurement close: "We declare success when 
 
 ---
 
+## Product-sense prompts
+
+The same habits apply when the prompt is a product question with no pipeline in it. Open with **user → problem → success metric → constraint**. Interviewers grade how you structure ambiguity and use them as a resource, not whether you land their pet answer.
+
+| Prompt | Shape of a good answer |
+|---|---|
+| "Client wants a chatbot. Where do you start?" | Don't accept the solution. Which problem, which users, what volume, what breaks today? The answer may be search and three macros. |
+| "The model is 92% accurate. Ship it?" | Errors × volume × cost per error, then how the errors are distributed (harmless or catastrophic), then what the user sees on a miss. Say yes or no with conditions. |
+| "How do you prioritize the AI roadmap?" | Impact × confidence ÷ effort, with guardrail metrics as a veto. Earn trust with a reviewable-output use case first. |
+| "Where does AI belong in this workflow?" | High-volume work a person can review first (drafting, triage, summaries). Irreversible, high-stakes actions last. |
+| "What does the user see on low confidence?" | Abstain, cite or escalate. Treat it as a product decision and design it with the workflow. |
+| "A nonprofit asks for an AI intake assistant." | Raise capacity, personal data and budget first. Budgets follow grant cycles, so API bills need caps. Maintainers rotate, so favour boring, documented, managed services. Define impact metrics funders can report, phase the rollout with human review, and plan the handoff. |
+
+---
+
 ## ROI arithmetic frameworks
 
 These numbers should come out of your mouth cold. Practice them.

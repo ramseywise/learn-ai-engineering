@@ -262,7 +262,7 @@ Each question has three parts:
 
 ### 25. What is prompt caching and when does it apply?
 
-**60-second answer**: Prompt caching lets the model provider cache the processed KV representation of a stable prompt prefix and reuse it across requests. You pay full price on the first request, then a fraction of input token cost on cache hits. Useful when you have a large stable system prompt, few-shot examples, or a fixed document that's referenced repeatedly.
+**60-second answer**: Prompt caching lets the model provider cache the processed KV representation of a stable prompt prefix and reuse it across requests. The first request pays to write the cache (Anthropic charges a premium for the write), then you pay a fraction of input token cost on cache hits. Useful when you have a large stable system prompt, few-shot examples, or a fixed document that's referenced repeatedly.
 
 **One level deeper**: Cache hit depends on the prefix being byte-for-byte identical up to the breakpoint you've marked. Any change before the cache mark invalidates the cache. Practical design: put stable content first (system prompt, static instructions, fixed documents), dynamic content last (conversation history, user query, retrieved chunks). Anthropic's caching uses explicit `cache_control` markers; OpenAI's is automatic after a threshold. Cache lifetime is typically 5 minutes (Anthropic) — for high-traffic systems, this is enough. For low-traffic or batch jobs, it may not be. Caching and context ordering are coupled decisions.
 
@@ -306,7 +306,7 @@ Each question has three parts:
 
 **60-second answer**: Regularization adds a penalty for model complexity to the loss function, discouraging the model from fitting noise in the training data. L2 (ridge) penalizes large weights; L1 (lasso) penalizes non-zero weights (produces sparsity). Dropout in neural networks is a regularization technique.
 
-**One level deeper**: L2 regularization has a probabilistic interpretation: it's equivalent to placing a Gaussian prior on weights and doing MAP estimation. L1 is equivalent to a Laplace prior, which has heavier tails at zero — explaining why L1 produces sparse solutions. Elastic net combines L1 and L2. For neural networks, explicit regularization (L2 on weights) is often supplemented with architectural regularization (dropout, batch normalization, early stopping). Dropout during training randomly zeroes activations, forcing the network to learn redundant representations — at inference, weights are scaled by the keep probability. The practical question: regularization hyperparameters (λ, dropout rate) are tuned on validation set performance, not training loss.
+**One level deeper**: L2 regularization has a probabilistic interpretation: it's equivalent to placing a Gaussian prior on weights and doing MAP estimation. L1 is equivalent to a Laplace prior, which peaks sharply at zero — explaining why L1 produces sparse solutions. Elastic net combines L1 and L2. For neural networks, explicit regularization (L2 on weights) is often supplemented with architectural regularization (dropout, batch normalization, early stopping). Dropout during training randomly zeroes activations, forcing the network to learn redundant representations — at inference, weights are scaled by the keep probability. The practical question: regularization hyperparameters (λ, dropout rate) are tuned on validation set performance, not training loss.
 
 **Study ref**: ml-fundamentals guide
 

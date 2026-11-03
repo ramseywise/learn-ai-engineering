@@ -37,7 +37,7 @@ Present in every loop but rarely the differentiator round. DS versions skew SQL/
 | `questions.md` | 31 questions by format with approach, signals, pitfalls — live coding, AI/ML practicals, debugging, pair, AI-assisted, multi-level implementation rounds (16–19), NumPy ML coding (20–25) |
 | `code-from-heart.md` | The stdlib patterns to write without reference — aggregation, sorting, validation, HTTP/auth minimums, plus a 25-min drill |
 | `study-guide.md` | Core methods: narration, debugging methodology, Python fluency, AI-assisted skills |
-| `sources.md` | Internal study guides + external resources |
+| `sources.md` | Pillar notes + external resources |
 | `examples/` | Nine worked walkthroughs — three general, five offline practicals, one interviewer guide (property search) |
 
 Drill-format practice files (prompt → hint ladder → solution) live in [`programming/drills/coding/`](../../../../programming/drills/coding/):

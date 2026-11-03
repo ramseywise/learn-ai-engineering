@@ -4,6 +4,8 @@ This round is not studied — it's rehearsed. The material here is a set of thin
 
 ---
 
+Titles blur between companies. Read the job description to see which job it really is before preparing.
+
 ## 1. The 90-Second Narrative
 
 The core deliverable of every recruiter screen. You need one version of this that is rehearsed, not improvised.

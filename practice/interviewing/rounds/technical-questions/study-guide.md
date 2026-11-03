@@ -49,6 +49,15 @@ When you don't know something well, say so — then redirect.
 
 ---
 
+## Numbers, textbook answers and definitions
+
+- **Numbers.** A figure from a course note is one result on one dataset. Quote it as an example, with its setup, never as a general rule.
+- **Textbook answers.** When the textbook answer is too simple (a fixed split ratio, say), give it, then give the nuance. Ratios depend on how much data you have.
+- **Definitions.** If the interviewer's definition of a term differs from yours, surface the ambiguity before you answer.
+- **Stats screens.** They probe what a number claims and whether you can design a test that would convince a sceptic. They rarely want derivations.
+
+---
+
 ## Trade-off pairs master list
 
 These are the most common "compare X and Y" questions. For each: know the key axis (what actually drives the decision) and a one-sentence call.

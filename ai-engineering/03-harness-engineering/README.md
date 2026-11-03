@@ -1,6 +1,6 @@
 # 03 — Harness Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position in the stack: *harness implements loops*.
 > Start with [notes/01](notes/01-what-a-harness-is.md) · Sources: [references.md](references.md)
 
@@ -91,7 +91,7 @@ Everything else: [references.md](references.md).
 ## Resource map
 
 ### Interviewing guide
-- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Coursera code
 - [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/notes/04-multi-agent-design-patterns.md) — agentic design patterns.

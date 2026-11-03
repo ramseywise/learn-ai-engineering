@@ -53,4 +53,4 @@ Core in every senior loop. For FDE it doubles as a customer-communication sample
 |------|---------|
 | `questions.md` | 15 questions with signals, answer structures, follow-up probes |
 | `study-guide.md` | Frameworks: three-altitude method, decision docs, incident storytelling, impact quantification |
-| `sources.md` | Internal study guides + external resources |
+| `sources.md` | Pillar notes + external resources |

@@ -15,17 +15,11 @@
 ## Internal notes
 
 
-### Code test / Work Trial provenance
+### Code test / Work Trial material
 
-The code-test and Work Trial material (README format table, study-guide clock/dial/taxonomy, `examples/aie-track/one-hour-code-test.md`) derives from three research passes dated 2026-08-01:
+The README format table, the study guide's clock, dial and taxonomy, and `examples/aie-track/one-hour-code-test.md` come from format research kept outside this repo, so nothing here cites it.
 
-- `2026-08-01_code-test_format-and-flaws.md` — format evidence, hidden-flaw taxonomy, the 60-minute clock, pragmatism/defensibility rubrics
-- `2026-08-01_code-test_openai-work-trial.md` — OpenAI Work Trial vs technical test; test-rigour dial, PR-review lens, observability weighting, async ambiguity protocol
-- `2026-08-01_code-test_tooling-audit.md` — starter-kit tooling audit; **not a source for the current round docs**, tracked separately
-
-Note the two-source tension on tests: the first lists a test suite under what *not* to build in a 60-minute window; the second calls a missing suite the top Work Trial rejection reason. The study-guide resolves this as a dial that scales with the timebox rather than adopting either verbatim.
-
-## External references
+Evidence on tests pulls two ways: one account lists a test suite under what *not* to build in a 60-minute window, and another calls a missing suite the top Work Trial rejection reason. The study guide resolves this as a dial that scales with the timebox rather than adopting either verbatim.
 
 ### Case interview frameworks
 

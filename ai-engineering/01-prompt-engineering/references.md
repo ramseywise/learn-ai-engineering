@@ -96,7 +96,7 @@ For [09](notes/09-evaluating-prompts.md). Deeper material is in [the Eval pillar
 
 ### Safety and adversarial
 
-For [10](notes/10-adversarial-prompting.md). For interview depth, see [interviewing/7-security-safety/prompt-injection.md](../../practice/interviewing/guides/7-security-safety/prompt-injection.md).
+For [10](notes/10-adversarial-prompting.md). For the system-level view, see [safety and security](../09-safety-and-security/README.md).
 
 - ★ Willison, [*Prompt injection attacks against GPT-3*](https://simonwillison.net/2022/Sep/12/prompt-injection/) (2022) — where the name comes from
 - Willison, [*The Dual LLM pattern*](https://simonwillison.net/2023/Apr/25/dual-llm-pattern/) — the quarantined-model defense

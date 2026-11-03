@@ -1,6 +1,6 @@
 # 08 — Eval Engineering
 
-> Depth layer. Summary: [interviewing/guides/6-evals-observability](../../practice/interviewing/guides/6-evals-observability/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position in the path: eighth pillar of generative-ai, moved from ai-engineering. It *measures every layer*: the five ai-engineering foundations (prompt, context, harness, loop, graph) and the generative-ai pillars that build on them.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
@@ -190,7 +190,7 @@ Trimmed templates live inline in the chapter that teaches them: the failure-taxo
 - [Learning-LangFuse-main](../06-observability/notes/02-scoring-datasets-experiments.md) and [langfuse-evaluation-main](../06-observability/notes/03-judge-pipelines-over-trace-exports.md) — Langfuse course code.
 
 ### Interviewing guide
-- [6-evals-observability](../../practice/interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep. This folder is the source of depth; if they drift, this folder wins.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ---
 

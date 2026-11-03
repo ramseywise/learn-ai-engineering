@@ -1,6 +1,6 @@
 # 05 — Graph Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position in the stack: fifth foundation, prompt → context → harness → loop → **graph**. Builds on [04-loop](../04-loop-engineering/README.md).
 
 ---
@@ -155,7 +155,7 @@ Everything else: [references.md](references.md).
 Chapter-to-note maps and quality flags for all three are in [references.md](references.md).
 
 ### Interviewing guide
-- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Notebooks and course code
 - DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.

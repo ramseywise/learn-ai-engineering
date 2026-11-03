@@ -4,7 +4,7 @@
 
 | Source | What to read | Why |
 |--------|-------------|-----|
-| `interviewing/guides/product-business.md` §5 | "Three audiences" pitch discipline | The recruiter is Audience 1: non-technical, time-constrained. §5 covers how to modulate the same project story for different listener contexts. Directly applies to the 90-second narrative and project highlights. |
+| [Customer simulation study guide](../customer-simulation/study-guide.md), habit 3 | Altitude matching, the same story for different listeners | The recruiter is Audience 1: non-technical, time-constrained. §5 covers how to modulate the same project story for different listener contexts. Directly applies to the 90-second narrative and project highlights. |
 | `interviewing/rounds/project-deep-dive/` | The projects you'll reference at a recruiter screen | You'll name 2–3 projects in this call. The project-deep-dive material is where you've built out those stories with full structure, metrics, and edge cases. Sync your one-liners here with the fuller treatment there. |
 | `interviewing/rounds/behavioral/` | STAR framework | The project highlights question at a recruiter screen is a compressed STAR. If you haven't internalized the behavioral structure, review it — the recruiter version is just faster. |
 

@@ -1,6 +1,6 @@
 # 05 — RL & Alignment
 
-> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position: fifth pillar of [generative-ai](../README.md). Presumes [01-llm-fundamentals](../01-llm-fundamentals/README.md); feeds [03-agentic-foundations](../03-agentic-foundations/README.md) and [generative-ai/08-eval](../08-eval/README.md).
 
 ---
@@ -135,6 +135,6 @@ Deck: [slides/rl-and-alignment.pptx](slides/rl-and-alignment.pptx) and [.pdf](sl
 
 **Readings:** local PDFs in [sources/](sources/), indexed with arXiv ids in [references.md](references.md#core-papers). Open gaps (TRL notebook, reward-model architecture note) are in [references.md § Gaps](references.md#gaps).
 
-**Interviewing guide:** [2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md): RLHF, alignment and preference optimization compressed for interview prep.
+**Interviewing:** [role map](../../practice/interviewing/README.md) to these checklists, and the rounds.
 
 **Previous:** [04-agentic-frameworks](../04-agentic-frameworks/README.md) · **Next:** [06-observability](../06-observability/README.md): once agents are trained and deployed, tracing and scoring close the feedback loop.

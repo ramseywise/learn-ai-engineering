@@ -1,6 +1,6 @@
 # 04 — Loop Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position in the stack: *the harness runs one agent well; the loop runs it again, against a goal, until a scorekeeper says stop*.
 > Start with [note 01](notes/01-what-a-loop-is.md) · Notes: [notes/](notes/) · Deck: [slides/](slides/loop-engineering.pptx)
 
@@ -115,7 +115,7 @@ Everything else: [references.md](references.md).
 - [Harness note 06: long-horizon execution](../03-harness-engineering/notes/06-long-horizon-execution.md) — Ralph and compaction from the harness side.
 
 ### Interviewing guide
-- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Coursera code
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md) — agent loops implemented as LangGraph graphs.

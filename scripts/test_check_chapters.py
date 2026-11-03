@@ -216,6 +216,11 @@ class Crosswalk(unittest.TestCase):
         text = "[a](x.md#s) [b](https://e.com) [c](#top) [d](two%20w.md)\n```\n[e](fenced.md)\n```\n"
         self.assertEqual(cw.link_targets(text), ["x.md", "two w.md"])
 
+    def test_label_names_the_round(self):
+        self.assertEqual(cw.label("practice/interviewing/rounds/case-study/README.md"), "case-study")
+        self.assertEqual(cw.label("practice/interviewing/rounds/case-study/examples/aie-track/x.md"), "case-study/x")
+        self.assertEqual(cw.label("programming/drills/python/x.md"), "x")
+
     def test_validate_missing_unit(self):
         found, units = cw.validate({"practice/g.md": "---\nunits: [no/such/unit]\n---\n"}, {"practice/g.md"})
         self.assertEqual(found, ["practice/g.md: unit does not exist: no/such/unit"])

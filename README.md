@@ -19,7 +19,7 @@ Generative AI builds things with LLMs; AI Engineering is the discipline that mak
 
 ## Practice
 
-[Language and coding drills](programming/drills/README.md) are part of Programming. Interview prep is in [`practice/`](practice), where an allowlist decides which files are published: start with the [interview guides](practice/interviewing/guides/00-start-here.md).
+[Language and coding drills](programming/drills/README.md) are part of Programming. Interview prep is in [`practice/`](practice), where an allowlist decides which files are published: start with the [role map](practice/interviewing/README.md).
 
 ## Readings
 

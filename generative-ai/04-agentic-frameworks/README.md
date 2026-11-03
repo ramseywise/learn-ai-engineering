@@ -1,6 +1,6 @@
 # 04 — Agentic Frameworks
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position: fourth generative-ai pillar, the framework layer. Builds on [03-agentic-foundations](../03-agentic-foundations/README.md); the theory it implements is [ai-engineering/05-graph-engineering](../../ai-engineering/05-graph-engineering/README.md).
 
 ---
@@ -130,7 +130,7 @@ Everything else: [references.md](references.md).
 - Framework docs and guides (Anthropic, OpenAI, 12-Factor Agents, ReAct): [references.md](references.md).
 
 ### Interviewing guide
-- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Previous and next layer
 ← [03-agentic-foundations](../03-agentic-foundations/README.md)

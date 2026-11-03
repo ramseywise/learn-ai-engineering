@@ -1,6 +1,6 @@
 # 02 — RAG & Retrieval
 
-> Depth layer. Summary: [interviewing/guides/3-rag](../../practice/interviewing/guides/3-rag/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position in the path: second generative-ai pillar, the first production pattern built on LLMs. Builds on [01-llm-fundamentals](../01-llm-fundamentals/README.md).
 
 ---
@@ -162,7 +162,7 @@ None are copied. Every lab is linked upstream, with its label in the note's `## 
 - [sources/](sources/): paper PDFs and routed book chapters. Which note cites each, which are still queued, and which are duplicates or off-topic is in [references.md](references.md).
 
 ### Interviewing guide
-- [3-rag](../../practice/interviewing/guides/3-rag/00-overview.md): compressed summary for interview prep.
+- [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Previous and next layer
 ← Builds on [01-llm-fundamentals/](../01-llm-fundamentals/README.md)

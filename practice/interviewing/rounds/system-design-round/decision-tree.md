@@ -3,11 +3,6 @@ origin: synthesized
 confidence: high
 sources:
   - interviewing/rounds/system-design-round/study-guide.md (the 5-step process + component table)
-  - interviewing/guides/3-rag/interview-guide.md
-  - interviewing/guides/4-agents/interview-guide.md
-  - interviewing/guides/5-context-cost/interview-guide.md
-  - interviewing/guides/6-evals-observability/interview-guide.md
-  - interviewing/guides/7-security-safety/interview-guide.md
 cleaned: 2026-07-30
 units:
   - data-engineering/01-storage-and-compute-foundations
@@ -15,9 +10,8 @@ units:
 ---
 # System Design — Decision Tree
 
-Pillar 9, detailed note 4. The middle layer between the [5-step process](../../rounds/system-design-round/study-guide.md)
-(too abstract under pressure — "design the components") and the pillar guides (too deep —
-127 lines on RAG when you have 40 seconds).
+The middle layer between the [5-step process](study-guide.md) (too abstract under pressure:
+"design the components") and the pillar notes (too deep when you have 40 seconds).
 
 A component table answers by **noun**: "what is reranking?" This answers by **situation**:
 "the interviewer just said 10K→1M docs — what changes and what do I say?" Those are
@@ -25,7 +19,7 @@ different retrieval operations, and only the second one is what a design round a
 
 ## How to use this
 
-**The trunk lives in the round's [study guide](../../rounds/system-design-round/study-guide.md)** —
+**The trunk lives in the round's [study guide](study-guide.md)** —
 one fork, memorized, that picks your spine. You walk exactly one spine per interview.
 
 ```text
@@ -72,7 +66,7 @@ misses paraphrase. Reranker on top, and I'd measure whether it earns its latency
 
 **Breaks first:** stale index. Nobody notices until faithfulness drops.
 
-**Deeper:** [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md) · [rag-system](../../rounds/system-design-round/examples/rag-system.md)
+**Deeper:** [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md) · [rag-system](examples/rag-system.md)
 
 #### R2. Chunking
 
@@ -150,7 +144,7 @@ state, latency, and failure points — I'd want evidence one context can't hold 
 **Breaks first:** agents talking past each other with no isolation boundary; one agent's
 failure cascading silently.
 
-**Deeper:** [topology patterns](../../../../ai-engineering/05-graph-engineering/notes/05-topology-patterns.md) · [agent-system](../../rounds/system-design-round/examples/agent-system.md)
+**Deeper:** [topology patterns](../../../../ai-engineering/05-graph-engineering/notes/05-topology-patterns.md) · [agent-system](examples/agent-system.md)
 
 #### A2. Agent loop or pipeline?
 
@@ -394,10 +388,10 @@ mid-interview is how you forget them.
 | Question | Default answer | Deeper |
 |---|---|---|
 | How do you know it works? | Golden set + regression on every change | [eval pillar](../../../../generative-ai/08-eval/README.md) |
-| How do you know it broke? | Traces + drift alerts, 10–20% online scoring | [production evals](../../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) |
+| How do you know it broke? | Traces + drift alerts, online scoring on a sample of traffic | [production evals](../../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) |
 | What does it cost? | Cost per *successful task*, not per call | [tracing and cost](../../../../generative-ai/08-eval/notes/08-tracing-and-observability.md) |
 | What's the blast radius? | Least privilege, untrusted input never reaches a dangerous sink | [threat model](../../../../ai-engineering/09-safety-and-security/notes/01-threat-model.md) |
-| What happens at 10×? | Name the bottleneck *before* they ask | [Round study guide §4](../../rounds/system-design-round/study-guide.md) |
+| What happens at 10×? | Name the bottleneck *before* they ask | [Round study guide §4](study-guide.md) |
 
 ### Test yourself
 

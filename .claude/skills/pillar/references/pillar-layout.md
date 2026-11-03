@@ -162,7 +162,7 @@ A pillar is **done** when all five hold:
    needs (API key, GPU, service).
 4. **Imports cleanly**: `make import-courses` in librarian brings it in with no broken
    relative links.
-5. **Cross-linked**: points to the practice guide that summarises it and, once they exist, to the
+5. **Cross-linked**: points to the [interviewing role map](../../../../practice/interviewing/README.md) that maps its checklists and, once they exist, to the
    drills that practise it (drills name their `concepts`).
 
 ### Status

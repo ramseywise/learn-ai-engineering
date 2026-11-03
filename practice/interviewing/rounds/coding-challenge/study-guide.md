@@ -146,7 +146,7 @@ For loops that allow or require an AI assistant:
 
 **MLE (Machine Learning Engineering)**: scikit-learn pipeline idioms, numpy/pandas manipulation, metric computation. May include debugging a training loop or a data preprocessing bug.
 
-**DS (Data Science)**: SQL and pandas heavy. "Parse this log file and report top-5 error codes" type problems. Expect GROUP BY logic in pandas, window functions in SQL.
+**DS (Data Science)**: SQL and pandas heavy. "Parse this log file and report top-5 error codes" type problems. Expect GROUP BY logic in pandas, window functions in SQL. For a SQL join, say how many rows the result should have before you write it.
 
 **FDE (Full-Stack/Data Engineering)**: practical scripting under time pressure. File I/O, CLI tools, JSON parsing, subprocess calls. Speed and correctness over elegance.
 

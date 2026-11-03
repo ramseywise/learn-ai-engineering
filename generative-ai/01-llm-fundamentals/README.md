@@ -1,6 +1,6 @@
 # 01 — LLM Fundamentals
 
-> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md)
+> Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
 > Position: first pillar of [generative-ai](../README.md). Everything else in generative-ai presumes it. Prompting technique depth lives in [ai-engineering/01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md).
 
 ---
@@ -154,6 +154,6 @@ Everything else: [references.md](references.md).
 
 **Readings:** every book, course and paper in [references.md](references.md), with local PDFs in [sources/](sources/). Papers held here but owned by other pillars are listed under [Held here, used elsewhere](references.md#held-here-used-elsewhere).
 
-**Interviewing guide:** [2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md): attention, RLHF, prompting and model behaviour compressed for interview prep.
+**Interviewing:** [role map](../../practice/interviewing/README.md) to these checklists, and the rounds.
 
 **Next:** [02-rag-retrieval](../02-rag-retrieval/README.md): RAG was the first killer app built on LLMs, and it presumes you can prompt a model reliably.

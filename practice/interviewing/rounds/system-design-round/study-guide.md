@@ -1,6 +1,6 @@
 # System Design Round — Study Guide
 
-The method for the highest-weight technical round. Domain content lives in the [RAG pillar](../../../../generative-ai/02-rag-retrieval/README.md), [harness pillar](../../../../ai-engineering/03-harness-engineering/README.md), [eval pillar](../../../../generative-ai/08-eval/README.md), [context pillar](../../../../ai-engineering/02-context-engineering/README.md), and [safety pillar](../../../../ai-engineering/09-safety-and-security/README.md) guides — this guide is the *process*.
+The method for the highest-weight technical round. Domain content lives in the [RAG](../../../../generative-ai/02-rag-retrieval/README.md), [harness](../../../../ai-engineering/03-harness-engineering/README.md), [eval](../../../../generative-ai/08-eval/README.md), [context](../../../../ai-engineering/02-context-engineering/README.md) and [safety](../../../../ai-engineering/09-safety-and-security/README.md) pillars; this guide is the *process*.
 
 ## 1. The five-step process (45-55 min, ~8 min/step)
 
@@ -10,6 +10,7 @@ The method for the highest-weight technical round. Domain content lives in the [
 | **Requirements split** | Functional (multi-turn? follow-ups? summarization?) vs non-functional (latency, consistency, scale, security). Write the non-functionals down — they're the trade-off axes. | 5 min |
 | **Design** | Components, data flow, APIs. Connect every choice back to a requirement, out loud. Draw the reference architecture (§3) and customize. | 15 min |
 | **Identify shortcomings** | Name your design's weaknesses before the interviewer does. Propose what changes under different constraints. | 8 min |
+| **Iterate** | Curveballs test adaptability, so expect to revisit options and converge. If a new requirement changes the pick, say which option now wins and why. | Throughout |
 | **Close with measurement** | Success metrics with numbers + future improvements. Never stop at the design. | 5 min |
 
 ### The two opening questions
@@ -58,7 +59,7 @@ with RAG for policy lookup). Name the primary spine, note the secondary, design 
 
 Walking a spine node-by-node — the fork, the discriminator question you ask aloud, what
 breaks first, what changes at 10× — is the
-[decision tree](../../guides/9-system-design/04-decision-tree.md). Drill it there; this
+[decision tree](decision-tree.md). Drill it there; this
 file is the process wrapper around it.
 
 ## 3. The LLM-system reference architecture (draw in under 3 min)
@@ -85,7 +86,7 @@ For each box, know its **failure mode** and its **scaling story**.
 
 Lookup by component name. When you need *"which option do I pick and why"* rather than
 *"where do I read about this"*, use the
-[decision tree](../../guides/9-system-design/04-decision-tree.md) instead — same
+[decision tree](decision-tree.md) instead — same
 components, organized by the question you're being asked.
 
 | Component | Study guide | Example |
@@ -115,7 +116,7 @@ components, organized by the question you're being asked.
 | Denial-of-wallet | Unbounded agent loops | Circuit breakers, per-user token quotas, max-step limits |
 | Embedder cold start | Serverless spin-up loads model (30-60s) | Warm pools, min-instances=1, API-based embeddings |
 | Checkpointer mismatch | MemorySaver in multi-worker deploy → lost state | Postgres checkpointer, topology-aligned state store |
-| Trace storage growth | 100% tracing at scale → storage/cost explosion | Sample metadata 100%, full text 10-20%, quality scores 1-5% |
+| Trace storage growth | 100% tracing at scale → storage/cost explosion | Keep metadata for every trace; sample full text and quality scoring, and pick the rates from your budget |
 | Knowledge graph staleness | Graph not updated after data change → wrong structured answers | Atomic pipeline (train + graph update in same transaction) |
 
 ### Failure modes
@@ -148,7 +149,7 @@ Future improvements list (show you think beyond MVP):
 - Feedback loop from thumbs-down to eval set
 
 One cost line lands well:
-> "At this scale I'd revisit fine-tuning autocomplete — roughly $30K/month off the API bill."
+> "At this scale I'd revisit fine-tuning autocomplete", followed by the figure you worked out for this design, with its volume and price assumptions.
 
 ## 6. Drills (systems you can already speak to)
 
