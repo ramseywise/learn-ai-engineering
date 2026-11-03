@@ -21,27 +21,27 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 FAMILIES = {
     "bolt": {
         "names": ["hex bolt", "hexagon screw", "hex cap screw", "bolt hex"],
-        "dims": {"d": [6, 8, 10, 12, 16], "l": [20, 30, 40, 50, 60, 80]},
+        "dims": {"d": [5, 6, 8, 10, 12, 14, 16], "l": [16, 20, 25, 30, 40, 50, 60, 70, 80]},
         "render": lambda v: f"M{v['d']}x{v['l']}",
         "critical": {"grade": {"8.8": ["8.8", "cl 8.8"], "10.9": ["10.9", "cl 10.9"],
                                "a2": ["a2-70", "stainless a2", "1.4301"], "a4": ["a4-80", "stainless a4", "1.4401"]}},
     },
     "bearing": {
         "names": ["ball bearing", "deep groove bearing", "bearing dgbb", "radial ball brg"],
-        "dims": {"d": [20, 25, 30, 35, 40], "l": [205, 206, 207, 208]},
+        "dims": {"d": [15, 20, 25, 30, 35, 40], "l": [203, 204, 205, 206, 207, 208]},
         "render": lambda v: f"{v['l']} bore {v['d']}",
         "critical": {"seal": {"open": ["open", "unsealed"], "2rs": ["2rs", "rubber sealed"], "zz": ["zz", "metal shield"]},
                      "clear": {"c3": ["c3", "clearance c3"], "cn": ["cn", "normal clearance"]}},
     },
     "oring": {
         "names": ["o-ring", "o ring", "oring seal", "toric seal"],
-        "dims": {"d": [10, 16, 25, 40, 63], "l": [2, 3, 4, 5]},
+        "dims": {"d": [10, 12, 16, 20, 25, 32, 40, 63], "l": [1, 2, 3, 4, 5]},
         "render": lambda v: f"{v['d']}x{v['l']}",
         "critical": {"mat": {"nbr": ["nbr", "nitrile"], "fkm": ["fkm", "viton"], "epdm": ["epdm", "ethylene propylene"]}},
     },
     "valve": {
         "names": ["gate valve", "valve gate", "wedge gate valve", "isolation valve"],
-        "dims": {"d": [25, 50, 80, 100], "l": [150, 200, 250]},
+        "dims": {"d": [25, 32, 50, 65, 80, 100], "l": [130, 150, 180, 200, 250]},
         "render": lambda v: f"DN{v['d']} L{v['l']}",
         "critical": {"pn": {"pn16": ["pn16", "pn 16"], "pn40": ["pn40", "pn 40"]},
                      "body": {"gg25": ["gg25", "cast iron"], "1.4408": ["1.4408", "stainless body"]}},
@@ -52,9 +52,12 @@ PLANTS = ["north", "south", "east", "west"]
 NOISE = ["pack 10", "pack 100", "new", "spare", "stock", "maint", "urgent", "alt", "ref only"]
 # Spellings an extractor knows. Some in FAMILIES are left out on purpose, so extraction misses them.
 UNKNOWN_TO_EXTRACTOR = {"1.4301", "1.4401", "metal shield", "ethylene propylene", "stainless body"}
+SHAPE = {"bolt": r"\bm\d+x\d+\b", "bearing": r"\b\d{3} bore \d+\b", "oring": r"(?<![\w.])\d+x\d+\b", "valve": r"\bdn\d+ l\d+\b"}
+CODE = re.compile(r"\b\d{2}[a-z]\d{4}\b")
+VENDOR = re.compile("|".join(v.lower() for v in VENDORS))
 
 
-def make_catalogue(seed=0, n_specs=500, missing=.15, typo=.05):
+def make_catalogue(seed=0, n_specs=800, missing=.15, typo=.05, wrong=.02):
     """Return records and parts. Each record's `part` and `spec` are the ground truth."""
     rng = np.random.default_rng(seed)
     specs, seen = [], set()
@@ -86,19 +89,21 @@ def make_catalogue(seed=0, n_specs=500, missing=.15, typo=.05):
     for p in parts.to_dict("records"):
         for _ in range(1 + rng.poisson(1.2)):  # one part, several plants' records: duplicates
             records.append({"record": len(records), "part": p["part"], "spec": p["spec"], "family": p["family"],
-                            "plant": str(rng.choice(PLANTS)), "text": _render(p, rng, missing, typo)})
+                            "plant": str(rng.choice(PLANTS)), "text": _render(p, rng, missing, typo, wrong)})
     return pd.DataFrame(records), parts
 
 
-def _render(p, rng, missing, typo):
+def _render(p, rng, missing, typo, wrong):
     fam = FAMILIES[p["family"]]
     bits = [str(rng.choice(fam["names"])), fam["render"](p)]
     for attr, values in fam["critical"].items():
         if rng.random() > missing:
-            bits.append(str(rng.choice(values[p[attr]])))
+            # A few records state the attribute wrongly, as a mistyped master record does. No rule can see this.
+            value = str(rng.choice([v for v in values if v != p[attr]])) if rng.random() < wrong else p[attr]
+            bits.append(str(rng.choice(values[value])))
     if rng.random() < .7:
         bits.append(p["vendor"])
-    if rng.random() < .5:
+    if rng.random() < .6:
         bits.append(p["code"])
     if rng.random() < .3:
         bits.append(str(rng.choice(NOISE)))
@@ -113,9 +118,10 @@ def _render(p, rng, missing, typo):
 
 
 def extract(text, family):
-    """Critical attributes a rule-based extractor can read. An attribute it can't read comes back as None."""
+    """What a rule-based extractor can read: the dimensions as `shape`, then each critical attribute. Unread is None."""
     low = text.lower()
-    out = {}
+    found = re.search(SHAPE[family], low)
+    out = {"shape": re.sub(r"\s+", " ", found.group(0)) if found else None}
     for attr, values in FAMILIES[family]["critical"].items():
         hits = {canon for canon, spellings in values.items()
                 for s in spellings if s not in UNKNOWN_TO_EXTRACTOR and re.search(rf"(?<![\w.-]){re.escape(s)}(?![\w-])", low)}
@@ -134,15 +140,6 @@ def candidates(records, k=10):
         top = row.indices[np.argsort(-row.data)[:k + 1]]
         pairs.update((min(i, int(j)), max(i, int(j))) for j in top if j != i)
     return np.array(sorted(pairs))
-
-
-def relation(records, left, right):
-    """The true relation of each pair: same part, equivalent, similar, or different."""
-    lf, rf = records.iloc[left], records.iloc[right]
-    same_part = lf.part.values == rf.part.values
-    same_spec = lf.spec.values == rf.spec.values
-    out = np.full(len(left), "different", dtype=object)
-    return out, same_part, same_spec
 
 
 def label_pairs(records, parts, pairs):

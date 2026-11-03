@@ -4,26 +4,22 @@ This file is the master cross-reference for round content. Pointers only — go 
 
 ---
 
-## Internal: Study guides
+## Internal: Pillar notes
 
-The domain study guides are the primary content source for this round. Each guide's question bank IS the drill set for its domain.
+The pillar notes are the primary content source for this round, and their `Interview checklist` sections are the drill set for each domain.
 
-| Guide | What it covers for this round |
+| Pillar | What it covers for this round |
 |-------|-------------------------------|
-| `transformers-attention` | Attention mechanism, multi-head attention, positional encoding, transformer architecture. The LLM fundamentals Q1 backbone. |
-| `hallucination-and-reliability` | Hallucination mechanisms, citation fabrication, mitigation strategies (RAG grounding, verifier agents, constrained decoding). Q2. |
-| `rag` | Full RAG pipeline, chunking strategies, hybrid search, reranking, CRAG/self-RAG, eval (RAGAS). Q8–12 source. |
-| `fine-tuning` | SFT, LoRA/QLoRA, RLHF, DPO, when fine-tuning vs RAG. Q3, Q4 depth. |
-| `alignment` | RLHF vs DPO, reward modeling, PPO instabilities, IPO/ORPO variants. Q4 source. |
-| `prompt-engineering` | CoT, zero-shot CoT, few-shot CoT, self-consistency. Q6 source. |
-| `inference-and-sampling` | Temperature, top-p, top-k, beam search, nucleus sampling. Q7 source. |
-| `context-engineering` | Context window management, lost-in-the-middle, prompt caching, token economics, context ordering. Q5, Q24–26 source. |
-| `agents` | Workflow vs agent, tool design, loop engineering, multi-agent patterns. Q13–16 source. |
-| `evals` | LLM-as-judge, RAGAS, golden sets, online vs offline eval, calibration. Q17–20 source. |
-| `security` | Prompt injection, PII handling, trust boundaries, least-privilege tool design. Q21–23 source. |
-| `ml-fundamentals` | Bias-variance, precision-recall, regularization, cross-validation. Q27–30 source. |
-| `1-foundations` | [classical ML](../../../../data-science/01-classical-ml/README.md): spoken answers to 18 ML Fundamentals questions, plus metrics, imbalance, calibration, drift. |
-| `11-stats-experimentation` | [experimentation](../../../../data-analytics/03-experimentation-and-causality/README.md): distributions, intervals, p-values, power, A/B design, CUPED, peeking, multiple comparisons, Bayesian A/B. The DS stats screen. |
+| [LLM fundamentals](../../../../generative-ai/01-llm-fundamentals/README.md) | Attention, positional encoding, hallucination, sampling, fine-tuning. Q1-Q4, Q7. |
+| [RL](../../../../generative-ai/05-RL/README.md) | RLHF, reward modeling, PPO. Q4. |
+| [prompting](../../../../ai-engineering/01-prompt-engineering/README.md) | CoT and self-consistency. Q6. |
+| [RAG and retrieval](../../../../generative-ai/02-rag-retrieval/README.md) | Pipeline, chunking, hybrid search, reranking, RAG eval. Q8-Q12. |
+| [context](../../../../ai-engineering/02-context-engineering/README.md) | Window management, lost in the middle, prompt caching, token economics. Q5, Q24-Q26. |
+| [harness](../../../../ai-engineering/03-harness-engineering/README.md) and [graphs](../../../../ai-engineering/05-graph-engineering/README.md) | Workflow vs agent, tool design, multi-agent patterns. Q13-Q16. |
+| [eval](../../../../generative-ai/08-eval/README.md) | LLM as judge, golden sets, online vs offline eval, calibration. Q17-Q20. |
+| [safety and security](../../../../ai-engineering/09-safety-and-security/README.md) | Prompt injection, PII, trust boundaries, least privilege. Q21-Q23. |
+| [classical ML](../../../../data-science/01-classical-ml/README.md) | Bias-variance, precision-recall, regularization, cross-validation. Q27-Q30. |
+| [experimentation](../../../../data-analytics/03-experimentation-and-causality/README.md) | Distributions, intervals, p-values, A/B tests. |
 
 ---
 

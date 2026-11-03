@@ -9,8 +9,13 @@ sources:
   - practice/matching.py (generated ledger)
   - https://arxiv.org/abs/1911.09798
   - https://arxiv.org/abs/2004.00584
+  - https://arxiv.org/abs/2205.05889
+  - https://arxiv.org/abs/2301.09521
+  - https://arxiv.org/abs/2406.15015
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC3531800/
+  - practice/parts_catalogue.py (generated catalogue)
 confidence: high
-cleaned: 2026-11-02
+cleaned: 2026-11-03
 ---
 
 # Entity matching and learning to rank
@@ -316,6 +321,87 @@ LambdaMART margin over second    coverage at precision: 0.99->0.685  0.98->0.715
 
 Choosing where to stand on that curve is a business decision based on the price of a wrong link and the price of review. That's the subject of [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md). The corrections people make in the review queue become your next training labels, with the selection bias that [DS 01/14](../../01-classical-ml/notes/14-learning-from-corrections.md) measures.
 
+## Splitting pairs without leaking the answer
+
+We split the ledger by time because production meets tomorrow's bank lines. Catalogue matching needs more care, because the thing you hold out is a pair and each record can sit in many pairs. Give a split pair A-B to training and B-C to test, and A-C is implied before the model reads a word.
+
+The generated catalogue in [`practice/parts_catalogue.py`](../practice/parts_catalogue.py) has this shape. A **record** is one plant's line, a **part** is one maker's product, and a **spec** is what a part must meet. Five seeds give about 1,700 records and 13,000 candidate pairs each, about 8% of them the same part. We train on one catalogue, then score a new one with new codes from the same generator. That new catalogue is the truth a split is trying to predict. One model sees similarity features, such as cosine and whether two codes agree, but never which code. The other sees which words each record holds, so it can memorise codes.
+
+```text
+--- does the split tell the truth? target: same part
+                                      f1_estimate  f1_truth  base_rate
+similarity features random pairs            0.793     0.779      0.085
+token identity      random pairs            0.489     0.239      0.085
+token identity      parts disjoint          0.548     0.466      0.104
+
+--- a matcher that reads nothing: close the training labels, predict same group. No text, no model
+              precision  recall     f1  base_rate
+random pairs        1.0   0.315  0.478      0.085
+```
+
+A random split told the token model it scored 0.489, and on new parts it scored 0.239 (standard deviations 0.050 and 0.102 over seeds). A matcher with no model at all, joining training labels into groups, scored 0.478 on that same test. Any score near that line is mostly telling you the labels connect. The similarity model lost only 0.014, so a leak depends on the features as well as the split.
+
+Holding out whole parts narrowed the token model's gap, and also gave a model and threshold that did better on the new catalogue, 0.466 against 0.239. Its test base rate differs, so read that gap as approximate. Splitting by record alone showed us nothing, as only 3.1% of its test pairs matched.
+
+Published benchmarks show the same pattern on real data:
+
+- [Wang et al.](https://arxiv.org/abs/2205.05889) built a product corpus and sampled 250 training clusters and 100 held out. At 1:3 mismatches, text only, Ditto's F1 fell from 93.06 when all test records were seen in training to 67.82 when they came from unseen entities. They found 96% to 100% of test records in abt-buy, amazon-google and dblp-acm already appeared in training.
+- [WDC Products](https://arxiv.org/abs/2301.09521) compared seen and unseen products at 50% corner cases and the medium training set, with 500 products per split. Ditto fell from 79.16 to 70.24, word co-occurrence from 58.07 to 29.70, and Magellan, built on similarity features, stayed level at 35.83 and 36.61. Its seen split shares products but no offers, so we'd expect it to leak less than a random pair split.
+
+The fix, in order:
+
+1. **Close the labels first.** Build connected components over every match label you have, on all the data, and treat each component as one group. This is `GroupKFold` from [Classical ML](../../01-classical-ml/notes/09-training-and-tuning.md#when-to-change-the-folds), and the group is found, not given.
+2. **Assign groups to sides, then block inside each side.** Blocking after the split keeps the base rate from being an artefact of the pairs you dropped.
+3. **Check for near-duplicates across the sides**, as in [failure modes](../../../generative-ai/08-eval/notes/12-failure-modes.md). This step is borrowed reasoning: we found no entity-matching study that measures it, and none comparing time splits with entity-disjoint splits.
+
+Which split is honest depends on what production will meet. If a matcher only ever sees known parts, a seen-entity score may be the right one, as [Park and Marcotte](https://pmc.ncbi.nlm.nih.gov/articles/PMC3531800/) say of protein pairs, provided you state the limit. Report both when new entities will come.
+
+**Closing predictions is a different test from scoring pairs.** Merging matched records in production runs closure on the model's errors too, and one bad pair joins two groups:
+
+```text
+--- closing the predictions, similarity model, new catalogue
+               pair_precision  pair_recall  pair_f1  group_precision  group_recall  group_f1  largest_group  true_largest
+best pair F1            0.590        0.957    0.728            0.108         0.861     0.186          123.6           7.2
+stricter, .9            0.920        0.645    0.757            0.831         0.543     0.656            9.2           7.2
+stricter, .99           0.985        0.507    0.669            0.974         0.389     0.555            6.4           7.2
+```
+
+The threshold chosen for pair F1 gives a group F1 of 0.186 and one group of about 124 records, when the largest true group has about 7. We picked the stricter thresholds by hand, so tune on group scores if you merge. [GraLMatch](https://arxiv.org/abs/2406.15015) reports the same fall on real company records with DistilBERT: pairwise F1 96.53, group F1 56.92 (±38.6) before its graph cleanup and 91.64 after. Its securities data shows no such fall.
+
+## Similar is not interchangeable
+
+Two records can describe the same part, two makers' parts that meet one spec, or two parts of one size that differ in material. Only the first two are safe to swap, and text similarity rewards all three. Most specs in the catalogue have a sibling that differs in one critical attribute, such as an NBR o-ring beside an FKM one. We call such a pair **similar**, and it's the unsafe mistake.
+
+Each threshold here is set on validation for 90% recall of interchangeable pairs:
+
+```text
+--- three targets, new catalogue
+                        recall  precision  unsafe_share  flagged
+cosine only              0.944      0.145         0.086  12509.0
+taught same shape        0.903      0.756         0.222   2279.8
+taught interchangeable   0.902      0.793         0.180   2172.0
+```
+
+The target is a decision you make when you write the labels. Teaching the right one moved the unsafe share from 22.2% to 18.0% of proposals. That's still too high to act on, because when a record leaves out its material no score can see the clash.
+
+So the score proposes and extracted facts decide. A rule reads the dimensions and critical attributes from both records: any clash rejects, all read and agreeing accepts, and anything unread goes to a person.
+
+```text
+--- the interchangeable model proposes, the rule routes. Mean pairs per new catalogue
+                pairs  interchangeable  unsafe
+accept          936.6            914.2    22.4
+review         1201.0            780.2   371.6
+reject           34.4             23.8     1.6
+not proposed  11665.4            188.4   850.8
+```
+
+Unsafe pairs in the accept pile fall to 2.4%, and the price is a review queue larger than that pile. Two details matter more:
+
+- **The accepted unsafe pairs come from the data.** Rerun the rule with no mistyped records and all 23 of the unsafe accepts it makes across all candidates disappear (`mistyped_rate` in the lab, set at 2%). A rule can't see through a wrong master record, so sample the accept pile as well.
+- **Vetoes here were mostly wrong.** Of 34 rejected proposals, 24 were interchangeable. The model already had attribute clashes as features, so what reached the veto was largely mistyped records. A hard rule on top keeps its place because it's explainable and can't drift, as [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md#shadow-and-canary) argues for limits on real-world actions, but measure what it costs.
+
+The costs aren't symmetric, since a wrongly swapped seal can stop a plant and a missed swap costs a duplicate stock line. Price the routes with [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md#price-each-route-and-the-thresholds-follow). All these numbers come from one generator whose 2% mistype rate and 15% missing rate we chose, so the shape carries over and the sizes don't.
+
 ## Pitfalls
 
 | Symptom | Cause | Fix |
@@ -329,6 +415,9 @@ Choosing where to stand on that curve is a business decision based on the price 
 | Scores from one bank line are compared with another's | A ranker only promises order within a query | Abstain on a calibrated probability or on the margin, and check it on a coverage curve |
 | A one-to-one constraint lowers the score | Part payments share an invoice, so the constraint is false for them | Check a constraint against the real shape of the data, kind by kind |
 | A test that mixes past and future | A random split puts a supplier's later invoices in training, which production never has | Split by time, as in [Time series ML](01-time-series-ml.md) |
+| A matcher scores well, then drops on a new catalogue | Random pair splits let test pairs connect to training labels | Close the labels, split whole groups, then block inside each side. Check against a matcher that only joins training labels |
+| Merged groups balloon to a hundred records | The threshold was tuned on pair F1, and closure chains the errors | Tune on group scores if you merge. Ours fell from 0.728 pair F1 to 0.186 group F1 |
+| Look-alike parts get swapped | The labels taught similarity, or a record left the attribute out | Label interchangeability, and send any pair with an unread critical attribute to a person |
 | An excellent NDCG, all from one feature | A label-derived field leaked in, such as a "paid date" on the invoice | Build features only from what's known when the bank line arrives, then remove each group in turn and see what it's worth |
 
 ## Try it
@@ -376,6 +465,23 @@ Recall collapses below 90 days because the window is counted from the *issue* da
 <details><summary>Answer</summary>
 
 Margin: $0.685 \times 866 \approx 593$ lines. Top score: $0.403 \times 866 \approx 349$. That's 244 more lines, or 28.2 points of coverage. Per thousand lines, that's 282 fewer reviews, which at 3 minutes is about 14 hours of review saved, from one extra subtraction on scores you already had. The 3 minutes is an assumption to replace with your own figure.
+
+</details>
+
+4. **What does a sparse record cost?** Edit nothing in the rule, and generate catalogues where records omit each critical attribute 0%, 15% and 30% of the time. What happens to the accept pile, and does it get less safe? Run [`practice/04_part_pairs_lab.py`](../practice/04_part_pairs_lab.py).
+
+<details><summary>Answer</summary>
+
+```text
+--- rules alone, mean over five new catalogues
+         accepted  to_review  recall_in_accept  unsafe_in_accept
+missing
+0.00       1430.6      699.6             0.725              40.2
+0.15        960.0     1621.2             0.491              23.2
+0.30        596.8     2231.6             0.326              15.8
+```
+
+Doubling the missing rate from 15% to 30% takes the share of interchangeable pairs you can accept from 49% to 33%, and the queue grows by more than a third. The unsafe count falls only because fewer pairs get accepted at all. At 0% missing it's highest, because every mistyped attribute is now read and believed.
 
 </details>
 

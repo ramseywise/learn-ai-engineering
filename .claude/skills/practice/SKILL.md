@@ -58,8 +58,8 @@ make crosswalk
 ```
 
 `make crosswalk` validates units and links and regenerates `practice/CROSSWALK.md`. Fix failures before going further.
-`make drill-check` applies the schema to files under a `drills/` folder. It only checks that a round file parses, so a
-round example is held to the schema by your reading alone.
+`make drill-check` applies the schema only to markdown under a `drills/` folder. It doesn't check a round's markdown,
+so a round file is held to this skill by your reading and the reviewer.
 
 ## Step 6 — Review
 

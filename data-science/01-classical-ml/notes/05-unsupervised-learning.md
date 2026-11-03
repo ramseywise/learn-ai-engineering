@@ -640,7 +640,7 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 | What is collaborative filtering? | Low-rank factorisation of the ratings matrix fitted on observed entries, learning item and user vectors |
 | How do you pick k for a clustering? | Measure, then expect disagreement. On the music library BIC is lowest at 11 and silhouette peaks at 2 or 3. The project's k=8 matches its eight taxonomy groups, which is a product reason and should be stated as one. |
 | When do you use unsupervised rather than supervised learning? | When there is no ground truth to score against. It is used most for exploration and as preprocessing for a supervised model, where the downstream score does give feedback. |
-| How much can scaling change a result? | A lot for a distance or kernel model. A kernel SVM on breast cancer scores 0.63 unscaled, 0.97 with `MinMaxScaler` and 0.96 with `StandardScaler`. |
+| How much can scaling change a result? | A lot for a distance model. On the music library, k-means clusters on raw features match clusters on duration alone at ARI 0.988, and at 0.072 once the features are scaled. |
 
 ## Next
 

@@ -18,47 +18,49 @@ sys.path.insert(0, str(Path(__file__).parent))
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from scipy.sparse import csr_matrix, hstack
+from scipy.sparse import hstack
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 
-from parts_catalogue import FAMILIES, candidates, components, extract, label_pairs, make_catalogue, pair_scores
+from parts_catalogue import CODE, VENDOR, candidates, components, extract, label_pairs, make_catalogue, pair_scores
 
 warnings.filterwarnings("ignore")
-pd.set_option("display.width", 140)
+pd.set_option("display.width", 160)
 SEEDS = range(5)
 GBM = dict(objective="binary", num_leaves=31, learning_rate=.05, min_data_in_leaf=10, verbosity=-1, deterministic=True,
            force_row_wise=True, num_threads=4)
 
 
-def build(seed):
-    records, parts = make_catalogue(seed)
+def build(seed, **kwargs):
+    records, parts = make_catalogue(seed, **kwargs)
     return records, parts, label_pairs(records, parts, candidates(records))
 
 
-def word_tokens(s):
-    return set(s.lower().split())
+def side(records, parts, keep):
+    """One side of a split: its own records, re-blocked inside the side, as production would see them."""
+    sub = records[keep].reset_index(drop=True)
+    return sub, label_pairs(sub, parts, candidates(sub))
 
 
 def similarity_features(records, pairs):
-    """Features that describe how alike two records are. No token's identity gets through."""
-    vec = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), sublinear_tf=True)
-    X = vec.fit_transform(records.text)
+    """How alike two records are. Whether a code agrees gets through; which code it is does not."""
+    X = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), sublinear_tf=True).fit_transform(records.text)
     cos = np.asarray(X[pairs.left.values].multiply(X[pairs.right.values]).sum(1)).ravel()
-    rows = []
-    texts = records.text.values
-    fams = records.family.values
+    texts, fams, rows = records.text.str.lower().values, records.family.values, []
     for l, r in zip(pairs.left.values, pairs.right.values):
-        a, b = word_tokens(texts[l]), word_tokens(texts[r])
-        ea, eb = extract(texts[l], fams[l]), extract(texts[r], fams[r]) if fams[l] == fams[r] else {}
-        agree = sum(1 for k in ea if ea[k] and eb.get(k) == ea[k])
-        clash = sum(1 for k in ea if ea[k] and eb.get(k) and eb[k] != ea[k])
-        rows.append((len(a & b) / max(len(a | b), 1), len(a & b), fams[l] == fams[r], agree, clash))
+        a, b = set(texts[l].split()), set(texts[r].split())
+        ca, cb, va, vb = set(CODE.findall(texts[l])), set(CODE.findall(texts[r])), set(VENDOR.findall(texts[l])), set(VENDOR.findall(texts[r]))
+        same_family = fams[l] == fams[r]
+        ea, eb = extract(texts[l], fams[l]), extract(texts[r], fams[r]) if same_family else {}
+        known = [k for k in ea if ea[k] and eb.get(k)]
+        rows.append((len(a & b) / max(len(a | b), 1), same_family, sum(ea[k] == eb[k] for k in known),
+                     sum(ea[k] != eb[k] for k in known), bool(ca & cb), bool(ca and cb and not ca & cb),
+                     bool(va & vb), bool(va and vb and not va & vb)))
     return np.column_stack([cos, np.array(rows, float)])
 
 
 class Similarity:
-    """Gradient boosting on how alike the two records are."""
     name = "similarity features"
 
     def fit(self, records, pairs, y):
@@ -70,12 +72,12 @@ class Similarity:
 
 
 class Tokens:
-    """Logistic regression on which words each record holds. Part codes count as words, so it can memorise."""
+    """Logistic regression on which words each record holds. Part codes are words, so it can memorise them."""
     name = "token identity"
 
     def fit(self, records, pairs, y):
-        self.vec = TfidfVectorizer(token_pattern=r"\S+", lowercase=True, min_df=1)
-        self.vec.fit(records.text)
+        seen = np.unique(pairs[["left", "right"]].values)
+        self.vec = TfidfVectorizer(token_pattern=r"\S+").fit(records.text.values[seen])
         self.model = LogisticRegression(C=10, max_iter=300).fit(self._x(records, pairs), y)
         return self
 
@@ -89,29 +91,32 @@ class Tokens:
 
 
 def best_threshold(y, s):
-    grid = np.quantile(s, np.linspace(.01, .99, 99))
+    grid = np.unique(np.quantile(s, np.linspace(.01, .99, 99)))
     return max(grid, key=lambda t: pair_scores(y, s >= t)[2])
 
 
-def splits(pairs, records, rng):
-    """Index arrays for train, validation and test under three ways to split the same candidate pairs."""
-    n = len(pairs)
-    out = {}
-    # 1. Random over pairs, what most public benchmarks do.
-    u = rng.random(n)
-    out["random pairs"] = (u < .6, (u >= .6) & (u < .7), u >= .7)
-    # 2. Each record on one side only. A pair crossing sides is dropped.
-    side = rng.choice(3, len(records), p=[.6, .1, .3])
-    a, b = side[pairs.left.values], side[pairs.right.values]
-    out["records disjoint"] = (((a == 0) & (b == 0)), ((a == 1) & (b == 1)), ((a == 2) & (b == 2)))
-    # 3. Each connected group of matches on one side only. Here a group is a spec with all its parts and records.
-    specs = records.spec.unique()
-    side_of = dict(zip(specs, rng.choice(3, len(specs), p=[.6, .1, .3])))
-    side = records.spec.map(side_of).values
-    a, b = side[pairs.left.values], side[pairs.right.values]
-    out["groups disjoint"] = (((a == 0) & (b == 0)), ((a == 1) & (b == 1)), ((a == 2) & (b == 2)))
-    return out
+def three_sides(records, parts, pairs, how, rng):
+    """(train, validation, test), each a (records, pairs) tuple, under one way of splitting."""
+    if how == "random pairs":
+        u = rng.random(len(pairs))
+        return [(records, pairs[m].reset_index(drop=True)) for m in (u < .6, (u >= .6) & (u < .7), u >= .7)]
+    if how == "records disjoint":
+        where = rng.choice(3, len(records), p=[.6, .1, .3])
+    else:  # every record of a part stays together, which is what closing the same-part labels produces
+        ids = records.part.unique()
+        where = records.part.map(dict(zip(ids, rng.choice(3, len(ids), p=[.6, .1, .3])))).values
+    return [side(records, parts, where == i) for i in range(3)]
 
+
+def same(pairs):
+    return (pairs.relation == "same_part").values
+
+
+def good(pairs):
+    return pairs.relation.isin(["same_part", "equivalent"]).values
+
+
+SPLITS = ["random pairs", "records disjoint", "parts disjoint"]
 
 # %%
 print("--- the catalogue, seed 0")
@@ -121,96 +126,85 @@ print(pairs.relation.value_counts().to_string())
 print(records.sample(6, random_state=1)[["part", "spec", "text"]].to_string(index=False))
 
 # %%
-print("\n--- is the matcher's score honest? duplicate detection: is this the same part?")
+print("\n--- does the split tell the truth? target: same part. truth = a new catalogue, new codes, same generator")
 rows = []
 for seed in SEEDS:
     records, parts, pairs = build(seed)
-    fresh_records, fresh_parts, fresh_pairs = build(seed + 1000)  # a catalogue nothing has seen: the truth
-    y = (pairs.relation == "same_part").values
-    fresh_y = (fresh_pairs.relation == "same_part").values
-    rng = np.random.default_rng(seed)
-    for split_name, (tr, va, te) in splits(pairs, records, rng).items():
-        for model_cls in (Similarity, Tokens):
-            m = model_cls().fit(records, pairs[tr], y[tr])
-            t = best_threshold(y[va], m.score(records, pairs[va]))
-            estimate = pair_scores(y[te], m.score(records, pairs[te]) >= t)[2]
-            if model_cls is Tokens:
-                # the vocabulary came from the old catalogue, so unknown codes count for nothing here, as in production
-                fresh = pair_scores(fresh_y, m.score(fresh_records, fresh_pairs) >= t)[2]
-            else:
-                fresh = pair_scores(fresh_y, m.score(fresh_records, fresh_pairs) >= t)[2]
-            rows.append(dict(seed=seed, split=split_name, model=m.name, estimate=estimate, on_new_catalogue=fresh,
-                             train_pairs=int(tr.sum()), test_pairs=int(te.sum())))
+    new_records, _, new_pairs = build(seed + 1000)
+    for how in SPLITS:
+        (tr_r, tr_p), (va_r, va_p), (te_r, te_p) = three_sides(records, parts, pairs, how, np.random.default_rng(seed))
+        for cls in (Similarity, Tokens):
+            m = cls().fit(tr_r, tr_p, same(tr_p))
+            t = best_threshold(same(va_p), m.score(va_r, va_p))
+            s, ns = m.score(te_r, te_p), m.score(new_records, new_pairs)
+            rows.append(dict(model=m.name, split=how, auc_estimate=roc_auc_score(same(te_p), s),
+                             auc_truth=roc_auc_score(same(new_pairs), ns),
+                             f1_estimate=pair_scores(same(te_p), s >= t)[2], f1_truth=pair_scores(same(new_pairs), ns >= t)[2],
+                             base_rate=same(te_p).mean(), train_pairs=len(tr_p), test_pairs=len(te_p)))
 res = pd.DataFrame(rows)
-res["optimism"] = res.estimate - res.on_new_catalogue
-print(res.groupby(["model", "split"])[["estimate", "on_new_catalogue", "optimism", "train_pairs", "test_pairs"]]
-      .mean().round(3).to_string())
-print(res.groupby(["model", "split"])[["estimate", "on_new_catalogue"]].std().round(3).to_string())
+res["auc_gap"] = res.auc_estimate - res.auc_truth
+cols = ["auc_estimate", "auc_truth", "auc_gap", "f1_estimate", "f1_truth", "base_rate", "train_pairs", "test_pairs"]
+print(res.groupby(["model", "split"], sort=False)[cols].mean().round(3).to_string())
+print("std over seeds")
+print(res.groupby(["model", "split"], sort=False)[["auc_gap", "f1_estimate", "f1_truth"]].std().round(3).to_string())
 
 # %%
-print("\n--- a matcher that reads nothing: closure over training labels, no text at all")
+print("\n--- a matcher that reads nothing: close the training labels, predict same group. No text, no model")
 rows = []
 for seed in SEEDS:
     records, parts, pairs = build(seed)
-    y = (pairs.relation == "same_part").values
-    rng = np.random.default_rng(seed)
-    for split_name, (tr, va, te) in splits(pairs, records, rng).items():
-        pos = pairs[tr & y]
-        groups = components(len(records), pos.left.values, pos.right.values)
-        pred = groups[pairs[te].left.values] == groups[pairs[te].right.values]
-        p, r, f = pair_scores(y[te], pred)
-        rows.append(dict(split=split_name, precision=p, recall=r, f1=f, base_rate=y[te].mean()))
-print(pd.DataFrame(rows).groupby("split").mean().round(3).to_string())
+    for how in SPLITS:
+        (tr_r, tr_p), _, (te_r, te_p) = three_sides(records, parts, pairs, how, np.random.default_rng(seed))
+        if how == "random pairs":
+            pos = tr_p[same(tr_p)]
+            g = components(len(records), pos.left.values, pos.right.values)
+            pred = g[te_p.left.values] == g[te_p.right.values]
+        else:  # no test record appears in any training pair, so closure has nothing to say
+            pred = np.zeros(len(te_p), bool)
+        p, r, f = pair_scores(same(te_p), pred)
+        rows.append(dict(split=how, precision=p, recall=r, f1=f, base_rate=same(te_p).mean()))
+print(pd.DataFrame(rows).groupby("split", sort=False).mean().round(3).to_string())
 
 # %%
 print("\n--- closing the predictions: pair scores against group scores on a new catalogue, similarity model")
 rows = []
 for seed in SEEDS:
     records, parts, pairs = build(seed)
-    fresh_records, fresh_parts, fresh_pairs = build(seed + 1000)
-    y = (pairs.relation == "same_part").values
-    fy = (fresh_pairs.relation == "same_part").values
-    tr, va, _ = splits(pairs, records, np.random.default_rng(seed))["groups disjoint"]
-    m = Similarity().fit(records, pairs[tr], y[tr])
-    t_pair = best_threshold(y[va], m.score(records, pairs[va]))
-    s = m.score(fresh_records, fresh_pairs)
-    # score every same-part pair in the catalogue, including ones blocking never proposed
-    n = len(fresh_records)
-    part = fresh_records.part.values
-    true_all = sum(c * (c - 1) // 2 for c in np.bincount(part))
-    for name, t in [("pairwise best", t_pair), ("stricter", np.quantile(s[s >= t_pair], .5))]:
-        chosen = fresh_pairs[s >= t]
-        direct = pair_scores(fy, s >= t)
-        g = components(n, chosen.left.values, chosen.right.values)
+    new_records, _, new_pairs = build(seed + 1000)
+    (tr_r, tr_p), (va_r, va_p), _ = three_sides(records, parts, pairs, "parts disjoint", np.random.default_rng(seed))
+    m = Similarity().fit(tr_r, tr_p, same(tr_p))
+    best = best_threshold(same(va_p), m.score(va_r, va_p))
+    s = m.score(new_records, new_pairs)
+    part = new_records.part.values
+    all_true = int((np.bincount(part) * (np.bincount(part) - 1) // 2).sum())
+    for name, t in [("best pair F1", best), ("stricter, .9", .9), ("stricter, .99", .99)]:
+        chosen = new_pairs[s >= t]
+        direct = pair_scores(same(new_pairs), s >= t)
+        g = components(len(new_records), chosen.left.values, chosen.right.values)
         sizes = np.bincount(g)
         implied = int((sizes * (sizes - 1) // 2).sum())
         tab = pd.crosstab(g, part).values
         tp = int((tab * (tab - 1) // 2).sum())
-        p, r = tp / max(implied, 1), tp / true_all
-        rows.append(dict(threshold=name, pair_precision=direct[0], pair_recall=direct[1], pair_f1=direct[2],
-                         group_precision=p, group_recall=r, group_f1=2 * p * r / max(p + r, 1e-12),
-                         largest_group=sizes.max(), true_largest=np.bincount(part).max()))
-print(pd.DataFrame(rows).groupby("threshold").mean().round(3).to_string())
+        gp, gr = tp / max(implied, 1), tp / all_true
+        rows.append(dict(threshold=name, pair_precision=direct[0], pair_recall=direct[1], pair_f1=direct[2], group_precision=gp,
+                         group_recall=gr, group_f1=2 * gp * gr / max(gp + gr, 1e-12), largest_group=sizes.max(),
+                         true_largest=np.bincount(part).max()))
+print(pd.DataFrame(rows).groupby("threshold", sort=False).mean().round(3).to_string())
 
 # %%
-print("\n--- three targets: same shape, interchangeable, and safe to act on. Scored on a new catalogue")
+print("\n--- three targets, each model's threshold set on validation for 90% recall of interchangeable pairs. New catalogue")
 
 
-def rule_route(records, pairs):
-    """accept, review or reject from extracted critical attributes alone."""
-    out = []
-    t, f = records.text.values, records.family.values
+def route(records, pairs):
+    """accept, review or reject from the extracted shape and critical attributes alone."""
+    t, f, out = records.text.values, records.family.values, []
     for l, r in zip(pairs.left.values, pairs.right.values):
         if f[l] != f[r]:
             out.append("reject")
             continue
         ea, eb = extract(t[l], f[l]), extract(t[r], f[r])
-        if any(ea[k] and eb[k] and ea[k] != eb[k] for k in ea):
-            out.append("reject")
-        elif all(ea[k] and eb[k] for k in ea):
-            out.append("accept")
-        else:
-            out.append("review")
+        out.append("reject" if any(ea[k] and eb[k] and ea[k] != eb[k] for k in ea)
+                   else "accept" if all(ea[k] and eb[k] for k in ea) else "review")
     return np.array(out)
 
 
@@ -221,33 +215,46 @@ def threshold_for_recall(y, s, recall=.9):
 rows, routes = [], []
 for seed in SEEDS:
     records, parts, pairs = build(seed)
-    fresh_records, fresh_parts, fresh_pairs = build(seed + 1000)
-    good = pairs.relation.isin(["same_part", "equivalent"]).values
-    shape = pairs.relation.isin(["same_part", "equivalent", "similar"]).values
-    fgood = fresh_pairs.relation.isin(["same_part", "equivalent"]).values
-    unsafe = (fresh_pairs.relation == "similar").values
-    tr, va, _ = splits(pairs, records, np.random.default_rng(seed))["groups disjoint"]
-    # cosine alone, then a model taught the wrong target, then one taught the right target
-    vec = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), sublinear_tf=True).fit(fresh_records.text)
-    X = vec.transform(fresh_records.text)
-    cos = np.asarray(X[fresh_pairs.left.values].multiply(X[fresh_pairs.right.values]).sum(1)).ravel()
-    m_shape = Similarity().fit(records, pairs[tr], shape[tr])
-    m_good = Similarity().fit(records, pairs[tr], good[tr])
-    scores = {"cosine only": cos, "taught same shape": m_shape.score(fresh_records, fresh_pairs),
-              "taught interchangeable": m_good.score(fresh_records, fresh_pairs)}
-    for name, s in scores.items():
-        t = threshold_for_recall(fgood, s)
-        pred = s >= t
-        rows.append(dict(model=name, recall=fgood[pred].sum() / fgood.sum(), precision=fgood[pred].mean(),
-                         unsafe_per_1000=1000 * unsafe[pred].mean()))
-    # the model proposes; extracted attributes can veto or send to a person
-    s = scores["taught interchangeable"]
-    pred = s >= threshold_for_recall(fgood, s)
-    route = rule_route(fresh_records, fresh_pairs)
-    decision = np.where(~pred, "reject", np.where(route == "reject", "reject", np.where(route == "accept", "accept", "review")))
-    for d in ("accept", "review", "reject"):
+    new_records, _, new_pairs = build(seed + 1000)
+    new_good = good(new_pairs)
+    unsafe = (new_pairs.relation == "similar").values
+    (tr_r, tr_p), (va_r, va_p), _ = three_sides(records, parts, pairs, "parts disjoint", np.random.default_rng(seed))
+    shape = tr_p.relation.isin(["same_part", "equivalent", "similar"]).values
+    cosine = lambda r, p: similarity_features(r, p)[:, 0]
+    taught_shape, taught_good = Similarity().fit(tr_r, tr_p, shape), Similarity().fit(tr_r, tr_p, good(tr_p))
+    models = {"cosine only": cosine, "taught same shape": taught_shape.score, "taught interchangeable": taught_good.score}
+    for name, score in models.items():
+        t = threshold_for_recall(good(va_p), score(va_r, va_p))
+        pred = score(new_records, new_pairs) >= t
+        rows.append(dict(model=name, recall=new_good[pred].sum() / new_good.sum(), precision=new_good[pred].mean(),
+                         unsafe_share=unsafe[pred].mean(), flagged=pred.sum()))
+    pred = taught_good.score(new_records, new_pairs) >= threshold_for_recall(good(va_p), taught_good.score(va_r, va_p))
+    rule = route(new_records, new_pairs)
+    decision = np.where(~pred, "not proposed", rule)
+    for d in ("accept", "review", "reject", "not proposed"):
         keep = decision == d
-        routes.append(dict(route=d, pairs=keep.sum(), interchangeable=fgood[keep].sum(), unsafe=unsafe[keep].sum()))
-    routes.append(dict(route="vetoed good pairs", pairs=(pred & (route == "reject") & fgood).sum(), interchangeable=0, unsafe=0))
+        routes.append(dict(seed=seed, route=d, pairs=keep.sum(), interchangeable=new_good[keep].sum(), unsafe=unsafe[keep].sum()))
 print(pd.DataFrame(rows).groupby("model", sort=False).mean().round(3).to_string())
-print(pd.DataFrame(routes).groupby("route", sort=False).mean().round(1).to_string())
+print(pd.DataFrame(routes).drop(columns="seed").groupby("route", sort=False).mean().round(1).to_string())
+
+# %%
+print("\n--- who slips through an accept? the same rule on a new catalogue with no mistyped records, seed by seed")
+rows = []
+for seed in SEEDS:
+    for wrong in (.02, 0):
+        new_records, _, new_pairs = build(seed + 1000, wrong=wrong)
+        accept = route(new_records, new_pairs) == "accept"
+        rows.append(dict(mistyped_rate=wrong, accepted=accept.sum(), unsafe=(new_pairs.relation[accept] == "similar").sum()))
+print(pd.DataFrame(rows).groupby("mistyped_rate").mean().round(1).to_string())
+
+# %%
+print("\n--- Try it: how much of the accept pile survives when records leave attributes out? Rules alone, new catalogue")
+rows = []
+for seed in SEEDS:
+    for missing in (0, .15, .3):
+        new_records, _, new_pairs = build(seed + 1000, missing=missing)
+        rule, ok = route(new_records, new_pairs), good(new_pairs)
+        rows.append(dict(missing=missing, accepted=(rule == "accept").sum(), to_review=(rule == "review").sum(),
+                         recall_in_accept=ok[rule == "accept"].sum() / ok.sum(),
+                         unsafe_in_accept=(new_pairs.relation[rule == "accept"] == "similar").sum()))
+print(pd.DataFrame(rows).groupby("missing").mean().round(3).to_string())

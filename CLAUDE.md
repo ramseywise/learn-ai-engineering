@@ -10,8 +10,8 @@ Course repo: curriculum notes, lecture decks, practice drills and the pipeline t
   [pillar-layout.md](.claude/skills/pillar/references/pillar-layout.md).
 - `programming/`: modules with their own notes and decks, plus `programming/drills/`, the drill gym. The root
   `.gitignore` names the drill folders that stay local.
-- `practice/`: interview rounds and the role-to-checklist map. Topic recall lives in the notes. `practice/.gitignore` is a per-file allowlist, so nothing new is tracked
-  until it is listed there. Add a line only after clearing the licence and checking for anything personal.
+- `practice/`: interview rounds and the role-to-checklist map. `practice/.gitignore` is a per-file allowlist, so nothing
+  new is tracked until it is listed there. Add a line only after clearing the licence and checking for anything personal.
 - `scripts/`: deterministic checks and pipelines. `scripts/papers/ledger.jsonl` tracks readings.
   `scripts/review/findings.jsonl` tracks reviewer decisions.
 

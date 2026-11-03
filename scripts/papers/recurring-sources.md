@@ -45,7 +45,7 @@ good, prefer citing the primary source it draws on. Value is coverage and cadenc
 | Route | Where it feeds | What to look for | How |
 |---|---|---|---|
 | `programming` | `programming/` (`PILLARS["programming"]`) | Language and framework release notes, official tutorials, engineering writing on Python, TypeScript, SQL and testing | `web-researcher`, one module at a time. Papers on the same topics still go through `discover.py` with `queries-programming.json` |
-| `interview` | `practice/interviewing/rounds/` and `guides/`; no ledger home | Published interview loops, first-party company engineering pages, rubrics | `web-researcher`, one round at a time. `practice/.gitignore` is an allowlist: clear the licence and check for anything personal before adding a line, and summarize rather than copy question banks |
+| `interview` | `practice/interviewing/rounds/`; no ledger home | Published interview loops, first-party company engineering pages, rubrics | `web-researcher`, one round at a time. `practice/.gitignore` is an allowlist: clear the licence and check for anything personal before adding a line, and summarize rather than copy question banks |
 
 ---
 

@@ -11,6 +11,8 @@ Run everything from the pillar folder, `data-science/05-time-series-and-recommen
 | [`customer-segments-lab/`](customer-segments-lab/README.md) | Synthetic business customers: sort them into cohorts, test whether to trust the cohorts, and forecast each one's cash flow, for [the case in Time series ML](../notes/01-time-series-ml.md#case-forecasting-each-segments-cash-flow) | One to four minutes | See its README, which pins versions |
 | [`04_matching_lab.py`](04_matching_lab.py) | Every number and figure in [Entity matching and learning to rank](../notes/04-entity-matching-and-learning-to-rank.md): blocking, Fellegi-Sunter weights, nine rankers over five ledgers, match errors. Run from `practice/` with `uv run 04_matching_lab.py`, as its packages are declared in the file | About four minutes | `numpy pandas scipy scikit-learn lightgbm matplotlib` |
 | [`04_matching_tryit.py`](04_matching_tryit.py) | The measured answers to that chapter's Try it. `uv run 04_matching_tryit.py`, from `practice/` | A few minutes | `numpy pandas scikit-learn lightgbm` |
+| [`04_part_pairs_lab.py`](04_part_pairs_lab.py) | The numbers in that chapter's sections on splitting pairs and on similar versus interchangeable, including its fourth Try it. `uv run 04_part_pairs_lab.py`, from `practice/` | About a minute | `numpy pandas scipy scikit-learn lightgbm` |
+| [`parts_catalogue.py`](parts_catalogue.py) | Generated parts catalogue with known records, parts and specs, candidate pairs and a rule-based extractor, imported by that lab | | |
 | [`matching.py`](matching.py) | Ledger generator, blocking, pair features and ranking metrics, imported by those two | | |
 | [`movielens.py`](movielens.py) | Shared MovieLens loader, split, metric and EASE, imported by the two recommender labs | | |
 
@@ -27,7 +29,7 @@ uv run --with numpy --with pandas --with scipy --with torch python practice/03_t
 
 ## Data
 
-The ledger in chapter 4 is generated from a seed, with no download. Neither of the two datasets below lives in the repo. The code downloads each to `~/.cache/learn-ai-engineering/` on first use.
+The ledger and the parts catalogue in chapter 4 are generated from a seed, with no download. Neither of the two datasets below lives in the repo. The code downloads each to `~/.cache/learn-ai-engineering/` on first use.
 
 - **Bike Sharing** ([UCI](https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset), CC BY 4.0, 280 KB). Cite Fanaee-T and Gama, 2014.
 - **MovieLens 100K** ([GroupLens](https://grouplens.org/datasets/movielens/100k/), 4.9 MB). Its licence allows research use, forbids redistribution and commercial use, and requires acknowledgement, which is why it is downloaded and not vendored. Cite Harper and Konstan, 2015.
