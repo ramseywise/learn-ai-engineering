@@ -1,3 +1,8 @@
+---
+units:
+  - generative-ai/02-rag-retrieval
+---
+
 # Worked Example: Retrieval → Prompt → Structured Answer (45 min, offline)
 
 > **Constraint note:** written for the **browser-editor, no-AI, no-network** variant — CoderPad/CodeSignal style. Pure stdlib: no `numpy`, no `pydantic`, no API key. If the real assessment offers those libraries, say so and use them; the point of drilling it offline is that you are never blocked by what isn't installed.

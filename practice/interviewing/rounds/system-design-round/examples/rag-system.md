@@ -1,3 +1,9 @@
+---
+units:
+  - generative-ai/02-rag-retrieval
+  - ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md
+---
+
 # Example: Document-QA for a Legal Firm
 
 ## Prompt

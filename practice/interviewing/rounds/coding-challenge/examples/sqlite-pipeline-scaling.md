@@ -1,3 +1,8 @@
+---
+units:
+  - programming/backend-and-system-design/notes/05-estimation-and-scaling.md
+---
+
 # Worked Example: SQLite Data Pipeline → The Scaling Trap (40 min, offline)
 
 > **Constraint note:** `sqlite3` is in the Python standard library — no install, no server, no network. That is exactly why assessments use it, and exactly why the scaling question is coming.

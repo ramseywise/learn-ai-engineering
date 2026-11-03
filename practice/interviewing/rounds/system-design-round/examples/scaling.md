@@ -1,3 +1,9 @@
+---
+units:
+  - ai-engineering/02-context-engineering
+  - ai-engineering/07-inference-engineering
+---
+
 # Example: Scaling a RAG System 100x
 
 ## Prompt

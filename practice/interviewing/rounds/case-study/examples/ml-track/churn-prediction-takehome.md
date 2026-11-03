@@ -1,3 +1,8 @@
+---
+units:
+  - data-science/01-classical-ml
+---
+
 # Worked Example: Churn Prediction Take-Home
 
 **Format:** Take-home, 3-hour timebox

@@ -1,3 +1,8 @@
+---
+units:
+  - programming/backend-and-system-design/notes/02-auth-sessions-jwt-oauth.md
+---
+
 # Worked Example: Auth & API Endpoint (40 min, offline)
 
 > **Constraint note:** pure stdlib — `hmac`, `hashlib`, `secrets`, `base64`, `json`. No PyJWT, no FastAPI, no bcrypt. In production you use the library; the point of writing it by hand once is that you understand what the library is doing when an interviewer asks.

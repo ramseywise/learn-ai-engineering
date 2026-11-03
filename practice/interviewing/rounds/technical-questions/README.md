@@ -1,3 +1,17 @@
+---
+units:
+  - generative-ai/01-llm-fundamentals
+  - generative-ai/05-RL
+  - generative-ai/09-llms-from-scratch
+  - ai-engineering/01-prompt-engineering
+  - data-science/03-nlp
+  - data-science/01-classical-ml
+  - data-science/02-deep-learning
+  - data-analytics/02-probability-and-statistics
+  - data-analytics/03-experimentation-and-causality
+  - data-analytics/04-bayesian-analysis
+---
+
 # Technical Questions — ML/LLM Breadth Round
 
 ## What's tested

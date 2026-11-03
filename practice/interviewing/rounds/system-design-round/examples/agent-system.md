@@ -1,3 +1,13 @@
+---
+units:
+  - generative-ai/03-agentic-foundations
+  - generative-ai/04-agentic-frameworks
+  - generative-ai/07-agentic-applications
+  - ai-engineering/03-harness-engineering
+  - ai-engineering/04-loop-engineering
+  - ai-engineering/05-graph-engineering
+---
+
 # Example: Automated Code Review Agent
 
 ## Prompt

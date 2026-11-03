@@ -1,3 +1,10 @@
+---
+units:
+  - generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md
+  - data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md
+  - data-analytics/05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md
+---
+
 # Case Study Round (live · code test · take-home · Work Trial · presentation/defense)
 
 ## What's tested

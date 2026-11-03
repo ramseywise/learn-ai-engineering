@@ -684,7 +684,6 @@ Improving one often hurts another.
 - Shorter prompts
 - Smaller models
 - Split complex workflows
-- Parallelize tasks
 
 ---
 

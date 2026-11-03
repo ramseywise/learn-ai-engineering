@@ -1,6 +1,6 @@
 ---
 name: drill-reviewer
-description: "Works through one piece of practice material the way a learner would and reports what is wrong: an answer or expected output that is incorrect, a test that passes bad code, a prompt that can't be answered, a difficulty or units field that doesn't match. Runs the code in a temporary copy. Read-only on the repo. Use from /review for drills, coding prompts, seeded-bug problems, MCQs, interview guides and pillar labs. Give it the path only."
+description: "Works through one piece of practice material the way a learner would and reports what is wrong: an answer or expected output that is incorrect, a test that passes bad code, a prompt that can't be answered, a difficulty or units field that doesn't match. Runs the code in a temporary copy. Read-only on the repo. Use from /review for drills, coding prompts, seeded-bug problems, MCQs, interview rounds and pillar labs. Give it the path only."
 tools: Read, Bash, Grep, Glob
 ---
 

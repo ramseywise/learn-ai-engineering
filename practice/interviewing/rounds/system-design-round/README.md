@@ -1,3 +1,17 @@
+---
+units:
+  - programming/backend-and-system-design
+  - data-engineering/01-storage-and-compute-foundations
+  - data-engineering/02-ingest-and-modelling
+  - data-engineering/03-transform-and-orchestrate
+  - data-engineering/04-warehouse-lakehouse-streaming
+  - data-engineering/05-quality-and-observability
+  - data-engineering/06-ml-platform
+  - data-engineering/07-architecture-and-governance
+  - ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md
+  - generative-ai/02-rag-retrieval/notes/07-rag-in-production.md
+---
+
 # System Design Round (ML/LLM/Agent)
 
 ## What's tested

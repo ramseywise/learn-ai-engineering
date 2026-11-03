@@ -1,3 +1,9 @@
+---
+units:
+  - generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md
+  - generative-ai/08-eval/notes/13-case-study-support-agent.md
+---
+
 # Worked Example: Retail Support Automation (Live Case)
 
 **Format:** Live case, 45 minutes

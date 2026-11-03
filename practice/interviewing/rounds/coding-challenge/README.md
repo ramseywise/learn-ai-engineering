@@ -1,3 +1,12 @@
+---
+units:
+  - programming/python
+  - programming/sql
+  - programming/typescript
+  - data-analytics/01-python-for-data-analysis
+  - data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md
+---
+
 # Coding Challenge
 
 **What's tested**: Engineering judgment in motion — reading unfamiliar code, debugging it, structuring a small solution cleanly, and narrating decisions while typing. The 2026 shift is away from algorithm recall toward observable problem-solving process.

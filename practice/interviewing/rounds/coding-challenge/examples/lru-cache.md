@@ -1,3 +1,8 @@
+---
+units:
+  - programming/computer-science/notes/02-data-structures.md
+---
+
 # LRU Cache — Live Coding Walkthrough
 
 **Prompt**: "Implement an LRU (Least Recently Used) cache with `get(key)` and `put(key, value)` operations. Both should run in O(1) time."

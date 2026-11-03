@@ -1,3 +1,8 @@
+---
+units:
+  - generative-ai/02-rag-retrieval
+---
+
 # Worked Example: RAG Pipeline Defense Round
 
 **Format:** Defense round (30–45 min) — you present a take-home RAG system design, then the panel challenges it.

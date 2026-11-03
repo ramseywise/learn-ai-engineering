@@ -1,3 +1,9 @@
+---
+units:
+  - generative-ai/08-eval
+  - generative-ai/06-observability
+---
+
 # Example: Eval Pipeline for an LLM Product
 
 ## Prompt

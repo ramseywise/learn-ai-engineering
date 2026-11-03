@@ -1,3 +1,9 @@
+---
+units:
+  - ai-engineering/09-safety-and-security
+  - generative-ai/03-agentic-foundations/notes/07-guardrails-and-autonomy.md
+---
+
 # Security & Trust Boundaries
 
 ## Example 1: Over-permissioned MCP tool config
