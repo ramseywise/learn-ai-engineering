@@ -7,7 +7,7 @@ sources:
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/rising-wave.md
   - https://dlthub.com/docs/intro
   - https://kafka.apache.org/documentation/
-  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 3"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 3"
   - https://github.com/PacktPublishing/LLM-Engineers-Handbook
   - https://debezium.io/documentation/reference/stable/features.html
   - https://dataintensive.net/
@@ -617,7 +617,7 @@ The zoomcamps ingest tables. An LLM application usually ingests documents: artic
 
 - **Normalize by content type, not by source.** Every crawler emits one of three document classes (article, repository, post), with the source URL kept in metadata. Adding a new site means one new crawler. If each source got its own document class, every downstream layer would need code for it.
 - **Dispatch on the URL's domain, with a fallback.** A registry maps domain patterns to crawler classes. Anything unmatched goes to a generic HTML crawler.
-- **A schemaless store is fine at small scale.** MongoDB as the "warehouse" suits hundreds of heterogeneous text documents. The authors say to move to Snowflake or BigQuery at millions. The feature pipeline reads from this store on its own schedule. The store is the only contract between the two.
+- **A schemaless store is fine at small scale.** MongoDB as the "warehouse" suits hundreds of heterogeneous text documents, and a store that doesn't enforce a schema made development faster (ch. 3). The raw crawl is unstructured text, which is the authors' reason for a NoSQL store in the first place (ch. 2). The authors say to move to Snowflake or BigQuery at millions. The feature pipeline reads from this store on its own schedule. The store is the only contract between the two.
 
 ```python
 # illustrative: from the zoomcamp module; needs the services named in Run labels

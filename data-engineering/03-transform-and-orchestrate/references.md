@@ -14,6 +14,7 @@ cleaned: 2026-11-01
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
 | ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | ch. 10 (workflow schedulers pp. 402-403; replacing outputs and human fault tolerance pp. 413-414; schema on read pp. 415-416), ch. 11 (idempotence p. 478), ch. 12 (end-to-end argument pp. 518-519). Metadata databases and zombie tasks link back to ch. 7-9 through [pillar 01](../01-storage-and-compute-foundations/README.md) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-transform.md), [02](notes/02-orchestrate.md), [04](notes/04-idempotency-and-backfills.md), [05](notes/05-dagster-and-airflow.md) |
+| Iusztin and Labonne, *LLM Engineer's Handbook* ([code](https://github.com/PacktPublishing/LLM-Engineers-Handbook); Packt, 2024) | Ch. 2 (pipelines and steps, glue code, ZenML's stack, alternatives) and ch. 11 (orchestrate from day 0) → [02](notes/02-orchestrate.md). Notes cite it as `(*LLM Engineer's Handbook*, ch. N)` | [Chapter PDFs](../../generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/) | [02](notes/02-orchestrate.md) |
 
 ## Core papers
 

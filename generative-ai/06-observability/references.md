@@ -16,11 +16,12 @@ cleaned: 2026-11-01
 
 ## Books
 
-No book has a chapter on LLM observability that this pillar relies on. These two free chapters supply the general discipline note 06 applies.
+No book has a chapter on LLM observability that this pillar relies on. The two free SRE chapters supply the general discipline note 06 applies, and one Handbook chapter sharpens note 01.
 
 | | Book, chapter | Cost | Notes | Use it for |
 |---|---|---|---|---|
 | ★ | Beyer, Jones, Petoff, Murphy (eds), *Site Reliability Engineering*, [ch 6 Monitoring Distributed Systems](https://sre.google/sre-book/monitoring-distributed-systems/) | Free online | 06 | The four golden signals (latency, traffic, errors, saturation), and why tails matter more than means |
+| | Iusztin and Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 2 Tooling and Installation. Chapter PDF in [../01-llm-fundamentals/sources/llm-engineers-handbook/](../01-llm-fundamentals/sources/llm-engineers-handbook/) | Proprietary, personal copy | 01 | Why prompt chains need traces rather than logs, and the tool landscape (Opik, Langfuse, Galileo, LangSmith). Notes cite it as `(*LLM Engineer's Handbook*, ch. 2)` |
 | | Beyer, Murphy, Rensin, Kawahara, Thorne (eds), *The Site Reliability Workbook*, [ch 5 Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) | Free online | 06 | Turning a target into an alert, the next step after note 06's threshold replay |
 
 ## Core papers

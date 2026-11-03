@@ -3,7 +3,7 @@ origin: book-condensed
 sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 15–16"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
-  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8, 10"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 8, 10"
   - https://www.usenix.org/conference/osdi22/presentation/yu
   - https://arxiv.org/abs/2309.06180
   - https://arxiv.org/abs/2305.05176
@@ -153,7 +153,7 @@ Fregly's monitoring stack (*AISPE*, ch. 16): DCGM exporter → Prometheus → Gr
 
 ## Autoscaling
 
-The Handbook's recipe on AWS (*LLM Engineer's Handbook*, ch. 10): register the endpoint as a **scalable target** with a minimum of at least 1 and a maximum, then attach a **target-tracking policy**. The metric is either invocations per model copy (`SageMakerInferenceComponentInvocationsPerCopy`) or GPU utilization around **70%**. Add **cooldowns** so the policy does not flap. It names the two failure modes, over-scaling (paying for idle GPUs) and under-scaling (SLO breaches during the lag), and recommends a stress test from 100 to 10,000 users per minute before launch. Its replica numbers (1 at idle, 2 at 10 RPS, 20 at 100 RPS) are illustrative.
+The Handbook's recipe on AWS (*LLM Engineer's Handbook*, ch. 10): register the endpoint as a **scalable target** with a minimum of at least 1 and a maximum, then attach a **target-tracking policy**. The metric is either invocations per model copy (`SageMakerInferenceComponentInvocationsPerCopy`) or GPU utilization around **70%**. Add **cooldowns** so the policy does not flap. It names the two failure modes, over-scaling (paying for idle GPUs) and under-scaling (SLO breaches during the lag), and recommends a stress test from 100 to 10,000 users per minute before launch. Its replica numbers (1 at idle, 2 at 10 RPS, 20 at 100 RPS) are illustrative. Billing is why this matters. A SageMaker endpoint charges for its instances whether or not anything calls it, while Bedrock charges per API call and allows less customisation. On a dedicated endpoint, "you have to design autoscaling systems that delete unused resources" (*LLM Engineer's Handbook*, ch. 2).
 
 Two problems with the recipe for LLMs:
 

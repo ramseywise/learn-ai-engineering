@@ -8,7 +8,7 @@ sources:
   - https://docs.mage.ai/introduction/overview
   - https://docs.prefect.io/
   - https://dataintensive.net/
-  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 11"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 11"
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -35,6 +35,8 @@ The DE orchestration module opens with "What is orchestration?" and this table i
 None of this is new. Kleppmann notes in [*Designing Data-Intensive Applications*](https://dataintensive.net/) (ch. 10, pp. 402-403) that once MapReduce jobs were being chained into workflows of 50 to 100 jobs, schedulers like Oozie, Azkaban, Luigi, Airflow and Pinball appeared to manage them, because chaining jobs by directory convention stopped being survivable. Directories did give those workflows one thing worth keeping: a job's output was only treated as valid once the job had succeeded, so the next job could not start on half of it (p. 402). The engines changed, and the shape of the problem didn't.
 
 Adopt the orchestrator on day 0, even if it only runs locally at first. An orchestrator forces each pipeline to be a separate unit that hands off only through storage (warehouse, feature store, artifact store), and a pipeline built that way can later be triggered by a schedule, an API call or a monitoring alert without a rewrite. The *LLM Engineer's Handbook* authors credit this decoupling with making continuous training a small step at the end of their project rather than a refactor (*LLM Engineer's Handbook*, ch. 11). Once the whole system runs from one manual trigger, the automated triggers are configuration.
+
+Keep the logic out of the orchestrator's decorators. Most orchestrators share one pattern: a function becomes a task (a "step" in ZenML) under one decorator, and a pipeline is a function under another that calls the tasks, which gives the DAG (*LLM Engineer's Handbook*, ch. 2). The Handbook's repo puts all domain code in its own package and leaves the `steps/` and `pipelines/` folders as thin glue that calls it. Its stated payoff is that the orchestrator can be swapped out, or the same logic called from a REST API (ch. 2). Two more of its points carry over to any tool. Task granularity is a design decision, because once deployed each task runs as its own unit, often on its own machine. And whatever a task returns has to be serializable by the orchestrator: ZenML could not store the book's UUID ids until the authors extended its materializer, ZenML's name for the serializer (ch. 2). The book also loads each pipeline's parameters from a YAML file at run time, so a change of input needs no code change and every run's inputs are on record (ch. 2). The typed run parameters in the table above are the same idea.
 
 ## An orchestrator in fifty lines
 
@@ -458,6 +460,8 @@ MLOps 05 reuses the pattern: `@flow batch_monitoring_backfill` loops over days, 
 | The org already runs Airflow | [Airflow](05-dagster-and-airflow.md); don't introduce a second orchestrator |
 | A Python team wants the least ceremony for scheduled functions | Prefect |
 
+The *LLM Engineer's Handbook* authors say they tested Airflow, Prefect, Metaflow and Dagster, plus Argo Workflows and Kubeflow for Kubernetes shops, and chose ZenML. They call it the best trade-off of ease of use, features and cost, and add that none of the others has its "stack": the orchestrator, artifact store and container registry are configured outside the code, so the Python holds nothing specific to S3 or ECR and nothing ties it to one cloud (*LLM Engineer's Handbook*, ch. 2). They give no benchmark, so treat it as one team's preference.
+
 ## Run labels
 
 | Material | Needs |
@@ -476,6 +480,7 @@ MLOps 05 reuses the pattern: `@flow batch_monitoring_backfill` loops over days, 
 - **Assuming a failed task has stopped.** An orchestrator declares failure from a missing heartbeat or a timeout, and it cannot tell a dead worker from a paused or partitioned one. The old attempt may still be writing while the retry runs, so writes need to be safe against it. [When distributed systems fail](../../01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md) runs this case.
 
 - **Heavy work in the orchestrator's process.** The scheduler should start work elsewhere, in the warehouse or on a worker. One heavy task on the scheduler's machine stalls every other pipeline.
+- **Business logic inside the task functions.** Code written into the decorated functions is tied to that orchestrator, and moving it means rewriting it. Keep tasks as glue around a plain package you can test and call without it.
 - **Passing data between tasks through the orchestrator.** Hand off through storage and pass the path. XComs and task results are for small values.
 - **A sensor with no timeout.** A source that stops sending is what the sensor exists to notice, and an untimed sensor just waits with it.
 - **Treating a green run as correct data.** The orchestrator knows tasks finished. A test task is what knows the numbers were right, and it has to be in the graph.

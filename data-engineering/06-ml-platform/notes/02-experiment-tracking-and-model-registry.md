@@ -8,6 +8,7 @@ sources:
   - https://doi.org/10.1109/ICSE-SEIP.2019.00042
   - https://arxiv.org/abs/2209.09125
   - https://arxiv.org/abs/2011.09926
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2"
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -18,6 +19,8 @@ Six months after a model ships, someone asks why it predicted what it did, and t
 The evidence that this is an engineering need, rather than tidiness, comes from the studies of working teams. [Microsoft's study by Amershi and colleagues (ICSE-SEIP 2019)](https://doi.org/10.1109/ICSE-SEIP.2019.00042), which interviewed 14 people and surveyed 551, reports teams tagging each model with its data and model version, and each dataset with its origin and code version, and it names data as harder to version than code. [Shankar and colleagues' interviews (2022)](https://arxiv.org/abs/2209.09125) put versioning next to velocity and validation as the three things that decide whether an ML effort works in production.
 
 ## Tracking with MLflow
+
+MLflow is one tracker among several. The *LLM Engineer's Handbook* names W&B, MLflow, Neptune and Comet, says they have "mostly the same features", and uses Comet for training loss, evaluation loss, gradient norm and system metrics such as GPU, CPU and memory use (*LLM Engineer's Handbook*, ch. 2). What carries over is the record, not the vendor.
 
 MLflow's tracker needs only a database, and the first experiment fits in a local SQLite file. We use the same synthetic rides as before, one function per month, and four Ridge models.
 
@@ -164,6 +167,8 @@ flowchart LR
 | Registered model | A named model; versions point at runs |
 | Stage (legacy) | `None` / `Staging` / `Production` / `Archived`; one fixed lifecycle, deprecated since MLflow 2.9 |
 | Alias (current) | A movable named pointer (`champion`, `challenger`) to a version; as many as you need |
+
+The registry is one case of a wider idea. The Handbook defines an artifact as any file the ML lifecycle produces, such as a dataset, model, checkpoint or log, and names three properties: artifacts are versioned, shareable and carry metadata. A model registry is "a particular use case for an artifact" (*LLM Engineer's Handbook*, ch. 2). The metadata exists so you can tell what an artifact holds without downloading it. On a dataset that means its size, train-test split and label types (ch. 2). That is the same reason this chapter tags every run with its training data. The authors keep their models on the Hugging Face Hub, although ZenML, Comet and SageMaker each offer a registry too, and their rule is to pick the one that integrates best with the rest of your tooling (ch. 2).
 
 ```python
 client = MlflowClient()

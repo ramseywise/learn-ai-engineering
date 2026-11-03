@@ -15,6 +15,12 @@ sources:
   - https://arxiv.org/abs/2505.08775
   - https://arxiv.org/abs/2504.12516
   - https://arxiv.org/abs/2510.04374
+  - https://arxiv.org/abs/2207.01206
+  - https://arxiv.org/abs/2308.03688
+  - https://arxiv.org/abs/2010.03768
+  - https://arxiv.org/abs/2204.01691
+  - https://arxiv.org/abs/2010.02903
+  - https://arxiv.org/abs/2304.08354
   - https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
@@ -56,7 +62,9 @@ The reverse also happens: a strict trajectory check can fail a run that did *bet
 
 Trajectory analysis also tells you **where** a run failed. A multi-step run has many paths to the same wrong answer, and each needs a different fix. An outcome-only eval scores them identically.
 
-AgentBoard turns "how far did it get" into a number (9 tasks, 1,013 environments). **Progress rate** is the highest fraction of human-annotated subgoals the agent reached at any step, reported beside success rate. Human ratings of the same trajectories tracked it closely (Pearson > 0.95 on every task). It separates agents that success rate lumps together: "Llama2-13b and Mistral-7b exhibit similarly negligible success rates (2.1% and 3.9%, respectively), but their progress rates differ significantly: 18.9% for Llama2-13b and 24.6% for Mistral-7b." AgentBoard also reports **grounding accuracy**, the share of actions that were valid in the environment, which separates malformed or impossible actions from bad plans ([arXiv:2401.13178](https://arxiv.org/abs/2401.13178) (Ma et al., 2024-01)). The cost is writing subgoals for every task. And progress rewards partial work: CodeLlama-34b often never emitted `finish`, which gave it higher progress and lower success than CodeLlama-13b. Report progress beside strict success, never instead of it ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
+AgentBoard turns "how far did it get" into a number (9 tasks, 1,013 environments). **Progress rate** is the highest fraction of human-annotated subgoals the agent reached at any step, reported beside success rate. Human ratings of the same trajectories tracked it closely (Pearson > 0.95 on every task). It separates agents that success rate lumps together: "Llama2-13b and Mistral-7b exhibit similarly negligible success rates (2.1% and 3.9%, respectively), but their progress rates differ significantly: 18.9% for Llama2-13b and 24.6% for Mistral-7b." AgentBoard also reports **grounding accuracy**, the share of actions that were valid in the environment, which separates malformed or impossible actions from bad plans ([arXiv:2401.13178](https://arxiv.org/abs/2401.13178) (Ma et al., 2024-01)). The cost is writing subgoals for every task. And progress rewards partial work: CodeLlama-34b often never emitted `finish`, which gave it higher progress and lower success than CodeLlama-13b. Report progress beside strict success, never instead of it ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)). The idea is older than AgentBoard. ALFWorld reports **goal-condition success**, the share of a task's goal conditions that hold in the end state, in parentheses beside strict success. "Put a hot potato on the countertop" has three conditions, so an agent that puts any potato there gets 0.33 ([arXiv:2010.03768](https://arxiv.org/abs/2010.03768) (Shridhar et al., ICLR 2021), taking the metric from ALFRED).
+
+Score the plan and its execution separately when they can fail apart. SayCan had a language model choose a robot's next skill, and three human raters judged each of 101 kitchen instructions twice: once on whether the plan would work, once by watching the robot (2 of 3 had to agree). PaLM-SayCan planned 84% correctly and executed 74% in the kitchen its skills were trained in, and 81% against 60% in a different, real kitchen. On long-horizon tasks in the training kitchen the two were 73% and 47%. The authors traced 65% of the planning errors to the language model (on long-horizon tasks, mostly stopping early) and 35% to affordance errors, where the value function misjudged which skills were feasible ([arXiv:2204.01691](https://arxiv.org/abs/2204.01691) (Ahn et al., CoRL 2022); one run per instruction as far as the paper says, no variance reported). A single success rate would have hidden which half to fix.
 
 ---
 
@@ -73,6 +81,8 @@ For agents that act, check the **end state** directly where you can:
 | Research | The report contains the required facts with valid citations ([07](07-evaluating-rag-and-grounding.md)) |
 
 An agent that says "I've issued your refund" when no refund exists is the most important failure to catch, and only a state check catches it.
+
+WebShop is the standard example of a state grader for a web agent. The episode ends when the agent buys something. The reward is computed from the purchased product: the share of the instruction's hidden attributes, options and price limit that it meets, multiplied by a product-type match. Two numbers come from that one reward, and they can disagree. **Task score** is the mean reward × 100, and **success rate** is the share of episodes with full reward. RL fine-tuning raised the imitation-learning agent's score from 59.9 to 62.4 while its success rate fell from 29.1% to 28.7% (500 test instructions; human experts 82.1 and 59.6%). The grader was itself checked against hand scoring of 200 human trajectories. Pearson was 0.86 for average workers and 0.77 for experts, and the automatic score ran low (81.5 against 89.9 for experts) because exact attribute matching misses synonyms ([arXiv:2207.01206](https://arxiv.org/abs/2207.01206) (Yao et al., NeurIPS 2022); BERT/BART agents, not LLMs). A state check can still be strict in the wrong place. Hand-score a sample before you trust it.
 
 ---
 
@@ -112,6 +122,8 @@ These are sets, so a tool that should be called twice counts once, and order is 
 > **Contradiction.** Albada's companion `param_accuracy` counts an expected call as matched only if `pred["params"] == exp["params"]`: whole-dict equality (*Building Applications with AI Agents*, ch. 9). That fails a refund of `19.990` against `19.99`, or an extra optional argument, as hard as a wrong order ID. Use the per-argument rules above. Keep exact equality for IDs, where it is the rule.
 
 Oshin & Campos test agents at three granularities (*Learning LangChain*, ch. 10): the **final response**, a **single step** (given this prompt and tool set, is the next tool call right?), and the **trajectory**. Their trajectory checks are the match modes in the table: "all expected tools, any order" is `set(expected) <= set(calls)`, "in order" is a subsequence check, and exact match compares the lists. Single-step tests are the cheap ones. They need no environment and pin down one decision, so write them for the steps that fail most. Their examples run each case three times (`num_repetitions=3`) because the agent is non-deterministic ([below](#non-determinism-run-every-task-k-times)).
+
+Score a no-tool baseline beside the tool runs, on tasks the model could attempt without the tool. In Qin et al.'s survey experiment (18 tools, text-davinci-003 and ChatGPT, prompted with the API documentation), giving ChatGPT a calculator dropped its ASDiv maths accuracy from 91.7 without the tool to 74.1 zero-shot, and few-shot examples brought it back to 92.5. On HotpotQA, ChatGPT with a Wikipedia tool scored 19.0 few-shot against 34.5 without it ([arXiv:2304.08354](https://arxiv.org/abs/2304.08354) (Qin et al., ACM Computing Surveys 2025); 2023 models without native function calling, test sets of 10–266 items, one run, no intervals). The authors grade most of their ChatGPT-generated, hand-filtered test sets from the trace, counting a task correct only if a person judges every call accurate and the result reasonable, but report no rubric or agreement figure, and warn that differing setups make the scores hard to compare across tools.
 
 Labeling expected tool calls is real work. Two shortcuts:
 
@@ -215,6 +227,8 @@ State which one you report. Yang et al. (2026) give both for a common set of *n*
 
 Also report the **per-task pass rate distribution**. A suite at 70% could be "every task passes 70% of the time" (flaky) or "70% of tasks always pass, 30% never do" (capability gaps). They need different fixes. Real suites are usually a mix. Over 64 trials per question on BrowseComp, Deep Research solved 16% of the questions every time, failed 14% every time, and landed somewhere in between on the rest ([arXiv:2504.12516](https://arxiv.org/abs/2504.12516) (Wei et al., 2025-04)).
 
+Report the spread per task, and say which score you took from each run. CALM ran five seeds per Jericho text game. On `library` the mean was 9.02 with a standard deviation of 5.07, against 30.39 ± 3.01 on `zork1`, and most of its ablations ran once each. Each run's score was the mean of its last 100 training episodes: 9.4% of the maximum averaged over 28 games. The best trajectories the same agents had found during exploration averaged 14.7%, higher than any model in the paper ([arXiv:2010.02903](https://arxiv.org/abs/2010.02903) (Yao et al., EMNLP 2020); GPT-2 action generator with an RL agent, 2020 baselines). The final policy and the best run seen are Mean@R and Best@k by other names, and they can differ by half again.
+
 ---
 
 ## Efficiency metrics
@@ -229,6 +243,8 @@ Log these on every trial. They catch regressions that pass rates miss:
 | **Latency** (p50 / p95, time to first token) | User experience |
 | **Cost per success** | The sustainability metric. Failed runs are pure cost, so at 50% success the real cost is 2× the per-run cost |
 | **Convergence** | Optimal steps ÷ actual steps (the course's Lab 4 metric, [below](#convergence-in-practice)) |
+
+**Log why each failed run ended, not only that it failed.** AgentBench (29 LLMs, 8 environments from an OS shell to ALFWorld and WebShop, temperature 0) sorts every run into completed, context limit exceeded, invalid format, invalid action, or task limit exceeded (out of turns, or stopped for repeating itself). The mix depends on the environment. Averaged over all models, task limit exceeded was 82.5% of outcomes on lateral-thinking puzzles and 67.9% on knowledge-graph tasks, invalid format was 53.3% on database tasks, and invalid action was 64.1% in ALFWorld. **Over 90% of the runs that hit the task limit had two responses with ROUGE-L ≥ 0.8 in their last 10 rounds**: the agent was looping, not making slow progress (partly by construction, since the ALFWorld harness ends a run that repeats itself three times). Open models of 70B or less produced invalid actions about three times as often as API models (13.6% against 4.6%) ([arXiv:2308.03688](https://arxiv.org/abs/2308.03688) (Liu et al., ICLR 2024)). Each reason has a different fix: a format failure points at the prompt or the parser, and a loop at a repetition check in the harness. AgentBench itself ran each model once, greedily, so its per-model scores carry no variance estimate ([below](#non-determinism-run-every-task-k-times)).
 
 ### Convergence in practice
 

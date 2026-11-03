@@ -6,6 +6,7 @@ sources:
   - https://langfuse.com/docs/observability/sdk/upgrade-path/python-v4-to-v5
   - https://python.reference.langfuse.com
   - https://arxiv.org/abs/2411.05285
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2"
   - ../practice/support_agent/
 confidence: high
 cleaned: 2026-11-01
@@ -14,7 +15,7 @@ cleaned: 2026-11-01
 
 > One trace per agent turn, one child observation per model or tool call: the Langfuse data model, instrumenting with the current v5 SDK, carrying a trace into tools with a `ContextVar`, and the score keys a support agent records.
 
-On a Monday in October a customer of Acme Books writes in to say the support assistant told them something that turned out to be false, and the invoice page took half a minute to load an answer on Friday. An ordinary service log can tell you the request returned 200 in 22 seconds. It can't tell you which documents the model read, whether it retried, how many tokens it spent, or whether the sentence the customer complained about appears in any of those documents. Tracing exists to answer those questions after the fact, when the turn cannot be reproduced because the model will not say the same thing twice.
+On a Monday in October a customer of Acme Books writes in to say the support assistant told them something that turned out to be false, and the invoice page took half a minute to load an answer on Friday. An ordinary service log can tell you the request returned 200 in 22 seconds. It can't tell you which documents the model read, whether it retried, how many tokens it spent, or whether the sentence the customer complained about appears in any of those documents. Tracing exists to answer those questions after the fact, when the turn cannot be reproduced because the model will not say the same thing twice. The *LLM Engineer's Handbook* gives the structural reason ordinary logging falls short: one interaction chains several prompts and outputs, and later prompts depend on earlier ones. That makes it a trace, not a set of independent lines (*LLM Engineer's Handbook*, ch. 2). Its authors use Opik and list Langfuse, Galileo and LangSmith as alternatives. Of the four, Opik and Langfuse are open source.
 
 This pillar works one incident from the first trace to the dashboard that should have caught it. This chapter reads one bad turn, then instruments the agent so that every future turn can be read the same way.
 
