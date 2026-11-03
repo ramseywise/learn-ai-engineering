@@ -164,6 +164,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 3. Design interactive charts with useful filtering, tooltips, and accessible fallbacks.
 4. Explain when to use Python plotting libraries, D3, Vega-Lite, or Observable Plot, and implement a small web chart.
 5. Design a dashboard and narrative that give a decision-maker context, evidence, recommendation, and limitations ([Knaflic](https://www.storytellingwithdata.com/books)).
+6. Choose a dashboard stack by audience, interaction, data volume and maintainer, and get Python results to a browser without leaking or overloading ([chapter 6](05-visualisation-and-storytelling/notes/06-dashboard-stacks-from-python-to-frontend.md)).
 
 **Review and practice:** [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) · chapter exercises · runnable [practice scripts and dashboard](05-visualisation-and-storytelling/practice/).
 

@@ -31,8 +31,8 @@ print("folium", folium.__version__, "->", [u for name, u in folium.Map.default_j
 
 import holoviews as hv  # noqa: E402
 
-print("holoviews", hv.__version__, "-> backends it can draw with:",
-      [b for b in ("bokeh", "matplotlib", "plotly") if hv.extension(b, logo=False) or b in hv.Store.renderers])
+hv.extension("bokeh", "matplotlib", "plotly", logo=False)
+print("holoviews", hv.__version__, "-> backends it loaded:", sorted(hv.Store.renderers))
 
 # %% figure-weight
 xy = table[["x", "y"]]
@@ -46,7 +46,7 @@ for name, text in [("numpy arrays", as_arrays), ("python lists", as_lists)]:
 import datashader as ds  # noqa: E402
 
 rng = np.random.default_rng(1)
-for points in (50_000, 5_000_000):
+for points in (50_000, 50_000, 5_000_000):  # the first call compiles, so the 50,000 runs twice
     idx = rng.integers(0, len(table), points)
     cloud = pd.DataFrame({"x": table.x.values[idx] + rng.normal(0, .05, points),
                           "y": table.y.values[idx] + rng.normal(0, .05, points),
@@ -73,12 +73,12 @@ named = px.scatter(sample, x="x", y="y", color="segment", symbol="segment",
                    category_orders={"segment": segments.NAMES}, color_discrete_map=COLOURS)
 print("names:", len(named.data), "traces:", [t.name for t in named.data])
 
-wales = px.scatter(sample[sample.region == "Wales"], x="x", y="y", color="segment")
 whole = px.scatter(sample, x="x", y="y", color="segment")
-print("no colour map, whole table:", {t.name: t.marker.color for t in whole.data})
-print("no colour map, Wales only: ", {t.name: t.marker.color for t in wales.data})
+filtered = px.scatter(sample[sample.segment != whole.data[0].name], x="x", y="y", color="segment")
+print("no colour map, whole table:     ", {t.name: t.marker.color for t in whole.data})
+print("no colour map, one segment gone:", {t.name: t.marker.color for t in filtered.data})
 
-both = make_subplots(cols=2, horizontal_spacing=.12, subplot_titles=(
+both = make_subplots(cols=2, horizontal_spacing=.2, subplot_titles=(
     "Numeric ids: a colour scale implies 3 is more than 0", "Names: four categories, each with a shape and a legend"))
 for trace in numeric.data:
     both.add_trace(trace, row=1, col=1)
@@ -87,8 +87,8 @@ for trace in named.data:
     both.add_trace(trace.update(marker_size=5), row=1, col=2)
 both.update_layout(coloraxis=numeric.layout.coloraxis, template="none", width=1100, height=430,
                    paper_bgcolor=cs.SURFACE, plot_bgcolor=cs.SURFACE, font=dict(color=cs.SECONDARY),
-                   legend=dict(x=.56, y=-.12, orientation="h"), margin=dict(l=40, r=20, t=50, b=70))
-both.update_layout(coloraxis_colorbar=dict(x=.44, title="cluster"))
+                   legend=dict(x=.55, y=-.13, orientation="h"), margin=dict(l=60, r=20, t=50, b=70))
+both.update_layout(coloraxis_colorbar=dict(x=.41, len=.9, thickness=14, title="cluster"))
 both.update_xaxes(showticklabels=False, showgrid=False, title="Coordinate 1", linecolor=cs.BASELINE)
 both.update_yaxes(showticklabels=False, showgrid=False, title="Coordinate 2", linecolor=cs.BASELINE)
 both.write_image(cs.IMAGES / "viz-segments-numeric-vs-categorical.png", scale=1.5)

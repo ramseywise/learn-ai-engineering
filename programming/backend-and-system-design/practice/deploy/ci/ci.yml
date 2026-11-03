@@ -1,0 +1,30 @@
+# Read and parsed in this track, never run. It lives here and not in .github/workflows,
+# so it can't trigger anything in this repository. Copy it there to use it.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python -m unittest -q test_server
+        working-directory: deploy/app
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (runs the tests again in the test stage)
+        run: docker build -t api:${{ github.sha }} deploy
+      - name: Smoke test the image
+        run: |
+          docker run -d --name smoke -p 8080:8080 api:${{ github.sha }}
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8080/readyz
+          docker stop smoke

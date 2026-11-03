@@ -1,6 +1,6 @@
 # /// script
-# requires-python = ">=3.11"
-# dependencies = ["numpy", "pandas", "matplotlib"]
+# requires-python = ">=3.11,<3.14"
+# dependencies = ["numpy", "pandas", "pyarrow", "scikit-learn", "matplotlib"]
 # ///
 """Chapter 6's one chart: what the browser downloads. Run after ch06_measure_api.py and `npm run sizes`."""
 import json
@@ -21,8 +21,8 @@ rows = [
     ("Code: plotly.js basic", code["plotly.js-basic-dist-min (bar, pie, scatter)"], cs.BLUE),
     ("Code: ECharts, everything", code["echarts, everything"], cs.BLUE),
     ("Code: vega-embed, Vega, Vega-Lite", code["vega-embed + vega + vega-lite"], cs.BLUE),
-    ("Code: ECharts, scatter only", code["echarts, scatter only"], cs.BLUE),
     ("Code: Recharts scatter with React", code["recharts scatter + react"], cs.BLUE),
+    ("Code: ECharts, scatter only", code["echarts, scatter only"], cs.BLUE),
     ("Code: D3, everything", code["d3, everything"], cs.BLUE),
     ("Code: Leaflet", code["leaflet"], cs.BLUE),
 ]
@@ -38,7 +38,7 @@ ax.set_xticks([])
 ax.spines["bottom"].set_visible(False)
 ax.spines["left"].set_visible(True)
 ax.tick_params(left=False)
-ax.set_title("Sending every customer costs as much as the largest chart library; a summary costs almost nothing",
-             fontsize=10)
+ax.set_title("Sending every customer weighs as much as the largest chart library",
+             fontsize=11, loc="left")
 ax.set_xlabel("Gzipped download, 50,000 synthetic customers", color=cs.SECONDARY)
 cs.save(fig, "viz-segments-what-the-browser-downloads.png")

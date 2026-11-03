@@ -54,7 +54,7 @@ function App() {
   return (
     <main>
       <h1>Fernhill customer segments</h1>
-      <p>Labels from the nightly job, read from a table. Synthetic data.</p>
+      <p>Labels from the batch job, read from a table. Synthetic data.</p>
       <label>Region
         <select value={region} onChange={(e) => setRegion(e.target.value)}>
           <option value="">All regions</option>

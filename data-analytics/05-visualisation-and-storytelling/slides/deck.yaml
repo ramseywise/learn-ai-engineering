@@ -1,13 +1,14 @@
-# Visualisation and Storytelling lecture deck. Covers notes 01-05.
+# Visualisation and Storytelling lecture deck. Covers notes 01-06.
 # Build: make slides PILLAR=data-analytics/05-visualisation-and-storytelling STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Fernhill Home, a fictional retailer. All numbers come from the seeded generator
 # in practice/fernhill.py, and the assumptions in the sizing are named as assumptions.
+# The stacks part measures 50,000 synthetic customers from practice/segments.py.
 deck:
   title: Visualisation and Storytelling
   subtitle: From a chart that is correct to a decision that gets made
   tagline: |-
-    Choose it · Draw it · Explore it · Build it · Argue from it
+    Choose it · Draw it · Explore it · Build it · Argue from it · Ship it
   reference: "Notes: data-analytics/05-visualisation-and-storytelling"
   output: visualisation-and-storytelling.pptx
   notes: >-
@@ -47,7 +48,7 @@ parts:
         bullets:
           - "Wilkinson's grammar replaced a menu of chart types with composable parts."
           - "Wickham's layers made it practical; **Vega-Lite and Altair** carry it into JSON and Python."
-        takeaway: The grammar treats a chart as data, encodings, scales and marks, so you can change one part at a time.
+        takeaway: The grammar treats a chart as data, encodings, scales, marks and facets, so you can change one part at a time.
         source: notes/01-grammar-and-chart-choice.md
         recall: What are the independent parts of a chart in the grammar of graphics?
         notes: >-
@@ -84,7 +85,7 @@ parts:
           - ["Do two measures move together?", "Scatter", "Two positions"]
         takeaway: Name the question first, then choose the form whose encoding answers it most accurately.
         source: notes/01-grammar-and-chart-choice.md
-        recall: Which encoding did Cleveland and McGill find most accurate?
+        recall: How do you choose a chart form?
         notes: >-
           Cleveland and McGill's experiments order the encodings: position on a common scale first, then length, angle
           and slope, then area, then shading. That ranking is why bars usually beat pies.
@@ -141,7 +142,7 @@ parts:
           - {title: Set it once, text: "rcParams and a fixed colour per entity."}
         takeaway: Every element must earn its place, and one shared style module keeps those choices from drifting.
         source: notes/02-matplotlib-and-seaborn.md
-        recall: What is the order of decluttering a matplotlib chart, and how do you keep it consistent?
+        recall: How do you decide what stays on a chart, and keep those choices consistent?
         notes: >-
           Make the choices once in practice/chartstyle.py, not chart by chart.
 
@@ -153,7 +154,7 @@ parts:
         bullets:
           - "Every channel drops at the same moment."
           - "**So it is not only mix.** Hold that thought."
-        takeaway: Small multiples separate tangled series while keeping one shared scale, so you can compare across panels.
+        takeaway: Small multiples showed Fernhill's repeat rate dropping in every channel at the same moment, which four tangled lines on one chart hid.
         source: notes/02-matplotlib-and-seaborn.md
         recall: What did small multiples reveal about Fernhill's repeat rate that a single chart hid?
         notes: >-
@@ -264,7 +265,7 @@ parts:
           - "Hover fails on phones and in print, so keep a table."
         takeaway: Ship inline HTML for email, CDN HTML for hosted pages, and always a static copy because hover cannot print.
         source: notes/03-plotly-and-interactive.md
-        recall: What does include_plotlyjs control, and what were the two file sizes here?
+        recall: How should you ship a plotly chart for email, a hosted page and print?
         notes: >-
           The data ships in the page either way, which is why a static plotly file cannot filter ten million rows.
 
@@ -285,7 +286,7 @@ parts:
             - Raises `MaxRowsError` above 5,000 rows
         takeaway: Use plotly for one rich chart and Altair for linked views, since its selections are part of the grammar.
         source: notes/03-plotly-and-interactive.md
-        recall: How does Altair link two charts without an event handler?
+        recall: When do you use plotly and when Altair?
         notes: >-
           When the user's choice must trigger a new query, you have outgrown a static file and need a server.
 
@@ -375,13 +376,13 @@ parts:
         title: Fernhill's revenue tile was green the whole time
         kicker: The problem
         image: ../../sources/images/viz-streamlit-dashboard.png
-        caption: "The rebuilt dashboard, with revenue beside repeat rate."
+        caption: "The rebuilt dashboard: the green tile now has a red partner."
         bullets:
           - "Revenue **+6.5%**; repeat rate **-11.3 pts**."
           - "Anything you can push by spending needs a partner metric."
         takeaway: Pair a growth metric with a health metric, because anything you can raise by spending looks fine alone.
         source: notes/05-dashboards-and-storytelling.md
-        recall: Why did Fernhill's dashboard not catch the fall in repeat buying?
+        recall: Why pair a growth metric with a health metric?
         notes: >-
           The dashboard did not lie. It answered the question it was built to answer.
 
@@ -393,9 +394,10 @@ parts:
           def load(): ...
 
           data = load()
-          chosen = st.multiselect("Channel", names, default=names)
+          chosen = st.multiselect("Channel", names,
+                                  default=names)
           view = data[data.channel.isin(chosen)]
-          st.metric("Revenue", f"£{view.revenue.sum() / 1e6:.2f}m")
+          st.metric("Revenue", view.revenue.sum())
         bullets:
           - "Each click reruns the script **top to bottom**."
           - "Cache the expensive work."
@@ -439,7 +441,7 @@ parts:
           - "The title states the finding as a sentence."
         takeaway: An explanatory chart keeps one series, marks the event, and states the finding in the title.
         source: notes/05-dashboards-and-storytelling.md
-        recall: How does the fall in Fernhill's repeat rate split between mix and within-channel effects?
+        recall: What makes a chart explanatory rather than exploratory?
         notes: >-
           Hold channel rates at 2024 levels and apply the 2025 mix, which gives the mix effect. The remainder is within-channel.
 
@@ -456,9 +458,196 @@ parts:
           - "**Paid social is a separate question** and this data does not settle it."
         takeaway: Report the break-even as well as the estimate, so the reader can see the decision survives its assumptions.
         source: notes/05-dashboards-and-storytelling.md
-        recall: What was the break-even margin, and why does the recommendation still need a holdout?
+        recall: Why report the break-even as well as the estimate?
         notes: >-
           The margin and revenue-per-repeat figures are assumptions in the code, and Fernhill is synthetic with this effect built in.
+
+  - title: Dashboard stacks
+    summary: Three layers · Choosing a stack · What a request costs · Labels · Many points · Colour
+    notes: >-
+      The Fernhill analysts have segmented every customer, and the CRM team wants a dashboard by Friday. Which stack, and how do Python results reach a browser?
+    slides:
+      - layout: statement
+        title: The first draft took ten minutes and has four faults
+        kicker: The problem
+        statement: "A web endpoint returns the whole customer table, emails included, with no login, and a chart paints four unrelated groups on a numeric scale."
+        attribution: "Fernhill's first draft of the segments dashboard, on 50,000 synthetic customers"
+        takeaway: A dashboard that works on a laptop can still leak, overload and misdraw, so choose the stack and measure the costs.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: What is wrong with a first-draft dashboard that returns the customer table and colours by cluster number?
+        notes: >-
+          This chapter answers the question the draft skipped: which stack should this be built on, and how do Python results reach a browser? You do not need to know React.
+
+      - layout: flow
+        title: Every dashboard does three jobs
+        kicker: Where a chart library sits
+        steps:
+          - {label: Analysis, sub: "runs on a schedule, writes a table"}
+          - {label: Application, sub: "who may ask, what they get"}
+          - {label: Presentation, sub: "draws in the browser"}
+        bullets:
+          - "**Plotly, Altair, D3:** presentation only."
+          - "**Streamlit, Dash, Panel, Shiny:** application, and they use a chart library to draw."
+          - "**FastAPI:** application only. **A BI tool:** all three."
+        takeaway: A dashboard has analysis, application and presentation layers. Plotly covers only presentation, so "Plotly or Dash?" is not a real choice.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: What are the three layers of a dashboard, and which one does Plotly cover?
+        notes: >-
+          Dash draws with Plotly, so they do not compete. Keep the three jobs apart and you can change route later without changing the numbers.
+
+      - layout: table
+        title: Python describes the chart, and JavaScript draws it
+        kicker: Versions as measured 2 November 2026
+        header: ["Python library", "Produces", "Drawn by", "Consequence"]
+        widths: [3, 3, 3, 4]
+        rows:
+          - ["Plotly 7.1.0", "A JSON figure", "plotly.js 4.1.1", "Every point travels to the browser"]
+          - ["Altair 6.3.0", "Vega-Lite spec", "Vega-Lite 6.4.1", "Stops at 5,000 rows by default"]
+          - ["Bokeh 3.10.1", "JSON objects", "BokehJS 3.10.1", "A server can keep both sides in sync"]
+          - ["Folium 0.20.0", "An HTML page", "Leaflet 1.9.3", "Each marker is written into the page"]
+          - ["HoloViews 1.23.2", "A declarative object", "Its chosen backend", "Inherits its backend's limits"]
+        takeaway: px.scatter sends a JSON figure with every point, and plotly.js draws it, so the library's limits apply even from Python.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: What does px.scatter actually send to the browser?
+        notes: >-
+          Versions come from practice/ch06_stack_map.py. Altair's documentation says plainly that Altair itself cannot render visualisations. HoloViews draws through Bokeh, Matplotlib or Plotly, so it is the one row here that need not end in JavaScript.
+
+      - layout: table
+        title: Start from the situation, not from what you know
+        kicker: Maintenance is our judgement
+        header: ["Situation", "Audience", "Maintained by", "Start with"]
+        widths: [4, 3, 3, 3]
+        rows:
+          - ["Recurring warehouse reporting", "Many non-technical viewers", "Analysts who write SQL", "A BI tool"]
+          - ["Internal tool on a model's output", "A team you can name", "Analysts who write Python", "Streamlit, Dash, Shiny, Panel"]
+          - ["Exploring millions of points", "A few experts", "Python-comfortable team", "Panel or HoloViews, datashader"]
+          - ["A feature in your product", "Outside users, own data only", "Front-end engineers on call", "FastAPI, React, TypeScript"]
+          - ["One finding, sent once", "A few people", "Nobody", "A self-contained HTML file"]
+        takeaway: An internal tool for a named team starts as a Python app such as Streamlit or Dash, and a product feature as FastAPI and React. Go heavier only for a named requirement.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Which stack fits an internal tool for a named team, and which fits a feature in your product?
+        notes: >-
+          Hiring pulls the same way. The team that built the analysis can maintain a Python app. A React front end needs someone who keeps its dependencies and build working after the author moves on.
+
+      - layout: cards
+        title: The full stack in four ideas, without knowing React
+        cards:
+          - {title: The contract, body: "The JSON shape is the real interface, and the analyst owns it. FastAPI publishes it at /openapi.json."}
+          - {title: Components, body: "A function that returns markup. Say what to show, and React updates the page."}
+          - {title: Effects, body: "A fetch runs in an effect. Answers can arrive out of order, so ignore an old filter's answer."}
+          - {title: Types, accent: "D4621A", body: "TypeScript types describe the answer but do not check it when the page runs, so test the real API."}
+        takeaway: You can review a React front end by checking its contract, its fetches, and what its types do not guarantee.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: How can you review a React front end without knowing React?
+        notes: >-
+          The running code is practice/segments_api.py and practice/js/segments_app/main.tsx. A Dash callback's return value works the same way as a React component's.
+
+      - layout: code
+        title: One short route closes the API faults
+        kicker: The row-level route
+        lang: python
+        code: |-
+          @app.get("/v1/customers",
+                   response_model=api.CustomerPage)
+          def customers(
+              segment: str, after: int = 0,
+              limit: int = Query(100, ge=1, le=500),
+              _: str = Depends(api.require_crm),
+          ):
+              rows = table[(table.segment == segment)
+                           & (table.customer_id > after)]
+              rows = rows.head(limit)
+              last = None
+              if len(rows) == limit:
+                  last = int(rows.customer_id.iloc[-1])
+              return {"rows": rows.to_dict("records"),
+                      "next_after": last}
+        bullets:
+          - "No key **401**; analyst **403**."
+          - "`limit=50000` **422**, before the function runs."
+          - "`response_model` removes the email."
+          - "`after` is keyset paging: no skipped rows, no jumping to a page."
+        takeaway: Permissions, field lists and row caps belong on the server, where a caller cannot go around them.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Where do permissions, field lists and row caps belong, and why?
+        notes: >-
+          The draft's faults map to OWASP API Security Top 10, 2023: no login, no per-object permission, every column returned, no limit on rows. The rows contain emails, and the response does not, because response_model filters the output. The demo keys are stand-ins: a real deployment uses single sign-on and verifies a signed token, and a key compiled into a front-end bundle is public. Keyset pagination says "after the last id I saw" rather than "skip 40,000 rows".
+
+      - layout: image
+        title: The draft's data weighs as much as the largest library
+        kicker: Fix the data first
+        image: ../../sources/images/viz-segments-what-the-browser-downloads.png
+        caption: "Gzipped sizes; bundles measured 2 November 2026 on Node 22."
+        bullets:
+          - "Draft data: **1,419 KB**. All of plotly.js: **1,449 KB**."
+          - "ECharts: **172 KB** scatter only, **375 KB** everything."
+          - "In process, no network: summary **4 ms**, all rows **534 ms**."
+        takeaway: All 50,000 customers gzip to 1,419 KB, about the same as all of plotly.js at 1,449 KB, so fix the data before choosing a library.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Which is heavier, 50,000 customers as JSON or all of plotly.js, and what does that imply?
+        notes: >-
+          Timings: Apple M4 Pro with 24 GB, Python 3.13.15, FastAPI TestClient, no network and no TLS, measured 2 November 2026; latency is uncompressed, and a real network would add to every row. Dash's first load fetched 21 files, about 1,901 KB if gzipped; our React page 5 files, about 177 KB. That gap matters on phones and hardly at all on office broadband.
+
+      - layout: table
+        title: Refitting on a filter changes what the labels mean
+        kicker: Share of customers changing group
+        header: ["Refit on", "Well-separated groups", "Overlapping groups"]
+        widths: [4, 3, 3]
+        rows:
+          - ["The same 50,000, new seed", "0.0%", "0.2%"]
+          - ["One region (Wales, 2,001)", "0.0%", "2.6%"]
+          - ["Spend above the median (25,000)", "14.8%", "25.3%"]
+        takeaway: The objection to refitting is meaning rather than speed, so publish one table and let the filter select rows from it.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Why not refit the clustering when a user filters?
+        notes: >-
+          One k-means fit took about 49 ms on this laptop, so speed would not settle it. The cluster ids are arbitrary too: a new seed on overlapping data kept the same id for only 49.1% of customers, with ARI 0.994. These groups are planted and simple, so treat the percentages as an illustration.
+
+      - layout: table
+        title: WebGL wins from about 10,000 points on this setup
+        kicker: Chrome 156, one M4 Pro, one draw
+        header: ["Points", "SVG scatter, ms", "WebGL scattergl, ms"]
+        widths: [3, 3, 3]
+        rows:
+          - ["1,000", "27", "42"]
+          - ["10,000", "102", "46"]
+          - ["50,000", "476", "55"]
+          - ["400,000", "not run", "111"]
+        takeaway: Use WebGL from about 10,000 points, measured on one M4 Pro, and datashader past about a million or to keep the data on a server. Often you need neither.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: When do you reach for WebGL, and when for datashader?
+        notes: >-
+          Reruns moved the WebGL figures by tens of milliseconds, so read the shape. Plotly's page warns of a limit of about 4 to 8 WebGL figures per page. Datashader needs a running Python process to zoom. For the CRM team, a grid of counts at 2.4 KB gzipped is enough.
+
+      - layout: image
+        title: A numeric id invents a scale
+        kicker: Colour categories by name
+        image: ../../sources/images/viz-segments-numeric-vs-categorical.png
+        caption: "The same synthetic customers, by cluster number and by named segment."
+        bullets:
+          - "Numbers get a **continuous** colour scale."
+          - "Default colours follow order of appearance, so a filter repaints segments."
+          - "Fix the map by name, and add a shape."
+        takeaway: Map each segment name to a fixed colour and a second encoding, so nothing depends on order or on colour alone.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: How should you colour customer segments in Plotly?
+        notes: >-
+          Accessibility is part of this. WCAG 2.2 asks that colour is not the only means of conveying information, that marks reach 3:1 contrast, that there is a table view, and that everything works without a mouse. We have not tested with a screen reader.
+
+      - layout: table
+        title: "Fernhill's choice: the Python app, behind a login proxy"
+        kicker: The same page, built twice
+        header: ["", "Dash", "FastAPI and React"]
+        widths: [3, 3, 5]
+        rows:
+          - ["Our code, lines", "42 of Python", "147 of Python, 100 of TypeScript, a Node toolchain"]
+          - ["First load, gzipped", "about 1,901 KB", "about 177 KB"]
+          - ["Login", "The company's login proxy, in front", "Key check in the demo, your SSO in production"]
+        takeaway: A few internal CRM users make this a Python app job. The React version earns its code when the views reach customers.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Why does Fernhill's CRM dashboard belong on the Python app route?
+        notes: >-
+          All numbers synthetic. If the same numbers were going into a BI tool the company already pays for, publishing the summary table to it would be cheaper still. Line counts include the kept first draft on the API side.
 
   - title: Wrap-up
     agenda: false
@@ -472,15 +661,14 @@ parts:
           - {title: Honesty, body: "Bars start at zero. Never use two y-axes. Show the window you have."}
           - {title: Style, body: "Remove, then emphasise. Label directly. Colour by job, and validate the palette."}
           - {title: Interaction, body: "Essential things stay visible without hover. Export a static copy."}
-          - {title: Dashboards, body: "Name the decision. Give numbers a comparison and growth a partner metric."}
+          - {title: Dashboards, body: "Name the decision. Give numbers a comparison and growth a partner metric. Take the lightest stack that fits."}
           - {title: Story, accent: "D4621A", body: "Write the sentence first. Titles state findings. Propose the test."}
         takeaway: Name the question, show it honestly, remove the clutter, and state the decision you want in one sentence.
         source: notes/05-dashboards-and-storytelling.md
       - layout: bullets
         title: Where next
         bullets:
-          - "**Applied analyses:** six worked business questions using these charts."
+          - "**Applied analyses:** worked business questions using these charts."
           - "**Practice:** rebuild the Fernhill charts in `practice/`, then change the question."
           - "**Read next:** Knaflic for explanatory work, Wilke for chart choice, Munzner for the theory."
-        takeaway: Next, use these charts on six worked analyses in the applied-analyses pillar.
         source: notes/05-dashboards-and-storytelling.md

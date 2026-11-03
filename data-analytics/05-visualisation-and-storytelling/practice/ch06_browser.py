@@ -6,7 +6,7 @@
 
 Needs Google Chrome, and `npm install && npm run app` in js/ first. Run: uv run ch06_browser.py"""
 # %% setup
-import json
+import gzip
 import os
 import subprocess
 import sys
@@ -32,6 +32,25 @@ DRAW = """async ({type, n, xs, ys}) => {
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   return performance.now() - start;
 }"""
+
+
+def record_bytes(page):
+    """Sum what a page fetches, raw and as gzip level 6 would send it, so the two apps compare fairly."""
+    bodies = {}
+
+    def keep(response):
+        try:
+            bodies[response.url] = response.body()
+        except Exception:
+            pass
+    page.on("response", keep)
+    return bodies
+
+
+def report_bytes(name, bodies):
+    raw = sum(len(b) for b in bodies.values())
+    packed = sum(len(gzip.compress(b, 6)) for b in bodies.values())
+    print(f"{name}: {len(bodies)} files, {raw / 1024:,.0f} KB, {packed / 1024:,.0f} KB if gzipped")
 
 
 def wait_for(url, seconds=30):
@@ -80,8 +99,10 @@ with sync_playwright() as p:
         sizes = {}
         page = browser.new_page(viewport={"width": 940, "height": 860})
         page.on("response", lambda r: sizes.__setitem__(r.url.split("8123")[-1], r.headers.get("content-length")))
+        react_bytes = record_bytes(page)
         page.goto("http://127.0.0.1:8123/?key=demo-analyst-key", wait_until="networkidle")
         print("React page sent:", {k: v for k, v in sizes.items() if v})
+        report_bytes("React page, first load", react_bytes)
         print("table rows:", page.locator("tbody tr").count(), "|", page.locator("tbody tr").first.inner_text().replace("\t", " | "))
         page.screenshot(path=cs.IMAGES / "viz-segments-react-dashboard.png")
         page.select_option("select", "Wales")
@@ -99,11 +120,13 @@ with sync_playwright() as p:
         wait_for("http://127.0.0.1:8050/")
         page = browser.new_page(viewport={"width": 940, "height": 860})
         calls = []
+        dash_bytes = record_bytes(page)
         page.on("request", lambda r: calls.append(r.url) if "_dash-update" in r.url else None)
         page.goto("http://127.0.0.1:8050/", wait_until="networkidle")
         page.wait_for_selector(".main-svg")
         print("Dash traces:", page.evaluate("document.querySelector('.js-plotly-plot').data.map(t => t.name)"))
         print("Dash callback requests so far:", len(calls))
+        report_bytes("Dash page, first load", dash_bytes)
         page.screenshot(path=cs.IMAGES / "viz-segments-dash-dashboard.png")
     finally:
         server.terminate()

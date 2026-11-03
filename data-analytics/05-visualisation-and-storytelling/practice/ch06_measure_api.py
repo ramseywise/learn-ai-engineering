@@ -40,7 +40,7 @@ def timed(call, repeats):
 
 start = time.perf_counter()
 table = segments.build_table()
-print(f"nightly job: {time.perf_counter() - start:.1f} s for {len(table):,} customers, "
+print(f"batch job: {time.perf_counter() - start:.1f} s for {len(table):,} customers, "
       f"{segments.TABLE.stat().st_size / 1e6:.1f} MB parquet")
 good, naive = TestClient(api.build_app(table)), TestClient(api.build_naive_app(table))
 print(f"{platform.machine()} {platform.system()}, python {platform.python_version()}")
@@ -77,16 +77,18 @@ print("naive first row keys:", sorted(leak))
 # %% serialisation
 records = table.to_dict("records")
 print(f"to_dict + json.dumps: {timed(lambda: json.dumps(records), 3)[0]:,.0f} ms, "
-      f"{len(json.dumps(records)) / 1024:,.0f} KB")
+      f"{len(json.dumps(records, separators=(",", ":"))) / 1024:,.0f} KB")
 slim = table[["x", "y", "segment"]]
 as_records = slim.to_json(orient="records")
-as_columns = json.dumps({c: slim[c].tolist() for c in slim})
+as_columns = json.dumps({c: slim[c].tolist() for c in slim}, separators=(",", ":"))
 print(f"three columns, records {len(as_records) / 1024:,.0f} KB (gzip {len(gzip.compress(as_records.encode(), 6)) / 1024:,.0f}), "
       f"columnar {len(as_columns) / 1024:,.0f} KB (gzip {len(gzip.compress(as_columns.encode(), 6)) / 1024:,.0f})")
 
 # %% refit-versus-read
-refit_ms, refit_worst, _ = timed(lambda: naive.get("/segments/refit"), 5)
-refit_region_ms, _, _ = timed(lambda: naive.get("/segments/refit?region=Wales"), 5)
+refit_ms, refit_worst, answer = timed(lambda: naive.get("/segments/refit"), 5)
+answer.raise_for_status()
+refit_region_ms, _, answer = timed(lambda: naive.get("/segments/refit?region=Wales"), 5)
+answer.raise_for_status()
 read_ms = timed(lambda: api.summarise(pd.read_parquet(segments.TABLE)), 15)[0]
 memory_ms = timed(lambda: api.summarise(table), 51)[0]
 results["costs"] = dict(refit_ms=refit_ms, refit_worst_ms=refit_worst, refit_region_ms=refit_region_ms,

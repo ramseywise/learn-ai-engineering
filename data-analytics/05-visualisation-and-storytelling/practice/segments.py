@@ -72,7 +72,10 @@ def name_clusters(frame, cluster):
 
 
 def build_table(n=50_000, seed=7, path=TABLE):
-    """The nightly job: fit once, write one table the app only ever reads."""
+    """The batch job: fit, name, and write one table the app only ever reads.
+
+    It fits on every run because this data is seeded and never changes. A real job keeps the
+    approved model and only assigns new customers to it, until someone approves a refit."""
     frame = make_customers(n, seed)
     cluster, x, y = fit(frame)
     frame["segment"] = pd.Series(cluster).map(name_clusters(frame, cluster)).values

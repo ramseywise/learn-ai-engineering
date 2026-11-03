@@ -44,6 +44,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | [TypeScript](typescript/README.md) | After Python for engineers | JavaScript → types → async and tooling → typed AI apps | TypeScript Handbook; *typescript-exercises*; *type-challenges* | Type-safe exercises and a validated async boundary |
 | [Computer science foundations](computer-science/README.md) | After Python foundations; pairs with Python for engineers | Cost models and Big-O → data structures → algorithm patterns → numbers and memory → processes, threads and I/O → networks | OSTEP, Erickson's *Algorithms*, MIT 6.042 notes, CPython source notes, RFCs and Goldberg; see its [references](computer-science/references.md) | Data structures, a stream decoder and an RFC 6298 timer built against tests, and every timing in the notes reproducible |
 | [Software design](software-design/README.md) | After Python for engineers | Readable code → refactoring → design principles → patterns → testing → debugging → Git, review and design docs | Authors' free writing, papers and tool documentation; see its [references](software-design/references.md) | A smelly module refactored under tests, then extended |
+| [Backend and system design](backend-and-system-design/README.md) | After computer science foundations; pairs with software design | API design → auth → caching and queues → load balancing and rate limiting → estimation and scaling → containers and deployment → reliability under load → design walkthroughs → AI system reference architecture | RFCs, OWASP, the Google SRE book, project docs and published papers; see its [references](backend-and-system-design/references.md) | A rate limiter, single-flight cache, JWT verifier, lease scheduler, small LSM store and token budget built against tests, and a container that drains correctly on SIGTERM |
 
 The tracks deliberately overlap. Python gives SQL and TypeScript their programming vocabulary; SQL sharpens the data model before [Data Analytics](../data-analytics/README.md); Python plus TypeScript prepares you for [AI Engineering](../ai-engineering/README.md).
 
@@ -148,6 +149,14 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 **Next:** Apply it in any later course. The reading order and sources are in the [track README](software-design/README.md).
 
+### [Backend and system design](backend-and-system-design/README.md)
+
+**Purpose:** How a service holds up with real users: API contracts, identity, caches and queues, balancing and limits, capacity sums, deployment and behaviour under load, then five design walkthroughs and a reference architecture for an AI system. Like software design, its notes follow the full chapter standard.
+
+**Evidence:** Build the [lab](backend-and-system-design/practice/README.md)'s modules against their tests, size a design from computed numbers, and say for every box on your diagram what happens to a request if it is slow, down, or running twice.
+
+**Next:** [Storage and compute foundations](../data-engineering/01-storage-and-compute-foundations/README.md) for what's underneath a store. The reading order and sources are in the [track README](backend-and-system-design/README.md).
+
 ## Completion standard and further practice
 
 Complete the Python track before moving to data or AI work. Take SQL when you will query or model data; take TypeScript when you will build typed applications. A complete programming foundation includes a passing Python exercise set and package, checked SQL exercises and capstone, and passing TypeScript checks plus a validated asynchronous boundary.
@@ -185,6 +194,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 | TypeScript exercises, tests, vendored `typescript-exercises/` and `type-challenges/`, [`check.ts`](typescript/practice/check.ts) | Needs Node 22.18+ (runs `.ts` directly, no build step) and one `npm install` (downloads TypeScript 7, zod, `@types/node`, the Anthropic SDK into the gitignored `node_modules/`) | `cd typescript/practice && npm install && npm run check` |
 | TypeScript live example [`examples/claude.ts`](typescript/practice/examples/claude.ts) | Needs an API key (`ANTHROPIC_API_KEY`); exits cleanly without one | `node examples/claude.ts` |
 | [`computer-science/practice/check.sh`](computer-science/practice/check.sh) | Needs `uv` and Python 3.14; the first run downloads pytest, numpy and `python3.14t`. Runs the lab's tests and every code block in the notes. Network blocks are opt-in | `bash check.sh`, `bash check.sh exercises`, `bash check.sh network` |
+| [`backend-and-system-design/practice/check.sh`](backend-and-system-design/practice/check.sh) | Needs `uv` and Python 3.14; the container checks also need Docker, and print a skip without it. Runs the lab's tests and every code block in the notes | `bash check.sh`, `bash check.sh exercises` |
 
 ## Primary texts
 
@@ -198,6 +208,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 - Ramalho, *Fluent Python*: further reading for Python 03
 - Computer science foundations: the [track's primary texts](computer-science/README.md#primary-texts)
 - Software design: the [track's primary texts](software-design/README.md#primary-texts)
+- Backend and system design: the [track's primary texts](backend-and-system-design/README.md#primary-texts)
 - McKinney, *Python for Data Analysis*: where the path goes next, in [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md)
 
 Everything else, with licences: [references.md](references.md). Each track README also maps sources directly to its notes.

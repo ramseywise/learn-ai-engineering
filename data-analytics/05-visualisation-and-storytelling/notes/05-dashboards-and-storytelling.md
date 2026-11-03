@@ -397,4 +397,4 @@ Alberto Cairo adds the conscience. In *The Truthful Art* he names five qualities
 
 ## Next
 
-You can now choose a form, draw it in any tool, and argue from it. The next pillar uses all of this on real business questions, starting with one that every operations team asks: [Forecasting](../../06-applied-analyses/notes/01-forecasting.md).
+You can now choose a form, draw it in any tool, and argue from it. The next chapter asks which stack a dashboard should be built on, and how Python results reach a browser: [Dashboard stacks](06-dashboard-stacks-from-python-to-frontend.md).

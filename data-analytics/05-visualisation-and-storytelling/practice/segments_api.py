@@ -50,7 +50,7 @@ class CustomerPage(BaseModel):
 def role_of(x_api_key: str = Header(default="")) -> str:
     """Who is calling. Compare keys in constant time, and refuse anything unknown."""
     for key, role in KEYS.items():
-        if secrets.compare_digest(x_api_key, key):
+        if secrets.compare_digest(x_api_key.encode(), key.encode()):
             return role
     raise HTTPException(status_code=401, detail="Unknown API key")
 
@@ -79,7 +79,7 @@ def bin_map(table: pd.DataFrame, cell: float = .25) -> list[dict]:
 
 
 def build_app(table: pd.DataFrame, gzip: bool = False) -> FastAPI:
-    """The app reads the table the nightly job wrote. It never imports a model."""
+    """The app reads the table the batch job wrote. It never imports a model."""
     app = FastAPI(title="Fernhill segments")
     if gzip:
         app.add_middleware(GZipMiddleware, minimum_size=1000)

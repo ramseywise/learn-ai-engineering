@@ -31,7 +31,7 @@ Librarian can present these same materials as lessons, decks, practice, and prog
 
 | Course | What you learn | Recommended preparation | Syllabus |
 |---|---|---|---|
-| Programming | The Python, SQL, and TypeScript fluency needed to read, test, and build technical systems, the computer science behind them, and the software design to keep them changeable. | None | [Syllabus](programming/README.md) |
+| Programming | The Python, SQL, and TypeScript fluency needed to read, test, and build technical systems, the computer science behind them, the software design to keep them changeable, and the backend and system design to keep them running under load. | None | [Syllabus](programming/README.md) |
 | Data analytics | Turn messy data into statistically honest, decision-ready analysis. | Python foundations; SQL alongside it | [Syllabus](data-analytics/README.md) |
 | Data science | Fit, evaluate, explain, and apply classical, neural, NLP, time-series, and recommender models. | Python and data-analytics foundations | [Syllabus](data-science/README.md) |
 | Data engineering | Build the storage, ingestion, transformation, quality, serving, and governance systems that data products rely on. | Python and SQL; data analytics recommended, not required | [Syllabus](data-engineering/README.md) |

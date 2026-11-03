@@ -21,6 +21,8 @@ in each note's frontmatter. [Sources and depth](../CURRICULUM.md#sources-and-dep
 
 The computer science foundations track keeps its own list: [computer-science/references.md](computer-science/references.md).
 
+The backend and system design track keeps its own list: [backend-and-system-design/references.md](backend-and-system-design/references.md).
+
 The software design track keeps its own list: [software-design/references.md](software-design/references.md).
 
 ## SQL

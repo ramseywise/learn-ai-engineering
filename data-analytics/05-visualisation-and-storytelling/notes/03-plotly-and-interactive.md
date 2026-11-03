@@ -187,7 +187,7 @@ Altair's limit is the opposite of plotly's: its specification embeds the data, a
 | Linked brushing across views | Altair | Selections are declared in the grammar |
 | Publication or slide figures | Matplotlib | Precise control of every element |
 | Custom interaction, new chart forms | D3 | See chapter 4 |
-| A filtered view backed by live queries | Streamlit or a BI tool | See chapter 5 |
+| A filtered view backed by live queries | Streamlit or a BI tool | See chapter 5, and [chapter 6](06-dashboard-stacks-from-python-to-frontend.md) for choosing the stack |
 
 ## Pitfalls
 
