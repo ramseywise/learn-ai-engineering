@@ -608,7 +608,7 @@ impact of revenue_by_month: ['revenue_by_month', 'weekly_revenue_dashboard']
 upstream of the dashboard: ['daily_revenue', 'not_null_daily_revenue_ordered_on', 'raw_orders', 'revenue_by_month', 'stg_orders', 'unique_daily_revenue_ordered_on', 'weekly_revenue_dashboard']
 ```
 
-Finance excludes refunds and growth doesn't, so "revenue" is two numbers, and the meeting goes to arguing about which. The fix is to define the metric once, near the models, and have every tool ask for it. [The dbt Semantic Layer](https://docs.getdbt.com/docs/use-dbt-semantic-layer/dbt-sl), built on MetricFlow, does this by moving metric definitions out of the BI layer and into the modelling layer, and handling joins for you. The `metric_sql` function above is only the idea in a few lines. The hosted layer needs a dbt Starter or Enterprise account, and I did not run it. A governed set of marts with one column per metric gets you much of the benefit with no new tool, provided people use them.
+Finance excludes refunds and growth doesn't, so "revenue" is two numbers, and the meeting goes to arguing about which. The fix is to define the metric once, near the models, and have every tool ask for it. [The dbt Semantic Layer](https://docs.getdbt.com/docs/use-dbt-semantic-layer/dbt-sl), built on MetricFlow, does this by moving metric definitions out of the BI layer and into the modelling layer, and handling joins for you. The `metric_sql` function above is only the idea in a few lines. The hosted layer needs a dbt Starter or Enterprise account, and I did not run it. A governed set of marts with one column per metric gets you much of the benefit with no new tool, provided people use them. [Catalog, semantic layer and data contracts](../../07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) runs MetricFlow locally, through join paths and non-additive metrics.
 
 The last two lines use an [exposure](https://docs.getdbt.com/docs/build/exposures), declared in `schema.yml` with an owner and `depends_on`. dbt now knows a dashboard exists, so `+exposure:weekly_revenue_dashboard` lists what feeds it, and the `state:modified+` output earlier listed the dashboard as affected by the change. That's lineage for the last hop, which [monitors and lineage](02-monitors-and-lineage.md) covers for the rest of the pipeline.
 
@@ -638,7 +638,7 @@ stg_orders        -             NO          []
 CI gate, models with no owner: ['dim_products', 'stg_orders']
 ```
 
-The last line is the useful part. A catalog people have to remember to fill goes stale, so make the facts required: fail CI when a model in a marts layer has no owner or description. Buy a product when you have many tools to span and enough people searching. A tool bought to solve a documentation habit won't.
+The last line is the useful part. A catalog people have to remember to fill goes stale, so make the facts required: fail CI when a model in a marts layer has no owner or description. Buy a product when you have many tools to span and enough people searching. A tool bought to solve a documentation habit won't. [Chapter 07/03](../../07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) takes the catalog further: push and pull, glossary, certification, and how to measure staleness and adoption.
 
 ## Reverse ETL
 

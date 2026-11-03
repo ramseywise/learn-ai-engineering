@@ -403,7 +403,7 @@ drill across:        (11233203.0, 314322)
 true:                11233203.0 314322
 ```
 
-Joining fact to fact doubled the fares, because each day and zone has two shifts, and it inflated drivers by more than a hundred times, because each shift row repeated once per trip. Both errors are the fan-out from earlier, this time in both directions at once. **Drilling across** means aggregating each fact to the shared dimension first and then joining the results, and that returns the true totals exactly. A BI tool's semantic layer does the same for you, if the model tells it which facts and dimensions conform.
+Joining fact to fact doubled the fares, because each day and zone has two shifts, and it inflated drivers by more than a hundred times, because each shift row repeated once per trip. Both errors are the fan-out from earlier, this time in both directions at once. **Drilling across** means aggregating each fact to the shared dimension first and then joining the results, and that returns the true totals exactly. A BI tool's semantic layer does the same for you, if the model tells it which facts and dimensions conform ([one running, with the fan-out it refuses](../../07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md#a-semantic-layer-compiles-the-question-at-its-grain)).
 
 ## When the star is the wrong tool
 

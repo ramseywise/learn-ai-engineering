@@ -33,7 +33,7 @@ own engineering, which no existing pillar could hold.
 
 | In | Out (lives elsewhere) |
 |---|---|
-| Image and document input: vision-language models, OCR vs. VLM, image token cost, resolution and cropping | How ViTs and CLIP are built and trained: [generative-ai/01](../../generative-ai/01-llm-fundamentals/README.md) |
+| Image and document input: vision-language models, OCR vs. VLM, image token cost, resolution and cropping | How ViTs are built and trained: [DS 02/05b](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md). CLIP gets a summary in [chapter 01](notes/01-image-input.md), and no chapter trains it |
 | Multimodal RAG: page-as-image retrieval (ColPali), captioning vs. embedding figures, tables | Text RAG pipelines: [generative-ai/02](../../generative-ai/02-rag-retrieval/README.md) |
 | Speech: ASR, TTS, cascaded vs. end-to-end voice pipelines, latency budgets | Building a full voice or computer-use agent: [generative-ai/07 note 03](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) |
 | Image and video generation as an API: prompting, editing, cost, provenance | Serving the models on GPUs: [07-inference](../07-inference-engineering/README.md) |
@@ -75,7 +75,7 @@ the checks into one scorecard. Attacks that arrive through an image, a document 
 |---|---|
 | [DS 02/04 Convolutional networks](../../data-science/02-deep-learning/notes/04-convolutional-networks.md) | Optional background: the vision models before ViT |
 | [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: comparing vectors in one space |
-| [GA 01/09 PEFT and fine-tuning in practice](../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md) | Parameter-efficient fine-tuning for image models |
+| [GA 01/09 PEFT and fine-tuning in practice](../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md) | Parameter-efficient fine-tuning on text models, the method chapter 02b applies to a vision-language model |
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | The pipeline multimodal RAG extends |
 | [GA 07/03 Real-time multimodal agents](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) | The voice case |
 | [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Judging multimodal output |

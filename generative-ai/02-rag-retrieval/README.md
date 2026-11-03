@@ -61,6 +61,7 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 
 | Chapter | Why |
 |---|---|
+| [DE 07/03 Catalog, semantic layer and contracts](../../data-engineering/07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) | Optional background: the table and column meaning text-to-SQL schema subsetting needs, and the metric kind of semantic layer |
 | [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | Optional background: TF-IDF, derived from scratch |
 | [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | Optional background: TF-IDF with a linear model as the baseline |
 | [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: BM25 built by hand |

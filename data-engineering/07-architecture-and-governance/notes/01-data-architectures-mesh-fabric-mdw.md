@@ -127,7 +127,7 @@ Serra calls a **data fabric** an evolution of the MDW, an added layer that impro
 | Feature | What it adds |
 |---|---|
 | Data access policies | Rules for who sees what, how it may be used and when, which every request must pass through. He calls them the key to governance |
-| Metadata catalog | Search across all datasets, with **lineage** (where a value came from and how it was transformed) |
+| Metadata catalog | Search across all datasets, with **lineage** (where a value came from and how it was transformed). [Built out in chapter 03](03-catalog-semantic-layer-and-contracts.md) |
 | Master data management (MDM) | One golden record per customer, product, supplier |
 | Data virtualization | Query data where it sits, without copying. Optional, and in most cases used for only a few sources |
 | Real-time processing | Streams alongside batch ([Ingest](../../02-ingest-and-modelling/notes/01-ingest.md)) |
@@ -513,10 +513,10 @@ The handout groups discussion prompts into three themes. For each, here is the m
 
 | Prompt | Root cause | Mechanism | Chapter |
 |---|---|---|---|
-| Where does this column come from? | No lineage | dbt docs DAG; fabric metadata catalog | [Transform](../../03-transform-and-orchestrate/notes/01-transform.md), [Data fabric](#data-fabric) |
+| Where does this column come from? | No lineage | dbt docs DAG; fabric metadata catalog | [Transform](../../03-transform-and-orchestrate/notes/01-transform.md), [Data fabric](#data-fabric), [Catalog](03-catalog-semantic-layer-and-contracts.md) |
 | A dataset used by models is modified; who is hit? | Dependencies not recorded | `downstream()` over declared `reads`; lineage events | [Monitors and lineage](../../05-quality-and-observability/notes/02-monitors-and-lineage.md) |
 | Backend data arrives with no QA | No check at the boundary | Tests at `error` severity at staging; quality dimensions | [Quality dimensions](../../05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) |
-| Two dashboards show different numbers | Two definitions of one metric | One mart per metric; a semantic layer | [Transform](../../03-transform-and-orchestrate/notes/01-transform.md) |
+| Two dashboards show different numbers | Two definitions of one metric | One definition per metric, in a mart or a semantic layer | [Transform](../../03-transform-and-orchestrate/notes/01-transform.md), [Semantic layer](03-catalog-semantic-layer-and-contracts.md#a-semantic-layer-compiles-the-question-at-its-grain) |
 | Can't reproduce last quarter's experiment | Untracked data, params and code | MLflow runs with data path and git SHA tags | [Tracking and registry](../../06-ml-platform/notes/02-experiment-tracking-and-model-registry.md) |
 | Is the model fair across groups? | No segment-level evaluation | Reports per segment; fairness checks in CI | [Drift](../../06-ml-platform/notes/04-drift.md) |
 

@@ -25,6 +25,11 @@ cleaned: 2026-11-01
 
 | Paper | Why read it | PDF | Maps to |
 |---|---|---|---|
+| Khan et al., [*Fine-Tuning Vision-Language Model for Automated Engineering Drawing Information Extraction*](https://arxiv.org/abs/2411.03707) (ICIAI 2025, LNEE 2026) | Zero-shot GPT-4o and Claude against a fine-tuned Florence-2 on 400 drawings | Link only | 02 |
+| Villena Toro & Tarkian, [*Optimizing Text Recognition in Mechanical Drawings*](https://www.diva-portal.org/smash/get/diva2:1950437/FULLTEXT01.pdf) (eDOCr2; Machines 13:254, 2025) | A dedicated pipeline against VLMs, on seven drawings | Link only | 02 |
+| Khan et al., [*From Drawings to Decisions*](https://arxiv.org/abs/2506.17374) (Robotics and Computer-Integrated Manufacturing 99, 2026) | Detector then parser on 1,367 drawings, weak on title blocks | Link only | 02 |
+| UV-Net, [*Learning from Boundary Representations*](https://arxiv.org/abs/2006.10211) (CVPR 2021) | Native B-rep learning, and where meshes keep up | Link only | 02 |
+| BRepNet, [*A Topological Message Passing System for Solid Models*](https://arxiv.org/abs/2104.00706) (CVPR 2021) | What meshing and sampling lose from a B-rep | Link only | 02 |
 | McKinzie et al., [MM1: Methods, Analysis & Insights from Multimodal LLM Pre-training](https://arxiv.org/abs/2403.09611) (ECCV 2024) | ★ The systematic study that ranks resolution above encoder size and connector design | [✓ PDF](sources/mckinzie-2024-mm1.pdf) | [01](notes/01-image-input.md) |
 | Li et al., [Mini-Gemini: Mining the Potential of Multimodal Vision Language Models](https://arxiv.org/abs/2403.18814) (IEEE TPAMI 2026) | Adds high-resolution detail without adding visual tokens | [✓ PDF](sources/li-2024-mini-gemini.pdf) | [01](notes/01-image-input.md) |
 | Aneja et al., [Phi-4-reasoning-vision-15B Technical Report](https://arxiv.org/abs/2603.03975) (2026 ⚑) | Compares dynamic resolution, tiling and token budgets directly | [✓ PDF](sources/aneja-2026-phi-4-reasoning-vision-15b.pdf) | [01](notes/01-image-input.md) |

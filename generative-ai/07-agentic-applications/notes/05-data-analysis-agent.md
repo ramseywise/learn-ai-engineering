@@ -178,7 +178,7 @@ mean_of_shares    winner: Fri   order: ['Fri', 'Sun', 'Thur', 'Sat']
 share_of_totals   winner: Fri   order: ['Fri', 'Thur', 'Sun', 'Sat']
 ```
 
-The dollar question picks Sunday, because bills are larger on Sunday. Both share questions pick Friday, and they disagree about what comes next. Each is a correct query. No validator can choose between them from the data, since the choice is a business decision. So a person writes it down ahead of time, as a metric definition the agent is required to use. Real analytics stacks call this a semantic layer, and the lab has a small version:
+The dollar question picks Sunday, because bills are larger on Sunday. Both share questions pick Friday, and they disagree about what comes next. Each is a correct query. No validator can choose between them from the data, since the choice is a business decision. So a person writes it down ahead of time, as a metric definition the agent is required to use. Real analytics stacks call this a [semantic layer](../../../data-engineering/07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md), and the lab has a small version:
 
 ```text
 Metric("tip_share", "tips", "tip", "total_bill", "tip as a fraction of that bill, averaged over bills")

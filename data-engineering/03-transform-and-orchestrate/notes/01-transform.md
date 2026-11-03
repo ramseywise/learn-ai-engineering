@@ -629,7 +629,7 @@ The zoomcamp shows two paths.
 | dbt Cloud | `dbt_cloud_setup.md`: connect BigQuery with a service-account key, link the repo | dbt Cloud jobs, `dbt build` on a cron, with a production environment and target dataset |
 | dbt Core locally (Postgres in the course) | `docker_setup/` (Dockerfile and compose) or `pip install dbt-bigquery` / `dbt-postgres`, plus `~/.dbt/profiles.yml` | Your orchestrator runs `dbt build` as a task ([orchestrate](02-orchestrate.md)) |
 
-The module ends by charting `dm_monthly_zone_revenue` in Google Data Studio (now Looker Studio) or Metabase. A dashboard on a mart, never on a staging view, is the rule that keeps metric logic in one place, and it's what prevents the "two dashboards show different numbers" scenario in [data architectures](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md).
+The module ends by charting `dm_monthly_zone_revenue` in Google Data Studio (now Looker Studio) or Metabase. A dashboard on a mart, never on a staging view, is the rule that keeps metric logic in one place (a [semantic layer](../../07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md#a-semantic-layer-compiles-the-question-at-its-grain) is the next step when one mart can't serve every grain), and it's what prevents the "two dashboards show different numbers" scenario in [data architectures](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md).
 
 ## Run labels
 

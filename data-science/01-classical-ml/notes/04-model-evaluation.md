@@ -399,9 +399,17 @@ Gaussian naive Bayes on a one-hot table is a deliberately bad case: its scores p
 | Naive Bayes | Pushed towards 0 and 1 |
 | SVM (`decision_function`), boosted trees | Sigmoid-shaped distortion |
 | Random forest | Pulled away from 0 and 1 |
-| Deep networks | Overconfident; temperature scaling (one scalar on the logits) fixes most of it |
+| Deep networks | Often overconfident; temperature scaling (one scalar on the logits) removes the average bias, not the rest (Guo; Minderer, below) |
 
-Deep networks made calibration a live research question. Guo et al. found modern deep nets overconfident ([arXiv:1706.04599](https://arxiv.org/abs/1706.04599), ICML 2017). On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets. Minderer et al. revisit this and find recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size ([arXiv:2106.07998](https://arxiv.org/abs/2106.07998), NeurIPS 2021).
+Deep networks made calibration a live research question. Guo et al. found modern deep nets overconfident ([arXiv:1706.04599](https://arxiv.org/abs/1706.04599), ICML 2017). On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets. Minderer et al. revisit this on recent ImageNet classifiers, and release measurements for 180 models from 16 families ([arXiv:2106.07998](https://arxiv.org/abs/2106.07998), NeurIPS 2021). Recent non-convolutional families (vision transformers, MLP-Mixer) are among the best calibrated. Size and pretraining don't fully explain the gap, and the authors only speculate that architecture is the cause.
+
+Three of their limits are easy to miss:
+
+- **What temperature scaling removes.** It leaves accuracy alone and corrects average over- or underconfidence. Differences between families remain after it.
+- **Shift.** They fit the temperature on clean ImageNet and tested on corrupted ImageNet. Calibration error still grew with corruption for every family, so a temperature fitted before shift doesn't fully carry over, though the decay was slower for MLP-Mixer and ViT.
+- **Which number to choose on.** In the one cost model they tested, abstaining on the least confident predictions, the more accurate of two BiT models cost less at abstention rates up to 70%. Its gap was 0.08 in error against 0.009 in ECE. The bin count can also flip the sign of the link between ECE and accuracy, so compare the two together.
+
+These are 2021 image classifiers, so don't carry the ranking to other domains or later models.
 
 [Imbalance, errors and drift](10-imbalance-errors-and-drift.md#calibration-the-bridge-from-score-to-price) shows why it matters to a lender, who has to turn a score into a price.
 

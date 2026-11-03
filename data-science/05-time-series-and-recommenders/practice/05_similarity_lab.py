@@ -25,10 +25,16 @@ from parts_catalogue import make_catalogue
 from similarity_train import BATCH, DEVICE, K, LR, MODEL, SEEDS, STEPS, TEMPERATURE, encode, evaluate, labelled_pairs, train
 
 # %%
+def spec_keys(parts):
+    """Each spec id with the family, dimensions and critical attributes it stands for."""
+    info = parts.drop_duplicates("spec").set_index("spec").drop(columns=["part", "vendor", "code"])
+    return {spec: tuple(sorted((k, v) for k, v in row.items() if pd.notna(v))) for spec, row in info.iterrows()}
+
+
 started = time.time()
 print(f"device {DEVICE}, model {MODEL}, {STEPS} steps, batch {BATCH}, lr {LR}, temperature {TEMPERATURE}, recall@{K}")
-print("All training catalogues and test catalogues are different generations: no record, code or part is shared.")
-rows, arms = [], {
+print("Training and test catalogues are different generations. No code is shared, but specs can recur, as measured below.")
+rows, overlap, arms = [], [], {
     "in-batch": dict(),
     "+ hardest (rank 1-10)": dict(band=(0, 10)),
     "+ hardest, false negatives removed": dict(band=(0, 10), oracle=True),
@@ -36,8 +42,12 @@ rows, arms = [], {
     "hardest only, no in-batch": dict(band=(0, 10), in_batch=False),
 }
 for seed in SEEDS:
-    train_records, _ = make_catalogue(seed)
+    train_records, train_parts = make_catalogue(seed)
     test_records, test_parts = make_catalogue(seed + 1000)
+    trained = set(spec_keys(train_parts).values())
+    seen_specs = {spec for spec, key in spec_keys(test_parts).items() if key in trained}  # spec ids are per catalogue, so compare what they describe
+    overlap.append(dict(seed=seed, test_specs_in_training=test_records.spec.drop_duplicates().isin(seen_specs).mean(), test_records_in_training=test_records.spec.isin(seen_specs).mean(),
+                        codes_shared=len(set(test_parts.code) & set(train_parts.code)), texts_shared=len(set(test_records.text) & set(train_records.text))))
     tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), sublinear_tf=True).fit_transform(test_records.text)
     rows.append(dict(seed=seed, arm="TF-IDF characters, no training", pairs=0,
                      **evaluate(tfidf.toarray(), test_records, test_parts)))
@@ -48,19 +58,22 @@ for seed in SEEDS:
         pairs, groups = labelled_pairs(train_records, n, rng)
         for arm, kw in (arms.items() if n == 1000 else [("in-batch", {})]):
             model, false_share = train(train_records, pairs, groups, seed, **kw)
-            rows.append(dict(seed=seed, arm=arm, pairs=len(pairs), mined_false_negatives=false_share,
-                             **evaluate(encode(model, test_records.text), test_records, test_parts)))
+            rows.append(dict(seed=seed, arm=arm, pairs=len(pairs), mined_matches_before_removal=false_share,
+                             **evaluate(encode(model, test_records.text), test_records, test_parts, seen_specs)))
             del model
     print(f"seed {seed} done, {time.time() - started:.0f}s", flush=True)
 res = pd.DataFrame(rows)
 available = int(sum(n * (n - 1) // 2 for n in train_records.groupby("spec").size()))
 print(f"\ntraining catalogue, last seed: {len(train_records)} records, {available} interchangeable pairs a label could cover")
 print("\n--- mean over seeds, new catalogue")
-print(res.groupby(["arm", "pairs"], sort=False)[["recall", "unsafe_in_top", "mined_false_negatives"]].mean().round(3).to_string())
+print(res.groupby(["arm", "pairs"], sort=False)[["recall", "unsafe_in_top", "mined_matches_before_removal"]].mean().round(3).to_string())
 print("\n--- standard deviation over seeds")
 print(res.groupby(["arm", "pairs"], sort=False)[["recall", "unsafe_in_top"]].std().round(3).to_string())
 wide = res[res.arm.isin(["in-batch", "+ hardest (rank 1-10)"]) & (res.pairs == 1000)].pivot(index="seed", columns="arm", values="unsafe_in_top")
 print("\n--- look-alikes in the top 10 at 1000 pairs, seed by seed\n" + wide.round(3).to_string())
+print("\n--- what the test catalogue shares with training\n" + pd.DataFrame(overlap).set_index("seed").round(3).to_string())
+split = res[(res.arm == "in-batch") & (res.pairs == 1000)]
+print("\n--- in-batch at 1000 pairs, queries whose spec was or was not in training\n" + split[["recall_seen", "recall_unseen", "unsafe_seen", "unsafe_unseen"]].agg(["mean", "std"]).round(3).to_string())
 
 # %%
 print("\n--- a family the model never trained on. 1000 pairs, in-batch. Scored only on that family in a new catalogue")

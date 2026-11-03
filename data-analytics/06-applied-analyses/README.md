@@ -38,6 +38,7 @@ The chapters can be read in any order, though 3 to 6 share a dataset and refer t
 
 | Chapter | Why |
 |---|---|
+| [DE 07/03 Catalog, semantic layer and contracts](../../data-engineering/07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) | Executes the metric definitions from note 11 at any grain, and traces who a change breaks |
 | [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Forecasting carries the same idea through to a staffing decision, and note 10 through to a stock order |
 | [DS 01/10 Imbalance, errors and drift](../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | Picks up where the credit scorecard stops |
 | [DS 01/05 Unsupervised learning](../../data-science/01-classical-ml/notes/05-unsupervised-learning.md) | Segmentation puts k-means to work on customers, and note 08 clusters journeys by their order |

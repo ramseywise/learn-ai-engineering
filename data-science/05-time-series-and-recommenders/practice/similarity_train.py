@@ -26,20 +26,28 @@ def sibling_of(parts):
     return {s: set(g.spec) - {s} for _, g in info.groupby(["family", "d", "l"]) for s in g.spec}
 
 
-def evaluate(vectors, records, parts):
-    """Each record queries all the others. Recall@K of interchangeable records, and look-alikes in the top K."""
+def evaluate(vectors, records, parts, seen_specs=None):
+    """Each record queries all the others. Recall@K of interchangeable records, and look-alikes in the top K.
+
+    With seen_specs, also splits both by whether the query's spec occurred in training.
+    """
     sim = vectors @ vectors.T
     np.fill_diagonal(sim, -np.inf)
     top = np.argpartition(-sim, K, axis=1)[:, :K]
     spec = records.spec.values
     siblings = sibling_of(parts)
-    recalls, unsafe = [], []
+    recalls, unsafe, seen = [], [], []
     for i in range(len(records)):
         relevant = (spec == spec[i]).sum() - 1
         if relevant:
             recalls.append((spec[top[i]] == spec[i]).sum() / min(relevant, K))
             unsafe.append(np.isin(spec[top[i]], list(siblings[spec[i]])).mean())
-    return dict(recall=np.mean(recalls), unsafe_in_top=np.mean(unsafe))
+            seen.append(seen_specs is not None and spec[i] in seen_specs)
+    out = dict(recall=np.mean(recalls), unsafe_in_top=np.mean(unsafe))
+    if seen_specs is not None:
+        recalls, unsafe, seen = np.array(recalls), np.array(unsafe), np.array(seen)
+        out |= dict(recall_seen=recalls[seen].mean(), recall_unseen=recalls[~seen].mean(), unsafe_seen=unsafe[seen].mean(), unsafe_unseen=unsafe[~seen].mean())
+    return out
 
 
 def labelled_pairs(records, n, rng):

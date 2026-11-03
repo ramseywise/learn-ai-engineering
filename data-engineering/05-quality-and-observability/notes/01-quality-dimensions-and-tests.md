@@ -358,7 +358,7 @@ A test run after the data is published tells you how bad the damage is. A test r
 
 ```mermaid
 flowchart LR
-  A[Raw partition lands] --> B[Contract: names and types]
+  A[Raw partition lands] --> B[Model contract: names and types]
   B --> C[Write to staging]
   C --> D{Row-level tests}
   D -- pass --> E[Publish to readers]
@@ -367,7 +367,7 @@ flowchart LR
   G -- drift --> F
 ```
 
-Each stage covers what the previous one cannot. A contract cannot see a null spike. A row test cannot see a missing day, because a missing day has no rows to test. Monitors catch those, though only after publication, and only by comparison with history. Iceberg's audit branches build the staging step into the table format ([Iceberg, Branching and Tagging](https://iceberg.apache.org/docs/latest/branching/)), and the [playbooks chapter](03-incident-playbooks.md) implements the gate with a DuckDB view.
+Each stage covers what the previous one cannot. A dbt model contract cannot see a null spike. A row test cannot see a missing day, because a missing day has no rows to test. Monitors catch those, though only after publication, and only by comparison with history. Iceberg's audit branches build the staging step into the table format ([Iceberg, Branching and Tagging](https://iceberg.apache.org/docs/latest/branching/)), and the [playbooks chapter](03-incident-playbooks.md) implements the gate with a DuckDB view.
 
 Not every failure should block. Blocking is right when wrong data does more harm than late data: finance numbers, or a model's training set. For a dashboard people glance at, warning and publishing is often better, since a stale chart is a failure too. Decide per table, and write it down.
 
@@ -421,7 +421,7 @@ Tests answer "is this batch acceptable by the rules I knew to write". The three 
 | How do you test accuracy? | Against an independent source: control totals, reconciliation with the producer, or sampling against the real world. |
 | What can row-level tests not catch? | Missing partitions, late data and shifts that stay within valid ranges. These need a comparison against time or history. |
 | What is write-audit-publish? | Write to a hidden location, run tests there, and expose the data only if they pass. It prevents bad data reaching readers rather than reporting it after. |
-| Contract versus test? | A contract enforces shape (names, types) at build. A test checks values after they exist. You usually want both. |
+| dbt model contract versus test? | A model contract enforces shape (names, types) at build. A test checks values after they exist. You usually want both. A [data contract](../../02-ingest-and-modelling/notes/04-data-contracts.md) is broader: a cross-team promise that includes meaning and owner. |
 | Great Expectations or dbt tests? | dbt tests when the model lives in dbt. GX for files and frames outside dbt, or where you want distribution expectations and data docs. Keep one home per rule. |
 | How do you pick thresholds? | Profile real data, adjust with domain knowledge, and prefer limits that encode physical truth over tight ones that go stale. |
 

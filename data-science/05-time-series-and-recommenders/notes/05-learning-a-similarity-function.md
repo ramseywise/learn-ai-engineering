@@ -52,7 +52,7 @@ HEXAGON SCREW ALT 39W8215 DOVRA M14X50     <- look-alike
 The setup, from [`practice/05_similarity_lab.py`](../practice/05_similarity_lab.py), which takes 15 to 25 minutes on an Apple M4 Pro GPU:
 
 - **Model.** `all-MiniLM-L6-v2`, a small pretrained sentence encoder, about 90 MB. Each training run is 400 steps, batch 32, learning rate 2e-5, temperature 0.05, about 35 seconds.
-- **Data.** Generated catalogues of about 1,700 records. Training and test catalogues are different generations, sharing no record, code or part, though they share the families and the shape of the text. That's generous, and we test it below.
+- **Data.** Generated catalogues of about 1,700 records. Training and test catalogues are different generations. They share no code, but about two thirds of the test specs also occur in training under another code, and they share the families and the shape of the text. Recurring specs barely help: at 1,000 pairs, recall is 0.911 on seen specs and 0.902 on unseen, with standard deviations of 0.011 and 0.015. Shared families are the generous part, and we test that below.
 - **Recall@10.** Each test record queries all the others. Recall is the share of its true matches in its top 10, with the denominator capped at 10.
 - **Look-alikes in the top 10.** The share of those ten slots holding a look-alike. A median spec has only three records, so most of the ten slots can't hold a match and something else fills them.
 - **Reported.** Means over three seeds, with standard deviations in the lab's output.
@@ -104,7 +104,7 @@ loss = F.cross_entropy(logits / temperature, torch.arange(len(batch)))
 
 The second step only removes matches you know about. An unlabelled match in the batch is still treated as a negative, which is called a **false negative**. Labels are always partial, so you can reduce this but can't remove it.
 
-Split straight after closing the labels, before you build any batch. In [the last chapter](04-entity-matching-and-learning-to-rank.md#splitting-pairs-without-leaking-the-answer), holding out parts while their look-alikes stayed in training overstated a similarity model by 0.131. Here the test catalogue is a separate generation, which you can't do with real data. With real data, hold out whole specs.
+Split straight after closing the labels, before you build any batch. In [the last chapter](04-entity-matching-and-learning-to-rank.md#splitting-pairs-without-leaking-the-answer), holding out parts while their look-alikes stayed in training overstated a similarity model by 0.131. Here the test catalogue is a new generation with no code in common, which you can't do with real data, and it doesn't hold specs out. With real data, hold out whole specs.
 
 ## How many pairs
 
@@ -130,7 +130,7 @@ trained on all families           0.861  0.947  0.944   0.917
 trained without this family       0.578  0.782  0.784   0.715
 ```
 
-Recall falls by 0.20 on average, and the tuned model still beats TF-IDF on every family. The generator is kind here. All its families share the same code formats and dimension strings, so some of what the model learned carries across. Expect a real new product line, with a new vocabulary, to fall further. That's a guess we can't test on this data.
+Recall falls by 0.20 on average, and the tuned model still beats TF-IDF on every family. The generator is kind here. All its families share the same code format and vendor names, and their dimensions are all short digit strings, so some of what the model learned carries across. Expect a real new product line, with a new vocabulary, to fall further. That's a guess we can't test on this data.
 
 Real data shows a harder version of this. In WDC Products, R-SupCon led on seen products and collapsed on unseen ones, with an F1 of 82.15 against 53.31 at the large size. Ditto held 67.94 on unseen and the cross-encoder RoBERTa held 69.75. Those two read the pair together, and both scored well above R-SupCon on unseen products. A score on a held-out family belongs next to your headline number.
 
@@ -139,8 +139,8 @@ Real data shows a harder version of this. In WDC Products, R-SupCon led on seen 
 In-batch negatives are whatever else landed in the batch, and most are easy. Mining adds the ones the model currently likes. For each anchor, the left record of a training pair, rank all the training records with the current encoder, drop what the labels call a match, and take a band of ranks. We add four per anchor to the in-batch set, and we rebuild the list once, halfway through training. All arms use 1,000 pairs:
 
 ```text
-                                     recall  look-alikes  mined that were
-                                             in top 10    really matches
+                                     recall  look-alikes  mined matches
+                                             in top 10    before removal
 in-batch                              0.908     0.494       -
 + hardest (rank 1-10)                 0.906     0.363     0.047
 + hardest, false negatives removed    0.893     0.304     0.048

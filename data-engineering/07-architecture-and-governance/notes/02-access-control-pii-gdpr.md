@@ -790,4 +790,4 @@ The fare model has no retention limit and no lawful basis, and it also trains on
 
 ## Next
 
-That closes the data-engineering subject's path from file to platform: storage, ingest, transform, warehouse, quality, ML platform, and the organisation that owns them. Read [the previous chapter](01-data-architectures-mesh-fabric-mdw.md) again with this one in mind, since federated governance only means something once these rules are the ones it enforces, and see the [pillar README](../README.md) for the deck and the rules of thumb.
+Read [the previous chapter](01-data-architectures-mesh-fabric-mdw.md) again with this one in mind, since federated governance only means something once these rules are the ones it enforces. An inventory like the one at the start of this chapter is one job of a catalog. [Catalog, semantic layer and data contracts](03-catalog-semantic-layer-and-contracts.md) builds that catalog out, and follows one column change through to the people it breaks.

@@ -55,7 +55,7 @@ flowchart LR
 
 Read them in order the first time, because each pillar consumes the previous one's output. Pillars 01 to 03 are the critical path, since every later pillar assumes them. If your goal is ML rather than platform work, you can take pillar 04 lightly and go on to pillars 05 and 06. Pillar 07 sits across the chain, and the dotted line from 05 to 03 is the repair: an incident ends in a backfill and a new test. [references.md](references.md) is the shared library of books, papers, courses and videos.
 
-The coursework is two DataTalksClub zoomcamps, kept as worked material and divided among the pillars they serve. Pillars 05 and 07 have no practice folder, and their chapter code runs from each chapter's `uv run --with ...` line.
+The coursework is two DataTalksClub zoomcamps, kept as worked material and divided among the pillars they serve. Pillar 07 has no practice folder, and its chapter code runs from each chapter's `uv run --with ...` line.
 
 ## Where each tool sits
 
@@ -69,7 +69,7 @@ Tools are easier to compare within a layer than across one. Snowflake against Ai
 | Store: operational | Serve the app | Postgres, Redis, DynamoDB, vector and graph stores |
 | Transform | Model data | dbt, Spark, SQL |
 | Orchestrate | Schedule, retry, backfill | Airflow, Dagster, Prefect |
-| Observe and govern | Trust and control | Great Expectations, OpenLineage, catalogs |
+| Observe and govern | Trust and control | Great Expectations, OpenLineage, catalogs, semantic layers (MetricFlow) |
 
 ## Units
 
@@ -111,9 +111,9 @@ Tools are easier to compare within a layer than across one. Snowflake against Ai
 
 ### [07 Architecture and governance](07-architecture-and-governance/README.md)
 
-**Objectives:** compare centralised, mesh, fabric, and MDW architectures (Serra; [Dehghani](https://martinfowler.com/articles/data-mesh-principles.html)); design ownership and interoperability; control access; protect PII; account for deletion, retention, and audit obligations (Kleppmann 2017, ch. 11–12).
+**Objectives:** compare centralised, mesh, fabric, and MDW architectures (Serra; [Dehghani](https://martinfowler.com/articles/data-mesh-principles.html)); design ownership and interoperability; control access; protect PII; account for deletion, retention, and audit obligations (Kleppmann 2017, ch. 11–12); run a catalog and a semantic layer, and trace a contract change to named consumers.
 
-**Learning:** [chapters and scenarios](07-architecture-and-governance/README.md); the scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice. **Evidence:** defend an architecture with mechanisms and trade-offs, then write an access/retention decision for a dataset.
+**Learning:** [chapters and scenarios](07-architecture-and-governance/README.md); the scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice. **Evidence:** defend an architecture with mechanisms and trade-offs, then write an access/retention decision for a dataset, and list who a column change breaks.
 
 ## Rules of thumb
 
@@ -128,7 +128,7 @@ Each pillar's README has its own full list. These are the ones that cross stages
 | Reach for DuckDB or Polars before Spark when the data fits on one machine | [01](01-storage-and-compute-foundations/notes/08-distributed-compute.md), [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
 | Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [02](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
 | Put a contract at every producer and consumer boundary | [02](02-ingest-and-modelling/notes/04-data-contracts.md) |
-| Define each metric once, in one mart, with an owner | [03](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+| Define each metric once, with an owner, in a mart or a semantic layer | [03](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) |
 | Make a task idempotent before you let anything retry it | [03](03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md) |
 | Partition on the date you always filter by, cluster on the next filter, and do not partition small tables | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
 | Commit output and offset together, or make the sink idempotent | [04](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) |

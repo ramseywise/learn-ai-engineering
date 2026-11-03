@@ -10,6 +10,13 @@ sources:
   - https://arxiv.org/abs/1904.08920
   - https://arxiv.org/abs/2502.17651
   - https://arxiv.org/abs/1912.13318
+  - https://arxiv.org/abs/2411.03707
+  - https://arxiv.org/abs/2506.17374
+  - https://www.diva-portal.org/smash/get/diva2:1950437/FULLTEXT01.pdf
+  - https://arxiv.org/abs/2006.10211
+  - https://arxiv.org/abs/2104.00706
+  - https://github.com/AutodeskAILab/Fusion360GalleryDataset/blob/master/LICENSE.md
+  - https://deep-geometry.github.io/abc-dataset/
   - ../practice/invoice_pipeline.py
 confidence: medium
 cleaned: 2026-11-02
@@ -258,6 +265,22 @@ The seconds vary with your machine. The sample is small and generated: three lay
 
 **Learning the layout rule.** Our `with_layout` is a hand-written version of what LayoutLM learns ([arXiv:1912.13318](https://arxiv.org/abs/1912.13318), Xu et al., KDD 2020). It gives BERT each token's 2-D position, pre-trained on about 11 million scanned pages. On the FUNSD forms task, with only 149 training forms, F1 rose from 0.6026 for BERT to 0.7866 with layout and 0.7927 with image features as well. On scanned receipts it reached 0.9524 against 0.9402 for the competition's winner, though using ground-truth OCR to remove OCR's effect, so a real pipeline starts lower. It also still needs OCR boxes first, and its pretraining took 80 hours per epoch on eight GPUs. That's a cost you can avoid by starting from the published weights. Choose it over rules once you have too many layouts to write rules for, and enough labelled documents to fine-tune.
 
+## Drawings and 3D parts
+
+An engineering drawing looks like a page and fails differently. The facts sit in small, often rotated dimensions, in tolerances, and in the symbols of GD&T (geometric dimensioning and tolerancing), such as the feature control frame, the small box that states how far a feature may deviate. The only public labelled set we found is the seven drawings in the eDOCr2 repository, whose code licence doesn't settle the rights to the drawings. So what follows is small, separate experiments that can't be compared with each other:
+
+| Setup | Result |
+|---|---|
+| [400 drawings, GD&T extraction](https://arxiv.org/abs/2411.03707), zero-shot against a fine-tuned small model, which is scored on its own 20% validation split | F1: GPT-4o 35.51, Claude 3.5 Sonnet 40.36, Florence-2 61.51 at best (four queries per image; 42.20 with one) |
+| [Seven drawings, three with feature control frames](https://www.diva-portal.org/smash/get/diva2:1950437/FULLTEXT01.pdf) | Dimension recall 93.75 for eDOCr2, a dedicated pipeline. GPT-4o 84.14, because it leaves out repeated dimensions, or 92.68 when repeats count as matches. Feature-control-frame recall 100 and 0 |
+| [1,367 drawings, detector then fine-tuned Donut](https://arxiv.org/abs/2506.17374), scored on patches the detector had already cut out | F1 0.965 on GD&T, 0.941 on measures, 0.533 on title blocks |
+
+Those models have dated, so run your own test. Two things are likely to hold anyway. General models read numbers better than symbols, and a detector that crops first makes the parser's job smaller. Score it like any other extraction, per field, because a dropped tolerance isn't a typo. When these papers report a "hallucination rate", it is 1 minus precision, so it isn't a second piece of evidence. We found no evaluation of checking a tolerance stack, so don't assume any model can.
+
+3D parts come in three forms. A **B-rep** (boundary representation, what a STEP file stores) holds exact faces and edges. A **mesh** approximates them with triangles, and a **point cloud** samples the surface. Each conversion loses something. [BRepNet](https://arxiv.org/abs/2104.00706) reports that meshing failed on 13% of its B-reps, and that sampling 2,048 points can miss small holes and grooves. On its Fusion 360 segmentation task, per-face IoU was 77.10 for BRepNet, 34.78 for PointNet++ and 20.59 for MeshCNN. Native B-rep isn't always that far ahead. On the synthetic MFCAD set, per-face IoU was 99.87 for [UV-Net](https://arxiv.org/abs/2006.10211), 99.70 for MeshCNN and 7.15 for PointNet. The UV-Net authors suggest MeshCNN keeps up because the labels correlate with the dihedral angles it uses as a feature.
+
+For finding similar parts, the question most teams bring, we found less. UV-Net shows retrieval only as pictures of nearest neighbours, and we could read no part-to-part retrieval score with its setup. So measure it yourself, as in [Learning a similarity function](../../../data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md): recall on labelled matches, plus how many look-alikes reach the top results. Check licences first. [Fusion 360 Gallery](https://github.com/AutodeskAILab/Fusion360GalleryDataset/blob/master/LICENSE.md) is for non-commercial research only, and [ABC's](https://deep-geometry.github.io/abc-dataset/) models belong to their creators. This section has no lab, and the numbers above are the papers' own.
+
 ## Choosing a route
 
 | Your documents | Start with | Why |
@@ -306,6 +329,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 | How do you verify an extraction without ground truth? | Use redundancy in the document: arithmetic, cross-field rules, a second independent extraction, master data, and requiring each value to appear in the OCR text. |
 | Edit distance or field F1? | Both, for different decisions. Edit distance compares transcript engines. Field F1 reflects business correctness because one wrong character fails the field. |
 | What costs most in a document pipeline? | People. In our run review was thousands of times dearer than compute, so a retry that cut review from 25.6% to 1.1% of documents was the best value. |
+| Can a general VLM read an engineering drawing? | Numbers better than symbols. On [seven drawings](https://www.diva-portal.org/smash/get/diva2:1950437/FULLTEXT01.pdf), GPT-4o's dimension recall was 92.68 counting repeats as matches, and its recall on feature control frames, present in three of them, was 0. The evidence is small and dates fast, so test on your own drawings and score per field. |
 | Why route per page? | Page cost varies by more than an order of magnitude. Skipping OCR and table models on simple pages saves most of the compute, and logging the route tells you what changed when accuracy moves. |
 
 ## Next

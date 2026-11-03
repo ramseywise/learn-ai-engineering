@@ -43,6 +43,11 @@ load_fulfilment (truth "fulfilment", 06/10): order_id, customer_id, order_date, 
     Furniture is slow, November and December slower, and the June 2023 outage delays dispatch.
 load_packing_line (truth "packing_line", 06/10): parcel_id, date, weekday, packer, arrived, pack_start,
     pack_end, wait_minutes, pack_minutes. Simulated M/M/c, with erlang_c() and its results as the truth.
+load_survey_frame (truth "survey", 06/12): customer_id, channel, orders, spend, segment (one, few, many),
+    active (ordered in 2025), area (postcode area, 0 to 119), emailable, true_score (1 to 5), true_satisfied,
+    true_latent, true_p_email (chance of answering a blanket email), true_p_followup (chance of answering a
+    designed survey with reminders). Answering depends on the observed columns and also, a little, on
+    satisfaction itself, so weighting repairs part of the bias and can't repair the rest.
 load_products, load_product_demand, load_purchase_orders (truth "products", 06/10): sku, category,
     unit_cost, unit_price, salvage_value, holding_cost_per_year, order_cost, christmas_only; week, sku,
     units; po_id, sku, ordered, lead_time_days, received. Truth by_sku holds each newsvendor_q, eoq and safety_stock.
@@ -220,7 +225,7 @@ def load_events(n_users=2000, seed=SEED):
 # own random stream, so nothing here can move a number in the tables above. Add a stream, don't share one.
 # ---------------------------------------------------------------------------------------------
 STREAMS = {"subscriptions": 101, "club": 102, "journeys": 103, "marketing": 104, "geo_test": 105,
-           "touch_paths": 106, "repeat_log": 107, "fulfilment": 108, "packing_line": 109, "products": 110}
+           "touch_paths": 106, "repeat_log": 107, "fulfilment": 108, "packing_line": 109, "products": 110, "survey": 111}
 
 
 def _stream(name, seed):
@@ -925,9 +930,63 @@ def load_purchase_orders(seed=SEED):
     return _products(seed)[0][2].copy()
 
 
+SURVEY_DGP = {
+    "n_areas": 120,
+    "area_sd": .25,                 # postcode areas differ, which is what cluster sampling pays for
+    "latent_base": .10,
+    "latent_active": .35,
+    "latent_many": .30,
+    "latent_channel": {"paid_social": -.35, "organic": 0.0, "email": .15, "referral": .15},
+    "score_cuts": [-1.25, -.55, .25, 1.15],     # latent to the 1-5 answer; 4 and 5 count as satisfied
+    "p_emailable": {"paid_social": .55, "organic": .75, "email": .92, "referral": .75},
+    "emailable_lapsed": .75,        # lapsed customers have opted out more often
+    "email_logit": {"base": -2.75, "active": .90, "many": .50, "email_channel": .50, "latent": .55},
+    "followup_logit": {"base": -.55, "active": .55, "many": .30, "email_channel": .10, "latent": .15},
+}
+
+
+@lru_cache(maxsize=1)
+def _survey(seed=SEED):
+    d = SURVEY_DGP
+    rng = _stream("survey", seed)
+    orders = load_orders(seed)
+    per = orders.groupby("customer_id").agg(orders=("order_id", "size"), spend=("value", "sum"), last=("order_date", "max"))
+    frame = load_customers(seed)[["customer_id", "channel"]].merge(per, left_on="customer_id", right_index=True, how="inner")
+    frame = frame.reset_index(drop=True)
+    n = len(frame)
+    frame["spend"] = frame["spend"].round(2)
+    frame["segment"] = np.select([frame["orders"] == 1, frame["orders"] <= 3], ["one", "few"], "many")
+    frame["active"] = frame["last"] >= pd.Timestamp("2025-01-01")
+    frame["area"] = rng.integers(0, d["n_areas"], n)
+    area_effect = rng.normal(0, d["area_sd"], d["n_areas"])
+    active, many = frame["active"].to_numpy(float), (frame["segment"] == "many").to_numpy(float)
+    latent = (d["latent_base"] + d["latent_active"] * active + d["latent_many"] * many
+              + frame["channel"].map(d["latent_channel"]).to_numpy() + area_effect[frame["area"]] + rng.normal(0, 1, n))
+    frame["true_latent"] = latent
+    frame["true_score"] = np.searchsorted(d["score_cuts"], latent) + 1
+    frame["true_satisfied"] = frame["true_score"] >= 4
+    reach = frame["channel"].map(d["p_emailable"]).to_numpy() * np.where(active == 1, 1, d["emailable_lapsed"])
+    frame["emailable"] = rng.random(n) < reach
+    email_channel = (frame["channel"] == "email").to_numpy(float)
+
+    def chance(c):
+        return 1 / (1 + np.exp(-(c["base"] + c["active"] * active + c["many"] * many
+                                 + c["email_channel"] * email_channel + c["latent"] * latent)))
+
+    frame["true_p_email"] = chance(d["email_logit"])
+    frame["true_p_followup"] = chance(d["followup_logit"])
+    frame = frame.drop(columns="last")
+    return frame, {**d, "true_share_satisfied": float(frame["true_satisfied"].mean())}
+
+
+def load_survey_frame(seed=SEED):
+    """One row per customer with an order: what the CRM holds, plus the answer they would give."""
+    return _survey(seed)[0].copy()
+
+
 _TRUTH = {"subscriptions": _subscriptions, "club": _club, "marketing": _marketing, "geo_test": _geo_test,
           "touch_paths": _touch_paths, "repeat_log": _repeat_log, "fulfilment": _fulfilment,
-          "packing_line": _packing_line, "products": _products}
+          "packing_line": _packing_line, "products": _products, "survey": _survey}
 
 
 def load_truth(table, seed=SEED):
