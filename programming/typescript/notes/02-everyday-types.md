@@ -72,8 +72,20 @@ const config = { mode: 'dev', port: 3000 } as const;   // readonly { mode: 'dev'
 
 Always turn on `"strict": true`. It enables `strictNullChecks` (the big one), `noImplicitAny` and stricter function checks. Without it, TS lets `null` flow anywhere and catches far less. Consider also enabling `noUncheckedIndexedAccess`, which makes `xs[i]` have type `T | undefined`.
 
+## Pitfalls
+
+- **Reaching for `any`.** It spreads to everything it touches, so errors stop being reported and the bug appears at runtime. Use `unknown` and narrow.
+- **Writing `String` instead of `string`.** That is the wrapper object, and the checker rejects it where a `string` is expected: "`String` is not assignable to `string`".
+- **Leaving `strict` off.** `null` flows anywhere, so a check you expected from the compiler never fires.
+- **Relying on the excess property check.** It applies only to object **literals**. Assign the same object to a variable first and a misspelt extra property passes silently.
+- **Forgetting `as const`.** `const config = { mode: 'dev' }` gives `mode` the type `string`, so passing it where `'dev' | 'prod'` is expected is a compile error.
+
 ---
 
-## Exercises
+## Try it
 
 [`practice/typescript-exercises/01`](../practice/typescript-exercises/01/index.ts): define `User` from the data. From `practice/`, check with `node check.ts exercises/01/`.
+
+## Next
+
+[Unions and narrowing](03-unions-and-narrowing.md).

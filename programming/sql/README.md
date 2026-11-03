@@ -26,6 +26,23 @@ Worked answers are in [`practice/solutions/`](practice/solutions/). Try each exe
 
 ---
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Python 01 Foundations](../python/README.md) | SQL starts after it, and [09](notes/09-sql-from-python.md) drives SQL from Python |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [DA 06/06 SQL for analytics](../../data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md) | Analytical SQL on top of these joins and window functions |
+| [Python 02/05 Databases](../python/02-informatics/notes/05-databases.md) | Hands the SQL itself to this track |
+
+---
+
 ## Layout
 
 ```

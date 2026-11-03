@@ -803,4 +803,4 @@ The blocks hold 12 x 7,087,872 = 85,054,464 parameters, or 68%, and embeddings h
 
 ## Next
 
-The series ends here, and the course moves from building one LLM to using LLMs as systems: tokenisation, pre-training at scale, post-training and inference. Continue with [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
+The series ends here, and the course moves from building one LLM to using LLMs as systems. Continue with [RAG and retrieval](../../02-rag-retrieval/README.md). If you came here before [LLM fundamentals](../../01-llm-fundamentals/README.md), read that first, since tokenisation, pre-training at scale, post-training and inference are taught there.

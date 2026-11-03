@@ -149,6 +149,22 @@ print("std over seeds")
 print(res.groupby(["model", "split"], sort=False)[["auc_gap", "f1_estimate", "f1_truth"]].std().round(3).to_string())
 
 # %%
+print("\n--- why parts disjoint overstates the similarity model: score the same model on new catalogues by size")
+rows = []
+for seed in SEEDS:
+    records, parts, pairs = build(seed)
+    (tr_r, tr_p), (va_r, va_p), (te_r, te_p) = three_sides(records, parts, pairs, "parts disjoint", np.random.default_rng(seed))
+    m = Similarity().fit(tr_r, tr_p, same(tr_p))
+    t = best_threshold(same(va_p), m.score(va_r, va_p))
+    rows.append(dict(scored_on="test side of the split", records=len(te_r), base_rate=same(te_p).mean(),
+                     f1=pair_scores(same(te_p), m.score(te_r, te_p) >= t)[2], threshold=t))
+    for n_specs in (167, 800):  # 167 specs generate about as many records as the test side holds
+        new_r, _, new_p = build(seed + 1000, n_specs=n_specs)
+        rows.append(dict(scored_on=f"new catalogue, {n_specs} specs", records=len(new_r), base_rate=same(new_p).mean(),
+                         f1=pair_scores(same(new_p), m.score(new_r, new_p) >= t)[2], threshold=t))
+print(pd.DataFrame(rows).groupby("scored_on", sort=False).mean().round(3).to_string())
+
+# %%
 print("\n--- a matcher that reads nothing: close the training labels, predict same group. No text, no model")
 rows = []
 for seed in SEEDS:

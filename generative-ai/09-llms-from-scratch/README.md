@@ -8,7 +8,7 @@ Three chapters built on Karpathy's [*Neural Networks: Zero to Hero*](https://kar
 
 ## Why it matters
 
-Most of what breaks in training has a one-line explanation once you have built the thing: a first loss of 27 where 3.30 belongs, tanh units saturated at 70%, an accumulation loop whose gradients are four times too large, a BatchNorm over the wrong dimension that raises no error. People who have written the stack can read those failures. There is also a floor to reach before the [generative AI](../README.md) material makes sense, as tokenisation, attention and pre-training all assume this one.
+Most of what breaks in training has a one-line explanation once you have built the thing: a first loss of 27 where 3.30 belongs, tanh units saturated at 70%, an accumulation loop whose gradients are four times too large, a BatchNorm over the wrong dimension that raises no error. People who have written the stack can read those failures. It is also the floor under the rest of [generative AI](../README.md): tokenisation, attention and pre-training all sit on it.
 
 ## The story
 
@@ -22,7 +22,7 @@ A network is one big expression, and backpropagation is the chain rule walked th
 | 02 | [makemore](notes/02-makemore.md) | What is a language model at its smallest, and how do you keep a deep one trainable? |
 | 03 | [nanoGPT](notes/03-nanogpt.md) | What is attention, what does each piece of a transformer buy, and how is GPT-2 trained? |
 
-Then continue with [LLM fundamentals](../01-llm-fundamentals/README.md) in generative AI, which starts from tokenisation and treats LLMs as systems.
+This pillar reads straight after [LLM fundamentals](../01-llm-fundamentals/README.md), which starts from tokenisation and treats LLMs as systems. Then continue with [RAG and retrieval](../02-rag-retrieval/README.md).
 
 ## Builds on and feeds into
 
@@ -30,11 +30,11 @@ Then continue with [LLM fundamentals](../01-llm-fundamentals/README.md) in gener
 
 | Chapter | Why |
 |---|---|
-| [DS 01/02 Supervised learning](../../data-science/01-classical-ml/notes/02-supervised-learning.md) | Logistic regression, the first rung |
-| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Backprop and the training loop |
-| [DS 02/06 Neural text models](../../data-science/02-deep-learning/notes/06-neural-text-models.md) | LSTM and BERT pipelines, compared |
-| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | TF-IDF with a linear model, compared |
-| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | word2vec, compared |
+| [DS 01/02 Supervised learning](../../data-science/01-classical-ml/notes/02-supervised-learning.md) | Optional background: logistic regression, the first rung |
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Optional background: backprop and the training loop |
+| [DS 02/06 Neural text models](../../data-science/02-deep-learning/notes/06-neural-text-models.md) | Optional background: LSTM and BERT pipelines, compared |
+| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | Optional background: TF-IDF with a linear model, compared |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: word2vec, compared |
 
 **Feeds into**
 

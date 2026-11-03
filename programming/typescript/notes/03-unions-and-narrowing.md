@@ -113,8 +113,20 @@ if (typeof v === 'object' && v !== null && 'name' in v && typeof v.name === 'str
 
 Narrowing `unknown` by hand gets painful quickly. That is the job of a schema library ([note 08](08-runtime-validation-zod.md)).
 
+## Pitfalls
+
+- **Calling a member-only method on a union.** `id.toUpperCase()` on `number | string` is a compile error. Narrow first.
+- **Leaving out the `never` branch.** When you add a member, a `switch` in a function that returns nothing skips it silently. `const unreachable: never = s` turns that into a compile error.
+- **Writing a wrong type predicate.** The checker trusts `x is T` without verifying it, so a wrong body compiles and fails at runtime.
+- **Narrowing `unknown` with `typeof v === 'object'` alone.** `null` passes that test too, and the next line reports "`v` is possibly `null`". Add `v !== null`.
+- **Using `if (x)` on a value that can be `0` or `""`.** Both are falsy ([note 01](01-js-for-python-devs.md)), so a real value is treated as missing. Use `x === null` or `x == null`.
+
 ---
 
-## Exercises
+## Try it
 
 [`practice/typescript-exercises/02`](../practice/typescript-exercises/02/index.ts), [`03`](../practice/typescript-exercises/03/index.ts) and [`04`](../practice/typescript-exercises/04/index.ts): unions of `User | Admin`, narrowing with `in`, and type predicates. From `practice/`, check each with `node check.ts exercises/02/` (and so on).
+
+## Next
+
+[Generics](04-generics.md).

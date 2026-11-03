@@ -54,6 +54,26 @@ chapter notebooks and the earlier Michigan and Wesleyan coursework.
 
 ---
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | The entry point of the course |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [DA 01 Python for data analysis](../../data-analytics/01-python-for-data-analysis/README.md) | Pandas starts where this track ends |
+| [SQL 09 SQL from Python](../sql/notes/09-sql-from-python.md) | Parameters, DuckDB and pandas, from the Python side of [databases](02-informatics/notes/05-databases.md) |
+| [TypeScript](../typescript/README.md) | Starts after 03; its [async](../typescript/notes/06-async.md) note leans on [concurrency](03-language-for-engineers/notes/07-concurrency.md) |
+| [Computer science foundations](../computer-science/README.md) | Cost and memory arguments made on Python's own objects |
+| [Software design](../software-design/README.md) | Refactoring and patterns written in Python |
+
+---
+
 ## Study decks
 
 Each module has a deck that librarian turns into flashcards: the title is the question and the

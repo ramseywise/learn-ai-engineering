@@ -16,6 +16,7 @@ lint:  ## Verify top-level topic directories exist
 	[ $$FAIL -eq 0 ] && echo "  OK (all topic directories present)"
 
 CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science/*/ data-engineering/*/
+LANGUAGE_SUBSET = programming/typescript programming/sql/notes/10-capstone-murder-mystery.md
 
 test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
 	@fail=0; for t in lint link-check crosswalk-check chapter-check-all drill-check deck-check ledger-check unit; do \
@@ -33,6 +34,8 @@ chapter-check-all:  ## Hold the five pillared subjects to the chapter standard a
 	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) >/dev/null
 	@python3 scripts/check_chapters.py --strict --metadata-only programming/*/ programming/python/*/ | tail -1
 	@python3 scripts/check_chapters.py --strict --metadata-only programming/*/ programming/python/*/ >/dev/null
+	@python3 scripts/check_chapters.py --strict $(LANGUAGE_SUBSET) | tail -1
+	@python3 scripts/check_chapters.py --strict $(LANGUAGE_SUBSET) >/dev/null
 	@python3 scripts/check_chapters.py programming/*/ | tail -1
 	@python3 scripts/check_chapters.py --advisory $(CHAPTER_GATE) | tail -1
 

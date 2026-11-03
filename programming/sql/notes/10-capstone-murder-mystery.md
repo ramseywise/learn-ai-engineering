@@ -30,7 +30,17 @@ It uses everything from notes 01–05:
 | Cross-reference gym check-ins, licence plates and event attendance | Multi-table joins ([04](04-joins.md)) |
 | Narrow down the suspects | Subqueries, `GROUP BY … HAVING count(*) = 3` ([03](03-aggregation.md), [05](05-subqueries-and-ctes.md)) |
 
-**Checking your answer.** The game ships with a `solution` table that checks your guess:
+## Pitfalls
+
+- **Skipping `setup.sh`.** `sqlite3` creates an empty database at a path that doesn't exist, so `.tables` prints nothing and raises no error.
+- **Guessing a column's format.** `crime_scene_report.date` is an integer, so `WHERE date = '2018-01-15'` returns no rows while `WHERE date = 20180115` returns 12 rows across 10 cities. Read the schema first.
+- **Stopping at the first answer.** A correct first name is not the end: there is a second twist.
+
+## Try it
+
+Solve the mystery from the facts above, then check your answer.
+
+The game ships with a `solution` table that checks your guess:
 
 ```sql
 INSERT INTO solution VALUES (1, 'Your Suspect');
@@ -40,3 +50,7 @@ SELECT value FROM solution;
 There is a second twist after the first answer. Keep going until the message says you've found the person really behind it.
 
 No solutions are written down here on purpose. Knight Lab's [walkthrough](https://mystery.knightlab.com/walkthrough.html) teaches the first steps if you get stuck.
+
+## Next
+
+[Data Analytics](../../../data-analytics/README.md) for analytical interpretation and pandas, or [Data Engineering](../../../data-engineering/README.md) for data systems and pipelines.

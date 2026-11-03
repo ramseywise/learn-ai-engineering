@@ -59,10 +59,10 @@ Notes are written from the sources by the `/chapter` skill, one source chapter a
 
 | Chapter | Why |
 |---|---|
-| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | What a forward pass is |
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Optional background: what a forward pass is |
 | [GA 01 LLM fundamentals](../../generative-ai/01-llm-fundamentals/README.md) | How transformers work |
-| [DE 06/02 Experiment tracking and model registry](../../data-engineering/06-ml-platform/notes/02-experiment-tracking-and-model-registry.md) | Versions, labels and rollback |
-| [DE 06/03 Batch and online serving](../../data-engineering/06-ml-platform/notes/03-batch-and-online-serving.md) | Serving shapes for an ordinary ML model |
+| [DE 06/02 Experiment tracking and model registry](../../data-engineering/06-ml-platform/notes/02-experiment-tracking-and-model-registry.md) | Optional background: versions, labels and rollback |
+| [DE 06/03 Batch and online serving](../../data-engineering/06-ml-platform/notes/03-batch-and-online-serving.md) | Optional background: serving shapes for an ordinary ML model |
 
 **Feeds into**
 

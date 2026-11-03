@@ -63,7 +63,7 @@ sources/       the AgentOps paper and the dashboard figure
 
 | Chapter | Why |
 |---|---|
-| [DA 05/05 Dashboards and storytelling](../../data-analytics/05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md) | What a dashboard is for and what it can hide |
+| [DA 05/05 Dashboards and storytelling](../../data-analytics/05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md) | Optional background: what a dashboard is for and what it can hide |
 
 **Feeds into**
 

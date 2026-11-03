@@ -28,6 +28,25 @@ Solutions sit next to each vendored exercise (`index.solution.ts`), in
 
 ---
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Python 03 Language for engineers](../python/README.md) | TypeScript starts after it; types and asynchronous work have context by then |
+| [Python 03/07 Concurrency](../python/03-language-for-engineers/notes/07-concurrency.md) | The asyncio model that [async](notes/06-async.md) compares with promises |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [Frontend and UX](../frontend-and-ux/README.md) | Starts after this track; React and AI interfaces use its async and streaming |
+| [DA 05/06 Dashboard stacks](../../data-analytics/05-visualisation-and-storytelling/notes/06-dashboard-stacks-from-python-to-frontend.md) | The TypeScript end of a dashboard stack |
+| [AI Engineering](../../ai-engineering/README.md) | Labs come in TypeScript and Python side by side |
+
+---
+
 ## Layout
 
 ```

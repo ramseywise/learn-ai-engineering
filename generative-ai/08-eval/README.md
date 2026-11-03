@@ -91,16 +91,16 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 | Chapter | Why |
 |---|---|
-| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Base rates under a judge's pass rate |
-| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Standard errors, Wilson intervals and the bootstrap |
-| [DA 02/05 Hypothesis testing](../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Paired tests and multiple comparisons |
-| [DA 03/01 A/B testing](../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) | Sample size and peeking |
-| [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | SRM, CUPED and looking early |
-| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under judges and retrieval metrics |
-| [DS 02/03 Structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md) | Error analysis and dev and test sets |
-| [DS 01/12 Reading the errors](../../data-science/01-classical-ml/notes/12-reading-the-errors.md) | The procedure behind 02's error analysis and 14's reading of a judge |
+| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Optional background: base rates under a judge's pass rate |
+| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Optional background: standard errors, Wilson intervals and the bootstrap |
+| [DA 02/05 Hypothesis testing](../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Optional background: paired tests and multiple comparisons |
+| [DA 03/01 A/B testing](../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) | Optional background: sample size and peeking |
+| [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | Optional background: SRM, CUPED and looking early |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | Optional background: the confusion matrix under judges and retrieval metrics |
+| [DS 02/03 Structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md) | Optional background: error analysis and dev and test sets |
+| [DS 01/12 Reading the errors](../../data-science/01-classical-ml/notes/12-reading-the-errors.md) | Optional background: the procedure behind 02's error analysis and 14's reading of a judge |
 | [GA 06/03 Judge pipelines over trace exports](../06-observability/notes/03-judge-pipelines-over-trace-exports.md) | The planted failures and rule judges behind note 14's exercise |
-| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG |
+| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Optional background: recall and NDCG |
 
 **Feeds into**
 

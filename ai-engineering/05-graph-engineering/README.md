@@ -93,7 +93,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 | Chapter | Why |
 |---|---|
-| [DS 03/05 Semantic analysis and NER](../../data-science/03-nlp/notes/05-semantic-analysis-and-ner.md) | NER without an LLM |
+| [DS 03/05 Semantic analysis and NER](../../data-science/03-nlp/notes/05-semantic-analysis-and-ner.md) | Optional background: NER without an LLM |
 | [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Building the gold set for extraction |
 | [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Scoring KG-RAG |
 

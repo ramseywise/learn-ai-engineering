@@ -47,7 +47,7 @@ Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx)
 | [GA 02/08 Agentic RAG: PRINCE](../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md) | The worked example |
 | [GA 08/06 Evaluating agents](../../generative-ai/08-eval/notes/06-evaluating-agents.md) | Measuring a harness |
 | [GA 08/10 Evals in CI](../../generative-ai/08-eval/notes/10-evals-in-ci.md) | Checks as gates |
-| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | False positives and their cost |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | Optional background: false positives and their cost |
 
 **Feeds into**
 

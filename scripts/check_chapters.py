@@ -18,6 +18,9 @@ Metadata rules, which count as shortfalls and apply everywhere the chapter shape
 
 --metadata-only applies those rules and skips the chapter shape, for programming/ modules the layout exempts from it.
 
+TypeScript 01-09 and the SQL capstone (LANGUAGE_SUBSET) keep the length exemption and are held to a subset of the shape:
+Pitfalls and Next, plus Try it when the note's prose names a lab under practice/, in that order. Their metadata rules still apply.
+
 --advisory prints what is reported and not gated: Interview checklist rows under one per ADVISORY_WORDS_PER_ROW words,
 body links other than papers that `sources` does not name, and `sources` URLs the body never cites.
 """
@@ -27,6 +30,7 @@ import argparse
 import re
 import sys
 from collections import Counter
+from fnmatch import fnmatch
 from pathlib import Path
 
 MIN_WORDS, MAX_WORDS = 1500, 7000
@@ -37,6 +41,8 @@ LINK_TABLE = re.compile(r"^(?:#+ +|\*\*)(?:Builds on|Feeds into)\b[^\n]*\n+\|", 
 PILLARED = {"ai-engineering", "generative-ai", "data-analytics", "data-science", "data-engineering"}
 LEGAL_ORIGINS = {"synthesis", "book-condensed", "web-authored", "curated"}
 CHECKLIST_HEADING = "Interview checklist"
+LANGUAGE_SUBSET = (("programming", "typescript", "notes", "*"), ("programming", "sql", "notes", "10-*"))
+LAB_REFERENCE = re.compile(r"\bpractice/")
 ADVISORY_WORDS_PER_ROW = 500
 ROOT = Path(__file__).resolve().parents[1]
 PERSONAL_PATH = re.compile(r"~/\.claude\b|~/workspace\b|/Users/")
@@ -161,12 +167,38 @@ def advisories(text: str) -> list[str]:
     return out
 
 
+def in_language_subset(note: Path) -> bool:
+    """Whether a note is one of the programming modules held to the subset of the chapter shape."""
+    parts = note.resolve().with_suffix("").parts
+    return any(len(parts) >= len(rule) and all(fnmatch(p, r) for p, r in zip(parts[-len(rule):], rule))
+               for rule in LANGUAGE_SUBSET)
+
+
+def language_subset_problems(text: str) -> list[str]:
+    """The subset: Pitfalls and Next, Try it where the prose names a lab, and those sections in chapter order."""
+    prose = FENCE.sub("", text)
+    headings = [h.lower() for h in re.findall(r"^##+ +(.+)$", prose, re.M)]
+    needed = [label for label, _ in SECTIONS if label in ("Pitfalls", "Next")]
+    if LAB_REFERENCE.search(prose):
+        needed.insert(1, "Try it")
+    patterns = dict(SECTIONS)
+    positions = {label: next((i for i, h in enumerate(headings) if re.match(patterns[label], h)), None)
+                 for label in needed}
+    problems = [f"no '{label}' section" for label, at in positions.items() if at is None]
+    found = [at for at in positions.values() if at is not None]
+    if found != sorted(found):
+        problems.append(f"{', '.join(needed)} are out of order")
+    return problems
+
+
 def check(note: Path, metadata_only: bool = False) -> list[str]:
     raw = note.read_text(encoding="utf-8")
     meta = metadata_problems(raw, note)
     if metadata_only:
         return meta
     front, text = split_front(raw)
+    if in_language_subset(note):
+        return meta + language_subset_problems(text)
     if re.search(r"^status:\s*skeleton", front, re.M):
         return ["skeleton (status: skeleton)", *meta]
     problems = meta

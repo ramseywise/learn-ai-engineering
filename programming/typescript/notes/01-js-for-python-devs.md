@@ -73,8 +73,21 @@ class Counter {
 
 Most TS code uses plain objects, functions and union types more than class hierarchies.
 
+## Pitfalls
+
+- **Writing `==`.** `"1" == 1` is true, so a check passes on the wrong type. Use `===`, with `x == null` as the one exception.
+- **Calling `sort()` on numbers.** It compares as strings, so `[10, 9, 1].sort()` gives `[1, 10, 9]`. Pass `(a, b) => a - b`.
+- **Testing a list with `if (xs)`.** `[]` and `{}` are truthy, the opposite of Python, so the branch runs on an empty list. Test `xs.length`.
+- **Defaulting with `||`.** `count || 10` gives 10 when `count` is 0. Use `??`, which treats only `null` and `undefined` as missing.
+- **Treating `{ ...a }` as a copy of everything.** It is shallow, so pushing to `b.tags` also changes `a.tags`. Use `structuredClone`.
+- **Reading `x as User` as a check.** It checks nothing, so bad outside data reaches your code and crashes later. Validate it instead ([note 08](08-runtime-validation-zod.md)).
+
 ---
 
-## Exercises
+## Try it
 
 [`practice/exercises/01-js-basics.ts`](../practice/exercises/01-js-basics.ts): Counter, `most_common`, chunk, zip and more, in idiomatic TS. From `practice/`, check with `npm test`.
+
+## Next
+
+[Everyday types](02-everyday-types.md).

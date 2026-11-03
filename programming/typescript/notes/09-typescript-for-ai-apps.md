@@ -113,9 +113,23 @@ The response is constrained to the schema. Still check `parsed_output` for `null
 - Log `usage` (input and output tokens) on every response. Cost bugs are invisible otherwise.
 - Pin the model ID in one config value, not scattered through the code.
 
+## Pitfalls
+
+- **Assuming `content[0]` is text.** With thinking enabled, the first block often isn't. Narrow by `type`.
+- **Trusting a tool call cut off by `max_tokens`.** Its input is truncated. Raise `max_tokens` or continue before running it.
+- **Writing a `switch` on `stop_reason` with no `default`.** The API adds new values over time, and a loop without a branch for them has no defined behaviour.
+- **Not checking for a refusal.** `parsed_output` can be `null`, so check it and `stop_reason: 'refusal'` before reading the result.
+- **Passing seconds as a timeout.** Timeouts are in milliseconds, so `timeout: 60` is 60 ms. Write `60_000`.
+- **Running tool inputs unvalidated.** They are model output, so they are untrusted. Validate them, confine file paths and gate anything destructive.
+- **Not logging `usage`.** Cost bugs are invisible until you do.
+
 ---
 
-## Exercises
+## Try it
 
 - [`practice/exercises/09-ai-helpers.ts`](../practice/exercises/09-ai-helpers.ts): `textOf`, `toolUses`, `runToolCalls` (errors become `is_error` results) and `nextStep` from `stop_reason`. It is tested offline against fake responses. From `practice/`, check with `npm test`.
 - [`practice/examples/claude.ts`](../practice/examples/claude.ts): streaming, structured output and a tool-runner loop against the real API. Run `node examples/claude.ts` with `ANTHROPIC_API_KEY` set. It costs a few cents.
+
+## Next
+
+[AI Engineering](../../../ai-engineering/README.md) for production LLM systems, or [Generative AI](../../../generative-ai/README.md) for LLM foundations and applications.

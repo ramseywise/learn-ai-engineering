@@ -82,7 +82,7 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 
 | Chapter | Why |
 |---|---|
-| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Optional: Thompson sampling, the simplest form of the explore-exploit idea agents inherit |
+| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Optional background: Thompson sampling, the simplest form of the explore-exploit idea agents inherit |
 | [GA 01](../01-llm-fundamentals/README.md), in this subject | The pillar starts from it |
 
 **Feeds into**

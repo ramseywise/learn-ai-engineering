@@ -87,9 +87,21 @@ function filterPersons(people: Person[], kind: string, criteria: Partial<Person>
 - Prefer letting `T` be inferred over making callers write it.
 - Constrain as loosely as the body allows.
 
+## Pitfalls
+
+- **Typing a helper with `any`.** `first(xs: any[]): any` loses the type, so `first([1]).toUpperCase()` compiles and fails at runtime.
+- **Using `T` only once.** The signature looks generic but links nothing. Write the concrete type or `unknown`.
+- **Leaving out a constraint.** `a.length` on a bare `T` is a compile error: "Property `length` does not exist on type `T`". Add `T extends { length: number }`.
+- **Using optional fields where a discriminated union fits.** With `ApiResponse<T>`, `r.data` is still "possibly undefined" after checking `status === 'success'`. `Result<T, E>` removes the check.
+- **Calling an overload through its implementation signature.** Callers never see it, so passing a plain `string` as `kind` fails with "No overload matches this call".
+
 ---
 
-## Exercises
+## Try it
 
 - [`practice/typescript-exercises/06`](../practice/typescript-exercises/06/index.ts) (overloads and generics), [`07`](../practice/typescript-exercises/07/index.ts) (a generic `swap`) and [`09`](../practice/typescript-exercises/09/index.ts) (a generic `ApiResponse`)
 - **Easy** type challenges in [`practice/type-challenges/challenges/`](../practice/type-challenges/challenges/): `*-easy-*.ts` (Pick, Readonly, First, Length, Exclude, Awaited, If, Concat, Includes, Push, Parameters). From `practice/`, check with `node check.ts easy`.
+
+## Next
+
+[Building types from types](05-type-transformations.md).

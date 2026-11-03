@@ -61,12 +61,12 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 
 | Chapter | Why |
 |---|---|
-| [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | TF-IDF, derived from scratch |
-| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | TF-IDF with a linear model as the baseline |
-| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | BM25 built by hand |
-| [DS 03/07 LLM embeddings as features](../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md) | What a sentence embedding is |
-| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under recall@k |
-| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG computed on a ranking |
+| [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | Optional background: TF-IDF, derived from scratch |
+| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | Optional background: TF-IDF with a linear model as the baseline |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: BM25 built by hand |
+| [DS 03/07 LLM embeddings as features](../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md) | Optional background: what a sentence embedding is |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | Optional background: the confusion matrix under recall@k |
+| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Optional background: recall and NDCG computed on a ranking |
 
 **Feeds into**
 

@@ -31,7 +31,7 @@ from a `references.md` row and never from memory, ending with a link to `referen
 **Builds on and feeds into.** Every pillar README has two tables under one
 `## Builds on and feeds into` heading, placed after the reading order. **Builds on** lists the earlier
 chapters in other subjects the pillar assumes, with one line on why. **Feeds into** lists the later
-chapters that use it. List only chapters that exist; a table with nothing to list says so in one row.
+chapters that use it. List only chapters that exist; a table with nothing to list says so in one row. In ai-engineering and generative-ai, a Builds on row from data analytics, data science or data engineering starts its reason with `Optional background:`, since Path D does not require those subjects first.
 `scripts/check_chapters.py` warns when a README has neither table. Links at chapter level go inline
 in the note, where the concept is first used:
 
@@ -96,7 +96,7 @@ parts in this order. `make chapter-check PILLAR=<pillar>` checks them.
 6. **`## Interview checklist`.** A table of questions with the answers filled in.
 7. **`## Next`.** The link to the following note, or to the next pillar on the last note.
 
-Python, SQL and TypeScript modules under `programming/` are exercise-driven at 300 to 600 words and are exempt from this section. New `programming/` chapters and tracks, such as `software-design/` and Python 03/08 and 03/09, follow the full standard.
+Python, SQL and TypeScript modules under `programming/` are exercise-driven at 300 to 600 words and are exempt from the length and shape above. TypeScript 01-09 and the SQL capstone still need three of the sections, in chapter order: `## Pitfalls`, `## Try it` where the note names a lab under `practice/`, and `## Next`. `scripts/check_chapters.py` gates that subset in `make test`. New `programming/` chapters and tracks, such as `software-design/` and Python 03/08 and 03/09, follow the full standard.
 
 ## references.md
 

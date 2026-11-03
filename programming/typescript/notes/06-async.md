@@ -74,15 +74,6 @@ const a = await getA(); const b = await getB();               // sequential: tot
 const [a, b] = await Promise.all([getA(), getB()]);           // parallel: total = max(a, b)
 ```
 
-## Common bugs
-
-| Bug | Symptom | Fix |
-|---|---|---|
-| A forgotten `await` | You get `Promise { <pending> }`, or the error appears later as an unhandled rejection | Turn on the lint rule `@typescript-eslint/no-floating-promises` |
-| `await` inside `forEach` | The callbacks aren't awaited | Use `for…of` with `await` (sequential) or `Promise.all(xs.map(…))` (parallel) |
-| `Promise.all` over 10,000 requests | Rate limits or exhausted sockets | Limit concurrency (`mapLimit`) |
-| A timeout via `race` with no cleanup | The process won't exit, or work continues after the timeout | Clear the timer. Pass an `AbortSignal` to cancel the actual work |
-
 ## Cancellation: `AbortController`
 
 ```ts
@@ -110,9 +101,24 @@ for await (const chunk of stream) process.stdout.write(chunk);
 
 Streaming LLM responses use exactly this ([note 09](09-typescript-for-ai-apps.md)).
 
+## Pitfalls
+
+| Bug | Symptom | Fix |
+|---|---|---|
+| A forgotten `await` | You get `Promise { <pending> }`, or the error appears later as an unhandled rejection | Turn on the lint rule `@typescript-eslint/no-floating-promises` |
+| `await` inside `forEach` | The callbacks aren't awaited | Use `for…of` with `await` (sequential) or `Promise.all(xs.map(…))` (parallel) |
+| `Promise.all` over 10,000 requests | Rate limits or exhausted sockets | Limit concurrency (`mapLimit`) |
+| A timeout via `race` with no cleanup | The process won't exit, or work continues after the timeout | Clear the timer. Pass an `AbortSignal` to cancel the actual work |
+
+Also, `Promise.race` does **not** cancel the loser, so work carries on after a timeout unless you pass a `signal`.
+
 ---
 
-## Exercises
+## Try it
 
 - [`practice/exercises/06-async.ts`](../practice/exercises/06-async.ts): `withTimeout`, `retry` with backoff, `mapLimit` and `partitionSettled`. From `practice/`, check with `npm test`.
 - [`practice/typescript-exercises/10`](../practice/typescript-exercises/10/index.ts): type a `promisify`. From `practice/`, check with `node check.ts exercises/10/`.
+
+## Next
+
+[Modules, `tsconfig` and tooling](07-modules-and-tooling.md).

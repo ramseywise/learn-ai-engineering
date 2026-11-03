@@ -74,9 +74,9 @@ Read in order. Each chapter assumes the Harbour system and the paths from chapte
 
 | Chapter | Why |
 |---|---|
-| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Base rates and false alarms |
-| [DA 03/02 Metrics and KPI design](../../data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) | Guardrail metrics, a different sense of the word |
-| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The guard's confusion matrix |
+| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Optional background: base rates and false alarms |
+| [DA 03/02 Metrics and KPI design](../../data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) | Optional background: guardrail metrics, a different sense of the word |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | Optional background: the guard's confusion matrix |
 | [GA 05/04 Constitutional AI](../../generative-ai/05-RL/notes/04-constitutional-ai.md) | Alignment training |
 | [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Judges in safety evals |
 

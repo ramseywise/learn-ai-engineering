@@ -72,9 +72,20 @@ type TrimLeft<S extends string> = S extends ` ${infer R}` ? TrimLeft<R> : S;
 
 Type-level code is real code: it is hard to read and debug, and slow to compile. Use utility types freely, mapped types sometimes, and deep conditional recursion only in libraries. If an application type needs `infer` three levels deep, a simpler runtime design is usually better.
 
+## Pitfalls
+
+- **Expecting a conditional type to treat a union as a whole.** `IsString<string | number>` is `boolean`, not `false`, because it distributes. Write `[T] extends [string]` to turn that off.
+- **Passing `keyof T` straight to `Capitalize`.** Keys can be numbers or symbols, so it is a compile error: "`K` does not satisfy the constraint `string`". Write `string & K`.
+- **Repeating fields by hand.** A create payload written out next to `User` drifts when `User` changes. Derive it with `Omit<User, 'id'>`.
+- **Writing deep conditional recursion in application code.** It is hard to read and debug, and slow to compile. If a type needs `infer` three levels deep, simplify the runtime design.
+
 ---
 
-## Exercises
+## Try it
 
 - [`practice/typescript-exercises/05`](../practice/typescript-exercises/05/index.ts) (`Partial`/`Omit`), [`08`](../practice/typescript-exercises/08/index.ts) (intersections), [`14`](../practice/typescript-exercises/14/index.ts) (typing curried helpers) and [`15`](../practice/typescript-exercises/15/index.ts) (an object-manipulation library)
 - **Medium** type challenges: `*-medium-*.ts` (ReturnType, Omit, DeepReadonly, TupleToUnion, Chainable, Last, PromiseAll, TypeLookup, TrimLeft, Capitalize, Replace, AppendArgument, Merge). From `practice/`, check with `node check.ts medium`.
+
+## Next
+
+[Async](06-async.md).

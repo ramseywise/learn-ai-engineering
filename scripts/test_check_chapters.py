@@ -40,6 +40,52 @@ class Origin(unittest.TestCase):
         self.assertIn("no origin in frontmatter", cc.metadata_problems("---\ntitle: T\n---\nBody\n", NOTE))
 
 
+class LanguageSubset(unittest.TestCase):
+    FULL = "# T\n\nShort.\n\n## Pitfalls\n\n- x\n\n## Try it\n\n[lab](../practice/a.ts)\n\n## Next\n\n[n](02.md)\n"
+
+    def write(self, rel, body):
+        root = Path(tempfile.mkdtemp())
+        path = root / rel
+        path.parent.mkdir(parents=True)
+        path.write_text(note_text(body=body), encoding="utf-8")
+        return path
+
+    def test_scope(self):
+        self.assertTrue(cc.in_language_subset(Path("programming/typescript/notes/04-generics.md")))
+        self.assertTrue(cc.in_language_subset(Path("programming/sql/notes/10-capstone-murder-mystery.md")))
+        self.assertFalse(cc.in_language_subset(Path("programming/sql/notes/09-sql-from-python.md")))
+        self.assertFalse(cc.in_language_subset(Path("programming/software-design/notes/01-readable-code.md")))
+
+    def test_short_note_with_the_subset_passes(self):
+        path = self.write("programming/typescript/notes/01-a.md", self.FULL)
+        self.assertEqual(cc.check(path), [])
+
+    def test_missing_sections_fail(self):
+        path = self.write("programming/typescript/notes/01-a.md", "# T\n\nShort, see practice/a.ts.\n")
+        self.assertEqual(cc.check(path), ["no 'Pitfalls' section", "no 'Try it' section", "no 'Next' section"])
+
+    def test_try_it_needed_only_where_a_lab_exists(self):
+        body = "# T\n\nShort.\n\n## Pitfalls\n\n- x\n\n## Next\n\n[n](02.md)\n"
+        self.assertEqual(cc.check(self.write("programming/sql/notes/10-capstone.md", body)), [])
+
+    def test_lab_named_only_in_code_fence_does_not_count(self):
+        body = "# T\n\n```\npractice/a.ts\n```\n\n## Pitfalls\n\n- x\n\n## Next\n\n[n](02.md)\n"
+        self.assertEqual(cc.check(self.write("programming/typescript/notes/02-a.md", body)), [])
+
+    def test_order_is_enforced(self):
+        body = "# T\n\nSee practice/a.ts.\n\n## Next\n\nx\n\n## Try it\n\ny\n\n## Pitfalls\n\nz\n"
+        problems = cc.check(self.write("programming/typescript/notes/01-a.md", body))
+        self.assertEqual(problems, ["Pitfalls, Try it, Next are out of order"])
+
+    def test_next_in_another_heading_is_not_the_next_section(self):
+        body = "# T\n\n## What to do next\n\nx\n\n## Pitfalls\n\ny\n\n## Next\n\nz\n"
+        self.assertEqual(cc.check(self.write("programming/typescript/notes/09-a.md", body)), [])
+
+    def test_other_programming_notes_keep_the_full_standard(self):
+        path = self.write("programming/software-design/notes/01-a.md", self.FULL)
+        self.assertTrue(any("under 1500" in p for p in cc.check(path)))
+
+
 class Sources(unittest.TestCase):
     def test_url_doi_and_layout_citation_pass(self):
         for entry in ("https://arxiv.org/abs/2401.00001", "10.1016/0196-8858(85)90002-8",

@@ -73,8 +73,8 @@ the checks into one scorecard. Attacks that arrive through an image, a document 
 
 | Chapter | Why |
 |---|---|
-| [DS 02/04 Convolutional networks](../../data-science/02-deep-learning/notes/04-convolutional-networks.md) | The vision models before ViT |
-| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Comparing vectors in one space |
+| [DS 02/04 Convolutional networks](../../data-science/02-deep-learning/notes/04-convolutional-networks.md) | Optional background: the vision models before ViT |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: comparing vectors in one space |
 | [GA 01/09 PEFT and fine-tuning in practice](../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md) | Parameter-efficient fine-tuning for image models |
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | The pipeline multimodal RAG extends |
 | [GA 07/03 Real-time multimodal agents](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) | The voice case |
