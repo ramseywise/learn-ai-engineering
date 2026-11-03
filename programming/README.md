@@ -45,6 +45,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | [Computer science foundations](computer-science/README.md) | After Python foundations; pairs with Python for engineers | Cost models and Big-O → data structures → algorithm patterns → numbers and memory → processes, threads and I/O → networks | OSTEP, Erickson's *Algorithms*, MIT 6.042 notes, CPython source notes, RFCs and Goldberg; see its [references](computer-science/references.md) | Data structures, a stream decoder and an RFC 6298 timer built against tests, and every timing in the notes reproducible |
 | [Software design](software-design/README.md) | After Python for engineers | Readable code → refactoring → design principles → patterns → testing → debugging → Git, review and design docs | Authors' free writing, papers and tool documentation; see its [references](software-design/references.md) | A smelly module refactored under tests, then extended |
 | [Backend and system design](backend-and-system-design/README.md) | After computer science foundations; pairs with software design | API design → auth → caching and queues → load balancing and rate limiting → estimation and scaling → containers and deployment → reliability under load → design walkthroughs → AI system reference architecture | RFCs, OWASP, the Google SRE book, project docs and published papers; see its [references](backend-and-system-design/references.md) | A rate limiter, single-flight cache, JWT verifier, lease scheduler, small LSM store and token budget built against tests, and a container that drains correctly on SIGTERM |
+| [Frontend and UX](frontend-and-ux/README.md) | After TypeScript | HTML, CSS and the DOM → React and state → accessibility → UX principles → AI interfaces | MDN, WHATWG, W3C, react.dev, Nielsen Norman Group, People + AI Guidebook and papers; see its [references](frontend-and-ux/references.md) | A streaming chat UI with citations, uncertain, error and handoff states, passing browser tests against a local mock server |
 
 The tracks deliberately overlap. Python gives SQL and TypeScript their programming vocabulary; SQL sharpens the data model before [Data Analytics](../data-analytics/README.md); Python plus TypeScript prepares you for [AI Engineering](../ai-engineering/README.md).
 
@@ -157,6 +158,14 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 **Next:** [Storage and compute foundations](../data-engineering/01-storage-and-compute-foundations/README.md) for what's underneath a store. The reading order and sources are in the [track README](backend-and-system-design/README.md).
 
+### [Frontend and UX](frontend-and-ux/README.md)
+
+**Purpose:** Enough of the browser, React, accessibility and usability for a backend, data or AI engineer to build a usable interface or judge one, then what AI interfaces need that ordinary ones don't: streaming, citations, uncertainty, handoff and failure. It's awareness depth, and its notes follow the full chapter standard.
+
+**Evidence:** Build the [lab](frontend-and-ux/practice/README.md)'s stream parser, state machine and chat interface against their tests, then walk every scenario by keyboard and try it with a screen reader, which no script here can do.
+
+**Next:** [Application patterns](../generative-ai/07-agentic-applications/notes/06-application-patterns.md). The reading order and sources are in the [track README](frontend-and-ux/README.md).
+
 ## Completion standard and further practice
 
 Complete the Python track before moving to data or AI work. Take SQL when you will query or model data; take TypeScript when you will build typed applications. A complete programming foundation includes a passing Python exercise set and package, checked SQL exercises and capstone, and passing TypeScript checks plus a validated asynchronous boundary.
@@ -195,6 +204,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 | TypeScript live example [`examples/claude.ts`](typescript/practice/examples/claude.ts) | Needs an API key (`ANTHROPIC_API_KEY`); exits cleanly without one | `node examples/claude.ts` |
 | [`computer-science/practice/check.sh`](computer-science/practice/check.sh) | Needs `uv` and Python 3.14; the first run downloads pytest, numpy and `python3.14t`. Runs the lab's tests and every code block in the notes. Network blocks are opt-in | `bash check.sh`, `bash check.sh exercises`, `bash check.sh network` |
 | [`backend-and-system-design/practice/check.sh`](backend-and-system-design/practice/check.sh) | Needs `uv` and Python 3.14; the container checks also need Docker, and print a skip without it. Runs the lab's tests and every code block in the notes | `bash check.sh`, `bash check.sh exercises` |
+| [`frontend-and-ux/practice/check.sh`](frontend-and-ux/practice/check.sh) | Needs Node 22.18+ and Chromium for Playwright, no API key. Runs the type check, unit and browser tests, axe, planted faults and every code block in the notes | `bash check.sh`, `bash check.sh exercises`, `bash check.sh no-browser` |
 
 ## Primary texts
 
@@ -209,6 +219,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 - Computer science foundations: the [track's primary texts](computer-science/README.md#primary-texts)
 - Software design: the [track's primary texts](software-design/README.md#primary-texts)
 - Backend and system design: the [track's primary texts](backend-and-system-design/README.md#primary-texts)
+- Frontend and UX: the [track's primary texts](frontend-and-ux/README.md#primary-texts)
 - McKinney, *Python for Data Analysis*: where the path goes next, in [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md)
 
 Everything else, with licences: [references.md](references.md). Each track README also maps sources directly to its notes.
