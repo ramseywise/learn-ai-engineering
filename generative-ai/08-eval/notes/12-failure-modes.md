@@ -260,12 +260,6 @@ Schedule maintenance: review failure labels quarterly, prune dead rows, re-calib
 
 ---
 
-## Working reference
-
-`~/.claude/refs/verification.md` — the verification ladder and the generator/evaluator split, from the harness side.
-
----
-
 ## Pitfalls
 
 - **Changing the agent first.** Symptom: "fixes" that don't move the score, or that break something. Fix: follow the debug order: infra, versions, traces and grades, slices, and only then the agent.

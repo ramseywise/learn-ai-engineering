@@ -19,8 +19,30 @@ sources:
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 8
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5
   - Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 7
-  - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
+  - "Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3"
   - Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 8
+  - https://doi.org/10.18653/v1/2023.acl-long.891
+  - https://doi.org/10.18653/v1/2024.naacl-long.250
+  - https://arxiv.org/abs/2004.10964
+  - https://arxiv.org/abs/2306.02707
+  - https://arxiv.org/abs/2311.07911
+  - https://arxiv.org/abs/2311.11045
+  - https://arxiv.org/abs/2406.06326
+  - https://arxiv.org/abs/2407.06023
+  - https://arxiv.org/abs/2411.15124
+  - https://arxiv.org/abs/2412.08905
+  - https://arxiv.org/abs/2503.17523
+  - https://arxiv.org/abs/2504.15777
+  - https://arxiv.org/abs/2505.00949
+  - https://arxiv.org/abs/2505.04588
+  - https://arxiv.org/abs/2507.01921
+  - https://arxiv.org/abs/2508.18255
+  - https://arxiv.org/abs/2509.07604
+  - https://arxiv.org/abs/2509.22230
+  - https://arxiv.org/abs/2510.05024
+  - https://arxiv.org/abs/2511.19333
+  - https://arxiv.org/abs/2602.08234
+  - https://arxiv.org/abs/2608.13787
 confidence: medium
 cleaned: 2026-11-01
 ---

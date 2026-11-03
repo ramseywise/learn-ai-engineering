@@ -1,5 +1,5 @@
 ---
-origin: curated (Li, AI Agents in Depth, ch. 6)
+origin: curated  # was: curated (Li, AI Agents in Depth, ch. 6)
 sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md (Bojie Li, AI Agents in Depth, 2026, ch. 6; Apache-2.0)
   - https://arxiv.org/abs/2312.08914 (Hong et al., CogAgent, 2023)
@@ -10,6 +10,12 @@ sources:
   - https://arxiv.org/abs/2409.06666 (Fang et al., LLaMA-Omni, 2024)
   - https://arxiv.org/abs/2411.18279 (Zhang et al., LLM-Brained GUI Agents survey, TMLR 2025)
   - https://arxiv.org/abs/2510.02250 (Gonzalez-Pumariega et al., Agent S3, 2025)
+  - https://arxiv.org/abs/2209.08655
+  - https://arxiv.org/abs/2312.13771
+  - https://arxiv.org/abs/2401.01614
+  - https://arxiv.org/abs/2411.10323
+  - https://arxiv.org/abs/2504.10458
+  - https://arxiv.org/abs/2508.09123
 confidence: high
 cleaned: 2026-11-01
 ---

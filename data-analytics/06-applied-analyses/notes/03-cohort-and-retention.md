@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - "Fader and Hardie, How to Project Customer Retention, Journal of Interactive Marketing, 2007"
   - "Fader, Hardie and Lee, Counting Your Customers the Easy Way, Marketing Science, 2005"
+  - https://doi.org/10.1002/dir.20074
 confidence: high
 cleaned: 2026-11-01
 ---

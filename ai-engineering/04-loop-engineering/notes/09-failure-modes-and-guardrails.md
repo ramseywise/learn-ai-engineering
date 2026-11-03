@@ -1,5 +1,5 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
   - https://medium.com/@adnanmasood/loop-engineering-a-guide-for-engineers-and-practitioners-893bb65ea943
   - https://www.mindstudio.ai/blog/what-is-loop-engineering-ai-coding-agents
@@ -201,12 +201,6 @@ Pause before: dependency changes, anything touching prod, deleting a test
 ```
 
 The state file it points to is in [note 05](05-long-running-loops.md#memory-three-tiers-five-fields); the guarded script that enforces the stop rules and the ratchet is in [note 05](05-long-running-loops.md#the-ralph-loop).
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-reliability.md` — retries, stall detection, recovery; `~/.claude/refs/agent-safety.md` — approval gates.
 
 ---
 

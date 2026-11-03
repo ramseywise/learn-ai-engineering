@@ -6,7 +6,9 @@ sources:
   - "Burges, From RankNet to LambdaRank to LambdaMART (Microsoft Research, 2010)"
   - "Bruch, An Alternative Cross Entropy Loss for Learning-to-Rank (WWW 2021)"
   - "Li et al., Deep Entity Matching with Pre-Trained Language Models (PVLDB, 2020)"
-  - "Generated ledger, practice/matching.py"
+  - practice/matching.py (generated ledger)
+  - https://arxiv.org/abs/1911.09798
+  - https://arxiv.org/abs/2004.00584
 confidence: high
 cleaned: 2026-11-02
 ---

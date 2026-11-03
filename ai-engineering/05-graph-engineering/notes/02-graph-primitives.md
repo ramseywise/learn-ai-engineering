@@ -6,6 +6,7 @@ sources:
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
+  - https://arxiv.org/abs/2309.02427
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -265,12 +266,6 @@ The bound lives in the two routers, not in the model: after `MAX_ATTEMPTS` the g
 | **Claude Code / Agent SDK** | Subagents as nodes, hooks as deterministic edges ([05](05-topology-patterns.md#the-same-patterns-in-claude-code)) |
 
 flowtivity also lists OpenClaw "Code Mode" (the model writes a small program instead of choosing from a long tool list) and an OpenAI Codex "graph-max" workflow. Neither is confirmed by first-party docs yet; treat them as examples of the idea that topology can be written as code, not as recommendations.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — when a subagent is warranted; orchestrator responsibilities.
 
 ---
 

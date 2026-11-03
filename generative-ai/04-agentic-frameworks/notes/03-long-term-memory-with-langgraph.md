@@ -1,5 +1,5 @@
 ---
-origin: Long-Term-Agentic-Memory-With-LangGraph-main
+origin: synthesis  # was: Long-Term-Agentic-Memory-With-LangGraph-main
 sources:
   - https://github.com/YunghuiHsu/Long-Term-Agentic-Memory-With-LangGraph (Lesson 2–5 notebooks, prompts.py)
   - https://www.deeplearning.ai/short-courses/long-term-agentic-memory-with-langgraph/ (L2 Baseline, L3 Semantic, L4 Episodic, L5 Procedural)

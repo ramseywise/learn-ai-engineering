@@ -1,10 +1,10 @@
 ---
-origin: course-synthesis
+origin: synthesis  # was: course-synthesis
 sources:
   - "adv-11/AgenticAIFrameworks (AutoGen, CrewAI, LangGraph, LangMem, Google ADK, OpenAI Agents SDK, smolagents, Letta, MCP, A2A, MLflow examples) — https://github.com/adv-11/AgenticAIFrameworks"
   - "DeepLearning.AI CrewAI notebooks bundled in that repo (CrewAI/Notebooks) — https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/"
-  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 10 Composable Agentic Workflows — ../sources/lakshmanan-hapke-genai-design-patterns-ch10-composable-agentic-workflows.pdf"
-  - "generative-ai/resources.md, section 03/04 Agents and frameworks"
+  - Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 10 Composable Agentic Workflows
+  # generative-ai/resources.md, section 03/04 Agents and frameworks
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 7"
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 1"

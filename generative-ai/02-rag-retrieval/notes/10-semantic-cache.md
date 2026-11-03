@@ -1,7 +1,7 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
-  - own work notes (production support-agent evaluation, anonymised)
+  # own work notes (production support-agent evaluation, anonymised)
   - https://aclanthology.org/2023.nlposs-1.24/
 confidence: medium
 cleaned: 2026-11-01

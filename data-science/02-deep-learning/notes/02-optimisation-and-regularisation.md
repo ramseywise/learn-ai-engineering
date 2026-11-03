@@ -1,9 +1,9 @@
 ---
-origin: own coursework (Ng Deep Learning Specialization, course 2) + curated
+origin: synthesis  # was: own coursework (Ng Deep Learning Specialization, course 2) + curated
 sources:
   - ../practice/ng-deep-learning/Improving Deep Neural Networks Hyperparameter tuning, Regularization and Optimization/
   - https://www.coursera.org/specializations/deep-learning
-  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - https://proceedings.mlr.press/v9/glorot10a.html
   - https://arxiv.org/abs/1502.01852
   - https://jmlr.org/papers/v15/srivastava14a.html

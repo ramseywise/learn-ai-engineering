@@ -1,9 +1,11 @@
 ---
 origin: book-condensed
 sources:
-  - sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf
-  - sources/kg-and-llms-in-action/ch12-node-classification-link-prediction.pdf
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 11
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 12
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
+  - https://arxiv.org/abs/2403.04483
+  - https://arxiv.org/abs/2404.14809
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -253,8 +255,6 @@ A predicted edge is the clearest case of note 12's rule that **claims are not tr
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-eval.md`: precision/recall trade-offs and held-out evaluation.
 
 Depth: [ch. 11 PDF](../sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf) (embeddings, KG decoders, message passing), [ch. 12 PDF](../sources/kg-and-llms-in-action/ch12-node-classification-link-prediction.pdf) (PyG walkthroughs). Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 7: a short survey of KG embeddings, GNNs and LLM graph reasoning.
 

@@ -1,9 +1,9 @@
 ---
-origin: course-synthesis
+origin: synthesis  # was: course-synthesis
 sources:
   - "DeepLearning.AI, AI Agentic Design Patterns with AutoGen (Chi Wang, Qingyun Wu), L1–L6 — https://www.deeplearning.ai/short-courses/ai-agentic-design-patterns-with-autogen/ ; snapshot upstream https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen"
   - "DeepLearning.AI, LLMs as Operating Systems: Agent Memory, L6 multi-agent orchestration — https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory"
-  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 5 P14 Tree of Thoughts, ch 6 P18 Reflection, ch 7 P23 Multiagent Collaboration — ../sources/lakshmanan-hapke-genai-design-patterns-ch07-enabling-agents-to-take-action.pdf"
+  - Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 5 P14 Tree of Thoughts, ch 6 P18 Reflection, ch 7 P23 Multiagent Collaboration
   - "Cemri et al. 2025, Why Do Multi-Agent LLM Systems Fail? — https://arxiv.org/abs/2503.13657"
   - "Andrew Ng, Agentic Design Patterns (The Batch, 2024) — https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/"
   - https://arxiv.org/abs/2601.12307

@@ -24,10 +24,10 @@ sources:
   - https://arxiv.org/abs/2509.08827
   - https://arxiv.org/abs/2512.13607
   - https://arxiv.org/abs/2506.10910
-  - https://arxiv.org/abs/2410.18982 (O1 Replication Journey: journey vs shortcut SFT)
-  - https://arxiv.org/abs/2411.16489 (O1 Replication Journey Part 2: o1 distillation)
+  - "https://arxiv.org/abs/2410.18982 (O1 Replication Journey: journey vs shortcut SFT)"
+  - "https://arxiv.org/abs/2411.16489 (O1 Replication Journey Part 2: o1 distillation)"
   - https://arxiv.org/abs/2502.06773 (RLSP, exploration reward for reasoning)
-  - https://arxiv.org/abs/2504.05185 (Concise Reasoning via RL: length as PPO loss artifact)
+  - "https://arxiv.org/abs/2504.05185 (Concise Reasoning via RL: length as PPO loss artifact)"
   - https://arxiv.org/abs/2602.04118 (TinyLoRA, RL reasoning gains with 13 trained parameters)
   - https://arxiv.org/abs/2512.07783 (Interplay of pre-, mid-training and RL, edge-of-competence data)
   - https://arxiv.org/abs/2510.14901 (Reasoning with Sampling, training-free power-distribution MCMC)

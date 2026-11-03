@@ -219,12 +219,6 @@ Eval measures every layer below it and inherits their weaknesses. It also has we
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-eval.md` — the unit/eval seam, grader contract, gate ladder and grader states. `~/.claude/refs/verification.md` — "a check that cannot fail is not a check", "state the corpus and the denominator". Both apply to every eval in this topic.
-
----
-
 ## Pitfalls
 
 - **Asserting model text in a unit test.** Symptom: CI goes red on a rephrased but correct answer, and the fix is to loosen the test until it checks nothing. Fix: unit-test the deterministic parts (prompt rendering, retry on 429), and move answer quality to an eval that reports a rate.

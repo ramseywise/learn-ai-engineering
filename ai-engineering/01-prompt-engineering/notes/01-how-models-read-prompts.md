@@ -4,6 +4,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 1–3"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://www.promptingguide.ai/introduction/basics
+  - https://arxiv.org/abs/2307.09009
 confidence: high
 cleaned: 2026-11-01
 ---

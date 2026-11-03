@@ -293,7 +293,7 @@ Learn from other people's incidents too. The [AI Incident Database](https://inci
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

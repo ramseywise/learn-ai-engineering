@@ -1,11 +1,13 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/thinkstats.pdf (ch. 5, Probability; ch. 6, Operations on distributions)
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 1-2, expected value, sampling)
-  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf (ch. 4, The p Value and the Base Rate Fallacy; ch. 3, Pseudoreplication)
-  - ../../sources/computer%20age%20statistical%20inference.pdf (ch. 3, Bayesian inference)
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 5, Probability; ch. 6, Operations on distributions)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 1-2, expected value, sampling)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 4, The p Value and the Base Rate Fallacy; ch. 3, Pseudoreplication)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 3, Bayesian inference)
   - https://www.stat.berkeley.edu/users/aldous/134/grinstead.pdf (Grinstead and Snell, Introduction to Probability; link only, ch. 4 read)
+  - https://doi.org/10.1007/s10618-008-0114-1
+  - https://doi.org/10.1371/journal.pmed.0020124
 confidence: high
 cleaned: 2026-11-01
 ---

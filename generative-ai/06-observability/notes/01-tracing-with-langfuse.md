@@ -1,5 +1,5 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - https://langfuse.com/docs/observability/sdk/overview
   - https://langfuse.com/docs/observability/sdk/python/instrumentation

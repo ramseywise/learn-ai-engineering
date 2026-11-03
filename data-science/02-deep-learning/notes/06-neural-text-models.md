@@ -1,10 +1,10 @@
 ---
-origin: vendored snapshots: Text Analytics with Python (kept), own coursework: intro-to-nlp (kept as practice); own notebook
+origin: synthesis  # was: vendored snapshots: Text Analytics with Python (kept), own coursework: intro-to-nlp (kept as practice); own notebook
 sources:
   - ../../03-nlp/practice/text-analytics-with-python/Ch10 - The Promise of Deep Learning/
   - ../practice/deep-learning-starter-simple-lstm.ipynb
-  - ../../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf
-  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - Raieli and Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 1
+  - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - ../../03-nlp/practice/intro-to-nlp/tensorFlow/ (tensor intro, pipeline review, RNN classification, LSTM text generation)
   - ../../03-nlp/practice/intro-to-nlp/transformers/transformers_models_apis.ipynb
   - https://aclanthology.org/P11-1015/

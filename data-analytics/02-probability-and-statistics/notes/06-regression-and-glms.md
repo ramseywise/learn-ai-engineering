@@ -1,12 +1,13 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf (ch. 3, Linear Regression; ch. 4, Classification, §4.3 and §4.6)
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 4, Regression and Prediction; ch. 5, Classification)
-  - ../../sources/computer%20age%20statistical%20inference.pdf (ch. 8, GLMs and Regression Trees)
-  - ../../sources/gelman-2009-weakly-informative-default-prior-distribution.pdf (separation)
+  - James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (ch. 3, Linear Regression; ch. 4, Classification, §4.3 and §4.6)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 4, Regression and Prediction; ch. 5, Classification)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 8, GLMs and Regression Trees)
+  - https://doi.org/10.1214/08-aoas191 (separation)
   - https://www.statsmodels.org/stable/index.html
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
+  - https://arxiv.org/abs/0901.4011
 confidence: high
 cleaned: 2026-11-01
 ---

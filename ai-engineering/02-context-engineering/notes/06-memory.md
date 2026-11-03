@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2506.15841
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 4 — generative-ai/01-llm-fundamentals/sources/learning-langchain/"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6, 13 — sources/building-applications-with-ai-agents/"
+  - https://arxiv.org/abs/2606.16707
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -383,13 +384,6 @@ The protocol: the agent writes memory from session 1, revises it after each late
 Memory failures are slow and silent. Test recall across sessions, update correctness and stale-memory rate ([12](12-evaluating-context.md#write-memory)). In production, also track **memory hit rate** (the share of queries where a retrieved memory was actually relevant) and log which memory entries went into each answer, so a bad answer can be traced back to the memory that caused it.
 
 Public multi-turn benchmarks stress later turns, questions that aren't standalone, topic switches and unanswerable questions: **CAsT** (query understanding, with a large gap between automatic and oracle rewrites), **QReCC** (rewrite, retrieve, read), **TopiOCQA** (topic switching), **CORAL** (retrieval, generation and citation) and **mtRAG** (human-written, multi-domain). Mixed-initiative sets such as **InSCIt** and **OR-ShARC** test the decision to ask a clarifying question instead of answering.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-memory.md` — memory tier conventions, what belongs in each, and retention rules.
-`~/.claude/refs/agent-context.md` — the Write lever (writing context out of the window) and memory summaries as stable, cache-friendly content.
 
 ---
 

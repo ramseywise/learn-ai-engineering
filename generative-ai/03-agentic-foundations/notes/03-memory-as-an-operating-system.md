@@ -1,9 +1,9 @@
 ---
-origin: course-synthesis
+origin: synthesis  # was: course-synthesis
 sources:
   - "DeepLearning.AI, LLMs as Operating Systems: Agent Memory (Charles Packer, Sarah Wooders), Labs 1–6 and slides — https://www.deeplearning.ai/short-courses/llms-as-operating-systems-agent-memory/ ; snapshot upstream https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory"
   - "Packer et al. 2023, MemGPT: Towards LLMs as Operating Systems — https://arxiv.org/abs/2310.08560"
-  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 8 P28 Long-Term Memory — ../sources/lakshmanan-hapke-genai-design-patterns-ch08-addressing-constraints.pdf"
+  - Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 8 P28 Long-Term Memory
   - "Chhikara et al. 2025, Mem0 — https://arxiv.org/abs/2504.19413"
   - "adv-11/AgenticAIFrameworks: Letta/self-editing memory from scratch, LangGraph/langMem — https://github.com/adv-11/AgenticAIFrameworks"
   - https://arxiv.org/abs/2304.03442

@@ -6,8 +6,8 @@ sources:
   - ../practice/text-analytics-with-python/Ch03 - Processing and Understanding Text/
   - ../practice/text-analytics-with-python/Ch04 - Feature Engineering for Text Representation/Ch04a - Feature Engineering Text Data - Traditional Strategies.ipynb
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
-  - ../../sources/bird-klein-loper-nlp-with-python.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
+  - Bird, Klein and Loper, Natural Language Processing with Python, https://www.nltk.org/book/
   - ../practice/intro-to-nlp/nltk/text_preprocessing_nltk.ipynb
   - ../practice/intro-to-nlp/tensorFlow/text-processing/
   - ../practice/intro-to-nlp/tensorFlow/tensor-intro-review/tensorFlow_tokenizing_review.ipynb

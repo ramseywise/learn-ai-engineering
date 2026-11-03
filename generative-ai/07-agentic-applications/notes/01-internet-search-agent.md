@@ -1,5 +1,5 @@
 ---
-origin: internet-search-agent-main
+origin: synthesis  # was: internet-search-agent-main
 sources:
   - https://github.com/omidreza-amrollahi/internet-search-agent (Omidreza Amrollahi, 2025; MIT)
   - https://docs.langchain.com/langgraph (StateGraph, MessagesState, checkpointers)

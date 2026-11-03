@@ -93,7 +93,7 @@ A model can learn to pick the seam itself, but prompting alone does not get it t
 
 **Identifiers survive verbatim.** UUIDs, hashes, IPs, ports, URLs, filenames, PR numbers. Change one digit and the next tool call fails. Summarizers also tend to drop what *looks* re-acquirable: early decisions, the reasons behind constraints, and failed paths. Those are exactly what retention items 1–5 protect.
 
-`~/.claude/rules/context-health.md` codifies this: sessions past 150k cost ~5× per turn with no cache benefit on the overflow. Compaction is one turn; carrying stale context is a cost on every subsequent turn.
+A working rule codifies this: sessions past 150k cost ~5× per turn with no cache benefit on the overflow. Compaction is one turn; carrying stale context is a cost on every subsequent turn.
 
 ---
 
@@ -230,13 +230,6 @@ The useful habit is thinking in **promotion and demotion**. Compaction demotes c
 ### Self-refinement as a compaction pass
 
 The upstream processing module describes self-refinement (generate → critique → revise) as a quality technique. It also works as a compaction step: ask the model to rewrite its working notes into the state schema ([07](07-structured-context.md#2-state-schemas--what-carries-across-turns)), then verify that the required facts survived ([12](12-evaluating-context.md)).
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-context.md` — the Compress lever, compaction triggers, and what must survive.
-`~/.claude/rules/context-health.md` — the 150k threshold and phase-boundary discipline.
 
 ---
 

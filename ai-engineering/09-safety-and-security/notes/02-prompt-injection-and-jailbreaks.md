@@ -298,7 +298,7 @@ Put together, Harbour should change as follows:
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

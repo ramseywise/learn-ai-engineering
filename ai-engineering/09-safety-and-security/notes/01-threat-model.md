@@ -320,7 +320,7 @@ The assumption line is the honest part. It tells the reader which defences are d
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

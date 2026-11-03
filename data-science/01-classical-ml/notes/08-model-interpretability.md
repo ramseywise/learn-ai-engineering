@@ -1,17 +1,23 @@
 ---
-origin: own experiment plus papers
+origin: synthesis  # was: own experiment plus papers
 sources:
-  - ../../sources/lundberg-2017-unified-approach-interpreting-model-predictions.pdf
-  - ../../sources/ribeiro-2016-why-should-i-trust-you.pdf
-  - ../../sources/lipton-2016-mythos-model-interpretability.pdf
-  - ../../sources/miller-2017-explanation-artificial-intelligence.pdf
-  - ../../sources/dodge-2019-explaining-models.pdf
-  - ../../sources/explanations-helpful-comparative-study-effects-explanations.pdf
-  - ../../sources/huang-2023-can-large-language-models-explain.pdf
-  - ../../sources/grosse-2023-studying-large-language-model-generalization.pdf
+  - https://arxiv.org/abs/1705.07874
+  - https://arxiv.org/abs/1602.04938
+  - https://arxiv.org/abs/1606.03490
+  - https://arxiv.org/abs/1706.07269
+  - https://arxiv.org/abs/1901.07694
+  - https://doi.org/10.1145/3397481.3450650
+  - https://arxiv.org/abs/2310.11207
+  - https://arxiv.org/abs/2308.03296
   - https://scikit-learn.org/stable/modules/permutation_importance.html
   - https://scikit-learn.org/stable/modules/partial_dependence.html
   - https://shap.readthedocs.io/
+  - https://doi.org/10.1023/a:1010933404324
+  - https://doi.org/10.1038/s42256-019-0138-9
+  - https://doi.org/10.1186/1471-2105-8-25
+  - https://doi.org/10.1214/aos/1013203451
+  - https://arxiv.org/abs/1309.6392
+  - https://arxiv.org/abs/1905.03151
 confidence: high
 cleaned: 2026-11-01
 ---

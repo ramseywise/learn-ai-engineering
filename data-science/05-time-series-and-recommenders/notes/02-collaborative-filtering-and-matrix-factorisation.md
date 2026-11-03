@@ -3,6 +3,16 @@ origin: synthesis
 sources:
   - ../references.md
   - "MovieLens 100K (Harper & Konstan, 2015)"
+  - https://doi.org/10.1109/icdm.2008.22
+  - https://doi.org/10.1109/mc.2009.263
+  - https://doi.org/10.1145/1864708.1864721
+  - https://doi.org/10.1145/2827872
+  - https://doi.org/10.1145/371920.372071
+  - https://arxiv.org/abs/1205.2618
+  - https://arxiv.org/abs/1708.05031
+  - https://arxiv.org/abs/1905.03375
+  - https://arxiv.org/abs/1907.06902
+  - https://arxiv.org/abs/2005.09683
 confidence: high
 cleaned: 2026-11-01
 ---

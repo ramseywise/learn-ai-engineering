@@ -2,8 +2,8 @@
 origin: synthesis
 sources:
   - ../practice/text-analytics-with-python/Ch08 - Semantic Analysis/
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
-  - ../../sources/bird-klein-loper-nlp-with-python.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
+  - Bird, Klein and Loper, Natural Language Processing with Python, https://www.nltk.org/book/
   - https://wordnet.princeton.edu/
   - https://spacy.io/usage/linguistic-features#named-entities
   - https://sklearn-crfsuite.readthedocs.io/

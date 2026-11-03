@@ -1,10 +1,10 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 confidence: medium
 cleaned: 2026-11-01
 sources:
-  - Sutton & Barto, "Reinforcement Learning: An Introduction" (2020)
-  - Phil Winder, "Reinforcement Learning: Industrial Applications of Intelligent Agents" (O'Reilly, 2020), ch. 1–9, 11
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2020)"
+  - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://cdn.openai.com/WebGPT.pdf (WebGPT)
@@ -21,6 +21,9 @@ sources:
   - https://arxiv.org/abs/2106.01345 (Decision Transformer)
   - https://arxiv.org/abs/2506.08007 (Reinforcement Pre-Training, next-token prediction as RLVR)
   - https://arxiv.org/abs/2403.09629 (Quiet-STaR, rationales before each token)
+  - https://arxiv.org/abs/1207.4708
+  - https://arxiv.org/abs/2302.08242
+  - https://arxiv.org/abs/2402.14740
 ---
 
 # 1 — RL Foundations for LLMs

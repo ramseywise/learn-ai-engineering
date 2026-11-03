@@ -324,7 +324,7 @@ The chapters were written in 2023 for a 2024 book. Still sound: the controls tab
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

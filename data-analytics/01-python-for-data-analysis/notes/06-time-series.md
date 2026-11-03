@@ -6,6 +6,7 @@ sources:
   - https://pandas.pydata.org/docs/user_guide/timeseries.html
   - https://pandas.pydata.org/docs/user_guide/window.html
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
+  - https://doi.org/10.18637/jss.v040.i01
 confidence: high
 cleaned: 2026-11-01
 ---

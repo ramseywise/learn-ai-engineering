@@ -29,6 +29,22 @@ sources:
   - https://arxiv.org/abs/2606.09076 (Z-Reward, distilled score-distribution RM)
   - https://arxiv.org/abs/2308.03958 (Synthetic data reduces sycophancy)
   - https://arxiv.org/abs/2512.13607 (Nemotron-Cascade, RM size in RLHF)
+  - https://arxiv.org/abs/1909.08593
+  - https://arxiv.org/abs/2009.01325
+  - https://arxiv.org/abs/2211.14275
+  - https://arxiv.org/abs/2301.13688
+  - https://arxiv.org/abs/2304.07327
+  - https://arxiv.org/abs/2305.00944
+  - https://arxiv.org/abs/2305.17333
+  - https://arxiv.org/abs/2305.20050
+  - https://arxiv.org/abs/2306.01693
+  - https://arxiv.org/abs/2306.09782
+  - https://arxiv.org/abs/2307.15217
+  - https://arxiv.org/abs/2309.12307
+  - https://arxiv.org/abs/2402.12354
+  - https://arxiv.org/abs/2405.05904
+  - https://arxiv.org/abs/2506.01937
+  - https://arxiv.org/abs/2509.14252
 confidence: medium
 cleaned: 2026-11-01
 ---

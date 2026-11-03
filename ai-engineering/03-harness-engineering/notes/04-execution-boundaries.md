@@ -11,7 +11,7 @@ sources:
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2310.02304
-  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 8"
   - https://arxiv.org/abs/2402.06664
@@ -402,12 +402,6 @@ Consequences for harness design:
   or a real sandbox — the isolation backends above — over pattern-matching the dangerous ones.
 - **Test the gates you rely on**, and re-test them after harness upgrades. A silently
   regressed deny rule looks exactly like a working one.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-safety.md` — five protection layers, threat model and trust zones, tool input validation, sandboxing, PII handling.
 
 ---
 

@@ -286,12 +286,6 @@ Know the multiplier. Using GPT-4 to generate and to judge one criterion doubles 
 - [ ] Pairwise judges run in both orders
 - [ ] Judge model + prompt version pinned and recorded
 
-## Working reference
-
-`~/.claude/refs/agent-eval.md` — grader states (heuristic / calibrated / experimental) and what each may gate.
-
----
-
 ## Pitfalls
 
 - **One judge for "quality".** Symptom: verdicts switch criteria from row to row, and disagreements can't be diagnosed. Fix: one judge per criterion, with written PASS and FAIL definitions, and decomposition for grounding and completeness.

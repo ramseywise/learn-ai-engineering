@@ -1,5 +1,5 @@
 ---
-origin: own lab on generated invoices and open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the active learning, label noise and weak supervision literature
+origin: synthesis  # was: own lab on generated invoices and open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the active learning, label noise and weak supervision literature
 sources:
   - ../practice/learning_from_corrections.py
   - ../practice/invoices.py

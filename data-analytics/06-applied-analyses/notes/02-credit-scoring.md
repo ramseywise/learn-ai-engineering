@@ -2,9 +2,9 @@
 origin: synthesis
 sources:
   - "Grömping, South German Credit Data: Correcting a Widely Used Data Set, Beuth Hochschule report 04/2019"
-  - "UCI Machine Learning Repository, South German Credit (UPDATE)"
+  - https://archive.ics.uci.edu/dataset/573/south+german+credit+update (UCI Machine Learning Repository, South German Credit (UPDATE))
   - "Basel Committee on Banking Supervision, An Explanatory Note on the Basel II IRB Risk Weight Functions, 2005"
-  - "Basel Framework, chapters CRE31 and CRE32"
+  - https://www.bis.org/basel_framework/chapter/CRE/31.htm (Basel Framework, chapters CRE31 and CRE32)
   - "Siddiqi, Intelligent Credit Scoring, 2nd ed., Wiley, 2017 (bands via a secondary source)"
   - "Yurdakul, Statistical Properties of Population Stability Index, Western Michigan University, 2018"
 confidence: high

@@ -18,6 +18,12 @@ sources:
   - https://arxiv.org/abs/2610.23839
   - https://arxiv.org/abs/2610.25858
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 11"
+  - https://arxiv.org/abs/2601.03315
+  - https://arxiv.org/abs/2601.21557
+  - https://arxiv.org/abs/2603.28052
+  - https://arxiv.org/abs/2604.25850
+  - https://arxiv.org/abs/2605.30621
+  - https://arxiv.org/abs/2606.09498
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -505,12 +511,6 @@ The risk that connects back to every scale: an **Amdahl's-law bottleneck**. Auto
 - [ ] Does each refinement record the problem, the change and the metric, and does a stateful agent's A/B test keep each user on one arm?
 - [ ] Are evolve diffs reviewed by a human, and are they getting more boring over time?
 - [ ] Who decides whether this loop should exist, and when do they revisit it?
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-context.md` — prompt versioning (the artifacts an evolve loop edits); `~/.claude/refs/agent-observability.md` — the traces the slow loop reads.
 
 ---
 

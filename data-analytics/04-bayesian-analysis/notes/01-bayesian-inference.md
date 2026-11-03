@@ -1,10 +1,10 @@
 ---
-origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77; bayesian_inference_talk-main
+origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77; bayesian_inference_talk-main
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 1 Introduction, ch. 2 A little more on PyMC)
   - https://github.com/prasoon2211/bayesian_inference_talk (DataTalks.Club talk, Introduction to Bayesian Inference for Parameter Estimation)
-  - ../../sources/bayes_for_hackers.pdf
-  - ../../sources/think_bayes.pdf
+  - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers
+  - Downey, Think Bayes (Green Tea Press), https://greenteapress.com/wp/think-bayes/
   - https://doi.org/10.1080/01621459.1965.10480775 (Warner, JASA, 1965)
   - https://doi.org/10.1080/01621459.1989.10478858 (Dalal, Fowlkes and Hoadley, JASA, 1989)
 confidence: high

@@ -8,7 +8,7 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 4 — https://github.com/bojieli/ai-agent-book"
-  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 5"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 4, 5, 8"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
@@ -319,14 +319,6 @@ Multi-agent is the expensive option. Single agent with verification is the corre
 - **Branches are genuinely independent** — real parallelism, not sequential work in costume.
 
 Absent one of these, added agents multiply token cost and introduce the four failure modes above while solving nothing. The three architectural patterns, in order of increasing cost: **single agent with verification → two-agent supervisor → multi-agent with a shared harness layer.**
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — orchestrator/subagent responsibility split.
-`~/.claude/refs/agent-context.md` — subagent context isolation; orchestrator-holds-plan as the settled default.
-`~/.claude/refs/google-adk.md` · `~/.claude/refs/langgraph.md` — framework bindings.
 
 ---
 

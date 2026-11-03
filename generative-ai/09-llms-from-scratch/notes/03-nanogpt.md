@@ -11,6 +11,12 @@ sources:
   - https://arxiv.org/abs/2002.04745
   - https://arxiv.org/abs/1608.05859
   - https://arxiv.org/abs/2406.17557
+  - https://arxiv.org/abs/1512.03385
+  - https://arxiv.org/abs/1606.08415
+  - https://arxiv.org/abs/1607.06450
+  - https://arxiv.org/abs/1611.01462
+  - https://arxiv.org/abs/1711.05101
+  - https://arxiv.org/abs/1905.07830
 confidence: high
 cleaned: 2026-11-01
 ---

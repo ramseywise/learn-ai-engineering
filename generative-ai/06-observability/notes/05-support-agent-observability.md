@@ -1,7 +1,7 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
-  - own reference specs for a support-agent eval platform (anonymised)
+  # own reference specs for a support-agent eval platform (anonymised)
   - ./01-tracing-with-langfuse.md
   - https://arxiv.org/abs/2411.05285
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents

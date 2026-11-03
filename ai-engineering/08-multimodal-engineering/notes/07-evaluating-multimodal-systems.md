@@ -219,7 +219,7 @@ Once the suite exists, run it in CI as [the CI note](../../../generative-ai/08-e
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

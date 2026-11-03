@@ -1,5 +1,5 @@
 ---
-origin: book-synthesis
+origin: synthesis  # was: book-synthesis
 sources:
   - "Valliappa Lakshmanan & Hannes Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 9"
   - https://www.anthropic.com/research/next-generation-constitutional-classifiers

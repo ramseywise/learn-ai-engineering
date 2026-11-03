@@ -1,14 +1,17 @@
 ---
-origin: book-and-course-condensed
+origin: book-condensed  # was: book-and-course-condensed
 sources:
-  - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 13: sources/kg-and-llms-in-action/ch13-kg-powered-rag.pdf"
-  - "ch. 14: sources/kg-and-llms-in-action/ch14-natural-language-kg-questions.pdf"
-  - "ch. 15: sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf"
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 13
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 14
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 15
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L4–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
   - https://arxiv.org/abs/2404.16130
   - https://neo4j.com/docs/neo4j-graphrag-python/current/
   - "flowtivity.ai (vendor, Tier 2): https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/"
+  - https://arxiv.org/abs/2408.04187
+  - https://arxiv.org/abs/2408.04948
+  - https://arxiv.org/abs/2408.08921
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -472,8 +475,6 @@ chain.invoke({"query": "What investment firms are near Santa Clara?"})   # cours
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-context.md`: retrieval and context assembly. `~/.claude/refs/agent-reliability.md`: bounded retries.
 
 Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 13–14. Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 7, for the GraphRAG survey view (granularity, retrievers, prompt formats).
 

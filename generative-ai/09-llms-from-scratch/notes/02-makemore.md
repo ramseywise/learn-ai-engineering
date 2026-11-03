@@ -2,13 +2,14 @@
 origin: synthesis
 sources:
   - ../practice/nn-zero-to-hero/makemore/
-  - ../../../data-science/sources/ioffe-2015-batch-normalization.pdf
-  - ../../../data-science/sources/wu-2021-rethinking-batch-batchnorm.pdf
+  - https://arxiv.org/abs/1502.03167
+  - https://arxiv.org/abs/2105.07576
   - https://github.com/karpathy/makemore
   - https://www.jmlr.org/papers/v3/bengio03a.html
   - https://arxiv.org/abs/2105.07576
   - https://arxiv.org/abs/1609.03499
   - https://arxiv.org/abs/1607.06450
+  - https://arxiv.org/abs/1502.01852
 confidence: high
 cleaned: 2026-11-01
 ---

@@ -271,12 +271,6 @@ The upstream "molecule" material comes down to three rules:
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-context.md` — content priority ordering: stable content (system prompt, memory summaries) before ephemeral content (history, tool results, scratch reasoning). Also covers prompt versioning (`PROMPT_VERSION` identifiers; version bumps invalidate eval baselines).
-
----
-
 ## Pitfalls
 
 - **A timestamp in the system prompt.** Symptom: cache hit rate falls to near zero, TTFT jumps and the bill climbs, as in the `Current time` incident on a 100k-conversation/day agent. Fix: pass time as a late message or a clock tool.

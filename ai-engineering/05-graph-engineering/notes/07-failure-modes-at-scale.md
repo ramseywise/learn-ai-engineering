@@ -8,6 +8,7 @@ sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
   - https://arxiv.org/abs/2512.08296
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
+  - https://arxiv.org/abs/2301.05327
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -169,7 +170,7 @@ Eigent's contribution is a control-theory reading of why independent loops degra
 
 Held-out test sets, physical inventory counts, banked revenue, safety specifications. Without anchors, a graph becomes *"perfectly self-consistent while drifting arbitrarily far from reality."* Every loop agrees with every other loop, and all of them are wrong.
 
-This is the 不易 (immutable) layer of the SANYI change contract (`~/workspace/librarian/data/wiki/meta/sanyi-change-contract.md`): the invariants that must never become configurable. **An anchor made tunable is an anchor that will eventually be tuned.**
+This is the 不易 (immutable) layer of the SANYI change contract: the invariants that must never become configurable. **An anchor made tunable is an anchor that will eventually be tuned.**
 
 ---
 
@@ -185,12 +186,6 @@ Before running a graph unattended:
 - [ ] Parallel workers have separate file spaces.
 - [ ] Every reviewer can check against something the producer didn't write: tests, sources, or execution.
 - [ ] At least one anchor the graph cannot edit, and someone watching it.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-reliability.md` — bounds, retries, failure handling. `~/workspace/librarian/data/wiki/meta/sanyi-change-contract.md` — the immutable layer.
 
 ---
 

@@ -1,7 +1,7 @@
 ---
-origin: book-and-course-condensed
+origin: book-condensed  # was: book-and-course-condensed
 sources:
-  - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4, ch. 6 and appendix C: sources/kg-and-llms-in-action/ch04-multisource-integration.pdf, appendix-c-kgs-from-structured-sources.pdf"
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4, ch. 6 and appendix C
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
@@ -229,8 +229,6 @@ On hosting, the chapter's survey is short: relational tables, document stores, g
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-memory.md`: semantic memory writes.
 
 Depth: *KG & LLMs in Action* ch. 4 and appendix C; the chapter files are listed in [references.md](../references.md). Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7, for the full lifecycle (assessment, cleaning, enrichment).
 

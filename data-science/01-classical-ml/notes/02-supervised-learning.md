@@ -1,5 +1,5 @@
 ---
-origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex1 to ex4, ex6)
+origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex1 to ex4, ex6)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
@@ -8,8 +8,10 @@ sources:
   - ../practice/ng-machine-learning/ex2/ex2.ipynb
   - ../practice/ng-machine-learning/ex3/ex3.ipynb
   - ../practice/ng-machine-learning/ex6/ex6.ipynb
-  - ../../sources/cortes-1995-support-vector-networks.pdf
-  - ../../sources/pedregosa-2012-scikit-learn.pdf
+  - https://doi.org/10.1007/bf00994018
+  - https://arxiv.org/abs/1201.0490
+  - https://doi.org/10.1111/j.2517-6161.1996.tb02080.x
+  - https://doi.org/10.1145/1102351.1102430
 confidence: high
 cleaned: 2026-11-01
 ---

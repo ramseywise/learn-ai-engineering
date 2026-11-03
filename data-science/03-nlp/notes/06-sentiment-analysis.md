@@ -2,10 +2,12 @@
 origin: synthesis
 sources:
   - ../practice/text-analytics-with-python/Ch09 - Sentiment Analysis/
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
   - ../practice/intro-to-nlp/tensorFlow/neural-network/ (CNN and RNN/LSTM sentiment)
   - ../practice/intro-to-nlp/word-cloud/world-cloud-pet-finder.ipynb
   - https://github.com/cjhutto/vaderSentiment
+  - https://doi.org/10.1093/pan/mpn018
+  - https://arxiv.org/abs/1602.04938
 confidence: medium
 cleaned: 2026-11-01
 ---

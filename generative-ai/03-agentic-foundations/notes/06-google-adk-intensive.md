@@ -1,5 +1,5 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 confidence: medium
 sources:
   - https://www.kaggle.com/competitions/5-day-ai-agents-intensive-vibecoding-course-with-google

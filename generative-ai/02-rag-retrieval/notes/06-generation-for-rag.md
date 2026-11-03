@@ -1,5 +1,5 @@
 ---
-origin: Deeplearning.ai-RAG-main
+origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation" + labs 4.1 sampling, 4.2 prompt engineering, Assignment 4 "Fashion Forward Hub")
@@ -11,6 +11,7 @@ sources:
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 7
   - https://arxiv.org/abs/2503.23513
+  - https://arxiv.org/abs/2404.10198
 confidence: high
 cleaned: 2026-11-01
 ---

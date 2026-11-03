@@ -198,7 +198,7 @@ The course has no chapter yet on the rest of diffusion internals: U-Net versus D
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

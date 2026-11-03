@@ -1,5 +1,5 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
   - https://machinelearningmastery.com/an-introduction-to-loop-engineering/
   - https://www.mindstudio.ai/blog/what-is-loop-engineering-ai-coding-agents
@@ -164,12 +164,6 @@ That is the green-first rule from [note 01](01-what-a-loop-is.md#green-first) ap
 | Layer | prompt / harness | **this pillar** | [05-graph](../../05-graph-engineering/README.md) |
 
 Start at the left column and move right only when the task forces you to.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — loop shapes, planning variants, turn termination control.
 
 ---
 

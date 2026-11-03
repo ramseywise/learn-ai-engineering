@@ -1,5 +1,5 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - https://platform.claude.com/docs/en/about-claude/pricing
   - https://platform.claude.com/docs/en/build-with-claude/prompt-caching

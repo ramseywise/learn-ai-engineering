@@ -8,7 +8,7 @@ sources:
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
   - https://docs.langchain.com/oss/python/deepagents/overview
-  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -208,13 +208,6 @@ Cutting the inventory to what a first real harness needs:
 6. **Structured traces** of every step
 
 Six items. Everything else in this note is elaboration on those.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-runtime.md` — runtime boundaries and where execution happens.
-`~/.claude/refs/agent-tools.md` — tool schema rules and the promote-from-bash heuristic.
 
 ---
 

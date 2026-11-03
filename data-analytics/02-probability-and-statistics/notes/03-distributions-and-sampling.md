@@ -1,10 +1,10 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 4, The Greatest Theorem Never Told)
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 2, Data and Sampling Distributions)
-  - ../../sources/thinkstats.pdf (ch. 4, Continuous distributions; ch. 6, Operations on distributions)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 2, Data and Sampling Distributions)
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 4, Continuous distributions; ch. 6, Operations on distributions)
   - https://doi.org/10.1214/18-AOAS1161SF (Meng, Annals of Applied Statistics, 2018; link only, main text read)
 confidence: high
 cleaned: 2026-11-01

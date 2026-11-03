@@ -1,6 +1,5 @@
 ---
-origin: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here)
-  - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
+origin: curated  # was: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here) - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
   - https://arxiv.org/abs/2312.10997

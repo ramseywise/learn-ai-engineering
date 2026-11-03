@@ -1,14 +1,14 @@
 ---
-origin: own chapter, written to tell the training loop as one story on the adult census running example
+origin: synthesis  # was: own chapter, written to tell the training loop as one story on the adult census running example
 sources:
   - ../practice/intro-to-ml-in-python/data/adult.data
   - ../practice/intro-to-ml-in-python/data/citibike.csv
-  - ../../sources/bergstra-2012-random-search-hyper-parameter-optimization.pdf
-  - ../../sources/bergstra-2011-algorithms-hyper-parameter-optimization.pdf
-  - ../../sources/akiba-2019-optuna.pdf
-  - ../../sources/prechelt-1998-early-stopping-but-when.pdf
-  - ../../sources/cawley-2010-over-fitting-model-selection.pdf
-  - ../../sources/bengio-2004-no-unbiased-estimator-variance-k-fold.pdf
+  - https://jmlr.org/papers/v13/bergstra12a.html
+  - https://papers.nips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
+  - https://arxiv.org/abs/1907.10902
+  - https://page.mi.fu-berlin.de/prechelt/Biblio/stop_tricks1997.pdf
+  - https://jmlr.org/papers/volume11/cawley10a/cawley10a.pdf
+  - https://jmlr.org/papers/volume5/grandvalet04a/grandvalet04a.pdf
 confidence: high
 cleaned: 2026-11-02
 ---

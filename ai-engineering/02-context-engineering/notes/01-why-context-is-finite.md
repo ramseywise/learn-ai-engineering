@@ -127,14 +127,6 @@ For the formal version of this argument (context as an optimisation under a toke
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-context.md` — the four-lever model (Write → Select → Compress → Isolate) is the operational response to this constraint. Apply in order; isolate is highest cost.
-
-Practical instance: `~/.claude/rules/context-health.md` sets the 150k threshold as a compaction trigger and treats phase boundaries as compaction boundaries — a direct application of "curate, don't accumulate."
-
----
-
 ## Pitfalls
 
 - **Trusting the advertised window.** Symptom: a design passes a needle test at 200k and then fails on real questions. GPT-5's single-needle score stays near 100% to 262K while OOLONG-Pairs is near 0% by 33K. Fix: test with the task shape you ship, including multi-hop and aggregation questions, and set your limit from that.

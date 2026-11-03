@@ -336,12 +336,6 @@ Labs, upstream (Apache-2.0; READMEs partly in Chinese): [4-1 perception MCP serv
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-tools.md` — the four gating questions, promote-from-bash heuristic, schema rules, MCP decision table, write-operation safety.
-
----
-
 ## Pitfalls
 
 - **Silent truncation.** Symptom: the agent reasons confidently from a file it only saw part of. Fix: make it visible ("lines 1–200 of 4,812"), with `offset`/`limit` windows.

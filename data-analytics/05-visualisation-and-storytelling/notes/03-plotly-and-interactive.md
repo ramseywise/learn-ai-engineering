@@ -1,12 +1,13 @@
 ---
 origin: synthesis
 sources:
-  - "Plotly Python documentation"
-  - "Altair user guide, interactive charts"
+  - https://plotly.com/python/ (Plotly Python documentation)
+  - https://altair-viz.github.io/user_guide/interactions/index.html (Altair user guide, interactive charts)
   - "Shneiderman, The Eyes Have It, IEEE Symposium on Visual Languages, 1996"
   - "Satyanarayan et al., Vega-Lite, IEEE TVCG, 2017"
   - "Munzner, Visualization Analysis and Design, CRC Press, 2014"
   - "Knaflic, Storytelling with Data, Wiley, 2015"
+  - https://doi.org/10.1109/vl.1996.545307
 confidence: high
 cleaned: 2026-11-01
 ---

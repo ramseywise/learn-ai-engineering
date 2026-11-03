@@ -7,7 +7,7 @@ sources:
   - https://arxiv.org/abs/2509.03646 (HICRA, planning-token credit assignment)
   - https://arxiv.org/abs/2607.13394 (GFlowRL, partition-free GFlowNet-style RL)
   - https://arxiv.org/abs/2305.18290 (DPO)
-  - https://arxiv.org/abs/2311.10702 (Tülu 2: DPO scaled to 70B)
+  - "https://arxiv.org/abs/2311.10702 (Tülu 2: DPO scaled to 70B)"
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
   - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
   - https://arxiv.org/abs/2402.01306 (KTO)
@@ -29,7 +29,16 @@ sources:
   - https://arxiv.org/abs/2509.25137 (RLHI, DPO from real user conversations)
   - https://arxiv.org/abs/2307.12966 (Aligning LLMs with Human survey)
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
-  - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
+  - "Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3"
+  - https://arxiv.org/abs/2310.16944
+  - https://arxiv.org/abs/2401.08967
+  - https://arxiv.org/abs/2402.14740
+  - https://arxiv.org/abs/2405.07863
+  - https://arxiv.org/abs/2405.14333
+  - https://arxiv.org/abs/2411.15124
+  - https://arxiv.org/abs/2504.12216
+  - https://arxiv.org/abs/2510.07242
+  - https://arxiv.org/abs/2601.05242
 confidence: medium
 cleaned: 2026-11-01
 ---

@@ -1,11 +1,11 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_inferential_statistics.py
   - ../practice/courses/umich_statistical_analysis.py
-  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 3, Statistical Experiments and Significance Testing)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 3, Statistical Experiments and Significance Testing)
   - https://doi.org/10.1080/00031305.2016.1154108 (ASA statement on p-values, The American Statistician, 2016)
   - https://doi.org/10.1111/j.2517-6161.1995.tb02031.x (Benjamini and Hochberg, JRSS B, 1995)
   - https://docs.scipy.org/doc/scipy/reference/stats.html

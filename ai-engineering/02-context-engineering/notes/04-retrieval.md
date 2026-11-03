@@ -268,7 +268,7 @@ Worked examples: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/not
 
 ## Working reference
 
-`~/.claude/refs/agent-context.md` — the Select lever. `~/.claude/refs/agent-tools.md` — tool design determines whether just-in-time retrieval is viable; a tool returning 50k tokens of raw output defeats the purpose. See [10-tools-and-multi-agent.md](10-tools-and-multi-agent.md) for token-efficient tool design.
+Tool design determines whether just-in-time retrieval is viable; a tool returning 50k tokens of raw output defeats the purpose. See [10-tools-and-multi-agent.md](10-tools-and-multi-agent.md) for token-efficient tool design.
 
 ---
 

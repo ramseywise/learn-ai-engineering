@@ -196,12 +196,6 @@ prompt → context → harness → loop → **graph**. The harness ([03-harness]
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — when to use a subagent, orchestrator responsibilities, dynamic fan-out.
-
----
-
 ## Pitfalls
 
 - **Graphing over a loop that doesn't converge.** Symptom: the same spinning or early quitting, now inside three nodes, with routing errors on top. Fix: fix the loop first, because a graph inherits every loop failure and adds coordination failures ([04-loop](../../04-loop-engineering/README.md)).

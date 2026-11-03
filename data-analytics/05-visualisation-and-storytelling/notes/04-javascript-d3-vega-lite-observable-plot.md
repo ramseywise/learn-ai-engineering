@@ -3,9 +3,9 @@ origin: synthesis
 sources:
   - "Bostock, Ogievetsky & Heer, D3: Data-Driven Documents, IEEE TVCG, 2011"
   - "Satyanarayan et al., Vega-Lite, IEEE TVCG, 2017"
-  - "D3 documentation"
-  - "Vega-Lite documentation"
-  - "Observable Plot source and documentation"
+  - https://d3js.org/ (D3 documentation)
+  - https://vega.github.io/vega-lite/ (Vega-Lite documentation)
+  - https://github.com/observablehq/plot (Observable Plot source and documentation)
   - "Murray, Interactive Data Visualization for the Web, 2nd ed., O'Reilly, 2017"
   - "Meeks & Dufour, D3.js in Action, 3rd ed., Manning, 2024"
 confidence: high

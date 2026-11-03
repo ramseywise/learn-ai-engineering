@@ -12,6 +12,15 @@ sources:
   - "Chari and Pachter, PLOS Computational Biology, 2023"
   - "Ben-David, von Luxburg and Pál, COLT, 2006"
   - ../../../data-science/05-time-series-and-recommenders/practice/customer-segments-lab/lab.py
+  - https://doi.org/10.1007/11776420_4
+  - https://doi.org/10.1007/978-3-642-37456-2_14
+  - https://doi.org/10.1016/0377-0427(87)90125-7
+  - https://doi.org/10.1109/icdmw.2017.12
+  - https://doi.org/10.1109/tit.1982.1056489
+  - https://doi.org/10.1371/journal.pcbi.1011288
+  - https://doi.org/10.1509/jmkr.2005.42.4.415
+  - https://doi.org/10.21105/joss.00205
+  - https://arxiv.org/abs/1802.03426
 confidence: high
 cleaned: 2026-11-01
 ---

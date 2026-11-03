@@ -10,8 +10,8 @@ sources:
   - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
-  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
-  - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
+  - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
+  - Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — https://arxiv.org/abs/2610.28380
   - https://arxiv.org/abs/2609.11999
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
@@ -430,13 +430,6 @@ Two distinct functions:
 2. **Visible intermediate steps make a wrong answer diagnosable** rather than merely wrong — the user sees *where* it went off, which is a bug report instead of a complaint.
 
 The general principle: **in any domain where a human must sign off, traceability is a harness feature, not a UI nicety.** It also disciplines the generator — an agent required to cite can only assert what it retrieved, which constrains hallucination at the point of writing rather than catching it afterward. Where the output is regulated, the harness produces a draft and a qualified human authors the final submission; the citation layer is what makes that review tractable.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-reliability.md` — failure taxonomy, retry defaults, idempotency, graceful degradation, circuit breaking, structured error returns.
-`~/.claude/refs/agent-eval.md` — eval design and regression baselines.
 
 ---
 

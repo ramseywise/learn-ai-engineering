@@ -1,10 +1,10 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
-  - own work notes (production support-agent evaluation, anonymised)
+  # own work notes (production support-agent evaluation, anonymised)
   - https://github.com/pgvector/pgvector
   - https://docs.pinecone.io/guides/search/hybrid-search
-  - "Li, AI Agents in Depth, ch. 3"
+  - Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book
 confidence: medium
 cleaned: 2026-11-01
 ---

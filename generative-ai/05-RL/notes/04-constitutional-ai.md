@@ -10,6 +10,14 @@ sources:
   - https://arxiv.org/abs/2509.20357 (RLMT, online RL with thinking against a reward model)
   - https://arxiv.org/abs/2308.06259 (Humpback, instruction backtranslation)
   - https://arxiv.org/abs/2512.23707 (AI co-scientists, self-grading with privileged rubrics)
+  - https://arxiv.org/abs/2203.11171
+  - https://arxiv.org/abs/2203.14465
+  - https://arxiv.org/abs/2312.06585
+  - https://arxiv.org/abs/2401.10020
+  - https://arxiv.org/abs/2403.09629
+  - https://arxiv.org/abs/2406.01252
+  - https://arxiv.org/abs/2409.12917
+  - https://arxiv.org/abs/2510.07686
 confidence: medium
 cleaned: 2026-11-01
 ---

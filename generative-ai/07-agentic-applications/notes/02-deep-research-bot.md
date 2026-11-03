@@ -1,16 +1,26 @@
 ---
-origin: practice/deep-research-bot (W&B Fully Connected London 2025 workshop clone)
+origin: synthesis  # was: practice/deep-research-bot (W&B Fully Connected London 2025 workshop clone)
 sources:
   - https://github.com/morganmcg1/deep-research-bot (Weights & Biases, "Building Agents from Scratch" workshop, 2025; Apache-2.0)
   - https://github.com/Ayanami0730/deep_research_bench (Du et al., DeepResearch Bench, Apache-2.0 code)
   - https://arxiv.org/abs/2506.11763 (DeepResearch Bench paper, RACE and FACT)
   - https://art.openpipe.ai/fundamentals/ruler (OpenPipe ART, RULER reward)
   - https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf (Singh et al., Code Researcher, 2025)
-  - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf (Shao et al., DR Tulu: RL with Evolving Rubrics, 2025)
+  - "https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf (Shao et al., DR Tulu: RL with Evolving Rubrics, 2025)"
   - https://arxiv.org/abs/2506.18096 (Huang et al., Deep Research Agents survey, 2025)
   - https://arxiv.org/abs/2503.20201 (Alzubi et al., Open Deep Search, 2025)
   - https://arxiv.org/abs/2507.16075 (Han et al., TTD-DR, 2025)
   - https://arxiv.org/abs/2408.06292 (Lu et al., The AI Scientist, 2024)
+  - https://arxiv.org/abs/2501.04227
+  - https://arxiv.org/abs/2503.22708
+  - https://arxiv.org/abs/2504.21776
+  - https://arxiv.org/abs/2509.00244
+  - https://arxiv.org/abs/2509.06283
+  - https://arxiv.org/abs/2509.10446
+  - https://arxiv.org/abs/2510.17797
+  - https://arxiv.org/abs/2512.20491
+  - https://arxiv.org/abs/2605.06651
+  - https://arxiv.org/abs/2610.18933
 confidence: high
 cleaned: 2026-11-01
 ---

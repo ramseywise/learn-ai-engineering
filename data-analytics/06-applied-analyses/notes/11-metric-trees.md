@@ -4,7 +4,8 @@ sources:
   - "Manheim and Garrabrant, Categorizing Variants of Goodhart's Law, arXiv:1803.04585, 2018 (preprint)"
   - "Rodden, Hutchinson and Fu, Measuring the User Experience on a Large Scale, CHI 2010"
   - "dbt Labs, Semantic Layer and metrics documentation (vendor docs, read 2026-11-02)"
-  - "Fernhill synthetic tables in practice/retail.py, run against this chapter's script"
+  - practice/retail.py (Fernhill synthetic tables, run against this chapter's script)
+  - https://arxiv.org/abs/1803.04585
 confidence: medium
 cleaned: 2026-11-02
 ---

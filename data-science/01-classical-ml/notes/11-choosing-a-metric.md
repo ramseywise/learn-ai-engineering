@@ -1,5 +1,5 @@
 ---
-origin: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0) and simulated targets and queries, organised around Gneiting's point on scoring functions
+origin: synthesis  # was: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0) and simulated targets and queries, organised around Gneiting's point on scoring functions
 sources:
   - ../practice/metric_map.py
   - https://arxiv.org/abs/0912.0902

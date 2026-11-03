@@ -4,7 +4,7 @@ sources:
   - ../practice/text-analytics-with-python/Ch04 - Feature Engineering for Text Representation/Ch04b - Feature Engineering Text Data - Advanced Deep Learning Strategies.ipynb
   - ../practice/text-analytics-with-python/Ch07 - Text Similarity and Clustering/
   - ../../02-deep-learning/practice/ng-deep-learning/Sequence Models/Week2/
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
   - ../practice/intro-to-nlp/word2vec/word_embeddings_word2vec.ipynb
   - ../practice/intro-to-nlp/tensorFlow/encoding-embeddings/
   - ../practice/intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb

@@ -1,5 +1,5 @@
 ---
-origin: own coursework (Ng Deep Learning Specialization, course 3 quizzes) + curated
+origin: synthesis  # was: own coursework (Ng Deep Learning Specialization, course 3 quizzes) + curated
 sources:
   - ../practice/ng-deep-learning/Structuring Machine Learning Projects/
   - https://www.coursera.org/specializations/deep-learning

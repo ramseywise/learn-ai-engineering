@@ -1,8 +1,8 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/2017-08-kddmetricinterpretationpitfalls.pdf (Dmitriev et al., A Dirty Dozen, KDD 2017)
-  - ../../sources/kohavi-2008-controlled-experiments-web.pdf (Kohavi et al., DMKD, 2009)
+  - https://doi.org/10.1145/3097983.3098024 (Dmitriev et al., A Dirty Dozen, KDD 2017)
+  - https://doi.org/10.1007/s10618-008-0114-1 (Kohavi et al., DMKD, 2009)
   - https://doi.org/10.1145/3219819.3219919 (Deng, Knoblich and Lu, Applying the Delta Method in Metric Analytics, KDD 2018; not held)
   - https://doi.org/10.1145/2783258.2788583 (Hohnhold, O'Brien and Tang, Focusing on the Long-term, KDD 2015; not held)
 confidence: high

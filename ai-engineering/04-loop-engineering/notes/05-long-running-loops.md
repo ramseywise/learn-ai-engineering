@@ -206,12 +206,6 @@ Loops lean toward **reset**, because the Ralph and initializer/worker patterns a
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-context.md` — compaction triggers and what must survive them; `~/.claude/refs/agent-memory.md` — durable state and memory hygiene.
-
----
-
 ## Pitfalls
 
 - **The bare Ralph one-liner.** Symptom: it keeps running after the work is finished. Fix: add an iteration cap, a wall-clock or cost cap, a done check that runs the scorekeeper, a stall check and a log line per pass, as in `ralph.sh`.

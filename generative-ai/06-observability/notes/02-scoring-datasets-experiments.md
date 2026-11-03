@@ -1,5 +1,5 @@
 ---
-origin: Learning-LangFuse-main
+origin: synthesis  # was: Learning-LangFuse-main
 sources:
   - https://github.com/pedroalexleite/Learning-LangFuse (Code/LLM-Judge-1.ipynb, LLM-Judge-2.ipynb, Embedding-Similarity.ipynb, Agent.ipynb, Multi-Agent.ipynb, README.md)
   - https://langfuse.com/docs/evaluation/experiments/experiments-via-sdk

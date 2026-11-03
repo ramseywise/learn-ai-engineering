@@ -7,7 +7,7 @@ sources:
   - https://addyosmani.com/blog/agent-harness-engineering/
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - https://martinfowler.com/articles/reliable-llm-bayer.html
-  - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
+  - Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — https://arxiv.org/abs/2610.28380
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
@@ -319,13 +319,6 @@ Ordered by return on effort:
 - [ ] Subtraction pass scheduled on each model upgrade — and on any gate that false-positives
 
 Items 1–8 get you to Stage 2. Items 9–16 get you to Stage 3. Item 17 keeps it from calcifying.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-observability.md` — traces, event streams, structured logging.
-`~/.claude/refs/agent-eval.md` — binary evals, regression baselines, LLM-as-judge calibration.
 
 ---
 

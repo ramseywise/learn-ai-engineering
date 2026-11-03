@@ -160,12 +160,6 @@ This is [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-ope
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — "dynamic fan-out: do not default to it".
-
----
-
 ## Pitfalls
 
 - **Graphing unknowable work.** Symptom: generic deep research forced onto fixed nodes, which get rewritten every time the task changes. Fix: if you can't name the nodes and `Send` can't derive them from a step you do know, use a harness with a good loop.

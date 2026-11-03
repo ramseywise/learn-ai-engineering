@@ -1,10 +1,10 @@
 ---
-origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice)
+origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/04-representing-data-feature-engineering.ipynb
   - ../practice/intro-to-ml-in-python/06-algorithm-chains-and-pipelines.ipynb
-  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
 confidence: high
 cleaned: 2026-11-01
 ---

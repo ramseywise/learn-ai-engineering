@@ -1,5 +1,5 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - https://adk.dev/
   - https://adk.dev/evaluate/

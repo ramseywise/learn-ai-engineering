@@ -1,10 +1,12 @@
 ---
-origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
+origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 6 Getting our priorities straight)
   - http://proceedings.mlr.press/v22/kaufmann12/kaufmann12.pdf (Kaufmann et al., Bayes-UCB, AISTATS 2012)
-  - ../../sources/gelman-2009-weakly-informative-default-prior-distribution.pdf (Gelman et al., AOAS, 2008)
-  - ../../sources/RM-StatRethink-Bayes.pdf
+  - https://doi.org/10.1214/08-aoas191 (Gelman et al., AOAS, 2008)
+  - McElreath, Statistical Rethinking (draft of November 2015)
+  - https://arxiv.org/abs/0901.4011
+  - https://doi.org/10.1016/0196-8858(85)90002-8
 confidence: high
 cleaned: 2026-11-01
 ---

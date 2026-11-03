@@ -6,6 +6,7 @@ sources:
   - "McKinney, Data Structures for Statistical Computing in Python (SciPy 2010), https://doi.org/10.25080/Majora-92bf1922-00a"
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
   - https://pandas.pydata.org/docs/user_guide/migration.html
+  - https://doi.org/10.18637/jss.v040.i01
 confidence: high
 cleaned: 2026-11-01
 ---

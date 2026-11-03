@@ -1,11 +1,11 @@
 ---
-origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex7, ex8)
+origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex7, ex8)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/03-unsupervised-learning.ipynb
   - ../practice/ng-machine-learning/ex7/ex7.ipynb
   - ../practice/ng-machine-learning/ex8/ex8.ipynb
-  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - ../practice/music-clustering-lab/music_clustering_lab.py
   - https://doi.org/10.1214/aos/1176344136
   - https://doi.org/10.1016/0377-0427(87)90125-7
@@ -13,6 +13,8 @@ sources:
   - https://doi.org/10.1016/j.csda.2006.11.025
   - https://doi.org/10.1109/icdm.2008.17
   - ../practice/isolation_forest.py
+  - https://doi.org/10.5555/1283383.1283494
+  - https://arxiv.org/abs/1802.03426
 confidence: high
 cleaned: 2026-11-02
 ---

@@ -55,6 +55,7 @@ sources:
   - https://arxiv.org/abs/2109.00859
   - https://arxiv.org/abs/1909.09436
   - https://arxiv.org/abs/2204.05999
+  - https://arxiv.org/abs/1810.04805
 confidence: high
 cleaned: 2026-11-01
 ---

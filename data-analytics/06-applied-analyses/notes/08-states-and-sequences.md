@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - "Grinstead and Snell, Introduction to Probability, section 11.2 Absorbing Markov Chains"
+  - https://math.dartmouth.edu/~prob/prob/prob.pdf (Grinstead and Snell, Introduction to Probability, section 11.2 Absorbing Markov Chains)
   - "Gabadinho, Ritschard, Müller and Studer, Analyzing and Visualizing State Sequences in R with TraMineR, Journal of Statistical Software, 2011"
   - "Halpin, Optimal Matching Analysis and Life Course Data, University of Limerick working paper, 2008"
 confidence: high

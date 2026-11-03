@@ -1,13 +1,13 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - ../practice/AB-Bayes/AB_Testing_with_Python.ipynb
   - ../../02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb
   - https://www.kaggle.com/datasets/zhangluyuan/ab-testing (ab_data.csv, not included)
   - https://www.statsmodels.org/stable/stats.html#power-and-sample-size-calculations
-  - ../../sources/kohavi-2008-controlled-experiments-web.pdf (Kohavi et al., DMKD, 2009)
-  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 3)
+  - https://doi.org/10.1007/s10618-008-0114-1 (Kohavi et al., DMKD, 2009)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 3)
 confidence: high
 cleaned: 2026-11-01
 ---

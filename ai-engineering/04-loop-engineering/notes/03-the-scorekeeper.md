@@ -179,12 +179,6 @@ For the scorekeeper as an eval artifact (building its dataset, calibrating a jud
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-eval.md` — graders, rubrics, held-out sets.
-
----
-
 ## Pitfalls
 
 - **A scorekeeper the loop can edit.** Symptom: the score goes green while the output is wrong. Fix: put scoring logic where the loop can't write, and enforce it structurally with permissions, a hook or a separate repo. An agent that can edit its own evaluator has a negotiation.

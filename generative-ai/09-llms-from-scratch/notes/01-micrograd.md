@@ -4,6 +4,8 @@ sources:
   - ../practice/nn-zero-to-hero/micrograd/
   - https://www.youtube.com/watch?v=VMj-3S1tku0
   - https://github.com/karpathy/micrograd
+  - https://doi.org/10.1038/323533a0
+  - https://arxiv.org/abs/1502.05767
 confidence: high
 cleaned: 2026-11-01
 ---

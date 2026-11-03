@@ -1,11 +1,11 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf
-  - ../../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf
-  - ../../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf
-  - ../../sources/strengholt-data-mesh-topologies.pdf
-  - ../../sources/data-mesh-scenario-prompts-handout.pdf
+  - James Serra, Deciphering Data Architectures (O'Reilly, 2024), ch. 10
+  - James Serra, Deciphering Data Architectures (O'Reilly, 2024), ch. 11
+  - James Serra, Deciphering Data Architectures (O'Reilly, 2024), ch. 13
+  - "Strengholt, Data Mesh: Topologies and domain granularity, Towards Data Science (saved 2025)"
+  # Data mesh scenario prompts handout, origin unknown, no public URL (linked from references.md)
   - https://martinfowler.com/articles/data-mesh-principles.html
   - https://dataintensive.net/
 confidence: medium

@@ -1,5 +1,5 @@
 ---
-origin: langfuse-mcp-python-main
+origin: synthesis  # was: langfuse-mcp-python-main
 sources:
   - https://github.com/Log-LogN/langfuse-mcp-python (README.md, src/langfuse_mcp_python/server.py, core/base_tool.py, integrations/langfuse_client.py, tools/); MIT, © 2026 LogLogN, v1.0.0
   - https://langfuse.com/docs/api-and-data-platform/features/mcp-server

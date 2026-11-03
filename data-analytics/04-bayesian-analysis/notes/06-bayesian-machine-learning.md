@@ -1,11 +1,14 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - ../practice/BayesianML/
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 7 Bayesian Machine Learning, unfinished outline)
-  - ../../sources/computer age statistical inference.pdf
-  - ../../sources/blei-2016-variational-inference.pdf (Blei, Kucukelbir and McAuliffe, JASA, 2017)
-  - ../../sources/hoffman-2011-no-u-turn-sampler.pdf (Hoffman and Gelman, JMLR, 2014)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/
+  - https://doi.org/10.1080/01621459.2017.1285773 (Blei, Kucukelbir and McAuliffe, JASA, 2017)
+  - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
+  - https://doi.org/10.1111/j.2517-6161.1977.tb01600.x
+  - https://arxiv.org/abs/1312.6114
+  - https://arxiv.org/abs/1601.00670
 confidence: medium
 cleaned: 2026-11-01
 ---

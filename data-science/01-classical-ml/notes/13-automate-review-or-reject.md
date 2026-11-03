@@ -1,5 +1,5 @@
 ---
-origin: own lab on generated invoices and open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the reject option and selective classification literature
+origin: synthesis  # was: own lab on generated invoices and open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the reject option and selective classification literature
 sources:
   - ../practice/review_queue.py
   - ../practice/invoices.py

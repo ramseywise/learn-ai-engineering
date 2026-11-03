@@ -1,8 +1,8 @@
 ---
 origin: web-authored
 sources:
-  - Phil Winder, "Reinforcement Learning: Industrial Applications of Intelligent Agents" (O'Reilly, 2020), ch. 1
-  - Sutton & Barto, "Reinforcement Learning: An Introduction" (2nd ed., 2018), http://incompleteideas.net/book/the-book-2nd.html
+  - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1"
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., 2018), http://incompleteideas.net/book/the-book-2nd.html"
   - https://huggingface.co/learn/deep-rl-course/unit0/introduction
 confidence: high
 cleaned: 2026-11-01

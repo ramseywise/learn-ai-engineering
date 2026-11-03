@@ -10,10 +10,11 @@ sources:
   - "Mathur, Ding, Riddell and VanderWeele, Web Site and R Package for Computing E-values, Epidemiology, 2018"
   - "VanderWeele and Ding, Sensitivity Analysis in Observational Research: Introducing the E-Value, Annals of Internal Medicine, 2017 (abstract only)"
   - "Liu, Kuramoto and Stuart, An Introduction to Sensitivity Analysis for Unobserved Confounding in Nonexperimental Prevention Research, Prevention Science, 2013 (Rosenbaum section read)"
-  - "Hernán and Robins, Causal Inference: What If (chapter 15 read)"
+  - "https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If, chapter 15 read)"
   - https://www.pywhy.org/dowhy/
   - ../practice/ch05_matching_weighting.py
   - ../../06-applied-analyses/practice/retail.py
+  - https://doi.org/10.7326/m16-2607
 confidence: high
 cleaned: 2026-11-02
 ---

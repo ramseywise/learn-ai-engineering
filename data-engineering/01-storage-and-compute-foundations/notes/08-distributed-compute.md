@@ -8,6 +8,8 @@ sources:
   - https://www.usenix.org/conference/hotos15/workshop-program/presentation/mcsherry
   - https://motherduck.com/blog/big-data-is-dead/
   - https://dataintensive.net/
+  - https://doi.org/10.1145/1165389.945450
+  - https://doi.org/10.1145/1327452.1327492
 confidence: high
 cleaned: 2026-11-01
 ---

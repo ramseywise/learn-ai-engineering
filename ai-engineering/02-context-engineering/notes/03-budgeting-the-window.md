@@ -4,6 +4,7 @@ sources:
   - https://github.com/davidkimai/Context-Engineering (40_reference/token_budgeting.md, NOCODE/00_foundations/02_token_budgeting.md, NOCODE/10_mental_models/02_budget_model.md, 00_COURSE/03_context_management/01_fundamental_constraints.md, 00_COURSE/00_mathematical_foundations/02–03 — snapshot 2026-08-14)
   - https://arxiv.org/abs/2507.13334
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+  - https://arxiv.org/abs/2610.28577
 confidence: medium
 cleaned: 2026-11-01
 ---

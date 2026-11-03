@@ -5,9 +5,9 @@ sources:
   - "Few, Information Dashboard Design, O'Reilly, 2006"
   - "Cairo, The Truthful Art, New Riders, 2016"
   - "Shneiderman, The Eyes Have It, IEEE Symposium on Visual Languages, 1996"
-  - "Streamlit documentation"
-  - "Metabase documentation"
-  - "Looker Studio documentation"
+  - https://docs.streamlit.io/ (Streamlit documentation)
+  - https://www.metabase.com/docs/latest/ (Metabase documentation)
+  - https://cloud.google.com/looker/docs/studio (Looker Studio documentation)
 confidence: high
 cleaned: 2026-11-01
 ---

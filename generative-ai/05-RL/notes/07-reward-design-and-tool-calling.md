@@ -2,7 +2,7 @@
 origin: synthesis
 sources:
   - Bojie Li, "AI Agents in Depth" (2026), ch. 8, https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md
-  - Koenigstein, "AI Agents: The Definitive Guide" (O'Reilly, 2026)
+  - "Koenigstein, \"AI Agents: The Definitive Guide\" (O'Reilly, 2026)"
   - Albada, "Building Applications with AI Agents" (O'Reilly, 2025)
   - https://arxiv.org/abs/2411.02337
   - https://arxiv.org/abs/2203.07814

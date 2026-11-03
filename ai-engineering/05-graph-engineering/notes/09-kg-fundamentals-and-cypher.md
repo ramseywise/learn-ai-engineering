@@ -1,7 +1,7 @@
 ---
-origin: book-and-course-condensed
+origin: book-condensed  # was: book-and-course-condensed
 sources:
-  - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 1–3 and appendices A–B: sources/kg-and-llms-in-action/ch01-kg-llm-killer-combination.pdf, ch02-intelligent-systems-hybrid.pdf, ch03-first-kg-from-ontologies.pdf, appendix-a-intro-to-graphs.pdf, appendix-b-neo4j.pdf"
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 1–3 and appendices A–B
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L0–L2: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://neo4j.com/docs/cypher-manual/current/
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
@@ -458,8 +458,6 @@ This finds congenital atransferrinemia through hypothyroidism and an autosomal r
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-memory.md`: semantic memory (facts and entities) is the tier a KG implements.
 
 Depth (book PDFs): [ch. 1](../sources/kg-and-llms-in-action/ch01-kg-llm-killer-combination.pdf) (definition, four pillars, when to use a KG), [ch. 2](../sources/kg-and-llms-in-action/ch02-intelligent-systems-hybrid.pdf) (KG vs. LLM reasoning, advisory systems, purpose-driven construction), [ch. 3](../sources/kg-and-llms-in-action/ch03-first-kg-from-ontologies.pdf) (RDF vs. LPG, n10s, the HPO graph), [appendix A](../sources/kg-and-llms-in-action/appendix-a-intro-to-graphs.pdf) (graph theory, representations), [appendix B](../sources/kg-and-llms-in-action/appendix-b-neo4j.pdf) (Neo4j, Cypher, APOC, GDS). The book's code for ch. 3: <https://github.com/alenegro81/knowledge-graphs-and-llms-in-action/tree/main/chapters/ch03>.
 

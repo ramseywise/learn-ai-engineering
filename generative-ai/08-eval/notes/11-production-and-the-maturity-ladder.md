@@ -10,8 +10,8 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - "Paul Iusztin & Maxime Labonne, LLM Engineer's Handbook (Packt, 2024), appendix"
-  - eval-harness.md (retired 2026-10-28)
-  - eval-maturity-ladder.md (retired 2026-10-28)
+  # eval-harness.md (retired 2026-10-28)
+  # eval-maturity-ladder.md (retired 2026-10-28)
 confidence: medium
 cleaned: 2026-11-01
 ---

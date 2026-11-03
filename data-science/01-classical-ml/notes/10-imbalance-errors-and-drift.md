@@ -1,11 +1,11 @@
 ---
-origin: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0), written to continue the credit scoring note
+origin: synthesis  # was: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0), written to continue the credit scoring note
 sources:
   - https://doi.org/10.24432/C55S3H
   - ../practice/credit-default-lab/credit_default_lab.py
-  - ../../sources/chawla-2002-smote.pdf
-  - ../../sources/van-den-goorbergh-2022-harm-class-imbalance-corrections.pdf
-  - ../../sources/elor-2022-to-smote-or-not.pdf
+  - https://arxiv.org/abs/1106.1813
+  - https://doi.org/10.1093/jamia/ocac093
+  - https://arxiv.org/abs/2201.08528
 confidence: high
 cleaned: 2026-11-02
 ---

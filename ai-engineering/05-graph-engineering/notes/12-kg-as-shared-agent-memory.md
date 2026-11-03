@@ -5,7 +5,7 @@ sources:
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
   - https://www.anthropic.com/engineering/building-effective-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
-  - sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf (community synthesis; secondary)
+  - "Graph Engineering: The Karpathy Loop, Improved 1000x by Itself, community-compiled playbook (2026) (community synthesis; secondary)"
   - https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/ (secondary)
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops (secondary)
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
@@ -231,8 +231,6 @@ Two drills test whether the graph is earning its place:
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-memory.md`: taxonomy, persistence by lifetime (in-turn → session → cross-session → **cross-agent**), and the single-writer rule. `~/.claude/refs/agent-architecture.md`: when to fan out.
 
 Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06-memory.md) (ChatGPT, OpenClaw, Memoria).
 

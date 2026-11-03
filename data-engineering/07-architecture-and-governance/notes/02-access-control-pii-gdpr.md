@@ -11,6 +11,7 @@ sources:
   - https://docs.delta.io/latest/delta-utility.html
   - https://duckdb.org/docs/stable/operations_manual/securing_duckdb/overview
   - https://dataintensive.net/
+  - https://arxiv.org/abs/2011.09926
 confidence: medium
 cleaned: 2026-11-02
 ---

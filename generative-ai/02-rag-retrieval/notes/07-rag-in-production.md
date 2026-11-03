@@ -1,5 +1,5 @@
 ---
-origin: Deeplearning.ai-RAG-main
+origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 5, "RAG Systems in Production" + ungraded lab "Tracing a RAG system" + Assignment 5 "Improving a RAG System")
@@ -10,6 +10,7 @@ sources:
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
   - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
   - https://arxiv.org/abs/2311.09476
+  - https://arxiv.org/abs/2402.07867
 confidence: high
 cleaned: 2026-11-01
 ---

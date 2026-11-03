@@ -10,6 +10,15 @@ sources:
   - https://arxiv.org/abs/2004.09936
   - https://arxiv.org/abs/2505.23006
   - https://arxiv.org/abs/2006.14779
+  - https://doi.org/10.1016/j.aiopen.2022.02.001
+  - https://doi.org/10.1145/3290605.3300233
+  - https://doi.org/10.1145/3313831.3376301
+  - https://arxiv.org/abs/1609.01454
+  - https://arxiv.org/abs/1910.00486
+  - https://arxiv.org/abs/2001.09977
+  - https://arxiv.org/abs/2011.00564
+  - https://arxiv.org/abs/2310.11589
+  - https://arxiv.org/abs/2401.02994
 confidence: medium
 cleaned: 2026-11-01
 ---

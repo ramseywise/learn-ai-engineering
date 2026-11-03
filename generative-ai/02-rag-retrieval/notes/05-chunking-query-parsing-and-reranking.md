@@ -1,5 +1,5 @@
 ---
-origin: Deeplearning.ai-RAG-main
+origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3 part 2, ungraded lab "Chunking" + Assignment 3 "Building RAG systems with a Vector Database")

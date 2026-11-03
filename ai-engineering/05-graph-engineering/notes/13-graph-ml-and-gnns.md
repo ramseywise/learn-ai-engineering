@@ -1,9 +1,9 @@
 ---
 origin: book-condensed
 sources:
-  - sources/kg-and-llms-in-action/ch04-multisource-integration.pdf
-  - sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf
-  - sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 9
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 10
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -251,8 +251,6 @@ What it buys: **deterministic** output (same graph, same features, which matters
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-eval.md`: precision/recall trade-offs and held-out evaluation.
 
 Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration.pdf) (Hetionet, metapaths, DWPC, celiac case), [ch. 9 PDF](../sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf) (task taxonomy, karate club), [ch. 10 PDF](../sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf) (manual features, metapaths, DWPC, ReFeX).
 

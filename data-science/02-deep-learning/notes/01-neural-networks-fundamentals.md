@@ -1,10 +1,10 @@
 ---
-origin: own coursework (Ng Machine Learning ex4; Ng Deep Learning Specialization, course 1) + curated
+origin: synthesis  # was: own coursework (Ng Machine Learning ex4; Ng Deep Learning Specialization, course 1) + curated
 sources:
   - ../../01-classical-ml/practice/ng-machine-learning/ex4/ex4.ipynb
   - ../practice/ng-deep-learning/Neural Networks and Deep Learning/
   - https://www.coursera.org/specializations/deep-learning
-  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - https://www.tensorflow.org/guide/migrate
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), appendix A"
   - https://doi.org/10.1038/323533a0

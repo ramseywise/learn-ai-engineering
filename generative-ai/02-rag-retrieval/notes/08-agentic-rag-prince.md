@@ -1,5 +1,5 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 9"

@@ -4,7 +4,9 @@ sources:
   - "Hyndman and Athanasopoulos, Forecasting: Principles and Practice, 3rd ed., OTexts, 2021"
   - "Hyndman and Koehler, Another look at measures of forecast accuracy, International Journal of Forecasting, 2006"
   - "Taylor and Letham, Forecasting at Scale, The American Statistician, 2018"
-  - "statsmodels documentation"
+  - https://www.statsmodels.org/stable/index.html (statsmodels documentation)
+  - https://doi.org/10.1016/j.ijforecast.2006.03.001
+  - https://doi.org/10.1080/00031305.2017.1380080
 confidence: high
 cleaned: 2026-11-01
 ---

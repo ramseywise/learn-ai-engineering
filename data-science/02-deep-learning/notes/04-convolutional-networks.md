@@ -1,9 +1,9 @@
 ---
-origin: own coursework (Ng Deep Learning Specialization, course 4) + curated
+origin: synthesis  # was: own coursework (Ng Deep Learning Specialization, course 4) + curated
 sources:
   - ../practice/ng-deep-learning/Convolutional Neural Networks/
   - https://www.coursera.org/specializations/deep-learning
-  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - https://doi.org/10.1109/5.726791
   - https://arxiv.org/abs/1512.03385
   - https://arxiv.org/abs/1612.08242

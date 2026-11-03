@@ -7,6 +7,7 @@ sources:
   - https://arxiv.org/abs/2305.05665
   - https://arxiv.org/abs/2311.17136
   - https://doi.org/10.18653/v1/2023.findings-acl.71
+  - https://arxiv.org/abs/2103.00020
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -205,7 +206,7 @@ Retrieval returns candidates. A vision model still has to read them, and everyth
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

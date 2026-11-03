@@ -289,7 +289,7 @@ Give the people who do this different perspectives: someone from support knows w
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

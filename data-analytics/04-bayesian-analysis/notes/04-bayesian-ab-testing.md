@@ -1,5 +1,5 @@
 ---
-origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
+origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 2 A/B testing, ch. 4 sorting Reddit comments)
   - https://www.evanmiller.org/bayesian-ab-testing.html

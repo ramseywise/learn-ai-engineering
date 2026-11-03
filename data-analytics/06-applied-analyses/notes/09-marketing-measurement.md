@@ -6,7 +6,7 @@ sources:
   - "Chan and Perry, Challenges and Opportunities in Media Mix Modeling, Google, 2017"
   - "Jin, Wang, Sun, Chan and Koehler, Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects, Google, 2017"
   - "Dalessandro, Stitelman, Perlich and Provost, Causally Motivated Attribution for Online Advertising, ADKDD, 2012"
-  - "pymc-marketing 1.3.0 documentation and code, run against this chapter's tables"
+  - https://github.com/pymc-labs/pymc-marketing (pymc-marketing 1.3.0 documentation and code, run against this chapter's tables)
 confidence: high
 cleaned: 2026-11-02
 ---

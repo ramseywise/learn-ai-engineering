@@ -3,6 +3,8 @@ origin: synthesis
 sources:
   - "Kohavi, Longbotham, Sommerfield and Henne, Controlled experiments on the web: survey and practical guide, Data Mining and Knowledge Discovery, 2009"
   - "Bickel, Hammel and O'Connell, Sex Bias in Graduate Admissions: Data from Berkeley, Science, 1975"
+  - https://doi.org/10.1007/s10618-008-0114-1
+  - https://doi.org/10.1126/science.187.4175.398
 confidence: high
 cleaned: 2026-11-01
 ---

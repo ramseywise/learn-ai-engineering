@@ -1,5 +1,5 @@
 ---
-origin: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the eyeball and blackbox split in Ng's Machine Learning Yearning
+origin: synthesis  # was: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0), built on the eyeball and blackbox split in Ng's Machine Learning Yearning
 sources:
   - ../practice/reading_errors.py
   - https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf

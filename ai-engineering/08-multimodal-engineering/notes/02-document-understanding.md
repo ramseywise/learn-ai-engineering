@@ -296,7 +296,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

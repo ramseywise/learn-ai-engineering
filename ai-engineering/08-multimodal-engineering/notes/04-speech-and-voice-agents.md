@@ -258,7 +258,7 @@ For the agent as a whole, measure things the caller feels: time to first audio, 
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

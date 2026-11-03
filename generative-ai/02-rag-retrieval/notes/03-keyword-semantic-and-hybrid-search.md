@@ -1,5 +1,5 @@
 ---
-origin: Deeplearning.ai-RAG-main
+origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 5"
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
@@ -7,6 +7,7 @@ sources:
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
+  - https://arxiv.org/abs/2404.13781
 confidence: high
 cleaned: 2026-11-01
 ---

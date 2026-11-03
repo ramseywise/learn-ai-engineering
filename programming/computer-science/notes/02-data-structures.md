@@ -10,6 +10,7 @@ sources:
   - "PEP 456, Secure and interchangeable hash algorithm — https://peps.python.org/pep-0456/"
   - "PEP 412, Key-Sharing Dictionary — https://peps.python.org/pep-0412/"
   - "Python docs: Time complexity, collections, heapq, bisect, Sorting techniques — https://docs.python.org/3/builtins/time-complexity.html"
+  - https://arxiv.org/abs/1805.04154
 concepts: [arrays-hashing, linked-list, stack, heap, trees, tries, design, dynamic-array, hash-table, open-addressing, cpython-list, cpython-dict, hash-flooding, powersort, key-sharing-dict]
 confidence: high
 cleaned: 2026-11-02

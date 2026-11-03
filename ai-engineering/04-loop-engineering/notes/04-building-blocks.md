@@ -192,12 +192,6 @@ Adding parts "just in case" makes the loop harder to debug without fixing anythi
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-tools.md` — tool and connector design; `~/.claude/refs/agent-runtime.md` — sub-agent topologies.
-
----
-
 ## Pitfalls
 
 - **Installing all six parts at once.** Symptom: a complex setup with no failure to justify any of it. Fix: each part exists to fix a specific failure, so add it when you see that failure.

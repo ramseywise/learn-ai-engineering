@@ -181,13 +181,7 @@ n8n's workflow builder puts its one gate after the **Planner**, before any build
 
 Graph state checkpoints are only as useful as the state schema. To resume cleanly, state must hold everything the next step needs: the plan, which steps are complete, intermediate outputs, and run metadata (attempt counts, budget used). If a node depends on something held only in a Python variable or an open connection, a resume will lose it.
 
-This matches the checkpoint rule in `~/.claude/refs/agent-reliability.md`: checkpoint after each plan step, and include plan state, completed steps, intermediate outputs and run metadata.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-reliability.md` — checkpointing, resumability. `~/.claude/refs/agent-memory.md` — state lifetimes.
+This matches a standing checkpoint rule: checkpoint after each plan step, and include plan state, completed steps, intermediate outputs and run metadata.
 
 ---
 

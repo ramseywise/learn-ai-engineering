@@ -1,7 +1,7 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
-  - own work notes (production support-agent evaluation, anonymised)
+  # own work notes (production support-agent evaluation, anonymised)
   - https://arxiv.org/abs/2212.10496
   - https://arxiv.org/abs/2305.18290
 confidence: medium

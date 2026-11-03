@@ -1,9 +1,9 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 1, Exploratory Data Analysis)
-  - ../../sources/thinkstats.pdf (ch. 2-3, descriptive statistics and the class size paradox)
-  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 1, Exploratory Data Analysis)
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 2-3, descriptive statistics and the class size paradox)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015)
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_data_cleaning.py
 confidence: high

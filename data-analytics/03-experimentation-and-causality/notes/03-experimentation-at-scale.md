@@ -1,14 +1,17 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/kohavi-2008-controlled-experiments-web.pdf (Kohavi et al., DMKD, 2009)
-  - ../../sources/2017-08-kddmetricinterpretationpitfalls.pdf (Dmitriev et al., A Dirty Dozen, KDD 2017)
+  - https://doi.org/10.1007/s10618-008-0114-1 (Kohavi et al., DMKD, 2009)
+  - https://doi.org/10.1145/3097983.3098024 (Dmitriev et al., A Dirty Dozen, KDD 2017)
   - https://doi.org/10.1145/2433396.2433413 (Deng, Xu, Kohavi and Walker, CUPED, WSDM 2013; not held)
   - https://arxiv.org/abs/1512.04922 (Johari, Pekelis and Walsh, Always Valid Inference; not held)
   - https://doi.org/10.1145/3097983.3097992 (Johari, Koomen, Pekelis and Walsh, Peeking at A/B Tests, KDD 2017; not held)
   - https://doi.org/10.1145/3292500.3330722 (Fabijan et al., Diagnosing Sample Ratio Mismatch, KDD 2019; not held)
   - https://doi.org/10.1145/1835804.1835810 (Tang et al., Overlapping Experiment Infrastructure, KDD 2010; not held)
   - https://experimentguide.com/ (Kohavi, Tang and Xu, Trustworthy Online Controlled Experiments, Cambridge, 2020; not held)
+  - https://doi.org/10.1093/biomet/64.2.191
+  - https://doi.org/10.1145/2783258.2788583
+  - https://doi.org/10.2307/2530245
 confidence: medium
 cleaned: 2026-11-01
 ---

@@ -211,13 +211,6 @@ His case studies are press and vendor reports, so treat them as illustrations. Z
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-runtime.md` — topology variants and what each forces on loop state;
-`~/.claude/refs/agent-architecture.md` — turn termination control.
-
----
-
 ## Pitfalls
 
 - **Skipping rungs.** Symptom: a doom loop, an agent running unattended on a schedule with only model judgment deciding when to stop. Fix: climb one rung at a time, and earn each handoff with a verifier.

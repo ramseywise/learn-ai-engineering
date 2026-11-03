@@ -1,9 +1,9 @@
 ---
-origin: own coursework (Ng Deep Learning Specialization, course 5) + curated
+origin: synthesis  # was: own coursework (Ng Deep Learning Specialization, course 5) + curated
 sources:
   - ../practice/ng-deep-learning/Sequence Models/
   - https://www.coursera.org/specializations/deep-learning
-  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - https://doi.org/10.1038/323533a0
   - https://doi.org/10.1162/neco.1997.9.8.1735
   - https://arxiv.org/abs/1406.1078

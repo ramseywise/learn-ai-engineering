@@ -5,12 +5,14 @@ sources:
   - "Cleveland & McGill, Graphical Perception, JASA, 1984"
   - "Wilkinson, The Grammar of Graphics, Springer, 1999"
   - "Healy, Data Visualization: A Practical Introduction, Princeton University Press, 2018"
-  - "Wickham, Navarro & Pedersen, ggplot2: Elegant Graphics for Data Analysis, 3rd ed."
+  - "https://ggplot2-book.org/ (Wickham, Navarro & Pedersen, ggplot2: Elegant Graphics for Data Analysis, 3rd ed.)"
   - "Wickham, A Layered Grammar of Graphics, JCGS, 2010"
   - "Satyanarayan et al., Vega-Lite, IEEE TVCG, 2017"
   - "Heer & Bostock, Crowdsourcing Graphical Perception, CHI, 2010"
   - "Wilke, Fundamentals of Data Visualization, O'Reilly, 2019"
   - "Knaflic, Storytelling with Data, Wiley, 2015"
+  - https://doi.org/10.1007/0-387-28695-0
+  - https://doi.org/10.1080/01621459.1984.10478080
 confidence: high
 cleaned: 2026-11-01
 ---

@@ -1,15 +1,17 @@
 ---
-origin: own experiment plus papers and library documentation
+origin: synthesis  # was: own experiment plus papers and library documentation
 sources:
   - ../practice/boosting-comparison/compare_boosters.py
-  - ../../sources/chen-2016-xgboost.pdf
-  - ../../sources/prokhorenkova-2017-catboost.pdf
-  - ../../sources/karbasi-2023-impossibility-parallelizing-boosting.pdf
+  - https://doi.org/10.1145/2939672.2939785
+  - https://arxiv.org/abs/1706.09516
+  - https://arxiv.org/abs/2301.09627
   - https://papers.nips.cc/paper/6907-lightgbm-a-highly-efficient-gradient-boosting-decision-tree
   - https://scikit-learn.org/stable/modules/ensemble.html
   - https://xgboost.readthedocs.io/
   - https://lightgbm.readthedocs.io/
   - https://catboost.ai/docs/
+  - https://arxiv.org/abs/1603.02754
+  - https://arxiv.org/abs/2207.08815
 confidence: high
 cleaned: 2026-11-01
 ---

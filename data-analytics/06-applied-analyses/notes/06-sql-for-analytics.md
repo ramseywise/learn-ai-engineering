@@ -1,10 +1,10 @@
 ---
 origin: synthesis
 sources:
-  - "DuckDB documentation, window functions, QUALIFY and FILTER"
-  - "SQLite documentation, window functions"
-  - "PostgreSQL tutorial, window functions"
-  - "Mode SQL tutorial, window functions"
+  - https://duckdb.org/docs/stable/sql/query_syntax/qualify (DuckDB documentation, window functions, QUALIFY and FILTER)
+  - https://www.sqlite.org/windowfunctions.html (SQLite documentation, window functions)
+  - https://www.postgresql.org/docs/current/tutorial-window.html (PostgreSQL tutorial, window functions)
+  - https://mode.com/sql-tutorial/sql-window-functions/ (Mode SQL tutorial, window functions)
 confidence: high
 cleaned: 2026-11-01
 ---

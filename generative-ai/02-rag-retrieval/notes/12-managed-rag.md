@@ -1,7 +1,7 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
-  - own work notes (production support-agent evaluation, anonymised)
+  # own work notes (production support-agent evaluation, anonymised)
   - https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html
   - https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking.html
   - https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html

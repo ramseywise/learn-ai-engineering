@@ -1,5 +1,5 @@
 ---
-origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
+origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 5 Would you rather lose an arm or a leg?)
   - Nate Silver, The Signal and the Noise (2012), weather forecasting chapter, as cited in BMH ch. 5

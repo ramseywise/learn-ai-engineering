@@ -1,8 +1,8 @@
 ---
 origin: synthesis
 sources:
-  - "Hernán and Robins, Causal Inference: What If, chapter 17"
-  - "lifelines documentation, Testing the proportional hazard assumption and Time varying survival regression"
+  - "https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If, chapter 17)"
+  - https://lifelines.readthedocs.io/en/latest/jupyter_notebooks/Proportional%20hazard%20assumption.html (lifelines documentation, Testing the proportional hazard assumption and Time varying survival regression)
 confidence: high
 cleaned: 2026-11-02
 ---

@@ -1,15 +1,19 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - ../../02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017)
   - https://www.pywhy.org/dowhy/
   - https://mixtape.scunning.com/
   - https://doi.org/10.1126/science.187.4175.398 (Bickel, Hammel and O'Connell, Science, 1975; not held)
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
-  - https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)
-  - https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If; link only, ch. 7 read)
+  - "https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)"
+  - "https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If; link only, ch. 7 read)"
+  - https://doi.org/10.1080/00031305.1973.10478966
+  - https://doi.org/10.1080/01621459.1996.10476902
+  - https://doi.org/10.1093/biomet/70.1.41
+  - https://doi.org/10.1198/jasa.2009.ap08746
 confidence: medium
 cleaned: 2026-11-01
 ---

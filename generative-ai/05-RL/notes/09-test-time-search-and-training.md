@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - Koenigstein, "AI Agents: The Definitive Guide" (O'Reilly, 2026)
+  - "Koenigstein, \"AI Agents: The Definitive Guide\" (O'Reilly, 2026)"
   - https://arxiv.org/abs/2203.07814
   - https://arxiv.org/abs/2203.11171
   - https://arxiv.org/abs/2509.06870

@@ -250,7 +250,7 @@ The order of operations stays the same. Fix the input first, since it is cheapes
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

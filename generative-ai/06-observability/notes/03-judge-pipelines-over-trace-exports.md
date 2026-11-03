@@ -1,5 +1,5 @@
 ---
-origin: langfuse-evaluation-main
+origin: synthesis  # was: langfuse-evaluation-main
 sources:
   - https://github.com/gustavobrieva1/langfuse-evaluation (README.md, src/orchestrator.py, src/etl/, src/evaluators/, AB_TEST_GUIDE.md); upstream README says "Internal use only", so only the generic design is condensed here
   - https://langfuse.com/docs/api-and-data-platform/features/export-from-ui

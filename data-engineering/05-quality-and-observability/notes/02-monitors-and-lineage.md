@@ -1,5 +1,5 @@
 ---
-origin: course-synthesis
+origin: synthesis  # was: course-synthesis
 sources:
   - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/05-monitoring
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/04-analytics-engineering

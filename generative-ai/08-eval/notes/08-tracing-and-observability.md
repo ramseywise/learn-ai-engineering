@@ -7,7 +7,7 @@ sources:
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 10"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
-  - eval-harness.md (retired 2026-10-28)
+  # eval-harness.md (retired 2026-10-28)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -259,12 +259,6 @@ Redact **at span export**, not in the dashboard. OTel exporters provide hooks fo
 - [ ] One-click path from a failing trace to a new eval row
 - [ ] Cost rolled up per request and per success
 - [ ] PII redaction and retention policy in place
-
-## Working reference
-
-`~/.claude/refs/agent-observability.md` — span types, minimum attributes, cost attribution, the six questions.
-
----
 
 ## Pitfalls
 

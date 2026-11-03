@@ -4,9 +4,15 @@ sources:
   - https://github.com/HandsOnLLM/Hands-On-Large-Language-Models
   - https://github.com/veekaybee/what_are_embeddings
   - https://sbert.net
-  - ../../sources/reimers-2019-sentence-bert.pdf
-  - ../../sources/grootendorst-2022-bertopic.pdf
-  - ../../sources/mcinnes-2018-umap.pdf
+  - https://doi.org/10.18653/v1/d19-1410
+  - https://arxiv.org/abs/2203.05794
+  - https://arxiv.org/abs/1802.03426
+  - https://doi.org/10.1007/978-3-642-37456-2_14
+  - https://doi.org/10.1109/icdm.2008.17
+  - https://doi.org/10.1145/335191.335388
+  - https://arxiv.org/abs/1908.10084
+  - https://arxiv.org/abs/2209.11055
+  - https://arxiv.org/abs/2210.07316
 confidence: high
 cleaned: 2026-11-01
 ---

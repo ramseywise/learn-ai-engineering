@@ -1,5 +1,5 @@
 ---
-origin: book-synthesis
+origin: synthesis  # was: book-synthesis
 sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 1 — https://github.com/bojieli/ai-agent-book"
   - https://www.anthropic.com/engineering/building-effective-agents

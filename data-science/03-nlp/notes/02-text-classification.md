@@ -5,7 +5,7 @@ sources:
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
   - ../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb
   - https://www.kaggle.com/code/abhishek/approaching-almost-any-nlp-problem-on-kaggle
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
 confidence: high
 cleaned: 2026-11-01
 ---

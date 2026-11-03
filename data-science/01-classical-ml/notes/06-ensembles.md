@@ -1,9 +1,11 @@
 ---
-origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice), grown with own runs
+origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice), grown with own runs
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://scikit-learn.org/stable/modules/ensemble.html
+  - https://doi.org/10.1023/a:1010933404324
+  - https://doi.org/10.1214/aos/1013203451
 confidence: high
 cleaned: 2026-11-01
 ---

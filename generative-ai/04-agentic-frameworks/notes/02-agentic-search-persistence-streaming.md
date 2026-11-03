@@ -1,5 +1,5 @@
 ---
-origin: AI-Agents-in-LangGraph-main
+origin: synthesis  # was: AI-Agents-in-LangGraph-main
 sources:
   - https://github.com/ksm26/AI-Agents-in-LangGraph (Lesson_3_Student.ipynb, Lesson_4_Student.ipynb, README.md for L5–L6)
   - https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/ (L3 Agentic Search, L4 Persistence and Streaming, L5 Human in the Loop, L6 Essay Writer)

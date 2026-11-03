@@ -3,9 +3,16 @@ origin: synthesis
 sources:
   - ../references.md
   - "UCI Bike Sharing Dataset (Fanaee-T & Gama, 2014)"
-  - ../../sources/montero-manso-2021-locality-globality.pdf
-  - ../../sources/bandara-2020-forecasting-across-time-series.pdf
+  - https://doi.org/10.1016/j.ijforecast.2021.03.004
+  - https://doi.org/10.1016/j.eswa.2019.112896
   - ../practice/customer-segments-lab/lab.py
+  - https://doi.org/10.1016/j.csda.2017.11.003
+  - https://doi.org/10.1016/j.ijforecast.2006.03.001
+  - https://doi.org/10.1016/j.ijforecast.2021.10.004
+  - https://arxiv.org/abs/1704.04110
+  - https://arxiv.org/abs/1803.01271
+  - https://arxiv.org/abs/1905.10437
+  - https://arxiv.org/abs/2205.13504
 confidence: high
 cleaned: 2026-11-01
 ---

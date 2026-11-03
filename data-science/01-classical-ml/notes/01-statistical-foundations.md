@@ -4,8 +4,8 @@ sources:
   - https://www.statlearning.com/
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/01-introduction.ipynb
-  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
-  - ../../sources/pedregosa-2012-scikit-learn.pdf
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
+  - https://arxiv.org/abs/1201.0490
   - https://doi.org/10.1214/10-STS330 (Shmueli, Statistical Science, 2010; link only, read in full)
   - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Science, 2001; link only, paper and discussion read)
 confidence: high

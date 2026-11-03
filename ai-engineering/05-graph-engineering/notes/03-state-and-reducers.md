@@ -109,7 +109,7 @@ That error is the framework doing you a favour. The same bug in a hand-rolled mu
 
 > **Rule: every key has either exactly one writer or an explicit reducer.**
 
-This is the single-writer rule from `~/.claude/refs/agent-memory.md`, enforced at the schema. In production the same rule shows up as optimistic locking: n8n's workflow builder rejects a write unless it carries the `versionId` and `expectedChecksum` it read ([08](08-governance-and-production.md#case-study-n8ns-ai-workflow-builder)), which is single-writer enforced by compare-and-swap instead of by convention.
+This is the single-writer rule, enforced at the schema. In production the same rule shows up as optimistic locking: n8n's workflow builder rejects a write unless it carries the `versionId` and `expectedChecksum` it read ([08](08-governance-and-production.md#case-study-n8ns-ai-workflow-builder)), which is single-writer enforced by compare-and-swap instead of by convention.
 
 ---
 
@@ -211,12 +211,6 @@ Not every sequential step is a dependency. The test for each edge:
 > **Does the next step actually read the previous step's output?**
 
 If yes, it is a **true dependency** and the edge is real. If no, the ordering is incidental: the steps were written in sequence because that's how a person would do them, and they belong in a fan-out. Most pipelines that "need" to be sequential have one or two real edges and several incidental ones.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-memory.md` — state lifetimes, single-writer rule, memory vs. context.
 
 ---
 

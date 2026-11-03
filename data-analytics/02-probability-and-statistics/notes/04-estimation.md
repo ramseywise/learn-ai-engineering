@@ -1,10 +1,10 @@
 ---
 origin: synthesis
 sources:
-  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 2, Data and Sampling Distributions)
-  - ../../sources/computer%20age%20statistical%20inference.pdf (Efron & Hastie, ch. 2-4, 10-11)
+  - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 2, Data and Sampling Distributions)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 2-4, 10-11)
   - https://doi.org/10.1214/aos/1176344552 (Efron, Bootstrap Methods, Annals of Statistics, 1979; not held)
-  - ../../sources/kohavi-2008-controlled-experiments-web.pdf (sample-size rule of thumb)
+  - https://doi.org/10.1007/s10618-008-0114-1 (sample-size rule of thumb)
 confidence: high
 cleaned: 2026-11-01
 ---

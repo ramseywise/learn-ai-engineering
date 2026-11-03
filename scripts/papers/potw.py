@@ -9,7 +9,10 @@
   route     move triaged PDFs out of the readings/ inbox into their home's sources/
   run       fetch + cite + triage + scan + download (what the weekly launchd job calls)
   status    counts by status, or list one status with --list
-  mark      set a paper's status (the /papers and /chapter skills mark papers `integrated`)
+  mark      set a paper's status (the /papers and /chapter skills mark papers `integrated`);
+            `mark integrated` refuses a key no note or references.md cites and sets `note` to the citing file
+  tier      rank what is ready: `tier` for /papers rows, `chapter_tier` for /chapter rows
+  ready     what the nightly run can start: homes with ready papers, a count, or the next chapter
 
 A *home* is the folder whose notes a reading feeds (HOMES below): the ai-engineering and
 generative-ai pillars, plus the subject homes (SUBJECT_HOMES: analytics, classical-ml,
@@ -167,7 +170,8 @@ WATCH = {"interpretability", "alignment"}
 # Sort key for every reading: the homes first, then the off-syllabus buckets.
 TOPICS = {**{k: scope for k, (_, scope) in HOMES.items()}, **OFF_SYLLABUS}
 SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "resources.md"}
-PDF_SKIP_DIRS = {".git", "node_modules", ".venv", "idk", "slides", "datasets"}  # slides/ holds our own decks
+# slides/ holds our own decks; leetcode/ is a local-only nested repo under programming/drills
+PDF_SKIP_DIRS = {".git", "node_modules", ".venv", "idk", "slides", "datasets", "leetcode"}
 STOPWORDS = {"a", "an", "the", "of", "for", "and", "in", "on", "to", "with", "via", "is", "are", "by", "from", "at"}
 
 # 2023-25 headings omit the trailing "- YYYY"; fall back to the page's year
@@ -535,12 +539,57 @@ TIERS = {1: "primary", 2: "landmark", 3: "solid", 4: "too new to tell", 5: "low 
 SOLID_CITES_PER_YEAR = 30
 
 
+# A PDF /chapter handles: sources/<book-slug>/chNN-*.pdf or sources/<book-slug>/appendix-*.pdf
+book_chapter_re = re.compile(r"/([^/]+)/(ch\d\d|appendix(?:-[a-z](?=-))?)-[^/]*\.pdf$")
+# Order in which the nightly run takes chapters, lowest first.
+CHAPTER_TIERS = {1: "book in progress", 2: "filed, needs an audit", 3: "new book"}
+
+
 def ready_for_papers(r):
     """A PDF waiting for /papers: downloaded, or queued and already in the repo (not a /chapter chapter)."""
     pdf = r.get("local_pdf") or ""
     return bool(r.get("pillar")) and (r["status"] == "downloaded" or (
         r["status"] == "queued" and bool(r.get("have_pdf"))
-        and not pdf.startswith(INBOX) and not re.search(r"/ch\d\d-", pdf)))
+        and not pdf.startswith(INBOX) and not book_chapter_re.search(pdf)))
+
+
+def ready_for_chapter(r):
+    """A chapter waiting for /chapter: queued, downloaded or filed, homed, and out of the inbox."""
+    pdf = r.get("local_pdf") if isinstance(r.get("local_pdf"), str) else ""
+    return bool(r.get("pillar") and pdf) and r["status"] in ("queued", "downloaded", "filed") \
+        and not pdf.startswith(INBOX) and bool(book_chapter_re.search(pdf))
+
+
+def chapter_tiers(rows):
+    """{key: chapter tier} for every ready chapter. Finish a book before starting another; among the
+    rest, audit filed chapters before new ones (the agreed backlog order)."""
+    done = Counter(book_chapter_re.search(r["local_pdf"]).group(1) for r in rows
+                   if r["status"] == "integrated" and isinstance(r.get("local_pdf"), str)
+                   and book_chapter_re.search(r["local_pdf"]))
+    tiers = {}
+    for r in rows:
+        if ready_for_chapter(r):
+            book = book_chapter_re.search(r["local_pdf"]).group(1)
+            tiers[r["key"]] = 1 if done[book] else 2 if r["status"] == "filed" else 3
+    return tiers
+
+
+def next_chapter(rows, exclude=()):
+    """(book slug, chapter, key) to run next, or None: lowest tier, then the book with the most
+    chapters done, then the lowest chapter."""
+    tiers = chapter_tiers(rows)
+    done = Counter(book_chapter_re.search(r["local_pdf"]).group(1) for r in rows
+                   if r["status"] == "integrated" and isinstance(r.get("local_pdf"), str)
+                   and book_chapter_re.search(r["local_pdf"]))
+    picks = []
+    for r in rows:
+        if r["key"] in tiers and r["key"] not in exclude:
+            m = book_chapter_re.search(r["local_pdf"])
+            picks.append((tiers[r["key"]], -done[m.group(1)], m.group(1), m.group(2), r["key"]))
+    if not picks:
+        return None
+    _, _, book, chapter, key = min(picks)
+    return book, chapter, key
 
 
 def integration_tier(r):
@@ -608,7 +657,8 @@ def cmd_triage(args):
     rows = load_ledger()
     statuses = args.status if isinstance(args.status, list) else [args.status]
     want_homes = getattr(args, "home", None)
-    pending = [r for r in rows if r["status"] in statuses and (args.backlog or not r.get("backlog"))
+    pending = [r for r in rows if r["status"] in statuses and not r.get("merged_into")
+               and (args.backlog or not r.get("backlog"))
                and (not args.source or r["source"] == args.source)
                and (not getattr(args, "local", False) or r.get("local_pdf"))
                and (not want_homes or triage_hint(r) in want_homes)]
@@ -767,23 +817,35 @@ def sources_pillar(path):
 
 
 def cmd_scan(args):
+    """Register PDFs no row records. A PDF a row already lists (as `local_pdf` or in `copies`) is that
+    row's, whatever its file name says: downloads have slug names and rows can be keyed by DOI or URL."""
     rows = load_ledger()
     pdfs = local_pdfs(deep=getattr(args, "deep", False))
-    # a plain scan can't see arXiv stamps inside PDFs; recover the id from the file hash
-    # an earlier deep scan recorded
+    owners = {}
+    for r in rows:
+        for p in [r.get("local_pdf"), *(r.get("copies") or [])]:
+            if isinstance(p, str):
+                owners.setdefault(p, r)
+    # a plain scan can't see arXiv stamps inside PDFs; recover the row from the file hash
+    # an earlier scan recorded
     arxiv_by_sha = {r["sha1"]: r["arxiv"] for r in rows if r.get("sha1") and r.get("arxiv")}
+    key_by_sha = {r["sha1"]: r["key"] for r in rows if r.get("sha1") and not r.get("arxiv")}
     by_arxiv, by_sha = {}, {}
     for f in pdfs:
+        owner = owners.get(f["path"])
         f["arxiv"] = f["arxiv"] or arxiv_by_sha.get(f["sha1"])
+        sha_key = key_by_sha.get(f["sha1"]) or f"sha1:{f['sha1'][:12]}"
+        if owner is not None and (owner.get("arxiv") or owner["key"]) != (f["arxiv"] or sha_key):
+            continue  # recorded under another key: not a new reading, and not a copy of another
         if f["arxiv"]:
             by_arxiv.setdefault(f["arxiv"], []).append(f)
         else:
-            by_sha.setdefault(f"sha1:{f['sha1'][:12]}", []).append(f)
+            by_sha.setdefault(sha_key, []).append(f)
 
-    # every PDF gets a row: DAIR rows match by arXiv id, earlier repo rows by id or hash
-    known = {r["key"] for r in rows}
+    # every other PDF gets a row: DAIR rows match by arXiv id, earlier repo rows by id or hash
+    known = {r["key"] for r in rows} | {r["arxiv"] for r in rows if r.get("arxiv")}
     new_ids = [aid for aid in by_arxiv if aid not in known]
-    meta = arxiv_batch_meta(new_ids) if new_ids else {}
+    meta = arxiv_batch_meta(new_ids) if new_ids and not getattr(args, "offline", False) else {}
     now = dt.datetime.now().isoformat(timespec="seconds")
     added = 0
     for key, group, aid in [(a, g, a) for a, g in by_arxiv.items()] + [(k, g, None) for k, g in by_sha.items()]:
@@ -803,17 +865,19 @@ def cmd_scan(args):
         known.add(key)
         added += 1
 
+    sha_by_path = {f["path"]: f["sha1"] for f in pdfs}
     found = 0
     for r in rows:
         group = by_arxiv.get(r["arxiv"]) if r.get("arxiv") else by_sha.get(r["key"])
-        paths = [f["path"] for f in group or []]
+        recorded = [c for c in r.get("copies") or [] if (REPO / c).exists()]
+        paths = list(dict.fromkeys([f["path"] for f in group or []] + recorded))
         prior = r.get("local_pdf")
-        if prior in paths or (not paths and prior and (REPO / prior).exists()):
-            path = prior
+        if isinstance(prior, str) and (REPO / prior).exists():
+            path = prior  # a recorded file stays recorded; anything else found becomes a copy
         else:  # prefer the copy filed in a pillar's sources/
             path = next((p for p in paths if sources_pillar(p)), paths[0] if paths else None)
         r["have_pdf"], r["local_pdf"] = bool(path), path
-        r["sha1"] = next((f["sha1"] for f in group or [] if f["path"] == path), r.get("sha1"))
+        r["sha1"] = sha_by_path.get(path, r.get("sha1"))
         r["copies"] = [p for p in paths if p != path] or None
         found += bool(path)
     save_ledger(rows)
@@ -1082,12 +1146,33 @@ def cmd_where(args):
 
 def cmd_tier(args):
     rows = load_ledger()
+    chapters = chapter_tiers(rows)
     for r in rows:
         r["tier"] = integration_tier(r) if ready_for_papers(r) else None
+        r["chapter_tier"] = chapters.get(r["key"])
     save_ledger(rows)
     counts = Counter(r["tier"] for r in rows if r.get("tier"))
     for tier, name in TIERS.items():
         print(f"  {tier} {name:<20} {counts[tier]}")
+    counts = Counter(chapters.values())
+    for tier, name in CHAPTER_TIERS.items():
+        print(f"  chapter {tier} {name:<20} {counts[tier]}")
+
+
+def cmd_ready(args):
+    """What the nightly run can start. Reads the ledger only; run `tier` first to rank new rows."""
+    rows = read_jsonl(LEDGER)
+    if args.next_chapter:
+        pick = next_chapter(rows, exclude=set(args.exclude or ()))
+        if pick:
+            print(*pick)
+        return
+    want = [r for r in rows if ready_for_papers(r) and (args.tier is None or r.get("tier") == args.tier)]
+    if args.count:
+        print(sum(r["pillar"] == args.count for r in want))
+        return
+    for home, _ in Counter(r["pillar"] for r in want).most_common():  # biggest backlog first
+        print(home)
 
 
 def cmd_status(args):
@@ -1096,13 +1181,13 @@ def cmd_status(args):
         # best first, so a run that stops early has read the papers most worth reading
         for r in sorted(rows, key=lambda r: (r.get("tier") or len(TIERS) + 1, -(cites_per_year(r) or 0))):
             if r["status"] == args.list:
-                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "tier", "role", "review_status", "relevance", "interest", "citations")},
+                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "tier", "chapter_tier", "role", "review_status", "relevance", "interest", "citations")},
                                   "pdf": r.get("local_pdf"), **{k: r.get(k) for k in ("reason", "url")}}, ensure_ascii=False))
         return
     print(f"ledger: {LEDGER.relative_to(REPO)} ({len(rows)} papers, {sum(bool(r.get('have_pdf')) for r in rows)} with a PDF in the repo)")
     inbox = sum(1 for r in rows if (r.get("local_pdf") or "").startswith(INBOX))
     print(f"inbox: {inbox} PDFs still in {INBOX} (`route` files the triaged ones)")
-    for field in ("source", "status", "tier", "topic"):
+    for field in ("source", "status", "tier", "chapter_tier", "topic"):
         counts = {}
         for r in rows:
             counts[r.get(field) or "-"] = counts.get(r.get(field) or "-", 0) + 1
@@ -1118,12 +1203,44 @@ def cmd_mark(args):
         sys.exit(f"mark: unknown home {args.home!r}; one of {', '.join(HOMES)}")
     if args.note and not (args.home and (REPO / args.note).is_file() and args.note.startswith(PILLARS[args.home] + "/")):
         sys.exit(f"mark: --note must be an existing note under {PILLARS.get(args.home, '--home')}/")
+    if args.no_citation and args.status != "integrated":
+        sys.exit("mark: --no-citation only applies to `mark integrated`")
+    refused = []
+    citing = {}
+    if args.status == "integrated":
+        import check_ledger  # here, not at the top: check_ledger imports this module
+        corpus = check_ledger.Corpus()
+        for r in hits:
+            home = args.home or r.get("pillar")
+            found = corpus.citing_files(r, home=home) if home else []
+            if found:
+                citing[r["key"]] = args.note if args.note in found else check_ledger.best_note(r, found)
+            elif not args.no_citation:
+                refused.append(r)
+    marked = 0
     for r in hits:
+        if r in refused:
+            continue
         r["status"] = args.status
+        marked += 1
         if args.home:  # a home set by hand: triage leaves it alone unless re-run on this status
             r.update(pillar=args.home, topic=args.home, note=args.note, reason=f"homed by hand: {args.why or ''}".strip())
+        if args.status == "integrated":
+            if r["key"] in citing:
+                r["note"] = citing[r["key"]]
+            elif args.no_citation:  # the exception is written down where the ledger check can list it
+                r["no_citation"] = args.no_citation
     save_ledger(rows)
-    print(f"marked {len(hits)} as {args.status}" + (f" in {args.home}" if args.home else ""))
+    print(f"marked {marked} as {args.status}" + (f" in {args.home}" if args.home else ""))
+    unknown = set(args.keys) - {r["key"] for r in hits}
+    if unknown:
+        print(f"mark: no ledger row for: {', '.join(sorted(unknown))}", file=sys.stderr)
+    if refused:
+        for r in refused:
+            print(f"mark: refused {r['key']} ({r.get('pillar') or 'no home'}): no citation in the home's notes or "
+                  f"references.md. Write the citation first, or pass --no-citation \"<why>\" for a genuine exception.",
+                  file=sys.stderr)
+        sys.exit(1)
 
 
 def cmd_run(args):
@@ -1166,6 +1283,8 @@ def main():
             p.set_defaults(status="new", source=None)
     p = sub.add_parser("scan")
     p.add_argument("--deep", action="store_true", help="also read the arXiv stamp inside each PDF (needs pypdf)")
+    p.add_argument("--offline", action="store_true",
+                   help="no arXiv metadata lookup: a new row keeps the title found in the file")
     p.set_defaults(fn=cmd_scan)
     p = sub.add_parser("route")
     p.add_argument("--from", dest="src", default=INBOX, help=f"move PDFs found under this prefix (default {INBOX})")
@@ -1176,6 +1295,12 @@ def main():
     p.set_defaults(fn=cmd_cite)
     p = sub.add_parser("tier", help="rank the PDFs ready for /papers (TIERS); rerun after citegraph.py status --write")
     p.set_defaults(fn=cmd_tier)
+    p = sub.add_parser("ready", help="for papers-nightly.sh: homes with ready papers, a home's count, or the next chapter")
+    p.add_argument("--tier", type=int, help="only rows in this tier")
+    p.add_argument("--count", metavar="HOME", help="print how many are ready in this home")
+    p.add_argument("--next-chapter", action="store_true", help="print `<book> <chapter> <key>` for the next chapter")
+    p.add_argument("--exclude", nargs="*", help="with --next-chapter, keys to pass over")
+    p.set_defaults(fn=cmd_ready)
     p = sub.add_parser("status")
     p.add_argument("--list", metavar="STATUS")
     p.set_defaults(fn=cmd_status)
@@ -1189,6 +1314,8 @@ def main():
     p.add_argument("--home", help="also set the home (a HOMES key), e.g. to place a parked paper")
     p.add_argument("--note", help="the note it feeds (repo-relative), with --home")
     p.add_argument("--why", help="one line kept as the row's reason, with --home")
+    p.add_argument("--no-citation", metavar="WHY",
+                   help="mark integrated although nothing cites it; the reason is kept on the row")
     p.set_defaults(fn=cmd_mark)
     args = ap.parse_args()
     args.fn(args)

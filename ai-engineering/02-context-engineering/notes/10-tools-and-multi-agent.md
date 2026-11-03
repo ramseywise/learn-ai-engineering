@@ -250,14 +250,6 @@ The book's ch. 2 calls its envelope `{protocol_version, sender, content, metadat
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-context.md` — sub-agent context isolation: what the sub-agent receives vs. what it does not; orchestrator-holds-plan as the settled default.
-`~/.claude/refs/agent-tools.md` — the four tool design questions (reversible, idempotent, observable, parallel-safe), tool schema rules, MCP vs. in-process decision table.
-`~/.claude/refs/agent-safety.md` — trust zones and the five protection layers.
-
----
-
 ## Pitfalls
 
 - **Reaching for agents before compression.** Symptom: token spend multiplies with no quality gain: three sub-agents at 80k each is 240k real tokens for 6k of output. Fix: try compaction and retrieval first, and split only when tasks are truly independent.

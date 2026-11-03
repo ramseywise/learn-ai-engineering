@@ -1,5 +1,5 @@
 ---
-origin: own synthesis, every number from simulated data with known truth
+origin: synthesis  # was: own synthesis, every number from simulated data with known truth
 sources:
   - ../practice/ch07_multilevel_models.py
   - https://arxiv.org/abs/0907.2478 (Gelman, Hill and Yajima, J. Research on Educational Effectiveness, 2012)
@@ -8,7 +8,7 @@ sources:
   - https://eprints.whiterose.ac.uk/89757 (Bell and Jones, Political Science Research and Methods, 2015)
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft, sections cited only)
   - https://www.statsmodels.org/stable/mixed_linear.html
-  - ../../sources/RM-StatRethink-Bayes.pdf (McElreath, draft of November 2015, ch. 12 and 13)
+  - McElreath, Statistical Rethinking (draft of November 2015) (McElreath, draft of November 2015, ch. 12 and 13)
 confidence: high
 cleaned: 2026-11-02
 ---

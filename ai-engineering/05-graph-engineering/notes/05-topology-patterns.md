@@ -12,6 +12,11 @@ sources:
   - https://arxiv.org/abs/2512.08296
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 8"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
+  - https://arxiv.org/abs/2303.17580
+  - https://arxiv.org/abs/2406.01297
+  - https://arxiv.org/abs/2408.08435
+  - https://arxiv.org/abs/2410.02089
+  - https://arxiv.org/abs/2606.07513
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -362,12 +367,6 @@ From *AI Agents in Depth* ch. 10. All are linked upstream: the first three and 1
 | 10-6 Parallel web research | Fan-out over a message bus; lock and terminate | [parallel-web-research](https://github.com/bojieli/ai-agent-book/tree/main/chapter10/parallel-web-research) |
 | 10-7 Generative agents | Smallville memory stream and reflection | [generative_agents](https://github.com/joonspk-research/generative_agents) |
 | 10-8 Voice Werewolf | Code judge; information access control | [voice-werewolf](https://github.com/bojieli/ai-agent-book/tree/main/chapter10/voice-werewolf) |
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — subagent criteria, orchestrator-holds-plan baseline, dynamic fan-out.
 
 ---
 

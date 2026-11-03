@@ -32,6 +32,12 @@ sources:
   - https://arxiv.org/abs/2404.07503 (best practices on synthetic data)
   - https://arxiv.org/abs/2408.16737 (compute-matched sampling from weaker teachers)
   - https://arxiv.org/abs/2510.06499 (Webscale-RL, pretraining documents converted to verifiable QA)
+  - https://doi.org/10.18653/v1/2022.acl-demo.9
+  - https://doi.org/10.18653/v1/2022.emnlp-main.340
+  - https://doi.org/10.18653/v1/2022.naacl-main.201
+  - https://doi.org/10.18653/v1/2023.acl-long.754
+  - https://doi.org/10.18653/v1/2023.acl-long.891
+  - https://doi.org/10.18653/v1/2024.eacl-long.57
 confidence: medium
 cleaned: 2026-11-01
 ---

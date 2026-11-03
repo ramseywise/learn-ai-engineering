@@ -10,7 +10,7 @@ sources:
   - https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
   - https://openai.com/index/harness-engineering/
   - https://github.com/walkinglabs/learn-harness-engineering
-  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -403,13 +403,6 @@ For long-running work, **breaking complex tasks into tractable chunks and assign
 The caveat from Anthropic's own results: decomposition is **scaffolding around a model limitation.** When Opus 4.6 arrived, sprint decomposition could be **removed entirely** with no quality loss. Build it when the model needs it; re-test when the model changes.
 
 Multi-agent depth: [note 07](07-orchestration.md).
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-context.md` — compaction triggers (80% limit, phase boundaries, before subagent spawn), what must survive compaction.
-`~/.claude/refs/agent-memory.md` — durable state and memory hygiene.
 
 ---
 

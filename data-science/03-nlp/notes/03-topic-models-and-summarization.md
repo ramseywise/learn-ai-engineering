@@ -4,7 +4,7 @@ sources:
   - ../practice/text-analytics-with-python/Ch06 - Text Summarization and Topic Models/
   - ../practice/text-analytics-with-python/Ch07 - Text Similarity and Clustering/Ch07c - Document Clustering.ipynb
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
-  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
   - ../practice/intro-to-nlp/nltk/text_summarization_nltk.ipynb
 confidence: high
 cleaned: 2026-11-01

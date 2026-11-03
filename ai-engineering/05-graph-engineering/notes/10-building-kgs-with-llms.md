@@ -1,10 +1,11 @@
 ---
-origin: book-and-course-condensed
+origin: book-condensed  # was: book-and-course-condensed
 sources:
-  - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4–8 and appendix C: sources/kg-and-llms-in-action/ch04-multisource-integration.pdf … ch08-ned-open-llms-ontologies.pdf, appendix-c-kgs-from-structured-sources.pdf"
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4–8 and appendix C
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L6: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
+  - https://arxiv.org/abs/2306.08302
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -420,8 +421,6 @@ The book's evaluation recipe for extraction: process a few dozen pages, have a Q
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-eval.md`: gold sets and gating. `~/.claude/refs/agent-memory.md`: semantic memory writes.
 
 Depth: *KG & LLMs in Action* ch. 5–8; the chapter files are listed in [references.md](../references.md).
 

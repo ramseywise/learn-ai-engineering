@@ -1,8 +1,8 @@
 ---
-origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
+origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 3 Opening the Black Box of MCMC)
-  - ../../sources/hoffman-2011-no-u-turn-sampler.pdf (Hoffman and Gelman, JMLR, 2014)
+  - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
   - https://python.arviz.org/
   - https://www.pymc.io/
   - ../practice/BayesianML/week_4/

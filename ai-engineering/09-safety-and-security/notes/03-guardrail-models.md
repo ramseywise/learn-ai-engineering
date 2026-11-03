@@ -301,7 +301,7 @@ Sometimes the question is whether text came from a model at all. Two approaches 
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

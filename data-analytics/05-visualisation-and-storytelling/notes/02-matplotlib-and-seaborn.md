@@ -1,11 +1,11 @@
 ---
 origin: synthesis
 sources:
-  - "Matplotlib documentation, Quick start guide"
-  - "seaborn documentation, Overview of plotting functions"
+  - https://matplotlib.org/stable/users/explain/quick_start.html (Matplotlib documentation, Quick start guide)
+  - https://seaborn.pydata.org/tutorial/function_overview.html (seaborn documentation, Overview of plotting functions)
   - "Knaflic, Storytelling with Data, Wiley, 2015"
   - "VanderPlas, Python Data Science Handbook, O'Reilly, 2017"
-  - "McKinney, Python for Data Analysis, O'Reilly"
+  - https://wesmckinney.com/book/ (McKinney, Python for Data Analysis, O'Reilly)
   - "Wilke, Fundamentals of Data Visualization, O'Reilly, 2019"
 confidence: high
 cleaned: 2026-11-01

@@ -1,7 +1,7 @@
 ---
 origin: book-condensed
 sources:
-  - Phil Winder, "Reinforcement Learning: Industrial Applications of Intelligent Agents" (O'Reilly, 2020)
+  - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020)"
   - https://arxiv.org/abs/2503.14476
   - https://arxiv.org/abs/2605.02572
   - https://arxiv.org/abs/2309.06180

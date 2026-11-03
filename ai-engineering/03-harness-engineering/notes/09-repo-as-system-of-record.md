@@ -201,12 +201,6 @@ A useful lens for agent state:
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-context.md` — what loads at startup vs. on demand.
-
----
-
 ## Pitfalls
 
 - **Treating a growing rules file as progress.** Symptom: after a few months the entry file is 600 lines and the agent is doing worse. Fix: make it a router with topic docs on demand, whatever length you pick from the sources' ~60, about 100 or 50–200 lines.

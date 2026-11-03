@@ -346,7 +346,7 @@ If an incident touches several regimes, several clocks run at once. Put them in 
    Sign a BAA with the tool's vendor and check the features you use are covered; move traces for this tenant to something under your own control and existing contract; or redact before writing, knowing that free-text redaction may not reach the de-identification standard, so the trace may still contain PHI and may still need the contract. Stopping the pilot's traces altogether isn't an option, since §164.312(b) requires audit controls and you'd lose your [incident evidence](06-incident-response.md). Note that the register caught this because of the row, not because anyone remembered it.
    </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

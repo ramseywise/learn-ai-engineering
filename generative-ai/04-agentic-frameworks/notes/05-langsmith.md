@@ -1,5 +1,5 @@
 ---
-origin: own coursework
+origin: synthesis  # was: own coursework
 sources:
   - https://docs.langchain.com/langsmith/observability
   - https://docs.langchain.com/langsmith/evaluation

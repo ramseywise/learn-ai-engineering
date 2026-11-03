@@ -166,19 +166,13 @@ The transferable idea: compaction triggers at 75% of the window, and **the artif
 
 ### Deployment
 
-n8n self-hosts via npm, Docker or Docker Compose, with provider guides for AWS, Azure, GCP, DigitalOcean, Hetzner, Heroku and OpenShift. Every installation runs the same core: without a licence key it is the free Community edition, and a Business or Enterprise key unlocks those editions on the same install ([docs](https://docs.n8n.io/deploy/host-n8n)). That is the shape of a graph system you operate rather than demo: a runtime, a persistence layer for checkpoints, and a deployment surface (`~/.claude/refs/agent-runtime.md`).
+n8n self-hosts via npm, Docker or Docker Compose, with provider guides for AWS, Azure, GCP, DigitalOcean, Hetzner, Heroku and OpenShift. Every installation runs the same core: without a licence key it is the free Community edition, and a Business or Enterprise key unlocks those editions on the same install ([docs](https://docs.n8n.io/deploy/host-n8n)). That is the shape of a graph system you operate rather than demo: a runtime, a persistence layer for checkpoints, and a deployment surface.
 
 ---
 
 ## What governance leaves open
 
 Governance tells you what ran and what it cost. It doesn't tell you whether the answer was right. That is [the Eval pillar](../../../generative-ai/08-eval/README.md): measuring graph correctness, router accuracy, and coordination quality across runs.
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-runtime.md` — deployment and runtime. `~/.claude/refs/agent-architecture.md` — trust boundaries.
 
 ---
 

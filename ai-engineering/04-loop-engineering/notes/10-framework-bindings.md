@@ -1,5 +1,5 @@
 ---
-origin: notion-export
+origin: curated  # was: notion-export
 sources:
   - https://adk.dev/agents/workflow-agents/loop-agents/
   - https://vercel.com/kb/guide/how-to-run-a-multi-step-research-agent-on-vercel
@@ -166,12 +166,6 @@ What a running loop exposes to a watching human (*Learning LangChain*, ch. 8):
 - **Human controls** ([note 07](07-autonomy-ladder.md#the-controls-a-human-needs-while-a-loop-runs)), all keyed by `config={"configurable": {"thread_id": ...}}` on a graph compiled with a checkpointer. **Interrupt** by breaking out of the stream, wrapped in `aclosing` so the stream closes cleanly. **Resume** by invoking with `None` as input. **Restart** by invoking with new input on the same thread (a new `thread_id` starts blank). **Edit** with `get_state` and then `update_state`, which writes a new checkpoint. **Fork** by picking a config from `get_state_history` (most recent first) and invoking `None` against it.
 
 **Dated.** The book's **authorize** pattern passes `interrupt_before=["tools"]` at call time. Current LangGraph favours calling `interrupt()` inside the node and resuming with `Command(resume=...)`, which lets the node show the human a payload and receive a decision. Static `interrupt_before` at compile time is now mostly used for debugging. The examples also use `gpt-3.5-turbo`, which is retired.
-
----
-
-## Working reference
-
-`~/.claude/refs/google-adk.md` · `~/.claude/refs/langgraph.md` · `~/.claude/refs/agent-skills/langgraph-fundamentals/` · `~/.claude/refs/agent-skills/adk-cheatsheet/`
 
 ---
 

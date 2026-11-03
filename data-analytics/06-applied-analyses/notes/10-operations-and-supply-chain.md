@@ -3,7 +3,7 @@ origin: synthesis
 sources:
   - "Little, A Proof for the Queuing Formula: L = λW, Operations Research, 1961"
   - "Makridakis et al., The M5 uncertainty competition, International Journal of Forecasting, 2022 (abstract only)"
-  - "pulp 4.2.0, run against this chapter's tables"
+  - https://github.com/coin-or/pulp (pulp 4.2.0, run against this chapter's tables)
 confidence: high
 cleaned: 2026-11-02
 ---

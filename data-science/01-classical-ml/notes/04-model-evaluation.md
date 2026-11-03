@@ -1,16 +1,17 @@
 ---
-origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex5)
+origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex5)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/05-model-evaluation-and-improvement.ipynb
   - ../practice/ng-machine-learning/ex5/ex5.ipynb
-  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
-  - ../../sources/varma-2006-bias-error-estimation-when-using.pdf
-  - ../../sources/davis-2006-relationship-between-precision-recall-roc.pdf
-  - ../../sources/guo-2017-calibration-modern-neural-networks.pdf
-  - ../../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
+  - https://doi.org/10.1186/1471-2105-7-91
+  - https://doi.org/10.1145/1143844.1143874
+  - https://arxiv.org/abs/1706.04599
+  - https://arxiv.org/abs/2106.07998
   - https://doi.org/10.1186/s12864-019-6413-7
   - https://doi.org/10.1109/ICPR.2010.764
+  - https://doi.org/10.1145/1102351.1102430
 confidence: high
 cleaned: 2026-11-02
 ---

@@ -3,7 +3,7 @@ origin: synthesis
 sources:
   - https://arxiv.org/abs/1101.0891 (Shmueli, To Explain or to Predict?, read in full)
   - https://projecteuclid.org/euclid.aoas/1532743473 (Meng, Statistical Paradises and Paradoxes in Big Data (I), read in full)
-  - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Modeling: The Two Cultures, §§1-9.1 and §12)
+  - "https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Modeling: The Two Cultures, §§1-9.1 and §12)"
   - https://arxiv.org/abs/1503.01603 (Pearl and Bareinboim, External Validity, §§1-4.1)
   - https://www.statsmodels.org/stable/index.html
   - https://scikit-learn.org/stable/modules/cross_validation.html

@@ -155,12 +155,6 @@ He's mostly right. Much of level 3 is automation rediscovered. What's new is tha
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-runtime.md` — hosted vs session-scoped execution; `~/.claude/refs/agent-safety.md` — credentials for unattended runs.
-
----
-
 ## Pitfalls
 
 - **`/loop 10m "keep implementing the payment system"`.** Symptom: each pass starts from the same point, because it doesn't remember where the last stopped. Fix: if the work has an end, use `/goal`. A timer loop that must make progress needs a state file it reads first.

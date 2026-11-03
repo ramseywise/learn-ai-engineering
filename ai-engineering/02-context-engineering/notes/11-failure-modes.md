@@ -168,13 +168,6 @@ Step 5 is the one that gets skipped, and it's the one that separates a context p
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-safety.md` — five protection layers, threat model and trust zones, tool input validation, sandboxing, PII handling.
-`~/.claude/refs/agent-context.md` — compaction as the operational answer to rot.
-
----
-
 ## Pitfalls
 
 - **Debugging without printing the window.** Symptom: hours of prompt rewording for what's really an assembly bug. Fix: print what was actually sent, which is step 1 of the flow.

@@ -237,12 +237,6 @@ prompt → context → harness → **loop** → graph. The harness ([03-harness]
 
 ---
 
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — loop shapes and turn termination control.
-
----
-
 ## Pitfalls
 
 - **A vague goal.** Symptom: "improve the app" runs without finishing and scope drifts. Fix: a testable goal such as "make all auth tests pass". A testable goal is a loop invariant, and a vague one is an infinite loop.

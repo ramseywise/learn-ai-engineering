@@ -307,7 +307,7 @@ Measure the cost as well as the safety. AgentDojo's authors ([arXiv:2406.13352](
 
 </details>
 
-## Interview questions
+## Interview checklist
 
 | Question | Answer |
 |---|---|

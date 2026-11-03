@@ -10,7 +10,7 @@ sources:
   - https://docs.langchain.com/oss/python/concepts/products
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 1, 5 — https://github.com/bojieli/ai-agent-book"
-  - "Agashe et al., Evolving Agent Interfaces (2026), arXiv 2610.28601 — sources/agashe-2026-evolving-agent-interfaces.pdf"
+  - Agashe et al., Evolving Agent Interfaces (2026), arXiv 2610.28601 — https://arxiv.org/abs/2610.28601
   - https://github.com/openclaw/openclaw
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: high
@@ -251,12 +251,6 @@ Meanwhile the useful primitives get standardized into products, then embedded in
 This is the harness's answer to Sutton's *Bitter Lesson*: general methods that scale with compute beat hand-encoded priors. Li's stance is to **endorse the direction but stay pragmatic about the pace**. Models do absorb harness layers; tool calling and long-horizon planning both used to be external orchestration. But training cycles take months, and no model internalizes every business's constraints at once. The harness covers what the model can't yet do reliably, drops each layer the model absorbs, and moves to the next frontier. Updates also have more than one home: in-context adaptation, external artifacts (docs, prompts, code) and weights each persist on a different timescale ([gen-AI 03](../../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md#how-agents-learn)).
 
 Practical consequence: **a harness needs periodic subtraction, not just addition.** See [note 08](08-maturity-and-failure-modes.md#iterative-simplification).
-
----
-
-## Working reference
-
-`~/.claude/refs/agent-architecture.md` — where responsibility sits between model, loop, and scaffolding; when a capability belongs in the harness rather than the prompt.
 
 ---
 

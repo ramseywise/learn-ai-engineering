@@ -1,7 +1,7 @@
 ---
 origin: book-condensed
 sources:
-  - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 15: sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf"
+  - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 15
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -154,8 +154,6 @@ From ch15's closing section:
 ---
 
 ## Working reference
-
-`~/.claude/refs/agent-reliability.md`: bounded retries.
 
 Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 15.
 

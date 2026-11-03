@@ -8,6 +8,11 @@ sources:
   - https://github.com/ggml-org/llama.cpp
   - https://github.com/ollama/ollama
   - "Iusztin and Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
+  - https://arxiv.org/abs/1810.03993
+  - https://arxiv.org/abs/2208.07339
+  - https://arxiv.org/abs/2302.13971
+  - https://arxiv.org/abs/2305.14314
+  - https://arxiv.org/abs/2402.00838
 confidence: high
 cleaned: 2026-11-01
 ---
