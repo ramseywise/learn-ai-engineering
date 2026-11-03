@@ -14,7 +14,7 @@ to computing the full pairwise similarity matrix between two batches of embeddin
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -44,7 +44,7 @@ Add a small epsilon to the norm so a zero vector doesn't divide by zero. If inpu
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Cosine similarity is the dot product of two vectors divided by the product of their L2 norms: cos(a, b) = (a·b) / (||a|| ||b||). It measures the angle between vectors and ignores magnitude. That's exactly why it's the default metric for comparing embeddings (query vs. document, sentence vs. sentence). For the batched case, L2-normalize every row once, then a single matrix multiply A_norm @ B_norm.T gives the entire pairwise similarity matrix, with no Python loops. Guard against divide-by-zero for zero vectors (add a tiny epsilon to the norm). Note: if the embeddings are already unit-normalized (many models return normalized vectors), cosine similarity reduces to a plain dot product.
 

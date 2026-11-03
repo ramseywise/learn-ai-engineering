@@ -41,7 +41,7 @@ Run this after any new or moved note. `/write-chapter` calls it. Make these edit
    subject README has no chapter lists, so do not add one.
 6. **Deck.** The map reports `deck_gap`. Revising a deck is a `/slides` run: name it in the report as the next step,
    unless the user asked for it.
-7. **Practice.** If `practice/` has drills on the topic, link them, and run `make crosswalk` if units changed.
+7. **Practice.** If `programming/drills/` or `practice/` has drills on the topic, link them, and run `make crosswalk` if units changed.
 
 ```bash
 python3 scripts/curriculum_map.py issues --pillar <pillar>

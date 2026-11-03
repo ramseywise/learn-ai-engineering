@@ -16,7 +16,7 @@ of their root nodes in the answer (order does not matter).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Any group with more than one member marks a duplicate. Using assigned integer id
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two subtrees are duplicates if and only if they have identical structure and values. Give each subtree a canonical signature: a serialization (or a bottom-up hash) of its value plus its children's signatures. Group nodes by signature. Any group with more than one node marks a duplicate, and one representative per such group is reported.
 
@@ -63,7 +63,7 @@ return [group[0] for group in signatures if len(group) > 1]
 
 **Complexity** — time O(n^2) with string signatures (O(n) with assigned ids); space O(n^2) / O(n)
 
-Full Python solution: [`LeetCodeCheat/find-duplicate-subtrees.py`](../../python/leetcode/LeetCodeCheat/find-duplicate-subtrees.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/find-duplicate-subtrees.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

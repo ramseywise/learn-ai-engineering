@@ -44,13 +44,13 @@ curriculum:  ## Rebuild the curriculum map and print integration issues: make cu
 	@python3 scripts/curriculum_map.py build
 	@python3 scripts/curriculum_map.py issues $(if $(PILLAR),--pillar $(PILLAR))
 
-crosswalk:  ## Validate practice/ units and links, then regenerate practice/CROSSWALK.md
+crosswalk:  ## Validate practice/ and programming/drills/ units and links, then regenerate practice/CROSSWALK.md
 	@python3 scripts/practice/crosswalk.py
 
-crosswalk-check:  ## Validate practice/ units and links; fail if practice/CROSSWALK.md is stale
+crosswalk-check:  ## Validate practice/ and programming/drills/ units and links; fail if practice/CROSSWALK.md is stale
 	@python3 scripts/practice/crosswalk.py --check
 
-drill-check:  ## Check drill schema, that Python parses and that SQL seeds load: make drill-check [DRILL_PATH=practice/drills/sql]
+drill-check:  ## Check drill schema, that Python parses and that SQL seeds load: make drill-check [DRILL_PATH=programming/drills/sql]
 	@python3 scripts/practice/check_drills.py $(DRILL_PATH)
 
 review-findings:  ## Reviewer precision, open decisions and recurring faults from the findings log
@@ -85,7 +85,7 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
 
-papers-nightly-install:  ## Install the nightly /papers integration job (daily 01:00)
+papers-nightly-install:  ## Install the nightly /papers integration job (daily 02:30)
 	@mkdir -p .claude/logs
 	@cp scripts/papers/com.wiseer.papers-nightly.plist ~/Library/LaunchAgents/
 	@launchctl bootout gui/$$(id -u)/com.wiseer.papers-nightly 2>/dev/null || true

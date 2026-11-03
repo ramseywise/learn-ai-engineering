@@ -15,7 +15,7 @@ sum exists. Example: `nums = [-1,2,1,-4]`, `target = 1` -> `2` (from `-1 + 2 + 1
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This gives O(n^2) time overall. An exact match (distance zero) can return immedi
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 This has the same structure as 3Sum. Sort the array, fix each element a, and sweep the rest with two pointers. For every triplet track the sum whose absolute distance to the target is smallest so far. If the current sum exceeds the target move the right pointer left, otherwise move the left pointer right. An exact hit (distance 0) returns immediately.
 
@@ -66,7 +66,7 @@ return best
 
 **Complexity** — time O(n^2); space O(1) (excluding sort)
 
-Full Python solution: [`LeetCodeCheat/3sum-closest.py`](../../python/leetcode/LeetCodeCheat/3sum-closest.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/3sum-closest.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -8,7 +8,7 @@ You are checking practice material before a learner trusts it. A wrong answer he
 memorises it, and librarian serves it. You have not seen why it was written this way. You do not edit the repo.
 
 Read the material in full. For a folder, read every tracked file (`git ls-files -co --exclude-standard <path>`), starting
-with its README. Read `practice/drills/README.md` for the schema. If the material names `units:`, read those notes or
+with its README. Read `programming/drills/README.md` for the schema. If the material names `units:`, read those notes or
 folder READMEs too.
 
 **Run things, don't reason about them.** Copy what you need to a new `mktemp -d` folder, and run only there:

@@ -15,7 +15,7 @@ determine whether you can reach the last index starting from index `0`. Return `
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This greedy single pass tells you in O(n) time and O(1) space whether the last i
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Greedy single pass tracking the farthest index reachable so far. Scan left to right, but only through positions you can actually reach (i <= max_index). At each i update max_index = max(max_index, i + nums[i]). If you can reach the last index, return true. If the loop stalls because i outran max_index, return false.
 
@@ -59,7 +59,7 @@ return max_index >= n - 1
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/jump-game.py`](../../python/leetcode/LeetCodeCheat/jump-game.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/jump-game.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

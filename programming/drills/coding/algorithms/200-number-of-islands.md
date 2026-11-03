@@ -16,7 +16,7 @@ one connected blob -> `1`; three separate blobs -> `3`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Increment the island count once per flood-fill. Each cell is visited only once, 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Count the connected components of '1' (land) cells in the grid. Scan every cell, and flood-fill from each unvisited land cell (DFS or BFS over its four-directional neighbors), marking all reachable land as visited. Then increment the island count. Each cell is visited once.
 
@@ -61,7 +61,7 @@ return count
 
 **Complexity** — time `O(rows * cols)`; space `O(rows * cols)`
 
-Full Python solution: [`LeetCodeCheat/number-of-islands.py`](../../python/leetcode/LeetCodeCheat/number-of-islands.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/number-of-islands.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

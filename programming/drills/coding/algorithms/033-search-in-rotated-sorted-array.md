@@ -16,7 +16,7 @@ Aim for `O(log n)` time. Example: `nums = [4,5,6,7,0,1,2]`, `target = 0` -> `4`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A modified binary search that discards half the range each step gives O(log n) t
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The array was sorted and then rotated by an unknown amount. There's one "pivot" where the order breaks, and no duplicates. Do a modified binary search on [l, r]. Take the middle m and look at A[l], A[m], A[r]. If the target equals any of these, return that index. If start <= target < mid, the left half is sorted and the target must be there, so recurse left. If mid < target <= end, the right half is sorted and holds the target, so recurse right. If neither ordinary case fires, the order breaks in this window, so find which side the pivot is on. If mid > right the pivot is on the right, so go right. If mid < left the pivot is on the left, so go left. (Duplicates need the extra handling in problem 81.)
 
@@ -64,7 +64,7 @@ search(A, t, l, r):
 
 **Complexity** — time O(log n); space O(log n) recursion
 
-Full Python solution: [`LeetCodeCheat/search-in-rotated-sorted-array.py`](../../python/leetcode/LeetCodeCheat/search-in-rotated-sorted-array.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/search-in-rotated-sorted-array.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

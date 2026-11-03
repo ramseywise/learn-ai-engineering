@@ -15,7 +15,7 @@ Example: `[1,2,3,null,5,null,4]` -> `[1,3,4]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Return the last value stored at each level, in O(n) time.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The right-side view is the last node encountered at each depth. Traverse the tree collecting values per level (as in level-order), then take the last value of each level - the rightmost node visible from the right.
 
@@ -63,7 +63,7 @@ return [level.last for level in levels]
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/binary-tree-right-side-view.py`](../../python/leetcode/LeetCodeCheat/binary-tree-right-side-view.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/binary-tree-right-side-view.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

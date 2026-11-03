@@ -16,7 +16,7 @@ searching for `5` in such a matrix -> `true`; searching for `20` -> `false`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Starting from the top-right corner and stepping left or down based on the compar
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Each row and each column is sorted ascending. This solution skips leading rows whose last element is below the target and trailing rows whose first element is above it. It then binary-searches each remaining candidate row. The elegant O(m+n) alternative starts at the top-right corner and moves left on a too-big value or down on a too-small one.
 
@@ -60,7 +60,7 @@ return false
 
 **Complexity** — time O(m log n) (top-right staircase alternative is O(m+n)); space O(1)
 
-Full Python solution: [`LeetCodeCheat/search-a-2d-matrix-ii.py`](../../python/leetcode/LeetCodeCheat/search-a-2d-matrix-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/search-a-2d-matrix-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ to nodes within the copied list (never the original).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A second pass wires each clone's next and random by looking them up in the map, 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Deep-copy a list whose nodes have an extra random pointer. Keep a hash map from each original node to its clone. A first pass creates every clone and records the mapping. A second pass wires each clone's next and random by looking up the clone of the original's next and random. The map resolves random pointers that may point anywhere in the list.
 
@@ -61,7 +61,7 @@ return map[head]
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/copy-list-with-random-pointer.py`](../../python/leetcode/LeetCodeCheat/copy-list-with-random-pointer.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/copy-list-with-random-pointer.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

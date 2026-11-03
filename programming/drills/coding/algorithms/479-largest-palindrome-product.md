@@ -15,7 +15,7 @@ product of two `n`-digit numbers, and return it modulo `1337`. Example: `n = 2` 
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Return the first palindrome found, modulo 1337, since a top-down search finds th
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Find the largest palindrome that's a product of two n-digit numbers, returned modulo 1337. Search factor pairs from the top of the n-digit range downward. Prune pairs whose last digits can't make the product end in 9, skip factors ending in 5, and return the first product that reads as a palindrome. The bounded ordered search reaches the largest palindrome quickly.
 
@@ -60,7 +60,7 @@ for k from max down to min:
 
 **Complexity** — time O((10^n)^2) worst case, heavily pruned in practice; space O(number of digits)
 
-Full Python solution: [`LeetCodeCheat/largest-palindrome-product.py`](../../python/leetcode/LeetCodeCheat/largest-palindrome-product.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/largest-palindrome-product.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ Then extend it under follow-ups (filtering, indexing).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ For CSV export, iterate rows in id order. For fast WHERE lookups under follow-up
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 A machine-coding / multi-level OOP round: they judge data-model choices and how cleanly you extend, not clever algorithms. Model each table as an object holding its column count, a rows container, and a next-id counter. The spec detail people miss: ids auto-increment and never reuse. Deleting a row doesn't decrement the counter, and the next insert still gets last_id + 1 even if that row was deleted. So store rows in a dict keyed by id (not a list), which makes delete O(1) and keeps ids stable and sparse. Keep a top-level dict of table_name -> Table. Validate inputs (right number of columns, table exists, 1-based column index) and decide error behavior explicitly. Talk through the model before coding. Clarify whether column types/names matter or columns are positional.
 

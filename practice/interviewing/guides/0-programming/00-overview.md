@@ -24,12 +24,12 @@ The teaching lives in the chapters. Work them in this order, then use the [inter
 
 ## Drill it
 
-- [Python](../../../drills/python/README.md), [SQL](../../../drills/sql/README.md) and
-  [TypeScript](../../../drills/typescript/README.md) tracks.
-- [Hello, Interview!](../../../drills/coding/dsa/README.md): pattern reference with solutions, for
+- [Python](../../../../programming/drills/python/README.md), [SQL](../../../../programming/drills/sql/README.md) and
+  [TypeScript](../../../../programming/drills/typescript/README.md) tracks.
+- [Hello, Interview!](../../../../programming/drills/coding/dsa/README.md): pattern reference with solutions, for
   refreshing a pattern, not rehearsing cold.
-- [Coding prompts](../../../drills/coding/prompts/README.md) and
-  [seeded-bug problems](../../../drills/coding/problems/README.md).
+- [Coding prompts](../../../../programming/drills/coding/prompts/README.md) and
+  [seeded-bug problems](../../../../programming/drills/coding/problems/README.md).
 - For cold reps on classic problems, use HackerRank and LeetCode directly. Fluency first, then
   pattern recognition, then timed mixed practice.
 

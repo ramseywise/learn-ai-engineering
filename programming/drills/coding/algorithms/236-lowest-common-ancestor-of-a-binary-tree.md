@@ -17,7 +17,7 @@ and `4` (with 4 under 5) is `5`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Propagate whichever single non-null result bubbles up otherwise, giving O(n) tim
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Recurse down the tree. A node is the LCA when p and q lie in different subtrees beneath it, or when the node equals p or q. Return the node when it equals p or q. Otherwise recurse into both children. If both sides return non-null, this node is the split point and thus the LCA. If only one side does, propagate that result upward.
 
@@ -62,7 +62,7 @@ lca(node):
 
 **Complexity** — time O(n); space O(h)
 
-Full Python solution: [`LeetCodeCheat/lowest-common-ancestor-of-a-binary-tree.py`](../../python/leetcode/LeetCodeCheat/lowest-common-ancestor-of-a-binary-tree.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/lowest-common-ancestor-of-a-binary-tree.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

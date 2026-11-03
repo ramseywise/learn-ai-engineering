@@ -17,7 +17,7 @@ the grant that funds it). Design so each level builds on the last.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ For out-of-order events, make final state a function of timestamps only. Buffer-
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 OpenAI's progressive coding format: four gates of rising difficulty, pass by clearing two. It's an event-simulation / bookkeeping problem, so the win is a data model that survives the out-of-order events at the end. Represent each grant as a lot: {amount_remaining, expires_at, granted_at}. A charge consumes from lots in expiry order (soonest-expiring first) so credits aren't wasted. A priority queue / heap keyed by expiry is the natural structure. Clarify the rules before coding. Decide whether an unfunded charge should fail, go negative, or wait for a future grant, and what breaks ties. The hard version says events can arrive out of order (unstable network), which means you can't decide a charge's outcome purely on arrival. You must reason by event timestamp, not arrival order. Design Level 1 around timestamps from the start and the out-of-order case becomes a re-processing problem, not a rewrite.
 

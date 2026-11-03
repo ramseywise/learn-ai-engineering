@@ -17,7 +17,7 @@ just a prefix. Example: `s = "aa"`, `p = "a*"` -> `true`; `s = "ab"`, `p = ".*"`
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Plain recursion is exponential in the worst case. Memoizing on the (s, p) positi
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Solve it with recursion on match(s, p), where '.' matches any single character and '*' matches zero or more of the preceding element. If both s and p are empty, return true. If s is empty but p isn't, it only matches when the next regex element is starred (skip it: match("", p[2:])). When the second regex char is '*' the current element is optional, so handle the '.' case and the specific-char case: consume as many matching characters from s as possible and try continuing with p[2:], and also try the zero-match branch. Otherwise, if the first characters match ('.' or equal), recurse on match(s[1:], p[1:]). Otherwise return false.
 
@@ -71,7 +71,7 @@ match(s, p):
 
 **Complexity** — time exponential without memoization (O(n*m) with a DP table); space O(n + m) recursion (O(n*m) memoized)
 
-Full Python solution: [`LeetCodeCheat/regular-expression-matching.py`](../../python/leetcode/LeetCodeCheat/regular-expression-matching.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/regular-expression-matching.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

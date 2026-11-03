@@ -15,7 +15,7 @@ Check that nobody owns this chapter. Other sessions share this tree:
 ```bash
 git status --short
 ls <pillar>/notes
-grep -rn '<NN-slug>' CONTENT-PLAN*.md .claude/docs/plans/ <pillar>/README.md
+grep -rn '<NN-slug>' .claude/docs/plans/ <pillar>/README.md
 ```
 
 If the file exists, or a plan or a live session has it, stop and report that. Dispatch `curriculum-steward` to confirm

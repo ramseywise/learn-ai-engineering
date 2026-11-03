@@ -17,7 +17,7 @@ Example: `"   -42abc"` -> `-42`; `"4193 with words"` -> `4193`; `"words 99"` -> 
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Detect 32-bit overflow immediately after each multiply-and-add and clamp to INT_
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Scan the characters as a careful state machine: first skip leading spaces and read an optional +/- sign. Then consume digits, building the result as result * 10 + digit, stopping at the first non-digit. The tricky part is 32-bit overflow: after each multiply-and-add, detect that the accumulation wrapped and clamp to INT_MAX or INT_MIN according to the sign. Anything that isn't a valid prefix yields 0.
 
@@ -65,7 +65,7 @@ return sign * result
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/string-to-integer-atoi.py`](../../python/leetcode/LeetCodeCheat/string-to-integer-atoi.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/string-to-integer-atoi.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -14,7 +14,7 @@ and works row-wise on a 2-D batch of logits.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -44,7 +44,7 @@ For a 2-D batch, reduce along axis=-1 with keepdims=True so both the max subtrac
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Softmax turns a vector of logits into a probability distribution: softmax(x)_i = exp(x_i) / sum_j exp(x_j). The naive formula overflows: exp of a large logit (roughly > 710 in float64) returns inf and you get nan. Subtract the row maximum before exponentiating. Because softmax is shift-invariant (subtracting a constant c from every logit multiplies numerator and denominator by exp(-c), which cancels), this changes nothing mathematically. But it keeps the largest exponent at exp(0)=1. For a batch, operate along the last axis with keepdims=True so the max and sum broadcast correctly per row. This is the same routine that sits inside attention and every classification head. Interviewers use it to check you know why the subtraction is there.
 

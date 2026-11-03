@@ -16,7 +16,7 @@ exactly once. A unique solution is guaranteed; modify the board in place.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ This constraint-propagation plus most-constrained-cell backtracking is exponenti
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Backtracking with constraint propagation and a most-constrained-cell heuristic. For each empty cell, precompute its candidate digits (those not already used in its row, column, or box) and the list of "peer" empty cells that share a unit with it. Then solve recursively: always pick the empty cell with the fewest remaining candidates (fail fast). Try each candidate by placing it, removing it from all peers' candidate sets, and recursing. If a peer would be left with zero candidates, prune that branch immediately. On failure, restore the digit and the peers' candidates and try the next. When no empty cells remain, the board is solved.
 
@@ -65,7 +65,7 @@ solve():
 
 **Complexity** — time exponential worst case (constraint pruning makes it fast in practice); space O(1) for the fixed 9x9 board plus recursion
 
-Full Python solution: [`LeetCodeCheat/sudoku-solver.py`](../../python/leetcode/LeetCodeCheat/sudoku-solver.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/sudoku-solver.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

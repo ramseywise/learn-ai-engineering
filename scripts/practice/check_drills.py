@@ -2,7 +2,7 @@
 """Check what can be computed about practice material: python3 scripts/practice/check_drills.py [path ...]
 
 Reads only files git would track, as crosswalk.py does. Exit 1 on any problem. Checks:
-- a schema drill (a drills/ Markdown file with `track:` in its frontmatter, see practice/drills/README.md) has
+- a schema drill (a drills/ Markdown file with `track:` in its frontmatter, see programming/drills/README.md) has
   valid required fields, no H1, the required sections in order, and its solution inside <details>;
 - every tracked .py file parses (seeded-bug and stub files are meant to fail when run, so nothing is run);
 - every tracked .sql seed loads into an in-memory SQLite database.
@@ -104,7 +104,7 @@ def check_file(path: str, text: str) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("paths", nargs="*", default=["practice/"])
+    parser.add_argument("paths", nargs="*", default=["programming/drills/", "practice/"])
     args = parser.parse_args()
     files = problems = 0
     for path in published(args.paths):

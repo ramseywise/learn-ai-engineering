@@ -14,7 +14,7 @@ Given a positive integer, return its Excel column name (1 -> "A", 26 -> "Z",
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -44,7 +44,7 @@ You produce the least-significant letter first, so build the string in reverse (
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 This is base-26 conversion, but bijective: letters A-Z map to 1-26, so there's no digit zero. The whole problem comes down to that off-by-one. In ordinary base-26 you'd take n % 26. Here you must subtract 1 first at each step so that a multiple of 26 (like 26 -> "Z") maps to the last letter rather than rolling over to a zero. Loop: decrement n by 1, take remainder = n % 26 to pick the letter chr(ord('A') + remainder), then n //= 26. Prepend letters because you generate the least-significant one first. The (n-1) adjustment is what makes 26 give "Z" and 27 give "AA" instead of the naive "A0"/"BA".
 
@@ -60,7 +60,7 @@ def to_column(n):
 
 **Complexity** — time O(log_26 n) — one iteration per output letter; space O(log_26 n) for the result string
 
-Full Python solution: [`LeetCodeCheat/excel-sheet-column-title.py`](../../python/leetcode/LeetCodeCheat/excel-sheet-column-title.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/excel-sheet-column-title.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

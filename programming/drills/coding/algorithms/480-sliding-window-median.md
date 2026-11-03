@@ -17,7 +17,7 @@ middle values when `k` is even). Example: `nums = [1,3,-1,-3,5,3,6,7]`, `k = 3` 
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Each slide costs O(log k), giving O(n log k) overall.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Extend the two-heap median idea to a moving window by using two balanced multisets split into a max-side and a min-side. This lets elements be removed as they leave the window. Each slide removes the outgoing value from whichever side holds it and inserts the incoming value. It then rebalances the two sides and reads the median off the boundary element(s).
 

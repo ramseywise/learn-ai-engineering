@@ -17,7 +17,7 @@ An empty input returns an empty list. Example: `digits = "23"` ->
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Emitting the prefix once no digits remain explores all O(4^n) combinations with 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Backtrack over the digits, mapping each digit to its phone-keypad letters. Recurse one digit at a time, passing along the prefix built so far. For the current digit try each of its letters, appending it to the prefix and recursing on the remaining digits. When there are no digits left, the prefix is a complete combination, so emit it. Empty input yields no combinations.
 
@@ -62,7 +62,7 @@ generate(prefix, digits):
 
 **Complexity** — time O(4^n) combinations for n digits; space O(n) recursion depth
 
-Full Python solution: [`LeetCodeCheat/letter-combinations-of-a-phone-number.py`](../../python/leetcode/LeetCodeCheat/letter-combinations-of-a-phone-number.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/letter-combinations-of-a-phone-number.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ ordered from the root level downward. Example: `[3,9,20,null,null,15,7]` ->
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ One O(n) traversal, starting a new bucket the first time a depth is reached, pro
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Group node values by depth with a DFS that tracks the current level. The first time a level is seen, start a new bucket, then append each node's value to its level's bucket. Visiting the left child before the right keeps left-to-right order within each level. A BFS that processes the queue one level at a time is the equivalent iterative approach.
 
@@ -64,7 +64,7 @@ return result
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/binary-tree-level-order-traversal.py`](../../python/leetcode/LeetCodeCheat/binary-tree-level-order-traversal.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/binary-tree-level-order-traversal.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

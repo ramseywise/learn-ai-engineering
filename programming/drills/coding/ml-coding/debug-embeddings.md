@@ -30,7 +30,7 @@ def best_match(queries, doc_embeddings, model):
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -60,7 +60,7 @@ Query and documents must be normalized the same way. Normalize the doc matrix on
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The snippet has three classic embedding bugs. (1) Shape mismatch: model.embed(q) returns (1, 768) but the code treats q_emb as a 1-D (768,) vector. doc_embeddings (N, 768) @ q_emb (1, 768) fails or, after an implicit reshape, produces the wrong shape. You must squeeze q_emb to (768,) (or transpose so it's (768, 1) and then flatten the result). Assert dimensions at the boundary rather than trusting them. (2) It's not cosine similarity, it's a raw dot product. Cosine requires dividing by the norms. A raw dot product is dominated by vector magnitude, so a long document vector wins regardless of direction. Either L2-normalize both sides first, or divide by the norm product. (3) Recomputing/normalizing inconsistently: if the stored doc_embeddings were normalized at index time but the query isn't (or vice versa), the scores are meaningless. Both sides must live in the same space. The robust fix normalizes both and does one matrix multiply, and returns argmax over a proper 1-D score vector.
 

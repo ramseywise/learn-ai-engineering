@@ -16,7 +16,7 @@ and at most the list length). Example: `head = [1,2,3,4,5]`, `n = 2` ->
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Two passes over the list gives O(L) time and O(1) space (a single-pass two-point
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two passes over the singly linked list. First walk to the end to learn its length L, so the node to delete from the front sits at position L - n. If that equals the head (L == n), return head.next. Otherwise walk to the node right before the target (L - n - 1 steps) and splice it out by pointing its next past the target. A one-pass variant uses two pointers spaced n apart, but the length approach is simplest.
 
@@ -61,7 +61,7 @@ return head
 
 **Complexity** — time O(L); space O(1)
 
-Full Python solution: [`LeetCodeCheat/remove-nth-node-from-end-of-list.py`](../../python/leetcode/LeetCodeCheat/remove-nth-node-from-end-of-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/remove-nth-node-from-end-of-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

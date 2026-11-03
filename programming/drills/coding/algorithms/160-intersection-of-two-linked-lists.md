@@ -15,7 +15,7 @@ one tail from there). Return `null` if they never intersect. Aim for O(1) extra 
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Move both pointers together one step at a time. They meet exactly at the interse
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two lists that intersect share the same tail from the intersection node onward. Measure both lengths (and confirm they end at the same last node, otherwise there's no intersection). Advance the longer list's pointer by the length difference so both pointers are equidistant from the end. Then move them together until they meet at the intersection node.
 
@@ -59,7 +59,7 @@ return that node
 
 **Complexity** — time O(n+m); space O(1)
 
-Full Python solution: [`LeetCodeCheat/intersection-of-two-linked-lists.py`](../../python/leetcode/LeetCodeCheat/intersection-of-two-linked-lists.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/intersection-of-two-linked-lists.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

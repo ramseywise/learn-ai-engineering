@@ -15,7 +15,7 @@ to n.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ In the sieve you can start striking multiples of p at p*p (smaller multiples wer
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two standard answers, and interviewers like to hear you compare them. Trial division: for each candidate m, test divisibility only up to sqrt(m). If no divisor is found, m is prime. The sqrt bound works because any factor larger than sqrt(m) pairs with one smaller than sqrt(m), and you only need to test odd divisors after 2. Sieve of Eratosthenes: mark a boolean array [2..n] all prime, then for each still-prime p, strike out its multiples starting at p*p. Whatever stays marked is prime. For a small fixed bound like 100 either is instant, but the sieve is the better answer for "all primes up to n" and shows you know the classic. Mention the edge cases: 0 and 1 aren't prime, 2 is the only even prime.
 
@@ -72,7 +72,7 @@ def sieve(n):
 
 **Complexity** — time Trial division O(n * sqrt(n)); sieve O(n log log n); space O(1) for trial division; O(n) for the sieve's boolean array
 
-Full Python solution: [`LeetCodeCheat/count-primes.py`](../../python/leetcode/LeetCodeCheat/count-primes.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/count-primes.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

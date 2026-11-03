@@ -17,7 +17,7 @@ impossible. You may only travel between stops by boarding buses. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ A BFS over this bus graph gives the minimum number of buses as the path length m
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Model routes as a graph over buses, not over stops. Build an inverted index stop -> buses, then connect two buses whenever they share a stop. Add artificial start and end nodes linked to the buses that serve S and T. A BFS from the start node gives the fewest buses (edges) needed to reach T. Each edge crossed is one bus change.
 
@@ -62,7 +62,7 @@ return -1 if T is unreachable
 
 **Complexity** — time O(sum of route lengths + B^2) worst case for graph build; space O(B^2)
 
-Full Python solution: [`LeetCodeCheat/bus-routes.py`](../../python/leetcode/LeetCodeCheat/bus-routes.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/bus-routes.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

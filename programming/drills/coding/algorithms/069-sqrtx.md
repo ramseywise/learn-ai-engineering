@@ -15,7 +15,7 @@ Example: `x = 8` -> `2` (since `2.828...` truncates to `2`); `x = 4` -> `2`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Stop once the guess is close enough and take the floor of it, giving O(log x) ti
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Binary search for the square root. The root of x lies in [1, x]. Repeatedly take the midpoint g and compare g*g against x, moving the low bound up when g*g is too small and the high bound down when it's too big, until the guess is close enough. Since the problem wants the integer part, round the converged guess down (with a small epsilon to decide whether to round the boundary case). Bracketing on a monotonic function is the core idea. (0 and 1 are returned directly.)
 
@@ -61,7 +61,7 @@ return floor(g)     # integer part
 
 **Complexity** — time O(log x); space O(1)
 
-Full Python solution: [`LeetCodeCheat/sqrtx.py`](../../python/leetcode/LeetCodeCheat/sqrtx.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/sqrtx.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

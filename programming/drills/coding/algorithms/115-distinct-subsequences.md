@@ -16,7 +16,7 @@ matching characters).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Filling this 2D table bottom-up gives an O(n*m) time and space solution.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Count how many distinct subsequences of s equal t. Fill a table `dp[i][j]` holding the number of times `t[:i]` occurs in `s[:j]`. The first row is all ones (an empty target is always matched once) and the first column below it is zero. If the characters differ, `s[j]` can't help, so `dp[i][j]` = `dp[i][j-1]` (same count as without `s[j]`). If they match, `dp[i][j]` = `dp[i][j-1] + dp[i-1][j-1]`: the ways that ignore `s[j]` plus the ways where `s[j]` completes the current target character.
 
@@ -64,7 +64,7 @@ return dp[len(t)][len(s)]
 
 **Complexity** — time O(n*m); space O(n*m)
 
-Full Python solution: [`LeetCodeCheat/distinct-subsequences.py`](../../python/leetcode/LeetCodeCheat/distinct-subsequences.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/distinct-subsequences.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

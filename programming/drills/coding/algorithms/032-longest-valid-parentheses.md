@@ -16,7 +16,7 @@ contiguous substring that is well-formed (properly matched) parentheses. Example
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A single O(n) pass with a stack and an array of match endpoints gets you the ans
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Match parentheses with a stack of indices, then measure runs. Scan left to right, pushing the index of each '('. On a ')', if the stack is non-empty, pop the matching '(' index and record that it closes at the current position (end_ptr[open] = i). This gives, for every opening bracket that's part of a valid pair, where its pair ends. Then sweep the string: whenever a position has a recorded end, chain forward through consecutive matched segments to accumulate the length of a contiguous valid run, keeping the maximum.
 
@@ -70,7 +70,7 @@ return best
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/longest-valid-parentheses.py`](../../python/leetcode/LeetCodeCheat/longest-valid-parentheses.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/longest-valid-parentheses.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

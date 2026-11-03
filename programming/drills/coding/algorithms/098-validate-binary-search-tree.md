@@ -16,7 +16,7 @@ themselves valid BSTs. Example: root `[2,1,3]` -> `true`; `[5,1,4,null,null,3,6]
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A single O(n) pass checking for strictly increasing values confirms validity.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 An in-order traversal of a binary search tree yields values in strictly increasing order. Traverse in-order collecting the values, then check that every adjacent pair is strictly increasing. Any equal-or-decreasing pair means the tree isn't a valid BST.
 
@@ -63,7 +63,7 @@ return true
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/validate-binary-search-tree.py`](../../python/leetcode/LeetCodeCheat/validate-binary-search-tree.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/validate-binary-search-tree.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

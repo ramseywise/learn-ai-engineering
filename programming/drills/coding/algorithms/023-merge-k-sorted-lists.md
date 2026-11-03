@@ -15,7 +15,7 @@ Example: `lists = [[1,4,5],[1,3,4],[2,6]]` -> `[1,1,2,3,4,4,5,6]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Since the heap never holds more than k nodes at a time, this processes all N nod
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Use a min-heap keyed on node value, seeded with the head of every non-empty list. Repeatedly pop the smallest node, append it to the output tail, and if that node has a successor push the successor back into the heap. Because the heap always holds at most k nodes, each of the N total nodes is inserted and extracted once at O(log k) cost. (The naive alternative scans all k heads on every step for O(Nk).)
 
@@ -63,7 +63,7 @@ return dummy.next
 
 **Complexity** — time O(N log k) for N total nodes across k lists; space O(k)
 
-Full Python solution: [`LeetCodeCheat/merge-k-sorted-lists.py`](../../python/leetcode/LeetCodeCheat/merge-k-sorted-lists.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/merge-k-sorted-lists.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

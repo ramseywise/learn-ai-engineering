@@ -14,7 +14,7 @@ data matrix X and k, return cluster assignments and centroids.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -44,7 +44,7 @@ K-means only finds a local optimum, so seeding matters. Mention k-means++ and mu
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 K-means (Lloyd's algorithm) alternates two steps until convergence. Assignment: put each point in the cluster whose centroid is nearest by squared Euclidean distance. Update: move each centroid to the mean of the points assigned to it. Repeat until assignments stop changing (or centroids move less than a tolerance, or you hit max_iter). The vectorized assignment computes an (n_points, k) distance matrix and takes argmin along the centroid axis, with no per-point loop. Interviewers probe several details here. Initialization: random points as centroids is fine to start, though k-means++ gives better seeds and fewer bad local minima. The objective it minimizes is the within-cluster sum of squares (inertia). It only reaches a local optimum, so you run several restarts and keep the best. The empty-cluster edge case: reseed a centroid to the farthest point if a cluster loses all members.
 

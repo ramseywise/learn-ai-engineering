@@ -14,7 +14,7 @@ head. Example: `1 -> 2 -> 3 -> 4 -> 5` becomes `5 -> 4 -> 3 -> 2 -> 1`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -44,7 +44,7 @@ One pass with O(n) time and O(1) space. prev becomes the new head once the curso
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Reverse the pointers in a single pass, traversing the list with a prev pointer. For each node, save its next, point the node back to prev, then advance prev and the cursor. When the cursor runs off the end, prev is the new head.
 
@@ -60,7 +60,7 @@ return prev
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/reverse-linked-list.py`](../../python/leetcode/LeetCodeCheat/reverse-linked-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/reverse-linked-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

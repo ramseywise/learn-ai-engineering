@@ -16,7 +16,7 @@ the LCA of `2` and `8` is `6`, and the LCA of `2` and `4` is `2`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ That first split point gives the LCA in O(h) time and O(1) space.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Use the BST ordering, walking down from the root. Go left if both p and q are smaller than the current node, and go right if both are larger. The first node where they split is the lowest common ancestor, as is any node that equals p or q. The implementation traces the root-to-p and root-to-q paths and returns their last common node.
 
@@ -60,7 +60,7 @@ loop:
 
 **Complexity** — time O(h); space O(1)
 
-Full Python solution: [`LeetCodeCheat/lowest-common-ancestor-of-a-binary-search-tree.py`](../../python/leetcode/LeetCodeCheat/lowest-common-ancestor-of-a-binary-search-tree.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/lowest-common-ancestor-of-a-binary-search-tree.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -40,7 +40,7 @@ Present in every loop but rarely the differentiator round. DS versions skew SQL/
 | `sources.md` | Internal study guides + external resources |
 | `examples/` | Nine worked walkthroughs — three general, five offline practicals, one interviewer guide (property search) |
 
-Drill-format practice files (prompt → hint ladder → solution) live in [`drills/coding/`](../../../drills/coding/):
+Drill-format practice files (prompt → hint ladder → solution) live in [`programming/drills/coding/`](../../../../programming/drills/coding/):
 `algorithms/` (89 LeetCode-style problems by pattern), `implementation/` (Q16–19), `ml-coding/` (Q20–25).
 
 ## The AIE practical variant

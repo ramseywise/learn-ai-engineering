@@ -16,7 +16,7 @@ return the empty string `""`. The answer is guaranteed unique when it exists. Ex
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ One pass with two pointers and running counts achieves O(n + m) time.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Sliding window with character counts. Count how many of each character t requires and track total_count, the number of still-needed characters. Expand the right edge over s, decrementing counts and total_count whenever the added character was actually needed. Whenever total_count hits 0 the window covers t, so try to shrink from the left. Record the window if it's the smallest so far, then remove the left character (bumping its count and total_count back if it was required) and advance left. Continue until the right edge reaches the end. Return the smallest recorded window.
 
@@ -67,7 +67,7 @@ return best window or ""
 
 **Complexity** — time O(n + m); space O(alphabet)
 
-Full Python solution: [`LeetCodeCheat/minimum-window-substring.py`](../../python/leetcode/LeetCodeCheat/minimum-window-substring.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/minimum-window-substring.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

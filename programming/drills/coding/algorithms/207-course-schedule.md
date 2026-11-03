@@ -17,7 +17,7 @@ a list `prerequisites` where `[a, b]` means you must take course `b` before cour
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Detecting any such cycle runs in O(V + E) time and means the schedule is infeasi
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Courses and their prerequisites form a directed graph. The schedule is feasible if and only if the graph has no cycle. Run DFS marking each node VISITING when entered and VISITED when finished. Reaching a node still marked VISITING means a back edge and thus a cycle, so it's infeasible. Translating the recursion to an explicit stack means pushing each node twice. Push once to open it (mark VISITING), and once with a counter to close it (mark VISITED).
 
@@ -68,7 +68,7 @@ DFS(start):
 
 **Complexity** — time O(V + E); space O(V + E)
 
-Full Python solution: [`LeetCodeCheat/course-schedule.py`](../../python/leetcode/LeetCodeCheat/course-schedule.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/course-schedule.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

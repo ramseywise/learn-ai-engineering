@@ -16,7 +16,7 @@ Example: `nums1 = [1,3]`, `nums2 = [2]` -> `2.0`; `nums1 = [1,2]`, `nums2 = [3,4
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Discarding roughly half of the remaining elements at each step gives O(log(n+m))
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Treat the median as the k-th smallest element of the combined arrays (or the average of the two middle ones for even total length). Reduce the problem to "find the k-th smallest across two sorted arrays" and solve that with binary search instead of merging. Compare the m-th elements of each array where m = k/2. Whichever side is smaller can't contain the k-th element in its first m entries, so discard that prefix and shrink k accordingly. Recurse until k reaches 1 or one array is empty. This gets to O(log(n+m)) rather than the O(n+m) merge.
 
@@ -70,7 +70,7 @@ findMedian(a, b):
 
 **Complexity** — time O(log(n + m)); space O(log(n + m)) recursion
 
-Full Python solution: [`LeetCodeCheat/median-of-two-sorted-arrays.py`](../../python/leetcode/LeetCodeCheat/median-of-two-sorted-arrays.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/median-of-two-sorted-arrays.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

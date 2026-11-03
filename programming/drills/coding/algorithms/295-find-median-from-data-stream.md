@@ -17,7 +17,7 @@ average of the two middle values when it is even. Example: after adding `1` and
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ This gives O(log n) inserts and O(1) median lookup from the two heap tops.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Keep the stream split into two parts: a max-heap holding the smaller half and a min-heap holding the larger half, kept balanced in size. On each insert, push into one heap and rebalance so the two sizes differ by at most one. The median is then the top of the larger heap (odd count) or the average of the two tops (even count). Both heaps expose the boundary elements around the median in O(1), with O(log n) inserts.
 
@@ -63,7 +63,7 @@ median():
 
 **Complexity** — time O(log n) per add, O(1) per median; space O(n)
 
-Full Python solution: [`LeetCodeCheat/find-median-from-data-stream.py`](../../python/leetcode/LeetCodeCheat/find-median-from-data-stream.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/find-median-from-data-stream.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

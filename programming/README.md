@@ -1,6 +1,6 @@
 # Programming
 
-> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**, plus **computer science foundations** and **software design**: keeping code cheap to change. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`practice/drills/`](../practice/drills/README.md).
+> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**, plus **computer science foundations** and **software design**: keeping code cheap to change. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`drills/`](drills/README.md).
 >
 > Position in the path: the entry point, no prerequisites; next are [data-analytics](../data-analytics/README.md) and [ai-engineering](../ai-engineering/README.md).
 
@@ -170,7 +170,7 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 Complete the Python track before moving to data or AI work. Take SQL when you will query or model data; take TypeScript when you will build typed applications. A complete programming foundation includes a passing Python exercise set and package, checked SQL exercises and capstone, and passing TypeScript checks plus a validated asynchronous boundary.
 
-For timed or interview-format practice, use [the practice drills](../practice/drills/README.md).
+For timed or interview-format practice, use [the drills](drills/README.md).
 
 ## Study decks
 

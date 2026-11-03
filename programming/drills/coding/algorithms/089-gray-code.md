@@ -16,7 +16,7 @@ Example: `n = 2` -> `[0, 1, 3, 2]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ This doubles the list every round, producing all 2^n codes in O(2^n) time.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Build the sequence iteratively by reflection, starting with [0]. For each bit i from 0 to n-1, take the current list. Walking it in reverse order, set bit i on each existing code and append the result. Reflecting the list and prefixing the new high bit guarantees consecutive codes differ by exactly one bit. The list doubles each round until it holds all 2^n codes.
 
@@ -60,7 +60,7 @@ return result
 
 **Complexity** — time O(2^n); space O(2^n)
 
-Full Python solution: [`LeetCodeCheat/gray-code.py`](../../python/leetcode/LeetCodeCheat/gray-code.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/gray-code.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

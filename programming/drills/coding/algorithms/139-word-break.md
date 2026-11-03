@@ -16,7 +16,7 @@ times. Example: `s = "leetcode"`, `wordDict = ["leet","code"]` -> `true`;
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Bucketing dictionary words by their first letter avoids checking every word at e
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Decide whether s can be segmented into a sequence of dictionary words. From a start index, try each dictionary word that matches at that position and recurse on the remainder. Memoize start positions already known to fail so each index is explored once. Bucketing dictionary words by their first letter prunes the candidates checked at each step.
 
@@ -64,7 +64,7 @@ return solve(0)
 
 **Complexity** — time O(n^2) (times word length for matching); space O(n)
 
-Full Python solution: [`LeetCodeCheat/word-break.py`](../../python/leetcode/LeetCodeCheat/word-break.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/word-break.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

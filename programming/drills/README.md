@@ -2,12 +2,13 @@
 
 Practice by language and topic, not a sequence. Come in, pick a track, drill, log it. Learning
 material lives in the [curriculum](../../README.md); interview format and round prep live in
-[`../interviewing/`](../interviewing/README.md). This folder is reps. The dependency runs one way:
-practice links to chapters, chapters never depend on practice. [`../CROSSWALK.md`](../CROSSWALK.md)
+[`practice/interviewing/`](../../practice/interviewing/README.md). This folder is reps. The dependency runs one way:
+practice links to chapters, chapters never depend on practice. [`practice/CROSSWALK.md`](../../practice/CROSSWALK.md)
 maps each curriculum unit to the drills and guides that test it.
 
-librarian imports `practice/drills/` as its **drills** course (`make import-courses`): every tracked
-`.md` here becomes a lesson, each track folder a module. Notebooks, `.sql`, `.ts` and `.py` files
+librarian imports this folder as the **drills** module of its Programming course
+(`make import-courses`): every tracked `.md` here becomes a lesson, each track folder a section. A
+file with `track:` in its frontmatter feeds Practice mode. Notebooks, `.sql`, `.ts` and `.py` files
 stay here and are linked, not imported.
 
 ## Tracks
@@ -23,13 +24,14 @@ stay here and are linked, not imported.
 
 `coding/` keeps its layout because the drill tooling depends on its paths.
 
-Only material cleared for publication is tracked. `practice/.gitignore` is a per-file allowlist, so
-anything new stays local until it is added there. Solutions to site problems, personal attempts
-and third-party material without a licence are not in this repo.
+Unlike `practice/`, this folder has no allowlist: the root `.gitignore` names what stays local. That is
+solutions to site problems (`python/leetcode/` and the `hackerrank/` folders), personal attempts
+(`coding/scratch/`) and the drill log. Check a new file's licence and contents before adding it.
+[`THIRD_PARTY.md`](../../THIRD_PARTY.md) lists the tracked material whose licence is still not cleared.
 
 ## Drill schema
 
-New drills are one Markdown file per drill, `drills/<track>/<topic>/<slug>.md`, with
+New drills are one Markdown file per drill, `programming/drills/<track>/<topic>/<slug>.md`, with
 code alongside when the drill needs it (`<slug>.py`, `<slug>.sql`, `<slug>.ts`, `<slug>.tf`).
 
 ```yaml
@@ -60,7 +62,7 @@ Worked examples of the schema: [`sql/window-functions/top-orders-per-user.md`](s
 [`terraform/review/web-stack.md`](terraform/review/web-stack.md).
 
 `units` links a drill to the curriculum: `scripts/practice/crosswalk.py` checks every path exists and
-generates [`../CROSSWALK.md`](../CROSSWALK.md). `concepts` links it to the wiki: librarian's Practice
+generates [`practice/CROSSWALK.md`](../../practice/CROSSWALK.md). `concepts` links it to the wiki: librarian's Practice
 mode uses it to draw concept → drill edges in the graph.
 
 ## Logging

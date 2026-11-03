@@ -148,10 +148,10 @@ class Signals(unittest.TestCase):
     def test_drill_flagged_on_latest_attempt_only(self):
         rows = [{"date": "1", "qid": "a", "aid": "3", "score": "T✗"}, {"date": "2", "qid": "a", "aid": "0", "score": "T✓"},
                 {"date": "1", "qid": "b", "aid": "—", "score": "T✗ S✗ D✓"}]
-        lines = sg.drill_section(rows, {"b": "practice/drills/b.md"})
+        lines = sg.drill_section(rows, {"b": "programming/drills/b.md"})
         self.assertEqual(len(lines), 2)
         self.assertIn("b:", lines[1])
-        self.assertIn("practice/drills/b.md", lines[1])
+        self.assertIn("programming/drills/b.md", lines[1])
 
     def test_card_needs_enough_attempts(self):
         def grade(front, result):

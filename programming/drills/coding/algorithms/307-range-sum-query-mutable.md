@@ -17,7 +17,7 @@ Example: after `update(1, 2)`, `sumRange(0, 2)` returns the sum of the first thr
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ A range query then combines O(log n) tree nodes, giving O(log n) update and quer
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Support point updates and range-sum queries efficiently by backing the array with a segment tree, where each node stores the sum of a subrange. Building is O(n), and an update fixes the O(log n) nodes on the path from a leaf to the root. A range query combines O(log n) node sums. A Fenwick (binary indexed) tree is the compact alternative.
 
@@ -59,7 +59,7 @@ sumRange(l, r): combine the O(log n) tree segments that cover [l, r]
 
 **Complexity** — time build O(n), update and query O(log n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/range-sum-query-mutable.py`](../../python/leetcode/LeetCodeCheat/range-sum-query-mutable.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/range-sum-query-mutable.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -17,7 +17,7 @@ and bump the key's frequency. Aim for `O(1)` average time per operation.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ An ordered-set version costs O(log n) per operation. The true O(1) design instea
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Evict the least-frequently-used entry, breaking ties by least-recently-used. This design keeps a hash map key -> node plus an ordered set of nodes sorted by (frequency, last-use timestamp). Both get and put bump a node's frequency and timestamp, then remove and reinsert it. Eviction removes the set's first (smallest) node, at O(log n) per operation. The O(1) design instead chains a doubly linked list per frequency bucket.
 
@@ -60,7 +60,7 @@ put new key when full: evict set.begin() (lowest freq, oldest); insert node freq
 
 **Complexity** — time O(log n) per operation (O(1) achievable); space O(capacity)
 
-Full Python solution: [`LeetCodeCheat/lfu-cache.py`](../../python/leetcode/LeetCodeCheat/lfu-cache.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/lfu-cache.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

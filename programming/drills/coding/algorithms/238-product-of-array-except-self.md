@@ -15,7 +15,7 @@ division and in `O(n)` time. Example: `nums = [1,2,3,4]` -> `[24,12,8,6]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Both passes can be folded into the output array, giving O(n) time and O(1) extra
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 For each index the answer is the product of everything to its left times everything to its right. Compute prefix products in a left-to-right pass and suffix products in a right-to-left pass, multiplying them per index - no division needed. The one-pass version fills both directions together, keeping only the output array plus two running scalars.
 
@@ -60,7 +60,7 @@ return out
 
 **Complexity** — time O(n); space O(1) extra (output array aside)
 
-Full Python solution: [`LeetCodeCheat/product-of-array-except-self.py`](../../python/leetcode/LeetCodeCheat/product-of-array-except-self.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/product-of-array-except-self.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

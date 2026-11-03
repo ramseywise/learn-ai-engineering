@@ -6,8 +6,8 @@ why does this leak / why didn't threads help" follow-up that comes after a codin
 
 **How to drill it:** pick a theme and answer each recall prompt out loud in under 60
 seconds, *then* open the handbook section to check. Concepts you missed get their example
-run and rewritten from memory in `drills/coding/scratch/`. Log it in
-[`../../coding/drill-log.md`](../../coding/drill-log.md) with QID `py-adv-<theme>`.
+run and rewritten from memory in `programming/drills/coding/scratch/`. Log it in
+`programming/drills/coding/drill-log.md` (personal, gitignored) with QID `py-adv-<theme>`.
 
 | Folder | What |
 |---|---|

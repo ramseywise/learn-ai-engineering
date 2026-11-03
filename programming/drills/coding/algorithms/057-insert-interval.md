@@ -16,7 +16,7 @@ intervals it overlaps. Example: `intervals = [[1,3],[6,9]]`, `newInterval = [2,5
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ This single linear scan inserts and merges the new interval in O(n) time and O(n
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The existing intervals are already sorted and non-overlapping, so process them in one pass around the new interval. Copy over every interval that ends before the new one starts. Then merge the new interval with any it overlaps by extending its end while the next interval's start is within reach. Finally copy the remaining intervals that come entirely after. This inserts and merges in a single linear scan.
 
@@ -65,7 +65,7 @@ return result
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/insert-interval.py`](../../python/leetcode/LeetCodeCheat/insert-interval.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/insert-interval.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

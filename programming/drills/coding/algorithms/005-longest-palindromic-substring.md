@@ -15,7 +15,7 @@ acceptable. Example: `s = "babad"` -> `"bab"` (or `"aba"`); `s = "cbbd"` -> `"bb
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Filling the whole table and tracking the longest span that comes out true costs 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Fill a boolean DP table `palindromes[i][j]` marking whether `s[i..j]` is a palindrome. `s[i..j]` is a palindrome when `s[i]` == `s[j]` and the inside `s[i+1..j-1]` is also a palindrome. So `palindromes[i][j]` = true if `s[i]` == `s[j]` and `palindromes[i+1][j-1]` is true (with length 1 and 2 as base cases). Fill the table and keep track of the longest span that comes out true.
 
@@ -68,7 +68,7 @@ return best
 
 **Complexity** — time O(n^2); space O(n^2)
 
-Full Python solution: [`LeetCodeCheat/longest-palindromic-substring.py`](../../python/leetcode/LeetCodeCheat/longest-palindromic-substring.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/longest-palindromic-substring.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

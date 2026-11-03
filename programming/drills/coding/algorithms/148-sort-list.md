@@ -15,7 +15,7 @@ new head. Aim for O(n log n) time. Example: `[4,2,1,3]` -> `[1,2,3,4]`;
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Merge the two sorted parts by splicing nodes in order, giving O(n log n) time ov
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Merge sort on a linked list, which needs no random access. Find the middle with slow/fast pointers and split it into two parts, then recursively sort each part. Merge the two sorted lists by splicing nodes in order. This gives O(n log n) time with O(log n) recursion depth.
 
@@ -60,7 +60,7 @@ merge(a, b): repeatedly attach the smaller head, then append the leftover tail
 
 **Complexity** — time O(n log n); space O(log n)
 
-Full Python solution: [`LeetCodeCheat/sort-list.py`](../../python/leetcode/LeetCodeCheat/sort-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/sort-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

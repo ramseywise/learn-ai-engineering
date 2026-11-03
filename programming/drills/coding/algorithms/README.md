@@ -5,7 +5,7 @@ prompt, a hint ladder (open one at a time), and a reference approach under `<det
 
 These are the **study layer**. Your own full Python solutions live in
 `../../python/leetcode/LeetCodeCheat/` (the nested, gitignored `Leet-Code` repo) — the
-✓ column marks problems that have one, and each drill links to it inside its Solution block.
+✓ column marks problems that have one, and each drill names it inside its Solution block.
 
 Drill them with `/coding-drill` (coach stance gives the hints in order). For a pattern refresher
 with full worked solutions and THINKING docs, use [`../dsa/`](../dsa/README.md) instead.

@@ -15,7 +15,7 @@ on your previous code — design so you don't have to rewrite it.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ For persistence, contrast a write-ahead log (append every mutation, replay on re
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 A progressive implementation round reveals a single problem in levels, where the grade is mostly about whether your Level 1 design absorbs Levels 2 and 3 without a rewrite. Start deliberately small but with clean seams. Level 1 is just a dict wrapped in a class: set(k, v), get(k) -> value or None, delete(k). Resist adding anything else yet, but keep the store behind a small interface so you can change the stored value type later. The design decision that pays off: store each value as a record (value + metadata) rather than the bare value. Level 2 needs an expiry timestamp, and Level 3 needs it too. Talk through the trade-offs out loud (lazy vs. active expiry, log vs. snapshot persistence). Interviewers weight reasoning over feature count. Clarify requirements before coding (whether it's single-threaded or concurrent, and what durability guarantees are needed) since jumping straight to code is the most-cited failure mode.
 

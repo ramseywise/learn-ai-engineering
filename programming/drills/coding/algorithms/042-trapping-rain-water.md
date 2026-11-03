@@ -15,7 +15,7 @@ Example: `height = [0,1,0,2,1,0,1,3,2,1,2,1]` -> `6`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This two-pointer sweep computes the total trapped water in a single O(n) time, O
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Water above a bar is bounded by the tallest bar to its left and the tallest to its right. The trapped amount at that bar is min(left_max, right_max) - height. Sweep from both ends toward the global maximum: from the left, track the running left_max and add left_max - height wherever the current bar is lower. Do the same symmetrically from the right with right_max. The two sweeps meet at the tallest bar, which correctly bounds both sides. Every position is counted once in a single O(n) pass with O(1) space.
 
@@ -64,7 +64,7 @@ return water
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/trapping-rain-water.py`](../../python/leetcode/LeetCodeCheat/trapping-rain-water.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/trapping-rain-water.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

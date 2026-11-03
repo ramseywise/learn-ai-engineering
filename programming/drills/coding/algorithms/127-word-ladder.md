@@ -17,7 +17,7 @@ list `[hot,dot,dog,lot,log,cog]` -> `5`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Stop as soon as the two frontiers meet and sum their distances, for O(N * L^2) t
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Return only the shortest transformation length, using the same wildcard-pattern graph where words that differ by one letter share a bucket. Then run bidirectional BFS from both beginWord and endWord, expanding the two frontiers alternately. When they meet, the shortest ladder length is the sum of the two distances. Searching from both ends keeps each frontier small and cuts the explored space dramatically versus one-directional BFS.
 
@@ -63,7 +63,7 @@ return 0 if the frontiers never meet
 
 **Complexity** — time `O(N * L^2)`; space `O(N * L)`
 
-Full Python solution: [`LeetCodeCheat/word-ladder.py`](../../python/leetcode/LeetCodeCheat/word-ladder.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/word-ladder.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

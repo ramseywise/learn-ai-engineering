@@ -17,7 +17,7 @@ the same reversed-digit form. The lists may differ in length. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Treat a missing node as digit 0 so lists of different lengths work. Emit one fin
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The digits are stored least-significant first, so add them the way you add by hand in school. Scan both lists in lockstep, adding the two current digits plus the incoming carry. Keep the units digit in a new node and pass the carry (0 or 1) forward. When both lists are exhausted, emit one final node if a carry remains. Treat a missing node as the digit 0 so lists of different lengths work.
 
@@ -63,7 +63,7 @@ add(l1, l2, carry):
 
 **Complexity** — time O(max(n, m)); space O(max(n, m))
 
-Full Python solution: [`LeetCodeCheat/add-two-numbers.py`](../../python/leetcode/LeetCodeCheat/add-two-numbers.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/add-two-numbers.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

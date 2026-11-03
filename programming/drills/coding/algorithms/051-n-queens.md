@@ -15,7 +15,7 @@ board is a list of `n` strings using `'Q'` for a queen and `'.'` for an empty ce
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Reaching row n with a valid placement means a full board is found. This exponent
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Backtrack row by row, since each row holds exactly one queen. Place a queen in some free column of the current row, mark all cells it attacks (its column and both diagonals) as taken, and recurse to the next row on a copy of that attack mask. When every free column in a row has been tried, backtrack. Reaching row n means all queens are placed, so reconstruct the board from the mask and record it as a solution.
 
@@ -61,7 +61,7 @@ solve(row, mask, solutions):
 
 **Complexity** — time exponential (bounded by n! placements); space O(n^2) per board mask plus recursion
 
-Full Python solution: [`LeetCodeCheat/n-queens.py`](../../python/leetcode/LeetCodeCheat/n-queens.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/n-queens.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ Example: `s1 = "great"`, `s2 = "rgeat"` -> `true` (swap the split `gr | eat`).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Memoizing on the pair of substrings turns the exponential recursion into a polyn
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Solve it with recursion. First, if s1 and s2 aren't anagrams, s2 can't be a scramble of s1. If they're already equal, return true. Otherwise try splitting s1 at every position i (1..n-1). Each split explores the ways of building the scramble tree. s1[:i] is the left child and s1[i:] the right. For each split, s2 could correspond in two ways. Without a swap at this node, s2 splits at i too, so check s1[:i] vs s2[:i] and s1[i:] vs s2[i:]. With a swap, s2's matching pieces are the last i and first n-i characters, so check s1[:i] vs s2[n-i:] and s1[i:] vs s2[:n-i]. If any split works, return true. Otherwise return false. The anagram check at the top prunes most branches.
 
@@ -65,7 +65,7 @@ isScramble(s1, s2):
 
 **Complexity** — time exponential without memoization (memoize on (s1,s2) substrings to make it polynomial); space O(n) recursion (more with memoization)
 
-Full Python solution: [`LeetCodeCheat/scramble-string.py`](../../python/leetcode/LeetCodeCheat/scramble-string.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/scramble-string.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

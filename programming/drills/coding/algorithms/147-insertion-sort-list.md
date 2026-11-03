@@ -14,7 +14,7 @@ new head. Example: `[4,2,1,3]` -> `[1,2,3,4]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -44,7 +44,7 @@ This selection-sort-over-a-list approach runs in O(n^2) time and O(1) extra spac
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Sort a linked list by repeatedly selecting the minimum. Scan the unsorted remainder to find the minimum node, unlink it, and place it at the front of the growing sorted result. That's a selection sort over the list. Classic insertion sort instead walks the sorted prefix to find each node's insertion point.
 
@@ -59,7 +59,7 @@ return sorted
 
 **Complexity** — time O(n^2); space O(1)
 
-Full Python solution: [`LeetCodeCheat/insertion-sort-list.py`](../../python/leetcode/LeetCodeCheat/insertion-sort-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/insertion-sort-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

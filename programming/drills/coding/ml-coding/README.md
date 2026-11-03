@@ -1,6 +1,6 @@
 # ML coding drills
 
-Implement the maths an AI-engineering round asks for from scratch in NumPy — no sklearn, no torch. Bank entries with the grading signals are in [`interviewing/rounds/coding-challenge/questions.md`](../../../interviewing/rounds/coding-challenge/questions.md) §ML coding.
+Implement the maths an AI-engineering round asks for from scratch in NumPy — no sklearn, no torch. Bank entries with the grading signals are in [`practice/interviewing/rounds/coding-challenge/questions.md`](../../../../practice/interviewing/rounds/coding-challenge/questions.md) §ML coding.
 
 | Drill | Difficulty |
 |---|---|

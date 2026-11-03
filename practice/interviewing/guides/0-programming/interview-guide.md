@@ -293,6 +293,6 @@ HAVING COUNT(DISTINCT DATE_TRUNC('month', event_date)) = 2
 ## Sources
 
 - chapters: [Python](../../../../programming/python/README.md), [SQL](../../../../programming/sql/README.md)
-- drills: [drills](../../../drills/README.md), [Hello, Interview!](../../../drills/coding/dsa/README.md) (DSA patterns)
+- drills: [drills](../../../../programming/drills/README.md), [Hello, Interview!](../../../../programming/drills/coding/dsa/README.md) (DSA patterns)
 - reference: *Competitive Programmer's Handbook* (Antti Laaksonen), free online
 - overview: [00-overview.md](00-overview.md)

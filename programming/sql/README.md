@@ -101,4 +101,4 @@ Everything else: [references.md](../references.md).
 | [Use The Index, Luke](https://use-the-index-luke.com/) | Read online | Background for 08 |
 | [Select Star SQL](https://selectstarsql.com/) | Proprietary, link only | Optional extra practice: an interactive book on a real dataset |
 
-Timed and interview-style SQL problems are in [`practice/drills/`](../../practice/drills/README.md).
+Timed and interview-style SQL problems are in [`programming/drills/`](../drills/README.md).

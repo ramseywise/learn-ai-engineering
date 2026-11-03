@@ -17,7 +17,7 @@ the string is returned unchanged.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Concatenating the row buffers at the end gives O(n) time and space. Handle numRo
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Simulate the zigzag path instead of building a 2D grid, keeping one string buffer per row. Iterate over the characters, appending down through the rows to the last one, then bounce back up to row 1 and repeat. Each character gets appended to the buffer of its current row. At the end, concatenate the row buffers top to bottom. The single-row case is returned unchanged.
 
@@ -67,7 +67,7 @@ return concat(rows)
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/zigzag-conversion.py`](../../python/leetcode/LeetCodeCheat/zigzag-conversion.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/zigzag-conversion.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -6,7 +6,7 @@ precisely you specify I/O per step, whether you verify each increment, and wheth
 catch bad AI output.
 
 Existing code in `src/` — `store.py` is the data layer (do not rewrite it), `ranker.py`
-is the stub you implement. Work in `drills/coding/scratch/`.
+is the stub you implement. Work in `programming/drills/coding/scratch/`.
 
 ---
 

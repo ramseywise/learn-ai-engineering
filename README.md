@@ -19,7 +19,7 @@ Generative AI builds things with LLMs; AI Engineering is the discipline that mak
 
 ## Practice
 
-Interview prep and coding drills are in the local [`practice/`](practice) folder, which is not published: [interview guides](practice/interviewing/guides/00-start-here.md) and [language drills](practice/drills/README.md).
+[Language and coding drills](programming/drills/README.md) are part of Programming. Interview prep is in [`practice/`](practice), where an allowlist decides which files are published: start with the [interview guides](practice/interviewing/guides/00-start-here.md).
 
 ## Readings
 

@@ -15,7 +15,7 @@ Example: `[[1,3],[2,6],[8,10],[15,18]]` -> `[[1,6],[8,10],[15,18]]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This single pass after sorting gives O(n log n) time overall (dominated by the s
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Sort the intervals by start. Scan them in order, keeping a result list seeded with the first interval. For each next interval, if its start is within the current last result interval (start <= last.end) the two overlap, so extend last.end to the larger of the two ends. Otherwise there's a gap, so append it as a new interval. Sorting guarantees any interval that could merge with the current one comes right after it.
 
@@ -62,7 +62,7 @@ return result
 
 **Complexity** — time O(n log n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/merge-intervals.py`](../../python/leetcode/LeetCodeCheat/merge-intervals.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/merge-intervals.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

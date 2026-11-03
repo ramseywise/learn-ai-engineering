@@ -16,7 +16,7 @@ Example: `s1 = "aabcc"`, `s2 = "dbbca"`, `s3 = "aadbbcbcac"` -> `true`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A 2D table over prefixes of the two source strings solves it in O(n*m) time.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Decide whether s3 is formed by interleaving s1 and s2 while preserving each string's order. Match from the front: the next character of s3 must come from s1 or s2, so recurse on both options. Memoize on the pair (i, j) of positions consumed in s1 and s2 so each state is solved once. The equivalent bottom-up form fills a DP table where `dp[i][j]` is true when `s1[:i]` and `s2[:j]` interleave to form `s3[:i+j]`. Each cell is reachable either from above (consume an s1 char) or from the left (consume an s2 char).
 
@@ -64,7 +64,7 @@ return dp[len(s1)][len(s2)]
 
 **Complexity** — time O(n*m); space O(n*m)
 
-Full Python solution: [`LeetCodeCheat/interleaving-string.py`](../../python/leetcode/LeetCodeCheat/interleaving-string.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/interleaving-string.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

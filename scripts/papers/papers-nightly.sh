@@ -3,7 +3,7 @@
 # Claude session (fresh context each). Every home's tier 1 comes before any home's tier 2
 # (tiers: `potw.py tier`), and within a tier the biggest backlog goes first.
 #
-# Scheduled by launchd (com.wiseer.papers-nightly.plist, daily 01:00). Install with
+# Scheduled by launchd (com.wiseer.papers-nightly.plist, daily 02:30). Install with
 # `make papers-nightly-install`, remove with `make papers-nightly-uninstall`.
 #
 # Edits notes, references.md, sources/images/ and the ledger. Never commits (git

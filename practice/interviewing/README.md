@@ -35,7 +35,7 @@ Roles: **AIE** (AI/agent engineer), **MLE** (ML engineer), **DS** (data scientis
 | [System design](guides/9-system-design/interview-guide.md) | ● | ● | ◐ | ● |
 | [Product & business sense](guides/10-product-delivery/interview-guide.md) | ◐ | ○ | ● | ● |
 | [Stats & experimentation](guides/11-stats-experimentation/interview-guide.md) | ○ | ◐ | ● | ○ |
-| Coding patterns / DS&A — [drills](../drills/README.md) | ◐ | ◐ | ◐ | ◐ |
+| Coding patterns / DS&A — [drills](../../programming/drills/README.md) | ◐ | ◐ | ◐ | ◐ |
 
 **Analyst or data engineer?** The matrix has no column for them. Analysts: treat stats, the metrics
 and SQL parts of ML foundations, and product sense as ●. Data engineers: treat data engineering and

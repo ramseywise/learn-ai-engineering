@@ -15,7 +15,7 @@ Example: `1 -> 1 -> 2 -> 3 -> 3` -> `1 -> 2 -> 3`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ One linear, in-place pass gives O(n) time and O(1) space.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The list is sorted, so equal values are adjacent. Keep the first occurrence of each value and drop the rest. Walk with a prev pointer at the last kept node. If the current node equals prev's value, unlink it (prev.next = node.next). Otherwise advance prev to the current node. One linear pass, in place.
 
@@ -63,7 +63,7 @@ return head
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/remove-duplicates-from-sorted-list.py`](../../python/leetcode/LeetCodeCheat/remove-duplicates-from-sorted-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/remove-duplicates-from-sorted-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

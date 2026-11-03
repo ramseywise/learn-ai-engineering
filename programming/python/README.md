@@ -146,4 +146,4 @@ Everything else: [references.md](../references.md).
 | Wes McKinney, *Python for Data Analysis*, 2nd ed. | Code and data MIT | The next pillar, [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md) |
 | Luciano Ramalho, *Fluent Python* | Proprietary | Further reading for 03, link only |
 
-Timed and interview-style Python problems are in [`practice/drills/`](../../practice/drills/README.md).
+Timed and interview-style Python problems are in [`programming/drills/`](../drills/README.md).

@@ -16,7 +16,7 @@ deleting a character, or replacing a character. Example: `word1 = "horse"`,
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Fill the table bottom-up in O(n1 * n2) time and space. Seed the first row and co
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Build a DP table (Levenshtein distance), where `distance[i][j]` is the edit distance between the first i characters of s1 and the first j characters of s2. Each cell is the minimum of three moves. Substitution is `distance[i-1][j-1]`, plus 1 unless `s1[i]` == `s2[j]` (in which case the characters already line up for free). Deletion is `distance[i-1][j]` + 1. Insertion is `distance[i][j-1]` + 1. Initialize the first row/column to 0,1,2,... (turning an empty string into a prefix costs one edit per character). The answer is `distance[n1][n2]`.
 
@@ -63,7 +63,7 @@ return dp[n1][n2]
 
 **Complexity** — time `O(n1 * n2)`; space `O(n1 * n2)`
 
-Full Python solution: [`LeetCodeCheat/edit-distance.py`](../../python/leetcode/LeetCodeCheat/edit-distance.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/edit-distance.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

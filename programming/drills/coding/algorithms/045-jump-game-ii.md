@@ -16,7 +16,7 @@ at index `0`, and the input guarantees the end is always reachable. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ This BFS-by-levels (equivalently, greedily extending the current reach) gives th
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Treat indices as nodes: from index i you can reach any index up to i + nums[i], so the minimum number of jumps to the end is the shortest path in this graph. A BFS by levels finds it, one jump per level. Process indices in FIFO order, marking newly reachable indices with their distance (parent distance + 1). The first time you can reach or pass the last index, that distance + 1 is the answer. (Equivalently this is the greedy "extend the current reach as far as possible, then take a jump" idea.)
 
@@ -64,7 +64,7 @@ return dist[n-1]
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/jump-game-ii.py`](../../python/leetcode/LeetCodeCheat/jump-game-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/jump-game-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

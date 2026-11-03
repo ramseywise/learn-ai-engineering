@@ -15,7 +15,7 @@ the largest sum and return that sum. Example: `nums = [-2,1,-3,4,-1,2,1,-5,4]` -
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This is Kadane's algorithm: track a running current sum and a global best in a s
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Apply Kadane's algorithm: keep sum[i], the maximum sum of a subarray ending at i (not necessarily starting at 0). To extend: if sum[i] + arr[i+1] > arr[i+1] then sum[i+1] = sum[i] + arr[i+1], otherwise sum[i+1] = arr[i+1]. In other words, if the running sum has gone negative it can only hurt, so reset to the new element. Otherwise keep accumulating. Report the maximum over all sum[i].
 
@@ -60,7 +60,7 @@ return best
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/maximum-subarray.py`](../../python/leetcode/LeetCodeCheat/maximum-subarray.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/maximum-subarray.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

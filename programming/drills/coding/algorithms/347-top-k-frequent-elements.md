@@ -15,7 +15,7 @@ be unique. Example: `nums = [1,1,1,2,2,3]`, `k = 2` -> `[1,2]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Collecting elements until you have k gives O(n) overall time, beating a full sor
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Count occurrences in a hash map, then bucket elements by frequency into an array indexed by count (the maximum possible count is n). Walk the buckets from highest frequency down, collecting elements until k are gathered - linear time, avoiding a full sort or a heap.
 
@@ -61,7 +61,7 @@ for f from n down to 1:
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/top-k-frequent-elements.py`](../../python/leetcode/LeetCodeCheat/top-k-frequent-elements.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/top-k-frequent-elements.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

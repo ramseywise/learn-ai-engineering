@@ -22,7 +22,7 @@ At drill time, create `problems/<name>/solutions/<phase>.md` with: question → 
 
 ## Rules
 
-- **`src/` is copied from, never edited.** Work in `drills/coding/scratch/`.
+- **`src/` is copied from, never edited.** Work in `programming/drills/coding/scratch/`.
 - **Read `prompts.md` only.** Nothing here contains an answer key by design, but the
   seeded bugs are only findable once.
 

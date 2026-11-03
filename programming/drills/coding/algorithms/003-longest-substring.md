@@ -15,7 +15,7 @@ contains no repeated characters. Example: for `s = "abcabcbb"` the answer is `3`
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ One left-to-right pass updating the start and the best length as you go gives O(
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 As you scan, keep start, the index where the current substring (the one ending at i) begins, and a map char -> the index where that char was seen previously (-1 if not seen). To advance to i+1: let c = str[i+1] and m = map[c], where we saw c last. If m is before the current start, start stays put. Otherwise move start to m+1: if c was seen after the current start, jump start to just after that previous occurrence. Record the char's new position and track the max length i - start + 1 along the way.
 
@@ -63,7 +63,7 @@ return best
 
 **Complexity** — time O(n); space O(1) for a fixed alphabet (O(k) in general)
 
-Full Python solution: [`LeetCodeCheat/longest-substring-without-repeating-characters.py`](../../python/leetcode/LeetCodeCheat/longest-substring-without-repeating-characters.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/longest-substring-without-repeating-characters.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

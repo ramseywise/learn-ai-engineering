@@ -15,7 +15,7 @@ identical consecutive characters with the character followed by its count (e.g.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Decoding must parse multi-digit counts (a run of 12 is 'a12'), and state your as
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 RLE is a single linear scan. Iterate over the string, tracking the current character and a run counter. When the next character differs (or you reach the end), emit the character and its count, then reset. The only subtlety is flushing the final run after the loop, a classic off-by-one. Decoding is the inverse: read a character, read its count, repeat the character that many times. Watch the ambiguity when the data contains digits (real RLE variants escape counts or use fixed markers). For the interview version, state the assumption (alphabetic input, or counts always emitted even for runs of length 1) so encode/decode round-trip exactly.
 

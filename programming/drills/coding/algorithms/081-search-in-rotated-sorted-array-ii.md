@@ -17,7 +17,7 @@ though duplicates can force `O(n)` in the worst case. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ This handles duplicates correctly but degrades to O(n) time in the worst case.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Same as problem 33 (Search in Rotated Sorted Array), but the array may contain duplicates, which needs one adjustment. The trouble is when A[start] == A[end]: you can't tell which half is sorted. Fix it by shrinking the window. Move end left until A[start] != A[end], then run the ordinary rotated binary search unchanged. The duplicate-skipping is what pushes the worst case to O(n).
 
@@ -66,7 +66,7 @@ search(A, t, start, end):
 
 **Complexity** — time O(log n) average, O(n) worst case with many duplicates; space O(log n) recursion
 
-Full Python solution: [`LeetCodeCheat/search-in-rotated-sorted-array-ii.py`](../../python/leetcode/LeetCodeCheat/search-in-rotated-sorted-array-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/search-in-rotated-sorted-array-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

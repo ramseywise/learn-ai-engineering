@@ -15,7 +15,7 @@ than 1 and itself. Example: `n = 10` -> `4` (the primes below 10 are 2, 3, 5, 7)
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Striking multiples rather than checking each number individually gives O(n log l
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Count primes below n with the Sieve of Eratosthenes, marking all numbers prime initially. Walking the odd numbers upward, count each one that's still marked prime and strike out all of its multiples as composite. Striking multiples is far cheaper than testing each number individually for primality.
 
@@ -61,7 +61,7 @@ return count
 
 **Complexity** — time O(n log log n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/count-primes.py`](../../python/leetcode/LeetCodeCheat/count-primes.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/count-primes.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

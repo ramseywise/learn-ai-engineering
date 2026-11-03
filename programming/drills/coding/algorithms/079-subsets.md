@@ -15,7 +15,7 @@ Example: `nums = [1,2,3]` -> `[[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ For each mask, build the subset from the set bits, giving an O(n * 2^n) solution
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 There are 2^n subsets of n elements, and each corresponds to an n-bit mask where bit j says whether nums[j] is included. So enumerate all masks 0 .. 2^n - 1 and, for each, collect the elements whose bit is set. (An equivalent formulation is recursive include/exclude backtracking. Another starts with the empty set and, for each new element, appends copies of all existing subsets extended by it.)
 
@@ -59,7 +59,7 @@ return result
 
 **Complexity** — time `O(n * 2^n)`; space `O(n * 2^n)` for the output
 
-Full Python solution: [`LeetCodeCheat/subsets.py`](../../python/leetcode/LeetCodeCheat/subsets.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/subsets.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ largest rectangle containing only `'1'`s and return its area. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Combining height times width at every cell across all rows yields an O(rows * co
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The clean solution builds histograms row by row and uses DP with three helper arrays. For each cell, `heights[i][j]` counts the consecutive 1s stacked above (and including) cell (i,j). `left[i][j]` is the leftmost column the all-1s bar at (i,j) can extend to, and `right[i][j]` is the rightmost such column. heights updates trivially from the row above. For left, sweep the row left to right maintaining left_start (reset to j+1 on a 0), and on a 1 set left = max(left-from-row-above, left_start). right is symmetric, sweeping right to left with right_end. Compute each cell's area as heights * (right - left + 1), and take the max over all cells. Alternatively, run the histogram solution from problem 84 on the height array of each row, or grow rectangles with DFS.
 
@@ -70,7 +70,7 @@ return best
 
 **Complexity** — time O(rows * cols); space O(cols)
 
-Full Python solution: [`LeetCodeCheat/maximal-rectangle.py`](../../python/leetcode/LeetCodeCheat/maximal-rectangle.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/maximal-rectangle.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

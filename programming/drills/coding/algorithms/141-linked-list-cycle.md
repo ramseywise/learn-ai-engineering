@@ -15,7 +15,7 @@ node's `next` points back to an earlier node so traversal never ends), otherwise
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This runs in O(n) time and O(1) space with no extra data structure needed.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Floyd's tortoise-and-hare advances a slow pointer one step and a fast pointer two steps at a time. If a cycle exists the fast pointer laps around and meets the slow one, otherwise fast reaches the end (null). It uses constant extra space.
 
@@ -60,7 +60,7 @@ return false
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/linked-list-cycle.py`](../../python/leetcode/LeetCodeCheat/linked-list-cycle.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/linked-list-cycle.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

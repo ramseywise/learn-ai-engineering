@@ -15,7 +15,7 @@ another (same letters rearranged) and return the groups in any order. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ One pass over all words, sorting each into its bucket, gives O(N * k log k) time
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two words are anagrams exactly when their sorted letters are identical, so use the sorted string as a canonical key. Scan the input, sort each word to get its key, and append the original word to a hash map bucket under that key. The map's values are the anagram groups.
 
@@ -59,7 +59,7 @@ return groups.values()
 
 **Complexity** — time `O(N * k log k)` for N words of max length k; space `O(N * k)`
 
-Full Python solution: [`LeetCodeCheat/group-anagrams.py`](../../python/leetcode/LeetCodeCheat/group-anagrams.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/group-anagrams.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

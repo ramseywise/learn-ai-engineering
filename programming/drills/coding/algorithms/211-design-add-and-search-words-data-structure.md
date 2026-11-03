@@ -17,7 +17,7 @@ after adding `"bad"`, `"dad"`, `"mad"`, `search("b..")` -> `true` and
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ To search with wildcard dots, recurse into every child at that position instead 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Store words in a trie (26-way children plus a flag marking word ends). addWord walks and creates nodes letter by letter. search walks the trie too, but on a '.' wildcard it recurses into every child and succeeds if any branch matches the rest of the pattern.
 
@@ -63,7 +63,7 @@ search(node, pattern):
 
 **Complexity** — time add O(L); search O(L) typical, up to O(26^d) with d wildcards; space O(total characters stored)
 
-Full Python solution: [`LeetCodeCheat/add-and-search-word-data-structure-design.py`](../../python/leetcode/LeetCodeCheat/add-and-search-word-data-structure-design.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/add-and-search-word-data-structure-design.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

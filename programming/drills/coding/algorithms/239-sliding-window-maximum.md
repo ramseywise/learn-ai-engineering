@@ -16,7 +16,7 @@ maximum value within each window position. Example: `nums = [1,3,-1,-3,5,3,6,7]`
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A monotonic decreasing deque of indices achieves this in O(n) total, beating an 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Report the maximum of each size-k window. This solution keeps the window in an ordered multiset (a balanced tree of value -> count). Sliding one step removes the outgoing element and inserts the incoming one. The largest key gives the current maximum, so each step is O(log k). The optimal O(n) method keeps a monotonic decreasing deque of indices.
 
@@ -60,7 +60,7 @@ for i = k..n-1:
 
 **Complexity** — time O(n log k); space O(k)
 
-Full Python solution: [`LeetCodeCheat/sliding-window-maximum.py`](../../python/leetcode/LeetCodeCheat/sliding-window-maximum.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/sliding-window-maximum.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

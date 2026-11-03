@@ -1,6 +1,6 @@
 # Implementation drills
 
-Multi-level build rounds (45–90 min): each level extends the last, so the grade is whether your level-1 design absorbs levels 2 and 3 without a rewrite. Bank entries are in [`interviewing/rounds/coding-challenge/questions.md`](../../../interviewing/rounds/coding-challenge/questions.md) §Implementation rounds.
+Multi-level build rounds (45–90 min): each level extends the last, so the grade is whether your level-1 design absorbs levels 2 and 3 without a rewrite. Bank entries are in [`practice/interviewing/rounds/coding-challenge/questions.md`](../../../../practice/interviewing/rounds/coding-challenge/questions.md) §Implementation rounds.
 
 | Drill | Difficulty |
 |---|---|

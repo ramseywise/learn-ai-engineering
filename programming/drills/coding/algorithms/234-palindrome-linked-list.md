@@ -15,7 +15,7 @@ reads the same forward and backward, `false` otherwise. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ The midpoint-reverse approach reaches O(n) time with O(1) extra space.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Build a reversed copy of the list, then walk the original and the reversed copy in lockstep comparing values. If every value matches, the list is a palindrome. The O(1)-space variant instead finds the middle, reverses the second half in place, and compares the two parts.
 
@@ -58,7 +58,7 @@ return true
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/palindrome-linked-list.py`](../../python/leetcode/LeetCodeCheat/palindrome-linked-list.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/palindrome-linked-list.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

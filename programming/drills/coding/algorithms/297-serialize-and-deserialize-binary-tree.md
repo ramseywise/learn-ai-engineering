@@ -17,7 +17,7 @@ values.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Both directions run in O(n) time and O(n) space.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Serialize with a recursive preorder that writes each node's value plus its two subtrees in parentheses, using a marker (such as 'x') for null children. This fully captures the structure. Deserialize by parsing that string left to right with a position cursor, rebuilding each node, then its left and right subtrees, recursively.
 
@@ -66,7 +66,7 @@ deserialize(s):
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/serialize-and-deserialize-binary-tree.py`](../../python/leetcode/LeetCodeCheat/serialize-and-deserialize-binary-tree.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/serialize-and-deserialize-binary-tree.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

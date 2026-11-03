@@ -16,7 +16,7 @@ sign. If the reversed value falls outside the 32-bit signed range
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Guard against 32-bit overflow by checking after each step that dividing the accu
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Pull digits off the number one at a time with mod/divide by 10. Rebuild the reversed value by multiplying the accumulator by 10 and adding each digit. Handle the sign separately by working on the absolute value. The one subtlety is 32-bit overflow: after each step check that dividing the accumulator back by the current power of ten still yields the digit you added. If it doesn't, the value overflowed, so return 0.
 
@@ -64,7 +64,7 @@ return sign * result
 
 **Complexity** — time O(log10(x)) — number of digits; space O(log10(x))
 
-Full Python solution: [`LeetCodeCheat/reverse-integer.py`](../../python/leetcode/LeetCodeCheat/reverse-integer.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/reverse-integer.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

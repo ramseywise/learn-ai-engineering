@@ -5,14 +5,14 @@ Semantic search over 50 real-estate listings: FastAPI + sentence-transformers
 boosted up the ranking. **It runs and returns results without errors.**
 
 ```bash
-cd drills/coding/scratch && cp -r ../problems/property-search/src property-search && cd property-search
+cd programming/drills/coding/scratch && cp -r ../problems/property-search/src property-search && cd property-search
 python -m venv .venv && source .venv/bin/activate
 pip install fastapi uvicorn sentence-transformers faiss-cpu numpy pydantic
 uvicorn main:app --reload        # then open http://localhost:8000
 ```
 
 First run downloads the embedding model (~90 MB). `requirements.txt` also lists `openai`,
-which the code never imports — skip it. Work in `drills/coding/scratch/`; don't edit `src/`.
+which the code never imports — skip it. Work in `programming/drills/coding/scratch/`; don't edit `src/`.
 
 Answer as if an interviewer is reading. Name the actual functions, variables and lines.
 Trace execution in order. Explain *why*, not just *what*.

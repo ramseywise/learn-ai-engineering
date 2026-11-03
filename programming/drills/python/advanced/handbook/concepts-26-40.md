@@ -63,9 +63,7 @@ Important note:
 **Related Examples**
 
 - [`27.serialization_deserialization.py`](../examples/27.serialization_deserialization.py)
-- [`example.bin`](../examples/example.bin)
-- [`handler.pkl`](../examples/handler.pkl)
-- [`person.pkl`](../examples/person.pkl)
+- `example.bin`, `handler.pkl` and `person.pkl`: written by the script when you run it, not kept in the repo
 
 ---
 

@@ -1,7 +1,7 @@
 # rate-limiter — env1 drill (45 min, no AI)
 
 Object-oriented design under time. No starter code — you design the interface as well as
-the implementation. Work in `drills/coding/scratch/`.
+the implementation. Work in `programming/drills/coding/scratch/`.
 
 This is the format `dsa/object_oriented_design/` has zero coverage of, and it is a common
 45-minute assessment shape.

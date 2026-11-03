@@ -6,7 +6,7 @@ Session token issuing and verification, backed by SQLite. **All 6 tests pass.**
 cd src && python3 -m unittest test_tokens -v
 ```
 
-Work in `drills/coding/scratch/` — copy `src/`, don't edit it in place.
+Work in `programming/drills/coding/scratch/` — copy `src/`, don't edit it in place.
 
 Answer as if an interviewer is reading. Be specific: name actual methods, variables and
 data structures. Trace execution in order. Explain *why*, not just *what*.

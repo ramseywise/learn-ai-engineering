@@ -15,7 +15,7 @@ BST containing `1, 2, 3, 4` with `k = 1` -> `1`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This reaches O(h + k) time using O(h) space, with no need to build the full sort
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 An in-order traversal of a BST visits values in ascending order, so the k-th node visited is the k-th smallest. Traverse in-order with a counter and stop as soon as the counter reaches k, returning that node's value without visiting the rest of the tree.
 
@@ -63,7 +63,7 @@ return answer
 
 **Complexity** — time O(h + k); space O(h)
 
-Full Python solution: [`LeetCodeCheat/kth-smallest-element-in-a-bst.py`](../../python/leetcode/LeetCodeCheat/kth-smallest-element-in-a-bst.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/kth-smallest-element-in-a-bst.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

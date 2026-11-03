@@ -4,7 +4,7 @@ One file per question. Each carries the prompt as a module docstring, the
 clarifications the interviewer would give if asked, signatures stubbed with
 `NotImplementedError`, and a single happy-path smoke assert.
 
-**Copy, don't edit.** Copy a starter to `drills/coding/scratch/<qid>-<date>.py` (gitignored) so
+**Copy, don't edit.** Copy a starter to `programming/drills/coding/scratch/<qid>-<date>.py` (gitignored) so
 these stay pristine across attempts.
 
 Every file except `debug-dedup.py` fails at `NotImplementedError` on a fresh run.
@@ -26,7 +26,7 @@ hand you the mark.
 | `agentic-rag-offline.py` | `agentic-rag-offline` | Q6b | practical | 45 min |
 
 Question numbers refer to `questions.md` in
-`interviewing/rounds/coding-challenge/`. That
+`practice/interviewing/rounds/coding-challenge/`. That
 folder's `examples/` holds full worked solutions — **do not open it before an
 attempt finishes.**
 

@@ -17,7 +17,7 @@ and put count as "using" a key.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Use dummy head and tail sentinels to avoid null checks. Evict the node before th
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Combine a hash map with a doubly linked list. The hash map maps key -> node, giving O(1) lookup of any entry. The doubly linked list stores nodes in recency order: most-recently-used near the head, least-recently-used near the tail. A doubly linked list (not singly) is required so any node can be unlinked in O(1), because you have direct pointers to its neighbors. On every get and put, move the touched node to the head to mark it most-recently used. On put past capacity, evict the tail node (LRU) and delete its key from the map. Use dummy head and tail sentinel nodes so insertion and removal never need null checks.
 
@@ -84,7 +84,7 @@ put(k, v):
 
 **Complexity** — time O(1) average per get and put (hash map lookup + constant linked-list pointer updates); space O(capacity) for the map plus one node per stored entry
 
-Full Python solution: [`LeetCodeCheat/lru-cache.py`](../../python/leetcode/LeetCodeCheat/lru-cache.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/lru-cache.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

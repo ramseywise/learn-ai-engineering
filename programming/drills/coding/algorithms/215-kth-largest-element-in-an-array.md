@@ -16,7 +16,7 @@ not the `k`-th distinct value (duplicates count). Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Shuffle the array first to avoid worst-case behavior, giving O(n) average time v
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Quickselect works because the k-th largest element sits at index n-k in sorted order. Partition the array (Hoare partition) around a pivot and recurse only into the side that contains that target index, ignoring the other half. This averages O(n). A random shuffle first guards against adversarial worst-case inputs.
 
@@ -62,7 +62,7 @@ shuffle(a); select(0, n-1); return a[target]
 
 **Complexity** — time O(n) average, O(n^2) worst; space O(1)
 
-Full Python solution: [`LeetCodeCheat/kth-largest-element-in-an-array.py`](../../python/leetcode/LeetCodeCheat/kth-largest-element-in-an-array.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/kth-largest-element-in-an-array.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

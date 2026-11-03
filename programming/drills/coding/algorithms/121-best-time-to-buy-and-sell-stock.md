@@ -16,7 +16,7 @@ day to buy and a later day to sell to maximize profit. Return the maximum profit
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A single linear pass keeping the running minimum and best profit so far solves i
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 One buy and one sell, and the buy must come before the sell. Sweep left to right tracking the minimum price seen so far. The best profit ending on any given day is that day's price minus the running minimum. Keep the maximum such profit over all days.
 
@@ -60,7 +60,7 @@ return best
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/best-time-to-buy-and-sell-stock.py`](../../python/leetcode/LeetCodeCheat/best-time-to-buy-and-sell-stock.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/best-time-to-buy-and-sell-stock.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

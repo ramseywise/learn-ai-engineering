@@ -15,7 +15,7 @@ You must modify the matrix in place, without allocating another 2D array. Exampl
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ This composition of transpose and row-reversal rotates the matrix in O(n^2) time
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Rotating an n x n matrix 90 degrees clockwise in place is transpose-then-reverse. First transpose the matrix (swap `m[i][j]` with `m[j][i]`, touching only one triangle so each pair swaps once), then reverse each row. The composition of those two O(n^2) passes is exactly the clockwise rotation, and it needs no extra matrix.
 
@@ -61,7 +61,7 @@ for each row:
 
 **Complexity** — time O(n^2); space O(1)
 
-Full Python solution: [`LeetCodeCheat/rotate-image.py`](../../python/leetcode/LeetCodeCheat/rotate-image.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/rotate-image.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

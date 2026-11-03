@@ -16,7 +16,7 @@ zeros. Example: `nums = [2,3,-2,4]` -> `6` (from `[2,3]`);
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Combine the current element with the previous max and min to get the next max an
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 A DP that tracks both the running maximum and running minimum product ending at each index. Because multiplying by a negative flips largest and smallest, the current minimum can become the maximum. At each step: cur_max = max(A[i], min_prev*A[i], max_prev*A[i]) and cur_min = min of the same three. Return the largest cur_max seen over all indices.
 
@@ -62,7 +62,7 @@ return answer
 
 **Complexity** — time O(n); space O(1)
 
-Full Python solution: [`LeetCodeCheat/maximum-product-subarray.py`](../../python/leetcode/LeetCodeCheat/maximum-product-subarray.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/maximum-product-subarray.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

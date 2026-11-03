@@ -16,7 +16,7 @@ positive. Example: `prices = [3,3,5,0,0,3,1,4]` -> `6`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ This gives O(n^2) directly, and is refinable to O(n) by precomputing best-profit
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 At most two transactions. Split the timeline at every index into a left and a right part, then solve the single-transaction problem (problem 121) independently on each side. Take the split that maximizes the sum of the two best profits. This split approach costs O(n^2), but an O(n) DP refines it by tracking four running states for the two buys and two sells.
 
@@ -60,7 +60,7 @@ return answer
 
 **Complexity** — time O(n^2); space O(1)
 
-Full Python solution: [`LeetCodeCheat/best-time-to-buy-and-sell-stock-iii.py`](../../python/leetcode/LeetCodeCheat/best-time-to-buy-and-sell-stock-iii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/best-time-to-buy-and-sell-stock-iii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

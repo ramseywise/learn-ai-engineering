@@ -17,7 +17,7 @@ at index 0 and `"foobar"` at index 9).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ Restricting attempts to starts whose total span fits, and stopping early at posi
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 All words have the same length, and we want every start index where some permutation of all the words appears back to back. Precompute, for each position i in s, which words match starting at i (a small candidate list per position). Also count how many times each distinct word must be used. Then, for each viable start (one whose total span fits), try to consume the words greedily with backtracking. At the current position pick an unused matching word, decrement its remaining count, jump forward by its length, and recurse until all words are consumed, undoing on failure. Record starts that succeed.
 
@@ -70,7 +70,7 @@ can_consume(pos, matches, counts, remaining):
 
 **Complexity** — time roughly O(n * total) in the good cases; backtracking worst case is higher; space O(n + total)
 
-Full Python solution: [`LeetCodeCheat/substring-with-concatenation-of-all-words.py`](../../python/leetcode/LeetCodeCheat/substring-with-concatenation-of-all-words.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/substring-with-concatenation-of-all-words.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

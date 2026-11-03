@@ -17,7 +17,7 @@ list `[hot,dot,dog,lot,log,cog]` -> `[[hit,hot,dot,dog,cog], [hit,hot,lot,log,co
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -47,7 +47,7 @@ DFS backward from endWord through the recorded parent links to reconstruct all s
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Return every shortest transformation sequence. Bucket words by wildcard patterns that replace one position with '_', so words that differ by one letter share a bucket. This builds an implicit graph of single-letter-change neighbors. Run BFS from beginWord recording, for each word, all predecessors that first reach it at the shortest distance. Then DFS backward from endWord through those predecessor links to reconstruct all shortest paths.
 
@@ -64,7 +64,7 @@ DFS from end back through parents, collecting reversed shortest paths
 
 **Complexity** — time `O(N * L^2)` to build the graph, plus path enumeration; space `O(N * L)`
 
-Full Python solution: [`LeetCodeCheat/word-ladder-ii.py`](../../python/leetcode/LeetCodeCheat/word-ladder-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/word-ladder-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ checked; the board need not be solvable. Return `true` if valid, `false` otherwi
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Checking all rows, columns, and boxes this way takes only O(1) time and space on
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Independently check that no digit repeats within any row, any column, or any 3x3 box. For each of the nine rows scan its cells with a seen-array of size 9 and fail on a repeat. Do the same for each column, then for each of the nine boxes scan its 3x3 cells with a fresh seen-array. Empty cells ('.') are skipped. If none of the checks finds a duplicate, the board is valid.
 
@@ -59,7 +59,7 @@ return true
 
 **Complexity** — time O(1) — fixed 9x9 board (O(n^2) for an n x n board); space O(1)
 
-Full Python solution: [`LeetCodeCheat/valid-sudoku.py`](../../python/leetcode/LeetCodeCheat/valid-sudoku.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/valid-sudoku.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

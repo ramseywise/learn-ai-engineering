@@ -99,7 +99,7 @@ def parse_drill_log(text: str) -> list[dict]:
 
 
 def drill_files(root: Path) -> dict[str, str]:
-    out = subprocess.run(["git", "-C", str(root), "ls-files", "-co", "--exclude-standard", "practice/drills"],
+    out = subprocess.run(["git", "-C", str(root), "ls-files", "-co", "--exclude-standard", "programming/drills"],
                          capture_output=True, text=True)
     return {Path(p).stem: p for p in out.stdout.splitlines() if p.endswith((".md", ".py"))}
 

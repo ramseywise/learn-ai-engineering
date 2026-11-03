@@ -16,7 +16,7 @@ Example: `1 -> 2 -> 3 -> 3 -> 4 -> 4 -> 5` -> `1 -> 2 -> 5`;
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ A single recursive or iterative pass handles this in O(n) time.
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Because the list is sorted, any duplicated value forms a contiguous run. Here we must drop such runs entirely, leaving only values that appear exactly once. Process recursively: if the head's value repeats into the next node, skip the whole run of that value and recurse on the first node past it. Otherwise the head is unique, so keep it and recurse on the rest, linking it to the cleaned tail.
 
@@ -63,7 +63,7 @@ dedup(head):
 
 **Complexity** — time O(n); space O(n) recursion (O(1) if written iteratively)
 
-Full Python solution: [`LeetCodeCheat/remove-duplicates-from-sorted-list-ii.py`](../../python/leetcode/LeetCodeCheat/remove-duplicates-from-sorted-list-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/remove-duplicates-from-sorted-list-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

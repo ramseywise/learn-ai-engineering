@@ -15,7 +15,7 @@ Level 3: make it concurrent. Design each level so the next builds on it.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ For concurrency, share a thread-safe frontier across N workers. The visited set 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 A progressive round (reported at Anthropic): you start with a correct single-threaded crawler and evolve it under new requirements, so the seams matter more than the first version. Model it as a work queue (frontier of URLs to visit) + a visited set for dedup + a fetch/parse/enqueue loop. The most important early decision is URL normalization: strip fragments, resolve relative links against the base, lowercase the host, drop default ports, so the visited set actually dedups. Keep fetch, parse, and the frontier as separate components. That separation is what lets you swap the frontier for a rate-limited one (L2) and the loop for a thread pool (L3) without a rewrite. Clarify scope up front (same-domain only, a max depth, whether to respect robots.txt). Handle errors and timeouts gracefully with backoff. Real pages fail.
 

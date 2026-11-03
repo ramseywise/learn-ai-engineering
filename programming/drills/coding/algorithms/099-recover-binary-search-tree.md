@@ -16,7 +16,7 @@ swapped) becomes `[3,1,null,null,2]`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ Swap their values back in a single O(n) traversal (O(1) extra space is possible 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Two nodes of a BST were swapped, so an in-order traversal is sorted except at the swap points. Collect the nodes in-order. Scan left-to-right for the first place the order breaks (the larger misplaced node), and scan right-to-left for the last break (the smaller misplaced node). Then swap those two nodes' values to restore the tree.
 
@@ -59,7 +59,7 @@ swap nodes[left].val and nodes[right].val
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/recover-binary-search-tree.py`](../../python/leetcode/LeetCodeCheat/recover-binary-search-tree.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/recover-binary-search-tree.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

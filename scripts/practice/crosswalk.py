@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Validate practice/ against the curriculum and generate practice/CROSSWALK.md.
+"""Validate practice/ and programming/drills/ against the curriculum and generate practice/CROSSWALK.md.
 
     python3 scripts/practice/crosswalk.py           # validate, then write CROSSWALK.md
     python3 scripts/practice/crosswalk.py --check   # validate, exit 1 if CROSSWALK.md is stale
 
-Reads only files git would track (`git ls-files -co --exclude-standard practice/`), so anything
-private or uncleared under practice/ is never read, listed or linked. Run from anywhere in the repo.
+Reads only files git would track (`git ls-files -co --exclude-standard` on both roots), so anything
+private or uncleared under them is never read, listed or linked. Run from anywhere in the repo.
 
 Checks, with one line per problem and exit 1 on any:
 - every `units:` entry in guide and drill frontmatter exists, repo-relative, and is not ignored;
 - every relative link in those files resolves, and does not point at an ignored file.
-drills/coding/dsa/ is upstream material, so its links are not checked and it has no units.
+programming/drills/coding/dsa/ is upstream material, so its links are not checked and it has no units.
 
 `units:` accepts an inline list or a YAML block list, of folders or single notes:
     units: [programming/sql, data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md]
 
 RENAME PASSES: `units:` fields and links here use current curriculum folder names. Any scripted
-rename of curriculum folders (data-science is next) must include practice/ in its rewrite, then
+rename of curriculum folders (data-science is next) must include both roots in its rewrite, then
 run this script. A missed rename fails here rather than going stale silently.
 """
 from __future__ import annotations
@@ -30,9 +30,10 @@ from pathlib import Path
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
-PRACTICE = ROOT / "practice"
-OUT = PRACTICE / "CROSSWALK.md"
-SKIP_LINKS = "practice/drills/coding/dsa/"
+ROOTS = ("practice/", "programming/drills/")
+DRILLS = "programming/drills/"
+OUT = ROOT / "practice" / "CROSSWALK.md"
+SKIP_LINKS = "programming/drills/coding/dsa/"
 FENCE = re.compile(r"^\s*```.*?^\s*```", re.S | re.M)
 LINK = re.compile(r"!?\[[^\]\n]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 HEADER = """# Crosswalk: curriculum to practice
@@ -49,7 +50,7 @@ def git_lines(*args: str) -> list[str]:
 
 
 def published() -> list[str]:
-    return sorted(set(git_lines("ls-files", "-co", "--exclude-standard", "practice/")))
+    return sorted(set(git_lines("ls-files", "-co", "--exclude-standard", *ROOTS)))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -124,7 +125,7 @@ def validate(files: dict[str, str], publ: set[str]) -> tuple[list[str], dict[str
             except ValueError:
                 problems.append(f"{rel}: link leaves the repo: {target}")
                 continue
-            if to.startswith("practice/") or to == "practice":
+            if to.startswith(ROOTS) or f"{to}/" in ROOTS:
                 if to not in publ and to not in pub_dirs and to != "practice/CROSSWALK.md":
                     problems.append(f"{rel}: link to unpublished or missing file: {target}")
             elif not abs_path.exists():
@@ -145,6 +146,11 @@ def label(rel: str) -> str:
     return Path(rel).stem
 
 
+def crosswalk_link(rel: str) -> str:
+    """A repo-relative path as CROSSWALK.md, which sits in practice/, links to it."""
+    return rel.removeprefix("practice/") if rel.startswith("practice/") else f"../{rel}"
+
+
 def unit_link(unit: str) -> str:
     target = ROOT / unit
     if target.is_dir() and (target / "README.md").exists():
@@ -159,7 +165,7 @@ def generate(units: dict[str, list[str]]) -> str:
         guide = str(Path(rel).with_name("interview-guide.md"))
         if rel.endswith("/00-overview.md") and guide in units:
             continue
-        kind = "drills" if rel.startswith("practice/drills/") else "guides"
+        kind = "drills" if rel.startswith(DRILLS) else "guides"
         for unit in found:
             table[unit.rstrip("/")][kind].add(rel)
     lines = [HEADER]
@@ -170,7 +176,7 @@ def generate(units: dict[str, list[str]]) -> str:
         lines += [f"## {subject}", "", "| Unit | Guides | Drills |", "|---|---|---|"]
         for unit in sorted(subjects[subject]):
             cells = [
-                ", ".join(f"[{label(r)}]({r.removeprefix('practice/')})" for r in sorted(table[unit][k])) or "-"
+                ", ".join(f"[{label(r)}]({crosswalk_link(r)})" for r in sorted(table[unit][k])) or "-"
                 for k in ("guides", "drills")
             ]
             lines.append(f"| {unit_link(unit)} | {cells[0]} | {cells[1]} |")

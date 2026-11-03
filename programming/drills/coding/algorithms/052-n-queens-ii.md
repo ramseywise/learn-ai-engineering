@@ -15,7 +15,7 @@ diagonal). Only the count is required, not the boards. Example: `n = 4` -> `2`.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Instead of recording boards, increment a counter whenever a placement reaches ro
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Identical backtracking to N-Queens, but we only need the count of solutions, not the boards. Place one queen per row in a free column, mark its column and diagonals as attacked, and recurse on a copy of the mask. When row n is reached, increment a counter instead of reconstructing a board.
 
@@ -61,7 +61,7 @@ solve(row, mask, count):
 
 **Complexity** — time exponential (bounded by n! placements); space O(n^2) per mask plus recursion
 
-Full Python solution: [`LeetCodeCheat/n-queens-ii.py`](../../python/leetcode/LeetCodeCheat/n-queens-ii.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/n-queens-ii.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

@@ -16,7 +16,7 @@ are closed in the correct order. Example: `"()[]{}"` -> `true`; `"(]"` -> `false
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ One linear pass with this stack is valid only if the stack ends up empty at the 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Use a stack and push every opening bracket. On a closing bracket, the stack must be non-empty and its top must be the matching opener. Pop it and check the pair matches. If the stack is empty or the pair is wrong, the string is invalid. After scanning everything, the string is valid only if the stack is empty (no unclosed openers).
 
@@ -63,7 +63,7 @@ return stack is empty
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/valid-parentheses.py`](../../python/leetcode/LeetCodeCheat/valid-parentheses.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/valid-parentheses.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

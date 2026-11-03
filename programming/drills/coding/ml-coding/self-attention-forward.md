@@ -15,7 +15,7 @@ attention output. Then note what changes for multi-head and for causal masking.
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Softmax runs row-wise (each query's weights sum to 1), and you multiply the weig
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Scaled dot-product attention is Attention(Q, K, V) = softmax(Q K^T / sqrt(d_k)) V. Steps for a length-L sequence with model dim d: (1) project the input X (L, d) into queries, keys, and values via learned matrices. That gives Q = X W_q, K = X W_k, V = X W_v, each (L, d_k). (2) Compute raw scores Q K^T, an (L, L) matrix where entry (i, j) is how much token i attends to token j. (3) Scale by 1/sqrt(d_k), because without this the dot products grow with d_k, pushing softmax into a saturated, low-gradient regime. (4) Apply row-wise softmax to get attention weights that sum to 1 per query. (5) Multiply by V to produce the output (L, d_k), a weighted average of value vectors. Multi-head just runs this h times on d/h-sized slices in parallel and concatenates. Causal (decoder) masking adds -inf to the upper triangle of the scores before softmax so a token can't attend to future positions. Reuse a numerically stable softmax (subtract the row max).
 

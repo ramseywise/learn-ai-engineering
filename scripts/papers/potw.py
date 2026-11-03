@@ -367,7 +367,8 @@ def cmd_fetch(args):
     seen = {r["key"]: r for r in rows}
     # Without --since, only pick up weeks at or after the newest one already in the
     # ledger, so the weekly job never backfills by accident.
-    since = args.since or max((r["week_start"] for r in rows), default=None)
+    # Curated and citation-graph rows have no week_start.
+    since = args.since or max((r["week_start"] for r in rows if r.get("week_start")), default=None)
     added = 0
     for year in args.years:
         try:

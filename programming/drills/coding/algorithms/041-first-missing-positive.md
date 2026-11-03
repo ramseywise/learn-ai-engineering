@@ -16,7 +16,7 @@ duplicated. Aim for `O(n)` time and `O(1)` extra space. Example:
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. Write the signature first, then say it out loud.
+Blank file in `programming/drills/coding/scratch/`. Write the signature first, then say it out loud.
 
 ## Tests
 
@@ -46,7 +46,7 @@ One pass to mark, one pass to find the first unset slot gives O(n) time and O(n)
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 The answer is always in the range 1..n+1, so only values in that window matter. Mark which of those are present with a boolean array of size n: for each positive value v <= n, set used[v-1]. Then scan used from the left and return the first index whose slot is unset (i+1). If all are set, the answer is n+1. (This uses O(n) extra space. The classic O(1)-space variant permutes the array in place to put each value v at index v-1, but the boolean-array version is the clearest.)
 
@@ -61,7 +61,7 @@ return n + 1
 
 **Complexity** — time O(n); space O(n)
 
-Full Python solution: [`LeetCodeCheat/first-missing-positive.py`](../../python/leetcode/LeetCodeCheat/first-missing-positive.py) (local only — `drills/python/leetcode/` is a gitignored nested repo).
+Full Python solution: `LeetCodeCheat/first-missing-positive.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 
 </details>
 

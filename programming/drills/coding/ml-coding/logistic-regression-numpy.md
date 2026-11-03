@@ -15,7 +15,7 @@ stops improving. Expose fit(X, y) and predict_proba(X).
 
 ## Starter
 
-Blank file in `drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
+Blank file in `programming/drills/coding/scratch/`. NumPy allowed unless the prompt says otherwise.
 
 ## Tests
 
@@ -45,7 +45,7 @@ Early stopping needs a validation split, so track val loss each epoch, keep the 
 
 ## Solution
 
-<details><summary>Reference approach</summary>
+<details><summary>Solution: reference approach</summary>
 
 Logistic regression models P(y=1|x) = sigmoid(w·x + b). Fit by minimizing the average binary cross-entropy loss plus an L2 penalty (lambda/2)*||w||^2 (don't regularize the bias). The gradient of cross-entropy is beautifully simple. For a single example, dL/dz = (sigmoid(z) - y), so the weight gradient is (p - y)*x + lambda*w and the bias gradient is (p - y). SGD updates the weights after each example (or small minibatch), shuffling each epoch. Early stopping holds out a validation split and tracks its loss each epoch. It stops when the loss fails to improve for `patience` epochs, restoring the best weights seen. Two numerical details matter: use a numerically stable sigmoid (branch on the sign of z, or use log1p) to avoid exp overflow, and standardize features so the single learning rate works across dimensions.
 
