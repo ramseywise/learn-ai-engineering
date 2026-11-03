@@ -102,6 +102,19 @@ The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 again
 
 **SOMA** is the rubric recipe: **S**pecific questions, an **O**rdinal scale with each level described, and **M**ulti-**A**spect scoring, one judge per dimension. Copilot Chat's split was relevance, truth and completeness. The full recipe, with a worked one-aspect judge from the book's Example 10-1, is in [GA 08/05 — SOMA](../../../generative-ai/08-eval/notes/05-llm-as-judge.md#soma-a-rubric-recipe), the authoritative note on judges.
 
+The shape of one aspect's prompt, in the order that recipe uses:
+
+```text
+<the task, and the one aspect being graded>
+1 = <what the worst level looks like>
+...
+5 = <what the best level looks like>
+
+<the transcript>
+
+Give a thorough analysis, then end with "<Aspect>: X", where X is 1 to 5.
+```
+
 Also:
 - **Rubric before content.** The judge reads once, forward only ([01](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)), so put the aspects first, then the example.
 - **Scores are relative.** "81% correct" means little alone; "B is judged correct more often than A" is the valid claim.

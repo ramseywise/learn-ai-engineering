@@ -2,6 +2,7 @@
 origin: synthesis  # was: own lab on open data (UCI Default of Credit Card Clients, CC BY 4.0) and simulated targets and queries, organised around Gneiting's point on scoring functions
 sources:
   - ../practice/metric_map.py
+  - ../practice/rare_class_quotas.py
   - https://arxiv.org/abs/0912.0902
   - https://doi.org/10.1186/s12864-019-6413-7
   - https://doi.org/10.1371/journal.pone.0118432
@@ -149,6 +150,47 @@ natural    rows  6000  rate 0.221  ROC-AUC 0.766  PR-AUC 0.535  balanced 0.694  
 
 ROC-AUC moves by a little, and only because the 3% subset keeps a random 145 of the test set's defaulters. PR-AUC falls from 0.535 to 0.167, and this is the honest drop: precision depends on the base rate. Read PR-AUC against its baseline, which is the base rate itself (0.221 and 0.030 here). Balanced accuracy stays put, as its formula says it should. MCC halves with the same model and threshold, which is the contradiction with "unaffected". Neither is wrong to do this: they answer different questions. If the deployed base rate differs from your test set, ROC and balanced accuracy tell you about the model and PR-AUC tells you what the user will see.
 
+### Sizing a benchmark when a class is rare
+
+The base rate also decides how to build a test set. Say a document classifier sees five classes, and safety sheets are 0.5% of traffic. You can afford 1,000 labelled rows. Draw them in the production mix and you get about 5 safety sheets, so you learn almost nothing about the class most likely to hurt someone. Give each class an equal **quota** instead, and the headline is now wrong unless you weight it back. Here both designs are drawn 20,000 times from a made-up mix where the truth is known: invoices are 70% of traffic at 97% accuracy, delivery notes 20% at 92%, certificates 8% at 85%, drawings 1.5% at 70% and safety sheets 0.5% at 50% (these tables come from [`practice/rare_class_quotas.py`](../practice/rare_class_quotas.py), the rest of the chapter's from `metric_map.py`):
+
+```text
+true production accuracy 0.944, benchmark of 1000 labelled rows, 20,000 draws
+
+--- production mix, per class                --- equal quota, per class
+                  rows  sd_of_accuracy                         rows  sd_of_accuracy
+invoice        699.844           0.006       invoice          200.0           0.012
+delivery note  200.066           0.019       delivery note    200.0           0.019
+certificate     80.087           0.040       certificate      200.0           0.025
+drawing         14.990           0.123       drawing          200.0           0.032
+safety sheet     5.012           0.253       safety sheet     200.0           0.035
+
+--- headline accuracy
+        design                 estimate   mean     sd    bias
+production mix               unweighted 0.9440 0.0072  0.0000
+production mix reweighted to production 0.9441 0.0071  0.0001
+   equal quota               unweighted 0.7880 0.0118 -0.1560
+   equal quota reweighted to production 0.9439 0.0094 -0.0001
+```
+
+Across the 20,000 draws, measured safety-sheet accuracy varies with a standard deviation of 0.253 under the production mix and 0.035 under the quota, about seven times less. That spread is the estimate's standard error. The quota costs little: the reweighted headline's standard deviation rises from 0.0071 to 0.0094.
+
+Left unweighted, the same benchmark reports 78.8% for a system that's 94.4% accurate, because an equal quota counts each class as a fifth of traffic. To reweight, measure accuracy per class, multiply each by that class's production share and add them up: $0.70 \times 0.97 + 0.20 \times 0.92 + 0.08 \times 0.85 + 0.015 \times 0.70 + 0.005 \times 0.50 = 0.944$. Report each class's accuracy on its own, then the reweighted headline. Equal quotas aren't special: you can spend rows wherever a wrong answer costs most.
+
+To size a quota, start from the margin you need and [turn the interval round](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#power-and-sample-size-the-estimation-view). Set the half-width $1.96\sqrt{p(1-p)/n}$ equal to $m$ and you get $n = 1.96^2\,p(1-p)/m^2$ rows at accuracy $p$, with $m = 0.05$ for ±5 points:
+
+```text
+               +/-10 points  +/-5 points  +/-3 points
+invoice                  12           45          125
+safety sheet             97          385         1068
+```
+
+$p(1-p)$ peaks at $p = 0.5$, so a class near 50% is the expensive one. You don't know $p$ before you measure it, so plan with 0.5 unless you have an earlier estimate. The formula is the Wald interval, so it [fails near 0 and 1](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson). Twelve invoices at 97% will usually show no errors at all, so don't trust the small numbers in the top row.
+
+The 200-row quota above gives a safety sheet about ±7 points ($1.96 \times 0.035$). Drawing at random, the roughly 100 safety sheets of the ±10 column would take $100 / 0.005 = 20{,}000$ rows. When a class shows no errors in $n$ rows, the [rule of three](10-imbalance-errors-and-drift.md#significance-power-and-what-a-rare-event-needs) bounds its error rate at about $3/n$: zero errors in 100 rows still allows 3%.
+
+The headline belongs to one mix, and the per-class accuracies don't. When the mix moves, reweight with the new shares and no new labels, as long as accuracy within each class has held.
+
 ## Counts
 
 Deviance is the count row's version of squared error: how much worse the model's log likelihood is than a model that fits each row exactly. The Poisson form is $\tfrac{2}{n}\sum_i\big[y_i\log(y_i/\hat\mu_i) - (y_i - \hat\mu_i)\big]$, and `mean_poisson_deviance` computes it. Dispersion is the Pearson statistic per degree of freedom, $\sum_i (y_i-\hat\mu_i)^2/\hat\mu_i\,/(n-p)$, and it should be near 1 if the Poisson's variance assumption holds. On simulated counts with extra variance (one real predictor, one column of noise, a gamma multiplier, seed 0):
@@ -232,6 +274,7 @@ Each later note has its own version. [GA 08/07](../../../generative-ai/08-eval/n
 - **Comparing PR-AUC across different base rates.** The drop from 0.535 to 0.167 was the same model.
 - **Reporting MRR when the task needs several documents.** It can't see anything past the first hit.
 - **Mixing NDCG definitions.** Gain, discount and cut-off all vary. State them, and compare only like with like.
+- **Reporting an oversampled benchmark's raw score as the headline.** Equal quotas reported 78.8% for a system that was 94.4% accurate. Weight each class back to its production share.
 - **Tuning against the metric you report.** The threshold table above was chosen on validation and scored on test. Choosing and scoring on one set flatters every row.
 
 ## Try it
@@ -276,6 +319,8 @@ The broad ranker's NDCG@10 stays well ahead at every lift, so MRR flips and NDCG
 | What does dispersion near 2 mean? | Variance about twice what the Poisson assumes, so the standard errors are too small. Consider negative binomial. |
 | MRR or NDCG? | MRR when the first good result ends the task, NDCG when several matter or relevance is graded. They can rank systems differently. |
 | How are retrieval metrics related to the confusion matrix? | P and R at k are one table with k as threshold. TN is the rest of the corpus. MRR and NDCG weight position, so they summarise across cut-offs. |
+| How do you test a class that's 0.5% of traffic? | Give it its own quota, sized from the margin you need, and report it separately. Then reweight per-class scores to the production mix for the headline. |
+| What does zero errors in 100 rows prove? | Not zero. The 95% upper bound on the error rate is about $3/n$, so 3%. |
 | What baseline for each target? | Mean, base rate, constant rate, popularity, permuted control, seasonal naive. |
 
 ## Next

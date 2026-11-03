@@ -3,6 +3,7 @@ origin: synthesis  # was: own lab on generated invoices and open data (UCI Defau
 sources:
   - ../practice/review_queue.py
   - ../practice/invoices.py
+  - ../practice/tenant_thresholds.py
   - https://doi.org/10.1109/TIT.1970.1054406
   - https://jmlr.org/papers/v9/bartlett08a.html
   - https://arxiv.org/abs/1705.08500
@@ -193,6 +194,52 @@ Class weights keep the ranking, with an AUC of 0.855 against 0.857, and destroy 
 
 Two details are worth keeping. The region that matters is the tail, around 0.027, and a calibration check averaged over all scores can hide trouble there, so check near the thresholds. And isotonic regression on 2,000 invoices, which hold about 120 problems, predicts 0.027 where the truth is 0.031. It costs 3.406 against Platt's 3.364 on the same rows, for the reason in [DS 01/10](10-imbalance-errors-and-drift.md#calibration-the-bridge-from-score-to-price): it needs more events than this.
 
+## When customers differ
+
+Now suppose the router serves many customers, companies that each send it their own invoices, on one shared score, and their problem rates differ. A score of 2% may mean 1% at one customer and 5% at another, so one set of thresholds pays too much for some and reviews too much for others. A threshold per customer sounds like the fix, but most customers have few labels. Twenty rows may hold no problem at all, and a fit on those rows says this customer never has one, so pay everything.
+
+The tool is **partial pooling**, from [DA 04/07](../../../data-analytics/04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#three-ways-to-estimate-one-number-per-group): start each customer at the shared answer, and let its own labels move it only as far as they can justify. Correct each customer with one number, an offset $\delta_k$ added to the score's log-odds. That's the Platt fit from the last section with the slope held at one. Then apply the same price thresholds to the corrected probability.
+
+Estimate $\hat\delta_k$ from that customer's labels, with its variance $v_k$ from the fit. Estimate $\tau^2$, how much customers really differ, across all of them by moments: each customer's $\hat\delta_k^2 - v_k$ estimates it, so take their average weighted by $1/v_k$, and floor it at zero. Then shrink:
+
+$$\tilde\delta_k = \hat\delta_k \cdot \frac{\tau^2}{\tau^2 + v_k}$$
+
+It's the weight from DA 04/07, with $v_k$ in the place of $\sigma^2/n$. If customers don't really differ, $\tau^2$ comes out near zero and everyone gets the global answer. With offsets spread at 1.0, $\tau^2$ came out at 0.958. A customer with 5,000 labels has a $v_k$ near 0.003 and keeps almost all its own offset. A customer with 20 labels has a median $v_k$ of 0.628 and keeps about 60% of it. At a rate near 7%, 19% to 31% of the 20-label customers here have no problem in their labels, and then no finite offset fits. For those, the pooled fit aims at half a problem instead of none, and leaves the customer out of the $\tau^2$ estimate. Its $v_k$ is about 2.1, so it keeps about 31% of an offset that says "fewer problems than average": a mean of -0.321, against -0.115 for customers with one problem. Zero problems reads as safer than one.
+
+Here's that on 40 generated customers, eight at each of 20, 50, 200, 1,000 and 5,000 labels, over 20 seeds, at this chapter's prices, from [`practice/tenant_thresholds.py`](../practice/tenant_thresholds.py). The lab draws scores at random, with a mean near 7%, and a customer's true log-odds are its score plus its offset, so with `sd_true` at 0 the score is the truth and the global regret of 0.000 is by construction. Labels are a random sample of each customer's rows, and $\tau^2$ always has the large customers in its estimate, so a book of only small customers is untested.
+
+Regret is the extra euros per invoice above routing on the true probability. `sd_true` is how far offsets really spread, in log-odds. The opening example's 2% that is really 5% is an offset of about 0.95. At zero spread the table omits 50 and 1,000 labels.
+
+```text
+method          one global threshold  each customer alone  alone, global if no fit  partial pooling
+sd_true labels
+0.0     20                     0.000                1.429                    0.112            0.000
+        200                    0.000                0.043                    0.043            0.000
+        5000                   0.000                0.001                    0.001            0.000
+0.4     20                     0.056                1.883                    0.146            0.048
+        50                     0.063                0.413                    0.176            0.044
+        200                    0.052                0.044                    0.044            0.021
+        1000                   0.069                0.008                    0.008            0.007
+        5000                   0.057                0.001                    0.001            0.001
+1.0     20                     0.387                1.278                    0.250            0.166
+        50                     0.361                0.283                    0.190            0.122
+        200                    0.539                0.043                    0.057            0.039
+        1000                   0.437                0.009                    0.009            0.009
+        5000                   0.378                0.002                    0.002            0.002
+
+mean over all customer sizes, equal weight per customer
+sd_true
+0.0                            0.000                0.357                    0.076            0.000
+0.4                            0.059                0.470                    0.075            0.024
+1.0                            0.421                0.323                    0.102            0.068
+```
+
+The second column is the fit taken literally, and its 20-label regret, up to 1.883 euros per invoice, comes mostly from one rule: no problem in the labels, so pay everything. The third column sends those customers to the global answer, and that alone cuts 1.278 to 0.250 at wide spread, which beats the global threshold's 0.387. So a per-customer threshold needs a rule for the empty case, and it still loses to pooling.
+
+One global threshold uses no labels, so it costs about 0.4 at any size when customers truly differ. Its column should be flat, and its moves, 0.361 to 0.539 at `sd_true` 1.0, are the noise in this table. Partial pooling is at or tied for the best in every row. Its closest call, 0.039 against 0.043 at 200 labels with wide spread, is within that noise: pooling lost 5 of the 20 seeds.
+
+Four limits. We generated exactly the difference the method assumes, a shift in log-odds. If a customer's score also ranks differently, one offset can't repair it, so compare its AUC on audited labels with the global AUC. The lab doesn't run that check. Shrinking to zero also assumes the shared score is right on average across customers. If it isn't, recalibrate it first, which we didn't test. The offset stays only as good as its labels. A live queue labels only the invoices it was sent, so [audit a random sample](14-learning-from-corrections.md#audit-a-random-sample) for small customers. And log which offset and thresholds decided each case: a customer asking why an invoice was paid needs the values in force that day.
+
 ## When calibration drifts
 
 Freeze the model, then change the world in three ways, using the terms from [DS 01/10](10-imbalance-errors-and-drift.md#drift-when-the-world-moves). `score_psi` is the population stability index of the scores against validation, and needs no labels. `recal` refits Platt on 10,000 fresh labelled invoices.
@@ -333,6 +380,7 @@ And the win depends on the person. The assumed analyst is better than the model,
 - **Picking the largest share that looks safe on validation.** It broke its target up to 69% of the time. Use a bound, and count the labels the bound needs.
 - **Reading "90% coverage" as 90% of the cases you care about.** Marginal coverage of problems was 3.4%.
 - **Carrying a certificate across a shift.** The 2% guarantee became 3.77% under the new fraud type.
+- **Fitting a threshold per customer on a handful of labels.** With no problem in the labels the fit pays everything, which cost up to 1.883 euros per invoice at 20 labels. Shrink each customer towards the shared answer.
 - **Setting one error target when costs vary.** Thresholds per invoice raised the error rate on paid invoices and cut the money lost.
 
 ## Try it
@@ -371,6 +419,7 @@ And the win depends on the person. The assumed analyst is better than the model,
 | What does SGR give you? | The largest coverage with a binomial bound on selective risk at chosen confidence, for any score that ranks. It needs many labels when the target sits close to the error on the safest cases. |
 | Marginal vs class-conditional conformal? | Marginal averages over everyone: 90% coverage covered 3.4% of problems. Class-conditional calibrates per class and holds for any scorer, given exchangeability. |
 | Is conformal a good router? | Not for binary decisions with known costs. It's two thresholds picked by coverage, so it can't beat pricing. |
+| One threshold or one per customer? | Neither. Partially pool: shrink each customer's log-odds offset by $\tau^2/(\tau^2 + v_k)$, so its labels move it only as far as they justify. |
 | How do results carry over? | The method carries over, the numbers don't. On credit the same policy automated 24%, and a weaker analyst cut the saving from 93.58 to 17.94. |
 
 ## Next

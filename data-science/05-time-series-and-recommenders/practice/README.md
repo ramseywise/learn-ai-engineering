@@ -13,6 +13,9 @@ Run everything from the pillar folder, `data-science/05-time-series-and-recommen
 | [`04_matching_tryit.py`](04_matching_tryit.py) | The measured answers to that chapter's Try it. `uv run 04_matching_tryit.py`, from `practice/` | A few minutes | `numpy pandas scikit-learn lightgbm` |
 | [`04_part_pairs_lab.py`](04_part_pairs_lab.py) | The numbers in that chapter's sections on splitting pairs and on similar versus interchangeable, including its fourth Try it. `uv run 04_part_pairs_lab.py`, from `practice/` | About two minutes | `numpy pandas scipy scikit-learn lightgbm` |
 | [`parts_catalogue.py`](parts_catalogue.py) | Generated parts catalogue with known records, parts and specs, candidate pairs and a rule-based extractor, imported by that lab | | |
+| [`05_similarity_lab.py`](05_similarity_lab.py) | Every number in [Learning a similarity function](../notes/05-learning-a-similarity-function.md): frozen against tuned, the pair curve, mining arms, a held-out family. Downloads about 90 MB on first use. Run from `practice/` with `uv run 05_similarity_lab.py` | 15 to 25 minutes on an Apple M4 Pro GPU, several times slower on CPU | Declared in the file |
+| [`05_similarity_tryit.py`](05_similarity_tryit.py) | The same note's temperature exercise | About four minutes on the same GPU | Declared in the file |
+| [`similarity_train.py`](similarity_train.py) | The training loop both of those import, not run on its own | n/a | Via those scripts |
 | [`matching.py`](matching.py) | Ledger generator, blocking, pair features and ranking metrics, imported by those two | | |
 | [`movielens.py`](movielens.py) | Shared MovieLens loader, split, metric and EASE, imported by the two recommender labs | | |
 

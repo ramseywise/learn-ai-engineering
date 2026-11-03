@@ -267,6 +267,8 @@ The March retrain was trained on an unchanged world and gets 3.054 against the c
 
 Note the limits of this gate. A single metric on a single holdout does not catch a model that wins on average and fails badly on one slice, and the offline metric may not move the thing you care about: [Paleyes, Urma and Lawrence's survey (ACM Computing Surveys, 2022)](https://arxiv.org/abs/2011.09926) reports Booking.com's experience across 150 models that offline gains did not translate directly to business value. So the gate decides what is allowed to proceed to a [staged rollout](03-batch-and-online-serving.md#rolling-out-a-new-model), not what users get.
 
+A classifier's gate needs the same discipline as an LLM's: score both models on the same rows, set a floor for the never-events, and treat a small win as noise until a paired test says otherwise. [Evals in CI](../../../generative-ai/08-eval/notes/10-evals-in-ci.md#the-regression-gate) builds that gate, so reuse it and change only the metric.
+
 Paleyes also cites work on update compatibility that deserves a thought here: a more accurate update can still hurt when people have learned how the old model behaves, as Bansal and colleagues showed for human and AI teams. A new champion is not automatically a better colleague.
 
 ## Rollback, and why the registry labels but does not deploy
@@ -301,6 +303,8 @@ The course's services load by `RUN_ID` from S3, which pins an exact artifact and
 | Alias | `models:/taxi-duration@champion` | Moving the alias, then a restart or reload | Promotion is a deliberate registry action | What is running depends on when it started, so log the resolved version |
 
 Whichever you use, return the version with each prediction, as the [serving chapter](03-batch-and-online-serving.md) does. Without it, nobody can tie a bad prediction back to a model.
+
+One service can also serve many customers with one model and [a different offset or threshold for each](../../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md#when-customers-differ). Then the version alone doesn't say what decided a case. Version those per-customer values too, and log them with each prediction, since rolling back the model without them changes what they mean.
 
 ## Choosing the run
 

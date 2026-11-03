@@ -69,6 +69,7 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 | [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Optional background: backprop, which [GA 09/01](../09-llms-from-scratch/notes/01-micrograd.md) also builds from scratch |
 | [DS 02/02 Optimisation and regularisation](../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md) | Optional background: AdamW and the learning-rate sweep, which [pretraining](notes/06-pretraining-data-and-objectives.md) uses |
 | [DS 02/05 Sequence models](../../data-science/02-deep-learning/notes/05-sequence-models.md) | Optional background: the recurrent networks attention grew out of |
+| [DS 02/05b Transformer encoders](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md) | Optional background: the encoder as a model you choose, with masks and position measured |
 
 **Feeds into**
 

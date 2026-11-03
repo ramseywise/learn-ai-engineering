@@ -535,4 +535,4 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
 ## Next
 
-[Neural text models](06-neural-text-models.md): the same layers on real text, from tokens to a classifier and pretrained embeddings.
+[Transformer encoders](05b-transformer-encoders.md): attention without the recurrence, as a model you choose and train. Then [neural text models](06-neural-text-models.md): the same layers on real text.

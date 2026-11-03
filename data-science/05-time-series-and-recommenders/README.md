@@ -4,7 +4,7 @@
 
 ## What it is
 
-Time series ML turns a history into a forecast using feature tables, gradient boosting and sequence models, tested with backtests. Recommender systems learn preferences from interaction logs using matrix factorisation, linear item models and two-tower networks, and are tested on full-catalogue ranking, counterfactual estimates and A/B tests. Entity matching applies the same retrieve-then-rank shape to joining records with no shared key, using blocking and learning to rank.
+Time series ML turns a history into a forecast using feature tables, gradient boosting and sequence models, tested with backtests. Recommender systems learn preferences from interaction logs using matrix factorisation, linear item models and two-tower networks, and are tested on full-catalogue ranking, counterfactual estimates and A/B tests. Entity matching applies the same retrieve-then-rank shape to joining records with no shared key, using blocking and learning to rank, and an encoder tuned on match labels supplies its candidates.
 
 ## Why it matters
 
@@ -22,6 +22,7 @@ An operator needs tomorrow's bike demand by midnight. A copy of last week is the
 | 2 | [Collaborative filtering and matrix factorisation](notes/02-collaborative-filtering-and-matrix-factorisation.md) | Why can the most accurate rating predictor make the worst list? |
 | 3 | [Two-tower retrieval and evaluation](notes/03-two-tower-and-evaluation.md) | How do you serve millions of items and new items, and how do you know it works? |
 | 4 | [Entity matching and learning to rank](notes/04-entity-matching-and-learning-to-rank.md) | Which record does this one match, if any, and how do you train on the order of a list? |
+| 5 | [Learning a similarity function](notes/05-learning-a-similarity-function.md) | When is an encoder worth tuning, how many pairs does it take, and what does hard-negative mining buy? |
 
 Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../02-deep-learning/README.md). Chapter 3 points at [LLM embeddings as features](../03-nlp/notes/07-llm-embeddings-as-features.md) for content features.
 

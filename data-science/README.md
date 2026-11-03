@@ -111,7 +111,7 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 2. Diagnose optimisation and generalisation problems using activations, learning curves, learning-rate sweeps, regularisation, and clean validation data.
 3. Use gap analysis to choose the intervention with the largest plausible gain.
 4. Explain why convolutions, residual connections, and data augmentation suit image tasks ([He et al.](https://arxiv.org/abs/1512.03385)).
-5. Build and diagnose sequence models, including recurrent networks and attention, for ordered inputs ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
+5. Build and diagnose sequence models, including recurrent networks, attention and [transformer encoders](02-deep-learning/notes/05b-transformer-encoders.md), for ordered inputs ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
 6. Compare TF-IDF, frozen encoders, and fine-tuned text models against the same held-out baseline.
 
 **Review and practice:** [deck](02-deep-learning/slides/deep-learning.pptx) · runnable chapter examples in PyTorch · optional historical [Ng coursework](02-deep-learning/practice/ng-deep-learning/) for comparison.
@@ -171,8 +171,9 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 4. Explain how two-tower retrieval handles large catalogues and cold-start content features.
 5. Design offline and online evaluation for ranking systems, including sampled-negative, exposure-bias, and counterfactual-evaluation pitfalls ([Dacrema et al.](https://arxiv.org/abs/1907.06902)).
 6. Match records with no shared key by blocking, scoring and ranking candidates, train pointwise, pairwise and listwise rankers, and score a match by whole records with room to abstain ([Fellegi and Sunter](https://www.irs.gov/pub/irs-soi/1985preprintar28.pdf); [Burges](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf)).
+7. Decide when an encoder is worth tuning, build training pairs from match labels without leaking matches, and measure what hard-negative mining changes ([Musgrave et al.](https://arxiv.org/abs/2003.08505); [Huang et al.](https://arxiv.org/abs/2006.11632)).
 
-**Review and practice:** [deck](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) · labs in [practice](05-time-series-and-recommenders/practice/README.md) · [customer-segments lab](05-time-series-and-recommenders/practice/customer-segments-lab/README.md) · [matching lab](05-time-series-and-recommenders/practice/04_matching_lab.py).
+**Review and practice:** [deck](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) · labs in [practice](05-time-series-and-recommenders/practice/README.md) · [customer-segments lab](05-time-series-and-recommenders/practice/customer-segments-lab/README.md) · [matching lab](05-time-series-and-recommenders/practice/04_matching_lab.py) · [similarity lab](05-time-series-and-recommenders/practice/05_similarity_lab.py).
 
 **Mastery lab:** Complete either a rolling-origin demand forecast or a recommendation-ranking comparison. State the information boundary, include the naive or popularity baseline, show the correct evaluation metric, inspect failure cases, and convert the model choice into an operational decision.
 

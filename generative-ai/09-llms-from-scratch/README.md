@@ -32,6 +32,7 @@ This pillar reads straight after [LLM fundamentals](../01-llm-fundamentals/READM
 |---|---|
 | [DS 01/02 Supervised learning](../../data-science/01-classical-ml/notes/02-supervised-learning.md) | Optional background: logistic regression, the first rung |
 | [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Optional background: backprop and the training loop |
+| [DS 02/05b Transformer encoders](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md) | Optional background: the encoder side, which nanoGPT omits |
 | [DS 02/06 Neural text models](../../data-science/02-deep-learning/notes/06-neural-text-models.md) | Optional background: LSTM and BERT pipelines, compared |
 | [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | Optional background: TF-IDF with a linear model, compared |
 | [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: word2vec, compared |

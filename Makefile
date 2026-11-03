@@ -29,8 +29,8 @@ test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum 
 unit:  ## Run the tests for the repo's scripts
 	@out=$$(python3 -m unittest discover -s scripts -p 'test_*.py' 2>&1); rc=$$?; echo "$$out" | grep -E '^(Ran |OK|FAILED|FAIL:|ERROR:)'; exit $$rc
 
-da06-smoke:  ## Run the DA 06 ch*.py labs headless in a temporary copy, each with a time limit (slow, so not in make test): make da06-smoke [SMOKE_TIMEOUT=600]
-	@python3 scripts/smoke_labs.py data-analytics/06-applied-analyses/practice --pattern 'ch*.py' --timeout $(or $(SMOKE_TIMEOUT),600) $(SMOKE_ARGS)
+da06-smoke:  ## Run the DA 06 chNN labs headless in a temporary copy, each with a time limit (slow, so not in make test): make da06-smoke [SMOKE_TIMEOUT=600]
+	@python3 scripts/smoke_labs.py data-analytics/06-applied-analyses/practice --pattern 'ch[0-9]*.py' --timeout $(or $(SMOKE_TIMEOUT),600) $(SMOKE_ARGS)
 
 chapter-check-all:  ## Hold the five pillared subjects to the chapter standard and programming/ to its frontmatter and path rules; the rest of programming/ and the advisories are reported only
 	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) | tail -1

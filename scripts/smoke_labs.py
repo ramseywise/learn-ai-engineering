@@ -5,7 +5,7 @@ Each lab runs with `uv run --script` in a temporary copy of the folder, so chart
 the working tree. MPLBACKEND=Agg stops matplotlib opening windows.
 
     make da06-smoke
-    python3 scripts/smoke_labs.py data-analytics/06-applied-analyses/practice --pattern 'ch*.py' --timeout 600
+    python3 scripts/smoke_labs.py data-analytics/06-applied-analyses/practice --pattern 'ch[0-9]*.py' --timeout 600
 """
 import argparse
 import os

@@ -107,7 +107,10 @@ Every chapter's code runs on synthetic data with `uv run --with numpy --with pil
 "Try it" sections are the exercises. [`practice/invoice_pipeline.py`](practice/invoice_pipeline.py) runs generated invoices
 through routing, extraction and checks, for [chapter 2](notes/02-document-understanding.md#a-pipeline-you-can-run), and scores
 field F1 and cost per document: `uv run invoice_pipeline.py`, from `practice/`. It takes a few minutes on a laptop CPU, and
-it calls no vision model.
+it calls no vision model. Three more labs run in seconds on synthetic fixtures: [`practice/multimodal_rag_lab.py`](practice/multimodal_rag_lab.py)
+for [chapter 3](notes/03-multimodal-rag.md), [`practice/voice_turn_lab.py`](practice/voice_turn_lab.py) for
+[chapter 4](notes/04-speech-and-voice-agents.md) and [`practice/pair_eval_lab.py`](practice/pair_eval_lab.py) for
+[chapter 7](notes/07-evaluating-multimodal-systems.md).
 
 ---
 

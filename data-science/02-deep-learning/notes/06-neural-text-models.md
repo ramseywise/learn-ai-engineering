@@ -429,7 +429,7 @@ all-mpnet-base-v2  [0.769, 0.841, 0.871, 0.882] 152 s
 
 The columns are 100, 500, 2,000 and 5,000 labels. "Pre-trained encoder" isn't one result. The small MiniLM model, which reads at most 256 word pieces, loses to TF-IDF at every size. The larger mpnet model, which reads 384, wins clearly on few labels (0.769 against 0.719 at 100, 0.841 against 0.800 at 500), and its lead has gone by 5,000 (0.882 against 0.886). So a frozen encoder earns its place when labels are few, as long as you measure the encoder on your own task and keep TF-IDF as the bar.
 
-The other option is to train through the encoder. Fine-tuning a pre-trained DistilBERT ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)) uses the same loop as the rest of this pillar, with a small learning rate and two epochs:
+The other option is to train through the encoder, which is the model from [note 05b](05b-transformer-encoders.md). Fine-tuning a pre-trained DistilBERT ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)) uses the same loop as the rest of this pillar, with a small learning rate and two epochs:
 
 ```python
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -552,7 +552,7 @@ The encoders descend from BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04
 
 ## What attention fixed
 
-An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. [The date model](05-sequence-models.md#seq2seq-and-attention) showed the first problem directly. Attention lets every position look directly at every other position with learned weights, and the Transformer drops recurrence entirely ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762) (Vaswani et al., NeurIPS 2017)). Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md)), language-model training ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md)), and the Transformer itself ([nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)). The LLM-level view continues in [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
+An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. [The date model](05-sequence-models.md#seq2seq-and-attention) showed the first problem directly. Attention lets every position look directly at every other position with learned weights, and the Transformer drops recurrence entirely ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762) (Vaswani et al., NeurIPS 2017)), as [transformer encoders](05b-transformer-encoders.md) showed. Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md)), language-model training ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md)), and the Transformer itself ([nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)). The LLM-level view continues in [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
 
 ## Reading
 

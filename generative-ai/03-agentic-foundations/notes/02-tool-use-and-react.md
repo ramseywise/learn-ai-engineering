@@ -488,7 +488,7 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 2. It has nothing to act on, so it would probably retry the same ID or guess. Each retry re-sends the whole conversation, so a vague error costs tokens and may use up the step cap.
 3. Reject any reply that contains `Observation:`, since only your code may write one. A stop sequence prevents the text from being generated, and native tool calls remove the need to parse at all.
 4. No. This is a knowledge gap, and reasoning over a stale figure gives a tidy wrong answer. Read the delivery time from a tool on each run instead of holding it in the prompt or in memory.
-5. With the helpful error the run ends after 2 calls and 458 characters on its last call. With a bare `Error` the script repeats itself until the step cap: 6 calls, 6 errors, 1,089 characters on the last call, and no answer. The missing result is rejected, because every `tool_use` needs a `tool_result` with its ID in the next message. At `MAX_STEPS = 3` every scenario that took 3 model calls or fewer still ends normally, and both non-stoppers hit the cap sooner.
+5. With the helpful error the run ends after 2 calls and 458 characters on its last call. With a bare `Error` the script repeats itself until the step cap: 6 calls, 6 errors, 1,089 characters on the last call, and no answer. The missing result is rejected, because every `tool_use` needs a `tool_result` with its ID in the next message. At `MAX_STEPS = 3` the six scenarios that stop on their own still finish, and the two that don't hit the cap after 3 calls.
 
 </details>
 

@@ -512,4 +512,4 @@ Doubling the missing rate from 15% to 30% takes the share of interchangeable pai
 
 ## Next
 
-You can now retrieve, rank and evaluate lists. The next step in the course is language modelling proper, and the ranking ideas return as reranking and retrieval metrics: carry on with [the LLM fundamentals pillar in generative AI](../../../generative-ai/01-llm-fundamentals/README.md). [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) puts the bank-line matcher in its place among the other jobs of one invoice system.
+You can now retrieve, rank and evaluate lists. A matcher's candidates are only as good as its encoder, so carry on with [learning a similarity function](05-learning-a-similarity-function.md), which tunes one on these parts. [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md) puts the bank-line matcher in its place among the other jobs of one invoice system.

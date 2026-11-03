@@ -103,7 +103,7 @@ Read in order. Each chapter assumes the Harbour system and the paths from chapte
 
 The lecture deck is [slides/safety-and-security.pptx](slides/safety-and-security.pptx), with a [PDF](slides/safety-and-security.pdf). Its spec is [slides/deck.yaml](slides/deck.yaml). Rebuild it with `make slides PILLAR=ai-engineering/09-safety-and-security`.
 
-This pillar has no practice folder yet. Each chapter has runnable code on synthetic data and a Try it section. To run a block, copy it to a file and use `uv run python file.py`; apart from the commands marked `# illustrative`, which need credentials, the blocks use only the standard library or numpy (add `--with numpy`).
+[`practice/injection_replay.py`](practice/injection_replay.py) replays illustrative injection payloads against a stub agent and reports attack success per defence, for [chapter 2](notes/02-prompt-injection-and-jailbreaks.md). Each chapter has runnable code on synthetic data and a Try it section. To run a block, copy it to a file and use `uv run python file.py`; apart from the commands marked `# illustrative`, which need credentials, the blocks use only the standard library or numpy (add `--with numpy`).
 
 ---
 

@@ -161,7 +161,8 @@ Everything else: [references.md](references.md).
 - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025): ch. 4, 11 → notes 02, 04, 05, 07 (planning taxonomy, autonomy levels, CoT limits, single vs multi-agent).
 
 ### Coursework and practice
-The labs are not copied into this repo. Run them from upstream:
+[`practice/tool_agent.py`](practice/tool_agent.py) runs a tool-calling loop against a scripted stub model, with no key, for
+[chapter 2](notes/02-tool-use-and-react.md). The course labs are not copied into this repo. Run them from upstream:
 
 | Lab | Upstream | Runs |
 |---|---|---|
