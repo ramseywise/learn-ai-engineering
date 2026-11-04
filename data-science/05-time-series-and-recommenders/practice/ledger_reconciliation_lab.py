@@ -4,7 +4,7 @@
 # ///
 """Bank-to-invoice matching that has to survive the accounts, for notes/04: a double-entry ledger with a period close.
 
-Run from this folder (under a minute on a laptop CPU, downloads nothing, needs no key):
+Run from this folder (about 20 seconds on a laptop CPU, downloads nothing, needs no key):
     uv run ledger_reconciliation_lab.py
     uv run ledger_reconciliation_lab.py --gate 0.5            # force the confidence gate
     uv run ledger_reconciliation_lab.py --fx-share 0.3        # more suppliers billing in USD
@@ -552,7 +552,7 @@ def propose(book, row, cands):
     if len(near) == 1:
         return Plan(line, day, amount, [full(near[0])]), None
     if len(near) > 1:
-        return None, "several invoices fit exactly"
+        return None, "several invoices fit within the allowance"
     found = []
     for size in (2, 3, 4):
         for combo in itertools.combinations(open_ids[-14:], size):
@@ -577,6 +577,8 @@ class Result:
     reasons: dict = field(default_factory=dict)
     held_for_confidence: int = 0
     corrected: int = 0
+    would_refuse: int = 0        # naive posts the invariants would have stopped
+    would_refuse_wrong: int = 0  # of those, how many were wrong links
     closes: list = field(default_factory=list)
     snapshot: Book | None = None
     statement_p1: Decimal = ZERO
@@ -708,6 +710,9 @@ def act_on_line(book, res, world, cands, row, policy, gate):
         if posted is None:
             book.to_suspense(line, day, amount, "no candidate")
             return
+        if book.violations(Plan(line, day, amount, [Alloc(posted, amount, book.doc[posted])])):
+            res.would_refuse += 1
+            res.would_refuse_wrong += not is_right(world, line, (posted,))
         book.track(book.ledger.post(day, f"bank line {line} to invoice {posted}",
                                     [Posting(AP, debit=amount, invoice=posted), Posting(BANK, credit=amount)],
                                     "bank", policy, float(c.iloc[0].p), f"bank:{line}"))
@@ -794,6 +799,36 @@ def float_section(person):
     assert differ > 0
 
 
+def show_entry(title, e):
+    print(f"   {title}: entry {e.id}, day {e.day}")
+    for p in e.lines:
+        side = f"Dr {p.debit:>10}" if p.debit > 0 else f"Cr {p.credit:>10}"
+        tag = f"  invoice {p.invoice}" if p.invoice is not None else ""
+        print(f"     {side}  {ACCOUNTS[p.account]}{tag}")
+
+
+def show_worked_entries(book):
+    """One entry of each kind, from the clean books. Each has debits equal to credits."""
+    journal, invoices = book.ledger.journal, book.world.invoices
+    bank = [e for e in journal if e.source == "bank"]
+    show_entry("An invoice with VAT", next(e for e in journal if e.source == "invoice" and len(e.lines) == 3))
+    show_entry("A credit note reverses part of the expense and the VAT", next(e for e in journal if e.source == "credit_note" and len(e.lines) == 3))
+    show_entry("One payment settling several invoices", next(e for e in bank if sum(p.account == AP for p in e.lines) > 1 and not any(p.account == FX_REALISED for p in e.lines)))
+    show_entry("A settlement difference", next(e for e in bank if any(p.account == SETTLEMENT for p in e.lines)))
+    show_entry("A USD invoice paid at a later rate", next(e for e in bank if any(p.account == FX_REALISED for p in e.lines)))
+    eur = {}
+    parts = book.world.lines[book.world.lines.kind == "part"]
+    i = book.world.links[int(parts.iloc[0].line)][0]
+    trail = [e for e in journal if any(p.invoice == i and p.account == AP for p in e.lines)]
+    print(f"   A partial payment: invoice {i} over time, open balance read from the journal")
+    for e in trail:
+        eur[i] = eur.get(i, ZERO) + sum((p.credit - p.debit for p in e.lines if p.invoice == i), ZERO)
+        print(f"     day {e.day:3d} {e.source:8s} open {eur[i]:>10}")
+    assert eur[i] == ZERO
+    realised = sum((p.debit - p.credit for e in journal for p in e.lines if p.account == FX_REALISED and e.source != "close"), ZERO)
+    print(f"   Net realised FX across the whole run, debit is a loss: {realised}. Fully determined by the invented rates\n")
+
+
 # %% The whole lab
 def main():
     ap_ = argparse.ArgumentParser()
@@ -842,6 +877,7 @@ def main():
     fx_net = -person.book.ledger.balances(through=None)[RETAINED]
     print(f"   Generated books: {len(world.invoices)} invoices ({usd} in USD), {len(world.credit_notes)} credit notes, {len(world.lines)} bank lines {kinds}")
     print(f"   A person with every supplier's statement closes both periods; payables end at {person.book.ledger.balances()[AP]}, retained result {fx_net}\n")
+    show_worked_entries(person.book)
     float_section(person.book)
 
     # %% 3. Choosing the gate, on another ledger
@@ -892,7 +928,24 @@ def main():
     print(f"   Passed the gate, then the arithmetic refused: {dict(sorted(gated.reasons.items(), key=lambda kv: -kv[1]))}")
     print(f"   Stopped by the gate itself: {gated.held_for_confidence}")
     print(f"   Wrong links reversed and reposted after the supplier-statement check: {gated.corrected}. This check is a perfect oracle here, a real one isn't")
+    print(f"   Run over the per-line matcher's posts, the invariants would have stopped {per_line.would_refuse} of {per_line.auto - len(world.lines[world.lines.kind == 'none'])}, "
+          f"{per_line.would_refuse_wrong} of them wrong links; the rest were right links with a difference no one booked")
+    print("   In the third column the search only proposes what fits, so the checks above are its second lock and rarely fire.")
     print("   The invariants catch what is impossible. A wrong link that fits the arithmetic still passes, which is why wrong isn't zero.\n")
+    probe_book = gated.snapshot
+    open_eur = sorted(i for i, v in probe_book.eur.items() if v > 0 and world.invoices[i].currency == "EUR")
+    i0 = open_eur[0]
+    other = next(i for i in open_eur if world.invoices[i].supplier != world.invoices[i0].supplier)
+    over = probe_book.eur[i0] + Decimal("1.00")
+    bad_plans = {"overpays": Plan(9_000_001, P1_END, over, [Alloc(i0, over, over)]),
+                 "two suppliers": Plan(9_000_002, P1_END, probe_book.eur[i0] + probe_book.eur[other],
+                                       [Alloc(i0, probe_book.eur[i0], probe_book.eur[i0]), Alloc(other, probe_book.eur[other], probe_book.eur[other])]),
+                 "before issue": Plan(9_000_003, world.invoices[i0].issued - 1, probe_book.eur[i0], [Alloc(i0, probe_book.eur[i0], probe_book.eur[i0])]),
+                 "invoice twice": Plan(9_000_004, P1_END, probe_book.eur[i0] * 2, [Alloc(i0, probe_book.eur[i0], probe_book.eur[i0])] * 2),
+                 "unexplained gap": Plan(9_000_005, P1_END, cents(probe_book.eur[i0] / 2),
+                                         [Alloc(i0, probe_book.eur[i0], probe_book.eur[i0])])}
+    for name, bad in bad_plans.items():
+        assert probe_book.violations(bad), f"the invariants accepted a plan that {name}"
     assert sum(eur_g.values(), ZERO) == ZERO and not any(v < 0 for v in eur_g.values())
     assert gated.right + gated.wrong == gated.auto
     assert tb[0] and tb[1] and tb[2], "the naive books balance: balancing does not mean right"
@@ -943,7 +996,7 @@ def main():
     plants = [("one-sided legacy import of 0.03", plant_one_sided), ("balanced, payables with no invoice", plant_untagged),
               ("balanced, VAT at the wrong rate", plant_wrong_vat), ("balanced, two bank digits swapped", plant_transposition),
               ("balanced, an invoice overpaid", plant_overpaid)]
-    print(f"   {'planted error':38s} {'balances?':>10s}   first reason the close gave")
+    print(f"   {'planted error':38s} {'balances?':>10s}   why the close refused")
     for name, plant in plants:
         b = copy.deepcopy(clean)
         plant(b)
@@ -952,7 +1005,9 @@ def main():
             b.close(day, statement)
             raise AssertionError(f"close accepted: {name}")
         except CloseRefused as refused:
-            print(f"   {name:38s} {'yes' if tb_ok else 'NO':>10s}   {refused.failures[0]}" + (f"  (+{len(refused.failures) - 1} more)" if len(refused.failures) > 1 else ""))
+            print(f"   {name:38s} {'yes' if tb_ok else 'NO':>10s}   {refused.failures[0]}")
+            for extra in refused.failures[1:]:
+                print(f"   {'':38s} {'':>10s}   {extra}")
     b = copy.deepcopy(clean)
     plant_wrong_vat(b)
     inv = b.world.invoices[int(invoice_entry.memo.split()[1])]

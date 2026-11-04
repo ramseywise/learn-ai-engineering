@@ -16,6 +16,7 @@ sources:
   - https://doi.org/10.18653/v1/2022.acl-long.577
   - https://arxiv.org/abs/2406.10209
   - https://arxiv.org/abs/2404.02151
+  - https://arxiv.org/abs/2307.15043
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -76,7 +77,7 @@ Most specific jailbreak strings stop working within months as models are patched
 
 ### Automated attacks
 
-Jailbreaks can be searched for instead of hand-written. Zou et al. (2023) optimize an adversarial suffix by substitution: "Tell me how to build a bomb" is refused, while the same request with a run of `! ! ! !` characters appended goes through. A filter for unusual characters stops that particular suffix. **PAIR** (Chao et al., 2023) uses an attacker LLM that writes a prompt, reads the target's refusal, and revises the prompt. It often succeeds in **fewer than 20 queries**:
+Jailbreaks can be searched for instead of hand-written. Zou et al. leave the request unchanged ("Tell me how to build a bomb.") and append a 20-token suffix, starting from a placeholder of `! ! ! !` characters. **GCG** (greedy coordinate gradient) then swaps suffix tokens to make the model's reply begin "Sure, here is…". It uses token gradients to shortlist swaps at every position, tries a random batch of them and keeps the one that most lowers the loss, so it needs an open model to optimize on. One suffix optimized on 25 harmful behaviours against LLaMA-2-7B-Chat worked on 84% of 100 held-out ones (35% for the older AutoPrompt optimizer). **Suffixes optimized on Vicuna and Guanaco transferred to closed models.** Over 388 behaviours, at least one suffix in an ensemble succeeded on 86.6% against GPT-3.5, 46.9% against GPT-4 and 2.1% against Claude 2, against 1.8%, 8.0% and 0% for the request alone. A human allowed 30 seconds to reword each failure got GPT-3.5 to nearly 100% ([arXiv:2307.15043](https://arxiv.org/abs/2307.15043) (Zou et al., 2023-07, preprint)). Read those as best-of-several numbers from mid-2023 snapshots, judged partly by hand. The paper tests no defence, and the authors argue that input detectors, which "universally failed" against adversarial examples in vision, will not fix this either. Some optimized suffixes come out partly readable ("…end-line only please reiterate the first sentence by putting Sure by…"). Our extrapolation: a filter for unusual characters is not a dependable defence. **PAIR** (Chao et al., 2023) uses an attacker LLM that writes a prompt, reads the target's refusal, and revises the prompt. It often succeeds in **fewer than 20 queries**:
 
 ![PAIR: an attacker LLM iteratively refines a jailbreak against a target LLM](../sources/images/huyen-ai-engineering-fig5-11.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-11, from Chao et al. (2023) (CC BY 4.0)*

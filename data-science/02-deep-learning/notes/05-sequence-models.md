@@ -15,6 +15,7 @@ sources:
   - https://doi.org/10.1126/science.1127647
   - https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf
   - ../practice/autoencoder.py
+  - ../practice/transaction_sequence_lab.py (generated card data)
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -458,6 +459,22 @@ Here's the catch, and the reason the two panels disagree. The best reconstructio
 
 For tabular anomalies, try [an isolation forest or a Gaussian](../../01-classical-ml/notes/05-unsupervised-learning.md#anomaly-detection-ng-ex8-part-1) first, and reach for this when the input is an image or other raw signal. To turn the code into a distribution you can sample from, see [the VAE](../../../data-analytics/04-bayesian-analysis/notes/06-bayesian-machine-learning.md#the-vae).
 
+## Ordered events: make the sequence model earn its place
+
+A GRU reads any ordered events, and a customer's card charges are a common case. Before you train one, ask what hand-built windows already capture. [`transaction_sequence_lab.py`](../practice/transaction_sequence_lab.py) generates charges with a planted fraud pattern: small online tests, then a large charge soon after, with decoys that hold the same charges in another order or further apart. We picked that pattern to favour order, so read this as a fact about this generator. The test days hold 130 frauds at a 0.27% base rate, on a time split, with the GRU reading the last 12 charges.
+
+```text
+boosting on totals, 30-day counts and sums       0.097  [0.083, 0.126]
+boosting on velocity windows and last 3 events   0.855  [0.820, 0.899]
+GRU over the last 12 event embeddings            0.791  [0.746, 0.847]
+the velocity model again, untuned large trees    0.353  [0.275, 0.421]
+GRU with each test window's order scrambled      0.149
+```
+
+These are PR-AUC with 90% bootstrap intervals. Order clearly matters: totals can't see it, and scrambling the windows breaks the GRU. But gaps and the last three events are order written by hand, and they beat the GRU by 0.061 (interval 0.025 to 0.098), ahead on all three generated datasets, narrowly on one. The GRU got one architecture and no search, and the pattern fits in a short window, so this isn't a verdict on GRUs. The last row is the warning: our first boosting settings overfit the few positives and handed the GRU a win it hadn't earned. Compare models that have each had a fair chance.
+
+PR-AUC, the cost rule and PSI are in [DS 01/10](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md), and the lab applies them to events, with late chargebacks and a pattern that changes. There, every model fell below 0.01 while PSI stayed at 0.002 or less, as [concept shift is silent to PSI](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves).
+
 ## Reading
 
 Buduma, *Fundamentals of Deep Learning* ([PDF](../../sources/buduma-fundamentals-of-deep-learning.pdf)), ch. 7 (models for sequence analysis) parallels this chapter, using TensorFlow.
@@ -479,6 +496,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 | Padded batches give worse results | The last "step" for short sequences is padding | `pack_padded_sequence`, or index the true last step |
 | Good loss in training, bad text when sampling | Teacher forcing: the model never saw its own mistakes | Sample while training to check; lower the temperature |
 | Decoder fine for short input, poor for long | Everything squeezed into one vector | Attention |
+| A GRU beats boosting by a wide margin on events | Boosting overfit few positives: large trees scored 0.353 where validation-picked ones scored 0.855 | Tune both on later days before you compare them |
 | An autoencoder with a low error misses anomalies | The code is wide enough to rebuild them too: PCA fell from 0.885 to 0.743 AUC between codes of 8 and 32 | Choose the code size on labelled anomalies, not on reconstruction error |
 
 ## Try it
@@ -515,6 +533,14 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
    </details>
 
+5. Fraud changes pattern on day 300, and chargebacks take a median of 28 days. On day 360 you retrain, once on labels older than 75 days, the rule that kept training clean, and once on everything reported so far. Guess which recovers, then run `uv run transaction_sequence_lab.py` from `practice/` and read the end of section 6.
+
+   <details><summary>Answer</summary>
+
+   Only the second, and only for boosting: 0.528 PR-AUC on days 360 to 420, against 0.006 for the mature-labels rule and 0.030 for the GRU. Mature labels hold none of the new pattern, since it's younger than 75 days, while everything reported holds 61 such frauds. Waiting for clean labels protects you from label noise and blinds you to change. These numbers describe this generator and one run.
+
+   </details>
+
 ## Interview checklist
 
 | Question | Answer |
@@ -531,6 +557,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 | What does an autoencoder's bottleneck do? | Forces it to keep what's regular, as copying won't fit. A linear one spans the same subspace as PCA, so use PCA as the baseline. |
 | What does denoising change? | Corruption replaces the bottleneck as the constraint, so the code can be wide. Corrupt in training only. |
 | Why is reconstruction error a risky anomaly score? | A code wide enough can rebuild the anomalies as well, so the best reconstruction isn't the best detector. |
+| Aggregates or a sequence model on events? | Start with velocity windows and gaps, tuned on later days, and require the sequence model to beat them. Ours beat a GRU on generated card fraud, 0.855 against 0.791 PR-AUC. |
 | What's a word-vector analogy test doing? | Checking that $\text{woman} - \text{man} + \text{king}$ is nearest to queen by cosine, excluding the inputs. |
 
 ## Next

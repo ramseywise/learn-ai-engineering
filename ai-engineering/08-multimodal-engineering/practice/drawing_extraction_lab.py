@@ -601,6 +601,7 @@ def tokens_in_zone(tokens, p1, p2, ppm):
 
 # %% Parsing: from characters to a typed record
 NUM = r"\d*\.\d+|\d+"
+PART_NO = r"[A-Z]{3}-\d{5}-[A-Z]"                            # the format of this drawing office's numbers, assumed known
 
 
 def clean(text):
@@ -633,19 +634,19 @@ def parse_dim(tokens, unit=None, feature=None):
 def parse_title_cell(name, text, out):
     t = text.strip()
     if name == "part_no":
-        m = re.search(r"[A-Z]{2,4}-?\d{5}-?[A-Z0-9]", t.replace(" ", ""))
-        out[name] = m.group() if m else (t or None)
+        m = re.search(PART_NO, t.replace(" ", ""))
+        out[name] = m.group() if m else None
     elif name == "material":
         out[name] = t or None
     elif name == "scale":
         m = re.search(r"\d+\s*:\s*\d+", t)
         out[name] = m.group().replace(" ", "") if m else None
     elif name == "units":
-        m = re.search(r"\b(MM|INCH)\b", t.upper())
-        out[name] = {"MM": "mm", "INCH": "in"}[m.group(1)] if m else None
+        m = re.search(r"MM|INCH", t.upper())
+        out[name] = {"MM": "mm", "INCH": "in"}[m.group()] if m else None
     elif name == "general_tol":
-        m = re.search(NUM, clean(t))
-        out[name] = D(m.group()) if m else None
+        m = re.search(rf"±\s*({NUM})", clean(t)) or re.search(rf"({NUM})", clean(t))
+        out[name] = D(m.group(1)) if m else None
     elif name == "rev":
         m = re.fullmatch(r"\s*([A-Z])\s*", t)
         out[name] = m.group(1) if m else None
@@ -653,16 +654,17 @@ def parse_title_cell(name, text, out):
 
 def best_label(text):
     """Which title cell a read belongs to, by its printed label. Returns the field and what is left of the text."""
-    upper, best, score = text.upper(), None, 0.0
+    upper, best, blocks_of_best = text.upper(), (0, 0.0), None
     for name, label in LABELS.items():
-        window = upper[:len(label) + 2]
-        s = SequenceMatcher(None, window, label).find_longest_match().size / len(label)
-        if s > score:
-            best, score = name, s
-    if score < .6:
+        blocks = [b for b in SequenceMatcher(None, upper[:len(label) + 2], label, autojunk=False).get_matching_blocks() if b.size]
+        matched = sum(b.size for b in blocks)
+        if matched / len(label) >= .6 and (matched, matched / len(label)) > best:
+            best, blocks_of_best = (matched, matched / len(label)), (name, blocks)
+    if not blocks_of_best:
         return None, text
-    m = SequenceMatcher(None, upper, LABELS[best]).find_longest_match()
-    return best, (text[:m.a] + " " + text[m.a + m.size + len(LABELS[best]) - m.size:]).strip(" :")
+    name, blocks = blocks_of_best
+    start, end = max(0, blocks[0].a - blocks[0].b), blocks[-1].a + blocks[-1].size
+    return name, (text[:start] + " " + text[end:]).strip(" :")
 
 
 def parse_title(reads):
@@ -671,6 +673,10 @@ def parse_title(reads):
         name, rest = best_label(text)
         if name in TITLE_FIELDS:
             parse_title_cell(name, rest, out)
+        if "part_no" not in out or out["part_no"] is None:   # the part number has a house format, so it can be known without its label
+            m = re.search(PART_NO, text.replace(" ", ""))
+            if m:
+                out["part_no"] = m.group()
     return out
 
 
@@ -723,7 +729,7 @@ def whole_page(tokens):
 
 def read_regions(layout, tokens=None):
     """Read every region the layout names. tokens=None crops and OCRs each region; otherwise it takes page OCR tokens that fall inside."""
-    units_title, title_reads = {}, []
+    title_reads = []
     for rect in layout.title_cells:
         if tokens is None:
             crop = cell_crop(layout.image, rect, layout.ppm)
@@ -968,14 +974,15 @@ def test_pieces():
     assert (d.nominal, d.plus, d.minus) == (D("25.00"), D("0.10"), D("0.05"))
     assert parse_dim([("25.00", 0, 0, 0), ("+0.10", 9, 3, 0)]).partial, "half a tolerance must be flagged, not completed"
     assert parse_dim([("THRU", 0, 0, 0)]) is None
+    assert parse_title(["PARTNO DRG-16363-A", "REV F", "GENERALTOL ±0.2", "MATERIAL AL 6061-T6"]) == dict(part_no="DRG-16363-A", rev="F", general_tol=D("0.2"), material="AL 6061-T6")
+    assert best_label("AEVC") == ("rev", "C") and best_label("MATERL TI-6AI-4V")[0] == "material"
     r = random.Random(1)
     for _ in range(20):
         drw = make_drawing(r)
         by = {d.feature: d for d in drw["dims"]}
         assert by["seg1"].nominal + by["seg2"].nominal + by["seg3"].nominal == by["len_overall"].nominal
         assert by["hole_dia"].plus is not None
-        got = wrong_fields(perfect_read(drw), drw)
-        assert got == ["frame datums"] * (not drw["fcf_datums"]) or not got or got == [], got
+        assert not wrong_fields(perfect_read(drw), drw), "a perfect read must score perfectly"
     drw = make_drawing(random.Random(2))
     explicit = next(d for d in drw["dims"] if d.plus is not None)
     x = perfect_read(drw)

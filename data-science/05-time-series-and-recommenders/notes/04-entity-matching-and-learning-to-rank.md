@@ -14,13 +14,14 @@ sources:
   - https://arxiv.org/abs/2406.15015
   - https://pmc.ncbi.nlm.nih.gov/articles/PMC3531800/
   - practice/parts_catalogue.py (generated catalogue)
+  - practice/ledger_reconciliation_lab.py (generated books)
 confidence: high
 cleaned: 2026-11-03
 ---
 
 # Entity matching and learning to rank
 
-A bank statement says `BROKADRU TOOLING B` paid 120.41, and somewhere among four thousand invoices is the one that payment settles, if there is one at all. Comparing every line with every invoice means seventeen million pairs, nearly all of them absurd, and a score that looks excellent on those pairs can still link a quarter of the lines wrongly. This chapter works that problem from end to end: cut the candidates, score a pair, rank the candidates for each line, then decide whether to link at all.
+A bank statement says `BROKADRU TOOLING B` paid 120.41, and somewhere among four thousand invoices is the one that payment settles, if there is one at all. Comparing every line with every invoice means seventeen million pairs, nearly all of them absurd, and a score that looks excellent on those pairs can still link a quarter of the lines wrongly. This chapter works through it: cut the candidates, score a pair, rank them per line, then decide whether to link.
 
 **In plain words.** Entity matching means deciding that two records describe the same real thing when no shared ID says so. It's the job of a clerk with a stack of bank lines and a stack of invoices. A good clerk doesn't read every invoice for every line. They pull the few that look about right, put them in order of likelihood, and then either tick the top one or put the line aside for a colleague, because a wrong tick is worse than an honest "not sure". Learning to rank is how you teach a model the middle step, by training on the order of a list and not on each item alone.
 
@@ -58,7 +59,7 @@ RENT STANDING ORDER  615.92   58   none
         PAYROLL RUN  510.50  427   none
 ```
 
-The three counts are close, yet the mapping isn't one-to-one in either direction: a batch line has several invoices and a part-paid invoice has several lines. And a line with no invoice is a correct outcome, so "which invoice?" is the wrong question. The right one is "which invoice, if any?"
+The three counts are close, yet the mapping isn't one-to-one in either direction: a batch line has several invoices and a part-paid invoice has several lines. And a line with no invoice is a correct outcome, so the question is "which invoice, if any?"
 
 ## Blocking: cut the candidates, and accept what that costs
 
@@ -110,7 +111,7 @@ Going from 44 to 78 candidates buys 0.33 of a point of recall. From 157 to 250 b
 
 ## Scoring a pair: Fellegi and Sunter
 
-A pair survives the block. How strong is the evidence? Fellegi and Sunter's answer is still the clearest way to think about it, and it reads naturally if you know the odds form of Bayes' rule.
+A pair survives the block. How strong is the evidence? Fellegi and Sunter's answer is still the clearest, and it reads naturally if you know the odds form of Bayes' rule.
 
 Describe each pair by a **comparison vector**, a list of how well each field agrees. Then ask two questions of each agreement level. How often does it happen among pairs that truly match, $m = P(\text{level} \mid \text{match})$? And among pairs that don't, $u = P(\text{level} \mid \text{non-match})$? An agreement that's common among matches and rare among non-matches is strong evidence. If you assume the fields are independent given match status, each field's evidence adds up on a log scale:
 
@@ -173,15 +174,15 @@ There are three ways to set up training. They differ in what one training exampl
 
 **Pointwise.** One example is one pair, and the target is its label. Fit a classifier and sort by probability. It's the obvious baseline and it never looks at the rest of the list.
 
-**Pairwise.** One example is two candidates from the same line, and the target is which one should come first. RankNet writes the model's belief that candidate $i$ beats $j$ as $P_{ij} = 1/(1 + e^{-\sigma(s_i - s_j)})$, where $s$ is the model's score, and minimises cross-entropy against the truth ([Burges 2010](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf), §2, a Microsoft Research report). That works with any differentiable model. Burges also shows the trick that made it practical: collect the gradient for each document, a value written $\lambda_i$, and training time per query drops from close to quadratic to close to linear in the number of documents.
+**Pairwise.** One example is two candidates from the same line, and the target is which one should come first. RankNet writes the model's belief that candidate $i$ beats $j$ as $P_{ij} = 1/(1 + e^{-\sigma(s_i - s_j)})$, where $s$ is the model's score, and minimises cross-entropy against the truth ([Burges 2010](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf), §2, a Microsoft Research report). Burges also shows the trick that made it practical: collect the gradient for each document, a value written $\lambda_i$, and training time per query drops from close to quadratic to close to linear in the number of documents.
 
 **Listwise.** One example is a whole list, and the loss depends on all of it. [Bruch's XE-NDCG](https://arxiv.org/abs/1911.09798) (WWW 2021) is a cross-entropy between the model's distribution over the list and one derived from the grades, shown to bound NDCG.
 
 ### Why NDCG can't be optimised directly, and LambdaMART
 
-Sorting makes NDCG, in Burges's words, "everywhere either discontinuous or flat". A small change in a score either changes nothing or swaps two documents and jumps. There's no useful gradient.
+Sorting makes NDCG, in Burges's words, "everywhere either discontinuous or flat". A small change in a score either changes nothing or swaps two documents and jumps.
 
-Pairwise cross-entropy has a gradient, but counts every swap equally. Burges's figure 1 makes the point: a list can drop from 13 pairwise errors to 11 by moving a top document down, which is better for RankNet and worse for NDCG. LambdaRank's fix is blunt and effective. Don't write a loss at all. Write down the gradient you want: RankNet's, multiplied by $|\Delta\text{NDCG}|$, the change in NDCG if those two documents swapped places. Pairs that matter near the top pull hard, and pairs far down the list barely pull at all.
+Pairwise cross-entropy has a gradient, but counts every swap equally. Burges's figure 1 makes the point: a list can drop from 13 pairwise errors to 11 by moving a top document down, which is better for RankNet and worse for NDCG. LambdaRank's fix: don't write a loss at all. Write down the gradient you want: RankNet's, multiplied by $|\Delta\text{NDCG}|$, the change in NDCG if those two documents swapped places. Pairs that matter near the top pull hard, and pairs far down the list barely pull at all.
 
 **LambdaMART** feeds those gradients to gradient-boosted trees, which he describes as "just use MART, specifying appropriate gradients and the Newton step". Bruch makes the objection precisely: it "forgoes the loss function altogether and heuristically formulates the gradients", so it has no objective to analyse. It works anyway: an ensemble of LambdaMART rankers won a track of the 2010 Yahoo! learning-to-rank challenge, as Burges reports.
 
@@ -321,6 +322,8 @@ LambdaMART margin over second    coverage at precision: 0.99->0.685  0.98->0.715
 
 Choosing where to stand on that curve is a business decision based on the price of a wrong link and the price of review. That's the subject of [DS 01/13](../../01-classical-ml/notes/13-automate-review-or-reject.md). The corrections people make in the review queue become your next training labels, with the selection bias that [DS 01/14](../../01-classical-ml/notes/14-learning-from-corrections.md) measures.
 
+**A link is also a posting.** A wrong link still balances, so a trial balance can't see it. [`ledger_reconciliation_lab.py`](../practice/ledger_reconciliation_lab.py) posts generated lines into a double-entry book with invented VAT. There, per-line top picks leave 149 of 900 invoices overpaid and the period close refuses. Searching each supplier's open invoices behind a gate cuts wrong posts from 210 to 4, sending 278 of 968 lines to a person.
+
 ## Splitting pairs without leaking the answer
 
 We split the ledger by time because production meets tomorrow's bank lines. From here we switch to a generated parts catalogue, where the thing you hold out is a pair and each record can sit in many pairs. Put the matches A-B and B-C in training and A-C in test, and the answer to A-C is implied before the model reads a word.
@@ -415,8 +418,6 @@ The costs aren't symmetric, since a wrongly swapped seal can stop a plant and a 
 | The ranker's recall looks perfect, and production misses links | The offline test scored only lines whose link survived the block | Report block recall, by kind of payment, as a separate number. It caps everything after it |
 | Pair accuracy above 99% and an unhappy client | Nearly all pairs are negatives, and always answering "no" scored 98.7% | Score whole lines: did each one end up with exactly the right set? |
 | Scores from one bank line are compared with another's | A ranker only promises order within a query | Abstain on a calibrated probability or on the margin, and check it on a coverage curve |
-| A one-to-one constraint lowers the score | Part payments share an invoice, so the constraint is false for them | Check a constraint against the real shape of the data, kind by kind |
-| A test that mixes past and future | A random split puts a supplier's later invoices in training, which production never has | Split by time, as in [Time series ML](01-time-series-ml.md) |
 | A matcher scores well, then drops on a new catalogue | Random pair splits let test pairs connect to training labels | Close the labels, split whole groups, then block inside each side. Check against a matcher that only joins training labels |
 | Merged groups balloon to a hundred records | The threshold was tuned on pair F1, and closure chains the errors | Tune on group scores if you merge. Ours went from 0.332 group F1 to 0.620 |
 | Look-alike parts get swapped | The labels taught similarity, or a record left the attribute out | Label interchangeability, and send any pair with an unread critical attribute to a person |
@@ -487,6 +488,14 @@ Doubling the missing rate from 15% to 30% takes the share of interchangeable pai
 
 </details>
 
+5. **Would a trial balance catch a bad matcher?** Guess, then run `uv run ledger_reconciliation_lab.py` from `practice/`: compare its three matchers, then its planted errors.
+
+<details><summary>Answer</summary>
+
+No, all three balance. The close's invoice-level checks notice: 149 invoices overpaid by top picks, 122 behind a gate alone, none with the search. That still posted 4 wrong links, since invariants catch only the impossible, and an assumed perfect statement check reversed them.
+
+</details>
+
 ## Interview checklist
 
 | Question | Short answer |
@@ -500,8 +509,7 @@ Doubling the missing rate from 15% to 30% takes the share of interchangeable pai
 | Why not optimise NDCG directly? | Sorting makes it flat or discontinuous in the scores, so it has no usable gradient. |
 | What is LambdaMART? | Boosted trees trained on RankNet's gradients, each multiplied by $\lvert\Delta\text{NDCG}\rvert$ of swapping the pair. It defines gradients, not a loss. |
 | Did LambdaMART win here? | Yes on NDCG, 0.9469 against 0.9129 for pointwise trees, in five of five ledgers. Most of that came from moving to pairs. The NDCG factor added only 0.0035. |
-| Why not report pair accuracy? | Negatives swamp it. We had 99.5% pair accuracy with only 72.7% of lines exactly right. |
-| Why does a wrong link cost double? | It marks a wrong invoice as paid and leaves the right one open. |
+| Why does a wrong link cost double? | It marks a wrong invoice as paid and leaves the right one open, and both entries balance, so only invoice-level checks notice. |
 | Would one-to-one assignment help? | Only where it's true. It helped singles and batches here and hurt part payments, for a net loss of 689 to 678. |
 | How do you handle a batch payment? | Search the supplier's candidates for a unique set of invoices that sums to the payment, and send ambiguous cases to a person. |
 | How should the system abstain? | Don't threshold raw ranker scores across queries. The margin over the second candidate raised coverage at 99% precision from 40% to 68%. |

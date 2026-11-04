@@ -4,7 +4,7 @@
 # ///
 """Card fraud as a sequence problem, for notes/05: aggregates against a GRU, leaks, late labels, cost and drift.
 
-Run from this folder (about three minutes on a laptop CPU, downloads nothing, needs no key):
+Run from this folder (about four minutes on a laptop CPU, downloads nothing, needs no key):
     uv run transaction_sequence_lab.py
     uv run transaction_sequence_lab.py --delay-median 60      # chargebacks take longer
     uv run transaction_sequence_lab.py --drift none           # the pattern never changes
@@ -13,17 +13,24 @@ Run from this folder (about three minutes on a laptop CPU, downloads nothing, ne
 What is generated: every customer, merchant, charge and label comes from a seeded generator. No real card data is
 involved. What we planted: fraud is a few small online test charges followed quickly by a large online charge, with no
 card-present charge after the tests. Decoys hold the same charges in a different order or further apart, so totals
-can't see it. That pattern was written to favour order and timing, so a sequence model doing well here is a fact about
-this generator and not about fraud in general. Every price and rate below is an assumption. The generator's constants
-were fixed before any model was compared, and they were not adjusted to change which model wins.
+can't see it. That pattern was written to favour order and timing, so whatever wins here is a fact about this generator
+and not about fraud in general. Every price and rate below is an assumption.
+
+Who wins, on the default run: hand-built velocity windows ahead of the GRU, and coarse totals far behind both. The
+generator's constants were not adjusted to change that. The boosting settings were changed: the first draft used large
+trees, which overfit and let the GRU win by a wide margin. Settings are now picked on validation days, and section 2
+still prints the large-tree score so you can see what that mistake would have claimed. The GRU got one architecture and
+no search, so try --epochs, or change its hidden size, before concluding anything about GRUs.
 
 The fundamentals of imbalance, PR-AUC, the cost rule, calibration and PSI are in
 data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md. This lab applies them to ordered events.
 """
 # %%
 import argparse
+import os
 import time
 
+os.environ.setdefault("OMP_NUM_THREADS", "4")
 import numpy as np
 import pandas as pd
 import torch
@@ -232,14 +239,21 @@ def build_sequences(ev, index):
 
 
 # %% Models
-def fit_boost(x, y, columns, seed=0):
-    x = x[columns]
-    cats = [c for c in columns if c in CATEGORICAL or c == "merchant_risk" and False]
-    frame = x.copy()
+# Tree settings tried on validation days. The large one is close to what people reach for first, and with few positives it
+# memorises them, which is shown in section 2 instead of being hidden.
+LOOSE = dict(learning_rate=.05, max_iter=300, max_leaf_nodes=31, min_samples_leaf=20)
+BOOST_GRID = [dict(learning_rate=.05, max_iter=150, max_leaf_nodes=15, min_samples_leaf=50),
+              dict(learning_rate=.03, max_iter=200, max_leaf_nodes=7, min_samples_leaf=100),
+              dict(learning_rate=.1, max_iter=60, max_leaf_nodes=7, min_samples_leaf=100)]
+
+
+def fit_boost(x, y, columns, params, seed=0):
+    cats = [c for c in columns if c in CATEGORICAL]
+    frame = x[columns].copy()
     for c in cats:
         frame[c] = frame[c].astype(int) + 1
-    model = HistGradientBoostingClassifier(learning_rate=.05, max_iter=300, max_leaf_nodes=31, early_stopping=False,
-                                           categorical_features=cats, random_state=seed)
+    model = HistGradientBoostingClassifier(early_stopping=False, categorical_features=cats, random_state=seed,
+                                           l2_regularization=1.0 if params is not LOOSE else 0.0, **params)
     model.fit(frame, y)
 
     def score(q):
@@ -305,7 +319,12 @@ def fit_gru(seq, y, train, val, use_merchant=False, seed=0, epochs=8, lr=2e-3, b
         if ap > best:
             best, best_state = ap, {k: v.clone() for k, v in model.state_dict().items()}
     model.load_state_dict(best_state)
-    return lambda mask: predict_gru(model, take(seq, mask))
+
+    def score(mask):
+        return predict_gru(model, take(seq, mask))
+
+    score.model = model
+    return score
 
 
 def merchant_risk(meta, y, train):
@@ -387,12 +406,18 @@ def checks(ev, x, seq, meta, delay_median):
     assert abs(pr_auc(fraud, np.random.default_rng(0).random(len(fraud))) - fraud.mean()) < 5 * fraud.mean()
 
 
-def compare(ev, x, meta, seq, seed):
+def choose_boost(x, y, tr, va, seed):
+    """The settings with the best PR-AUC on validation days, velocity features. Test days are not looked at."""
+    scores = [pr_auc(y[va], fit_boost(x[tr], y[tr], VELOCITY, p, seed)(x[va])) for p in BOOST_GRID]
+    return BOOST_GRID[int(np.argmax(scores))]
+
+
+def compare(ev, x, meta, seq, seed, params):
     """Train on days before TRAIN_END with final labels, tune on the next window, test on the one after."""
     y, d = meta.fraud.to_numpy(), meta.day.to_numpy()
     tr, va, te = d < TRAIN_END, (d >= TRAIN_END) & (d < VAL_END), (d >= VAL_END) & (d < TEST_END)
     models = {"totals": TOTALS, "velocity": VELOCITY, "oracle": ORACLE}
-    scorers = {n: fit_boost(x[tr], y[tr], c, seed=seed) for n, c in models.items()}
+    scorers = {n: fit_boost(x[tr], y[tr], c, params, seed=seed) for n, c in models.items()}
     gru = fit_gru(seq, y, tr, va, seed=seed)
     return (tr, va, te), scorers, gru
 
@@ -419,7 +444,9 @@ def main():
           f"{int(y.sum())} frauds, base rate {y.mean():.3%}")
     print(f"split in days: train <{TRAIN_END}, validation <{VAL_END}, test <{TEST_END}, drift <{DRIFT_END}, retrain test <{DAYS}\n")
 
-    (tr, va, te), scorers, gru = compare(ev, x, meta, seq, args.seed)
+    tr, va = d < TRAIN_END, (d >= TRAIN_END) & (d < VAL_END)
+    params = choose_boost(x, y, tr, va, args.seed)
+    (tr, va, te), scorers, gru = compare(ev, x, meta, seq, args.seed, params)
     p_val = {n: s(x[va]) for n, s in scorers.items()} | {"gru": gru(va)}
     p_te = {n: s(x[te]) for n, s in scorers.items()} | {"gru": gru(te)}
     yte, yva = y[te], y[va]
@@ -442,6 +469,10 @@ def main():
     for n in labels:
         lo, hi = boot_ci(yte, p_te[n])
         print(f"   {labels[n]:48s} {pr_auc(yte, p_te[n]):.3f}  [{lo:.3f}, {hi:.3f}]")
+    loose = fit_boost(x[tr], y[tr], VELOCITY, LOOSE, seed=args.seed)(x[te])
+    lo, hi = boot_ci(yte, loose)
+    print(f"   {'the velocity model again, untuned large trees':48s} {pr_auc(yte, loose):.3f}  [{lo:.3f}, {hi:.3f}]  (31 leaves, 300 rounds, leaf of 20)")
+    print(f"   Boosting settings picked on validation days: {params}. The GRU got one architecture and checkpointing on validation")
     for a, b in (("gru", "totals"), ("gru", "velocity"), ("gru", "oracle")):
         m, lo, hi = boot_diff(yte, p_te[a], p_te[b])
         print(f"   {a} minus {b:9s} {m:+.3f} [{lo:+.3f}, {hi:+.3f}]  {verdict(m, lo, hi, a, b)}")
@@ -452,9 +483,7 @@ def main():
         for k in shuffled:
             shuffled[k][row] = seq[k][row][perm]
     model_input = take(shuffled, te)
-    print("   GRU with each test window's order scrambled: ", end="")
-    gru_model = gru.__closure__[0].cell_contents
-    print(f"{pr_auc(yte, predict_gru(gru_model, model_input)):.3f}  (the same charges, the order gone)")
+    print(f"   GRU with each test window's order scrambled: {pr_auc(yte, predict_gru(gru.model, model_input)):.3f}  (the same charges, the order gone)")
     if args.seeds > 1:
         rows = [{"data seed": args.seed, **{n: pr_auc(yte, p_te[n]) for n in labels}}]
         for extra in range(1, args.seeds):
@@ -462,7 +491,7 @@ def main():
             ev2 = make_events(s, args.drift, args.delay_median)
             x2, meta2 = build_table(ev2)
             seq2 = build_sequences(ev2, x2.index.to_numpy())
-            (_, _, te2), scorers2, gru2 = compare(ev2, x2, meta2, seq2, s)
+            (_, _, te2), scorers2, gru2 = compare(ev2, x2, meta2, seq2, s, params)
             y2 = meta2.fraud.to_numpy()[te2]
             rows.append({"data seed": s, **{n: pr_auc(y2, sc(x2[te2])) for n, sc in scorers2.items()}, "gru": pr_auc(y2, gru2(te2))})
         print("   the same comparison on other generated datasets, PR-AUC")
@@ -482,8 +511,8 @@ def main():
     columns = VELOCITY + ["merchant_risk"]
     xr = x.assign(merchant_risk=merchant_risk(meta, y, rtr))
     xt = x.assign(merchant_risk=merchant_risk(meta, y, ttr))
-    random_boost = fit_boost(xr[rtr], y[rtr], columns, seed=args.seed)
-    time_boost = fit_boost(xt[ttr], y[ttr], columns, seed=args.seed)
+    random_boost = fit_boost(xr[rtr], y[rtr], columns, params, seed=args.seed)
+    time_boost = fit_boost(xt[ttr], y[ttr], columns, params, seed=args.seed)
     plain_val = np.zeros(len(d), bool)
     inner = shuffled_pool[int(.9 * cut):cut]
     plain_val[inner] = True
@@ -495,7 +524,8 @@ def main():
     print(f"   {'':36s} {'random holdout':>15s} {'same model, later days':>23s} {'trained by time, later days':>28s}")
     for name, a, b, c in table:
         print(f"   {name:36s} {a:15.3f} {b:23.3f} {c:28.3f}")
-    print(f"   without any merchant signal, velocity aggregates scored {pr_auc(yte, p_te['velocity']):.3f} and the GRU {pr_auc(yte, p_te['gru']):.3f} on those later days\n")
+    print(f"   without any merchant signal, velocity aggregates scored {pr_auc(yte, p_te['velocity']):.3f} and the GRU {pr_auc(yte, p_te['gru']):.3f} on those later days")
+    print("   The random holdout makes the merchant signal look safe. On later days both models do better without it.\n")
 
     # %% 4. Late labels
     print(f"4. Labels arrive late: median {args.delay_median:.0f} days to a chargeback, standing on day {VAL_END}")
@@ -514,7 +544,7 @@ def main():
     for name, mask, labels_used in (("hindsight, final labels (impossible live)", known_tr, y),
                                     ("all days, unreported counted as clean", known_tr, seen),
                                     (f"only days older than {MATURITY_DAYS} days", mature_tr, seen)):
-        boost = fit_boost(x[mask], labels_used[mask], VELOCITY, seed=args.seed)
+        boost = fit_boost(x[mask], labels_used[mask], VELOCITY, params, seed=args.seed)
         window = np.flatnonzero(mask)
         cut_val = window[d[window] >= np.quantile(d[window], .8)]
         vmask = np.zeros(len(d), bool)
@@ -595,7 +625,7 @@ def main():
         if mask is None:
             rows.append((name, int(y[tr].sum()), 0, pr_auc(yaf, scorers["velocity"](x[after])), pr_auc(yaf, gru(after))))
             continue
-        boost = fit_boost(x[mask], used[mask], VELOCITY, seed=args.seed)
+        boost = fit_boost(x[mask], used[mask], VELOCITY, params, seed=args.seed)
         window = np.flatnonzero(mask)
         cut_val = window[d[window] >= np.quantile(d[window], .8)]
         vmask = np.zeros(len(d), bool)

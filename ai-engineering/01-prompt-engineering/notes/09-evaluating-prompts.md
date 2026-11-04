@@ -6,6 +6,7 @@ sources:
   - https://arxiv.org/abs/2303.07142
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 10"
   - https://arxiv.org/abs/2005.04118
+  - https://arxiv.org/abs/2103.07191
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -76,6 +77,8 @@ From easiest to hardest to set up (the book's order, which is not an order of ri
 Cheap programmatic checks belong next to these. Phoenix & Taylor's list: cost and latency per prompt, the number of calls per task, classification accuracy against labels, hallucination measured as terms that appear in the output but nowhere in the context, refusal rate by matching known refusal phrases, resistance to known injection strings, and similarity to a reference (*Prompt Engineering for Generative AI*, ch. 1).
 
 [CheckList](https://arxiv.org/abs/2005.04118) (Ribeiro et al., ACL 2020) adds two tests that need no gold answers: an invariance test changes something that shouldn't alter the output (swap a place name, add a typo), and a directional test changes something that should move it a known way. It tested NLP models rather than prompts, but adding a random URL or handle changed 24.8% of one commercial sentiment model's predictions.
+
+Two cheap baselines show whether a benchmark tests what you think it does. SVAMP took math word problems from ASDiv-A and MAWPS, deleted the question and kept only the story, and the best solver (Graph2Tree with RoBERTa embeddings) still answered 64.4% and 77.7% correctly. A model that ignored word order entirely scored 77.9% on MAWPS. On 1,000 variations of 100 of those problems (change the question, invert the operation, add an irrelevant number, reorder phrases), the same solver scored 43.8% against 82.2% and 88.7% on the originals ([arXiv:2103.07191](https://arxiv.org/abs/2103.07191) (Patel et al., NAACL 2021)). These were 2021 solvers trained on the data, not prompted LLMs. The baselines carry over to prompt evals: blank out the part of the input that should matter, and if the score holds, the eval is measuring a shortcut.
 
 **Similarity to a reference is the weakest of these, so read its results carefully.** Phoenix & Taylor score four prompts for rewriting text in Mike Taylor's style (the text says "five different prompt approaches" but lists four). The metric is the cosine distance between ada-002 embeddings of the output and of a hand-rewritten reference, on three topics (*Prompt Engineering for Generative AI*, ch. 10):
 

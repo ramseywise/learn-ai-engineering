@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test unit da06-smoke chapter-check chapter-check-all deck-check link-check curriculum crosswalk crosswalk-check drill-check review-findings signals learn ledger-check ledger-report papers-figures papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
+.PHONY: help lint test unit da06-smoke chapter-check chapter-check-all deck-check link-check curriculum crosswalk crosswalk-check manifest-check drill-check review-findings signals learn ledger-check ledger-report papers-figures papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -19,7 +19,7 @@ CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science
 LANGUAGE_SUBSET = programming/typescript programming/sql/notes/10-capstone-murder-mystery.md
 
 test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
-	@fail=0; for t in lint link-check crosswalk-check chapter-check-all drill-check deck-check ledger-check unit; do \
+	@fail=0; for t in lint link-check crosswalk-check manifest-check chapter-check-all drill-check deck-check ledger-check unit; do \
 		echo "== $$t"; $(MAKE) --no-print-directory $$t || { echo "FAILED: $$t"; fail=1; }; \
 	done; \
 	echo "== curriculum (information only)"; \
@@ -61,6 +61,9 @@ crosswalk:  ## Validate practice/ and programming/drills/ units and links, then 
 
 crosswalk-check:  ## Validate practice/ and programming/drills/ units and links; fail if practice/CROSSWALK.md is stale
 	@python3 scripts/practice/crosswalk.py --check
+
+manifest-check:  ## Validate every pillar's practice/manifest.yaml and that each tracked example has an entry
+	@python3 scripts/practice/check_manifest.py
 
 drill-check:  ## Check drill schema, that Python parses and that SQL seeds load: make drill-check [DRILL_PATH=programming/drills/sql]
 	@python3 scripts/practice/check_drills.py $(DRILL_PATH)

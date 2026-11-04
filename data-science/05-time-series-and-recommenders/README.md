@@ -77,6 +77,7 @@ The [customer segments lab](practice/customer-segments-lab/README.md) backs the 
 uv run --with scikit-learn --with pandas --with torch python practice/run_note.py notes/01-time-series-ml.md
 uv run --with numpy --with pandas --with scipy python practice/02_cf_lab.py
 cd practice && uv run 04_matching_lab.py   # entity matching, on a generated ledger
+cd practice && uv run ledger_reconciliation_lab.py   # posting those links into a double-entry ledger, with a period close
 ```
 
 ## Primary texts

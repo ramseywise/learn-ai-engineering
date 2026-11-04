@@ -29,14 +29,14 @@ sources:
   - https://docs.cube.dev/docs/data-modeling/joins.md
   - https://docs.cube.dev/docs/data-modeling/multi-fact-views.md
   - https://docs.cube.dev/cube-core/index.md
-  - https://arxiv.org/abs/2311.07509
-  - https://arxiv.org/abs/2405.11706
-  - https://arxiv.org/abs/2604.25149
+  - https://arxiv.org/abs/2311.07509 (Sequeda et al., GRADES-NDA 2024, arXiv v1, full)
+  - https://arxiv.org/abs/2405.11706 (Allemang and Sequeda, arXiv v1, full; ISWC 2024 chapter not read)
+  - https://arxiv.org/abs/2604.25149 (Rumiantsau and Fokeev, preprint, full; companion repo not read)
   - https://raw.githubusercontent.com/bitol-io/open-data-contract-standard/main/docs/support-communication-channels.md
   - https://raw.githubusercontent.com/bitol-io/open-data-contract-standard/main/schema/odcs-json-schema-latest.json
   - https://martinfowler.com/articles/data-mesh-principles.html
   - https://dataproducts.substack.com/p/the-rise-of-data-contracts
-  - https://arxiv.org/abs/2304.01062
+  - https://arxiv.org/abs/2304.01062 (Goedegebuure et al., ACM Computing Surveys 2024, arXiv v3 author's version, full; online appendix not read)
 confidence: medium
 cleaned: 2026-11-03
 ---
@@ -208,7 +208,7 @@ Coverage is what tools report by default, and it measures presence. [OpenMetadat
 
 The last three lines measure adoption from the query log rather than from page views. Here most reads land on an uncertified table, and a tier 1 table has none. Those are two work items: certify `raw_redemptions` or move people off it, and find out why nobody reads `raw_wallet`. Page views and daily active users, [which OpenMetadata also reports](https://docs.open-metadata.org/v2.0.x/how-to-guides/data-insights/report.md), tell you the tool is open, and not whether people query what it recommends.
 
-There are no good external benchmarks for any of this. I found no peer-reviewed measurement of catalog adoption or metadata staleness in production, though the systematic reviews I didn't read in full may hold some. The numbers I did read are self-reported or thin. Nemo's post reports data search success up by more than 50 percent, and I didn't capture a metric definition or baseline. A [preliminary Eckerson survey](https://datalere.com/articles/preliminary-survey-results-on-data-catalog-adoption) (2021, sample size not stated, survey still open) has 39% naming lack of user adoption as a barrier. Set your targets from your own baseline.
+There are no good external benchmarks for any of this. I found no peer-reviewed measurement of catalog adoption or metadata staleness in production, and the one systematic review I read in full, on data mesh, has none, though others may hold some. The numbers I did read are self-reported or thin. Nemo's post reports data search success up by more than 50 percent, and I didn't capture a metric definition or baseline. A [preliminary Eckerson survey](https://datalere.com/articles/preliminary-survey-results-on-data-catalog-adoption) (2021, sample size not stated, survey still open) has 39% naming lack of user adoption as a barrier. Set your targets from your own baseline.
 
 ## Three numbers that plain SQL gets wrong
 
@@ -418,18 +418,18 @@ This adds to the [advice to keep metric logic in a mart](../../03-transform-and-
 
 ### Does it help text-to-SQL?
 
-**Text-to-SQL** means a language model writes the SQL from a question in plain English ([one production system](../../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md)). The claim most often made for these layers is that they make it more accurate, and the evidence is thin and interested. Every measured comparison I read comes from a company selling such a layer, and I found no independent replication.
+**Text-to-SQL** means a language model writes the SQL from a question in plain English ([one production system](../../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md)). The claim most often made for these layers is that they make it more accurate, and the evidence is thin and interested. Every measured comparison I read comes from a company selling a layer or a knowledge graph product of this kind, and I found no independent replication.
 
 | Source | Compared | Setup | Result (% correct, as each source scores it) |
 |---|---|---|---|
-| [arXiv:2311.07509](https://arxiv.org/abs/2311.07509) (Sequeda et al., data.world; GRADES-NDA 2024, arXiv version read) | SQL over DDL vs SPARQL over a [knowledge graph](../../../ai-engineering/05-graph-engineering/notes/09-kg-fundamentals-and-cypher.md) | GPT-4, zero-shot; 43 questions on a 13-table subset of a 199-table insurance model | 16.7 vs 54.2 |
-| [arXiv:2405.11706](https://arxiv.org/abs/2405.11706) (Allemang and Sequeda, data.world, preprint; a chapter with a different title is at ISWC 2024, not read) | SPARQL over the knowledge graph, without vs with ontology checks and LLM repair | Same benchmark, GPT-4 zero-shot; up to 3 repair cycles | 42.88 vs 72.55 |
+| [arXiv:2311.07509](https://arxiv.org/abs/2311.07509) (Sequeda et al., data.world; GRADES-NDA 2024, arXiv v1 read) | SQL over DDL vs SPARQL over a [knowledge graph](../../../ai-engineering/05-graph-engineering/notes/09-kg-fundamentals-and-cypher.md) | GPT-4, zero-shot; 43 questions on a 13-table subset of a 199-table insurance model, with a couple of rows of data per table; share of repeated runs correct | 16.7 vs 54.2 |
+| [arXiv:2405.11706](https://arxiv.org/abs/2405.11706) (Allemang and Sequeda, data.world, preprint; a chapter with a different title is at ISWC 2024, not read) | SPARQL over the knowledge graph, first try (counted only if it also passes the ontology check) vs with LLM repair after that check | Same benchmark, GPT-4 zero-shot; up to 3 repair cycles; a further 8 came back as unknown | 42.88 vs 72.55 |
 | [dbt Labs blog, 2026](https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026) | Text-to-SQL vs Semantic Layer | 11 questions run 20 times each; Sonnet 4.6, full schema as context | Original normalised schema: 62.5 vs 100 on questions the layer can reach, 70.0 vs 0 on those it can't, 64.5 vs 72.7 overall. After 3 extra models: 90.0 vs 98.2 |
-| [arXiv:2604.25149](https://arxiv.org/abs/2604.25149) (Rumiantsau and Fokeev, Cube, preprint) | Schema vs schema plus a hand-written context document | 99 questions, 25-table retail schema, Sonnet 4.6, single shot | 46.5 [37.0, 56.2] vs 68.7 [59.0, 77.0] |
+| [arXiv:2604.25149](https://arxiv.org/abs/2604.25149) (Rumiantsau and Fokeev, Cube, preprint) | Schema vs schema plus a hand-written context document | 99 questions, 25-table retail schema, Sonnet 4.6, single shot, scored by an LLM judge | 46.5 [37.0, 56.2] vs 68.7 [59.0, 77.0] |
 
-Brackets are the paper's 95% Wilson intervals. Zero-shot means no worked examples in the prompt. These scores use different questions and scoring, so don't compare across rows.
+Brackets are the paper's 95% Wilson intervals. Zero-shot means no worked examples in the prompt. The first two rows share a benchmark. The others use different questions and scoring, so don't compare them with those or with each other.
 
-Read these with care. The first changes query language and context together, so it doesn't isolate the graph. The second paper's first-try figure (42.88) comes from the same zero-shot prompt the first paper scored at 54.2, so whatever the cause, a gap of that size can appear with no change of method. The dbt row is the most useful, because it shows the real trade: strong inside what was modelled, nothing outside it, and modelling closes the gap. Three extra models let the layer answer every question, and text-to-SQL also rose to 90.0 on that project. The blog also says a layer's query "is guaranteed to be correct" if the model picks the right metric and dimensions. That "if" matters, because its own table has Opus 4.6 at 87.2 to 87.5 on the layer, on questions the layer can reach. The compile is what's guaranteed, and the choice isn't. The Cube paper tests a document and not a runtime layer, and says outright that it leaves that comparison unanswered. So: declared definitions help, the size of the effect isn't settled, and nothing I read separates a compiler's value from simply writing definitions down.
+Read these with care. The first changes query language and context together, so it doesn't isolate the graph. The second paper's first-try figure (42.88) comes from the same zero-shot prompt the first paper scored at 54.2, though it counts a query only if it also passes the new check, and the paper doesn't discuss the difference. The check can't explain all of it, since one question type rose from 66.9 to 69.76. So a gap of that size can appear with little change of method, for reasons nobody reports. The dbt row is the most useful, because it shows the real trade: strong inside what was modelled, nothing outside it, and modelling closes the gap. Three extra models let the layer answer every question, and text-to-SQL also rose to 90.0 on that project. The blog also says a layer's query "is guaranteed to be correct" if the model picks the right metric and dimensions. That "if" matters, because its own table has Opus 4.6 at 87.2 to 87.5 on the layer, on questions the layer can reach. The compile is what's guaranteed, and the choice isn't. The Cube paper tests a document and not a runtime layer, and says outright that it leaves that comparison unanswered. So: declared definitions help, the size of the effect isn't settled, and nothing I read separates a compiler's value from simply writing definitions down.
 
 This is why two chapters elsewhere need this one. The [data-analysis agent's required metric definitions](../../../generative-ai/07-agentic-applications/notes/05-data-analysis-agent.md) are a small semantic layer, and this is the production version. The ["semantic layer" in PRINCE's text-to-SQL tool](../../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md) is a different thing with the same name: a store of few-shot question and SQL pairs. Its schema subsetting needs the column meaning a catalog holds.
 
@@ -445,7 +445,7 @@ So how does the owner know? Not from the standard. I searched [ODCS](https://raw
 | Lineage | Derived from pipelines, as in [OpenLineage](../../05-quality-and-observability/notes/02-monitors-and-lineage.md) or [OpenMetadata's downstream alerts](https://docs.open-metadata.org/v2.0.x/how-to-guides/data-quality-observability/alerts-notifications/notify-downstream.md) | Notebooks and exports outside any pipeline |
 | Query log | Observed in the warehouse | Anyone who hasn't read within the log's retention, and a shared service account tells you nothing about who |
 
-Goods notes the lineage route, where provenance lets a producer "quickly notify those affected by the problem". The grey-literature review by [Goedegebuure et al.](https://arxiv.org/abs/2304.01062) (ACM Computing Surveys, 2024) reports Dehghani as not recommending a central catalog run by a separate team, since each data product decides what to publish about itself. That is the federated version of [the catalog in the mesh chapter](01-data-architectures-mesh-fabric-mdw.md), and it still needs one index to search. Here is the chain, using all three sources.
+Goods notes the lineage route, where provenance lets a producer "quickly notify those affected by the problem". The grey-literature review by [Goedegebuure et al.](https://arxiv.org/abs/2304.01062) (ACM Computing Surveys, 2024; author's version read) reports a central catalog as the common proposal in its sources, and Dehghani as not recommending one run by a separate team, since each data product decides what to publish about itself. I read that as the federated version of [the catalog in the mesh chapter](01-data-architectures-mesh-fabric-mdw.md), a term the review doesn't use, and it still needs one index to search: the review's own runtime architecture keeps a registry and discovery service. Here is the chain, using all three sources.
 
 ```python
 (m / "exposures.yml").write_text("""

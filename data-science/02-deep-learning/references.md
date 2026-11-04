@@ -72,13 +72,13 @@ cleaned: 2026-11-01
 | Devlin et al., [*BERT*](https://arxiv.org/abs/1810.04805) (NAACL 2019) | Most of the pipelines' encoders | Link only | 06 |
 | Sanh et al., [*DistilBERT*](https://arxiv.org/abs/1910.01108) (2019) ⚑ | A smaller distilled encoder | Link only | 06 |
 | ★ Vaswani et al., [*Attention Is All You Need*](https://arxiv.org/abs/1706.03762) (NeurIPS 2017) | The block, position functions, Table 1 complexity. Read in full | Link only | 05b, 06 |
-| ★ Dosovitskiy et al., [*An Image is Worth 16x16 Words*](https://arxiv.org/abs/2010.11929) (ICLR 2021) | What a CNN assumes and an encoder doesn't; pre-training size, Table 5 | Link only | 05b |
-| Touvron et al., [*Training Data-Efficient Image Transformers*](https://arxiv.org/abs/2012.12877) (ICML 2021) | The recipe changes the data requirement | Link only | 05b |
-| ★ Xiong et al., [*On Layer Normalization in the Transformer Architecture*](https://arxiv.org/abs/2002.04745) (ICML 2020) | Pre-norm, post-norm and warm-up | Link only | 05b |
-| ★ Zeng et al., [*Are Transformers Effective for Time Series Forecasting?*](https://arxiv.org/abs/2205.13504) (AAAI 2023) | Linear models beat earlier forecasting Transformers | Link only | 05b |
-| Nie et al., [*A Time Series is Worth 64 Words*](https://arxiv.org/abs/2211.14730) (ICLR 2023) | PatchTST: patches and channel independence | Link only | 05b |
-| Gorishniy et al., [*Revisiting Deep Learning Models for Tabular Data*](https://arxiv.org/abs/2106.11959) (NeurIPS 2021) | FT-Transformer: one token per feature, and its cost | Link only | 05b |
-| Grinsztajn et al., [*Why do tree-based models still outperform deep learning on typical tabular data?*](https://arxiv.org/abs/2207.08815) (NeurIPS 2022) | Trees at around 10K samples, FT-Transformer as best case | Link only | 05b |
+| ★ Dosovitskiy et al., [*An Image is Worth 16x16 Words*](https://arxiv.org/abs/2010.11929) (ICLR 2021) | What a CNN assumes and an encoder doesn't; pre-training size, Table 5. Text read in full, figures not viewed | Link only | 05b |
+| Touvron et al., [*Training Data-Efficient Image Transformers*](https://arxiv.org/abs/2012.12877) (ICML 2021) | The recipe changes the data requirement. Read in full | Link only | 05b |
+| ★ Xiong et al., [*On Layer Normalization in the Transformer Architecture*](https://arxiv.org/abs/2002.04745) (ICML 2020) | Pre-norm, post-norm and warm-up. Read in full, proofs for their statements | Link only | 05b |
+| ★ Zeng et al., [*Are Transformers Effective for Time Series Forecasting?*](https://arxiv.org/abs/2205.13504) (AAAI 2023) | Linear models beat earlier forecasting Transformers. arXiv version, text read in full | Link only | 05b |
+| Nie et al., [*A Time Series is Worth 64 Words*](https://arxiv.org/abs/2211.14730) (ICLR 2023) | PatchTST: patches and channel independence. Text read in full | Link only | 05b |
+| Gorishniy et al., [*Revisiting Deep Learning Models for Tabular Data*](https://arxiv.org/abs/2106.11959) (NeurIPS 2021) | FT-Transformer: one token per feature, and its cost. Read in full | Link only | 05b |
+| Grinsztajn et al., [*Why do tree-based models still outperform deep learning on typical tabular data?*](https://arxiv.org/abs/2207.08815) (NeurIPS 2022) | Trees at around 10K samples, FT-Transformer as best case. arXiv v1, text read in full | Link only | 05b |
 
 ## Courses and videos
 

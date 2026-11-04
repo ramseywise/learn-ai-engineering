@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2310.05736
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://developers.openai.com/api/docs/guides/compaction
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/02_context_processing/01–02, 00_COURSE/03_context_management/01–04) — snapshot 2026-08-14)
@@ -224,7 +225,7 @@ The useful habit is thinking in **promotion and demotion**. Compaction demotes c
 | **Extractive** | Keep the sentences that matter verbatim | Faithful; cites cleanly; less compression |
 | **Abstractive** | Rewrite into a shorter form | Higher ratio; can introduce errors |
 | **Hierarchical summarisation** | Summarise chunks, then summarise the summaries | Scales to very long inputs; detail lost at each level |
-| **Token pruning** (LLMLingua-style) | A small model drops low-information tokens | 2–5× with modest loss on many tasks; output is unreadable to humans |
+| **Token pruning** (LLMLingua) | A small LM drops low-perplexity tokens under a per-section budget | On GSM8K chain-of-thought prompts for GPT-3.5-Turbo, 20× cost 1.5 EM, but on BBH 7× cost 13.2. Output is hard for humans to read, though GPT-4 can mostly reconstruct it ([arXiv:2310.05736](https://arxiv.org/abs/2310.05736), Jiang et al., EMNLP 2023) |
 | **Query-conditioned** | Compress *relative to the current question* | Highest relevance per token; must be redone per query |
 
 ### Self-refinement as a compaction pass
