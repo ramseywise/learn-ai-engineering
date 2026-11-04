@@ -296,7 +296,7 @@ P(positive) = 0.993
 [(np.str_('brilliant'), 0.065), (np.str_('Fantastic'), 0.064), (np.str_('and'), 0.05), (np.str_('love'), 0.043), (np.str_('unique'), 0.041), (np.str_('finest'), 0.04), (np.str_('acting'), -0.031), (np.str_('minutes'), -0.025)]
 ```
 
-For a linear pipeline, the global coefficients already explain the model ([text classification](02-text-classification.md)), and LIME earns its cost on nonlinear models. SHAP's text explainer is the more principled alternative: [model interpretability](../../01-classical-ml/notes/08-model-interpretability.md) covers SHAP values and the explanation papers, including LIME's, Ribeiro et al. ([arXiv:1602.04938](https://arxiv.org/abs/1602.04938), KDD 2016).
+For a linear pipeline, the global coefficients already explain the model ([text classification](02-text-classification.md)), and LIME earns its cost on nonlinear models. Its paper adds two limits: a linear model with thousands of active features isn't readable either, and a model highly non-linear around the prediction may have no faithful local explanation. On book and DVD reviews it recovered more than 90% of the important words of sparse logistic regressions and decision trees limited to 10 features, chosen because their important words are known, so this isn't evidence on black-box models. That used 15,000 samples rather than the 1,000 used above, and the paper leaves the right sample count open. SHAP's text explainer is the more principled alternative: [model interpretability](../../01-classical-ml/notes/08-model-interpretability.md) covers SHAP values and the explanation papers, including LIME's, Ribeiro et al. ([arXiv:1602.04938](https://arxiv.org/abs/1602.04938), KDD 2016).
 
 ### Topic models per class
 

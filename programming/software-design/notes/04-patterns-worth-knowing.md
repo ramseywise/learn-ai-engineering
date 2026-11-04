@@ -614,7 +614,7 @@ The absolute numbers are small, tens of nanoseconds on this machine. A remote mo
 | What's wrong with mutable globals? | Distant code becomes coupled, and tests can't run independently or in parallel. Easiest to justify for process-wide resources like `os.environ`. |
 | When is a repository worth it? | Around a real domain with a stable, small query surface. It costs you visibility of queries and doesn't map to transactions or analytics well. |
 | What's the risk with observers? | Hidden control flow, order dependence, slow or failing listeners. Decide whether listener errors propagate. |
-| Why use a transition table? | Illegal states become unrepresentable, and you can test the whole table. |
+| Why use a transition table? | Illegal transitions raise an error through `to()`, and you can test the whole table. It doesn't make them unrepresentable, since direct assignment to `state` bypasses it. |
 | Inheritance or composition for two axes of variation? | Composition. Inheritance gives you one subclass per combination. |
 | What does indirection cost? | Tens of nanoseconds per layer in CPython on my machine, which rarely matters on a request path. The reader's cost is usually larger. |
 

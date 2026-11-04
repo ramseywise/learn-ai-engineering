@@ -139,7 +139,7 @@ ALTER TABLE orders RENAME COLUMN note TO note2     AccessExclusiveLock
 ALTER TABLE orders DROP COLUMN note                AccessExclusiveLock
 ```
 
-There are three groups worth remembering:
+There are four locks worth remembering:
 
 | Lock | Blocks | Taken by |
 |---|---|---|

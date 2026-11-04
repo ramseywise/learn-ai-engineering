@@ -338,7 +338,7 @@ Each line teaches one thing:
 
 Autovacuum does this in production, and you tune it per table rather than switching it off. For a table with big periodic deletes, the docs suggest `TRUNCATE` over `DELETE` and `VACUUM`, and [dropping a partition](https://www.postgresql.org/docs/current/ddl-partitioning.html) does the same job for time-based data.
 
-**Wraparound** is the failure to know by name. Transaction IDs are finite, and the docs set the limit at two billion transactions since a table's last aggressive vacuum. Autovacuum normally handles this with no attention. If it can't, the server warns as it nears the limit and eventually stops assigning new transaction IDs to avoid data loss. The docs' recovery list starts with ending long-running transactions and dropping old replication slots, the same things that block ordinary vacuum. So alert on `age(datfrozenxid)` long before it matters. This run printed a few thousand.
+**Wraparound** is the failure to know by name. Transaction IDs are finite, and the docs set the limit at two billion transactions since a table's last aggressive vacuum. Autovacuum normally handles this with no attention. If it can't, the server warns as it nears the limit and eventually stops assigning new transaction IDs to avoid data loss. The docs' recovery list starts with ending long-running transactions and dropping old replication slots, the same things that block ordinary vacuum. So alert on `age(datfrozenxid)` long before it matters. This run printed 1,182.
 
 ## Replica lag
 

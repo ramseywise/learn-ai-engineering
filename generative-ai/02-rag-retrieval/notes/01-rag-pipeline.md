@@ -215,15 +215,6 @@ Dense and hybrid search drop from 1.0 to 0.0, and no rerank stage can bring the 
 
 The source changes after the first load. If re-ingestion is naive, the index either duplicates chunks or keeps ones whose source was deleted.
 
-**Batch first.** The Handbook's advice is to start with a scheduled batch pipeline and move to streaming only when freshness demands it. A batch run every minute is fine for thousands of records (*LLM Engineer's Handbook*, ch. 4). To find what changed, it lists the *change data capture* (CDC) options:
-
-| CDC method | How | Catch |
-|---|---|---|
-| Naive full pull | Re-read everything each run | Fine at thousands to tens of thousands of records |
-| Timestamp | Pull rows with `updated_at` after the last run | Misses deletes; scans the table |
-| Trigger | Database triggers write changes to an audit table | Adds write overhead to the source |
-| Log-based | Read the database's transaction log | Best fidelity and no source load, but vendor-specific and needs a queue |
-
 **Make writes idempotent.** The Handbook uses the MD5 of a chunk's content as its ID, so re-running the pipeline overwrites rather than duplicates. Content-derived IDs also make deletes possible: whatever this source no longer produces must be stale. The whole idea fits in a few lines:
 
 ```python
@@ -259,32 +250,7 @@ print("chunks left:", len(index))
 chunks left: 0
 ```
 
-LangChain's indexing API is the production form. A `RecordManager` stores a hash of each document's content and metadata, its write time and its source ID. On re-run it skips unchanged documents and, depending on `cleanup`, deletes stale ones (*Learning LangChain*, ch. 2):
-
-```python
-# illustrative: needs a Postgres database for the record manager and a vector store
-from langchain.indexes import SQLRecordManager, index
-
-record_manager = SQLRecordManager("pgvector/my_docs", db_url=DB_URL)
-record_manager.create_schema()
-
-# cleanup=None: only add; "incremental": also delete old versions of the sources in this batch;
-# "full": also delete every source NOT in this batch (pass the whole corpus, or lose data)
-index(docs, record_manager, vectorstore, cleanup="incremental", source_id_key="source")
-```
-
-The book uses the 2025 `langchain` / `langchain_community` import paths. Check current docs before copying.
-
-**Bulk deletes can be asynchronous.** Rothman's dual-RAG build clears a Pinecone namespace with `delete_all` and upserts straight after. Pinecone performs the delete in the background, so it can sweep away vectors written after the call returned. The fix is to poll the index stats until the namespace is empty before writing (*Context Engineering for MAS*, ch. 3):
-
-```python
-# illustrative: needs a Pinecone account and an existing index
-index.delete(delete_all=True, namespace=ns)
-while index.describe_index_stats().namespaces.get(ns, {"vector_count": 0})["vector_count"] > 0:
-    time.sleep(2)      # the delete is async: wait, or later upserts may be wiped
-```
-
-The Handbook also stores two snapshots of each document in its feature store: one cleaned (for fine-tuning) and one chunked and embedded (for RAG). Then a new chunking or embedding choice doesn't mean re-crawling.
+Scheduling, change detection, LangChain's indexing API and asynchronous deletes are in [07 § keeping a live index in sync](07-rag-in-production.md#keeping-a-live-index-in-sync).
 
 ---
 

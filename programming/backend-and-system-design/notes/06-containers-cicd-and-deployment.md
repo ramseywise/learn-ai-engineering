@@ -84,7 +84,7 @@ Environment variables have a limit worth stating: child processes inherit them, 
 
 Every deploy, scale-down and node drain ends with the same event: your process receives SIGTERM. Kubernetes then gives it [a grace period, 30 seconds by default](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/), before SIGKILL. Python's default for SIGTERM is to die on the spot.
 
-The code below starts a real child server twice, sends a one-second request, and signals the process while that request runs.
+The code below starts a real child server twice, sends a 0.6-second request, and signals the process while that request runs.
 
 ```python
 import signal, subprocess, sys, tempfile, threading, time, urllib.request

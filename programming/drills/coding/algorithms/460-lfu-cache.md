@@ -58,7 +58,55 @@ get/put on existing key: erase from set; freq++; last_used = tick++; reinsert
 put new key when full: evict set.begin() (lowest freq, oldest); insert node freq=1
 ```
 
-**Complexity** — time O(log n) per operation (O(1) achievable); space O(capacity)
+**Complexity** — time O(log n) per operation; space O(capacity)
+
+The prompt asks for O(1), which needs a bucket of keys per frequency, each ordered by last use, plus the current minimum frequency:
+
+```python
+from collections import OrderedDict, defaultdict
+
+class LFUCache:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.entries = {}                          # key -> [value, freq]
+        self.buckets = defaultdict(OrderedDict)    # freq -> keys, oldest use first
+        self.min_freq = 0
+
+    def _touch(self, key):
+        entry = self.entries[key]
+        freq = entry[1]
+        del self.buckets[freq][key]
+        if not self.buckets[freq]:
+            del self.buckets[freq]
+            if self.min_freq == freq:
+                self.min_freq = freq + 1           # the key moves to freq + 1, so that bucket exists
+        entry[1] = freq + 1
+        self.buckets[freq + 1][key] = None
+
+    def get(self, key):
+        if key not in self.entries:
+            return -1
+        self._touch(key)
+        return self.entries[key][0]
+
+    def put(self, key, value):
+        if self.capacity == 0:
+            return
+        if key in self.entries:
+            self.entries[key][0] = value
+            self._touch(key)
+            return
+        if len(self.entries) == self.capacity:
+            oldest, _ = self.buckets[self.min_freq].popitem(last=False)
+            if not self.buckets[self.min_freq]:
+                del self.buckets[self.min_freq]
+            del self.entries[oldest]
+        self.entries[key] = [value, 1]
+        self.buckets[1][key] = None
+        self.min_freq = 1
+```
+
+**Complexity** — average O(1) time per operation; space O(capacity)
 
 Full Python solution: `LeetCodeCheat/lfu-cache.py` (local only — `programming/drills/python/leetcode/` is a gitignored nested repo).
 

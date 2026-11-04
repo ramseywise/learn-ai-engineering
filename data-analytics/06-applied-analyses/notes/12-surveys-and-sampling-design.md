@@ -571,7 +571,7 @@ Run `uv run ch12_surveys.py` from `practice/`, which takes under a minute. It ne
 |---|---|---|
 | Printing a margin on a self-selected sample | A tight plus or minus on a poll anyone could join | Report it as non-probability, and describe the model if you give a precision measure |
 | Treating the response rate as the quality measure | A 42% survey trusted over an 8% one with no check | Compare respondents with the frame on known columns first |
-| Optimising allocation for one number | Fine on spend, and the satisfaction margin is 40% wider | Use proportional unless one statistic dominates |
+| Optimising allocation for one number | Fine on spend, and the satisfaction margin is about 42% wider | Use proportional unless one statistic dominates |
 | Plain margin after weighting or clustering | Intervals too narrow | Multiply by deft; say that you did |
 | Taking a weighted number as debiased | Rows agree with each other, and all miss the truth | State the unmeasured risk; follow up a sample of non-respondents |
 

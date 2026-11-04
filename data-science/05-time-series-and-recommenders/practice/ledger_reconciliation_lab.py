@@ -1005,11 +1005,11 @@ def main():
         i = next(k for k, v in b.eur.items() if v == 0 and b.world.invoices[k].currency == "EUR")
         b.ledger.post(day, "duplicate payment", [Posting(AP, debit=Decimal("40.00"), invoice=i), Posting(SUSPENSE, credit=Decimal("40.00"))], "manual", "someone")
 
-    plants = [("one-sided legacy import of 0.03", plant_one_sided), ("balanced, payables with no invoice", plant_untagged),
-              ("balanced, VAT at the wrong rate", plant_wrong_vat), ("balanced, two bank digits swapped", plant_transposition),
-              ("balanced, an invoice overpaid", plant_overpaid)]
+    plants = [("one-sided legacy import of 0.03", plant_one_sided, "trial balance off"), ("balanced, payables with no invoice", plant_untagged, "payables control"),
+              ("balanced, VAT at the wrong rate", plant_wrong_vat, "VAT account"), ("balanced, two bank digits swapped", plant_transposition, "bank account"),
+              ("balanced, an invoice overpaid", plant_overpaid, "invoices overpaid")]
     print(f"   {'planted error':38s} {'balances?':>10s}   why the close refused")
-    for name, plant in plants:
+    for name, plant, expected in plants:
         b = copy.deepcopy(clean)
         plant(b)
         tb_ok = sum((debits(e.lines) for e in b.ledger.journal), ZERO) == sum((credits(e.lines) for e in b.ledger.journal), ZERO)
@@ -1020,6 +1020,7 @@ def main():
             print(f"   {name:38s} {'yes' if tb_ok else 'NO':>10s}   {refused.failures[0]}")
             for extra in refused.failures[1:]:
                 print(f"   {'':38s} {'':>10s}   {extra}")
+            assert any(expected in f for f in refused.failures), f"{name}: the check meant to catch this one did not fire"
     b = copy.deepcopy(clean)
     plant_wrong_vat(b)
     inv = b.world.invoices[int(invoice_entry.memo.split()[1])]
@@ -1028,6 +1029,8 @@ def main():
     net, tax = split_vat(inv.gross, inv.vat_rate)
     b.track(b.ledger.post(day, f"invoice {inv.id} rebooked correctly", [Posting(PURCHASES, debit=net), Posting(VAT_INPUT, debit=tax), Posting(AP, credit=inv.gross, invoice=inv.id, doc=inv.doc)], "invoice", "reviewer"))
     b.close(day, statement)
+    owed_in_doc = lambda ledger: {i: v for i, v in ledger.open_items()[1].items() if v != 0}
+    assert owed_in_doc(b.ledger) == owed_in_doc(clean.ledger), "a reversal must take the document-currency amount back out too"
     print("   Fixing the VAT error with a reversal and a correct entry: the close now passes, and all three entries stay on the record")
     print(f"   Clean run: {gated.closes[0][1]} on day {gated.closes[0][0]}, then {gated.closes[1][1]} on day {gated.closes[1][0]}\n")
 
@@ -1061,6 +1064,7 @@ def main():
     actors = pd.Series([e.actor for e in final.journal]).value_counts().to_dict()
     print(f"   Who posted: {actors}")
     reversals = sum(e.source == "reversal" for e in final.journal)
+    assert all(e.id in final.reversed_ids for e in final.journal if e.source == "revaluation" and e.day <= P1_END), "a period 1 revaluation was never undone"
     print(f"   Reversals on record: {reversals}, of which revaluations undone: {sum(e.source == 'reversal' and e.actor == 'system' for e in final.journal)}")
     print(f"\nRuntime {time.time() - start:.0f} s. Results describe this generated ledger and these invented prices and rules.")
 

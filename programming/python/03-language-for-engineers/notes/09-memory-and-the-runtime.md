@@ -108,7 +108,7 @@ array('f')    6628
 per million, list[float]: 44 GiB
 ```
 
-A `list[float]` costs 8 bytes for the pointer plus 24 for each float. Use `array` or, in real systems, NumPy, for anything that is a block of numbers. [Vector databases](../../../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) depend on this: index memory only adds up with packed arrays.
+The last line measures again, and repeat calls come in about 2 KB lower than the first (47,136 bytes on this run), which is why it says 44 GiB and not the 46 you'd get from the first line. A `list[float]` costs 8 bytes for the pointer plus 24 for each float. Use `array` or, in real systems, NumPy, for anything that is a block of numbers. [Vector databases](../../../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) depend on this: index memory only adds up with packed arrays.
 
 ## Reference counting frees most things immediately
 

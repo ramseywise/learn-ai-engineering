@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2203.05794
   - ../practice/text-analytics-with-python/Ch06 - Text Summarization and Topic Models/
   - ../practice/text-analytics-with-python/Ch07 - Text Similarity and Clustering/Ch07c - Document Clustering.ipynb
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
@@ -244,7 +245,7 @@ On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, 
 
 `pyLDAvis` (Ch06d) plots topics as circles in a 2-D projection of inter-topic distance, sized by prevalence, with a relevance slider ($\lambda$) that trades a word's topic-specific probability against its overall frequency. The notebook uses `pyLDAvis.sklearn`, renamed `pyLDAvis.lda_model` in pyLDAvis 3.4.
 
-For short texts, or for anything where LDA's bag of words hurts, the modern route is to embed documents, reduce with UMAP, cluster with HDBSCAN and describe clusters with class-based TF-IDF. That is BERTopic, and [LLM embeddings as features](07-llm-embeddings-as-features.md) builds its pieces.
+Where LDA's bag of words hurts, a modern route is to embed documents, reduce with UMAP, cluster with HDBSCAN and describe clusters with class-based TF-IDF. That is BERTopic ([arXiv:2203.05794](https://arxiv.org/abs/2203.05794), Grootendorst, 2022, preprint), and [LLM embeddings as features](07-llm-embeddings-as-features.md) builds its pieces. Its evidence for short text is one dataset. On Trump's tweets it led on NPMI coherence, at 0.066 against 0.009 for NMF and -0.011 for LDA (MPNet embeddings, 3 runs at each of 10 to 50 topics, baselines at default settings). With Doc2Vec embeddings it fell to -0.088, and those tweets are also the paper's only lightly preprocessed set, so length isn't isolated. Top2Vec with Doc2Vec beat it on both news datasets, and the author warns that NPMI may not track human judgement for neural models. BERTopic also gives up what defines LDA: it assumes one topic per document, and its topic words are still bags of words.
 
 ## Document clustering (Sarkar ch. 7c)
 
@@ -477,7 +478,7 @@ On this article the effect is small: TextRank's picks average 18.1 words against
 | Extractive or abstractive? | Extractive copies real sentences and cannot invent. Abstractive generates, reads well and can hallucinate. |
 | How does TextRank work? | PageRank on a graph of sentences linked by similarity. Central sentences win. |
 | How do you evaluate without labels? | Read topics and members, check stability across seeds, and test usefulness as features in a downstream task. |
-| When would you use BERTopic instead? | Short texts or where word order and meaning matter: embed, reduce, cluster, then describe with class-based TF-IDF. |
+| When would you use BERTopic instead? | When embeddings group your documents better than word counts and one topic per document is acceptable: embed, reduce, cluster, then describe with class-based TF-IDF. |
 
 ## Next
 

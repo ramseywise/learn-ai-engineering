@@ -294,7 +294,7 @@ True False True
 
 Integers in the smallest unit, say micro-dollars, are as fast as floats, here 7.6 ns per addition. [`Decimal`](https://docs.python.org/3.14/library/decimal.html) is about four times slower and decimal-rounding aware, which matters if a contract specifies a rounding rule. [`Fraction`](https://docs.python.org/3.14/library/fractions.html) is exact but about 40 times slower than a float here, since it keeps reducing, and its denominators can grow. Note also that `Decimal(0.1)` shows the binary error faithfully: construct from strings, not floats.
 
-The last lines are traps. `nan != nan`, so `sorted` on a list containing a NaN doesn't raise an error, it returns a list that isn't sorted, since every comparison with NaN is false. In an eval pipeline that yields wrong percentiles with no warning. Check `math.isnan` on the way in. And `math.isclose` defaults to a relative tolerance, so comparing anything to `0.0` is always false unless you pass `abs_tol`.
+The last lines are traps. `nan != nan`, so `sorted` on a list containing a NaN doesn't raise an error, it returns a list that isn't sorted, since every ordering comparison with NaN (`<`, `>`, `<=`, `>=`) is false. In an eval pipeline that yields wrong percentiles with no warning. Check `math.isnan` on the way in. And `math.isclose` defaults to a relative tolerance, so comparing anything to `0.0` is always false unless you pass `abs_tol`.
 
 ## Bits you'll actually use
 
@@ -620,7 +620,7 @@ So the rule of thumb is that speed comes from getting the whole operation out of
 | What's catastrophic cancellation? | Subtracting nearly equal numbers cancels the good leading digits and leaves rounding error. Rearrange the formula. |
 | How do you sum many floats accurately? | `sum` is compensated since 3.12, `math.fsum` handles hard cases, and NumPy uses partial pairwise summation. |
 | How should you store money? | As integers in the smallest unit, or `Decimal` constructed from strings. |
-| Why is NaN dangerous in sorting? | All its comparisons are false, so sort silently gives an unsorted result. |
+| Why is NaN dangerous in sorting? | Its ordering comparisons are all false, and only `!=` is true, so sort silently gives an unsorted result. |
 | Why do sequential and random access differ? | Caches work on lines and prefetchers predict patterns. Random access defeats both. |
 | Why is a list of floats so much bigger than an array? | Pointers plus boxed objects: 32 bytes per value against 8. |
 | Why can a NumPy loop be slower than a list loop? | Each element is boxed into a new Python object as you iterate. |

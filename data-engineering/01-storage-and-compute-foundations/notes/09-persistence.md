@@ -44,7 +44,7 @@ A write in Python passes through two caches before any device sees it. `f.write`
 So here is a writer that acknowledges each record to its client after one of those three steps. The parent `SIGKILL`s it at a random moment, 20 times per setting. `SIGKILL` cannot be caught, so nothing gets a chance to tidy up.
 
 ```python
-import signal, subprocess, random, time
+import signal, subprocess, sys, random, time
 
 WRITER = """
 import os, sys
@@ -64,11 +64,13 @@ open("writer.py", "w").write(WRITER)
 
 def crash_writer(mode):
     """Start a writer, SIGKILL it at a random moment, compare what it acknowledged with the file."""
-    p = subprocess.Popen([sys.executable, "writer.py", mode, "log.txt"], stdout=subprocess.PIPE, text=True)
-    time.sleep(0.05 + random.random() / 10)
-    p.send_signal(signal.SIGKILL)
-    acked = p.stdout.read().count("\n")
-    p.wait()
+    with open("acks.txt", "w") as acks:                # a file, not a pipe: a full pipe would stall the writer
+        p = subprocess.Popen([sys.executable, "writer.py", mode, "log.txt"], stdout=acks)
+        time.sleep(0.05 + random.random() / 10)
+        p.send_signal(signal.SIGKILL)
+        p.wait()
+    with open("acks.txt") as f:
+        acked = f.read().count("\n")
     with open("log.txt") as f:
         saved = sum(1 for line in f if len(line) == 16)        # 16 bytes is one complete record
     return acked, max(acked - saved, 0)
@@ -82,12 +84,12 @@ for mode in ["memory", "flush", "fsync"]:
 
 ```text
 stops at   trials  acknowledged    lost
-memory         20       255,480  19,960
-flush          20       255,480       0
-fsync          20        54,417       0
+memory         20       991,331   4,707
+flush          20       543,470       0
+fsync          20        63,756       0
 ```
 
-The `memory` writer told its client about 19,960 records that were never in the file: about 1,000 per crash, which is what fits in its 8 KB buffer at 16 bytes per record. One `flush` per record closes the gap entirely, for this failure.
+The `memory` writer told its client about 4,700 records that were never in the file: about 235 per crash, which fits a buffer of 8 KB at 16 bytes per record, or 512 records, caught on average half full. The counts vary by machine and run. One `flush` per record closes the gap entirely, for this failure.
 
 Now the honest catch: **this test cannot tell `flush` from `fsync`.** A killed process does not take the page cache with it. The kernel still holds those pages and writes them later, so both show zero. If you stop here you would conclude `fsync` buys nothing, and that is wrong. What it buys only shows when the machine itself goes down.
 
@@ -564,7 +566,7 @@ For a database, the copy is a base backup plus archived WAL, which allows [point
 
 | Rung | Survives | Does not survive | RPO | RTO | Evidence |
 |---|---|---|---|---|---|
-| Process memory | nothing | process crash | all unflushed, about 1,000 records per crash | none needed | measured |
+| Process memory | nothing | process crash | all unflushed, up to 512 records per crash in the test above | none needed | measured |
 | Page cache | process crash | OS crash, power cut | since the last OS writeback; [Redis docs](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) say about 30 s on Linux | reboot | measured for process crash, cited otherwise |
 | `fsync` to device | power cut, if the device honours flushes | disk failure, lying drive | 0 if honest | restart | modelled, not physically tested |
 | WAL, `synchronous_commit=off` | server crash, without corruption | last few hundred ms of commits | 5 to 36 rows in our runs; bounded at 3 x `wal_writer_delay` | 0.1 s to replay | measured and cited |

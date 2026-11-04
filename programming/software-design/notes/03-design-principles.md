@@ -418,7 +418,7 @@ table        22.9 ns/shape   1.87x   total=1278318.5
 
 The direction is the same but the magnitude isn't anything like C++: in this run the table is roughly twice as fast as virtual dispatch, nowhere near 10x, because in an interpreter every path pays for bytecode dispatch and boxed floats. The real speedup is leaving the interpreter, and [NumPy-style vectorising](../../python/03-language-for-engineers/notes/09-memory-and-the-runtime.md) over flat data sits in Muratori's camp: it requires knowing the data layout, not hiding it. That's Parnas's cost note from 1972 turning up again.
 
-For an LLM system, where work is dominated by waiting for a model, a few hundred nanoseconds of dispatch won't show on any profile. For an inner loop over a hundred million rows, it may be your whole budget. So measure with [a profiler](06-debugging-and-profiling.md) and don't argue from either side's slogan. Muratori's fair point stands: cost is real and the people recommending an abstraction rarely quantify it.
+For an LLM system, where work is dominated by waiting for a model, a few tens of nanoseconds of dispatch per call, as measured above, won't show on any profile. For an inner loop over a hundred million rows, it may be your whole budget. So measure with [a profiler](06-debugging-and-profiling.md) and don't argue from either side's slogan. Muratori's fair point stands: cost is real and the people recommending an abstraction rarely quantify it.
 
 ## Essential and accidental complexity
 
@@ -468,7 +468,7 @@ You won't adopt their full architecture, but a Python version of the idea is eve
 | Does ISP apply in Python? | Weakly: Martin says dynamic languages are less affected. It survives as "ask for only what you use", via `Protocol`. |
 | How do you do dependency inversion in Python? | Pass a function or protocol object into high-level logic and wire the real one at the edge. No framework needed. |
 | What's the best critique of SOLID? | Pick one and state it fairly: North on rules vs properties, Ousterhout on shallow pieces, Metz on premature abstraction, Muratori on measured runtime cost. Then give the reply. |
-| Is polymorphism slow? | Muratori measured 1.5x to about 15x in C++. In CPython my run shows a much smaller gap, since the interpreter dominates. Measure in your own context. |
+| Is polymorphism slow? | Muratori measured 1.5x to about 15x in C++, and 20 to 25x with AVX. In CPython my run shows a much smaller gap, since the interpreter dominates. Measure in your own context. |
 | Essential vs accidental complexity? | Brooks: inherent difficulty versus representation difficulty. Moseley and Marks: avoid or separate accidental state and control. |
 
 ## Next

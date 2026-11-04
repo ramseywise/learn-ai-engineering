@@ -416,12 +416,12 @@ D. To match the residual stream scale
 
 ### C3
 
-Self-attention's O(n²) cost is the stated reason for which *pair*?
+Self-attention compares every token with every earlier one. That quadratic cost most directly explains:
 
-A. Hallucination and reward hacking
-B. Long-context expense and "context rot"
-C. Tokenization drift and multilingual inflation
-D. Catastrophic forgetting and mode collapse
+A. Why models hallucinate
+B. Why long contexts are expensive to process
+C. Why token counts vary between languages
+D. Why training can forget earlier data
 
 ### C4
 
@@ -455,7 +455,7 @@ D. Mixture-of-experts routing
 Even at temperature 0, production output isn't fully deterministic. Named causes:
 
 A. Tokenizer drift, prompt truncation, retry logic
-B. Batching, floating point, MoE routing
+B. Batching, floating point, hardware and version differences
 C. Sampling seeds, top-p, top-k
 D. Load balancing, caching, streaming
 
@@ -563,7 +563,7 @@ D. The KV cache
 "Lost in the middle" describes:
 
 A. Truncation of the middle of a long prompt by the tokenizer
-B. Attention dilution over long contexts
+B. Models using information at the start and end of a long context better than the middle
 C. Retrieval returning mid-ranked documents
 D. Positional embeddings failing past their trained length
 
@@ -618,7 +618,8 @@ C21-B · C22-C · C23-B
 - **C21**: Temperature scales the logits before sampling — low values concentrate mass on
   the top tokens, high values flatten the distribution. It is not a length, latency, or
   capacity control. Note the interaction with **C7**: temperature 0 removes *sampling*
-  randomness but not nondeterminism from batching, floating point, and MoE routing.
+  randomness but not nondeterminism from batching, floating point, and hardware or version
+  differences.
 - **C22**: CoT buys reasoning quality by spending intermediate tokens — so it *raises*
   token usage and latency, which is why A and D are inverted traps. It reduces reasoning
   errors; it does not eliminate hallucination (C), since a fluent wrong chain is still
