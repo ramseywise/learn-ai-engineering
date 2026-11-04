@@ -1,0 +1,720 @@
+# Lecture on notes/01-statistical-foundations.md, in the note's order.
+# make slides PILLAR=data-science/01-classical-ml LECTURE=01-statistical-foundations STRICT=1 PREVIEW=1
+deck:
+  title: Statistical Foundations
+  subtitle: What a model estimates, and why it fails on new data
+  tagline: "The question · The setting · Bias and variance · Probability · Splits · The API · Pitfalls"
+  reference: "Notes: data-science/01-classical-ml/notes/01-statistical-foundations.md"
+  output: 01-statistical-foundations.pptx
+  notes: >-
+    This is the refresher everything else in classical ML leans on. By the end you should have the words for why a model
+    fails on new data, the habit of hiding data away to measure it, and the four lines of code every later model shares.
+
+lecture:
+  covers: [data-science/01-classical-ml/notes/01-statistical-foundations.md]
+  requires:
+    - data-science/01-classical-ml/README.md
+    - data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md
+  next: [data-science/01-classical-ml/notes/02-supervised-learning.md]
+  related:
+    - data-analytics/02-probability-and-statistics/notes/04-estimation.md
+    - data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md
+    - data-science/01-classical-ml/notes/04-model-evaluation.md
+  omits:
+    - The shape of this pillar   # the overview lecture and the generated slides carry this
+    - Reading map                # a list of books, which belongs in the note
+
+parts:
+  - title: The question behind every model
+    summary: Last year or next year · What a model is · Every failure is the same failure
+    notes: We start with the one question all of classical ML is trying to answer.
+    slides:
+      - layout: statement
+        beat: problem
+        section: Why a readings layer comes first
+        title: Who will earn over $50k next year?
+        recall: What is a data scientist asked that a census analyst isn't?
+        kicker: The problem
+        statement: "A census analyst can tell you who earned over $50k last year. A data scientist is asked who will next year, and whether the answer holds on people the model never saw."
+        takeaway: A data scientist predicts who earns over $50k next year, and if that holds on new people.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Describing last year is a counting problem. Predicting next year is a different kind of claim, because we can't
+          check it on the people we care about. Everything today is about how to make that claim honestly.
+
+      - layout: compare
+        beat: fundamentals
+        section: Why a readings layer comes first
+        title: A model is a rule learned from past examples
+        recall: What matters about a model's guesses?
+        lead: Picture a new estate agent who has seen a few hundred house sales and now guesses prices.
+        left:
+          title: Sales already studied
+          bullets: [The agent has seen the answers, Guesses look sharp, This score flatters]
+        right:
+          title: Houses never seen
+          bullets: [No answers to lean on, Guesses can be far worse, This is the score that counts]
+        takeaway: What matters is how well the guesses hold up on data the model has never seen.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Hold on to this picture. The gap between the two sides is what today's vocabulary names, and hiding some data
+          away is how we measure it. That check sits behind every prediction you will ship at work.
+
+      - layout: cards
+        beat: fundamentals
+        section: Why a readings layer comes first
+        title: Three words carry the whole subject
+        recall: How do you define a model, learning and generalisation in terms of f?
+        lead: "Assume the world works like y = f(x) + ε: some function of x, plus noise."
+        cards:
+          - {title: Model, body: "An estimate f̂ of the unknown f."}
+          - {title: Learning, body: "Choosing f̂ from a family of functions."}
+          - {title: Generalisation, accent: "D4621A", body: "How close f̂ stays to f on new x."}
+        takeaway: A model estimates f, learning picks the estimate, and generalisation is closeness to f on new x.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          The rest of the lecture is about that last card. A better fit on the rows you have is not better generalisation.
+          The data generating process note in data analytics makes the same point from the analyst's side.
+
+      - layout: steps
+        beat: fundamentals
+        section: Why a readings layer comes first
+        title: Every failure is a failure to generalise
+        recall: What do overfitting, leakage and a peeked test set have in common?
+        lead: "Classical ML is applied statistics with a compute budget, and each technique answers one question: how do I estimate a function from samples so it holds on samples I haven't seen?"
+        steps:
+          - {title: Overfitting, text: "The fit learned the sample, not the function"}
+          - {title: Leakage, text: "The model saw statistics of the rows it is tested on"}
+          - {title: The wrong metric, text: "The score rewards something you don't want"}
+          - {title: A peeked test set, text: "The check stopped being a check"}
+        takeaway: Overfitting, leakage, a bad metric and a peeked test set all break one promise about unseen data.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          These four will come back as whole lectures. Overfitting today and in supervised learning, leakage in pipelines,
+          metrics in evaluation and choosing a metric. For now, notice that they are one failure wearing four costumes.
+
+  - title: The problem setting
+    summary: The vocabulary · Two questions first · Two cultures · The running example
+    notes: Before bias and variance, we need shared words and one table to try them on.
+    slides:
+      - layout: table
+        beat: fundamentals
+        section: The problem setting
+        title: The words you need before any model
+        recall: What is the difference between a sample, a feature and a target?
+        header: [Term, Meaning, Comes back in]
+        widths: [2.6, 5, 3.4]
+        rows:
+          - [Sample, "One row x, with its features", Everywhere]
+          - [Feature, "One column: numeric, categorical, text, image", Feature engineering]
+          - ["Target, label", The y you want to predict, Supervised learning]
+          - [Supervised, "Learn x to y from labelled pairs", "Supervised learning, ensembles"]
+          - [Unsupervised, Find structure in x alone, Unsupervised learning]
+          - [Classification, y is a class from a finite set, Supervised learning]
+          - [Regression, y is a real number, Supervised learning]
+          - [Generalisation, Performance on data not used to fit, Model evaluation]
+        takeaway: A row is a sample, a column is a feature, and the target is the y you want to predict.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Don't memorise this. It is here so that nobody is lost in the next hour. The right-hand column says where each
+          word gets its own lecture.
+
+      - layout: compare
+        beat: fundamentals
+        section: The problem setting
+        title: The first split is whether you have a target
+        recall: What separates supervised from unsupervised learning?
+        emphasis: none
+        left:
+          title: Supervised
+          bullets: ["You have labelled pairs of x and y", "You learn to predict y"]
+        right:
+          title: Unsupervised
+          bullets: ["You have x alone", "You look for structure"]
+        takeaway: Supervised learning predicts a labelled y, and unsupervised learning finds structure in x alone.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Most of this course is supervised, because a held-out score gives us something to believe. The unsupervised
+          lectures come later, once we have the tools to check an answer that has no label.
+
+      - layout: cards
+        beat: fundamentals
+        section: The problem setting
+        title: Two questions come before any model
+        recall: Which two questions come before any model?
+        kicker: "Müller and Guido, ch. 1"
+        lead: Most failed projects fail here, not in model choice.
+        cards:
+          - {title: "What am I answering?", body: "Can the data I have answer it?"}
+          - {title: "How will I measure success?", accent: "D4621A", body: "What counts as success, and what does a wrong answer cost?"}
+        takeaway: Ask what question you are answering with this data, and how you measure success and price a wrong answer.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          These sound too obvious to write down. Müller and Guido open their book with them anyway, because projects die
+          here far more often than they die from the wrong algorithm.
+
+      - layout: compare
+        beat: fundamentals
+        level: practice
+        section: The problem setting
+        title: Breiman split the field by its measure of success
+        recall: How did Breiman divide statistical modelling by its measure of success?
+        kicker: "Breiman, Statistical Science 2001"
+        left:
+          title: Data modelling
+          bullets: ["Assume a data model", "Validate with goodness-of-fit tests and residuals"]
+        right:
+          title: Algorithmic modelling
+          bullets: ["Judge a model by its predictive accuracy"]
+        takeaway: One culture validates an assumed data model, and the other judges by predictive accuracy.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This pillar lives mostly on the right, and data analytics spends more time on the left. Cox's published reply to
+          Breiman is worth remembering: "I would prefer to start with an issue, a question or a scientific hypothesis". That
+          takes us straight back to the first question on the previous slide.
+
+      - layout: code
+        beat: practice
+        level: practice
+        section: The problem setting
+        title: The running example is one table of people
+        recall: What is the first thing to print on a classification problem?
+        lead: "Adult census, from Müller and Guido ch. 4. Each row is a person, and the target is whether they earned over $50k."
+        lang: python
+        code: |-
+          adult = pd.read_csv(".../adult.data", header=None, names=cols,
+                              skipinitialspace=True, na_values="?")
+          print(adult.shape)
+          print(adult["income"].value_counts(normalize=True).round(3).to_dict())
+          print(adult[["workclass", "occupation", "native-country"]].isna().sum().to_dict())
+
+          # (32561, 15)
+          # {'<=50K': 0.759, '>50K': 0.241}
+          # {'workclass': 1836, 'occupation': 1843, 'native-country': 583}
+        takeaway: Print the class shares first, because they set the number any model's accuracy has to beat.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This table returns in the later lectures, where we encode it, evaluate on it, boost on it and explain it. So it is
+          worth two minutes now. There are 32,561 people and 15 columns, and three columns have missing values.
+
+      - layout: statement
+        beat: pitfalls
+        section: The problem setting
+        title: Is 76% accuracy good?
+        kicker: Adult census
+        statement: "Always guessing \"<=50K\" is right about three times in four. Read a model's accuracy against 0.759, not against zero."
+        takeaway: Not on adult census, where always guessing <=50K scores 0.759, so read accuracy against the base rate.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          A model that has learned nothing at all scores 76 percent here. That is the first number we have, and it already
+          changes how every later score reads. With it in hand, we can ask why models fail.
+
+  - title: Bias, variance and model complexity
+    summary: The decomposition · A simulation · Train and test · More data
+    notes: Now the central idea. Why does a model that fits well fail on new rows?
+    slides:
+      - layout: image
+        beat: fundamentals
+        section: "Bias, variance and model complexity"
+        title: More complexity first helps, then hurts
+        recall: What happens to test accuracy as complexity rises?
+        kicker: "Müller and Guido, ch. 2"
+        image: ../../../sources/images/mueller-guido-overfitting-underfitting-cartoon.png
+        caption: "Image source: Müller and Guido, Introduction to Machine Learning with Python, ch. 2."
+        bullets:
+          - "**Too simple:** underfits, and both scores are low."
+          - "**Too flexible:** overfits, and the two scores pull apart."
+          - "**In between** is the model you want."
+        takeaway: Test accuracy rises with complexity until the model starts fitting the sample, then falls, so aim for the sweet spot.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Hold this picture in mind. Raising complexity trades one kind of error for another. To say which kind, and how
+          much, we need the decomposition.
+
+      - layout: cards
+        beat: fundamentals
+        section: "Bias, variance and model complexity"
+        title: Error has three parts, and you control two
+        recall: How does expected squared error break down?
+        cards:
+          - {title: Bias, body: "The family is too simple: a straight line fit to a curve."}
+          - {title: Variance, body: "The fit depends too much on the sample: a degree-15 polynomial through 20 points."}
+          - {title: Irreducible error, accent: "94A3B8", body: "The noise in y itself. No model removes it."}
+        takeaway: Expected error is bias squared plus variance plus noise, and you control only the first two.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Bias is being wrong in the same way every time. Variance is being wrong in a different way depending on which rows
+          you happened to draw. Noise is the part nobody can fix, so know its size before you spend a week tuning.
+
+      - layout: code
+        beat: fundamentals
+        level: deep
+        section: "Bias, variance and model complexity"
+        title: The decomposition, written out
+        recall: Write the bias-variance decomposition.
+        lang: math
+        code: |-
+          E[(y - f̂(x))²]  =  (E[f̂(x)] - f(x))²  +  Var[f̂(x)]  +  σ²
+
+                               bias²                variance      irreducible
+
+          E[f̂(x)]   the average fit over many training sets
+          Var[f̂(x)] how far one fit swings around that average
+          σ²         the noise in y, here 0.3² = 0.09 in the simulation to come
+        takeaway: "E[(y - f̂(x))²] = (E[f̂(x)] - f(x))² + Var[f̂(x)] + σ², which is bias² plus variance plus noise."
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          The expectation runs over training sets. That is why you can't compute this on real data: you only ever drew one
+          training set. A simulation, where we know the true function, lets us see each term directly.
+
+      - layout: code
+        beat: practice
+        level: deep
+        section: "Bias, variance and model complexity"
+        title: A simulation can measure each part
+        recall: Why does measuring bias and variance directly need a simulation?
+        lead: "f(x) = sin(2πx), noise sd 0.3, 30 points per training set, 200 training sets. Polynomial degree is the knob."
+        lang: python
+        code: |-
+          for degree in [1, 3, 5, 7, 9]:
+              preds = []
+              for _ in range(200):
+                  x = rng.uniform(0, 1, 30)
+                  y = f(x) + rng.normal(0, 0.3, 30)
+                  preds.append(np.polyval(np.polyfit(x, y, degree), x_grid))
+              preds = np.array(preds)
+              bias2 = ((preds.mean(0) - f(x_grid)) ** 2).mean()
+              var = preds.var(0).mean()
+        takeaway: Only a simulation lets you draw many training sets from a known function, so only it can show each term.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Read the loop from the inside. We draw a fresh training set, fit it, and predict on a fixed grid. Bias compares the
+          average prediction with the truth, and variance is how far predictions spread around their own average.
+
+      - layout: table
+        beat: practice
+        section: "Bias, variance and model complexity"
+        title: Degree 3 to 5 is the sweet spot
+        recall: In the simulation, what happens to bias and variance as degree rises?
+        lead: "Simulated data: f(x) = sin(2πx), noise sd 0.3, 30 points per training set, mean over 200 training sets."
+        header: [Degree, Bias², Variance, Test MSE]
+        widths: [2, 2, 2, 2]
+        rows:
+          - ["1", "**0.157**", "0.021", "0.268"]
+          - ["3", "0.003", "0.013", "**0.106**"]
+          - ["5", "0.000", "0.025", "0.115"]
+          - ["7", "0.001", "0.196", "0.287"]
+          - ["9", "0.010", "**17.864**", "17.963"]
+        highlight: [1, 2]
+        takeaway: Bias falls and variance rises, so degree 1 is mostly bias, and at degree 9 variance reaches 17.9.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Test MSE is bias squared plus variance plus 0.09, the noise. Look at degree 9. Its bias is tiny, so the average of
+          many fits is near the truth, but no one ever gets the average. You get one fit, and that fit swings wildly.
+
+      - layout: table
+        beat: practice
+        section: "Bias, variance and model complexity"
+        title: Two scores diagnose the fit
+        recall: How do train and test scores diagnose underfitting and overfitting?
+        header: [Symptom, Train, Test, Diagnosis, Fix]
+        widths: [1.8, 1, 1.8, 1.6, 4.6]
+        rows:
+          - [Underfitting, Low, "Low, close to train", High bias, "More features, a more flexible model, less regularisation"]
+          - [Overfitting, High, Much lower, High variance, "More data, a simpler model, more regularisation, early stopping"]
+          - [Good fit, High, Close to train, None, "Stop tuning, and check the test set once"]
+        takeaway: Low train and low test is underfitting, and high train with a much lower test is overfitting.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This is the table to keep. The fixes point in opposite directions, so applying the wrong one makes things worse. A
+          bigger model helps only with high bias.
+
+      - layout: compare
+        beat: practice
+        section: "Bias, variance and model complexity"
+        title: More data supports more complexity
+        recall: What happens to variance at degree 9 when training sets grow from 30 to 300 points?
+        lead: Same simulation, degree 9, with ten times the points in each training set.
+        emphasis: right
+        left:
+          title: 30 points
+          bullets: ["Variance **17.9** at degree 9", "Best degree is 3"]
+        right:
+          title: 300 points
+          bullets: ["Variance **0.003** at degree 9", "Best degree moves to 5, with 7 and 9 nearly as good"]
+        takeaway: At degree 9, variance collapses from 17.9 to 0.003, so more data supports more complexity.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Bias barely moves here, and variance collapses. This is the "complexity relative to data size" point from Müller and
+          Guido chapter 2. Andrew Ng's learning curves make it measurable, and they come up in the model evaluation lecture.
+
+      - layout: bullets
+        beat: fundamentals
+        section: "Bias, variance and model complexity"
+        title: Regularisation pulls the fit towards simplicity
+        recall: What is regularisation?
+        lead: It is any constraint that makes the model simpler than the data would otherwise allow.
+        bullets:
+          - "**L2 penalty on weights:** ridge."
+          - "**L1 penalty on weights:** lasso, which also zeros features."
+          - "**A maximum tree depth** in trees."
+          - "**A minimum number of neighbours** in kNN."
+        takeaway: Regularisation is any constraint pulling the fit towards simplicity, and every model family has one main knob.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          These look like four separate tricks, and they are one idea. The next lecture names the main complexity knob for each
+          family, so when a model overfits you know which dial to turn.
+
+      - layout: compare
+        beat: fundamentals
+        level: practice
+        section: "Bias, variance and model complexity"
+        title: Explaining and predicting want different things
+        recall: Why can the wrong model predict better than the correct one?
+        kicker: "Shmueli, Statistical Science 2010"
+        left:
+          title: Explanatory modelling
+          bullets: ["Focuses on minimising bias"]
+        right:
+          title: Predictive modelling
+          bullets: ["Focuses on bias and variance together"]
+        takeaway: Prediction weighs bias and variance together, so "the 'wrong' model can sometimes predict better than the correct one".
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This is why you can't read a good predictive model as a true account of the world, and it comes back in the
+          interpretability lecture. Estimation in data analytics shows the same split on a single estimator.
+
+  - title: Probability as ML uses it
+    summary: Four ideas · Negative log-likelihood · The bridge to Bayes
+    notes: You need far less probability to use these models than the textbooks cover. Four ideas keep coming back.
+    slides:
+      - layout: table
+        beat: fundamentals
+        level: practice
+        section: Probability as ML uses it
+        title: Four probability ideas keep coming back
+        recall: Which four probability ideas recur in ML?
+        header: [Idea, Used in, One line]
+        widths: [2.6, 3.4, 5]
+        rows:
+          - [Likelihood, "Logistic regression, naive Bayes", "How probable the data is under the parameters. Training maximises it"]
+          - [Negative log-likelihood, Cross-entropy loss, "Minimising it is maximum likelihood"]
+          - [Gaussian, "Anomaly detection, weight initialisation", "Mean and variance describe it fully"]
+          - [Conditional independence, Naive Bayes, "Assume features are independent given the class. Wrong, and often still good"]
+        takeaway: The four recurring ideas are likelihood, negative log-likelihood, the Gaussian and conditional independence.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          If any of these feel shaky, the probability foundations and estimation notes in data analytics are the place to go.
+          For using these models, this table is most of what you need.
+
+      - layout: code
+        beat: fundamentals
+        level: deep
+        section: Probability as ML uses it
+        title: Cross-entropy is maximum likelihood in disguise
+        recall: What is minimising cross-entropy equivalent to?
+        lang: math
+        code: |-
+          NLL(θ)  =  -(1/n) Σᵢ log p_θ(yᵢ | xᵢ)
+
+          maximise the likelihood  =  minimise the negative log-likelihood
+
+          For classes, this NLL is the cross-entropy loss.
+          The same line trains logistic regression and a language model.
+        takeaway: Minimising cross-entropy is maximum likelihood of the labels under the model.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This one line runs from the next lecture all the way to nanoGPT later in the course. When you meet a loss function,
+          ask what probability model it is the likelihood of.
+
+      - layout: compare
+        beat: fundamentals
+        level: deep
+        section: Probability as ML uses it
+        title: Regularisation is a prior in another language
+        recall: Ridge and lasso are MAP estimates under which priors?
+        emphasis: none
+        left:
+          title: Ridge
+          bullets: ["L2 penalty", "MAP estimate under a **Gaussian** prior on the weights"]
+        right:
+          title: Lasso
+          bullets: ["L1 penalty", "MAP estimate under a **Laplace** prior on the weights"]
+        takeaway: Ridge is MAP under a Gaussian prior, and lasso is MAP under a Laplace prior.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          That is the bridge between this subject and the Bayesian pillar in data analytics. Priors become regularisers, and
+          posteriors replace point estimates. We won't cross that bridge here, but you should know it is there.
+
+  - title: Train, validation, test
+    summary: The one discipline · Three splits · Two ways to break it
+    notes: Now the habit that makes all of this measurable.
+    slides:
+      - layout: statement
+        beat: fundamentals
+        section: "Train, validation, test"
+        title: The one discipline
+        recall: When may you touch the test set?
+        kicker: The rule
+        statement: The test set is touched once, at the end. Everything you tune is tuned on data the test set never saw.
+        takeaway: Once, at the end, and tune only on data the test set never saw.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This separates a real result from a fooled one. Every look at the test set is a small decision made with it, and
+          those decisions add up until the score is no longer a test.
+
+      - layout: flow
+        beat: fundamentals
+        section: "Train, validation, test"
+        title: Each split answers its own question
+        recall: Why three splits rather than two?
+        steps:
+          - {label: Training, sub: "Fit. 60-80%"}
+          - {label: Validation or CV, sub: "Choose. 10-20% or k-fold"}
+          - {label: Test, sub: "Final estimate. 10-20%"}
+        caption: Typical shares. Validation can be k-fold over the training part instead.
+        takeaway: A split used to choose stops being honest, so choose on validation and take the final estimate from test, once.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Two splits are not enough, because the moment you use one to choose, it stops being honest. So you need one to
+          choose with, and another that stays out of every decision.
+
+      - layout: code
+        beat: practice
+        level: practice
+        section: "Train, validation, test"
+        title: Two arguments make a split trustworthy
+        recall: How do you make a classification split reproducible and balanced?
+        lang: python
+        code: |-
+          split = train_test_split(
+              X, y,
+              random_state=0,  # same split every run
+              stratify=y,      # class shares match
+          )
+          X_train, X_test, y_train, y_test = split
+        bullets:
+          - "**Default:** shuffles, holds out 25%."
+          - "**`random_state`:** same split each run."
+          - "**`stratify=y`:** keeps class shares."
+        takeaway: Fix random_state so the split reproduces, and pass stratify=y so the class balance matches.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Shuffling is a default, not a truth. For data with an order, it is the wrong thing to do, and we come to that in
+          the pitfalls at the end.
+
+      - layout: compare
+        beat: pitfalls
+        section: "Train, validation, test"
+        title: Two ways to fool yourself with a split
+        recall: How does a train and test split end up reporting an optimistic score?
+        left:
+          title: Tuning on the test set
+          bullets: ["Choosing C for an SVM by test score", "The test set becomes a validation set", "The reported score is optimistic"]
+        right:
+          title: Leakage
+          accent: "D4621A"
+          bullets: ["Fitting a scaler or selector on all the data before splitting", "The model has seen statistics of the test rows"]
+        takeaway: Choosing by test score and fitting preprocessing before the split both make the score optimistic.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Both of these are covered properly later. Leakage gets its treatment in feature engineering and pipelines, and tuning
+          in model evaluation and in training and tuning, which runs the whole loop on real data.
+
+  - title: The scikit-learn API in four lines
+    summary: A first application · Four lines · Look at the data · Every method
+    notes: One last piece of foundation. Every classical model you meet has the same shape in code.
+    slides:
+      - layout: image
+        beat: practice
+        section: The scikit-learn API in four lines
+        title: The first application classifies iris flowers
+        recall: How large are the iris data and the default split?
+        kicker: "Müller and Guido, ch. 1"
+        image: ../../../sources/images/mueller-guido-iris-petal-sepal.png
+        caption: "Image source: Müller and Guido, Introduction to Machine Learning with Python, ch. 1."
+        bullets:
+          - "**150 flowers**, four measurements."
+          - "**Predict** the species."
+          - "**112 train, 38 test** by default."
+        takeaway: Iris has 150 rows and four measurements, and the default split gives 112 to train and 38 to test.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          It is a small and easy problem, which is the point. We want to see the shape of the code without any of the data
+          getting in the way.
+
+      - layout: code
+        beat: practice
+        section: The scikit-learn API in four lines
+        title: Every supervised model follows the same four lines
+        recall: What code shape does a supervised scikit-learn model share?
+        lang: python
+        code: |-
+          knn = KNeighborsClassifier(n_neighbors=1)  # 1. instantiate with hyperparameters
+          knn.fit(X_train, y_train)                  # 2. fit on training data
+          y_pred = knn.predict(X_test)               # 3. predict
+          print(knn.score(X_test, y_test))           # 4. score
+
+          # 0.9736842105263158
+        takeaway: Instantiate, fit, predict and score, and every supervised model in this pillar has this shape.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Learned state ends in an underscore, like coef_. The default score is accuracy for classifiers and R squared for
+          regressors. Swap the first line for any other model and the other three stay exactly the same.
+
+      - layout: bullets
+        beat: practice
+        level: practice
+        section: The scikit-learn API in four lines
+        title: Before fitting, look at the data
+        recall: What does a scatter matrix catch before you fit?
+        lead: "One line first: `pd.plotting.scatter_matrix(df, c=y_train)`"
+        bullets:
+          - "**Do the classes separate** on the raw features at all?"
+          - "**Unit errors** show up as odd scales."
+          - "**Outliers** show up before they cost you a day."
+        takeaway: A scatter matrix shows if classes separate on raw features, and catches unit errors and outliers.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          One line of code, and it comes before fit in any real project. It is the cheapest check in this whole lecture.
+
+      - layout: table
+        beat: practice
+        level: practice
+        section: The scikit-learn API in four lines
+        title: Six methods and what they return
+        recall: What does fit return, and what does transform return?
+        header: [Method, "On", Returns]
+        widths: [3.6, 3.2, 4.4]
+        rows:
+          - ["`fit(X, y)`", Every estimator, "`self`, with learned attributes ending in `_`"]
+          - ["`predict(X)`", "Supervised models, some clusterers", Labels or values]
+          - ["`predict_proba(X)`", Most classifiers, Class probabilities]
+          - ["`transform(X)`", "Preprocessors, PCA, vectorisers", A new feature matrix]
+          - ["`fit_transform(X)`", Transformers, "Fit then transform, sometimes faster"]
+          - ["`score(X, y)`", Supervised models, Default metric]
+        takeaway: fit returns self with learned attributes, predict returns answers, and transform returns a new feature matrix.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          decision_function sits next to predict_proba and returns signed margins. Because every estimator has this shape, you
+          can chain them into pipelines and search over them. Both come in later lectures.
+
+      - layout: compare
+        beat: fundamentals
+        level: deep
+        section: The scikit-learn API in four lines
+        title: The uniform API is a design decision
+        recall: What does the scikit-learn paper claim about its API, and what doesn't it measure?
+        kicker: "Pedregosa et al., JMLR 2011"
+        left:
+          title: What the paper claims
+          bullets: ["API consistency over many algorithms", "For non-specialists", "By code convention, not inheritance"]
+        right:
+          title: What it doesn't show
+          bullets: ["It reports no usability study", "Its one benchmark table measures time on a single dataset"]
+        takeaway: API consistency is a stated design goal of scikit-learn, and the paper doesn't measure usability.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Anything with a fit method can join in. That convention is the reason the ecosystem around scikit-learn fits together.
+          Read it as a design claim, because that is all the paper offers for it.
+
+      - layout: image
+        beat: practice
+        level: deep
+        section: The scikit-learn API in four lines
+        title: Which estimators have which methods
+        recall: Which estimators predict, and which transform?
+        kicker: "Müller and Guido, ch. 8"
+        image: ../../../sources/images/mueller-guido-api-table.png
+        caption: "Image source: Müller and Guido, Introduction to Machine Learning with Python, ch. 8."
+        takeaway: Classifiers, regressors and some clusterers predict, preprocessors and feature extractors transform, and all of them fit.
+        source: notes/01-statistical-foundations.md
+        notes: A reference slide, to come back to when you're unsure which method a given object offers.
+
+      - layout: code
+        beat: practice
+        level: deep
+        section: The scikit-learn API in four lines
+        title: Writing your own estimator takes three rules
+        recall: How do you make a custom class work as a scikit-learn estimator?
+        lang: python
+        code: |-
+          class Ranked(ClassifierMixin, BaseEstimator):
+              def __init__(self, rank=0):
+                  self.rank = rank       # store it, no logic
+
+              def fit(self, X, y):
+                  c, n = np.unique(y, return_counts=True)
+                  self.classes_ = c      # state ends in _
+                  self.label_ = c[np.argsort(-n)[self.rank]]
+                  return self
+
+              def predict(self, X):
+                  return np.full(len(X), self.label_)
+        bullets:
+          - "**Inherit** a mixin, `BaseEstimator`."
+          - "**`__init__`** only stores hyperparameters."
+          - "**`fit`** returns `self`."
+        takeaway: Subclass BaseEstimator and a mixin, keep logic out of __init__, and return self from fit.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          An illustration written for this slide and run on iris, following the rules in Müller and Guido chapter 8. Follow those
+          rules and your object works in pipelines and grid search.
+
+  - title: Pitfalls
+    summary: Five first mistakes · A rule that loses to guessing · What to carry forward
+    notes: Each of these is a mistake with a symptom you can spot, and a fix you can apply on Monday.
+    slides:
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Five ways a first model misleads you
+        recall: What's the symptom of fixing variance with a bigger model?
+        header: [Pitfall, Symptom, Fix]
+        widths: [3.4, 4, 3.8]
+        rows:
+          - [Accuracy without the base rate, "76% on adult census is what always saying <=50K gets", Print the class shares before fitting]
+          - [Treating noise as bias, The test score stops improving with any model or feature, "Estimate the noise from repeat labels or human agreement"]
+          - [Reading the test set while developing, The score drops the day it meets real data, Tune on validation or CV]
+          - [Fixing variance with a bigger model, "Train rises, test falls", "Regularise, simplify or add data"]
+          - [Shuffling data that has an order, "Great offline, poor live, on time-stamped or grouped rows", "Split by time or group, as production meets the data"]
+        takeaway: A bigger model raises train and lowers test when the problem is variance, so regularise, simplify or add data.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Treating noise as bias is the expensive one. If human labellers disagree with each other on a fifth of the rows, no
+          amount of tuning gets you past that. Measure the noise before you spend the week.
+
+      - layout: code
+        beat: pitfalls
+        level: practice
+        section: Pitfalls
+        title: A sensible rule can lose to guessing
+        recall: Why compare a sensible-looking rule to the base rate?
+        lead: "On adult census: predict over $50k if `education-num` is 13 or more."
+        lang: python
+        code: |-
+          ((adult["education-num"] >= 13) == (adult["income"] == ">50K")).mean()
+
+          # 0.752   the rule
+          # 0.759   always guessing <=50K
+        takeaway: On accuracy, a sensible-looking rule at 0.752 loses to the base rate of 0.759, so check before you believe it.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          More education does go with higher income, and the rule still loses on accuracy to knowing nothing. That doesn't make
+          education useless. It says you need a better question and a better measure, which is where the next lectures go.
+
+      - layout: steps
+        beat: wrap
+        section: Pitfalls
+        title: What to carry into the next lecture
+        recall: What should you carry forward from statistical foundations?
+        steps:
+          - {title: Print the base rate, text: "Every score is read against it"}
+          - {title: Read train and test together, text: "Together they name bias or variance, and that picks the fix"}
+          - {title: Keep the test set back, text: "Touch it once, at the end"}
+          - {title: Use the four lines, text: "Every model next lecture has this shape, and its own complexity knob"}
+        takeaway: Read scores against the base rate, diagnose with train and test, touch the test set once, and use the four lines.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          You now have what you need to compare models fairly. Next we meet the families themselves: linear models, kNN, trees,
+          kernels. Each one gets its complexity knob, its strengths and its failure mode.

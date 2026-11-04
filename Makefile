@@ -19,7 +19,7 @@ CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science
 LANGUAGE_SUBSET = programming/typescript programming/sql/notes/10-capstone-murder-mystery.md
 
 test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
-	@fail=0; for t in lint link-check crosswalk-check manifest-check chapter-check-all drill-check deck-check ledger-check unit; do \
+	@fail=0; for t in lint link-check crosswalk-check manifest-check chapter-check-all drill-check deck-check deck-graph-check ledger-check unit; do \
 		echo "== $$t"; $(MAKE) --no-print-directory $$t || { echo "FAILED: $$t"; fail=1; }; \
 	done; \
 	echo "== curriculum (information only)"; \
@@ -43,6 +43,12 @@ chapter-check-all:  ## Hold the five pillared subjects to the chapter standard a
 	@python3 scripts/check_chapters.py --strict $(LANGUAGE_SUBSET) >/dev/null
 	@python3 scripts/check_chapters.py programming/*/ | tail -1
 	@python3 scripts/check_chapters.py --advisory $(CHAPTER_GATE) | tail -1
+
+deck-graph:  ## Regenerate DECKS.md, the map of every pillar and lecture
+	@uv run -q --with pyyaml python scripts/slides/deck_graph.py build
+
+deck-graph-check:  ## Fail if a lecture's covers or edges name a missing note, or two lectures claim one note
+	@uv run -q --with pyyaml python scripts/slides/deck_graph.py check
 
 deck-check:  ## Fail if a stamped deck no longer matches its deck.yaml; decks built before stamping are reported only
 	@python3 scripts/slides/deck_stamp.py
@@ -126,8 +132,8 @@ papers-nightly-uninstall:  ## Remove the nightly /papers job
 # PILLAR is a dir under ai-engineering/ (01-prompt-engineering) or a path (generative-ai/02-rag-retrieval)
 SLIDES_DIR = $(if $(findstring /,$(PILLAR)),$(PILLAR),ai-engineering/$(PILLAR))
 
-slides:  ## Build a deck: make slides PILLAR=01-prompt-engineering|data-analytics/02-probability-and-statistics|programming/python/01-foundations [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]
-	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]"; exit 1; }
+slides:  ## Build a deck: make slides PILLAR=01-prompt-engineering|data-analytics/02-probability-and-statistics|programming/python/01-foundations [LECTURE=01-statistical-foundations] [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]
+	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [LECTURE=<NN-slug>] [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]"; exit 1; }
 	@uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py python scripts/slides/build_deck.py \
-		$(SLIDES_DIR)/slides/deck.yaml \
-		$(if $(PREVIEW),--preview $(SLIDES_DIR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict) $(if $(LEVEL),--level $(LEVEL))
+		$(SLIDES_DIR)/slides/$(if $(LECTURE),lectures/$(LECTURE).yaml,deck.yaml) \
+		$(if $(PREVIEW),--preview $(SLIDES_DIR)/slides/$(if $(LECTURE),lectures/.preview/$(LECTURE),.preview)) $(if $(PDF),--pdf) $(if $(STRICT),--strict) $(if $(LEVEL),--level $(LEVEL))

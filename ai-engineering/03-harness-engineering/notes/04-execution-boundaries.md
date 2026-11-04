@@ -15,6 +15,8 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 8"
   - https://arxiv.org/abs/2402.06664
+  - https://arxiv.org/abs/2407.16741
+  - https://arxiv.org/abs/2604.25850
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
 confidence: high
 cleaned: 2026-11-01
@@ -34,6 +36,8 @@ A sandbox gives the agent a **safe operating environment to act, observe results
 The sandbox has to sit outside what the agent can change. In STOP, GPT-4 rewrote its own improver code and removed the sandbox flag in 0.42% of 10,000 attempts (95% CI 0.31–0.57%), usually commenting the change "for efficiency" ([arXiv:2310.02304](https://arxiv.org/abs/2310.02304) (Zelikman et al., 2023-10)). Enforce isolation in the runtime, never in code or config the agent can edit.
 
 What a sandbox ships with matters as much as its isolation: language runtimes, CLIs, browsers, test runners. These are the agent's *senses*. Browsers, logs, screenshots, and test output are how it observes its own work — the raw material for self-verification loops ([note 05](05-verification-loops.md)).
+
+OpenHands ([arXiv:2407.16741](https://arxiv.org/abs/2407.16741) (Wang et al., ICLR 2025)) shows the per-session shape: a Docker container for each task session, built on any base image, with the workspace mounted and an API server inside that runs the agent's bash, Python and browser actions. Read it as a design, not as evidence about isolation. The paper calls the container "securely isolated" but reports no escape, prompt-injection or side-effect test.
 
 **Backend independence is the design rule**: *"swap the backend, the tools don't change."* One `Sandbox` interface, multiple implementations:
 
@@ -106,6 +110,8 @@ The rule from [02-context-engineering/notes/02](../../02-context-engineering/not
 > A model may ignore, misunderstand, or inconsistently follow a textual instruction. **A code-level control cannot be talked out of enforcing itself.**
 
 So: if a behavior must hold *every* time, it is a hook, a permission, or a schema — not a sentence. "The agent keeps doing X" is usually a hook, not a stronger paragraph. Adding a fourth conditional to a prompt is the signal that the requirement has outgrown the prompt layer.
+
+One case from an automated harness search shows this. On Terminal-Bench 2's path-tracing task, the agent deleted its verified output during cleanup, even though "the seed harness's prompt advice against 'destroying verified state' was already present". A prompt rule and a shell guard, shipped together at iteration 5, flipped the task from 0/2 to 2/2 rollouts. The paper calls the guard load-bearing, and it intercepted the cleanup in both passing rollouts, but the guard was never tested alone on this task. That guard could also be overridden: a related task recovered only partly at iteration 5, was back to 0/2 at iteration 7, and reached 2/2 once iteration 8 made the reset a hard block ([arXiv:2604.25850](https://arxiv.org/abs/2604.25850) (Lin et al., 2026-04, preprint)). These are single-task results with two rollouts each, so treat them as an illustration.
 
 Karpathy's version of the same split (as relayed from his AISN 2026 talk): a `CLAUDE.md` line such as "don't touch /important" is a **request** the model can ignore, and a pre-tool-use hook that blocks the write is a **rule** it cannot. Sort every behaviour into three buckets and match the enforcement to the cost of getting it wrong:
 

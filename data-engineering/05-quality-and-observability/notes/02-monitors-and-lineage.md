@@ -10,6 +10,7 @@ sources:
   - https://docs.getdbt.com/reference/resource-properties/freshness
   - https://mlsys.org/Conferences/2019/doc/2019/167.pdf
   - https://sre.google/sre-book/monitoring-distributed-systems/
+  - https://arxiv.org/abs/1810.11953
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -56,6 +57,8 @@ Drift metrics are proxies: they flag trouble without labels by comparing a **ref
 | Concept drift | P(output \| input): the same inputs now mean something else | Retrain on recent data; arrives gradually, suddenly (an external event) or periodically (seasonality) |
 
 The test depends on the column: Kolmogorov–Smirnov for one numeric feature, chi-squared for a categorical one, one test per feature. Text and other embedded inputs are multivariate. The usual approach there is to reduce the embeddings of both windows and compare them with maximum mean discrepancy (MMD), a kernel distance between the two distributions. `alibi-detect` ships `KSDrift` and `MMDDrift`, and Evidently has embedding-drift methods too. Several kinds of drift can happen at once, which is why the per-column test suite below matters for finding the source.
+
+One test per feature is less crude than it sounds, as long as you correct for the number of tests: with a Bonferroni correction you reject only if the smallest of *K* p-values is below α/*K*. [*Failing Loudly*](https://arxiv.org/abs/1810.11953) (Rabanser, Günnemann and Lipton, NeurIPS 2019) compared detectors on simulated shifts of MNIST and CIFAR-10, at α = 0.05 over five random splits. **Corrected univariate tests were comparable to multivariate MMD, and the best detector was KS on the softmax outputs of the classifier already in place**. At 1,000 samples, pooled across all the shifts, it detected the shift 70% of the time, against 61% for the best MMD setup and 54% for KS on the raw inputs. That supports the prediction-first advice above, with a catch: the evidence is for a classifier's soft outputs on images, and chi-squared on hard predicted labels reached only 46%. It says nothing directly about a regressor's single prediction column. The authors leave other domains such as text and graphs open, along with online data, where adjacent time steps are correlated, so the study does not cover a monitor that tests every day. [Drift](../../06-ml-platform/notes/04-drift.md) works through the tests and more of these results.
 
 The data-observability vendors group the pipeline half of this table into five pillars: freshness, quality, volume, schema and lineage ([Monte Carlo, What is data observability](https://www.montecarlodata.com/blog-what-is-data-observability/), a vendor's framing, though a widely used one). We already tested quality and schema. The rest of this chapter builds freshness, volume, distribution and lineage on the running feed, and then the model layers.
 
@@ -542,7 +545,7 @@ Two things to change before production. Metrics are keyed by `begin + timedelta(
 
 Give every alert an owner and an action (page, open a ticket, trigger retraining). An alert nobody acts on trains the team to ignore the channel, and requiring two consecutive breaches is the cheapest guard against one noisy batch. For statistical drift tests the p-value is the threshold, and the same trade-off applies: set it too loose and false positives drown the real ones.
 
-Before a drift alert triggers retraining, rule out the cheap explanations: is the data valid, did a schema change, is it one outlier? Retraining is the expensive response and fixes none of those (*LLM Engineer's Handbook*, appendix).
+Before a drift alert triggers retraining, rule out the cheap explanations: is the data valid, did a schema change, is it one outlier? Retraining is the expensive response and fixes none of those (*LLM Engineer's Handbook*, appendix). Nor does a real shift have to hurt. *Failing Loudly* found one in MNIST's own train and test split, where a KS test on the sixes gave p = 2.7e-10 against a Bonferroni threshold of 6.3e-5, and its malignancy check declared that shift harmless.
 
 Google's SRE book states the same discipline for paging: every page should be actionable and should call for intelligence rather than a robotic response ([Beyer et al., Site Reliability Engineering, ch. 6](https://sre.google/sre-book/monitoring-distributed-systems/)). It also separates the symptom (what is broken) from the cause (why). Data monitors should alert on symptoms that users would notice, and lineage helps with the cause. [Breck et al. (2017)](https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/), in the ML Test Score's second monitoring test, say the same about data invariants: thresholds need careful tuning, so that alerts stay useful and actionable.
 

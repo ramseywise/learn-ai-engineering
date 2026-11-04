@@ -1,4 +1,4 @@
-# Deck spec — `slides/deck.yaml`
+# Deck spec — `slides/deck.yaml` and `slides/lectures/*.yaml`
 
 `scripts/slides/build_deck.py` renders one YAML file into a 16:9 `.pptx` in the course's
 house style (navy title bar with an orange edge, breadcrumb strip, white cards with
@@ -206,6 +206,52 @@ stamped deck no longer matches its yaml, and reports decks with no stamp without
   15 to 25 for a programming module. `deep` slides don't count towards these limits, because the talk is the deck without them.
 
 Closing parts (`agenda: false`) are exempt from takeaway and part-mix checks.
+
+## Lecture series
+
+A pillar can be taught as a series of full lectures instead of one deck: an overview, then one lecture per note. Each
+lecture is its own file, `<pillar>/slides/lectures/NN-slug.yaml`, and builds to `NN-slug.pptx` beside it. `NN-slug` is
+the note's stem, because note numbers are stable ids. Reading order comes from the README's syllabus. The worked example
+is `data-science/01-classical-ml/slides/lectures/`. Everything above applies, apart from the differences below.
+
+```yaml
+lecture:
+  covers: [data-science/01-classical-ml/notes/01-statistical-foundations.md]   # repo-relative
+  requires: [data-science/01-classical-ml/README.md]
+  next: [data-science/01-classical-ml/notes/02-supervised-learning.md]
+  related: [data-analytics/02-probability-and-statistics/notes/04-estimation.md]
+  omits:                       # note headings left out on purpose
+    - Reading map
+  overview: true               # only on the opening lecture, which covers the README
+```
+
+**Graph.** Lectures are the nodes, and `requires`, `next` and `related` are the edges. Edges point at notes, because a
+note exists before its lecture does. In `DECKS.md`, a target with no lecture yet is labelled "<note title>, notes only". A
+generated slide shows the note title, plus the subject if it is elsewhere. Both start
+naming the lecture the day one is written. `make deck-graph-check`, part of `make test`, fails on an edge or `covers`
+path that does not exist, a note two lectures claim, and a cycle in `requires`. `make deck-graph` regenerates `DECKS.md`,
+the curriculum-wide map.
+
+**Generated slides.** "Where this lecture sits" follows the title slide, and "Where this leads" closes the lecture. Both
+come from the `lecture:` block, so don't write them in the YAML. The story rules don't judge them.
+
+**`section`.** Each slide names the exact `##` heading it teaches. The builder warns when a heading has no slide and no
+line in `omits`, when a section or an omit isn't in the note, and when sections run against the note's order. Practice,
+Try it, Interview checklist, Next, References and Further reading aren't owed slides.
+
+**Size.** A lecture owes one content slide per 150 words of its note, at least 20 and at most 60. An overview owes at
+least 15. `deep` slides count here, because a lecture is the whole note.
+
+**Story.** The spine is checked once per lecture, not per part: open on a `statement` or `image`, include an `image` or
+`flow`, include code, and include the `fundamentals`, `practice` and `pitfalls` beats. An overview owes no code and no
+beats. Layout mix and flashcard rules are unchanged.
+
+```bash
+make slides PILLAR=<pillar> LECTURE=01-statistical-foundations STRICT=1 PREVIEW=1
+```
+
+`LEVEL=` works as it does for a single deck. Previews are in `slides/lectures/.preview/<stem>/`. A YAML image path has
+one more `../` than in `deck.yaml`: `../../../sources/images/...` from a pillar in `data-science/`.
 
 ## Writing rules
 

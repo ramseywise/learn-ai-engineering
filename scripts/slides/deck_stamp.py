@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tell whether a built .pptx still matches its deck.yaml. Standard library only, so `make test` needs no packages.
 
-    python3 scripts/slides/deck_stamp.py [deck.yaml ...]     # default: every tracked or local slides/deck.yaml
+    python3 scripts/slides/deck_stamp.py [deck.yaml ...]     # default: every tracked or local slides/deck.yaml and lecture
 
 build_deck.py writes the sha256 of the deck.yaml bytes into the pptx's core properties. A timestamp could not do this
 job: zip entries change on every build and a git checkout resets mtimes, so a fresh clone would look stale.
@@ -36,10 +36,11 @@ def stamp_value(spec: Path) -> str:
 
 
 def pptx_for(spec: Path) -> Path:
-    """Where build_deck.py writes this deck: `deck.output`, else <pillar>.pptx."""
+    """Where build_deck.py writes this deck: `deck.output`, else <pillar>.pptx, or a lecture's own name."""
     head = spec.read_text(encoding="utf-8").split("\nparts:", 1)[0]
     match = OUTPUT.search(head)
-    return spec.parent / (match.group(1) if match else f"{spec.parent.parent.name}.pptx")
+    default = f"{spec.stem}.pptx" if spec.parent.name == "lectures" else f"{spec.parent.parent.name}.pptx"
+    return spec.parent / (match.group(1) if match else default)
 
 
 def state(spec: Path) -> str:
@@ -59,7 +60,8 @@ def state(spec: Path) -> str:
 
 
 def all_specs() -> list[Path]:
-    return sorted(p for p in ROOT.rglob("slides/deck.yaml") if SKIP.isdisjoint(p.parts))
+    specs = [*ROOT.rglob("slides/deck.yaml"), *ROOT.rglob("slides/lectures/*.yaml")]
+    return sorted(p for p in specs if SKIP.isdisjoint(p.parts))
 
 
 def check(specs: list[Path]) -> int:

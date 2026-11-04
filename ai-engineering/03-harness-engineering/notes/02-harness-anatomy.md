@@ -9,6 +9,9 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
   - https://docs.langchain.com/oss/python/deepagents/overview
   - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
+  - https://arxiv.org/abs/2407.16741
+  - https://arxiv.org/abs/2603.28052
+  - https://arxiv.org/abs/2604.25850
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -77,6 +80,8 @@ Two of these map onto Norman's two gulfs from interaction design. The **gulf of 
 
 **Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing.
 
+Test the combination as well as the parts, because the effects don't add up. Agentic Harness Engineering ([arXiv:2604.25850](https://arxiv.org/abs/2604.25850) (Lin et al., 2026-04, preprint)) swapped evolved components one at a time into a bash-only seed on Terminal-Bench 2 (89 tasks, GPT-5.4 high, seed 69.7%): memory alone reached 75.3%, tools 73.0%, middleware 71.9%, and the system prompt alone fell to 67.4%. The three gains sum to +11.1 points, but the full set gained only +7.3. This is one campaign with no confidence intervals, and an add-one test rather than a removal.
+
 ### One harness, read through the five subsystems
 
 DeepMind's Minecraft run (Faldor et al., 2026) is a compact example because the harness is small and fully described. Four general-purpose Gemini 4 Argon coding agents, with nothing Minecraft-specific, beat the game in 27 h 14 min.
@@ -93,6 +98,15 @@ DeepMind's Minecraft run (Faldor et al., 2026) is a compact example because the 
 | Feedback | Text back after every program (position, health, inventory, what it found, or the error); game chat; an independent Observer agent that checks claims against the server log |
 
 The action space is the interesting choice. There are no pixels and no keyboard. The agent acts by writing code, which makes bash-style composition ([below](#bash-as-a-general-purpose-tool)) the whole action space.
+
+### The same split as two function types
+
+OpenHands, formerly OpenDevin ([arXiv:2407.16741](https://arxiv.org/abs/2407.16741) (Wang et al., ICLR 2025)), separates the agent's decision step from execution as two types: `Agent: Event History -> Action` and `Runtime: Action -> Observation`. This isn't quite model versus harness, because the `Agent` side also assembles the prompt and parses the response, and this note counts those as harness. An **event stream** records both. In the subsystem table, the event stream is State and the runtime is Tools plus Environment. Each task session gets its own Docker container with a bash shell, an IPython server and a Playwright browser, reached through an API server running inside it.
+
+![OpenHands architecture: the agent reads the event history and produces an action, the Docker runtime executes it through IPython, bash or a browser, and the resulting observation joins the event stream](../sources/images/wang-openhands-fig2.png)
+*Image Source: Wang et al., [OpenHands](https://arxiv.org/abs/2407.16741) (ICLR 2025), Fig. 2*
+
+Its evaluation supports generality, not this design. One CodeAct agent reached 26.0% on SWE-Bench Lite (300 issues, no hints, Claude 3.5 Sonnet), against 18.0–27.3% for specialist agents, 15.3% on WebArena (812 tasks, browsing delegated to a sub-agent) and 52.0% on GPQA diamond (198 questions). The baselines mostly used other models and there are no repeat runs, so the 26.0 vs. 27.3 gap, about 4 issues, means little. The paper has no ablation either, so nothing ties a score to the event stream or the runtime. Model choice moved one result far more than that gap: an earlier version of the same agent scored 2.3% on ToolQA (800 questions) with gpt-3.5-turbo and 47.2% with gpt-4o.
 
 ---
 
@@ -122,6 +136,8 @@ Persist *auditable descriptions* of state (files, scripts, manifests), never opa
 
 **Environment status bar.** Before every inference, append the working directory, Git branch, recent commits and a staged/unstaged summary **at the end of the context**, never in the system prompt, where changing values would break the KV cache.
 
+**Environment snapshot.** The same idea applied once at startup was the main change automated search found for a coding harness. Meta-Harness ([arXiv:2603.28052](https://arxiv.org/abs/2603.28052) (Lee et al., 2026-03, preprint)) added about 80 lines to Terminus-KIRA that run one shell command before the first model call and inject the result: working directory, a `/app` listing cut to 20 entries, available languages and package managers, and memory. The command has a 15-second timeout and fails silently. On Terminal-Bench 2 the new harness gained on 7 of 89 tasks, which the authors say all need specialist tools whose presence can't be assumed. Its 76.4% on Opus 4.6 was searched and scored on the same 89 tasks. The 74.7% it is set against is Terminus-KIRA's leaderboard entry, and the search log's own Terminus-KIRA baseline is 64.4% (model not stated). The snapshot has no ablation of its own, the paper lists no tasks lost, and the claim that it saves 2–4 turns is asserted rather than measured.
+
 ---
 
 ## Bash as a general-purpose tool
@@ -131,6 +147,8 @@ The design bet: **you cannot pre-design every tool an agent will need.**
 Harnesses ship a bash tool so the model can compose solutions by writing and executing code, rather than being limited to the API surface someone anticipated. A curated tool set handles known operations well; bash handles the long tail.
 
 The tension is real — bash is maximally capable and maximally dangerous, which is exactly why it must be paired with a sandbox and hooks ([note 04](04-execution-boundaries.md)). The promote-from-bash heuristic resolves it: **start with shell, promote to a typed tool when you need a gate, a rendered result, an audit record, parallelism, or a retry policy.**
+
+OpenHands sets a similar bar for its tool library, on what the model can already do: "We only add a new skill when: (1) it is not readily achievable for LLM to write code directly (e.g., edit code and replace certain lines), and/or (2) it involves calling an external model" (Wang et al., ICLR 2025). The model already knows `pandas`, so nobody writes it a CSV reader. This is a stated policy, not a measured result, and the file editor it names as an exception is still weak: the authors report the agent "suffers a lot when editing long files".
 
 Li's minimal coding kit is seven tools: code interpreter, bash, read, write, edit, glob and grep. With them, code becomes a **meta-capability**, a way of making the capabilities you didn't build. In ch. 5 he applies it in six directions:
 

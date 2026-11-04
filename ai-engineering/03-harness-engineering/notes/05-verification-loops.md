@@ -2,6 +2,9 @@
 origin: web-authored
 sources:
   - https://www.langchain.com/blog/improving-deep-agents-with-harness-engineering
+  - https://arxiv.org/abs/2407.16741
+  - https://arxiv.org/abs/2603.28052
+  - https://arxiv.org/abs/2604.25850
   - https://www.anthropic.com/engineering/harness-design-long-running-apps
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
   - https://vercel.com/academy/build-ai-agent-harness
@@ -274,6 +277,8 @@ The same ladder describes **runtime guardrails**, the gate between "the agent sa
 
 Two related disciplines: **Pass@k** measures capability boundaries (can it ever do this?); **Pass^k** measures deployment quality (does it do this *every* time?). Ship on Pass^k.
 
+A real-model eval is too expensive to run on every change, so regression checks need a cheaper tier. OpenHands estimated $6.9k for a full SWE-Bench run (2,294 instances at a conservative $3 each) and about $600 for SWE-Bench Lite with gpt-4o. Its pull-request tests **replay recorded model responses instead**: the framework "intercepts all LLM calls and supplies predefined responses based on exact prompt matches", then compares the result to gold files, and substantial changes regenerate the responses with real models ([arXiv:2407.16741](https://arxiv.org/abs/2407.16741) (Wang et al., ICLR 2025)). A replay catches a harness change that alters a prompt or breaks a tool. It can't tell you whether the model still solves the task, and the paper reports no measure of how many bugs these tests catch.
+
 And the meta-rule: **if the eval system is broken, fix the eval system first.** Never steer on a distorted signal. The debug order for that is in [Eval chapter 12](../../../generative-ai/08-eval/notes/12-failure-modes.md#the-debug-order); graders and their calibration states are in [Eval chapter 04](../../../generative-ai/08-eval/notes/04-graders.md#grader-states-which-ones-can-block-a-release); pass@k vs. pass^k with repeats is in [Eval chapter 06](../../../generative-ai/08-eval/notes/06-evaluating-agents.md#non-determinism-run-every-task-k-times); wiring evals into CI is in [Eval chapter 10](../../../generative-ai/08-eval/notes/10-evals-in-ci.md).
 
 ### Two eval surfaces, different triggers
@@ -417,6 +422,8 @@ High effort at the ends, where decisions are made and checked; moderate through 
 The ratchet needs input, and traces are it. LangChain's **Trace Analyzer Skill** automatically fetches production traces, **spawns parallel error-analysis agents**, and synthesizes recurring failure patterns — reasoning errors, task misunderstanding, insufficient testing.
 
 Each recurring pattern becomes a harness change. This is the closest thing the field has to an automated ratchet, and it's one of the discipline's three open frontiers ([note 08](08-maturity-and-failure-modes.md#open-frontiers)).
+
+Give the analyst the raw traces, or a way to reach them. In Meta-Harness ([arXiv:2603.28052](https://arxiv.org/abs/2603.28052) (Lee et al., 2026-03, preprint)), a proposer agent with access to raw execution traces found a harness scoring 56.7% on the search set of an online text-classification task. With scores and code but no traces it reached 41.3%, and adding summaries 38.7%. The comparison ran on this one domain with one proposer (Claude Code on Opus 4.6), and the paper reports no repeated seeds. Agentic Harness Engineering compresses raw traces to an overview (about 10M to 10K tokens in its architecture figure, not a measured ratio), but keeps the layers below it open for drill-down ([arXiv:2604.25850](https://arxiv.org/abs/2604.25850) (Lin et al., 2026-04, preprint)).
 
 Prerequisite: **traces exist and are structured.** Observability isn't a nice-to-have — it's the raw material for every subsequent improvement. Manual annotation and calibration first, then automatic LLM scoring; use both layers together.
 

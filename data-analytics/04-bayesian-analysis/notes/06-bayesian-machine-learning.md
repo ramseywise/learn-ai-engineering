@@ -4,11 +4,10 @@ sources:
   - ../practice/BayesianML/
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 7 Bayesian Machine Learning, unfinished outline)
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/
-  - https://doi.org/10.1080/01621459.2017.1285773 (Blei, Kucukelbir and McAuliffe, JASA, 2017)
+  - https://arxiv.org/abs/1601.00670 (Blei, Kucukelbir and McAuliffe, JASA, 2017)
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
   - https://doi.org/10.1111/j.2517-6161.1977.tb01600.x
   - https://arxiv.org/abs/1312.6114
-  - https://arxiv.org/abs/1601.00670
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -270,7 +269,7 @@ print(f"gradient ascent on the ELBO: m {m:.3f}   exact {post_mean:.3f}")
 gradient ascent on the ELBO: m 1.000   exact 1.000
 ```
 
-Forty noisy steps reach the exact mean. This is the core of the method in Blei et al., and of a VAE.
+Forty noisy steps reach the exact mean. This is the core of a VAE, but not of Blei et al., whose review never uses the trick and only lists Kingma and Welling among its examples of "black box" methods. Their main algorithm is coordinate ascent (CAVI), which updates one factor of q at a time from the same complete conditional a Gibbs sampler draws from, plus a stochastic version (SVI) for large data that follows noisy natural gradients computed on a sampled data point.
 
 PyMC's `pm.fit(method="advi")` is the same idea, with a Normal q per parameter. Compare it to NUTS when two inputs are nearly collinear, so the posterior over their coefficients is a narrow diagonal ridge:
 
@@ -297,6 +296,8 @@ ADVI: mean a 1.153 b 1.018  sd a 0.127 b 0.130  sd of a+b 0.181  corr -0.01
 ```
 
 The means are close. The marginal standard deviations are about 0.39 under NUTS and 0.13 under ADVI, which is the underestimation Blei et al. warn about, and here it is threefold. Mean-field q has no way to express the correlation of −0.96, and that also misstates the sum: the well-determined a + b gets an sd of 0.181 against 0.113. If you need intervals rather than a prediction, check VI against MCMC on a sample of the data first.
+
+That check is needed because the general answer isn't known. Blei et al. write that **the relative accuracy of VI and MCMC "is still unknown"**: VI generally underestimates variance, yet it need not lose accuracy on posterior predictive densities. Their own speed result is one case. CAVI fit a 30-cluster Gaussian mixture to 10,000 images (576-dimensional colour histograms) in under a minute, "orders of magnitude" faster than the HMC-based sampler in Stan (the review cites version 2.8), with progress tracked by held-out log predictive and no hardware stated. It says nothing about intervals, and a footnote calls it "not a definitive comparison", since a collapsed Gibbs sampler might do better. Two more limits come from the same review. The ELBO is generally non-convex, so CAVI only reaches a local optimum that depends on the starting point. And picking a model by its ELBO "sometimes works in practice" but is "not justified in theory".
 
 ### The VAE
 

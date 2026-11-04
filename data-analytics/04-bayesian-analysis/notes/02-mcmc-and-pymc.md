@@ -3,6 +3,7 @@ origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesia
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 3 Opening the Black Box of MCMC)
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
+  - https://arxiv.org/abs/1601.00670 (Blei, Kucukelbir and McAuliffe, JASA, 2017)
   - https://python.arviz.org/
   - https://www.pymc.io/
   - ../practice/BayesianML/week_4/
@@ -149,7 +150,7 @@ NUTS, standardised   beta ess_bulk   2591  r_hat 1.00  leapfrog steps/draw   3.1
 
 Metropolis on raw Fahrenheit has an ESS of 5 and an R-hat above 2 after 4,000 draws, which is why BMH runs it for 120,000. NUTS copes, but spends 19 gradient steps per draw on a long narrow ridge, because the intercept and slope are almost perfectly correlated when the temperature is far from zero. Standardising removes the ridge: three steps per draw, and about 2,600 effective samples. Scale your inputs before reaching for more draws.
 
-Other approximations to MCMC exist. The **Laplace approximation** fits a Normal at the MAP, and **variational inference** (`pm.fit(method="advi")`) fits a simple distribution by optimisation. Both are faster and less exact, and [chapter 6](06-bayesian-machine-learning.md) measures how much less.
+Other approximations to MCMC exist. The **Laplace approximation** fits a Normal at the MAP, and **variational inference** (`pm.fit(method="advi")`) fits a simple distribution by optimisation. Both are faster and less exact, and [chapter 6](06-bayesian-machine-learning.md) measures how much less. [Blei, Kucukelbir and McAuliffe (JASA, 2017)](https://arxiv.org/abs/1601.00670) illustrate the choice with two scenarios, not experiments: MCMC for a small, expensive dataset where you trust the model and need precise inferences, VI for a text model on a billion documents. Size isn't the only factor. For mixture models where Gibbs sampling is not an option, they note VI may do better than Hamiltonian Monte Carlo even on small data.
 
 ## Worked example: a two-cluster mixture
 

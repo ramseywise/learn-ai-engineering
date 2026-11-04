@@ -1,6 +1,6 @@
 # 01 — Classical ML
 
-> Fit a model on a table, measure it honestly, and explain it. Deck: [`slides/classical-ml.pptx`](slides/classical-ml.pptx) (source [`slides/deck.yaml`](slides/deck.yaml)). Practice: [`practice/`](practice/). References: [`references.md`](references.md).
+> Fit a model on a table, measure it honestly, and explain it. Lectures: [`slides/lectures/`](slides/lectures/), starting from [the overview](slides/lectures/00-overview.yaml). Deck: [`slides/classical-ml.pptx`](slides/classical-ml.pptx) (source [`slides/deck.yaml`](slides/deck.yaml)). Practice: [`practice/`](practice/). References: [`references.md`](references.md).
 
 ## What it is
 
@@ -160,7 +160,10 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 
 ```bash
 make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
+make slides PILLAR=data-science/01-classical-ml LECTURE=00-overview STRICT=1 PREVIEW=1
 ```
+
+The lecture series is being built one note at a time. [DECKS.md](../../DECKS.md) shows how far it has got.
 
 ## Primary texts
 

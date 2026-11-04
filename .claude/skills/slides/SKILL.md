@@ -16,6 +16,8 @@ catalogue, the palette and the writing rules. The worked example is
 
 ---
 
+**Lecture series.** To teach a pillar as one full lecture per note, write `slides/lectures/NN-slug.yaml` instead of `slides/deck.yaml`, one note at a time. The steps below still apply, with `LECTURE=NN-slug` on the build. See "Lecture series" in `references/deck-spec.md`, and run `make deck-graph` after adding a lecture.
+
 ## Step 1 — Pick the pillar
 
 `$ARGUMENTS` names a pillar directory under `ai-engineering/` (`02-context-engineering`, or

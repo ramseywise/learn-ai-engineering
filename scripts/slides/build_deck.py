@@ -34,6 +34,7 @@ from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import deck_graph  # noqa: E402
 import deck_stamp  # noqa: E402
 
 # ---------------------------------------------------------------------------
@@ -82,6 +83,11 @@ TAKEAWAY_PAD = 0.3
 FOOTER_Y = 7.02
 
 WARNINGS: list[str] = []
+# What a lecture owes its note: one slide per this many words, inside these limits. See deck-spec.md.
+WORDS_PER_SLIDE = 150
+LECTURE_MIN = 20
+LECTURE_MAX = 60
+LECTURE_OVERVIEW_MIN = 15
 
 
 def rgb(hex_: str) -> RGBColor:
@@ -808,7 +814,7 @@ def section_slide(prs, part, idx, number):
     acc = PART_ACCENTS[idx % len(PART_ACCENTS)]
     set_bg(s, NAVY)
     rect(s, 0, 0, 0.18, SLIDE_H, acc if acc != NAVY else TEAL)
-    text(s, 0.9, 1.6, 6, 0.5, f"PART {idx + 1}", 18, ORANGE if acc == NAVY else acc if acc not in (NAVY, PURPLE, GREEN) else TEAL,
+    text(s, 0.9, 1.6, 6, 0.5, f"PART {idx + 1}", 18, ORANGE if acc == NAVY else acc if acc not in (NAVY, TEAL_DARK, PURPLE, GREEN) else TEAL,
          bold=True)
     th = est_h(part["title"], 6.0, 50, bold=True)
     text(s, 0.9, 2.15, 6.0, th + 0.2, part["title"], 50, WHITE, bold=True, spacing=0.95)
@@ -871,6 +877,9 @@ def build(spec_path: Path, level: str | None = None) -> Path:
     base = spec_path.parent
     check_keys(all_parts)
     parts = filter_parts(all_parts, level) if level else all_parts
+    lecture = deck_graph.lecture_from(spec_path, spec, deck_graph.ROOT) if "lecture" in spec else None
+    if lecture:
+        parts = framed(parts, lecture, deck)
 
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(SLIDE_W), Inches(SLIDE_H)
@@ -914,8 +923,8 @@ def build(spec_path: Path, level: str | None = None) -> Path:
             agenda_idx += 1
 
     # The story rules judge the deck as written, so a filtered build reports what the full one does.
-    check_story(all_parts, base)
-    out = base / deck.get("output", f"{base.parent.name}.pptx")
+    check_story(all_parts, base, lecture)
+    out = base / deck.get("output", f"{spec_path.stem if lecture else base.parent.name}.pptx")
     if level:
         # deck_stamp.py only looks at the unsuffixed name, so this file is never read as the deck.
         out = out.with_name(f"{out.stem}-{level}{out.suffix}")
@@ -946,8 +955,85 @@ def flashcard_problems(sl: dict) -> list[str]:
     return problems
 
 
-def check_story(parts: list[dict], base: Path) -> None:
-    """Warn where the deck breaks the story rules in deck-spec.md (spine, mix, flashcards, coverage)."""
+def framed(parts: list[dict], lecture: deck_graph.Lecture, deck: dict) -> list[dict]:
+    """Put the generated slides around a lecture: where it sits on the way in, where it leads on the way out.
+
+    They come from the `lecture:` block, so they can't disagree with the graph, and the story rules don't judge them.
+    """
+    root = deck_graph.ROOT
+    lectures = deck_graph.load_lectures(root)
+    if not any(existing.spec.resolve() == lecture.spec.resolve() for existing in lectures):
+        lectures = [*lectures, lecture]
+
+    def names(notes: list[str]) -> list[str]:
+        return [deck_graph.slide_label(n, lectures, root, lecture.pillar) for n in notes]
+
+    place, total = deck_graph.position(lecture, root)
+    series = f"Lecture {place} of {total}"
+    opening = {
+        "layout": "cards", "title": "Where this lecture sits", "kicker": series,
+        "cards": [
+            *([{"title": "Before this", "bullets": names(lecture.requires)}] if lecture.requires else []),
+            {"title": "This lecture", "accent": "D4621A", "body": deck.get("subtitle", lecture.title)},
+            {"title": "After this", "bullets": names(lecture.next) or ["The end of this series"]},
+        ],
+        "takeaway": f"{series} in the series, and each lecture links to its neighbours.",
+    }
+    leads_on = {
+        "layout": "cards", "title": "Where this leads", "kicker": series,
+        "cards": [
+            {"title": "Next", "accent": "D4621A", "bullets": names(lecture.next) or ["The end of this series"]},
+            {"title": "Connected", "bullets": names(lecture.related) or ["No other links yet"]},
+        ],
+    }
+    frame = {"agenda": False, "divider": False, "summary": ""}
+    return [{**frame, "title": "Where this fits", "slides": [opening]}, *parts,
+            {**frame, "title": "Where this leads", "slides": [leads_on]}]
+
+
+def check_lecture(parts: list[dict], lecture: deck_graph.Lecture, root: Path) -> None:
+    """Warn where a lecture stops teaching its note: too thin, a section missing, or sections out of the note's order."""
+    slides = [sl for p in parts for sl in p.get("slides", [])]
+    notes = [root / c for c in lecture.covers if c.endswith(".md") and "/notes/" in c and (root / c).is_file()]
+    words = sum(len(n.read_text(encoding="utf-8").split()) for n in notes)
+    # A note's words set what a full lecture owes, so a 7,000-word note can't pass with the slides of a 2,000-word one.
+    floor = LECTURE_OVERVIEW_MIN if lecture.overview else max(LECTURE_MIN, min(words // WORDS_PER_SLIDE, LECTURE_MAX))
+    if len(slides) < floor:
+        warn("lecture", f"{len(slides)} slides is too condensed: {floor} is the least for {words} words of notes")
+    names = [sl.get("layout", "bullets") for sl in slides]
+    if names and names[0] not in ("statement", "image"):
+        warn("lecture", "should open on a statement or image that poses the problem")
+    if not {"image", "flow"} & set(names):
+        warn("lecture", "no image or flow slide")
+    if not lecture.overview:
+        if "code:" not in yaml.safe_dump(slides):
+            warn("lecture", "no code or worked example")
+        missing = [b for b in PART_BEATS if b not in {sl.get("beat") for sl in slides}]
+        if missing:
+            warn("lecture", f"no slide with beat: {', '.join(missing)}")
+    owed = [s for n in notes for s in deck_graph.teaching_sections(n)]
+    named = [sl["section"] for sl in slides if "section" in sl]
+    for section in dict.fromkeys(named):
+        if notes and section not in owed:
+            warn("lecture", f"section '{section}' is not a heading in the note")
+    for section in lecture.omits:
+        if section not in owed:
+            warn("lecture", f"omits '{section}', which is not a heading in the note")
+    for section in owed:
+        if section not in named and section not in lecture.omits:
+            warn("lecture", f"note section '{section}' has no slide and no line in omits")
+    order = [owed.index(s) for s in named if s in owed]
+    for here, after in zip(order, order[1:]):
+        if after < here:
+            warn("lecture", f"section '{owed[after]}' comes after '{owed[here]}', against the note's order")
+            break
+
+
+def check_story(parts: list[dict], base: Path, lecture: deck_graph.Lecture | None = None) -> None:
+    """Warn where the deck breaks the story rules in deck-spec.md (spine, mix, flashcards, coverage).
+
+    A lecture holds the spine once across the deck rather than in each part, and its coverage is by note section.
+    """
     slides = [(p, sl) for p in parts for sl in p.get("slides", [])]
     if not slides:
         return
@@ -965,6 +1051,9 @@ def check_story(parts: list[dict], base: Path) -> None:
             warn(f"slide '{plain(sl.get('title', ''))}'", "no takeaway, so no flashcard answer")
         for problem in flashcard_problems(sl):
             warn(f"slide '{plain(sl.get('title', ''))}'", problem)
+    if lecture:
+        check_lecture(parts, lecture, deck_graph.ROOT)
+        return
     for part in parts:
         if not part.get("agenda", True):
             continue

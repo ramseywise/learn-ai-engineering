@@ -4,6 +4,8 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html
+  - https://arxiv.org/abs/2302.00093
+  - https://arxiv.org/abs/2505.06120
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 10, appendix A — sources/context-engineering-multi-agent-systems/"
 confidence: high
 cleaned: 2026-11-01
@@ -48,6 +50,8 @@ A hallucination, stale fact, or wrong retrieval enters context and is subsequent
 
 Memory makes this durable. A poisoned entry written to long-term memory is re-injected in every future session. A single hallucination becomes a permanent false belief.
 
+**The model's own early guess can do it too.** Laban et al. gave 15 LLMs 600 instructions across six tasks (code, SQL, API actions, math, data-to-text, summaries), either whole or revealed over several turns by a simulated user who says as little as possible. **Every model did worse overall, by 39% on average, and the spread between a model's strong and weak runs on one instruction (90th minus 10th percentile) more than doubled (+112%, to about 50 points)**, while 90th-percentile scores fell only 16% ([arXiv:2505.06120](https://arxiv.org/abs/2505.06120) (Laban et al., ICLR 2026)). The information isn't what's lost: the same pieces joined into one message score 95.1% of the original, though instructions were filtered in advance to keep that control high. Occupancy looks unlikely as the main cause, though the paper doesn't test it: in a follow-up with GPT-4o and GPT-4o-mini on 31 instructions, two turns were enough. Models tend to answer before they have the details and then build on their own assumptions. On code and math, runs whose first attempt came in the first 20% of turns scored 30.9, against 64.4 for the last 20%, but that link is observational and the mechanism is the authors' hypothesis. The conversations are simulated, with a minimal system prompt, tool calls that are scored but not executed, and no compaction described, so this doesn't size the effect for an agent. Retrying in a fresh session with the requirements restated is the authors' advice. The retry itself wasn't tested, though the single-message control is the evidence they point to, and it's the same move as step 5 of the flow below.
+
 **Sources.** Model hallucination captured into notes; outdated documents retrieved without freshness checks; a tool returning stale data; a summarization step introducing a detail the source didn't contain.
 
 **Fix.**
@@ -65,6 +69,8 @@ Enough marginally relevant content accumulates that the model's attention drifts
 **Signature.** The agent produces a competent answer to a question adjacent to the one asked. It latches onto a detail from a retrieved document and builds an elaborate response around it.
 
 **Fix.** Rerank hard and send narrow. Dynamic k scaled to task complexity. Query-conditional compression. The discipline from [01-why-context-is-finite.md](01-why-context-is-finite.md): justify inclusion rather than defaulting to it.
+
+**One sentence can be enough.** Shi et al. added a single irrelevant sentence to 100 easy GSM8K word problems. With code-davinci-002 and a one-exemplar greedy prompt, **chain-of-thought fell from 95.0% to 72.4%, and only 6% of the base problems stayed correct under every sampled distractor** ([arXiv:2302.00093](https://arxiv.org/abs/2302.00093) (Shi et al., ICML 2023)). Distractors on the problem's own topic did the most damage (63.1% vs. 80.7% off-topic), which fits the point above that plausible content is worse than merely extra content. Adding "Feel free to ignore irrelevant information given in the questions." raised it to 77.8%, and a majority vote over 20 samples to 88.1%. The right answer was among those 20 samples 99.7% of the time, so the model could produce it and the failure was in settling on it. These numbers come from one templated sentence, on arithmetic, with GPT-3-family models. There's no retrieval and the amount of distraction is never varied, so it doesn't test the rerank fix or show that 40 documents are worse than 3.
 
 ---
 
@@ -214,6 +220,7 @@ Step 5 is the one that gets skipped, and it's the one that separates a context p
 | An injection filter passes all your tests. Are you safe? | No, a regex can be beaten by paraphrase. Treat instructions as code-level controls: fail closed, check both ends and restrict what tools can do. |
 | Retrieval returns 40 documents to be safe. Good idea? | Usually not, because distractors compete for attention. Rerank down to what's needed, around 3 in this chapter's example, and measure. |
 | A user says "use pnpm" at turn 12, and "we use npm" from turn 3 is still in the window. What's the fix? | That's a clash, and nothing marks turn 3 as superseded. Remove or date the stale statement, and state a precedence rule rather than relying on recency. |
+| The same task works in one message but fails over several turns, with the window nearly empty. What's going on? | Probably not rot: in Laban et al.'s simulations, GPT-4o and GPT-4o-mini degraded at two turns, and the authors suspect models build on their early guesses. Their advice is to restate the requirements in a fresh session. |
 | Context poisoning or memory poisoning? | Context poisoning is a hallucination, stale fact or wrong retrieval in the window being treated as truth. Written to long-term memory it becomes durable and is re-injected every future session, so one hallucination turns into a permanent false belief. |
 
 ## Next
