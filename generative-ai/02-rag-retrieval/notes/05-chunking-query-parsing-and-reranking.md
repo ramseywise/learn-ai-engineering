@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
+  - https://arxiv.org/abs/2212.10496
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3 part 2, ungraded lab "Chunking" + Assignment 3 "Building RAG systems with a Vector Database")
   - https://github.com/FullStackRetrieval-com/RetrievalTutorials (Kamradt, "5 Levels of Text Splitting", cited by the course)
@@ -271,7 +272,7 @@ HyDE changes what is being matched: normally prompt-to-document, with HyDE docum
 
 GLiNER example: *"I read The Great Gatsby by F. Scott Fitzgerald last summer while visiting New York…"* → BOOK, PERSON, DATE, LOCATION. The DATE and LOCATION can become metadata filters.
 
-Raieli and Iuculano's HyDE variant generates several answers, five in their example, and averages their embeddings, so one odd generation doesn't steer the search (*Building AI Agents*, ch. 6).
+The HyDE paper itself averages the embeddings of several sampled answers, optionally with the query's own ([arXiv:2212.10496](https://arxiv.org/abs/2212.10496), Gao et al., ACL 2023). Averaging also means one odd generation doesn't steer the search. Raieli and Iuculano's example uses five (*Building AI Agents*, ch. 6).
 
 ### Query transformations
 

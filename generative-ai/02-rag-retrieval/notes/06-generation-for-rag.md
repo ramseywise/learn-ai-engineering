@@ -1,6 +1,9 @@
 ---
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
+  - https://arxiv.org/abs/2310.05736
+  - https://arxiv.org/abs/2204.06092
+  - https://arxiv.org/abs/2305.14627
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation" + labs 4.1 sampling, 4.2 prompt engineering, Assignment 4 "Fashion Forward Hub")
   - https://gradientscience.org/contextcite/ (ContextCite, cited by the course)
@@ -12,6 +15,7 @@ sources:
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 7
   - https://arxiv.org/abs/2503.23513
   - https://arxiv.org/abs/2404.10198
+  - https://arxiv.org/abs/2007.01282
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -213,11 +217,14 @@ print(edges_first([f"rank{i}" for i in range(1, 8)]))
 ['rank1', 'rank3', 'rank5', 'rank7', 'rank6', 'rank4', 'rank2']
 ```
 
+How many passages to pass depends on whether the reader can combine them. Fusion-in-Decoder (FiD) encodes each retrieved passage separately, with the question prepended, and lets the decoder attend over all of them at once, so encoder cost grows linearly with the number of passages. With a fine-tuned T5-base reader, trained and tested at each passage count on DPR-retrieved passages, going from 10 to 100 passages raised exact match by about 3.5 on Natural Questions and 6 on TriviaQA (validation sets; the paper writes these as %). The authors cite earlier work in which extractive readers peaked at 10–20 passages. FiD-large (770M) reached 51.4 EM on the NQ test set with DPR and 100 passages, against 44.5 for RAG and 36.6 for closed-book T5 at 11B. Even with BM25 retrieval it scored 44.1 ([arXiv:2007.01282](https://arxiv.org/abs/2007.01282), Izacard & Grave, EACL 2021). The result holds for a reader trained to fuse, on short factoid answers. The paper never tests passage order and never measures how cost scales with passage count (it reports only 147 against 425 training GPU-hours for two schedules), so it says nothing about how a prompted LLM handles 100 chunks.
+
 When the retrieved text is too long, compress it before generation (*Building AI Agents*, ch. 6):
 
 | Method | How |
 |---|---|
 | Selective context | Score each token or sentence by self-information under a small LM; keep the top percentile |
+| LLMLingua | A small LM (Alpaca-7B) drops low-perplexity tokens, segment by segment, under a per-section budget. On GSM8K chain-of-thought prompts for GPT-3.5-Turbo, 20× compression cost 1.5 EM points (77.3 vs 78.9), and end-to-end latency fell from 8.6 s to 2.3 s at 5× on one V100. Selective context scored 44.2 at 15×. Tested on prompts and conversations, not retrieved passages ([arXiv:2310.05736](https://arxiv.org/abs/2310.05736), Jiang et al., EMNLP 2023) |
 | LongLLMLingua | Question-aware version: compresses and reorders documents using both context and query |
 | AutoCompressors | Fine-tune the model to summarise long text into summary vectors used as soft prompts |
 
@@ -300,7 +307,7 @@ The course's example: a support bot asked "Do you offer student discounts?" inve
 | Grounding via system prompt | "Answer only from the documents; say if you don't know" | Cheap; not a guarantee |
 | **Citations** | Number documents, require `[1]`, `[2]` after claims | Citations themselves can be hallucinated |
 | ContextCite | Attributes each statement to the context spans that caused it | Research tool; extra compute |
-| ALCE benchmark | Scores citation quality, correctness and fluency | For evaluating systems, not runtime |
+| ALCE benchmark | Scores citation quality, correctness and fluency; an NLI model (T5-11B) checks that each sentence's cited passages entail it | Mainly for evaluating systems. Its own best-of-4 rerank used the scorer at generation time and raised ChatGPT's ASQA citation recall from 73.6 to 84.8, at the cost of 4 generations plus the NLI pass |
 
 The grounding prompt is weakest exactly when retrieval misses. In a banking-QA study (GPT-4, GPT-3.5 and Llama-2, two document sets, 800 queries each), the models kept answering when the gold passage was absent, with loosely related context or with invention. The authors call this *pseudo-helpfulness*. Nine prompt variants (verbose, quote-first, citation-required) made no salient difference to answer quality ([Zhao et al., NAACL 2024 Industry](https://aclanthology.org/2024.naacl-industry.23/), 2024-06). Catch missing evidence upstream, in the retriever and in evaluation, rather than with more prompt wording.
 
@@ -313,7 +320,7 @@ The grounding prompt is weakest exactly when retrieval misses. In a banking-QA s
 1. Every chunk is upserted with `"source": doc_name` in its metadata, so each retrieved chunk knows its file.
 2. After generation, the agent appends a `**Sources:**` list programmatically from the retrieved chunks' metadata, instead of trusting the LLM to name them.
 
-The weak spot is in the book's own trace. Asked about the Juno mission, the answer cites `[1]` and lists both `juno_mission_overview.txt` and `perseverance_rover_tools.txt`. The Perseverance file was retrieved but contributed nothing. Appending every retrieved source records what the model saw, not what it used. Citation is not attribution: for that you need per-claim matching, such as ContextCite above or the fuzzy citation matching Raieli and Iuculano describe, which matches the response against the chunks with n-gram TF-IDF (*Building AI Agents*, ch. 6).
+The weak spot is in the book's own trace. Asked about the Juno mission, the answer cites `[1]` and lists both `juno_mission_overview.txt` and `perseverance_rover_tools.txt`. The Perseverance file was retrieved but contributed nothing. Appending every retrieved source records what the model saw, not what it used. Citation is not attribution. ALCE measured the gap: ChatGPT answering closed-book and attaching citations afterwards scored 26.7 citation recall on ASQA, against 73.6 when it wrote from the retrieved passages. Even then, about half of ChatGPT's and GPT-4's ELI5 answers were not fully supported by what they cited ([arXiv:2305.14627](https://arxiv.org/abs/2305.14627), Gao et al., EMNLP 2023; 2023 models, top-5 passages). For attribution you need per-claim matching, such as ContextCite above or the fuzzy citation matching Raieli and Iuculano describe, which matches the response against the chunks with n-gram TF-IDF (*Building AI Agents*, ch. 6).
 
 Three of these checks cost no model call, so run them on every answer. Does each `[DOC n]` exist? Does each claim have one? Does every number in the answer appear in the cited text? The answers below stand in for model output, and the third has the error from this chapter's opening:
 
@@ -394,6 +401,8 @@ Rothman's negative-result test is worth copying. With only Juno and Perseverance
 | Others | Noise sensitivity, citation metrics, context precision/recall | All lean on LLM-as-judge |
 
 Raieli and Iuculano add a few metrics in the same family (*Building AI Agents*, ch. 5). **Context entities recall** is the share of entities in the ground-truth answer that appear in the retrieved context; it suits fact-heavy domains. **Summarization score** asks whether the answer keeps the context's important information. **Fluency** scores individual sentences and **coherence** the response as a whole.
+
+Long answers can also be scored without an LLM judge. ASQA's questions are ambiguous ("who ruled France in 1830?"), and a good answer covers every reading. Its DR score runs a SQuAD-trained RoBERTa reader over the answer to see which disambiguated questions it can answer (Disambig-F1), then takes the geometric mean with ROUGE-L, so pasting a long passage or writing fluent filler can't max it alone. On 45 dev questions DR tracked the authors' own pairwise judgments at 95.0 Pearson, against 86.4 for ROUGE-L alone. A T5-large reader on 5 JPR passages scored 32.1 DR against 61.8 for the human answers. Its Disambig-F1 also fell further behind the passages it read as K grew, so the generator lost information it had been given ([arXiv:2204.06092](https://arxiv.org/abs/2204.06092), Stelmakh et al., EMNLP 2022). The metric measures recall only: an answer that adds a hallucinated reading is not penalised, and the correlation rests on six systems.
 
 Measure indirectly too: thumbs up/down and A/B tests that change only the LLM, so you capture its effect alone. The RAGAS paper is in `sources/` (arXiv 2309.15217); see [references](../references.md).
 

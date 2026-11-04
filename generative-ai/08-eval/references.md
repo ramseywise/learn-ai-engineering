@@ -77,7 +77,7 @@
 |---|---|---|---|
 | ★ | Es et al., *RAGAS: Automated Evaluation of Retrieval Augmented Generation* (2023). [PDF](sources/es-2023-ragas.pdf) | [2309.15217](https://arxiv.org/abs/2309.15217) | 07 |
 | | Saad-Falcon et al., *ARES: An Automated Evaluation Framework for RAG Systems* (2023) | [2311.09476](https://arxiv.org/abs/2311.09476) | 07 |
-| | Gao et al., *Enabling Large Language Models to Generate Text with Citations* (ALCE, 2023): citation precision/recall | [2305.14627](https://arxiv.org/abs/2305.14627) | 07, 13 |
+| | Gao et al., *Enabling Large Language Models to Generate Text with Citations* (ALCE, EMNLP 2023): citation precision/recall, scored by an NLI model; about half of ChatGPT and GPT-4 ELI5 answers lack full citation support | [2305.14627](https://arxiv.org/abs/2305.14627) | 07, 13 |
 | | Qi et al., *Model Internals-based Answer Attribution for Trustworthy Retrieval-Augmented Generation* (EMNLP 2024): self-generated citations are often unreliable | [2406.13663](https://arxiv.org/abs/2406.13663) | 13 |
 | | Chen et al., *Concise and Sufficient Sub-Sentence Citations for RAG* (2025): sub-sentence citations cut verification cost | [2509.20859](https://arxiv.org/abs/2509.20859) | 13 |
 | | Manakul et al., *SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection* (2023). [PDF](sources/manakul-2023-selfcheckgpt.pdf) | [2303.08896](https://arxiv.org/abs/2303.08896) | 07 |

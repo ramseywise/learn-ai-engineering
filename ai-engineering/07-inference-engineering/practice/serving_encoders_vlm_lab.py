@@ -1,12 +1,13 @@
 # /// script
 # requires-python = ">=3.11,<3.13"
-# dependencies = ["numpy", "pandas", "torch>=2.9", "transformers>=5", "peft>=0.20", "pillow", "num2words", "accelerate", "sentence-transformers>=5", "onnxruntime", "optimum[onnxruntime]"]
+# dependencies = ["numpy", "pandas", "torch>=2.9", "transformers>=5.20", "peft>=0.20", "pillow", "num2words", "accelerate", "sentence-transformers>=5", "onnxruntime"]
 # ///
 """The numbers in notes/08b: where the time goes when you serve an encoder or a vision-language model.
 
 Run from this folder. It downloads two small models, about 0.6 GB, on first use:
     uv run serving_encoders_vlm_lab.py
 
+It takes about two and a half minutes on an M4 Pro with nothing else running, and other work on the machine can triple the timings.
 Everything runs in one process on one laptop, with no server and no network. Read the ratios, not the absolute numbers:
 a datacentre GPU changes them, and the point of the lab is that you can take the same measurements on your own hardware.
 """
@@ -19,8 +20,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
+import onnxruntime as ort
 import pandas as pd
 import torch
+from huggingface_hub import hf_hub_download
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModel, AutoTokenizer
@@ -41,7 +44,7 @@ def sync():
 
 
 def timed(fn, repeats=3):
-    """Median of the repeats, after one warm-up call, because the first call on MPS builds its graphs."""
+    """Fastest of the repeats, after one warm-up call: the first call on MPS builds its graphs, and anything else on the machine only ever adds time."""
     fn()
     sync()
     times = []
@@ -50,7 +53,7 @@ def timed(fn, repeats=3):
         fn()
         sync()
         times.append(time.perf_counter() - tick)
-    return float(np.median(times))
+    return min(times)
 
 
 # %% Encoder: generated catalogue text, most of it short and a few long, like real product data
@@ -108,6 +111,12 @@ def top10_overlap(a, b, queries=300):
     return float(np.mean([len(set(np.argsort(-x)[1:11]) & set(np.argsort(-y)[1:11])) / 10 for x, y in zip(at, bt)]))
 
 
+def best(batches, passes=3, **kw):
+    """The fastest of three passes, for the same reason as timed()."""
+    runs = [embed(batches, **kw) for _ in range(passes)]
+    return runs[0][0], min(run[1] for run in runs), runs[0][2]
+
+
 arrival = list(range(len(corpus)))
 longest_first = [int(i) for i in np.argsort(-lengths)]
 embed(by_count(arrival, 32))  # warm-up, not reported
@@ -116,7 +125,7 @@ for name, batches in (("32 per batch, arrival order", by_count(arrival, 32)),
                       ("32 per batch, sorted by length", by_count(longest_first, 32)),
                       ("token budget 2048, arrival order", by_budget(arrival, 2048)),
                       ("token budget 2048, sorted by length", by_budget(longest_first, 2048))):
-    vectors, seconds, padded = embed(batches)
+    vectors, seconds, padded = best(batches)
     reference = vectors if reference is None else reference
     rows.append(dict(batching=name, batches=len(batches), texts_per_s=len(corpus) / seconds, padded_tokens=padded, padding_share=1 - lengths.sum() / padded))
 print("\n--- batching, same encoder and texts, on the GPU")
@@ -125,7 +134,7 @@ print(pd.DataFrame(rows).round(3).to_string(index=False))
 rows = []
 sorted_batches = by_count(longest_first, 32)
 for name, dtype in (("fp32", None), ("bf16 autocast", torch.bfloat16), ("fp16 autocast", torch.float16)):
-    vectors, seconds, _ = embed(sorted_batches, dtype=dtype)
+    vectors, seconds, _ = best(sorted_batches, dtype=dtype)
     rows.append(dict(precision=name, texts_per_s=len(corpus) / seconds, top10_kept_of_fp32=top10_overlap(reference, vectors)))
 print("\n--- precision on the GPU, sorted batches of 32")
 print(pd.DataFrame(rows).round(3).to_string(index=False))
@@ -135,17 +144,35 @@ clear()
 rows = []
 sample = corpus[:600]
 base = None
-for name, kw in (("PyTorch fp32", dict(backend="torch")),
-                 ("ONNX fp32", dict(backend="onnx")),
-                 ("ONNX int8", dict(backend="onnx", model_kwargs=dict(file_name="onnx/model_qint8_arm64.onnx")))):
-    st = SentenceTransformer(ENCODER, device="cpu", **kw)
-    st.encode(sample[:32], batch_size=32, show_progress_bar=False)
-    tick = time.perf_counter()
-    v = st.encode(sample, batch_size=32, normalize_embeddings=True, show_progress_bar=False)
-    seconds = time.perf_counter() - tick
+
+
+def onnx_encoder(file_name):
+    session = ort.InferenceSession(hf_hub_download(ENCODER, file_name), providers=["CPUExecutionProvider"])
+    needed = {i.name for i in session.get_inputs()}
+
+    def run(texts):
+        batch = tok(texts, padding=True, truncation=True, max_length=256, return_tensors="np")
+        hidden = session.run(None, {k: v for k, v in batch.items() if k in needed})[0]
+        mask = batch["attention_mask"][..., None]
+        pooled = (hidden * mask).sum(1) / mask.sum(1)
+        return pooled / np.linalg.norm(pooled, axis=1, keepdims=True)
+    return run
+
+
+st = SentenceTransformer(ENCODER, device="cpu")
+for name, run in (("PyTorch fp32", lambda texts: st.encode(texts, batch_size=len(texts), normalize_embeddings=True, show_progress_bar=False)),
+                  ("ONNX fp32", onnx_encoder("onnx/model.onnx")),
+                  ("ONNX int8", onnx_encoder("onnx/model_qint8_arm64.onnx"))):
+    run(sample[:32])
+    seconds, v = [], None
+    for _ in range(3):
+        tick = time.perf_counter()
+        v = np.concatenate([run(sample[i:i + 32]) for i in range(0, len(sample), 32)])
+        seconds.append(time.perf_counter() - tick)
+    seconds = min(seconds)
     base = v if base is None else base
     rows.append(dict(backend=name, texts_per_s=len(sample) / seconds, top10_kept_of_fp32=top10_overlap(base, v, 100)))
-    del st
+del st
 print("\n--- on the CPU, 600 texts")
 print(pd.DataFrame(rows).round(3).to_string(index=False))
 
@@ -160,7 +187,7 @@ service = lambda n: float(np.interp(n, sizes, list(one.values())))
 
 
 def queue(rate, wait, cap=64, n=20_000, seed=0):
-    """A single worker. A batch leaves when it is full, or when its oldest request has waited `wait`, or as soon as the worker frees up after that."""
+    """A single worker. A batch leaves when its oldest request has waited `wait`, or once the worker frees up if that is later, and takes at most `cap`."""
     rng = np.random.default_rng(seed)
     arrive = np.cumsum(rng.exponential(1 / rate, n))
     done, i, free = np.zeros(n), 0, 0.0
@@ -220,10 +247,13 @@ for edge in (512, 1024, 2048):
         work = (png * 3)
         def prepare_one(b):
             return proc(text=prompt, images=[[Image.open(io.BytesIO(b)).convert("RGB")]], return_tensors="pt")
-        tick = time.perf_counter()
-        with ThreadPoolExecutor(threads) as pool:
-            list(pool.map(prepare_one, work))
-        rows.append(dict(edge=edge, threads=threads, pages_per_s=len(work) / (time.perf_counter() - tick)))
+        seconds = []
+        for _ in range(3):
+            tick = time.perf_counter()
+            with ThreadPoolExecutor(threads) as pool:
+                list(pool.map(prepare_one, work))
+            seconds.append(time.perf_counter() - tick)
+        rows.append(dict(edge=edge, threads=threads, pages_per_s=len(work) / min(seconds)))
 print("\n--- CPU decode and prepare, pages per second by thread count")
 print(pd.DataFrame(rows).pivot(index="edge", columns="threads", values="pages_per_s").round(1).to_string())
 
@@ -244,12 +274,17 @@ print(pd.DataFrame(rows).round(3).to_string(index=False))
 b = proc(text=prompt, images=[[images[0]]], return_tensors="pt")
 b = {k: v.to(DEVICE, dtype=torch.bfloat16) if k == "pixel_values" else v.to(DEVICE) for k, v in b.items()}
 with torch.inference_mode():
-    features = model.model.get_image_features(pixel_values=b["pixel_values"], pixel_attention_mask=b.get("pixel_attention_mask"))
-    features = getattr(features, "pooler_output", features)
+    features = dict(image=model.model.get_image_features(pixel_values=b["pixel_values"], pixel_attention_mask=b.get("pixel_attention_mask")))  # a bare list here is ignored, with no error, and the model reads no image
     rest = {k: v for k, v in b.items() if k not in ("pixel_values", "pixel_attention_mask")}
+    vision_calls, text_lengths = [], []
+    hooks = [model.model.vision_model.register_forward_pre_hook(lambda *_: vision_calls.append(1)),
+             model.model.text_model.register_forward_pre_hook(lambda _, __, kw: text_lengths.append(kw["inputs_embeds"].shape[1]), with_kwargs=True)]
+    model.generate(**b, min_new_tokens=50, max_new_tokens=50, do_sample=False)
+    [hook.remove() for hook in hooks]
+    print(f"\n--- one reply of 50 tokens: the vision tower ran {len(vision_calls)} time, the language model {len(text_lengths)} times, on {text_lengths[:4]}... tokens")
     fresh = timed(lambda: model.generate(**b, min_new_tokens=50, max_new_tokens=50, do_sample=False), 5)
-    cached = timed(lambda: model.generate(**rest, image_hidden_states=features, min_new_tokens=50, max_new_tokens=50, do_sample=False), 5)
-    same = model.generate(**b, max_new_tokens=50, do_sample=False).tolist() == model.generate(**rest, image_hidden_states=features, max_new_tokens=50, do_sample=False).tolist()
+    cached = timed(lambda: model.generate(**rest, mm_encoder_outputs=features, min_new_tokens=50, max_new_tokens=50, do_sample=False), 5)
+    same = model.generate(**b, max_new_tokens=50, do_sample=False).tolist() == model.generate(**rest, mm_encoder_outputs=features, max_new_tokens=50, do_sample=False).tolist()
 print(f"\n--- the same page again: {fresh * 1000:.0f} ms encoding it fresh, {cached * 1000:.0f} ms from cached image features, same reply: {same}")
 del model
 clear()

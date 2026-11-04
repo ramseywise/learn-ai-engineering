@@ -8,6 +8,8 @@ sources:
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
   - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2
+  - https://arxiv.org/abs/1702.08734
+  - https://arxiv.org/abs/1603.09320
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -136,7 +138,7 @@ HNSW speeds up the early part of the walk by stacking proximity graphs of decrea
 | 2 | 100 | Intermediate: start from layer 3's best candidate |
 | 1 (bottom) | All 1,000, full proximity graph | Precise final search from layer 2's best candidate |
 
-Each layer has exponentially fewer vectors (1000 → 100 → 10), which makes the search approximately logarithmic and lets it scale to billions of vectors.
+Each layer has exponentially fewer vectors (1000 → 100 → 10), which makes the search approximately logarithmic. The guarantee is weaker than it sounds. Malkov and Yashunin prove O(log N) only for an exact Delaunay graph with bounded degree, and they support the approximate graph that real indexes build only with simulations on low-dimensional data (d=4, plus scaling runs at d=8). On 200M SIFT vectors (128-d) their query time "deviates from the pure logarithm". The paper's largest test is 200M vectors, and it leaves billion-scale data to future work ([arXiv:1603.09320](https://arxiv.org/abs/1603.09320), Malkov & Yashunin, IEEE TPAMI 2020). Two other details matter in practice. A node's top layer is drawn at random, ⌊−ln(U)·m<sub>L</sub>⌋ with m<sub>L</sub> = 1/ln M, so no layer is planned. Neighbours are chosen for diversity, not only for closeness, because on clustered data a graph of nearest neighbours only "stucks at the clusters boundaries".
 
 ```text
 layer 3   o-----------------o-----------o            10 nodes: long jumps
@@ -209,7 +211,7 @@ HNSW is one of several. Huyen's list (*AI Engineering*, ch. 6):
 | **PQ** (product quantization) | Split each vector into sub-vectors and replace each with a codebook ID | Much less memory; approximate distances |
 | **Annoy** | A forest of random-projection trees | Simple, static index ([09](09-vector-database-comparison.md#ann-index-types-hnsw-vs-annoy)) |
 
-Libraries combine them: FAISS's workhorse is IVF plus PQ. ScaNN, SPTAG and FLANN are the other common ones. Compare indexes on four numbers, as ANN-Benchmarks does: recall, queries per second, build time and index size.
+Libraries combine them: FAISS's workhorse is IVF plus PQ. The FAISS paper gives the sizing rules. Use about √n coarse clusters for n vectors, and give PQ 256 centroids per sub-vector so that each sub-vector costs one byte. Codes shorter than the 4- or 8-byte ID stored beside them save nothing. Recall comes from `nprobe` (τ in the paper), the number of clusters scanned, which the authors sweep from 1 to 256. PQ is fast because each query precomputes 256 distances per sub-vector, so scoring a stored vector costs *b* table lookups instead of *d* multiply-adds. On SIFT1B (a billion 128-d image descriptors) with 8-byte codes, one Titan X GPU answering batches of 10,000 queries reached recall@10 of 0.376 at 17.7 µs per query on average, 8.5× faster than the previous GPU method at slightly better recall ([arXiv:1702.08734](https://arxiv.org/abs/1702.08734), Johnson et al., IEEE Trans. Big Data 2021). The paper covers exact and IVF-PQ search on GPUs only. It doesn't test graph indexes, filters, deletes or updates, which are the things a vector database adds. ScaNN, SPTAG and FLANN are the other common ones. Compare indexes on four numbers, as ANN-Benchmarks does: recall, queries per second, build time and index size.
 
 ### FAISS by hand
 

@@ -211,12 +211,12 @@ Multi-query takes BM25 from nearly useless to good on these queries, and it fixe
 
 ### 3. HyDE (Hypothetical Document Embeddings)
 
-**What**: instead of embedding the user query, generate a hypothetical ideal article that answers it, embed that, and retrieve by similarity ([arXiv:2212.10496](https://arxiv.org/abs/2212.10496) (Gao et al., 2022)). It bridges the domain gap between customer support language (informal phrasing) and help centre language (formal structured articles).
+**What**: instead of embedding the user query, generate a hypothetical ideal article that answers it, embed that, and retrieve by similarity ([arXiv:2212.10496](https://arxiv.org/abs/2212.10496) (Gao et al., ACL 2023)). The paper built it for retrieval with no relevance labels: an unsupervised encoder (Contriever) matches the generated document against real ones, and the encoder's dense bottleneck is expected to drop the invented details. On TREC DL19 web search it took Contriever from 44.5 to 61.3 nDCG@10, level with the MS MARCO fine-tuned Contriever (62.1), with InstructGPT as the generator. With Flan-T5-XXL as the generator it reached only 48.9. It stayed behind the fine-tuned model on DL20, FiQA and DBPedia, and the authors frame it as a cold-start tool: once labels exist, a supervised retriever takes the in-domain queries and HyDE keeps the novel ones. Here the hope is that it bridges the domain gap between customer support language (informal phrasing) and help centre language (formal structured articles).
 
-**Why it works**: accounting queries use informal vocabulary ("fee", "do my VAT") while articles use formal terms ("VAT return", "filing with the tax authority"). HyDE closes this gap.
+**Why it works**: accounting queries use informal vocabulary ("fee", "do my VAT") while articles use formal terms ("VAT return", "filing with the tax authority"). A generated article written in the formal register should land closer to the real one. The paper does not test vocabulary mismatch directly, so this is the case to measure on our queries.
 
-**Cost**: +1 LLM call to generate the hypothetical article, no retrieval loop.
-**Limitation**: it works best with pure vector retrieval, as in the deterministic pipeline. Bedrock HYBRID search (BM25 plus vector) may dilute the benefit, since BM25 is keyword-based.
+**Cost**: +1 LLM call to generate the hypothetical article, no retrieval loop. The paper's method averages the embeddings of N sampled documents, optionally with the query's (N is not reported), so its call count is unstated, and it never measures latency.
+**Limitation**: the paper tests it only with dense retrieval, as in the deterministic pipeline. Whether Bedrock HYBRID search (BM25 plus vector) dilutes the benefit is untested, since BM25 is keyword-based.
 
 **Best implementation path**: the deterministic pipeline's retrieval step, not the agents on Bedrock.
 
@@ -469,7 +469,7 @@ The product glossary is a flat list of concepts with no numeric article IDs and 
 | How would you judge a +0.03 MRR on 32 queries? | Not yet real. Worst-case SE of one mean is 0.088. Compute a paired bootstrap interval on per-query differences. |
 | Why a paired test? | The same queries go through both systems, so per-query difficulty cancels and the comparison is tighter. |
 | How does multi-query help, and what does it cost? | It covers lexical variance by retrieving for 2 or 3 reformulations and merging. Cost: one LLM call and one retrieval per variant. It helps keyword search most. |
-| How does HyDE differ? | It embeds a generated hypothetical answer in place of the query. One LLM call, one long bet on the corpus's vocabulary, best with pure vector search. |
+| How does HyDE differ? | It embeds a generated hypothetical answer in place of the query. One LLM call, one long bet on the corpus's vocabulary. The paper tested it only with pure vector search. |
 | Why did the LLM planner lose to a regex? | -0.031 MRR and +4 s. For a narrow edge-case vocabulary the rule was simply better, so test before assuming an LLM wins. |
 | What is a coverage gap? | A gold document that was never indexed. It lowers scores and no ranker can fix it, so filter or report it separately. |
 | Why keep URL mapping in a data file? | KB migrations become a data change, not a redeploy, and agents stay KB-agnostic. |

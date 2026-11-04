@@ -582,4 +582,4 @@ The limits are real. The 90-day repeat rate is a leading proxy for a long-term v
 
 ## Next
 
-That's the last of the applied analyses. Each ended with a decision and a check against something known, and this one set out the numbers the others should be judged by. Go on to [data science](../../../data-science/README.md), which takes up the models behind these analyses in depth.
+Next, [surveys and sampling design](12-surveys-and-sampling-design.md) asks what a satisfaction number is worth when you must ask people for it.

@@ -16,6 +16,7 @@ mean it is untested: fields are left out where the mapping is unclear.
 | [`ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md`](../ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md) | [system-design-round/rag-system](interviewing/rounds/system-design-round/examples/rag-system.md) | - |
 | [`ai-engineering/07-inference-engineering`](../ai-engineering/07-inference-engineering/README.md) | [system-design-round/scaling](interviewing/rounds/system-design-round/examples/scaling.md) | - |
 | [`ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md`](../ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md) | [system-design-round](interviewing/rounds/system-design-round/README.md) | - |
+| [`ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md`](../ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
 | [`ai-engineering/09-safety-and-security`](../ai-engineering/09-safety-and-security/README.md) | [code-review-round/security](interviewing/rounds/code-review-round/examples/security.md) | - |
 
 ## data-analytics
@@ -47,8 +48,11 @@ mean it is untested: fields are left out where the mapping is unclear.
 | Unit | Rounds | Drills |
 |---|---|---|
 | [`data-science/01-classical-ml`](../data-science/01-classical-ml/README.md) | [case-study/churn-prediction-takehome](interviewing/rounds/case-study/examples/ml-track/churn-prediction-takehome.md), [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
+| [`data-science/01-classical-ml/notes/13-automate-review-or-reject.md`](../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
 | [`data-science/02-deep-learning`](../data-science/02-deep-learning/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 | [`data-science/03-nlp`](../data-science/03-nlp/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
+| [`data-science/05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md`](../data-science/05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
+| [`data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md`](../data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
 
 ## generative-ai
 

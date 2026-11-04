@@ -8,6 +8,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 8, Ch 11"
   - https://arxiv.org/abs/2306.11644
   - https://arxiv.org/abs/2305.07759
+  - https://arxiv.org/abs/2209.11755
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 8"
 confidence: medium
 cleaned: 2026-11-01
@@ -84,8 +85,8 @@ A concise counter-argument query related to the argument #N:
 
   ![Promptagator per-dataset prompts](../sources/images/dai-promptagator-per-dataset-prompts.png)
   *The same passage → query template, relabeled per intent ("Counter argument:", "Vexed question:", "Is it true that"). Dai et al. (2022).*
-- Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
-- In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
+- The DAIR guide suggests labelling ~20 examples and **randomly sampling 2–8 per prompt** for diversity ([promptingguide.ai](https://www.promptingguide.ai/applications/synthetic_rag)). The paper itself used a fixed 2–8 examples per task, with no larger pool.
+- In the paper, **8 examples plus the prompted LLM were worth about 50k human-labelled MS MARCO pairs** for a simple dual encoder, evaluated on MS MARCO in a stripped-down comparison read off a plot (Fig. 2b). Separately, the full pipeline used FLAN at 137B and a round-trip filter that dropped any query whose own document the initial dual encoder did not rank top-1. Its 110M retriever, given 2–8 examples per dataset, averaged 47.8 nDCG@10 on 11 BEIR datasets, against 41.8 for BM25 ([arXiv:2209.11755](https://arxiv.org/abs/2209.11755), Dai et al., ICLR 2023).
 
 Retrieval itself belongs to [02-context](../../02-context-engineering/notes/04-retrieval.md).
 

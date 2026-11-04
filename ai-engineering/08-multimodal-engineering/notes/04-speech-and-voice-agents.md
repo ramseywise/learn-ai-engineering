@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2107.03312
   - https://arxiv.org/abs/2210.13438
   - https://arxiv.org/abs/2301.02111
+  - https://arxiv.org/abs/2106.07447
+  - https://arxiv.org/abs/2108.06209
   - https://arxiv.org/abs/2306.12925
   - https://arxiv.org/abs/2305.15255
   - https://arxiv.org/abs/2410.00037
@@ -32,6 +34,8 @@ Coverage has continued to expand. Meta's Omnilingual ASR reports open models for
 ## Speaking: audio as tokens
 
 Producing speech with a language model needs a compact sequence of discrete tokens that can stand in for audio. Neural codecs provide this. SoundStream compresses audio with an encoder, a residual vector quantizer and a decoder, and one model covers 3 to 18 kbps ([arXiv:2107.03312](https://arxiv.org/abs/2107.03312) (Zeghidour et al., IEEE/ACM TASLP 2022)). EnCodec does the same in real time, with a streaming architecture ([arXiv:2210.13438](https://arxiv.org/abs/2210.13438) (Défossez et al., TMLR 2023)). VALL-E showed that once speech is codec tokens, a language model can do text-to-speech with zero-shot voice cloning from a three-second sample ([arXiv:2301.02111](https://arxiv.org/abs/2301.02111) (Wang et al., 2023-01, preprint)). That power brings a real risk, which is covered in [chapter 9.1](../../09-safety-and-security/notes/01-threat-model.md).
+
+Codec tokens are built to rebuild the waveform. A second kind of token comes from self-supervised recognisers and is built to predict what was said. HuBERT makes its targets offline. It clusters MFCC frames into 100 groups with k-means, trains a model to predict the cluster of each masked frame, then re-clusters that model's own layer-6 features into 500 groups and trains again. Each round gave better units. With 500 clusters each time, the share of phone uncertainty that the cluster label removes rose from 0.276 (MFCC) to 0.637 (round-1 layer 6) to 0.704 (round-2 layer 9), and dev-other word error fell from 18.40 to 10.75 (100k pre-training steps, 10-hour fine-tune). Putting the loss only on masked frames is what made noisy targets usable: on unmasked frames alone, training failed at 96.37 WER ([arXiv:2106.07447](https://arxiv.org/abs/2106.07447) (Hsu et al., IEEE/ACM TASLP 2021)). w2v-BERT learns its token IDs and predicts them in one pass, with a contrastive loss to keep the codebook alive. Without that loss, masked prediction collapsed every time they tried it. Pretrained on 60,000 hours of Libri-Light, the 0.6B model reached 1.5/2.9 WER on LibriSpeech test/test-other with no language model, and pretrained instead on 34,300 hours of English voice-search audio it cut WER from 8.9 to 6.2 against a matched contrastive baseline ([arXiv:2108.06209](https://arxiv.org/abs/2108.06209) (Chung et al., ASRU 2021)). Both papers test recognition only, on English. Neither generates speech from its units, and HuBERT lists generation as future work, so when a later speech model calls units like these its "semantic tokens", check its own evidence for that.
 
 The token rate explains why this suits streaming. Kyutai's Mimi codec, used by Moshi, runs at 12.5 frames per second with 8 codebooks of 2,048 entries, which you can check directly:
 

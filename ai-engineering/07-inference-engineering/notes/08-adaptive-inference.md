@@ -321,4 +321,4 @@ Ch. 19 closes with an **RL-based runtime tuner** that adjusts batch size, precis
 
 ## Next
 
-[09-checklist-and-ai-assisted-tuning.md](09-checklist-and-ai-assisted-tuning.md): everything so far as an ordered checklist, plus how to let a model search for kernels safely.
+[08b-serving-encoders-and-vision-models.md](08b-serving-encoders-and-vision-models.md): the same questions for models that aren't only a decode loop, embedding encoders and vision-language models. Then [09-checklist-and-ai-assisted-tuning.md](09-checklist-and-ai-assisted-tuning.md): everything so far as an ordered checklist.

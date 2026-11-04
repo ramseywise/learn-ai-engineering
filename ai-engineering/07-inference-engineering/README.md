@@ -51,6 +51,7 @@ Notes are written from the sources by the `/chapter` skill, one source chapter a
 | 06 | [Serving at scale: deployment, batching, routing, parallelism, autoscaling](notes/06-serving-at-scale.md) | ch. 15–16; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8, 10 |
 | 07 | [Prefill, decode and the KV cache](notes/07-prefill-decode-kv-cache.md) | ch. 17–19; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8 |
 | 08 | [Adaptive inference: speculative decoding, quantization, early exit](notes/08-adaptive-inference.md) | ch. 15, 16, 19; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8 |
+| 08b | [Serving encoders and vision models](notes/08b-serving-encoders-and-vision-models.md) | Lab; S-LoRA; vLLM and TEI docs |
 | 09 | [Checklist and AI-assisted tuning](notes/09-checklist-and-ai-assisted-tuning.md) | ch. 20, appendix |
 
 ## Builds on and feeds into

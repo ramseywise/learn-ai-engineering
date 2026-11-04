@@ -15,6 +15,7 @@ Run everything from the pillar folder, `data-science/05-time-series-and-recommen
 | [`parts_catalogue.py`](parts_catalogue.py) | Generated parts catalogue with known records, parts and specs, candidate pairs and a rule-based extractor, imported by that lab | | |
 | [`05_similarity_lab.py`](05_similarity_lab.py) | Every number in [Learning a similarity function](../notes/05-learning-a-similarity-function.md): frozen against tuned, the pair curve, mining arms, a held-out family. Downloads about 90 MB on first use. Run from `practice/` with `uv run 05_similarity_lab.py` | 15 to 25 minutes on an Apple M4 Pro GPU, several times slower on CPU | Declared in the file |
 | [`05_similarity_tryit.py`](05_similarity_tryit.py) | The same note's temperature exercise | About four minutes on the same GPU | Declared in the file |
+| [`06_parts_capstone_lab.py`](06_parts_capstone_lab.py) | Capstone: rules, retrieval, pair model and a cost gate chained on generated catalogues, in [Learning a similarity function](../notes/05-learning-a-similarity-function.md#all-four-stages-together) | About five minutes on a laptop CPU | Declared in the file |
 | [`similarity_train.py`](similarity_train.py) | The training loop both of those import, not run on its own | n/a | Via those scripts |
 | [`matching.py`](matching.py) | Ledger generator, blocking, pair features and ranking metrics, imported by those two | | |
 | [`movielens.py`](movielens.py) | Shared MovieLens loader, split, metric and EASE, imported by the two recommender labs | | |

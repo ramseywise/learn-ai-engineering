@@ -3,6 +3,7 @@ import gc
 import json
 import random
 import resource
+import sys
 import time
 
 import torch
@@ -105,7 +106,7 @@ def weights_gb():
 
 
 def driver_gb():
-    return torch.mps.driver_allocated_memory() / 1e9 if DEVICE == "mps" else resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e9
+    return torch.mps.driver_allocated_memory() / 1e9 if DEVICE == "mps" else resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1e6 if sys.platform == "linux" else 1e9)  # kilobytes on Linux, bytes on macOS
 
 
 @torch.no_grad()
@@ -119,11 +120,11 @@ def read(model, proc, image, prompt=PROMPT, max_new_tokens=70):
     return proc.tokenizer.decode(out[0, b["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
 
-def score(model, proc, docs, prompt=PROMPT):
+def score(model, proc, docs, prompt=PROMPT, max_new_tokens=70):
     """Exact match per field, values found anywhere in the reply under any key, and how many replies parse as JSON at all."""
     hits, parsed, found, replies = {f: 0 for f in FIELDS}, 0, 0, []
     for image, doc in docs:
-        text = read(model, proc, image, prompt)
+        text = read(model, proc, image, prompt, max_new_tokens)
         replies.append(text)
         found += sum(doc[f] in text for f in FIELDS)
         try:

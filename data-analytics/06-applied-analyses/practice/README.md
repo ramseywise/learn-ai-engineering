@@ -15,6 +15,7 @@ Run everything from this folder, `data-analytics/06-applied-analyses/practice/`.
 | [`ch09_marketing_measurement.py`](ch09_marketing_measurement.py) | Where next quarter's budget goes, and what a new customer is worth | about 5 min | numpy, pandas, matplotlib, scipy, pymc-marketing, nutpie |
 | [`ch10_operations_supply_chain.py`](ch10_operations_supply_chain.py) | How much of each product to hold, and how many packers on a Monday | about 1 min | numpy, pandas, matplotlib, scipy, pulp |
 | [`ch11_metric_trees.py`](ch11_metric_trees.py) | Which number to run on, what feeds it, and what would catch it being gamed | under 1 min | numpy, pandas |
+| [`ch12_surveys.py`](ch12_surveys.py) | What a survey's number is worth: allocation, clusters, nonresponse, weighting and margins | under 1 min | numpy, pandas, scipy |
 
 Runtimes come from one smoke run with packages already cached and three labs at a time. The first run of a lab also downloads its packages. `chartstyle.py` and `retail.py` are helpers the labs import.
 

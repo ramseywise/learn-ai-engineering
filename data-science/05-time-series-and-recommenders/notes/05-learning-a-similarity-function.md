@@ -178,6 +178,31 @@ Start with in-batch softmax, the [`MultipleNegativesRankingLoss`](https://sbert.
 
 The lab writes its own loop so that you can see how the batch is built. In practice, [`sentence-transformers`](https://sbert.net/docs/sentence_transformer/loss_overview.html) 6 gives you the same loss with a [no-duplicates sampler](https://sbert.net/docs/package_reference/sentence_transformer/sampler.html). [`mine_hard_negatives`](https://sbert.net/docs/package_reference/util/hard_negatives.html) has a `range_min` to skip the top ranks that may be true matches, and margins to keep negatives below the positive. One default can catch you out. [`BatchSemiHardTripletLoss`](https://sbert.net/docs/package_reference/sentence_transformer/losses.html) uses Euclidean distance with a margin of 5, against 0.2 in FaceNet on normalised vectors.
 
+## All four stages together
+
+A real system chains everything in this subject: read attributes with rules, retrieve candidates, score pairs, then decide what merges without a person. [`practice/06_parts_capstone_lab.py`](../practice/06_parts_capstone_lab.py) does that on generated catalogues, with retrieval by character TF-IDF rather than a tuned encoder. It trains on one catalogue, sets thresholds on a second and reports on a third, each generated from its own seed. "Interchangeable" means same spec. The prices are assumptions: a wrong merge costs 200 euros, a review 3 and a missed pair 5.
+
+Each new catalogue has about 1,766 records and 3,784 true interchangeable pairs. The thresholds come from a search over 40 quantile points. Means of 5 seeds:
+
+| Arm | True pairs offered | Merged | Wrong merges | Wrong after closure | Reviews | Still unfound | Euros per record |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Full pipeline, k=10 | 0.505 | 546 | 0.4 | 0.6 | 1,187 | 2,255 | 8.44 |
+| No stop on stated conflict | 0.505 | 564 | 0.4 | 0.6 | 1,170 | 2,255 | 8.41 |
+| Rules hidden from model and gate | 0.505 | 492 | 0.2 | 0.2 | 239 | 3,107 | 9.22 |
+| No review band | 0.505 | 668 | 8.4 | 17.2 | 22 | 3,102 | 9.77 |
+| Thresholds set on 200 specs, not 800 | 0.505 | 599 | 5.4 | 11.6 | 1,256 | 2,195 | 8.95 |
+| Retrieve k=3 | 0.329 | 516 | 0.4 | 0.4 | 646 | 2,717 | 8.82 |
+| Retrieve k=30 | 0.681 | 542 | 0.8 | 1.2 | 1,494 | 2,015 | 8.32 |
+
+Four things stand out. At this search setting, each arm's cost difference from the full pipeline went the same way in all 5 seeds unless noted:
+
+- **Retrieval sets the ceiling.** At k=10, half the true pairs never reach the model, and no pair scorer can recover them. Most still-unfound pairs are of this kind. Tripling k raised that share to 0.681, for 2.8 times the candidates, and the extra pairs mostly went to review at these prices. The saving is small and not safe to memorise. Across three tuning draws and three search settings, k=30 was cheaper in 7 of 9 comparisons, by 0.11 to 0.38 euros per record. In the other 2, it cost about 0.32 more, because a finer search picked a threshold that let through about 7 wrong merges. Closure is the one exception to the ceiling, since a missing pair can come back through a chain of offered ones. If every true pair offered were confirmed and joined into groups, that would reach 0.563 of all true pairs at k=3, 0.825 at k=10 and 0.947 at k=30. In the full pipeline, merges plus confirmed reviews reach 0.670, with 4 wrong pairs implied. The table's "still unfound" doesn't credit any of this.
+- **Set thresholds on a catalogue of production size.** The table's 5.4 wrong merges depends on which small catalogue you draw and how finely you search. Over three draws and searches of 40, 80 and 200 points for the merge threshold, 200 specs gave 1.2 to 6.6 wrong merges and 800 gave 0 to 2.4, so even the 0.4 in the table isn't a stable figure. The ranges overlap, and 200 specs cost more in 7 of the 9 matched settings, by up to 0.51 euros per record, and a hair less in the other 2. At 40 points, the merge threshold's standard deviation across seeds was 0.005 to 0.015, against 0.002 to 0.004. So a small catalogue gives a noisier threshold. Don't trust a wrong-merge count from a single search.
+- **Closure multiplies mistakes.** With no review band, 8.4 wrong pairs became 17.2 once merges were joined into groups. One wrong link can join two whole groups.
+- **A stop on stated conflicts caught nothing here.** The model seeing the conflict isn't the reason. With rules hidden from it, 19.2 pairs per catalogue with a stated clash still scored above the merge threshold, and none was wrong. Every one was a true pair whose records disagree, so an attribute was mistyped or misread. The stop sends those to a person, and in the full pipeline that's 17.2 pairs. Reading the attributes mattered a lot, though: hiding them cost 0.78 euros per record. So rules earned their place as model inputs, at least on these generated catalogues.
+
+The review band's value depends on the price of a miss. At 20 euros per missed pair, reviews rose from 1,187 to 2,087, and merges stayed at 546. Replacing `candidates` with the encoder you tuned above is the obvious next experiment, and we haven't run it.
+
 ## Pitfalls
 
 - **Skipping the frozen baseline.** Without a frozen score and a character score on the same test set, a tuned number says nothing. Here frozen was 0.134 and characters were 0.456.

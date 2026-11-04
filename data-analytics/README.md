@@ -46,7 +46,7 @@ By the end of the course, you can:
 | [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading, including by matching and weighting. | Experiment brief or causal-design critique |
 | [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests, loss functions and multilevel models. | Diagnosed PyMC decision analysis |
 | [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
-| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement and operations. | End-to-end analysis portfolio |
+| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement, operations, metric trees and surveys. | End-to-end analysis portfolio |
 
 Read them in order the first time. Units 01 to 03 are the core sequence. Take Unit 04 after Unit 03; it revisits inference and A/B testing through a Bayesian decision framework. Take Unit 05 before or alongside Unit 06.
 
@@ -190,6 +190,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 8. Model customers as states and sequences, and check a transition matrix on a holdout before using it to forecast ([States and sequences](06-applied-analyses/notes/08-states-and-sequences.md)).
 9. Separate attribution from incrementality when you allocate a marketing budget ([Marketing measurement](06-applied-analyses/notes/09-marketing-measurement.md)).
 10. Turn a forecast's error distribution into stock and staffing decisions ([Operations and supply chain](06-applied-analyses/notes/10-operations-and-supply-chain.md)).
+11. Design a survey, weight it to known totals, and report what its margin of error omits ([Surveys and sampling design](06-applied-analyses/notes/12-surveys-and-sampling-design.md)).
 
 **Review and practice:** [deck](06-applied-analyses/slides/applied-analyses.pptx) · runnable [case-study scripts](06-applied-analyses/practice/) and their generated or documented datasets.
 
@@ -228,6 +229,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 | A transition matrix describes the past; it forecasts only if the process is stationary, so check it on a holdout period | [06](06-applied-analyses/notes/08-states-and-sequences.md) |
 | Attribution allocates credit; only an experiment or a model with a causal design measures incrementality | [06](06-applied-analyses/notes/09-marketing-measurement.md) |
 | The forecast's error distribution is the input to the stock decision, not the point forecast | [06](06-applied-analyses/notes/10-operations-and-supply-chain.md) |
+| A margin of error measures sampling error only: name the design, the weights and the nonresponse risk beside it | [06](06-applied-analyses/notes/12-surveys-and-sampling-design.md) |
 | Before tuning, read the false positives and false negatives: what the model finds, what it misses, and whether the data could tell them apart | [DS 01](../data-science/01-classical-ml/notes/12-reading-the-errors.md) |
 | Read errors on one split and score fixes on another; fix a class of error, never the rows you read | [DS 01](../data-science/01-classical-ml/notes/12-reading-the-errors.md) |
 | Start from the target: it picks the model family, the loss, the metric and the baseline, in that order | [DS 01](../data-science/01-classical-ml/notes/11-choosing-a-metric.md) |

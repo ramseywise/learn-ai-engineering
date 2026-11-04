@@ -179,7 +179,7 @@ Three tiers enforce the claims mechanically (the tier summary is in [07](07-eval
 | 2 | Every per-claim citation ID is declared at the top level. This closes the gap where a model lists valid IDs at response level but cites undeclared passages per claim |
 | 3 | The `supportingQuote` appears verbatim in the cited passage. Zero token overlap means it was fabricated |
 
-Claims don't make hallucination impossible. The wrong document can still be retrieved, the claim can be irrelevant, or the answer can add unsupported detail. What claims do is expose the evidence, so each of those failures becomes checkable. Self-generated citations can themselves be unreliable (Qi et al., 2024). Sub-sentence citations cut the reader's verification cost (Chen et al., 2025). ALCE shows that even strong systems lack complete citation support (Gao et al., 2023).
+Claims don't make hallucination impossible. The wrong document can still be retrieved, the claim can be irrelevant, or the answer can add unsupported detail. What claims do is expose the evidence, so each of those failures becomes checkable. Self-generated citations can themselves be unreliable (Qi et al., 2024). Sub-sentence citations cut the reader's verification cost (Chen et al., 2025). ALCE shows that even strong systems lack complete citation support: about half of ChatGPT's and GPT-4's ELI5 answers in 2023 (Gao et al., 2023).
 
 ---
 

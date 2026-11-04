@@ -33,7 +33,7 @@ def half_width(p, n):
 sent = frame[frame.emailable]
 replied = sent[RNG.random(len(sent)) < sent.true_p_email]
 raw = replied.true_satisfied.mean()
-print(f"frame {N}; emailable {len(sent)} ({len(sent) / N:.0%}); replies {len(replied)} ({len(replied) / len(sent):.1%} of those sent)")
+print(f"customers {N}; emailable {len(sent)} ({len(sent) / N:.0%}); replies {len(replied)} ({len(replied) / len(sent):.1%} of those sent)")
 print(f"answers say {raw:.3f}, plus or minus {half_width(raw, len(replied)):.3f} by the textbook formula")
 print(f"true share: everyone {truth:.3f}; emailable {sent.true_satisfied.mean():.3f}; replies {raw:.3f}")
 print(f"coverage error {sent.true_satisfied.mean() - truth:+.3f}; nonresponse error {raw - sent.true_satisfied.mean():+.3f}")
@@ -53,7 +53,8 @@ def stratified_se(alloc, S):
     return np.sqrt((W**2 * (1 - alloc / strata.N_h) * S**2 / alloc).sum())
 
 
-rows = {"simple random": {"spend": frame.spend.std() / np.sqrt(n), "satisfied": frame.true_satisfied.std() / np.sqrt(n)}}
+fpc = np.sqrt(1 - n / N)  # the finite population correction, explained in the next section
+rows = {"simple random": {"spend": fpc * frame.spend.std() / np.sqrt(n), "satisfied": fpc * frame.true_satisfied.std() / np.sqrt(n)}}
 for plan in plans:
     rows[plan] = {"spend": stratified_se(plans[plan], strata.S_spend), "satisfied": stratified_se(plans[plan], strata.S_sat)}
 print(pd.DataFrame(rows).T.round(4).to_string())
@@ -133,7 +134,7 @@ def nonresponse_bias(p):
 
 
 mailings = {"flat 8%": np.full(N, .08),
-            "'tell us what you loved', 45%": .30 + .25 * y,
+            "'tell us what you loved', 42%": .30 + .25 * y,
             "blanket email, all customers": frame.true_p_email.to_numpy(),
             "designed, with reminders": frame.true_p_followup.to_numpy()}
 for name, p in mailings.items():
@@ -276,5 +277,5 @@ packaging = answers(4.6, 1.0, 500, make)    # consistent answers
 delivery = answers(5.4, 2.5, 500, make)     # a higher underlying mean, and a much wider spread
 for name, s in [("packaging", packaging), ("delivery", delivery)]:
     shares = np.bincount(s, minlength=6)[1:] / len(s)
-    print(f"{name:10s} shares 1-5 {np.round(shares, 2)}  mean {s.mean():.2f}  bottom two {np.mean(s <= 2):.2f}  top box {np.mean(s == 5):.2f}  probit mean, sd {np.round(fit_probit(s), 2)}")
+    print(f"{name:10s} shares 1-5 {np.round(shares, 2)}  mean {s.mean():.2f}  bottom two {np.mean(s <= 2):.3f}  top box {np.mean(s == 5):.2f}  probit mean, sd {np.round(fit_probit(s), 2)}")
 print(f"t test on the means: p = {stats.ttest_ind(packaging, delivery, equal_var=False).pvalue:.3f}; true underlying means are 4.6 and 5.4")

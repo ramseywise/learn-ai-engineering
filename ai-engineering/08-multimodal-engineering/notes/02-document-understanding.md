@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2205.14100
   - https://arxiv.org/abs/2111.15664
   - https://arxiv.org/abs/2308.13418
   - https://arxiv.org/abs/2309.11419
@@ -55,7 +56,7 @@ flowchart TD
 
 The pipeline's strength is that it is inspectable and its cost is known. Its weakness is the one the Donut authors name: the stages add computation, resist change, and pass errors down the line, since a wrong layout region stays wrong forever ([arXiv:2111.15664](https://arxiv.org/abs/2111.15664) (Kim et al., ECCV 2022)).
 
-**An end-to-end document model.** Donut skips OCR and maps page images directly to structured tokens with a Swin encoder and a BART-style decoder. Nougat applies the same idea to academic PDFs. Kosmos-2.5 trains one decoder for two outputs: spatially located text blocks and structured Markdown ([arXiv:2309.11419](https://arxiv.org/abs/2309.11419) (Lv et al., 2023-09, preprint)). These models avoid error propagation but pick up a new failure: they can loop. Nougat saw repetitive output on 1.5% of its test pages, and more often on pages outside its training domain ([arXiv:2308.13418](https://arxiv.org/abs/2308.13418)).
+**An end-to-end document model.** Donut skips OCR and maps page images directly to structured tokens with a Swin encoder and a BART-style decoder. Nougat applies the same idea to academic PDFs. Kosmos-2.5 trains one decoder for two outputs: spatially located text blocks and structured Markdown ([arXiv:2309.11419](https://arxiv.org/abs/2309.11419) (Lv et al., 2023-09, preprint)). These models avoid error propagation but pick up a new failure: they can loop. Nougat saw repetitive output on 1.5% of its test pages, and more often on pages outside its training domain ([arXiv:2308.13418](https://arxiv.org/abs/2308.13418)). Reading without an OCR engine can come from captioning alone. GIT, a general image captioner with no OCR input, scored 138.2 CIDEr on the TextCaps test set against 109.7 for TAP, the previous best, which fed in OCR tokens. The authors credit the web captions: an OCR API found the image's text written into the caption for an estimated 15% of CC12M and 31% of a 500K sample of their crawled images. Its TextCaps captioner averaged 89.9 across six scene-text recognition benchmarks with no OCR training, counted correct when the caption contained the word ([arXiv:2205.14100](https://arxiv.org/abs/2205.14100) (Wang et al., TMLR 2022)). That is single words in photos, not dense pages.
 
 **A general vision-language model.** You send the page image and a schema, and get JSON back. It is the fastest route to a demo, and it handles odd layouts well, since no rule has to anticipate them. It has the resolution limits of [chapter 1](01-image-input.md), its errors look exactly like correct output, and it costs model inference per page.
 
@@ -334,4 +335,4 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 
 ## Next
 
-[Chapter 3 — Multimodal RAG](03-multimodal-rag.md) takes a collection of documents and asks how to find the right page when the answer is in a chart or a table. For what happens to this pipeline around the reader, from pricing a mistake to rollout and monitoring, see [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).
+[Chapter 2b — Fine-tuning a vision-language model](02b-fine-tuning-a-vision-language-model.md) trains a small reader for when these routes don't fit your limits. [Chapter 3 — Multimodal RAG](03-multimodal-rag.md) takes a collection of documents and asks how to find the right page when the answer is in a chart or a table. For what happens to this pipeline around the reader, from pricing a mistake to rollout and monitoring, see [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

@@ -277,12 +277,12 @@ def se_ratio(users=2000, sessions=5, icc=0.5, reps=2000):
 
 true_se, naive_se = se_ratio()
 print(f"true SE {true_se:.4f}, naive SE {naive_se:.4f}, understated by {true_se / naive_se:.2f}x")
-print(f"design effect sqrt(1 + (m-1)*icc) = {(1 + 4 * 0.5)**0.5:.2f}")
+print(f"standard error ratio sqrt(1 + (m-1)*icc) = {(1 + 4 * 0.5)**0.5:.2f}")
 ```
 
 ```text
 true SE 0.0175, naive SE 0.0100, understated by 1.75x
-design effect sqrt(1 + (m-1)*icc) = 1.73
+standard error ratio sqrt(1 + (m-1)*icc) = 1.73
 ```
 
 Five sessions per user with ρ = 0.5 means you have about a third of the information your row count suggests, and any naive standard error is 1.75 times too small. Reinhart calls this pseudoreplication, in the context of cells from one culture and fish in one aquarium (*Statistics Done Wrong*, ch. 3). In an A/B test the same thing appears whenever you randomise by user and analyse by session, and [regression](06-regression-and-glms.md) gives the fix.

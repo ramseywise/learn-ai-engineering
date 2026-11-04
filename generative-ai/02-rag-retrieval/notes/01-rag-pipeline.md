@@ -2,6 +2,7 @@
 origin: curated  # was: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here) - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
+  - https://arxiv.org/abs/2212.10496
   - https://arxiv.org/abs/2312.10997
   - https://arxiv.org/abs/2402.19473
   - https://pub.towardsai.net/9-rag-architectures-that-save-you-months-of-dev-work-0e219eb637cb
@@ -9,6 +10,8 @@ sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md
   - https://arxiv.org/abs/2310.11511
   - https://arxiv.org/abs/2305.06983
+  - https://arxiv.org/abs/2212.10509
+  - https://arxiv.org/abs/2212.14024
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
@@ -83,7 +86,7 @@ A popular catalogue ([Towards AI](https://pub.towardsai.net/9-rag-architectures-
 | 4 | **Adaptive** | Intent classifier → pipeline. Fast path: low-k, cached or templated answers. Deep path: high-k, multi-hop or iterative retrieval | Mixed workloads (FAQs, research, creative) | Keep the intent model small and cheap; make routing rules auditable. Speed for simple queries, depth where it matters |
 | 5 | **Query generation** (the catalogue calls it "Self-RAG"; see below) | The LLM writes query expansions or keywords used for retrieval | Vague inputs; paraphrase-heavy domains | Validate or constrain generated queries so the model can't invent out-of-scope terms |
 | 6 | **Fusion** | Vector search + web API + SQL → merge and rerank → synthesise with provenance labels | Enterprise: internal docs + web + DBs | Use it when breadth of sources matters |
-| 7 | **HyDE** | An LLM writes a *hypothetical answer*; that answer, not the raw question, is embedded and searched. Variant: generate Q/A pairs per document at index time and index those | Short or vague queries; dense technical docs | Costs an extra LLM call but often much better recall. Regenerate index-time entries when models or documents change |
+| 7 | **HyDE** | An LLM writes a *hypothetical answer*; that answer, not the raw question, is embedded and searched. Variant: generate Q/A pairs per document at index time and index those | Short or vague queries; dense technical docs | Costs an extra LLM call but often much better recall (TREC DL19 recall@1k 74.6 → 88.0 over unsupervised Contriever; [arXiv:2212.10496](https://arxiv.org/abs/2212.10496), Gao et al., ACL 2023). Regenerate index-time entries when models or documents change |
 | 8 | **Agentic** | Planner → retriever-as-tool → executor → verifier, spawning sub-queries | Multi-step automation, research agents | Sandbox tool execution; step-level rollbacks. Moves you from Q&A to action |
 | 9 | **GraphRAG** | Retrieve passages → entity-link to graph nodes → traverse for multi-hop → synthesise and show the path | Biotech, legal, research: provenance-critical | Invest in entity linking and a provenance UI |
 
@@ -458,6 +461,8 @@ The Librarian has a gap. It queries with `top_k=1` and falls back to "generate t
 ## Agentic RAG
 
 Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. It's the most capable design and the hardest to evaluate, because the retrieval path differs per run ([02-context 12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md)). It's just-in-time retrieval ([02-context 04](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#just-in-time-context)) with a search tool. Huyen frames it from the other side: RAG is a special case of an agent whose only tool is the retriever (*AI Engineering*, ch. 6). Raieli and Iuculano name three loop shapes (*Building AI Agents*, ch. 6). *Iterative* retrieval retrieves again with what the last generation produced. *Recursive* retrieval breaks the query into sub-queries. *Adaptive* retrieval lets the model decide when to retrieve, as FLARE and Self-RAG do ([above](#nine-named-patterns)). Agent-side patterns (retrieval as a tool, planners, verifiers) are in [08 — agentic RAG (PRINCE)](08-agentic-rag-prince.md).
+
+IRCoT uses each chain-of-thought sentence as the next BM25 query. With GPT-3 on four multi-hop QA sets it raised gold-paragraph recall over one-step retrieval by 11–23 points, at one LLM call per sentence, never timed ([arXiv:2212.10509](https://arxiv.org/abs/2212.10509), Trivedi et al., ACL 2023). DSP's two-hop search program reached 51.4 EM on HotPotQA dev against 36.9 for retrieve-then-read, but only 36.6 against 33.8 on single-hop Open-SQuAD, with no cost reported ([arXiv:2212.14024](https://arxiv.org/abs/2212.14024), Khattab et al., 2022, preprint).
 
 ### Agentic vs. single-pass: Li Experiment 3-9
 

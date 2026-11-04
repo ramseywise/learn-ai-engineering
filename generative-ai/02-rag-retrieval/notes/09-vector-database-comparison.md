@@ -6,6 +6,7 @@ sources:
   - https://docs.pinecone.io/guides/search/hybrid-search
   - Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book
   - https://huggingface.co/intfloat/multilingual-e5-large
+  - https://arxiv.org/abs/1603.09320
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -261,6 +262,15 @@ The approximate-nearest-neighbour index decides how the store behaves when the c
 |---|---|---|---|---|---|
 | **HNSW** | Layered proximity graph | Incremental | Higher | Very high | Live corpora that change often |
 | **ANNOY** | Forest of random-projection trees | **Full rebuild** on change | Low | Good | Static corpora; fast build |
+
+The HNSW paper says how to set the knobs ([arXiv:1603.09320](https://arxiv.org/abs/1603.09320), Malkov & Yashunin, IEEE TPAMI 2020):
+
+- **`M`**, links per node, is "the only meaningful construction parameter left for the user". Use 5–48, small for low recall or low dimensions and large for high recall or high dimensions. Memory grows with it.
+- **The bottom layer gets 2·`M` links.** Fewer cost a lot at high recall, and more waste memory.
+- **`efConstruction`** only has to be high enough that recall during the build is about 0.95. With efConstruction = 100 and M = 16, 10M SIFT vectors indexed in 3 minutes on a 40-core Xeon server.
+- **`ef`** at query time is the recall dial. The paper gives no default, so sweep it as [note 04](04-vector-databases-and-ann.md#hierarchical-nsw-hnsw) does.
+
+The graph costs about 60–450 bytes per vector on top of the vectors themselves, for M from 6 to 48. On 200M SIFT vectors, against a CPU FAISS build of May 2017, HNSW took 64 GB of RAM against 23.5–30 GB for FAISS's product-quantized index, and built in 42 minutes to 5.6 hours against FAISS's 11–12 hours. HNSW also had the better recall-for-speed curve. Against Annoy and the other ann-benchmarks entries on SIFT, GloVe, DEEP and CoPhIR, HNSW won "by a large margin". On 4-dimensional data it was only slightly faster than Annoy at high recall. The paper's algorithm has no deletes or updates and lists them as future work, so check how your store handles them.
 
 The insert behaviour is also a governance point: expiring a superseded document in an ANNOY index means rebuilding it, so stale content lingers until the next rebuild ([02-context 04 — context validation](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#context-validation)). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding) benchmarks both.
 

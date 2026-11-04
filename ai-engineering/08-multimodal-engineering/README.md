@@ -57,6 +57,7 @@ behind it, a check that catches it, and the evidence for what to do about it.
 |---|---|---|
 | 01 | [Image input](notes/01-image-input.md) | What does the model actually receive, and what did preprocessing destroy? |
 | 02 | [Document understanding](notes/02-document-understanding.md) | Which route through a PDF, and how do you prove the result without trusting the model? |
+| 02b | [Fine-tuning a vision-language model](notes/02b-fine-tuning-a-vision-language-model.md) | When prompts aren't enough, what do you train, and what can quietly undo it? |
 | 03 | [Multimodal RAG](notes/03-multimodal-rag.md) | How do you retrieve an answer that exists only in a chart? |
 | 04 | [Speech and voice agents](notes/04-speech-and-voice-agents.md) | Cascade or speech-to-speech, and how do you spend the latency budget? |
 | 05 | [How image generators work](notes/05-how-image-generators-work.md) | What happens between noise and picture, and which families compete with diffusion? |

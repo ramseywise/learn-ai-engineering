@@ -169,7 +169,7 @@ Citations are one of the few places in RAG where code can grade semantics cheapl
 | **Coverage** | Every strict-tier claim has a citation |
 | **Format** | Citation markers parse |
 
-Then, with a judge: **citation precision** (does the cited passage support the sentence it's attached to?) and **citation recall** (is every claim that needs a citation cited?). ALCE (Gao et al. 2023) defines both and shows models citing irrelevant passages often.
+Then, with a judge: **citation recall** (does the sentence have at least one citation, and do its cited passages together entail it?) and **citation precision** (is each citation needed: a citation counts against precision when it can't support the sentence alone and the others support it without it). ALCE defines both with an NLI model (TRUE, T5-11B) as the judge, and found about half of ChatGPT's and GPT-4's ELI5 answers not fully supported by their citations. Against human labels the scores agreed at kappa 0.698 for recall and 0.525 for precision. The NLI model misses partial support, so automatic precision runs low ([arXiv:2305.14627](https://arxiv.org/abs/2305.14627), Gao et al., EMNLP 2023).
 
 The code half of that table on a sample answer. The fifth claim is a greeting in the general tier, and the last call passes a URL where passage text belongs:
 
