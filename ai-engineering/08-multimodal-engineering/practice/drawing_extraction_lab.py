@@ -225,19 +225,19 @@ def symbol_marks(pen, kind, x, y, s=8):
     """The characteristic symbol, drawn as strokes. It is a shape on the page: no font and no character code."""
     cx, cy, w = x + s / 2, y + s / 2, .35
     if kind == "position":
-        pen.d.ellipse([(cx - 2.2) * pen.k, (cy - 2.2) * pen.k, (cx + 2.2) * pen.k, (cy + 2.2) * pen.k], outline=0, width=round(w * pen.k))
-        pen.line((cx - 3.2, cy), (cx + 3.2, cy), w)
-        pen.line((cx, cy - 3.2), (cx, cy + 3.2), w)
+        pen.d.ellipse([(cx - 1.7) * pen.k, (cy - 1.7) * pen.k, (cx + 1.7) * pen.k, (cy + 1.7) * pen.k], outline=0, width=round(w * pen.k))
+        pen.line((cx - 2.6, cy), (cx + 2.6, cy), w)
+        pen.line((cx, cy - 2.6), (cx, cy + 2.6), w)
     elif kind == "flatness":
-        pts = [(cx - 3, cy + 1.6), (cx + 1.5, cy + 1.6), (cx + 3, cy - 1.6), (cx - 1.5, cy - 1.6), (cx - 3, cy + 1.6)]
+        pts = [(cx - 2.6, cy + 1.4), (cx + 1.3, cy + 1.4), (cx + 2.6, cy - 1.4), (cx - 1.3, cy - 1.4), (cx - 2.6, cy + 1.4)]
         for p, q in zip(pts, pts[1:]):
             pen.line(p, q, w)
     elif kind == "perpendicularity":
-        pen.line((cx - 3, cy + 2.4), (cx + 3, cy + 2.4), w)
-        pen.line((cx, cy + 2.4), (cx, cy - 2.6), w)
+        pen.line((cx - 2.6, cy + 2.2), (cx + 2.6, cy + 2.2), w)
+        pen.line((cx, cy + 2.2), (cx, cy - 2.4), w)
     else:
         for off in (-1.2, 1.2):
-            pen.line((cx - 1.6 + off, cy + 2.4), (cx + 1.6 + off, cy - 2.4), w)
+            pen.line((cx - 1.3 + off, cy + 2.2), (cx + 1.3 + off, cy - 2.2), w)
 
 
 def title_block():
@@ -310,7 +310,7 @@ def render(drw, dpi):
     edge = (drw["centres"][0][0] + r0 * .71, drw["centres"][0][1] - r0 * .71)
     pen.line((sx, sy), edge)
     pen.arrow(edge, (sx, sy))
-    fx, fy = sx, sy + 1.2
+    fx, fy = sx + 3, sy + 2.0
     tol_text = ("Ø" if drw["fcf_dia"] else "") + fmt(drw["fcf_tol"], drw["unit"], tol=True)
     widths = [8, max(16, pen.width(tol_text) + 3)] + [8] * len(drw["fcf_datums"])
     fcf_cells, cx = [], fx
@@ -395,36 +395,52 @@ def dimension_segments(b, ppm):
     segs = cv2.HoughLinesP(b * 255, 1, np.pi / 720, threshold=int(9 * ppm), minLineLength=int(14 * ppm), maxLineGap=int(1.2 * ppm))
     if segs is None:
         return [], []
-    groups = []
+    groups = []                                              # one entry per straight line, however many pieces Hough found
     for x1, y1, x2, y2 in segs.reshape(-1, 4).astype(float):
         angle = math.atan2(y2 - y1, x2 - x1) % math.pi
-        rho = x1 * math.sin(angle) - y1 * math.cos(angle)
+        if angle > math.pi - math.radians(3) or angle < math.radians(3):
+            angle = 0.0
+        elif abs(angle - math.pi / 2) < math.radians(3):
+            angle = math.pi / 2
+        rho = (x1 + x2) / 2 * math.sin(angle) - (y1 + y2) / 2 * math.cos(angle)
         for g in groups:
-            diff = min(abs(g["angle"] - angle), math.pi - abs(g["angle"] - angle))
-            if diff < math.radians(2.5) and abs(abs(g["rho"]) - abs(rho)) < .5 * ppm:
+            if min(abs(g["angle"] - angle), math.pi - abs(g["angle"] - angle)) < math.radians(2.5) and abs(g["rho"] - rho) < 1.2 * ppm:
                 g["pts"] += [(x1, y1), (x2, y2)]
+                g["rhos"].append(rho)
                 break
         else:
-            groups.append(dict(angle=angle, rho=rho, pts=[(x1, y1), (x2, y2)]))
-    band, dims, plain = max(2, round(.9 * ppm)), [], []
+            groups.append(dict(angle=angle, rho=rho, rhos=[rho], pts=[(x1, y1), (x2, y2)]))
+    band, dims, plain, thin = max(2, round(.9 * ppm)), [], [], max(.75 * ppm, 3.5)
     for g in groups:
         c, s = math.cos(g["angle"]), math.sin(g["angle"])
-        ts = [x * c + y * s for x, y in g["pts"]]
-        p, q = g["pts"][int(np.argmin(ts))], g["pts"][int(np.argmax(ts))]
-        w = width_profile(b, p, q, band)
-        if np.median(w) > .6 * ppm:                          # the part outline and the frame are too heavy to be dimensions
+        ts, rho = [x * c + y * s for x, y in g["pts"]], float(np.median(g["rhos"]))
+        if max(ts) - min(ts) > 200 * ppm:                    # the drawing frame
             continue
-        bump = (cv2.blur(w.astype("float32").reshape(-1, 1), (1, 3)).ravel() >= max(np.median(w) + 1.5, .55 * ppm)).astype(int)
-        edges = np.flatnonzero(np.diff(np.r_[0, bump, 0]))
-        runs = [(a, b_) for a, b_ in zip(edges[::2], edges[1::2]) if b_ - a >= 1.2 * ppm]
+        p, q = (min(ts) * c + rho * s, min(ts) * s - rho * c), (max(ts) * c + rho * s, max(ts) * s - rho * c)
+        w = width_profile(b, p, q, band)
         n = max(len(w) - 1, 1)
         point = lambda t: (p[0] + (q[0] - p[0]) * t / n, p[1] + (q[1] - p[1]) * t / n)
-        if len(runs) < 2:
-            plain.append((p, q))
+        base = np.median(w)
+        bump = (cv2.blur(w.astype("float32").reshape(-1, 1), (1, 3)).ravel() >= max(base + 1.5, .55 * ppm)).astype(int)
+        edges = np.flatnonzero(np.diff(np.r_[0, bump, 0]))
+        heads = [[a, b_] for a, b_ in zip(edges[::2], edges[1::2])     # an arrowhead along the line, not one lying across it
+                 if 1.0 * ppm <= b_ - a <= 7 * ppm and np.median(w[a:b_]) <= 1.7 * ppm]
+        joined = []                                          # two arrowheads tip to tip, where a chain of dimensions meets
+        for head in heads:
+            if joined and head[0] - joined[-1][1] < 5 * ppm:
+                joined[-1][1] = head[1]
+            else:
+                joined.append(head)
+        ends_are_arrows = len(joined) >= 2 and joined[0][0] < 3 * ppm and n - joined[-1][1] < 3 * ppm
+        if not ends_are_arrows:
+            if base <= thin:
+                plain.append((p, q))
             continue
-        stops = [runs[0][0]] + [(a + b_) / 2 for a, b_ in runs[1:-1]] + [runs[-1][1]]
+        # An interior stop must be two arrowheads. Mark it at the extension line that crosses there, the widest point.
+        inner = [(a, b_) for a, b_ in joined[1:-1] if b_ - a >= 3.5 * ppm]
+        stops = [0] + [a + int(np.argmax(w[a:b_] - .02 * np.abs(np.arange(a, b_) - (a + b_) / 2))) for a, b_ in inner] + [n]
         for t1, t2 in zip(stops, stops[1:]):
-            if t2 - t1 >= 14 * ppm:
+            if t2 - t1 >= 14 * ppm and np.median(w[int(t1):int(t2)]) <= thin:   # the outline is too heavy to be a dimension
                 dims.append((point(t1), point(t2)))
     return dims, plain
 
@@ -439,7 +455,7 @@ def name_features(segments, ppm):
     out = {}
     slant = [(p, q) for p, q in segments if kind(p, q) == "s"]
     if slant:
-        out["edge_slant"] = slant[0]
+        out["edge_slant"] = max(slant, key=lambda s: math.hypot(s[1][0] - s[0][0], s[1][1] - s[0][1]))
     if not hs or not vs:
         return out
     length = lambda s: math.hypot(s[1][0] - s[0][0], s[1][1] - s[0][1])
@@ -475,18 +491,17 @@ def find_regions(image, ppm):
             continue
         x, y, w, h = cv2.boundingRect(c)
         wm, hm, area = w / ppm, h / ppm, cv2.contourArea(c)
-        perimeter = cv2.arcLength(c, True)
-        if area > .85 * w * h and 4.5 <= hm < 9.5 and 3.5 <= wm <= 40 and y < .4 * h_img:
+        if area > .75 * w * h and 4.5 <= hm < 9.5 and 3.5 <= wm <= 40 and y < .4 * h_img:
             fcf.append((x, y, w, h))
-        elif area > .85 * w * h and 8.5 <= hm <= 13 and 15 <= wm <= 60 and x > .55 * w_img and y > .7 * h_img:
+        elif area > .75 * w * h and 8.5 <= hm <= 13 and 15 <= wm <= 60 and x > .55 * w_img and y > .7 * h_img:
             title.append((x, y, w, h))
-        elif perimeter and 4 * math.pi * area / perimeter ** 2 > .75 and 2.5 <= math.sqrt(area / math.pi) / ppm <= 8:
-            layout.holes.append(2 * math.sqrt(area / math.pi) / ppm + .5)   # inner edge to stroke centre
-    # A frame is a row of cells at one height. Take the longest such row.
-    rows = {}
-    for cell in fcf:
-        rows.setdefault(round(cell[1] / (2 * ppm)), []).append(cell)
-    layout.fcf_cells = sorted(max(rows.values(), key=len), key=lambda c: c[0]) if rows else []
+        else:
+            _, radius = cv2.minEnclosingCircle(c)
+            if area > .8 * math.pi * radius ** 2 and 2.5 <= radius / ppm <= 8:
+                layout.holes.append(2 * math.sqrt(area / math.pi) / ppm + .5)   # inner edge to stroke centre
+    # A frame is a row of touching cells of one height. Take the longest such row.
+    rows = [[c for c in fcf if abs(c[1] - seed[1]) < 1.5 * ppm and abs(c[3] - seed[3]) < 1.5 * ppm] for seed in fcf]
+    layout.fcf_cells = sorted(max(rows, key=len), key=lambda c: c[0]) if rows else []
     layout.title_cells = title
     top_of_frame = min((c[1] for c in layout.fcf_cells), default=None)
     shelves = [(p, q) for p, q in plain if abs(p[1] - q[1]) < .6 * ppm and 15 * ppm < abs(q[0] - p[0]) < 85 * ppm and 12 * ppm < p[1] < 40 * ppm]
@@ -511,6 +526,7 @@ def true_regions(image, angle, regions, drw, ppm):
 
 # %% Reading: a token is (text, along, up, height), in millimetres in the frame of the region it came from
 ocr = RapidOCR()
+BAND_FLOOR = .75                                             # millimetres above the line where the text band starts
 ZOOM = 10                                                    # crop pixels per page millimetre, whatever the scan resolution was
 
 
@@ -524,14 +540,14 @@ def frame(p1, p2):
 
 
 def zone_size(p1, p2, ppm):
-    return min(math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / ppm / 2 + 1, 26.0), 8.8      # half width along the line, height above it
+    return min(math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / ppm / 2 + 1, 26.0), 8.8      # half width along the line, top of the band above it
 
 
 def aligned_crop(image, p1, p2, ppm):
-    """Cut out the band above a line and turn it level. This is the rotation normalisation."""
+    """Cut out the band above a line, leaving out the line and its arrowheads, and turn it level. This is the rotation normalisation."""
     mid, d, up = frame(p1, p2)
     half, height = zone_size(p1, p2, ppm)
-    W, Hh, scale = int(2 * half * ZOOM), int(height * ZOOM), ppm / ZOOM
+    W, Hh, scale = int(2 * half * ZOOM), int((height - BAND_FLOOR) * ZOOM), ppm / ZOOM
     M = np.array([[d[0] * scale, -up[0] * scale, mid[0] - half * ZOOM * d[0] * scale + height * ZOOM * up[0] * scale],
                   [d[1] * scale, -up[1] * scale, mid[1] - half * ZOOM * d[1] * scale + height * ZOOM * up[1] * scale]])
     return cv2.warpAffine(image, M, (W, Hh), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP, borderValue=255), half, height

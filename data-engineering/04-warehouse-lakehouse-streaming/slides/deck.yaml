@@ -1,4 +1,4 @@
-# Warehouse, lakehouse and streaming lecture deck. Covers notes 01-05.
+# Warehouse, lakehouse and streaming lecture deck. Covers notes 01-05, including 01b.
 # Build: make slides PILLAR=data-engineering/04-warehouse-lakehouse-streaming STRICT=1 PREVIEW=1
 # Running example: one year of New York taxi trips, synthetic for the local runs.
 deck:
@@ -15,7 +15,7 @@ deck:
 
 parts:
   - title: Layout decides the bill
-    summary: Columns · Partitions · Clusters · Shuffles
+    summary: Columns · Partitions · Clusters · Shuffles · Buckets
     notes: >-
       We start with one question over one year of trips, and discover that the answer is the same and the cost is not.
     slides:
@@ -81,11 +81,63 @@ parts:
             sub: per key
           - label: Write
             sub: Parquet out
-        caption: "Counting rows for 1M trips on 4 executors: 749,066 rows without partial aggregation, 795 partial sums with it."
+        caption: "Counting rows for 1M trips on 4 executors: 749,627 rows without partial aggregation, 795 partial sums with it."
         takeaway: Partial aggregation shrinks what crosses the network from every row to one result per key per executor.
         source: notes/01-warehouse-and-store.md
         notes: >-
           Spark's physical plan does this for you. A join on two large tables shuffles both; broadcast a small one to avoid it. And if your data fits on one machine, DuckDB has no shuffle to pay for at all.
+      - layout: code
+        title: Small files cost requests and break column pruning
+        recall: Why did the same one-column query read 12 times more bytes from 1,000 files?
+        lang: text
+        code: |-
+          1M rows, sum one column, DuckDB against a local moto server
+          files  stored MB    GET  MB read  query s
+              1       20.8      2      1.8     0.01
+             10       21.9     20      2.2     0.03
+            100       24.7    200      5.2     0.20
+          1,000       30.3  2,000     22.1     2.01
+        bullets:
+          - "**Same answer** in every row."
+          - "**Each footer read** fetched a 16 KB tail from a 30 KB file."
+          - "**No network** here, and nothing ran on AWS."
+        takeaway: A footer read brings in over half of a 30 KB file, so pruning stops working once a file is about the size of that read, and compaction is the fix.
+        source: notes/01b-object-storage-and-the-data-lake.md
+        notes: >-
+          This is a bucket and not a disk: flat keys, no rename, a charge per request. Moving a 2,500-object directory took 3 list calls and 5,000 copy and delete requests. The block turns DuckDB's external file cache off so each query shows its own requests, and other engines differ. Real S3 adds latency per request.
+          At list price, 100,000 files scanned every 15 minutes cost about $232 a month in requests, and one compaction costs $0.08. Small files come from streaming sinks, too many partition columns and per-task writes.
+      - layout: table
+        title: Cold tiers lose money once people scan them
+        recall: Why does a table scanned twice a month belong in Standard?
+        lead: "1,000 GB kept for a year, in USD, at S3 list prices for us-east-1. A read is one full scan."
+        header: [Class, No reads, 1 a month, 2 a month, 5 a month]
+        widths: [3, 2, 2, 2, 2]
+        rows:
+          - ["Standard", "276", "276", "276", "276"]
+          - ["Standard-IA", "150", "270", "390", "750"]
+          - ["Glacier Instant Retrieval", "48", "408", "768", "1,848"]
+        highlight: [0]
+        takeaway: Retrieval fees outrun the storage saving at about one full scan a month, so check access logs first, and compact first because transitions charge per object.
+        source: notes/01b-object-storage-and-the-data-lake.md
+        notes: >-
+          Moving 1 TB of 256 KB objects to Glacier Instant Retrieval costs about $78 in transition fees, around 4 months of the saving. A 10 KB object in Standard-IA is billed as 128 KB, about 7 times what Standard charges for it. Add a lifecycle rule to abort incomplete multipart uploads on every bucket as well, since those parts are invisible to a listing and still billed.
+      - layout: table
+        title: A bucket promises one key at a time
+        recall: Why can a reader see half a rewrite when every PUT is atomic?
+        header: [Case, What S3 documents]
+        widths: [3, 6]
+        rows:
+          - ["Read after write", "Strong for object PUT and DELETE, including list after write"]
+          - ["One key", "A concurrent GET gets old or new, never partial"]
+          - ["Two writers, one key", "No locking, and the latest timestamp wins"]
+          - ["Several keys", "No atomic update across keys"]
+          - ["Bucket settings", "Eventually consistent"]
+        highlight: [3]
+        takeaway: Atomicity stops at one key, so a job dying 2 files into rewriting a 4-file table left readers counting 6,000 rows instead of 4,000, with no error.
+        source: notes/01b-object-storage-and-the-data-lake.md
+        notes: >-
+          Readers find files by listing, so the query read every key present. That run was against moto, which issues real S3 API requests and has none of S3's latency, durability or scaling. One tool works against last-writer-wins: a conditional PUT with If-None-Match fails with 412 if the key exists. Eight writers claimed one log entry and exactly one won,
+          though this server handles one request at a time, so that guarantee rests on AWS's stated behaviour. That is enough to build an ordered commit log, which is the next part.
 
   - title: A log makes a table
     summary: The crash · Sixty lines · Delta · Iceberg · Hudi

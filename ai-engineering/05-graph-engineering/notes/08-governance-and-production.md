@@ -92,6 +92,23 @@ Put human approval at the edges where consequence concentrates: irreversible, ex
 
 Route model calls through a named alias ("reviewer-model"), not a hard-coded model ID, so a model change is a config change you can roll out and roll back per node.
 
+### One agent core, many tenants
+
+When one agent serves several clients, keep one code path and put everything that differs into validated per-tenant configuration: prompt, rubric, enabled tools, knowledge scopes, model alias and limits. Each tenant then gets its own config versions and its own canary, and a rollback moves that tenant and no other. A run pins its version at the start, so a rollback changes new runs and not one already halfway through.
+
+The controls that keep tenants apart only hold if they sit below the model and below the graph, where calls converge. Each row has an obvious version that fails.
+
+| Control | Obvious version, and how it fails | Version that holds |
+|---|---|---|
+| **Tenant budget** | A shared counter checked before the model call and written after it. Every run in flight passes the same check. | A ledger that reserves the worst case before the call in one atomic statement, then settles to the actual. |
+| **Knowledge** | Rank everyone's documents, then filter. The top-k is spent before the filter, so small tenants starve, and anything downstream of ranking has seen the foreign text. | The scope predicate is part of the query ([permissions at the retrieval layer](../../02-context-engineering/notes/04-retrieval.md)). |
+| **Tools** | The allowlist is a sentence in the prompt. | The executor checks it, and takes the tenant from the run rather than from the model's arguments. |
+| **Capacity** | One queue, so one client's bulk import sits in front of everyone. | A rate limit at admission, then a fair queue per tenant that shares by request cost and leaves no capacity idle. |
+| **Traces** | The tenant lives in one ambient slot, which the next overlapping run overwrites. | Each span is stamped from the run's own context, and each read names the caller. |
+| **Quality** | A pass rate across the fleet, weighted by traffic. | A pass rate per tenant, with too few runs reported as too few runs rather than as a pass. |
+
+The [multi-tenant lab](../practice/multi-tenant-agents/README.md) runs each pair on generated traffic with a stub model. In its setup, 60 overlapping runs against a 6,000-token cap bill 11,291 tokens through the shared counter and 5,688 through the ledger. A model alias change takes one small tenant's pass rate from 86.0% to 49.0% while the fleet rate rises from 89.3% to 93.3%. Those numbers describe the lab's planted faults; the direction is what carries over.
+
 ---
 
 ## Production checklist
@@ -181,6 +198,8 @@ Governance tells you what ran and what it cost. It doesn't tell you whether the 
 - **Tracing the graph you drew.** Symptom: the diagram shows four nodes and the bill shows fifty calls, and no one can say which ran. Fix: with `Send` and conditional edges the graph that ran isn't the one you drew, so record the actual runtime work graph.
 - **Only a per-run cap.** Symptom: one looping node uses almost the whole run budget, and the run dies before the nodes that matter get to go. Fix: budget per node as well, using `node_id` on every call.
 - **Expecting a run-scoped framework to hold a tenant limit.** Symptom: each run is within budget and one customer still consumes the shared budget across concurrent runs. Fix: enforce it where calls converge, such as a gateway keyed on a virtual account or a metadata tag.
+- **A shared counter as the tenant budget.** Symptom: the limit is checked on every call and the bill still passes it during a burst. Fix: reserve before the await in one atomic statement, because a check and a later write leave a gap every run in flight fits through.
+- **A fleet mean as the quality alert.** Symptom: the dashboard improves after a model change while one small client's answers get worse. Fix: alert per tenant, and treat too few runs as unknown.
 - **Hard-coded model IDs.** Symptom: a model change means a code change everywhere and has no per-node rollback. Fix: route through a named alias such as "reviewer-model".
 - **Taking a teardown's numbers as fact.** Symptom: n8n's constants copied into a design as if n8n had published them. Fix: they come from Rathod's third-party teardown, so check them against the n8n repository first.
 - **Letting the artifact fill the context.** Symptom: an agent editing a large workflow spends its window reading it. Fix: cap the artifact under construction, as n8n's builder does at 30K tokens in a 200K window, with compaction at 150K.
@@ -211,6 +230,14 @@ Governance tells you what ran and what it cost. It doesn't tell you whether the 
 
    </details>
 
+4. Run the [multi-tenant lab](../practice/multi-tenant-agents/README.md) (`uv run run.py`). In section 2, why does the shared counter still overspend, and why does the ledger that refuses whenever money is held use only half the budget?
+
+   <details><summary>Answer</summary>
+
+   The shared counter bills 11,291 against the 6,000 cap because every run in flight checks it before the await and writes it after, so they all pass the same check. The refusing ledger bills 3,005 because it reserves each call's worst case and turns runs away while that money is merely held, and most of a hold comes back at settlement. Waiting for holds to settle bills 5,688, or 95% of the cap. All of this is the lab's generated traffic and stub model.
+
+   </details>
+
 ## Interview checklist
 
 | Prompt | Answer in one line |
@@ -219,6 +246,8 @@ Governance tells you what ran and what it cost. It doesn't tell you whether the 
 | Why record the actual runtime work graph? | With `Send` and conditional edges, the graph that ran isn't the one you drew. Traces are the only record of which nodes ran, how many times and in what order. |
 | At what levels do you budget, and what does each guard against? | Per node for one node looping or fanning out, per run for a whole run going wrong, per tenant for one customer consuming shared budget. |
 | Why can't the framework enforce a tenant budget? | The limit must hold across many concurrent runs, and a run-scoped framework only sees one. TrueFoundry's answer, which is also what it sells, is a gateway rule keyed on a virtual account or metadata tag. |
+| A tenant budget is checked on every call and still overspends. Why? | The check and the write sit either side of an await, so concurrent runs all pass the same check. Reserve the worst case atomically before the call and settle after it. |
+| Why filter by tenant in the query rather than after it? | After it, the top-k is already spent, so small tenants starve, and any step before the filter has seen foreign text. Over-fetching eases the first and worsens the second. |
 | What does a model alias buy you? | A model change becomes a config change you can roll out and roll back per node, rather than a code edit. |
 | What is the transferable lesson from n8n's context budget? | Compaction starts at 75% of the window (150K of 200K), and the artifact under construction is capped at 30K tokens, so the agent can't fill its context with what it is editing. These come from a third-party teardown. |
 | A run's cost doubled overnight. How do you find out why? | Group the trace by `node_id` and compare it with the prior `graph_id`. Without `node_id` on every call, you only learn that the run was expensive. |

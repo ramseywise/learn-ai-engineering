@@ -1,4 +1,4 @@
-# Applied Analyses lecture deck. Covers notes 01-10.
+# Applied Analyses lecture deck. Covers notes 01-12.
 # Parts carry no summary: at ten agenda rows the title slide has no room for one under the part name.
 # Build: make slides PILLAR=data-analytics/06-applied-analyses STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
@@ -788,6 +788,109 @@ parts:
         source: notes/10-operations-and-supply-chain.md
         notes: >-
           The recommended plan takes mean wait from 2.96 to 0.95 minutes and packer-days from 23 to 27, for £392 a week, on assumed contracts. Pack time is the other thing to confirm: 3.5 minutes in the operations data against 4.97 on the packing line, and a time near 3.5 would take a packer or more off every day.
+
+  - title: Metric trees
+    notes: >-
+      Eleventh question: not an analysis of the business, but which number to run the business on.
+    slides:
+      - layout: statement
+        title: Which number should Fernhill run on?
+        kicker: The problem
+        statement: "Revenue rose 2.1% and active customers 33.9%, while marketing rose 66.4% and revenue less marketing fell 17.1%."
+        attribution: "Fernhill, synthetic, 2024 to 2025. Asked its repeat rate, the same ledger gives answers from 4.6% to 46.5%."
+        takeaway: None of the numbers was wrong. Nothing was paired with them to catch the cost, so choose what to run on and what would catch it.
+        source: notes/11-metric-trees.md
+        recall: Why would a dashboard of revenue, active customers and new customers have misread 2025?
+        notes: >-
+          A dashboard of those three would have called it a good year. Marketing went from £292,745 to £487,125 to get there, and the customers who joined came back much less often. The repeat rate range is a definition problem, not a data problem. Among 2024 and 2025 joiners it is 46.5 against 24.4 ever, 30.4 against 18.1 within 90 days, and 30.4 against 20.2 once only mature customers count. December joiners show 4.6%, which is right-censoring. Population, window, clock, unit, finality, version and owner all have to be written down.
+
+      - layout: flow
+        title: A tree separates identities from causal claims
+        recall: What can you do with an identity edge in a metric tree that you can't do with a causal one?
+        steps:
+          - {label: Active customers, sub: "10,324 to 13,825"}
+          - {label: × orders each, sub: "2.33 to 1.79"}
+          - {label: × value per order, sub: "£52.82 to £52.27"}
+          - {label: = revenue, sub: "£1.268m to £1.296m"}
+        bullets:
+          - "**Identity edges:** the leaves multiply back to the ledger, so assert them."
+          - "**Causal edges:** paid social to new customers is a claim that needs an experiment."
+          - "**North star:** repeat customers, 4,423 to 4,571, trailing 365 days."
+          - "**Counter-metric:** marketing per repeat customer, £66.08 to £106.20 (+60.7%)."
+        takeaway: An identity attributes exactly and a causal edge needs an experiment, so read the two kinds of edge differently.
+        source: notes/11-metric-trees.md
+        notes: >-
+          Repeat customers means two or more orders on distinct days. A naive count of orders reads 4,430 to 4,587, and simulated order-splitting takes that to 6,435 with revenue unchanged, while distinct days stays at 4,571. A north star follows customer value, leads revenue, and changes what a team would do. A guardrail is global and must not break: lead time p95 was 7 days both years. A counter-metric is paired with one target, which is the course's working distinction. Paid social's cost per new customer moved 4%, from £64.72 to £67.60, while its cost per repeating customer moved 36%, from £365.56 to £498.76. Goodhart has four variants, from Manheim and Garrabrant's 2018 preprint: regressional, extremal, causal and adversarial.
+
+      - layout: code
+        title: Two large moves almost cancelled inside a 2% rise
+        recall: Revenue rose £27,263. What did log-mean attribution show, and what did it leave open?
+        lead: "Fernhill, synthetic, 2024 to 2025. Log-mean weights leave no residual and don't depend on the order of the leaves."
+        lang: python
+        code: |-
+          def attribute(before, after, leaves=("active", "per_customer", "per_order")):
+              weight = (after.revenue - before.revenue) / np.log(after.revenue / before.revenue)
+              return pd.Series({leaf: weight * np.log(after[leaf] / before[leaf]) for leaf in leaves})
+
+          # active           +374,320
+          # per_customer     -333,706
+          # per_order         -13,352
+          # sum of the parts   27,263   change in revenue 27,263
+        takeaway: More customers added £374,320 and lower frequency took £333,706. Attribution says frequency fell and leaves the reason open.
+        source: notes/11-metric-trees.md
+        notes: >-
+          Had the extra customers kept 2024's frequency, revenue would have been £1,698,403, so the £403k gap is the distance between a plan based on customer counts and the ledger. Whether the cause is mix or every channel getting worse is what the cohort chapter worked out. Multiplying the leaves one at a time gives an answer that depends on which you take first and leaves an interaction term.
+
+  - title: Surveys and sampling
+    notes: >-
+      Twelfth question: what a satisfaction number is worth when you have to ask people for it.
+    slides:
+      - layout: statement
+        title: How sure can a survey make us?
+        kicker: The problem
+        statement: "2,573 customers replied and 73.0% were satisfied, plus or minus 1.7 points. The truth was 49.6%."
+        attribution: "Blanket email to Fernhill's 15,981 emailable customers. The customers are synthetic, so the truth can be looked up."
+        takeaway: The margin says how far a random sample of this size would wander, and this wasn't a random sample, so more replies wouldn't help.
+        source: notes/12-surveys-and-sampling-design.md
+        recall: Why couldn't more replies have rescued the 73.0% figure?
+        notes: >-
+          That error is more than 13 times the margin. The formula answered the question it was given. A real survey has no true columns, but here every method gets marked. Replies were 16.1% of those sent.
+
+      - layout: flow
+        title: A margin of error measures only the sampling step
+        recall: How large were the errors the margin could not see on the blanket email?
+        steps:
+          - {label: Target, sub: "every customer, 49.6%"}
+          - {label: Frame, sub: "emailable, 52.1%: coverage +2.5"}
+          - {label: Sample, sub: "who you select: sampling error"}
+          - {label: Respondents, sub: "replies, 73.0%: nonresponse +20.9"}
+          - {label: Answers, sub: "what they say: measurement error"}
+        bullets:
+          - "**Blanket email:** coverage cost 2.5 points and nonresponse 20.9, against a margin of 1.7."
+          - "**Size doesn't rescue it:** US first-dose estimates, May 2021, Delphi-Facebook about 250,000 responses a week ran 17 points over the CDC benchmark, Axios-Ipsos about 1,000 a week 4.2 (Bradley et al., 2021)."
+        takeaway: Each gap has its own error and a margin only measures sampling, so name which gap you're quoting before trusting a plus-or-minus.
+        source: notes/12-surveys-and-sampling-design.md
+        notes: >-
+          Coverage is target to frame, sampling is frame to sample, nonresponse is sample to respondents, and measurement sits on top. A probability sample is what makes the sampling step measurable. Measurement can be as large as anything else: Pew's January 2003 split gave 68% against 43% from a wording change. Fernhill's split ballot, with a planted 12% acquiescence, finds a 4.6 point difference, 1.5 to 7.7. On a five-point scale, report shares: packaging and delivery means are 4.33 and 4.29, but the bottom two boxes are 1.4% and 10.6%.
+
+      - layout: code
+        title: A 42% mailing can carry more bias than a flat 8%
+        recall: Why doesn't a high response rate guarantee low nonresponse bias?
+        lead: "Synthetic frame of 26,342 customers. Each mailing's chance of answering is known, so its bias can be computed."
+        lang: python
+        code: |-
+          def nonresponse_bias(p):
+              # the covariance of the chance of answering with y, over the mean chance
+              return np.cov(p, y, bias=True)[0, 1] / p.mean()
+
+          # flat 8%                        response 0.080   bias  0.000
+          # 'tell us what you loved'       response 0.424   bias +0.147
+          # blanket email, all customers   response 0.147   bias +0.217
+          # designed, with reminders       response 0.460   bias +0.047
+        takeaway: Bias comes from the link between answering and the answer, and rate appears only in the denominator. Report the sampling margin and what it leaves out.
+        source: notes/12-surveys-and-sampling-design.md
+        notes: >-
+          Groves in 2006 calls the nonresponse rate a weak predictor of nonresponse bias, with an r-squared of 0.11 across 30 studies. Brick and Tourangeau in 2017 say it is far from irrelevant, so don't over-read that. Weighting helps less than it looks: raking takes the email from 72.5% to 66.6%, still 17 points out. Over 400 repeat surveys the designed survey averages 52.8% raked and its Kish margin covers the truth 54.8% of the time, while the email averages 67.8% and never covers it. So the report reads: about 50% satisfied, plus or minus 3 points of sampling error, on 966 answers from 2,000 sampled, and 47% if non-respondents are 5 points less satisfied.
 
   - title: Wrap-up
     agenda: false

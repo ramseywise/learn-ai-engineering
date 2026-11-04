@@ -12,16 +12,17 @@ from functools import partial
 from pathlib import Path
 
 from agent import run_agent
-from enforce import (AmbientTraces, BudgetBusy, BudgetExceeded, CheckThenSpend, FairQueue, FifoQueue, PostFilterRetriever,
-                     PromptOnlyTools, Request, ReservationLedger, RunScopedBudget, ScopedRetriever, TenantTraces,
-                     TokenBucket, ToolLayer, canary_decision, fleet_mean_alert, hammer_from_processes, per_tenant_alert,
+from enforce import (AmbientTraces, BudgetBusy, BudgetExceeded, CheckThenSpend, FairQueue, FifoQueue,
+                     PostFilterRetriever, PromptOnlyTools, Request, ReservationLedger, RunScopedBudget, ScopedRetriever,
+                     TenantTraces, TokenBucket, ToolLayer, canary_decision, fleet_mean_alert, hammer_from_processes,
+                     per_tenant_alert,
                      simulate_load, tenant_status)
 from model import ModelError
 from scenarios import (BUDGET_TENANT, INDEX, bad_configs, budget_scenario, canary_run, fleet_scenario, load_scenario,
                        make_controls, quality_scenario, retrieval_scenario, reworded_tallow, shortened_larkspur,
                        tool_scenario, trace_scenario)
-from tenancy import (TENANT_IDS, ConfigError, ConfigStore, NaiveConfigStore, UnknownTenant, load_raw_configs, load_store,
-                     score_answer, validate_config)
+from tenancy import (TENANT_IDS, ConfigError, ConfigStore, NaiveConfigStore, UnknownTenant, load_raw_configs,
+                     load_store, score_answer, validate_config)
 
 RAWS = {r["tenant_id"]: r for r in load_raw_configs()}
 QUIET = ("larkspur-clinic", "tallow-legal", "ferrous-freight")
@@ -46,7 +47,8 @@ def retrieval_never_shows_foreign_text(make_retriever):
 def disallowed_tool_never_executes(make_tools):
     r = tool_scenario(make_tools)
     assert not r["disallowed_effects"], r["disallowed_effects"]
-    assert len(r["denied_spans"]) == 1 and r["injected_run_status"] == "answered", "denied, recorded, and the run carries on"
+    assert len(r["denied_spans"]) == 1, "the denial is recorded"
+    assert r["injected_run_status"] == "answered", "and the run carries on"
     assert len(r["allowed_effects"]) == 1, "the allowlist must not simply block the tool for everyone"
 
 
@@ -145,7 +147,8 @@ def run_paired():
 # %% The ledger, beyond the headline
 def test_ledger_holds_across_processes():
     with tempfile.TemporaryDirectory() as tmp:
-        r = hammer_from_processes(str(Path(tmp) / "ledger.db"), "t", cap=5_000, workers=4, calls=200, need=100, actual=60)
+        path = str(Path(tmp) / "ledger.db")
+        r = hammer_from_processes(path, "t", cap=5_000, workers=4, calls=200, need=100, actual=60)
     assert r["spent"] <= r["cap"] and r["held"] == 0, r
     assert r["granted"] == r["spent"] // 60, "every grant was settled exactly once"
     assert r["spent"] > r["cap"] - 100, "the budget was actually used up, not just refused"
@@ -344,7 +347,8 @@ def test_rubrics_differ_per_tenant():
 # %% Retrieval details
 def test_scope_filter_applies_inside_a_tenant_too():
     store = load_store()
-    got = ScopedRetriever(INDEX).retrieve(store.get("larkspur-clinic").knowledge_scopes, "what is the refund policy", 50)
+    scopes = store.get("larkspur-clinic").knowledge_scopes
+    got = ScopedRetriever(INDEX).retrieve(scopes, "what is the refund policy", 50)
     assert got.docs and all(d.scope in ("larkspur-clinic/policies", "shared/product") for d in got.docs)
 
 

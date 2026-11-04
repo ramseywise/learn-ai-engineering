@@ -91,7 +91,8 @@ class ReservationLedger:
         self.db = sqlite3.connect(path, timeout=30, isolation_level=None)
         self.wait, self.clock = wait, clock
         self.db.executescript("""
-            CREATE TABLE IF NOT EXISTS ledger (tenant TEXT PRIMARY KEY, cap INT, spent INT DEFAULT 0, held INT DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS ledger (tenant TEXT PRIMARY KEY, cap INT,
+                                               spent INT DEFAULT 0, held INT DEFAULT 0);
             CREATE TABLE IF NOT EXISTS holds (id INTEGER PRIMARY KEY, tenant TEXT, run_id TEXT, tokens INT,
                                               state TEXT DEFAULT 'open', created INT);
         """)
@@ -306,8 +307,9 @@ class FifoQueue:
 
 
 class FairQueue:
-    """Deficit round robin. Each tenant has its own line and earns quantum x weight per turn, spent in request cost, so
-    a tenant sending heavier requests doesn't get more capacity. An idle tenant takes no turn, so no capacity is wasted."""
+    """Deficit round robin. Each tenant has its own line and earns quantum x weight per turn, spent in request cost,
+    so a tenant sending heavier requests doesn't get more capacity. An idle tenant takes no turn, so nothing is wasted.
+    """
 
     def __init__(self, weights: dict[str, int], quantum: int = 100):
         self.weights, self.quantum = weights, quantum
@@ -405,7 +407,8 @@ class TenantTraces:
         pass
 
     def record(self, ctx, node, status="ok", detail="", tokens=0) -> None:
-        self._spans[ctx.tenant_id].append(Span(ctx.tenant_id, ctx.run_id, ctx.config.version, node, status, detail, tokens))
+        span = Span(ctx.tenant_id, ctx.run_id, ctx.config.version, node, status, detail, tokens)
+        self._spans[ctx.tenant_id].append(span)
 
     def read(self, caller: str, run_id: str | None = None) -> list[Span]:
         return [s for s in self._spans[caller] if run_id is None or s.run_id == run_id]

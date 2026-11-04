@@ -504,6 +504,65 @@ parts:
         notes: >-
           Neither paper proposes this, as both are after representations, so this is the course's own test. Train on normal data only, and the model fails on what doesn't resemble it. The autoencoder peaks at 0.956 at a code of 8, and it beats PCA at every size here. The digit 1 is hardest, plausibly because its few strokes are easy to rebuild from the others. For tables, try an isolation forest or a Gaussian first, and reach for this on images or other raw signals. To sample from the code, the VAE is in the Bayesian analysis pillar.
 
+  - title: What if every token could see every other?
+    summary: Position · Silent bugs · Which family at which size
+    notes: >-
+      An LSTM carries memory forward step by step. An encoder drops that and lets each token look at all the others.
+    slides:
+      - layout: statement
+        title: Why does an encoder need position added?
+        kicker: The problem
+        statement: "An encoder reads every token at once, and knows nothing about order until you tell it."
+        attribution: "Digits as 8 rows of 8 pixels, 3 seeds: with no position, 0.902 on test and 0.902 with the rows upside down."
+        takeaway: Self-attention is permutation-equivariant, and invariant with a mean pool, so order has to be added as position.
+        source: notes/05b-transformer-encoders.md
+        recall: Why did the no-position encoder score the same on upside-down digits?
+        notes: >-
+          Add sinusoids and test accuracy is 0.984 with 0.395 upside down. A learned table gives 0.975 and 0.551, and it raises an error past its length. The Transformer paper found the two nearly level, 25.7 against 25.8 dev BLEU. Attention has 4,224 parameters at any head count, because heads split the width rather than add to it.
+
+      - layout: flow
+        title: The worst encoder bugs raise no error
+        recall: Test accuracy falls from 0.966 to 0.658 when requests arrive one at a time. What should you suspect?
+        steps:
+          - {label: Tokens, sub: "batch, n, inp"}
+          - {label: Embed + position, sub: "batch, n, d"}
+          - {label: Blocks × N, sub: attention sees the padding mask}
+          - {label: Pool, sub: over real tokens only}
+          - {label: Head, sub: "batch, classes"}
+        bullets:
+          - "**Padding:** logits move 0.2876 padded to 10 without the mask, 0 with it. The pool must skip padding too."
+          - "**`batch_first=False`, the default:** digits scored as one batch 0.966, one at a time 0.658."
+        takeaway: The model still trains, so score the same examples at batch size 1 and 32 and check that the logits match.
+        source: notes/05b-transformer-encoders.md
+        notes: >-
+          With the default, the layer reads the batch as the sequence, so each digit attends to the other digits in its batch. A large batch gives every example neighbours to borrow from, which is why the test score looks healthy. In the mask, True means ignore. Without a mask the same input gives different logits depending on the longest member of its batch: 0.4305 padded to 20. A third silent bug is a loss broadcast between shapes of batch by one and batch: R-squared per seed is about -0.084, 0.089 and -0.135, against 0.897, 0.966 and 0.946 once squeezed.
+
+      - layout: code
+        title: On 1,257 digits the encoder comes third, behind a CNN
+        recall: Why does the encoder lose to a linear model at 100 digit labels yet reach 0.973 at 1,257?
+        lang: text
+        code: |-
+          Same test set, same step budget, 3 seeds
+          train  linear    cnn   lstm  encoder
+            100   0.913  0.923  0.763    0.862
+            300   0.925  0.960  0.910    0.930
+           1257   0.936  0.988  0.975    0.973
+          params    650   6090  19594    18026
+
+          First sign, T=200, 500 steps, per seed
+          encoder       1.000  1.000  1.000
+          cnn           1.000  1.000  1.000
+          lstm, bias 2  0.516  0.534  1.000
+          no position   0.509  0.508  0.509
+        bullets:
+          - "**Motif, 2,000 labels:** encoder 0.534 to 0.577, CNN about 0.76."
+          - "**Cost, 512 to 2,048 tokens:** encoder 22.18 to 327.15 ms, LSTM 4.28 to 16.98 ms (batch 8, d 32, one thread)."
+          - "**Tables:** tree-based models stayed ahead up to 10,000 samples across 45 datasets (Grinsztajn et al.)."
+        takeaway: An encoder assumes less than a CNN or an LSTM, so it has to learn more from examples. Ask which task you have before reaching for one.
+        source: notes/05b-transformer-encoders.md
+        notes: >-
+          The CNN wins at every size because digits are small local shapes, and the CNN assumes exactly that. The encoder has three times the CNN's parameters here. Position zero is one attention step from everything, so the first-sign task is easy for it, and without position it stays at chance. Self-attention costs n squared times d per layer against n times d squared for a recurrent layer. ViT-B/16 shows the data appetite: 77.91 pre-trained on ImageNet, 83.97 on ImageNet-21k and 84.15 on JFT-300M, though DeiT reached 83.1 on ImageNet alone. In forecasting, Zeng et al.'s linear model beat five Transformers on nine benchmarks, and PatchTST answered with patches. Pre-norm trains at a learning rate of 0.01 with no warm-up at 0.935, where post-norm reaches 0.101 without warm-up and 0.905 with it.
+
   - title: What does a model need to read text?
     summary: Token ids · Four models · Frozen encoders · Fine-tuning
     notes: >-

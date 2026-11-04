@@ -1,6 +1,6 @@
 # Time series and recommenders lecture deck. Covers notes/01-time-series-ml.md,
 # notes/02-collaborative-filtering-and-matrix-factorisation.md, notes/03-two-tower-and-evaluation.md,
-# notes/04-entity-matching-and-learning-to-rank.md.
+# notes/04-entity-matching-and-learning-to-rank.md, notes/05-learning-a-similarity-function.md.
 # Build: make slides PILLAR=data-science/05-time-series-and-recommenders STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running examples: hourly bike rentals (UCI), a synthetic customer cash-flow case, MovieLens 100K, then a generated payment ledger.
@@ -623,6 +623,47 @@ parts:
         source: notes/04-entity-matching-and-learning-to-rank.md
         notes: >-
           A ranker only promises order within a bank line, so comparing raw scores across lines asks something it was not trained for. The margin is how far the top candidate is ahead of the second. The ranker did not change at all, and a better question of its output gained 28 points of coverage at 99 percent precision. Where to stand on that curve is a business decision based on the price of a wrong link and the price of review, which is DS 01/13. The corrections people make in the queue become your next labels, with the selection bias DS 01/14 measures.
+
+      - layout: table
+        title: Tuning beat a frozen encoder here, then flattened
+        recall: How do you tell whether more labelled pairs would pay when tuning an encoder?
+        lead: "Generated catalogues of about 1,700 records, `all-MiniLM-L6-v2`, 400 steps, batch 32, three seeds. Seed noise about 0.01."
+        header: [Model, Pairs, Recall@10, Look-alikes in top 10]
+        widths: [4, 1.2, 1.6, 2.4]
+        highlight: [4]
+        rows:
+          - [TF-IDF characters, "0", "0.456", "0.089"]
+          - [Frozen pretrained, "0", "0.134", "0.030"]
+          - [Tuned in-batch, "100", "0.799", "0.371"]
+          - [Tuned in-batch, "300", "0.881", "0.476"]
+          - [Tuned in-batch, "1,000", "0.908", "0.494"]
+          - [Tuned in-batch, "3,000", "0.912", "0.501"]
+        takeaway: Measure frozen and a character baseline first, then train at three sizes. When the last step gains less than seed noise, more labels of that kind won't pay.
+        source: notes/05-learning-a-similarity-function.md
+        notes: >-
+          Don't take 13.4% to 90.8% as what tuning does in general. It's the size of the gap on this text, mostly codes, grades and dimensions, where the frozen model has the least to work with. The 1,000 to 5,000 pairs rule of thumb we traced cites no study. Pairs come from closing the match labels into groups and allowing one pair per known group in a batch, so no known match is used as a negative, though unlabelled matches can still land there. Look-alikes rise with tuning too, which the next slide returns to.
+
+      - layout: compare
+        title: What a headline recall hides
+        recall: Mining left recall flat. What did it buy, and why do you still need an attribute check?
+        left:
+          title: A family it never saw
+          bullets:
+            - "Trained on all families **0.917**, without this one **0.715** (1,000 pairs, mean of three)"
+            - "Worst family: bearing, **0.578**. TF-IDF averages 0.451"
+            - "WDC Products: R-SupCon F1 **82.15** seen, **53.31** unseen"
+          tag: A generous test, since the families share a format
+        right:
+          title: Mining hard negatives
+          bullets:
+            - "Add hardest ranks: recall **0.908** to **0.906**, look-alikes **0.494** to **0.363**"
+            - "Hardest only: recall **0.852**, look-alikes 0.250"
+            - "Rank 11 to 100: no change, 0.908 and 0.502"
+          tag: 1,000 pairs, three seeds
+        takeaway: Put a held-out family beside your headline score, and keep the attribute check, since more than a third of the top 10 are look-alikes even after mining.
+        source: notes/05-learning-a-similarity-function.md
+        notes: >-
+          Mining works on a metric you may not have been measuring. About 4.7% of the hardest mined records were true matches the labels missed, and removing them left recall within noise, 0.893. Facebook's search team found rank 101 to 500 best on their much larger corpus, so test a band and don't copy one. For the loss, start with in-batch softmax: Musgrave et al. on vision data found newer losses barely beat 2006 contrastive. On WDC, Ditto held 67.94 and RoBERTa 69.75 on unseen products, because those read the pair together.
 
   - title: Rules of thumb
     agenda: false

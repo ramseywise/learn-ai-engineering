@@ -6,7 +6,7 @@
 
 Run from this folder (under a minute on a laptop CPU, no API key, downloads no data):
     uv run voice_stream_lab.py
-    uv run voice_stream_lab.py --silence-ms 250 --hangover-ms 60 --barge-confirm-ms 100   # move a knob, watch the tables
+    uv run voice_stream_lab.py --silence-ms 250 --hangover-ms 60 --barge-confirm-ms 100   # move a knob, watch the tables move
 
 Optional, off by default, downloads a Whisper model (about 75 MB) and a public speech clip into ~/.cache:
     uv run --with faster-whisper voice_stream_lab.py --asr              # a short public clip of real speech
@@ -38,6 +38,7 @@ import selectors
 import statistics
 import sys
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -51,6 +52,7 @@ SPEECH_DB = -20.0     # active speech level of a nominal caller, in dB relative 
 GAIN_SPREAD_DB = 6.0  # handsets differ: each call's level moves by up to this much either way
 FIXED_DB = -38.0      # the naive VAD's threshold, chosen by looking at one quiet recording
 MARGIN_DB = 7.0       # the adaptive VAD fires this far above its noise floor
+FLOOR_WINDOW_MS = 2000  # longer than a phrase, so speech doesn't become the floor
 HANGOVER_MS = 120     # how long the VAD stays "speech" after energy drops
 ONSET_MS = 60         # energy needed before it says "speech" at all
 MIN_SPEECH_MS = 160   # a shorter blip reaches the endpointer but gets no reply
@@ -169,15 +171,16 @@ class EnergyVad:
     def __init__(self, hangover_ms=HANGOVER_MS, onset_ms=ONSET_MS, margin_db=MARGIN_DB):
         self.hangover = hangover_ms // FRAME_MS
         self.onset = max(1, onset_ms // FRAME_MS)
-        self.margin, self.floor, self.count, self.hold, self.on = margin_db, None, 0, 0, False
+        self.margin, self.count, self.hold, self.on = margin_db, 0, 0, False
+        self.recent, self.smooth = deque(maxlen=FLOOR_WINDOW_MS // FRAME_MS), None
 
     def step(self, frame):
         level = db_rms(frame)
-        if self.floor is None:
-            self.floor = level
-        # The floor falls quickly and rises about 1 dB a second, so speech can't drag it up within one phrase.
-        self.floor = 0.9 * self.floor + 0.1 * level if level < self.floor else self.floor + 0.02
-        loud = level > self.floor + self.margin
+        # The floor is the quietest smoothed level of the last couple of seconds. A slow-rising average looked fine on
+        # generated audio and stuck at -120 dB on a real clip that opens with digital silence, so --asr caught it.
+        self.smooth = level if self.smooth is None else 0.7 * self.smooth + 0.3 * level
+        self.recent.append(self.smooth)
+        loud = level > min(self.recent) + self.margin
         self.count = min(self.onset, self.count + 1) if loud else max(0, self.count - 1)
         if loud and self.on:
             self.hold = self.hangover
@@ -213,13 +216,13 @@ def frames_of(audio):
     return (audio[i:i + FRAME] for i in range(0, len(audio) - FRAME + 1, FRAME))
 
 
-def vad_section(n_calls):
+def vad_section(n_calls, hangover_ms):
     print("1. VAD, frame by frame, on generated audio that is NOT speech (bursts, coughs, pink noise)")
     print(f"   {n_calls} generated calls per SNR, level varies {GAIN_SPREAD_DB:.0f} dB either way per call, {FRAME_MS} ms frames")
     print(f"   {'':30}{'SNR dB':>7}{'false alarm':>13}{'miss':>8}{'on-runs per phrase':>20}{'fires on coughs':>17}")
     arms = [("fixed threshold, no hangover", FixedVad),
             ("adaptive floor, no hangover", lambda: EnergyVad(hangover_ms=0)),
-            ("adaptive floor, hangover", EnergyVad)]
+            ("adaptive floor, hangover", lambda: EnergyVad(hangover_ms=hangover_ms))]
     results = {}
     for label, make in arms:
         for snr in SNRS:
@@ -251,7 +254,8 @@ def vad_section(n_calls):
     assert results["adaptive floor, hangover", 20][2] < results["adaptive floor, no hangover", 20][2], "the hangover merges runs"
     assert results["fixed threshold, no hangover", 10][0] > 0.5, "noise above a fixed threshold reads as speech"
     assert results["adaptive floor, hangover", 10][0] < results["fixed threshold, no hangover", 10][0]
-    print("   Energy alone fires on coughs at every SNR, and at 0 dB it has little left to work with. A trained VAD is the next step.\n")
+    print("   The hangover's false alarms are its tails: the price of not flipping off inside every word. Energy alone fires on")
+    print("   coughs at every SNR, and at 0 dB it has little left to work with. A trained VAD is the next step.\n")
 
 
 # %% Endpointing: a window too short cuts people off, too long adds dead air
@@ -449,7 +453,7 @@ class VoiceCall:
         self.user_turns = self.llm_calls = self.talk_overs = 0
         self.t_start = self.first_audio_after_end = self.t_endpoint = self.t_barge = None
         self.frame_lateness, self.want_announce, self.told = [], False, False
-        self.plans, self.duplicate_call, self.speech_frames = 0, False, 0
+        self.plans, self.duplicate_call, self.speech_frames, self.answer_owed = 0, False, 0, False
         self.vad_tail_ms = getattr(self.vad, "hangover", 0) * FRAME_MS
 
     # ---- what the language model would decide, reduced to a rule that reads the history
@@ -551,6 +555,7 @@ class VoiceCall:
                     reply.heard.append(word)
 
     def _note_first_audio(self, reply):
+        self.answer_owed = False
         if self.t_start is None or reply.first_audio < self.t_start + self.call.true_end:
             return  # started before the caller finished: that is talking over them, not a reply
         self.first_audio_after_end = reply.first_audio
@@ -628,7 +633,9 @@ class VoiceCall:
             forced = self.ep.talking and started_at is not None and now - started_at >= MAX_TURN_S
             if forced:
                 self.ep.talking = False
-            if (event == "end" or forced) and self.speech_frames * FRAME_MS >= MIN_SPEECH_MS + self.vad_tail_ms:
+            long_enough = self.speech_frames * FRAME_MS >= MIN_SPEECH_MS + self.vad_tail_ms
+            if (event == "end" or forced) and (long_enough or self.answer_owed):  # a cough can't cancel an answer for good
+                self.answer_owed = True
                 self.t_endpoint = now
                 self.frames.put_nowait(None)
                 self.start_reply(self.text)
@@ -690,15 +697,16 @@ async def latency_arm(cfg, calls):
     return done
 
 
-def latency_section(n_turns, silence_ms, hangover_ms):
+def latency_section(n_turns, silence_ms, hangover_ms, confirm_ms):
     rng = np.random.default_rng([SEED, 6])
     mix = [30, 20, 20, 10]
     calls = [render(conversation(rng, tail=MAX_TURN_S + 1.5), rng, mix[i % len(mix)]) for i in range(n_turns)]
     adaptive = lambda: EnergyVad(hangover_ms=hangover_ms)
-    arms = [Config("batch stages, adaptive VAD", streaming=False, make_vad=adaptive, silence_ms=silence_ms),
-            Config("streaming, fixed-threshold VAD", make_vad=FixedVad, silence_ms=silence_ms),
-            Config("streaming, adaptive VAD", make_vad=adaptive, silence_ms=silence_ms),
-            Config("streaming, shorter window", make_vad=adaptive, silence_ms=max(FRAME_MS, silence_ms // 2))]
+    common = dict(make_vad=adaptive, silence_ms=silence_ms, barge_confirm_ms=confirm_ms)
+    arms = [Config("batch stages, adaptive VAD", streaming=False, **common),
+            Config("streaming, fixed-threshold VAD", **{**common, "make_vad": FixedVad}),
+            Config("streaming, adaptive VAD", **common),
+            Config("streaming, shorter window", **{**common, "silence_ms": max(FRAME_MS, silence_ms // 2)})]
     print(f"4. End of speech to first audio, measured on the running loop. {n_turns} generated calls, SNR mixed over {sorted(set(mix))} dB")
     print(f"   Real samples and a real VAD set the wait; the note's placeholders drive the stubs, sigma {SPREAD}, paired draws per call")
     print(f"   {'':32}{'window':>9}{'wait p50':>10}{'p50':>8}{'p95':>8}{'p99':>8}{f'<= {TARGET_MS} ms':>11}{'no answer':>11}{'talked over':>13}{'LLM calls/turn':>16}")
@@ -742,13 +750,14 @@ def tool_trial(cfg, call, i):
     return run_virtual(go())
 
 
-def barge_tool_section(n_trials):
+def barge_tool_section(n_trials, hangover_ms, confirm_ms):
     rng = np.random.default_rng([SEED, 7])
     calls = [barge_call(rng) for _ in range(n_trials)]
-    arms = [Config("mute the speaker only", barge="mute"),
-            Config("cancel everything", barge="cancel_all"),
-            Config("cancel everything, keyed tool", barge="cancel_all", idempotency_key=True),
-            Config("cancel turn, tool survives", barge="correct", idempotency_key=True)]
+    common = dict(make_vad=lambda: EnergyVad(hangover_ms=hangover_ms), barge_confirm_ms=confirm_ms)
+    arms = [Config("mute the speaker only", barge="mute", **common),
+            Config("cancel everything", barge="cancel_all", **common),
+            Config("cancel everything, keyed tool", barge="cancel_all", idempotency_key=True, **common),
+            Config("cancel turn, tool survives", barge="correct", idempotency_key=True, **common)]
     print(f"5. Barge-in with issue_refund in flight, {n_trials} generated calls, tool takes 3 to 6 s (assumed), the money moves at 40% of that")
     print("   The LLM stub follows one rule: if history has no record of the refund and none is running, it tries again.")
     print(f"   {'':31}{'stop audio p50':>15}{'tokens after':>14}{'claimed, unheard':>18}{'refunds':>9}{'re-issued':>11}{'caller told':>13}")
@@ -779,7 +788,8 @@ def barge_tool_section(n_trials):
               f"{statistics.mean(refunds):>9.2f}{statistics.mean(retried):>11.0%}{statistics.mean(told):>13.0%}")
     assert results["cancel everything"][0] > 1.5, "cancelling the client doesn't undo the server, so a retry pays twice"
     assert results["cancel everything, keyed tool"][0] == 1 and results["mute the speaker only"][1] > 0
-    print("\n   One history from the last arm, in order:")
+    print("\n   One history from the last arm, in commit order. A reply commits when it ends, so the outcome can land while a stale")
+    print("   'still running' is being spoken. The next reply corrects it, because the outcome is in history:")
     for entry in example.history:
         print(f"     {entry}")
     print()
@@ -788,7 +798,7 @@ def barge_tool_section(n_trials):
 # %% The wall clock, where a blocking call costs every other caller
 def wall_section():
     rng = np.random.default_rng([SEED, 8])
-    calls = [render([("pause", 0.3), ("speech", rng.uniform(0.8, 1.4)), ("pause", 1.5)], rng, 20) for _ in range(8)]
+    calls = [render([("pause", 0.3), ("speech", rng.uniform(0.8, 1.4)), ("pause", 7.0)], rng, 20) for _ in range(8)]
 
     async def arm(cfg):
         voices = [VoiceCall(cfg, stage_draws(SEED * 3000 + i), c, stop_at_first_audio=True, seed=i) for i, c in enumerate(calls)]
@@ -798,6 +808,7 @@ def wall_section():
     def summary(voices):
         lat = latency_stats(voices)
         late = [x * 1000 for v in voices for x in v.frame_lateness]
+        assert not any(math.isinf(x) for x in lat), "every call on the wall clock must get an answer"
         return statistics.median(lat), max(late), statistics.median(late)
 
     print("6. Same code on the wall clock, 8 calls on one loop. These numbers vary by machine.")
@@ -879,17 +890,18 @@ def asr_section(source):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--silence-ms", type=int, default=SILENCE_MS, help="endpointing window for sections 4")
-    parser.add_argument("--hangover-ms", type=int, default=HANGOVER_MS, help="VAD hangover for sections 2 to 4")
+    parser.add_argument("--silence-ms", type=int, default=SILENCE_MS, help="endpointing window for section 4")
+    parser.add_argument("--hangover-ms", type=int, default=HANGOVER_MS, help="VAD hangover for sections 1 to 5")
+    parser.add_argument("--barge-confirm-ms", type=int, default=BARGE_CONFIRM_MS, help="speech needed to stop the agent in sections 4 and 5")
     parser.add_argument("--turns", type=int, default=200, help="calls per arm in section 4")
     parser.add_argument("--skip-wall", action="store_true", help="skip section 6, which is the only one that varies between runs")
     parser.add_argument("--asr", nargs="?", const="default", metavar="WAV", help="also run a real speech model (downloads a model)")
     args = parser.parse_args()
-    vad_section(40)
+    vad_section(40, args.hangover_ms)
     endpoint_section(300, args.hangover_ms)
     barge_section(200, args.hangover_ms)
-    latency_section(args.turns, args.silence_ms, args.hangover_ms)
-    barge_tool_section(40)
+    latency_section(args.turns, args.silence_ms, args.hangover_ms, args.barge_confirm_ms)
+    barge_tool_section(40, args.hangover_ms, args.barge_confirm_ms)
     if not args.skip_wall:
         wall_section()
     if args.asr:

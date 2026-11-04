@@ -1,4 +1,4 @@
-# Safety and Security lecture deck. Covers notes 01-06.
+# Safety and Security lecture deck. Covers notes 01-07.
 # Build: make slides PILLAR=ai-engineering/09-safety-and-security STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Harbour, a support agent that reads help articles and tickets, looks up orders,
@@ -532,12 +532,86 @@ parts:
         takeaway: An incident is finished once a regression test, threat-model update and detection rule exist.
         source: notes/06-incident-response.md
 
+      - layout: table
+        title: Features, not the model, set Harbour's AI Act tier
+        recall: What decides whether Harbour is high-risk under the EU AI Act, and where should that check live?
+        kicker: EU AI Act, as of 2 Nov 2026
+        lead: Harbour as built sits in the transparency tier, and must tell customers they are talking to an AI.
+        header: [Proposed feature, Where it lands]
+        widths: [5, 4]
+        rows:
+          - ["Sort tickets by topic", "No tier change"]
+          - ["Offer pay-later if the customer scores well", "High-risk, Annex III 5(b)"]
+          - ["Route tickets by each agent's past behaviour", "High-risk, Annex III 4(b)"]
+          - ["Detect a customer's emotion from their voice", "High-risk, Annex III 1(c), and Art. 50(3)"]
+          - ["Detect an agent's emotion from their voice", "Prohibited, Art. 5(1)(f)"]
+        highlight: [4]
+        takeaway: High-risk status comes in through the roadmap, so put an Annex III check in feature review, where stopping it is cheap.
+        source: notes/07-compliance-and-regulation.md
+        notes: >-
+          An incident also raises who is legally on the hook, and an enterprise questionnaire asks it before any incident
+          does. This is not legal advice: use it to ask your lawyers better questions. Duties attach to roles. A provider puts
+          a system out under its own name, and a deployer uses it under its authority, so building on a model API for your own
+          desk commonly makes you both, and buying a model does not move your duties to its vendor. Article 25(1) makes a
+          deployer the provider if it rebrands, substantially modifies, or changes the purpose so a system becomes high-risk.
+          The workplace emotion ban has an exception for medical or safety reasons. Judging sentiment from text is probably not
+          emotion recognition, because the definition is tied to biometric data, but confirm that with counsel.
+
+      - layout: code
+        title: The 2026 Omnibus moved the high-risk dates
+        recall: Why can an older summary of the EU AI Act give you the wrong compliance date?
+        kicker: As amended by Regulation 2026/1744
+        lang: text
+        code: |-
+          2 Feb 2025   Prohibitions, definitions, scope
+          2 Aug 2025   GPAI model rules, penalties (not Art. 101)
+          27 Jul 2026  Omnibus in force
+          2 Aug 2026   Art. 50 transparency; Art. 101 fines
+          - - - - - - as of 2 Nov 2026 - - - - - -
+          2 Dec 2026   New Art. 5 bans; 50(2), older systems
+          2 Aug 2027   Models placed before 2 Aug 2025 comply
+          2 Dec 2027   High-risk: Annex III (was 2 Aug 2026)
+          2 Aug 2028   High-risk: Annex I (was 2 Aug 2027)
+        bullets:
+          - "Annex III moved by **487 days**"
+          - "Prohibited practices: up to **€35M or 7%** of worldwide turnover"
+          - "SMEs pay the lower of each pair"
+        takeaway: Annex III duties now start on 2 December 2027 while transparency already applies, so check the amendment and date your notes.
+        source: notes/07-compliance-and-regulation.md
+        notes: >-
+          The original Article 113 had Annex III duties applying on 2 August 2026, and most older articles still say so. Keep
+          this table as data, so a change to it has a diff and a source beside it. A date alone is not enough, because the lookup
+          needs system facts too: a text generator placed in June 2026 gets the 50(2) marking duty from 2 December 2026, while
+          50(1) has applied since August. Much of the high-risk regime is what this course already teaches: threat model,
+          replayable traces, human oversight, evals and incident response. What the law adds is that it must be documented and
+          available on request, and logs kept at least six months. So keep evidence from the system you have, not a second one.
+
+      - layout: cards
+        title: Four answers that don't mean what they sound like
+        recall: Why doesn't a vendor's paperwork or setting answer a customer's compliance questionnaire?
+        kicker: The questionnaire
+        cards:
+          - {title: SOC 2, body: "A CPA's report on a vendor's controls. Read scope, categories, period and exceptions. It says nothing about model answers.", accent: 1E3A5F}
+          - {title: HIPAA, body: "Attaches to PHI held for a covered entity. A written contract comes before any data, down the subcontractor chain.", accent: D4621A}
+          - {title: Data residency, body: "A region setting covers part of the processing. EU personal data needs a transfer mechanism, and your logs count.", accent: 0EA5C9}
+          - {title: Zero data retention, body: "An arrangement with exceptions, such as flagged content kept up to 2 years at Anthropic. Your own traces are untouched.", accent: 5B21B6}
+        takeaway: The answers depend on what your system does with data, so keep a register of every place it goes and have a person own it.
+        source: notes/07-compliance-and-regulation.md
+        notes: >-
+          Vendor terms are as of 2 November 2026, and they change without notice. The usual gaps are not the model API but the
+          tracing tool and the eval notebook, set up by whoever needed them that afternoon. The chapter's register runs each flow
+          through rules, and a clean output only means those rules found nothing. Also put the clocks in the incident plan, since
+          several can run at once: GDPR, 72 hours to the supervisory authority where feasible; HIPAA, 60 calendar days at most
+          for a business associate; AI Act Article 73, 15 days for high-risk systems once those duties apply, 10 for a death and 2
+          for the gravest cases. Working out what started each clock is a legal question, so bring legal in early.
+
   - title: What to carry away
     agenda: false
     divider: false
     slides:
       - layout: cards
         title: Rules of thumb
+        recall: "If you assume the model will be fooled, what do you limit and test?"
         kicker: Summary
         cards:
           - {title: Any input is an instruction, body: "Break the trifecta on each path that has all three legs.", accent: D4621A}

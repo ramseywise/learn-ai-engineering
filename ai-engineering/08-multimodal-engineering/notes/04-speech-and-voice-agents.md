@@ -136,6 +136,28 @@ speech-to-speech           280 ms  within 800 ms  largest: model first audio (20
 
 Two things stand out when you lay it out this way. Moving to streaming saves far more than a faster model would, because the listener only needs the first syllable, not the full reply. And even the streaming cascade is over target with these placeholders, with deciding that the person has finished as one of its largest lines, which isn't a model speed problem at all. Cut the VAD silence window too far and you interrupt people, so test this value on real callers. The remaining options are a smaller model for simple turns and a short spoken acknowledgement while a slower step runs.
 
+## Finding the end of speech
+
+The budget has a line called "VAD end of speech", and a faster server can't shrink it, because it waits on the caller. Here is what sits behind that line.
+
+An energy VAD works on frames of about 20 ms. It computes each frame's level in decibels and calls the frame speech when that level clears the background noise by some margin. The naive version compares against a fixed threshold, so a quiet caller falls below it and a noisy line stays above it for a whole call. The better version tracks the floor, for example as the quietest smoothed level of the last two seconds, which is long enough that speech doesn't become the floor. Frame decisions flicker, because words have quiet stops inside them. So the detector asks for a few loud frames before it turns on, and a **hangover** keeps it on for about 120 ms after the level drops.
+
+The **endpointer** sits on top of the VAD. It counts silence once the VAD has turned off, and when the count reaches the silence window it declares the turn finished. So the caller waits for the hangover plus the window. A short window replies sooner and cuts people off whenever they pause. A long window hears them out and adds silence to every turn. [`practice/voice_stream_lab.py`](../practice/voice_stream_lab.py) runs this on sample arrays. The audio is generated and isn't speech, with pause lengths we assumed, so read the shape of this table and not its values (300 generated calls of each kind at 20 dB SNR, hangover 120 ms):
+
+| Silence window | Cut off, open talk | Cut off, digit strings | Added wait, p50 |
+|---|---|---|---|
+| 100 ms | 90.0% | 100.0% | 198 ms |
+| 300 ms | 40.0% | 100.0% | 401 ms |
+| 400 ms | 18.0% | 97.0% | 501 ms |
+| 800 ms | 0.7% | 31.7% | 901 ms |
+| 1200 ms | 0.3% | 7.3% | 1301 ms |
+
+No single window serves a caller chatting and a caller reading out an account number with pauses between the groups. The dialogue knows which question it just asked, so let it choose. In the same setup, using 300 ms normally and 900 ms after asking for digits keeps the 401 ms median on open talk and cuts digit strings off 23.7% of the time, where a fixed 300 ms cut them off every time. The cost lands only on the digit question, which waits 1002 ms at the median.
+
+The budget's 300 ms placeholder looks hopeful next to this. In the lab's full loop (200 generated calls, SNR mixed over 10, 20 and 30 dB, stage stubs drawn around the placeholders above), a 400 ms window gives a median wait of 520 ms and a median of 855 ms from end of speech to first audio, with a p95 of 1431 ms. Halving the window brings the median to 652 ms, and first audio within 800 ms goes from 29.0% of turns to 80.0%. But the agent talks over the caller on 31.0% of calls instead of 8.5%, and it makes 2.04 language model calls per call instead of 1.22, because every false endpoint starts a reply that then gets cancelled. A shorter window buys speed with those two.
+
+Energy has limits. It fires on coughs at every SNR in that test, and at 0 dB the detector with hangover misses 71.1% of speech frames. A trained VAD is the usual next step, and [the real-time agents note](../../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md#streaming-voice-perception-replacing-vad--asr) looks at replacing silence detection altogether. Test on real audio as well. An earlier floor tracker in this lab passed everything on generated audio, then stuck at the digital silence that opens a real clip and stayed on for 99% of its frames.
+
 ## Interruption is a state machine
 
 People interrupt, and a voice agent that keeps talking feels broken. Handling this means stopping playback, discarding unspoken text, and telling the language model what the user actually heard, because its context otherwise claims it said everything it generated. Getting this wrong has real consequences. The agent can believe it read out a refund policy that the caller never heard. A small explicit state machine makes the behaviour testable:
@@ -188,6 +210,19 @@ listening
 
 The history holds only what the caller heard, with a flag the model can see. A real implementation works on word timestamps from the TTS engine and not on whole sentences, but the invariant is the same, and you can write regression tests against it.
 
+Two things sit outside that class. The first is deciding that a sound is an interruption at all. Stopping on the first loud frame lets every cough silence the agent, so the detector waits for a confirmation window, and energy alone can't tell a cough from a short "no". On generated events at 20 dB SNR, a 160 ms confirmation lets 91.0% of coughs stop the agent and misses 1.0% of short replies, while 320 ms lets through 34.0% of coughs and misses 77.5% of replies. Pausing at onset and resuming if the burst doesn't confirm is one way out. All of this assumes the agent's own voice has been removed from the caller's channel, since otherwise it interrupts itself. The lab assumes that too and doesn't model it.
+
+The second is what cancellation reaches. In an asyncio loop, one reply can be a task group holding the LLM, TTS and playback tasks, so a barge-in cancels the group, and generation stops along with the audio. A tool call isn't part of the reply. Cancelling your side of a request doesn't undo what the server has already done, so a tool belongs to the call and outlives the turn that started it. The lab replays this with a refund in flight (40 generated calls, the tool takes an assumed 3 to 6 s, the money moves at 40% of that, and the LLM stub retries if history shows no refund):
+
+| Version | Tokens generated after barge-in | Generated, not heard | Refunds per call | Calls that re-issue it |
+|---|---|---|---|---|
+| Mute the speaker only | 20.5 | 33.9 | 1.00 | 0% |
+| Cancel everything | 0.0 | 0.0 | 2.10 | 100% |
+| Cancel everything, tool has an idempotency key | 0.0 | 0.0 | 1.00 | 100% |
+| Cancel the turn, tool survives | 0.0 | 0.0 | 1.00 | 0% |
+
+All four stop the audio at the same median, 215 ms after the caller starts, so that number can't tell them apart. Keep the key anyway, as [the tool design note](../../03-harness-engineering/notes/03-tool-design.md#write-operation-safety) says, because a line can drop and a retry can come from anywhere. And keep the loop itself free. In one wall-clock run of 8 calls on one loop, an LLM stub that blocked the loop instead of awaiting moved the median first audio from 878 ms to 2142 ms and left a microphone frame 820 ms late at worst. Those two numbers vary by machine.
+
 ## Measuring recognition honestly
 
 Word error rate is substitutions, insertions and deletions over reference words. It looks simple, but small choices about text move it a lot. The Whisper authors built a text normaliser by inspecting failures, and found it could drop WER by up to 50% on some datasets because of quirks in reference transcripts, while warning that the same normaliser could end up tuned to their model's habits ([arXiv:2212.04356](https://arxiv.org/abs/2212.04356)). So compare systems with one shared normaliser, and report which one it was.
@@ -239,6 +274,8 @@ The wrong-amount transcript scores about 10% WER, which might pass a threshold, 
 
 For the agent as a whole, measure things the caller feels: time to first audio, how often it talks over people, how often it is interrupted, task completion, and how often callers repeat themselves. Repeats are a good proxy for recognition failure on live traffic without any reference transcripts.
 
+If something downstream reads the transcript, such as a model that scores the call, recognition error becomes its input. Evaluate that step on the recogniser's output as well as on a clean transcript, and compare the two on the same calls, split by accent and channel.
+
 ## Pitfalls
 
 - **Benchmarking on read speech.** Clean audiobook WER predicts little about a call centre. Build a test set from your own channel.
@@ -254,6 +291,7 @@ For the agent as a whole, measure things the caller feels: time to first audio, 
 2. Add a "tool call in flight" state to `Turn`. What should `barge_in` do if the agent has already called a refund tool?
 3. Compute WER on two reference sentences where one is 50 words and one is 5, each with one error. Why is averaging per-sentence WER misleading, and what should you do instead?
 4. Run [`practice/voice_turn_lab.py`](../practice/voice_turn_lab.py). Why is the p95 of a whole turn lower than the sum of the stage p95s, and when does that stop being true? In its barge-in replay, what goes wrong in the version that drops the tool result? Which of its two made-up engines would you pick for a billing line?
+5. Run [`practice/voice_stream_lab.py`](../practice/voice_stream_lab.py), which takes under a minute. In section 4, what did halving the silence window buy and what did it cost? In section 5, all four versions stop the audio equally fast, so why does "cancel everything" pay out about twice, and what does an idempotency key still leave wrong?
 
 <details><summary>Answers</summary>
 
@@ -261,6 +299,7 @@ For the agent as a whole, measure things the caller feels: time to first audio, 
 2. Stop speaking, but don't discard the tool's outcome. The action may have happened, so record the tool result in history and tell the caller the true state on the next turn. Consequential actions should normally need confirmation before this point.
 3. Per-sentence WERs are 2% and 20%, averaging to 11%, while the corpus WER is `2/55`, about 3.6%. Averaging over-weights short sentences, so divide total errors by total reference words across the corpus.
 4. Independent stages rarely peak in the same turn: with our assumed spread the stage p95s add up to 940 ms while the turn's p95 is about 733 ms. If a shared slow spell moves every stage together, the turn's p95 is about 945 ms, so don't count on the gap. The naive version keeps listening with an empty history, so the next reply knows nothing about a refund that went through. For billing, take engine B: its corpus WER is worse (0.051 against 0.035), but it recalls critical terms at 0.98 against 0.82.
+5. Going from 400 ms to 200 ms moved median first audio from 855 ms to 652 ms and first audio within 800 ms from 29.0% to 80.0%. It raised calls where the agent talked over the caller from 8.5% to 31.0%, and language model calls from 1.22 to 2.04 per call. "Cancel everything" cancels the client, but the refund has usually gone through on the server, and nothing in history says so, so the model tries again: 2.10 refunds per call. A key holds that to 1.00, yet the agent still re-issued the call in 100% of calls, because it lost track of the first one. Only the version where the tool survives the turn gets 1.00 refunds and 0% re-issued.
 
 </details>
 
@@ -274,6 +313,8 @@ For the agent as a whole, measure things the caller feels: time to first audio, 
 | Why is WER not enough? | It weights every word equally, so a wrong amount looks like a wrong article. Add recall on critical terms, and break results down by accent and channel. |
 | How should a text normaliser be handled? | Use one shared normaliser for all compared systems and report it. It can change WER by a large margin, and it can be fit, even by accident, to one model's habits. |
 | What must happen on barge-in? | Stop playback, drop the unspoken text, record only what was heard, and preserve any tool result already obtained, so that the model's context matches reality. |
+| How do you set the silence window? | By dialogue state and by measurement. It trades cut-off callers against added wait, one value can't serve open talk and read-out digits, and a short window also wastes LLM calls on false endpoints. |
+| Does cancelling a task on barge-in cancel the tool call? | It shouldn't, and it can't undo the server anyway. Cancel the turn's tasks, let the call own the tool, record the outcome, and use an idempotency key against retries. |
 
 ## Next
 

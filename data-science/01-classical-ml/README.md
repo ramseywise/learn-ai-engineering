@@ -33,6 +33,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 12 | [Reading the errors](notes/12-reading-the-errors.md) | Which rows does the model get wrong, why, and how do you learn from them without fitting to them? |
 | 13 | [Automate, review or reject](notes/13-automate-review-or-reject.md) | Which decisions may the model take alone, and what is a person's review worth? |
 | 14 | [Learning from corrections](notes/14-learning-from-corrections.md) | What can people's corrections teach a model, and how do you measure what they never see? |
+| 15 | [Fairness in automated scoring](notes/15-fairness-in-automated-scoring.md) | Which group gaps can you measure in a screening model, which can't be closed together, and what must an audit state? |
 
 ## Builds on and feeds into
 
@@ -56,7 +57,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Recall and precision at k are the confusion matrix at one cut-off |
 | [GA 08/15 Calibrating a judge](../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md#what-to-measure) | A judge's matrix, with PASS as positive |
 | [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | The retrieval reading of the same table |
-| [AIE 09/03 Guardrail models](../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) | The guard's reading of the same table |
+| [AIE 09/03 Guardrail models](../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) | The guard's reading of the same table, and the counterfactual swap that note 15 pairs with group metrics |
+| [AIE 09/07 Compliance and regulation](../../ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md) | The EU AI Act's roles and dates around the audit in note 15 |
 | [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Low recall and low precision as cells of the table |
 | [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | A verifier that cries wolf is a false positive with a cost |
 | [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | Drift monitoring in production |
@@ -83,6 +85,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 - Read errors on one split and score fixes on another. A fix built from noise gained 18.6 per 1,000 on the rows that chose it and lost 8.3 on the rest.
 - Price the review route before building it. Thresholds come from the error costs, the review cost and how often the reviewer catches a problem, and the straight-through rate is a constraint, not a goal.
 - Silence isn't confirmation. Audit a random sample of what nobody looks at, because no other number can see a new kind of failure.
+- A selection ratio isn't a verdict. Report the counts, an interval and the label behind it, and name the jurisdiction of any legal rule.
 
 ## Practice
 
@@ -97,6 +100,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [`practice/reading_errors.py`](practice/reading_errors.py) | Six steps of error analysis on the credit model, and a noise fix against a mechanism fix over 30 seeds, for [note 12](notes/12-reading-the-errors.md) | `uv run reading_errors.py`, from `practice/`; under a minute |
 | [`practice/review_queue.py`](practice/review_queue.py) | Two thresholds on generated invoices and real credit data: prices, capacity, calibration, drift, risk targets and conformal, for [note 13](notes/13-automate-review-or-reject.md). Shares [`invoices.py`](practice/invoices.py) | `uv run review_queue.py`, from `practice/`; about three minutes, internet needed once |
 | [`practice/learning_from_corrections.py`](practice/learning_from_corrections.py) | Agreement, label noise, weak supervision, active learning, audits and regression cases, for [note 14](notes/14-learning-from-corrections.md) | `uv run learning_from_corrections.py`, from `practice/`; about 15 minutes, internet needed once |
+| [`practice/fairness_audit_lab.py`](practice/fairness_audit_lab.py) | Selection rates, ratios with intervals, error rates, calibration, the impossibility conflict, proxies, label bias and group cutoffs on generated applicants, for [note 15](notes/15-fairness-in-automated-scoring.md) | `uv run fairness_audit_lab.py`, from `practice/`; a few seconds |
 | [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | Müller and Guido's notebooks, with local `mglearn` and data | `uv run --with scikit-learn --with pandas --with matplotlib --with jupyter jupyter lab`, from that folder |
 | [`practice/ng-machine-learning/`](practice/ng-machine-learning/) | Own Python ports of Ng's ex1 to ex8 | Same command, from that folder |
 | [`practice/udacity_mlnd_python_practice.ipynb`](practice/udacity_mlnd_python_practice.ipynb) | Python and data-handling warm-up | Same command |

@@ -249,7 +249,7 @@ The prompt a user types is rarely the best search query.
 |---|---|---|
 | **LLM query rewriting** | An LLM rewrites the prompt into a clean query | One small LLM call; "benefits easily justify costs" |
 | **Named entity recognition** | Tag people, places, dates, titles (GLiNER) to drive filters and targeted search | One small model call |
-| **HyDE** | An LLM writes a *hypothetical answer document*; embed that instead of the prompt | One LLM call + latency |
+| **HyDE** | An LLM writes a *hypothetical answer document*; embed that instead of the prompt | One or more LLM calls (the paper averages several samples) + latency |
 
 The course's rewriting prompt for a medical knowledge base:
 

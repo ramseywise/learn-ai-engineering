@@ -1,4 +1,4 @@
-# Python 03 Language for engineers: study deck (flashcards). Covers notes/01-07.
+# Python 03 Language for engineers: study deck (flashcards). Covers notes/01-09.
 # Build:  make slides PILLAR=programming/python/03-language-for-engineers [PREVIEW=1]
 # Spec:   .claude/skills/slides/references/deck-spec.md
 
@@ -7,13 +7,13 @@ deck:
   subtitle: The language features production code relies on
   tagline: |-
     Data model · Iterators · Closures · Errors
-    Types · Tooling · Concurrency
+    Types · Tooling · Concurrency · Objects · Memory
   reference: "Notes: programming/python/03-language-for-engineers"
   output: python-for-engineers.pptx
   notes: >-
     The study deck for Python 03. Every slide is a flashcard: the title is the question and the
     takeaway is the rule that answers it. How the language works, then how to write code that
-    holds up, then how to run many things at once.
+    holds up, then how to run many things at once, then what classes and objects really do.
 
 parts:
   - title: How the language works
@@ -262,21 +262,10 @@ parts:
           - {title: uv, body: "`uv add httpx`, `uv run pytest`. Commit `uv.lock`, because it pins every transitive version."}
           - {title: ruff, body: "`ruff check --fix` lints and `ruff format` formats, replacing flake8, isort and black."}
           - {title: pytest, body: "Plain `assert`, `parametrize`, `raises`, and fixtures such as `tmp_path` injected by name."}
-        takeaway: A project is a `pyproject.toml`, `src/` and `tests/`, with uv for environments, ruff for lint and format, and pytest for tests.
+          - {title: Imports, accent: "D4621A", body: "`sys.path` starts with the script's directory, so a file named `json.py` shadows the real module."}
+        takeaway: A project is a `pyproject.toml`, `src/` and `tests/`, with uv, ruff and pytest. Never name a file after a standard-library module.
         source: notes/06-modules-packaging-tooling.md
-        notes: Three tools cover what used to take many.
-
-      - layout: bullets
-        title: Why does a file named json.py break your imports?
-        kicker: Modules
-        bullets:
-          - "Python searches `sys.path`, which starts with the script's directory, so your file shadows the real module"
-          - "`import` runs a module once and caches it in `sys.modules`"
-          - "`if __name__ == \"__main__\":` guards code that should only run when the file is executed"
-          - "Avoid `from x import *`"
-        takeaway: "`sys.path` starts with the script's directory, so never name a file after a standard-library module."
-        source: notes/06-modules-packaging-tooling.md
-        notes: "\"Works when I run it from here\" bugs come from the same place. uv sync installs the project so imports stop depending on the working directory."
+        notes: "Three tools cover what used to take many. `import` runs a module once and caches it in `sys.modules`. `if __name__ == \"__main__\":` guards code that should only run when the file is executed. Avoid `from x import *`. \"Works when I run it from here\" bugs come from the same place as the shadowing: uv sync installs the project so imports stop depending on the working directory."
 
   - title: Many things at once
     summary: Picking a tool · The GIL · The event loop · Never block · Retries
@@ -372,6 +361,75 @@ parts:
         source: notes/07-concurrency.md
         notes: Never retry 4xx validation errors. LLM SDKs already retry for you, so check before you wrap them.
 
+  - title: What objects really do
+    summary: The method resolution order · super() · Leaks · tracemalloc
+    notes: >-
+      Classes and memory stop being a mystery once you can work them out. Each of these has a rule you can check with a
+      print statement or a snapshot, and each tool has a cost.
+    slides:
+      - layout: statement
+        title: Why does class behaviour seem unpredictable?
+        kicker: The problem
+        statement: "A `super()` call runs a method in a class you never named, an instance attribute silently replaces a method, or two libraries refuse to combine with a metaclass conflict."
+        attribution: One small set of rules explains all three.
+        recall: What explains a `super()` call reaching a class you never named, a method replaced by an instance attribute, and a metaclass conflict?
+        takeaway: Attribute lookup, the order of a class's ancestors and how a class gets built explain these, so you can work the behaviour out.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          Lookup has a fixed order. A data descriptor such as a property beats the instance dict, and a function is a non-data
+          descriptor, which is why a method can be shadowed and a property can't. For class creation, pick the first tool that
+          works: a class decorator, then __init_subclass__, then a metaclass. Inheritance also couples you to the parent's
+          internals, so composition is the default for reusing behaviour.
+
+      - layout: flow
+        title: What does super() call in a diamond?
+        kicker: The MRO
+        recall: In `class ProdClient(Retrying, Logged)`, with both parents inheriting `BaseClient`, what does `super()` inside `Retrying` reach, and why?
+        steps:
+          - {label: ProdClient, sub: "the instance's class"}
+          - {label: Retrying, sub: "`super()` is written here"}
+          - {label: Logged, sub: "next in the MRO, not Retrying's parent"}
+          - {label: BaseClient, sub: "after both of its children"}
+          - {label: object, sub: "the end of the chain"}
+        bullets:
+          - "**C3 guarantees** a class before its parents, parents in written order, and an order subclasses can't reshuffle"
+          - "**It can refuse:** parents that disagree on order raise `TypeError` when the class is defined"
+          - "**The cost:** to read a mixin's method, you have to know what class it was mixed into"
+        takeaway: "`super()` continues from the entry after the current class in the MRO of the instance's type, so it can reach a sibling, not only a parent."
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          Print type(self).__mro__ and read the order. Every occurrence of the method must call super(), or the chain stops there
+          with no error. That is Hettinger's list: the method must exist, the signatures must match, and every occurrence must
+          call super(). For a small stack of wrappers, composition is often clearer, because the nesting shows the order where
+          the object is assembled.
+
+      - layout: bullets
+        title: What is a memory leak in Python, and how do you find it?
+        kicker: Measured on CPython 3.14.7, macOS arm64
+        recall: Why can no garbage collector free a Python "leak", and why is rising RSS not enough to call something one?
+        bullets:
+          - "**Most objects** are freed when their refcount hits zero, and a cycle collector handles the cycles"
+          - "**A leak is still reachable:** an unbounded cache, a listener, `lru_cache` on a method, a stored exception"
+          - "**RSS is not proof:** keeping 1,500 of 3 million small dicts held RSS at 686 MiB, because survivors pin arenas"
+        aside:
+          lang: python
+          code: |-
+            tracemalloc.start()
+            traffic(0, 1_000)
+            before = tracemalloc.take_snapshot()
+            traffic(1_000, 50_000)
+            after = tracemalloc.take_snapshot()
+            after.compare_to(before, "lineno")[:2]
+        takeaway: A Python leak is an object something can still reach, so diff two `tracemalloc` snapshots after warm-up, and don't trust RSS alone.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          These figures hold for CPython 3.14.7 on macOS arm64, and this area changes between releases. Dropping the last 1,500
+          dicts gave back about 640 MiB. In a service, take the snapshots some time apart, because filling caches look like leaks
+          in the first minutes. tracemalloc misses memory a C extension allocates privately, and slowed an allocation-heavy loop
+          about 4 times here. Over 200,000 two-field records, __slots__ saved about a quarter, 112.1 against 152.1 bytes each, and
+          sys.getsizeof reported 48 for both because it is shallow. A full collection grew from about 5 ms at 100,000 records to
+          about 260 ms at 4 million. Free-threading in 3.14 is supported but optional, and it does not make your code thread-safe.
+
   - title: Rules to keep
     agenda: false
     divider: false
@@ -383,16 +441,7 @@ parts:
           - {title: Errors, body: "Narrow `except`, small `try`, `with` for cleanup, logging over print."}
           - {title: Types, body: "Hints on every signature. Dataclasses inside, a validator at the edge."}
           - {title: Concurrency, body: "Pick by what you wait on. Never block the loop. Always a limit and a timeout."}
+          - {title: Next, accent: "D4621A", body: "Pandas in `data-analytics`, TypeScript for the same type and async ideas, and `bash check.sh exercises 03`."}
         takeaway: Treat names as labels, fail narrowly, validate at edges, and choose concurrency by what you are waiting on.
         source: notes/01-data-model-and-idioms.md
-        notes: These condense the module's seven notes.
-
-      - layout: bullets
-        title: Where do you go after this module?
-        bullets:
-          - "**Data work**: phase 4 moved to the `data-analytics` pillar, starting with `01-python-for-data-analysis`"
-          - "**TypeScript**: the same type and async ideas with a stricter checker"
-          - "**Practice**: `bash check.sh exercises 03`, including the `uv` tooling package"
-        takeaway: Next is pandas in the data-analytics pillar, and TypeScript for the same type and async ideas.
-        source: notes/06-modules-packaging-tooling.md
-        notes: See programming/README.md for the order of the tracks.
+        notes: These condense notes 01 to 07. Data work starts with 01-python-for-data-analysis in the data-analytics pillar, and the practice run includes the uv tooling package. See programming/README.md for the order of the tracks.

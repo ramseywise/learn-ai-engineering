@@ -51,7 +51,8 @@ class RunResult:
 def build_prompt(cfg, ticket: str, docs: list, tool_results: list[str]) -> str:
     lines = "\n".join(f"[{d.id}] {d.text}" for d in docs)
     results = "".join(f"\n<tool_result>{r}</tool_result>" for r in tool_results)
-    return (f"Tools you may use: {', '.join(cfg.tools)}. Do not use any other tool.\n"  # advice to the model, not a control
+    # This sentence is advice to the model, not a control. The control is in ToolLayer.
+    return (f"Tools you may use: {', '.join(cfg.tools)}. Do not use any other tool.\n"
             f"<ticket>\n{ticket}\n</ticket>\n<docs>\n{lines}\n</docs>{results}")
 
 

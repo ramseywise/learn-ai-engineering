@@ -1,6 +1,6 @@
-# Quality and observability lecture deck. Covers notes 01-03.
+# Quality and observability lecture deck. Covers notes 01-06.
 # Build: make slides PILLAR=data-engineering/05-quality-and-observability STRICT=1 PREVIEW=1
-# Running example: one quarter of synthetic taxi trips with five faults planted in March.
+# Running example: one quarter of synthetic taxi trips with five faults planted in March (notes 01-03).
 deck:
   title: Quality and Observability
   subtitle: Finding out that the data is wrong, before anyone else does
@@ -349,6 +349,185 @@ parts:
           The SRE book's reasoning for blamelessness is practical. If people are punished for errors, they stop surfacing
           them. A silent wrong number can sit for weeks if the person who noticed is afraid to say so.
 
+  - title: Changing a live store
+    summary: Locks · Safe forms · Expand and contract · Restores · Pools · Disk
+    notes: >-
+      The taxi feed steps aside here, and these chapters use their own benches. A real Postgres runs under load while we
+      change it, restore it and run it out of connections.
+    slides:
+      - layout: statement
+        title: A one-millisecond ALTER stops the reads
+        kicker: The problem
+        statement: "An `ALTER` that needs a millisecond stalled reads for 2,003 ms."
+        attribution: "Postgres 16.2 on a laptop: it queued behind a report that ran on for 2 s. With a 100 ms `lock_timeout`, the worst stall was 101 ms"
+        recall: "Why can a one-millisecond ALTER take a site down?"
+        takeaway: A fast statement queues for its lock with every new query behind it, so set `lock_timeout` in the migration's session and retry.
+        source: notes/04-schema-and-data-migrations.md
+        notes: >-
+          The report holds a weak lock, which conflicts with ACCESS EXCLUSIVE, so the ALTER waits, and new reads wait
+          behind the ALTER even though they do not conflict with the report. The price of the timeout is that the ALTER
+          did not happen, so the migration has to retry. Set it per session, not in postgresql.conf.
+      - layout: table
+        title: Split the slow work from the strong lock
+        lead: "Worst stall seen by a small application. Postgres 16.2, 2,000,000-row table, on a laptop."
+        recall: "How do you keep a slow migration step from stalling the application?"
+        header: [Change, Direct, Safe form, Safe]
+        widths: [2, 2, 6, 1.5]
+        rows:
+          - ["Column default", "1,461 ms", "A constant default, stored in the catalog, not a volatile one", "1 ms"]
+          - ["`NOT NULL`", "157 ms", "`CHECK NOT VALID`, `VALIDATE`, then `SET NOT NULL`", "1 ms"]
+          - ["Index", "314 ms", "`CREATE INDEX CONCURRENTLY`", "3 ms"]
+          - ["Backfill", "5,237 ms", "Keyed batches of 10,000, each its own transaction", "20 ms"]
+        bold_first: true
+        takeaway: Spend very little time holding the strongest lock, and do the slow part under weak locks or in short keyed transactions.
+        source: notes/04-schema-and-data-migrations.md
+        notes: >-
+          The shape holds and the absolute times grow with your tables. Only ACCESS EXCLUSIVE blocks a plain SELECT. A
+          failed concurrent build leaves an INVALID index to drop. And a backfill alone is wrong on a live table: 1,932 rows
+          came out wrong because the application kept writing, until a trigger and a repair pass took that to zero.
+      - layout: flow
+        title: Expand, migrate, contract
+        recall: "How do you rename a column while old and new code both run?"
+        steps:
+          - {label: Add column, sub: "new, nullable", accent: 0F7490}
+          - {label: Dual write, sub: both columns current, accent: 0EA5C9}
+          - {label: Backfill, sub: then verify, accent: 5B21B6}
+          - {label: Read new, sub: then stop old writes, accent: 1E3A5F}
+          - {label: Contract, sub: drop the old column, accent: D4621A}
+        bullets:
+          - "Naive rename: 403 `UndefinedColumn` errors in half a second"
+          - "Expand, migrate, contract: 0 errors, old code then new"
+          - "A new embedding model takes the same moves: a second index, then an alias swap"
+        takeaway: Keep old and new code working at every step, and delay the drop, the one step with no rollback, until no reader remains.
+        source: notes/04-schema-and-data-migrations.md
+        notes: >-
+          Fowler calls this parallel change. Until contract, rollback is a redeploy or dropping the new column. After it,
+          rollback is a restore from backup. A warehouse move is the same pattern: in our DuckDB simulation with a one-hour
+          session difference planted, totals agreed to the cent and no day of 367 matched, so compare per partition and key.
+      - layout: code
+        title: Only a restore proves a backup
+        recall: "How do you know a backup works?"
+        lang: text
+        code: |-
+          # 1M accounts at 1,000 each, dumped during transfers
+          real dump : ok in 0.40 s
+                      invariant = 1,000,000,000
+
+          # a job that wrote nothing
+          empty file: FAILED
+                      input file is too short
+        bullets:
+          - "GitLab 2017: `pg_dump` 9.2 against a 9.6 server failed every time"
+          - "The failure emails were rejected, so nobody knew"
+          - "A replica is no backup: it replays your mistake"
+        takeaway: Only a scheduled restore that checks an invariant proves a backup, and the alert should fire when success is missing.
+        source: notes/05-operating-data-stores.md
+        notes: >-
+          Run on Postgres 16.2 on a laptop. An exit code or a file proves neither. A real drill runs on other hardware and
+          records the time, which is your measured recovery time. A dump loses everything since: with a base backup and
+          archived WAL, our recovery to just before a bad DELETE brought all 5,000 orders back on a new timeline.
+      - layout: compare
+        title: 100 clients, 30 connections
+        recall: "What does a pool change when clients outnumber connections?"
+        left:
+          title: No pool
+          bullets:
+            - "100 clients, 5 requests each, 50 ms of work"
+            - "**349 of 500** requests failed"
+            - "0.40 s in total, slowest 99 ms"
+        right:
+          title: Pool of 10
+          bullets:
+            - "The same traffic and the same server"
+            - "**0 of 500** requests failed"
+            - "2.58 s in total, slowest 521 ms"
+        emphasis: right
+        takeaway: A pool turns failure into waiting, so pool and queue in front of the database instead of raising `max_connections`.
+        source: notes/05-operating-data-stores.md
+        notes: >-
+          Each connection is a server process, and max_connections is fixed at start and sizes shared memory. Connecting cost
+          1.27 ms against 0.02 ms for reuse, on a local socket with no TLS, so the real gap is larger. PgBouncer was read
+          about and not run. Its transaction mode breaks session state such as SET lock_timeout, so run migrations directly.
+      - layout: table
+        title: What grows when no new data arrives
+        lead: "Measured on Postgres 16.2 on a laptop, with autovacuum off for the demonstration."
+        recall: "Why can a Postgres table or disk grow while no new data arrives?"
+        header: [Cause, Measured here, Guard]
+        widths: [3, 5, 4]
+        rows:
+          - ["Updates, no vacuum", "16.9 MB became 67.6 MB after 3 full updates", "Keep autovacuum on, tune per table"]
+          - ["Idle transaction", "200,000 dead rows `VACUUM` could not remove", "Timeout on idle transactions"]
+          - ["Slot nobody reads", "978 MB of WAL held after 3 updates of 1M rows", "Alert; `max_slot_wal_keep_size`"]
+          - ["Bulk update", "278 MB of WAL for a 73 MB table", "Plan headroom for operations"]
+        bold_first: true
+        takeaway: Dead rows, unread slots and bulk writes fill a disk slowly and without alarm, so graph each one and alert on the trend.
+        source: notes/05-operating-data-stores.md
+        notes: >-
+          VACUUM frees space for reuse, and only VACUUM FULL returns it, under ACCESS EXCLUSIVE. A full disk stops the primary.
+          Replicas have their own trap: a read straight after a write was stale 194 times in 200 on an idle pair, so never
+          route a read-your-own-write through one unchecked. Wraparound is the failure to know by name.
+
+  - title: Shipping the change
+    summary: CI · Deploys · Service levels · On-call
+    notes: >-
+      Everything so far assumed someone was careful. This part makes the careful path the default one, from pull request to
+      the page that wakes someone.
+    slides:
+      - layout: statement
+        title: Correct models, wrong numbers
+        kicker: The problem
+        statement: "A data team can write correct models and still ship wrong numbers."
+        attribution: "A change goes straight to production, and the first alert is a message from finance"
+        recall: "What is DataOps in one line?"
+        takeaway: DataOps applies software delivery habits to data, with version control, automated tests, isolated environments, automated deploys and service levels.
+        source: notes/06-dataops.md
+        notes: >-
+          The DataOps Manifesto is stewarded by a vendor, so read it as a statement of intent. Snowflake against Airflow is not
+          a real comparison, since one stores and computes and the other schedules. DataOps sits across the layers, and it
+          changes how each one gets changed.
+      - layout: flow
+        title: A change reaches production through its own schema
+        recall: "How do you stop a bad model reaching production without rebuilding everything?"
+        steps:
+          - {label: Pull request, sub: "lint DAGs, scan secrets", accent: 0F7490}
+          - {label: Build, sub: what changed, temporary schema, accent: 0EA5C9}
+          - {label: Test, sub: red blocks the merge, accent: D4621A}
+          - {label: Deploy, sub: "audit, then switch readers", accent: 5B21B6}
+          - {label: Watch, sub: the SLO, accent: 1E3A5F}
+        bullets:
+          - "`state:modified+`: 5 of 12 resources in the demo dbt project"
+          - "`--defer`: reads production for what it did not build"
+          - "A failed `unique` test left production at its 28 rows"
+        takeaway: Build what changed and its dependents in a temporary schema as a required check, so a failing test stops the merge with production untouched.
+        source: notes/06-dataops.md
+        notes: >-
+          dbt 1.12 and DuckDB ran for real here; dbt's hosted CI did not. Rolling back code does not roll back rows, so build
+          beside the old version, audit, and swap a view, which took about a millisecond on a local file. Terraform was modelled
+          and not run: read every plan for destroys, since some edits replace the resource, and rotate any secret that reaches git.
+      - layout: code
+        title: Spend a budget, page on the symptom
+        recall: "What should page someone about late batches, and what should not?"
+        lang: text
+        code: |-
+          # SLO: 99% of hourly batches within 30 min, 28 days
+          batches: 672   SLI: 98.51%
+          budget: 6.72 late batches
+          spent:  10 (149%), 5 outage + 5 scattered
+
+          page on any task failure: 33 pages
+          page on the symptom:      1 page
+          symptom page at hour 412, outage began at 411
+        bullets:
+          - "A simulation with chosen rates: keep the method, not the values"
+          - "Retries had already absorbed all 33 failures"
+          - "Over budget, the agreed policy applies"
+        takeaway: Page on actionable symptoms that threaten the SLO, and send task failures and scattered late batches to a ticket and the budget review.
+        source: notes/06-dataops.md
+        notes: >-
+          An error budget is one minus the target, and the policy for spending it is agreed in advance. The symptom rule is 2 of
+          the last 6 batches late. Burn-rate thresholds from the SRE workbook do not fit here, because one batch is 15% of the
+          budget. A target has to come from what users need, and these numbers do not tell you what yours should be.
+
   - title: Rules of thumb
     summary: What to keep
     agenda: false
@@ -356,6 +535,7 @@ parts:
     slides:
       - layout: cards
         title: Rules of thumb
+        recall: "What finds a data fault, what bounds it, and what repairs it?"
         cards:
           - {title: State a tolerance, body: "A hard rule on a soft fact gets muted. Bad rows are the evidence.", accent: 0EA5C9}
           - {title: Rules and history, body: "A test asks about a batch. A monitor asks about a batch against time.", accent: 0F7490}
@@ -371,8 +551,8 @@ parts:
       - layout: bullets
         title: Where next
         bullets:
-          - "Read: the three chapters in `notes/`, then `references.md`"
-          - "Practice: `06-ml-platform/practice/datatalks-mlops/05-monitoring`"
+          - "Read: the chapters in `notes/`, then `references.md`"
+          - "Practice: the runnable scripts in `practice/`"
           - "Next: the ML platform, starting from features that match at training and serving"
         takeaway: The feed is clean again, and the model downstream of it is next.
         source: notes/03-incident-playbooks.md

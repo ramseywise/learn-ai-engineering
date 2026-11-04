@@ -7,11 +7,11 @@ import random
 from collections import Counter, defaultdict
 
 from agent import Controls, run_agent, serve
-from enforce import (FairQueue, FifoQueue, Index, PostFilterRetriever, ReservationLedger, Request, ScopedRetriever,
+from enforce import (Index, ReservationLedger, Request, ScopedRetriever,
                      TenantTraces, TokenBucket, ToolLayer, simulate_load)
 from model import Completion, ModelRequest
 from stub import SEED, TOPICS, make_corpus, make_records, stub_model
-from tenancy import TENANT_IDS, ConfigStore, load_raw_configs, load_store
+from tenancy import TENANT_IDS, load_raw_configs, load_store
 
 CORPUS = make_corpus()
 INDEX = Index(CORPUS)
@@ -38,7 +38,7 @@ def default_limits(store) -> dict[str, int]:
     return {t: store.get(t).monthly_tokens for t in TENANT_IDS}
 
 
-def make_controls(budget=None, retriever=None, tools=None, traces=None, store=None) -> Controls:
+def make_controls(budget=None, retriever=None, tools=None, traces=None, store=None, model=None) -> Controls:
     store = store if store is not None else load_store()
     return Controls(
         store=store,
@@ -46,7 +46,7 @@ def make_controls(budget=None, retriever=None, tools=None, traces=None, store=No
         retriever=retriever if retriever is not None else ScopedRetriever(INDEX),
         tools=tools if tools is not None else ToolLayer(make_records()),
         traces=traces if traces is not None else TenantTraces(),
-        model=MeteredModel(),
+        model=MeteredModel(model) if model is not None else MeteredModel(),
     )
 
 
@@ -72,11 +72,10 @@ def budget_scenario(make_budget, cap=BUDGET_CAP, runs=BUDGET_RUNS) -> dict:
     c = make_controls(budget=make_budget(limits))
 
     async def main():
-        return await asyncio.gather(*(
-            _staggered_run(c, BUDGET_TENANT, f"budget-{i}",
-                           f"Please show me record PW-{1001 + i % 3}." if i % 2 else f"what is the {TOPICS[i % 6]} policy",
-                           i // ARRIVALS_PER_TICK)
-            for i in range(runs)))
+        tickets = [f"Please show me record PW-{1001 + i % 3}." if i % 2 else f"what is the {TOPICS[i % 6]} policy"
+                   for i in range(runs)]
+        return await asyncio.gather(*(_staggered_run(c, BUDGET_TENANT, f"budget-{i}", t, i // ARRIVALS_PER_TICK)
+                                      for i, t in enumerate(tickets)))
 
     results = asyncio.run(main())
     return {"cap": cap, "bill": c.model.bill[BUDGET_TENANT], "answered": sum(r.status == "answered" for r in results),
@@ -177,7 +176,8 @@ def _switch_alias(store, tenant, alias) -> None:
 
 def _pass_counts(store, window: str, volume: dict[str, int]) -> dict[str, tuple[int, int]]:
     c = make_controls(store=store)
-    jobs = [(t, f"{window}-{t}-{i}", f"what is the {TOPICS[i % 6]} policy") for t, n in volume.items() for i in range(n)]
+    jobs = [(t, f"{window}-{t}-{i}", f"what is the {TOPICS[i % 6]} policy")
+            for t, n in volume.items() for i in range(n)]
     results = asyncio.run(_gather_runs(c, jobs))
     return {t: (sum(r.passed for r in results if r.tenant_id == t), n) for t, n in volume.items()}
 

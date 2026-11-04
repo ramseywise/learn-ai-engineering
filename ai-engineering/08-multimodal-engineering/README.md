@@ -111,7 +111,9 @@ field F1 and cost per document: `uv run invoice_pipeline.py`, from `practice/`. 
 it calls no vision model. Three more labs run in seconds on synthetic fixtures: [`practice/multimodal_rag_lab.py`](practice/multimodal_rag_lab.py)
 for [chapter 3](notes/03-multimodal-rag.md), [`practice/voice_turn_lab.py`](practice/voice_turn_lab.py) for
 [chapter 4](notes/04-speech-and-voice-agents.md) and [`practice/pair_eval_lab.py`](practice/pair_eval_lab.py) for
-[chapter 7](notes/07-evaluating-multimodal-systems.md).
+[chapter 7](notes/07-evaluating-multimodal-systems.md). [`practice/voice_stream_lab.py`](practice/voice_stream_lab.py) takes
+chapter 4 down to audio samples: VAD, endpointing and barge-in by task cancellation on generated waveforms, in under a
+minute, with an optional `--asr` flag that downloads a small speech model.
 
 ---
 

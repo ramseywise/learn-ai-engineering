@@ -1,4 +1,4 @@
-# Agentic Applications lecture deck. Covers notes 01-06.
+# Agentic Applications lecture deck. Covers notes 01-07.
 # Build: make slides PILLAR=generative-ai/07-agentic-applications STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running question: what would prove this answer wrong, and who checks?
@@ -352,11 +352,11 @@ parts:
         bullets:
           - "**No distribution assumption:** resample each group."
           - "**Interval includes zero:** the answer must say the groups are not distinguishable."
-          - "Titanic: women 74.2%, men 18.9%, interval **[.49, .61]**."
+          - "Fri minus Sun on tip share: 0.0030, interval **[-0.0251, 0.0317]**, which includes 0."
         takeaway: Bootstrap the difference between groups, and refuse an unhedged lead when the interval includes zero.
         source: notes/05-data-analysis-agent.md
         notes: >-
-          The Titanic gap is a real lead, and the interval says so clearly. For tips by day it is not. The next slide shows
+          Friday looks highest on tip share, but its gap to Sunday has an interval that includes zero, so it is not a lead. The next slide shows
           what the agent ends up allowed to say.
 
       - layout: image
@@ -388,10 +388,11 @@ parts:
           Where does the agent sit next to the person who has to trust it?
 
   - title: Meet the user
-    summary: Chatbot, editor, ambient · The router's history · Trust · One engine, new domain
+    summary: Chatbot, editor, ambient · The router's history · Trust · One engine, new domain · Scoping the product
     notes: >-
       An agent can pass every test and still fail, if the person cannot see or undo what it did. The final part is about
-      position: who is working when, and what that makes hard.
+      position: who is working when, and what that makes hard. It closes with the decision that comes first in a real
+      project: whether to build one at all.
     slides:
       - layout: statement
         title: Where should the agent sit?
@@ -499,6 +500,78 @@ parts:
         notes: >-
           Rothman's approach to re-tasking is useful. His evidence is single runs, and the persuasive pitch is a grounding failure,
           which is the question we started with again: what would prove this answer wrong?
+
+      - layout: flow
+        title: Write user, problem, metric and constraint before the model
+        recall: Why decide what would kill an AI project before the work starts?
+        steps:
+          - {label: User, sub: "support agent on a routine ticket"}
+          - {label: Problem, sub: "12 minutes a ticket, timed"}
+          - {label: Metric, sub: "tickets per agent hour, satisfaction held"}
+          - {label: Constraint, sub: "draft in 20 s, under $0.05, no autonomous send"}
+          - {label: "Worth building?", sub: "no: stop or buy. yes: shadow, canary, ramp"}
+        bullets:
+          - "**Hypothetical team:** 40 agents, 60,000 tickets a month. Use your own numbers."
+          - "**The usefulness threshold,** not the best achievable number, tells you when to stop."
+          - "**Write the kill criterion now,** while nobody is invested."
+        takeaway: Narrow from user to constraint in that order, and write the kill criterion first, or a failing project gets a further phase and not a decision.
+        source: notes/07-scoping-an-ai-product.md
+        notes: >-
+          One decision is left, and in a real project it comes before everything else in this deck: whether to build at all.
+          Each of the four narrows the next, and a gap in any of them shows up later as an argument about something else.
+          No such team exists; these are round numbers chosen to make the arithmetic easy to follow. Huyen's planning chapter
+          adds two checks: why do it at all, and how critical the AI is to the product. After evaluation you may find that
+          reaching the threshold costs more than the return, and as she notes, that is a successful outcome of scoping.
+
+      - layout: code
+        title: Count model calls, because each one resends everything so far
+        recall: Why does input dominate an agent's bill even when output costs 5 times as much per token?
+        lang: text
+        code: |-
+          call  new input   sent in   output
+          1           800     5,286      120
+          2           400     5,806      150
+          3         4,000     9,956      500
+          total              21,048      770
+
+          no cache                  $0.04980
+          prefix read from cache    $0.02423
+        bullets:
+          - "**Setup:** one hypothetical ticket on Sonnet 5.5, list price read 2 Nov 2026."
+          - "**Output is about 15%** of the $0.0498, even at a 5x price per token."
+          - "**Caching the 4,486-token prefix** saves 51%."
+        takeaway: Cost an agent per call, since each resends the growing context, so input dominates and caching the shared prefix saves about half.
+        source: notes/07-scoping-an-ai-product.md
+        notes: >-
+          The system prompt gets paid for three times, once per call. The real monthly bill for this hypothetical is larger than
+          the sticker: $1,454 with the cache becomes $2,204 once you add retries, evals, cache writes, a token count 30% above
+          the estimate and regional processing. Model choice spans $156 on Haiku 5.5 to $4,366 on Opus 5.5 on the same basis.
+          Prices change, so date them. Treat comparisons across vendors as order of magnitude, because token counts are not
+          portable, and compare only among models that pass your evaluation.
+
+      - layout: table
+        title: Uplift and use decide the ROI, not the model bill
+        recall: In the worked example, why measure how often people use the draft before working on the model bill?
+        lead: "Hypothetical: 60% of tickets use the draft, $180,000 build, then $2,204 model bill and $7,500 run cost a month."
+        header: [Uplift, Value a month, Net a month, Payback, 3-year ROI]
+        widths: [1.6, 2.4, 2.4, 2.6, 2]
+        highlight: [2]
+        rows:
+          - ["3%", "$7,550", "-$2,155", never, "-143%"]
+          - ["7%", "$16,957", "$7,253", 24.8 months, "45%"]
+          - ["14%", "$31,832", "$22,128", 8.1 months, "343%"]
+          - ["25%", "$51,840", "$42,136", 4.3 months, "743%"]
+        takeaway: At a 14% uplift a 30% miss on use moves value by $9,549 a month, over four times the $2,204 model bill, so measure use first.
+        source: notes/07-scoping-an-ai-product.md
+        notes: >-
+          The highlighted 14% comes from Brynjolfsson, Li and Raymond: 5,179 customer support agents, 34% for novices and minimal
+          for the most experienced, in a working paper. Becker and colleagues at METR ran a randomised trial with 16 experienced
+          open-source developers across 246 tasks: they took 19% longer while believing they had been 20% faster. That is a
+          preprint, and the authors stress it does not show AI fails to help in other settings. Neither is your product, so use
+          a range and a holdout, not self-report. Use is a funnel: four plausible steps reach 39.9%, and at a 7% uplift that is
+          313 hours a month, or 1.0 agent of 40. Released time is not money until hiring, backlog or volume changes. On build or
+          buy, at an invented $150 a seat buying wins by $293,000 over three years at 40 agents, and building matches it at about
+          126. Keep the eval set yourself either way, and keep shadow mode, since $2,204 is cheap for a look at real tokens.
 
   - title: Closing
     agenda: false

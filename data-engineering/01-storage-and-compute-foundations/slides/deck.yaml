@@ -1,4 +1,4 @@
-# Storage and compute foundations lecture deck. Covers notes 01-08.
+# Storage and compute foundations lecture deck. Covers notes 01-10.
 # Build: make slides PILLAR=data-engineering/01-storage-and-compute-foundations STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: synthetic taxi trips. Measured numbers come from the runs printed in the notes.
@@ -6,13 +6,13 @@ deck:
   title: Storage and Compute Foundations
   subtitle: The logic under every pipeline
   tagline: |-
-    Promises · Files · Writers · Copies · Faults · Agreement · Clusters
+    Promises · Files · Writers · Copies · Faults · Agreement · Clusters · Durability · Stores
   reference: "Notes: data-engineering/01-storage-and-compute-foundations. Core text: Kleppmann, Designing Data-Intensive Applications (2017)."
   output: storage-and-compute-foundations.pptx
   notes: >-
     Today we start with one machine and add trouble a step at a time, following Kleppmann's book. What a system promises, how data
     sits in a file and on disk, what happens when a second writer arrives, what happens with copies, what happens when the network
-    and the clocks stop cooperating, how machines agree anyway, and finally how to compute over all of it. Every number on these
+    and the clocks stop cooperating, how machines agree anyway, how to compute over all of it, and finally what saved really means and which store fits. Every number on these
     slides comes from code you can run in the practice folder.
 
 parts:
@@ -494,12 +494,117 @@ parts:
         notes: >-
           The grouped query over a 640 megabyte file finished in about three seconds. On the same machine a 100 MB limit failed until we set threads to one.
 
+  - title: What saved means, and where to keep it
+    summary: Durability · Failover · Access patterns · Store choice
+    notes: >-
+      Every chapter so far assumed the write was still there afterwards. Now we crash things on purpose to see what saved promises, and then ask which store to keep the data in.
+    slides:
+      - layout: statement
+        title: Saved is a ladder, not a state
+        kicker: The problem
+        statement: "An API returns 200 and the row is saved. In a process buffer, a crash takes it. In the page cache, a power cut. On a replica, your own bad DELETE follows it."
+        attribution: Chapter 9, crashing a private Postgres 16.2 on purpose
+        takeaway: Each rung of saved survives a different failure and costs a different amount, so first ask which failure you must survive.
+        source: notes/09-persistence.md
+        notes: >-
+          The test for every rung is one question: of the writes you acknowledged, how many are still there? Losing a write nobody was told about is a failed request. Losing one you confirmed is a broken promise.
+          Two numbers describe the answer. RPO is how much you lose, RTO is how long you are down.
+      - layout: steps
+        title: Each rung survives one more failure
+        recall: Which rung covers your own bad DELETE, and why not a replica?
+        axis: survives more
+        steps:
+          - {title: Process memory, text: "Survives nothing. SIGKILL lost about 1,000 records per crash."}
+          - {title: Page cache, text: "Survives a process crash, not a power cut."}
+          - {title: fsync to device, text: "Survives a power cut if the drive honours flushes. Modelled, not tested."}
+          - {title: WAL, text: "Survives a server crash. kill -9 under load lost 5 to 36 rows with `synchronous_commit=off`, 0 with `on`."}
+          - {title: Replica, text: "Survives machine loss. A bad DELETE reached the standby within 34 ms."}
+          - {title: Tested backup, text: "A base backup plus archived WAL survives your own bad deploy.", accent: "D4621A"}
+        takeaway: A replica copies your mistakes in milliseconds, so your own bad DELETE needs point-in-time recovery from a backup you have restored.
+        source: notes/09-persistence.md
+        notes: >-
+          The 1,000 records is a Python writer acknowledging after an in-process write, killed 20 times. The WAL rows are five crashes per setting of a single-row insert loop, and each restart came back consistent. A kill leaves the page cache intact,
+          so it cannot tell flush from fsync, and the power-cut rung is a labelled simulation. Cost, on this Mac with one client: 14,737 commits per second with plain fsync, which does not flush the drive, against 296 with fsync_writethrough. Take the ratio, not the absolute figures,
+          because the machine was busy. Restart after a crash grew with WAL volume, to 6 seconds for 2.1 GB. Eleven nines of S3 durability describe S3 losing an object, not you overwriting one, which is what versioning is for.
+      - layout: table
+        title: RPO zero costs availability
+        recall: What does synchronous replication pay for losing nothing on failover?
+        lead: "Primary killed under load, standby promoted. One run per row, so a demonstration and not a rate."
+        header: [Replication, Acknowledged, In the stall, Lost after failover]
+        widths: [4, 2, 2, 3]
+        rows:
+          - ["Asynchronous", "7,315", "0", "0"]
+          - ["Asynchronous, standby stalled 1 s", "21,878", "15,432", "15,620"]
+          - ["Synchronous", "4,059", "0", "0"]
+          - ["Synchronous, standby stalled 1 s", "3,915", "0", "0"]
+        highlight: [1]
+        takeaway: Synchronous replication lost nothing but acknowledged nothing during a 1 s standby stall, while asynchronous kept committing and lost 15,620 rows.
+        source: notes/09-persistence.md
+        notes: >-
+          Asynchronous lost nothing while the network was healthy, which is what makes it dangerous. The synchronous cost is the zero in the stall column: you have turned a replica problem into a primary outage. Promotion took about a tenth of a second, and that is not the RTO,
+          since detecting the failure and deciding usually dominate. The same question applies to caches. In a run with SQLite underneath, write-behind flushing every 300 writes kept 900 of 1,000 acknowledged writes after a restart, and write-through kept all 1,000. If you delete it and someone has to explain to customers, it was your database all along.
+      - layout: flow
+        title: Name the access pattern before naming a store
+        recall: Why did the same 2,000,000 rows favour SQLite on one query and DuckDB on another?
+        steps:
+          - {label: Finding a record, sub: "key, fields, words, meaning, links"}
+          - {label: Data touched, sub: few rows or most rows}
+          - {label: How it changes, sub: "updates, appends, whole files"}
+          - {label: Size and speed, sub: one machine or more}
+          - {label: Who runs it, sub: embedded or on-call team}
+        bullets:
+          - "**Point lookup, 2,000,000 rows:** SQLite 0.0051 ms, DuckDB 0.2368 ms."
+          - "**Group-by over every row:** SQLite 436.2 ms, DuckDB 2.1 ms."
+        takeaway: A store is a bet on how data is read and written, so row-oriented SQLite won the lookup and columnar DuckDB won the scan, with neither the better database.
+        source: notes/10-choosing-a-store.md
+        notes: >-
+          Saying we need a document database has already skipped the question. Every new store also brings its own backups, upgrades, monitoring and failure modes, so who runs it counts. These runs are one machine, one trial each, on synthetic data. Check the two tools sit in the same layer before comparing them:
+          Snowflake stores and computes, Airflow schedules, and they do not compete. And wide-column does not mean columnar, because Cassandra is not a scan engine.
+      - layout: code
+        title: Plain Postgres stretches further than expected
+        recall: When does plain Postgres stop being enough?
+        lang: text
+        code: |-
+          one private Postgres 16.2, one trial each, synthetic
+          key-value, 1M keys    33,181 reads/s, 20,741 upserts/s
+          document, 1M docs     seq scan 31.387 ms, GIN 0.017 ms
+          text, 300,000 docs    LIKE 138,026 hits, tsquery 257,679
+          time, 12 partitions   DELETE month 64 ms, DROP 5.4 ms
+          graph, 500,000 edges  6 hops in 15 ms
+        bullets:
+          - "**Not a benchmark** against the specialised stores, which were not run."
+          - "**Upserts** used macOS fsync, which does not flush the drive."
+        takeaway: Postgres cleared these bars on one laptop, and stops being enough when writes exceed one primary, scans cover most of a large table, or search is the product.
+        source: notes/10-choosing-a-store.md
+        notes: >-
+          Stonebraker and Pavlo argue that SQL absorbs the good ideas from other models, and that is an argued position, so these blocks check it. The stemmed query finds more because it also matches satisfy and satisfies. The bundled Postgres has no pgvector, so vectors ran in numpy instead:
+          exact search over a million 384-dimensional vectors took about 17 ms per query, in memory, one query at a time. The other limits are multi-region writes with no single primary, and blobs, which belong in an object store with their paths in the database. The opposite trap is adopting a specialised store for a scale you do not have.
+      - layout: table
+        title: Six needs, two or three stores
+        recall: In this worked app, which need forces a store beyond Postgres, and why?
+        lead: "One app, where the first instinct might name six stores."
+        header: [Need, Pattern, Choice]
+        widths: [3, 4, 4]
+        rows:
+          - ["Accounts, orders", "Transactions, joins", "Postgres"]
+          - ["Catalogue", "Varying shape, read by id", "`jsonb` columns in Postgres"]
+          - ["Product search", "Words and ranking", "Postgres FTS first"]
+          - ["Sessions", "Key lookup, can be lost", "Redis, or a Postgres table"]
+          - ["Recommendations", "Nearest neighbour, 200,000 items", "pgvector, or exact search"]
+          - ["Revenue dashboards", "Scan and aggregate, 500M order lines", "A warehouse, fed by a pipeline"]
+        highlight: [5]
+        takeaway: Scanning 500 million order lines is the one need that forces a different store, and search can move out later, once relevance becomes a project of its own.
+        source: notes/10-choosing-a-store.md
+        notes: >-
+          Redis is justified if you already run it, and sessions are derived data either way. By the chapter's table, flat search over 200,000 items is about 3 ms. If search relevance later becomes a product, you add Elasticsearch fed from Postgres and nothing else has to change, which is an easier move to make once you know you need it than a premature one is to undo.
+
   - title: Rules of thumb
     agenda: false
     divider: false
     slides:
       - layout: cards
         title: What to remember
+        recall: "Which mechanisms do most data engineering debates reduce to?"
         cards:
           - title: Measure the tail
             body: "Percentiles from the client, merged by histogram."

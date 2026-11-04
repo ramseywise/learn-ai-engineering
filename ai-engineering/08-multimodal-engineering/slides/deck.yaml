@@ -281,6 +281,31 @@ parts:
           0.172 against 0.258 seconds a page at 0.978 against 0.977. Clean renders of a clean font are easy for
           OCR, and the seconds vary with your machine.
 
+      - layout: table
+        title: Labels, pixels and saving each outweighed 16× more data
+        recall: Before you label more data for a fine-tuned vision-language model, what should you check, and why?
+        kicker: When prompts and routes fail
+        lead: "SmolVLM-256M, LoRA, 200 steps on generated invoices, 3 seeds. Frozen scored **0.021**, and LoRA **0.933**."
+        header: [Choice, Change, Field accuracy, Setup]
+        widths: [2, 4, 3, 4]
+        rows:
+          - ["Training data", "25 → 400 invoices", "0.860 → 0.933", "Seen layouts"]
+          - ["Labels", "Padding only → answer only", "0.829 → 0.933", "Image tokens out of the loss"]
+          - ["Pixels", "512 → 1024 longest edge", "0.496 → 0.969", "Small print, about 3.4× memory"]
+          - ["Saving", "Attached → merged into 4-bit", "0.910 → 0.000", "All 3 seeds, only a rounding warning"]
+        highlight: [3]
+        takeaway: Read one batch's labels, look at the page as the model gets it, and score after every conversion before adding data.
+        source: notes/02b-fine-tuning-a-vision-language-model.md
+        notes: >-
+          Now a customer's scans must stay on their machines, with about 4 GB to spare, and the local OCR route misreads
+          them. So we fine-tune a small model. Generated pages are far kinder than real ones, so read these as how choices
+          compare, not as what you would get. None of these faults raises an error. Leaving image tokens in the loss cost
+          about 0.10. No adapter can bring back what the processor threw away: retraining on small print at 512 only
+          reached 0.496. The merge is the worst one. The update was about 0.2 percent of the weight, 16 levels cannot hold
+          it, and the merged change had a cosine of 0.02 with the change training wanted. Merging into bf16 cost 0.008, so
+          train on bf16 when it fits, or serve the adapter attached to its 4-bit base. Also print the trainable names,
+          since a suffix list for target_modules wraps both towers. Next we go back to the whole collection.
+
   - title: The answer inside a chart
     summary: What to index · ColPali evidence · Late interaction · Cost
     notes: >-
@@ -579,6 +604,7 @@ parts:
     slides:
       - layout: cards
         title: Rules of thumb
+        recall: "Almost nothing in a multimodal system raises an error, so what must every stage have?"
         kicker: To keep
         cards:
           - title: Fix the input first

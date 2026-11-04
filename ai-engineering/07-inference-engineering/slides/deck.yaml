@@ -545,6 +545,80 @@ parts:
           needs an eval before you ship it. At large batch the picture changes: compile helps less, and speculation may not help. Dynamic
           precision, early exit and RL tuners remain experiments, and they should ship with a kill switch that reverts to a known-good configuration.
 
+      - layout: table
+        title: An encoder's cost is the shape of its batch
+        recall: Why does sorting texts by length speed up an encoder, and what does a token budget give you instead?
+        kicker: Serving encoders
+        lead: "all-MiniLM-L6-v2 on an M4 Pro GPU, 3,000 generated lines of skewed length. No KV cache, one forward pass."
+        header: [Batching, Texts per second, Tokens computed, Padding]
+        widths: [5, 3, 3, 2]
+        rows:
+          - ["32 per batch, arrival order", "1,025", "419,016", "80%"]
+          - ["32 per batch, sorted by length", "3,162", "87,480", "5%"]
+          - ["Token budget 2048, arrival order", "991", "306,142", "73%"]
+          - ["Token budget 2048, sorted by length", "3,573", "87,246", "4%"]
+        highlight: [1]
+        takeaway: Every text is padded to the longest in its batch, so measure padding share and sort; a token budget caps memory, not time.
+        source: notes/08b-serving-encoders-and-vision-models.md
+        notes: >-
+          So far we have served a language model. Encoders sit beside it in most products, and most of what we said
+          about KV caches and streaming does not apply. A batch is a rectangle. Sorting gave 2.8 to 4.5 times across
+          four runs on a shared machine, and the data is skewed on purpose, so a corpus of even lengths gains far less.
+          A token budget without sorting ranged from 0.7 to 1.3 times, so what it buys is a ceiling: no batch above 2,048
+          tokens, where a sorted batch of 32 can reach 8,192. A backfill gets all of the sorting gain, and a live queue
+          only part of it. In a simulated single worker, a 50 ms wait window added about 35 ms at the median, so start at
+          zero. Published fp16 and ONNX int8 results pointed the other way from ours on this Apple machine, and int8
+          kept 0.916 of the top ten here, so measure on your hardware and test retrieval.
+
+      - layout: flow
+        title: A vision-language model pays before its first token
+        recall: Why does a short reply from a vision-language model stay slow, and which setting changes that most?
+        kicker: Serving VLMs
+        lead: "SmolVLM-256M, one page at a 2048 longest edge, 50 tokens out, M4 Pro GPU: 1,156 ms in all."
+        steps:
+          - {label: Prepare, sub: "CPU, 67 ms, once per page", accent: "94A3B8"}
+          - {label: Vision pass, sub: "628 ms, once, no cache of its own", accent: "D4621A"}
+          - {label: Prefill and decode, sub: "462 ms, 892 prompt tokens then KV cache", accent: "0F7490"}
+        caption: "At a 512 edge: 1 tile, 254 ms, **19%** in vision. At 1024: 5 tiles, 499 ms, **45%**. At 2048: 13 tiles, **54%**."
+        takeaway: The longest edge sets the tiles and so the fixed cost per page, making it your main serving control, and short replies feel it most.
+        source: notes/08b-serving-encoders-and-vision-models.md
+        notes: >-
+          The lab counted calls for one reply: the vision tower ran once and the language model 50 times. Pages multiply
+          this. Run one after another, a 30-page upload at a 2048 edge pays about 20.9 seconds of fixed cost, which is what
+          vLLM's limit_mm_per_prompt is there to cap. On this laptop the CPU was 4 to 6 percent of a page, but a datacentre
+          GPU and heavy scans could reverse that, so compare both rates. Cached image features saved 60 ms at a 512 edge,
+          the only size measured. There is a trap: in Transformers 5.20, a bare list passed as mm_encoder_outputs was
+          ignored with no error, and the model answered with no image. So assert the same reply against a fresh pass.
+
+      - layout: compare
+        title: Merge one adapter, and keep many of them apart
+        recall: When should you merge a LoRA adapter for serving, and when should you keep it attached?
+        kicker: Adapters at serving time
+        lead: "Speed only: one page, 50 tokens, an r=8 untrained adapter through PEFT in Python, against a 247 ms base model."
+        left:
+          title: Attached
+          tag: Many adapters, or a 4-bit base
+          bullets:
+            - "**447 ms**, 1.8 to 1.9× the base in all four runs"
+            - "S-LoRA, one A100, Llama-7B: **8.05 → 7.61** req/s from 5 to 2,000 adapters"
+            - "Merged copies per adapter in vLLM ran out of memory by 100"
+        right:
+          title: Merged
+          tag: One adapter on a float base
+          bullets:
+            - "**254 ms**, 1.01 to 1.15× the base"
+            - "Into a 4-bit base: field accuracy **0.91 → 0.00**"
+            - "Score it after merging, on the same pages"
+        takeaway: Merge a single adapter into a float base, and keep adapters unmerged for many customers or on a 4-bit base.
+        source: notes/08b-serving-encoders-and-vision-models.md
+        notes: >-
+          Attached means the update stays separate and runs at every wrapped layer. Merged means it was added into the
+          weights. An engine built for this will differ from our Python numbers, but the direction fits the extra
+          multiplications. S-LoRA is text-only and does not report swap latency, tail latency or quality, so extending it to
+          vision models is our inference. vLLM's docs mark adapters on the vision tower as experimental. RunPod's vendor
+          benchmark is the other serving note worth reading: on bge-m3 at 512 tokens with TEI, the fastest card was not the
+          cheapest per token, and we did not reproduce it. Next, back to language-model kernels.
+
       - layout: code
         title: Let a model search for kernels only behind a verifier
         recall: What makes AI-generated kernels safe to use, and what results has the verifier loop produced?
@@ -595,7 +669,7 @@ parts:
     slides:
       - layout: cards
         title: Rules of thumb for inference engineering
-        recall: What are the rules of thumb for inference engineering?
+        recall: "How do you approach an inference problem, and when do you re-run evals?"
         cards:
           - {title: Meters, body: "TTFT, TPOT, goodput at a percentile. Never GPU util alone."}
           - {title: Bound, body: "Prefill is compute. Decode is memory bandwidth. Find your side of the ridge."}

@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""One agent core serving four fictional tenants, with each isolation control printed beside the naive version it replaces.
+"""One agent core serving four fictional tenants, each isolation control printed beside the naive version it replaces.
 
 Run from this folder (a few seconds, standard library only, no API key, downloads nothing):
     uv run run.py
@@ -81,7 +81,8 @@ for label, make in (("run-scoped (reads spend at start)", RunScopedBudget),
 
 # %% 3. Retrieval
 header(f"3. Retrieval: 6 generic questions per tenant, top 3, over {len(CORPUS)} generated documents")
-print(f"  {'retriever':13}{'tenant':18}{'no docs':>9}{'no on-topic':>13}{'foreign in context':>20}{'foreign exposed':>17}")
+print(f"  {'retriever':13}{'tenant':18}{'no docs':>9}{'no on-topic':>13}"
+      f"{'foreign in context':>20}{'foreign exposed':>17}")
 for name, make in (("post-filter", PostFilterRetriever), ("in the query", ScopedRetriever)):
     rows = retrieval_scenario(make)
     for tenant, row in rows.items():
@@ -90,7 +91,7 @@ for name, make in (("post-filter", PostFilterRetriever), ("in the query", Scoped
     if make is ScopedRetriever:
         assert all(r["foreign_exposed"] == 0 and r["missed"] == 0 for r in rows.values())
 lost = [d for d in CORPUS if d.scope is None]
-print(f"  {len(lost)} documents lost their scope at ingest. In the query they match nobody, and that needs an alert too.")
+print(f"  {len(lost)} documents lost their scope at ingest. In the query they match nobody, which needs its own alert.")
 
 # %% 4. Tools
 header("4. Tools: the stub tries issue_refund for a tenant that doesn't have it, and reads another tenant's record")
@@ -121,7 +122,7 @@ for name, make in (("one ambient tenant slot", AmbientTraces), ("stamped from th
 assert r["misattributed"] == 0 and r["foreign_spans_read"] == 0
 
 # %% 7. Quality
-header("7. Quality: a shared model alias moves from v1 to v2 for every tenant (generated runs, stub with a planted fault)")
+header("7. Quality: a shared model alias moves from v1 to v2 for every tenant (generated runs, planted fault)")
 q = quality_scenario()
 before, after = q["before"], q["after"]
 status = tenant_quality(before, after)
@@ -129,8 +130,9 @@ print(f"  {'tenant':18}{'runs':>7}{'v1 pass':>9}{'v2 pass':>9}  status")
 for tenant in QUALITY_VOLUME:
     print(f"  {tenant:18}{after[tenant][1]:>7}{before[tenant][0] / before[tenant][1]:>9.1%}"
           f"{after[tenant][0] / after[tenant][1]:>9.1%}  {status[tenant]}")
-print(f"  {'fleet, by traffic':18}{sum(c[1] for c in after.values()):>7}{fleet_rate(before):>9.1%}{fleet_rate(after):>9.1%}"
-      f"  alert: {sorted(fleet_mean_alert(before, after)) or 'none'}")
+fleet_alert = sorted(fleet_mean_alert(before, after)) or "none"
+print(f"  {'fleet, by traffic':18}{sum(c[1] for c in after.values()):>7}"
+      f"{fleet_rate(before):>9.1%}{fleet_rate(after):>9.1%}  alert: {fleet_alert}")
 print(f"  per-tenant alert names: {sorted(per_tenant_alert(before, after))}")
 assert per_tenant_alert(before, after) == {"larkspur-clinic"} and not fleet_mean_alert(before, after)
 

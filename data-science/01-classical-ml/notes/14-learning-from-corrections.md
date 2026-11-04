@@ -430,4 +430,4 @@ We expected a wider gap between the suite and unseen invoices of the same class,
 
 ## Next
 
-[Deep learning](../../02-deep-learning/README.md): the same discipline of splits, thresholds and calibration, now with models that learn their own features. To see this loop as the last stage of a whole invoice system, with its rollout and monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).
+[Fairness in automated scoring](15-fairness-in-automated-scoring.md): when the labels are people's past decisions and the score decides who gets through, which gaps can you measure, and which can't be closed together? To see this loop as the last stage of a whole invoice system, with its rollout and monitoring, read [DE 06/06](../../../data-engineering/06-ml-platform/notes/06-ml-system-framing-to-monitoring.md).

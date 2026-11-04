@@ -49,6 +49,12 @@ A LangGraph support graph: routing, a fan-out with a reducer, a retry cycle, an 
 | TypeScript | [practice/langgraph-graph-ts/](practice/langgraph-graph-ts/README.md) | `cd practice/langgraph-graph-ts && npm install && npx tsx run.ts` |
 | Python | [practice/langgraph-graph/](practice/langgraph-graph/README.md) | `cd practice/langgraph-graph && uv run run.py` |
 
+A second lab serves [note 08](notes/08-governance-and-production.md): one agent core driven by per-tenant config, with each isolation control printed beside the naive version it replaces (budget under real asyncio concurrency, retrieval scope, tool allowlist, fair queuing, traces, per-tenant quality). It is Python standard library with a stub model, and needs no API key.
+
+| Language | Folder | Run |
+|---|---|---|
+| Python | [practice/multi-tenant-agents/](practice/multi-tenant-agents/README.md) | `cd practice/multi-tenant-agents && uv run run.py` |
+
 ## Layout
 
 ```
@@ -56,7 +62,7 @@ README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
 notes/         01–13 (with 10b, 11b, 13b), the course; figures and code inline
 slides/        deck.yaml + graph-engineering.pptx
-practice/      the lab, in TypeScript and Python
+practice/      the LangGraph lab in TypeScript and Python, and the multi-tenant lab
 sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
   images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
   images/unreferenced/   course images not used anywhere yet, kept for review

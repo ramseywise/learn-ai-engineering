@@ -1,4 +1,4 @@
-# Architecture and governance lecture deck. Covers notes 01-02.
+# Architecture and governance lecture deck. Covers notes 01-03.
 # Build: make slides PILLAR=data-engineering/07-architecture-and-governance STRICT=1 PREVIEW=1
 # Running example: one company's trips and riders. A tax join across two domains, then one rider who asks to be deleted.
 deck:
@@ -453,12 +453,76 @@ parts:
           Article 30 does not list lawful basis; we add it to meet accountability in Article 5(2). Retention periods in the
           run are invented; real ones come from legal.
 
+  - title: Trace a change
+    summary: Catalog · Semantic layer · Contracts
+    notes: >-
+      Now the same company's analysts. The mobility team wants to store fares in cents and asks who that will hurt, and the
+      answer runs through three systems.
+    slides:
+      - layout: statement
+        title: Breaking, but to whom?
+        kicker: The problem
+        statement: "The contract's diff says the change is breaking, but not to whom."
+        attribution: "`fare_usd` becomes `fare_cents`: the dashboard reads a metric defined elsewhere, a notebook reads the column"
+        recall: "Why doesn't a contract diff tell you who a breaking change hurts?"
+        takeaway: A contract marks a change as breaking, so finding who it hurts takes a chain through the catalog, the metrics and the query log.
+        source: notes/03-catalog-semantic-layer-and-contracts.md
+        notes: >-
+          Each system has a neighbour with the same name. A data catalog is not the Iceberg catalog. A dbt model contract checks
+          one model's columns and types at build, and it cannot state a unit or name a consumer. ODCS v3.2.0 has no field that
+          records who consumes a dataset, on the chapter's search of it. Registration, lineage and the query log each have a hole.
+      - layout: code
+        title: Plain SQL runs and returns three wrong numbers
+        recall: "How does a semantic layer stop a fan-out, a mean of ratios and a summed balance?"
+        lang: text
+        code: |-
+          # 90 days of synthetic trips, DuckDB
+          revenue, true:          82,209.54
+          joined to promos:      132,994.27
+
+          cancel rate, totals:   0.0668
+          mean of daily rates:   0.1619
+
+          wallet, end of March:  11,280
+          wallet, March summed: 340,380
+        bullets:
+          - "**Fan-out:** MetricFlow refuses a foreign-to-foreign join"
+          - "**Ratio:** it sums the parts, then divides"
+          - "**Balance:** `non_additive_dimension` returned 11,280"
+        takeaway: A semantic layer holds metrics and join keys as data and compiles each request at its grain, so nobody rewrites the join or the division.
+        source: notes/03-catalog-semantic-layer-and-contracts.md
+        notes: >-
+          Refusal is a real cost, because someone wanted that cut and now has to say what it means. Marts stay, since the layer
+          reads a modelled table. On text-to-SQL the evidence is thin and interested: every measured comparison the chapter read
+          comes from a company selling such a layer, with no independent replication found.
+      - layout: flow
+        title: Follow the chain to named owners
+        recall: "How do you work out who a change to a column will hurt?"
+        steps:
+          - {label: Contract, sub: fare_usd is breaking, accent: 1E3A5F}
+          - {label: Catalog, sub: "term, steward, tier", accent: 0F7490}
+          - {label: Metrics, sub: revenue and revenue_per_trip, accent: 0EA5C9}
+          - {label: Owners, sub: "exposures, query log", accent: D4621A}
+        bullets:
+          - "**Catalog:** coverage still counts `fare_usd`, though its text predates the column's last change"
+          - "**Metrics:** `cancel_rate` does not read the fare, so ops stays off the list"
+          - "**Query log:** `nb_fare_audit` is registered nowhere"
+          - "**Same name, in cents:** validation passes, and revenue per trip goes from 30.86 to 3,085.94"
+        takeaway: Follow the chain to named owners, check the log for unregistered readers, and give a new unit a new column name.
+        source: notes/03-catalog-semantic-layer-and-contracts.md
+        notes: >-
+          All on synthetic trips. Measure a catalog by descriptions older than the column's last change and by reads on certified
+          tables, not by coverage: here 27% coverage, 28% of reads on a certified table. The rename fails loudly in validation. The
+          same-name change needs a value rule. With the metric's expr updated, revenue per trip returns to 30.86 for its consumers.
+          The chapter found no controlled measurement showing that contracts reduce incidents.
+
   - title: Rules to take with you
     agenda: false
     divider: false
     slides:
       - layout: cards
         title: Rules of thumb
+        recall: "Where does governance actually exist?"
         cards:
           - {title: Measure first, body: "Size the architecture to the data and the concurrency you have.", accent: 1E3A5F}
           - {title: Mesh is ownership, body: "Domains still run an MDW, fabric or lakehouse.", accent: 0F7490}
@@ -469,16 +533,17 @@ parts:
         takeaway: Decide ownership and enforcement before you need them, because governance only exists where a step can fail.
         source: notes/01-data-architectures-mesh-fabric-mdw.md
         notes: >-
-          These restate the two chapters. Everything about GDPR here is engineering guidance, not legal advice.
+          These restate chapters 01 and 02. Everything about GDPR here is engineering guidance, not legal advice.
       - layout: bullets
         title: Where next
         bullets:
           - "**Chapter 01:** topologies and the scenario prompts, as interview practice"
           - "**Chapter 02:** run the attacks, then the erasure coverage check"
+          - "**Chapter 03:** the exercises on consumers, refused joins and catalog measures"
           - "**Lineage:** the quality pillar's monitors and lineage chapter"
           - "**Table formats:** the warehouse pillar's vacuum and snapshot mechanics"
           - "**Real cases:** take them to your data protection officer"
-        takeaway: Run both chapters' code, then bring real erasure and breach cases to a data protection officer instead of deciding alone.
+        takeaway: Run the chapters' code, then bring real erasure and breach cases to a data protection officer instead of deciding alone.
         source: notes/02-access-control-pii-gdpr.md
         notes: >-
           The chapter code is the practice for this pillar. There is no practice folder.
