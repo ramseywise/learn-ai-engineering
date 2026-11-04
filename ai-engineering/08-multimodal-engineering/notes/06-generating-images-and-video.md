@@ -39,6 +39,7 @@ sources:
   - https://arxiv.org/abs/2301.07093
   - https://arxiv.org/abs/2308.16512
   - https://arxiv.org/abs/2601.20540
+  - https://arxiv.org/abs/2401.10891
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -164,6 +165,8 @@ Generating from a map is older than diffusion. pix2pix trained a conditional GAN
 | Scribble | A rough drawing | Composition from a sketch |
 
 The preprocessor and the ControlNet model must match each other (a Canny map needs a Canny model), and the model must match the base model's version. *Control weight* acts like a prompt weight for the map. *Start* and *end control steps* limit when it applies: ending at 0.8 lets the model invent fine detail freely (ch. 9).
+
+**The depth preprocessor is a model with its own limits.** Depth Anything ([arXiv:2401.10891](https://arxiv.org/abs/2401.10891) (Yang et al., CVPR 2024)) trained on 1.5M labeled and 62M unlabeled images: a teacher trained on the labels annotates the unlabeled set, an idea the paper traces to Lee's pseudo-labels (ICMLW 2013), and a fresh student learns from the labels and those annotations. **The extra images alone gave no consistent gain.** In ViT-L tests on six datasets excluded from training, adding them left KITTI AbsRel (mean relative depth error, lower is better) at 0.085 and moved NYUv2 from 0.053 to 0.054. Strongly perturbing the student's copies, then aligning its features to a frozen DINOv2 encoder, brought them to 0.076 and 0.043. Against MiDaS v3.1, its KITTI AbsRel was 0.076 to 0.127, and it won on all six sets, even though MiDaS had trained on KITTI and NYUv2 images. Both models' scale and shift were aligned to ground truth first. That tests near-versus-far structure, which is what a control map needs, not distance in metres. The smallest size, ViT-S, lost to MiDaS on NYUv2 and DIODE. The paper gives no latency figures. It claims a better depth-conditioned ControlNet, but the evidence is a side-by-side figure with no metric.
 
 **Boxes are a lighter control than maps.** GLIGEN, from the same month as ControlNet, also freezes the base model and adds trainable layers that start as a no-op: a gated self-attention layer in each block, whose gate is initialized to zero ([arXiv:2301.07093](https://arxiv.org/abs/2301.07093) (Li et al., CVPR 2023)). Each grounding token pairs a phrase, encoded by the model's own CLIP text encoder, with a box, so objects can be placed by name, including categories missing from the box-training data. On COCO2017 layout-to-image it scored FID 21.04 and YOLO box AP 22.4, against 22.15 and 28.20 AP50 for TwFA and 13.40 for LAMA. Trained on COCO alone it placed LVIS objects at 6.4 AP, where real images score 25.2. The same timing knob appears here as *end control step*: GLIGEN applies the boxes for the first 20% of steps and then runs the plain model, which improved quality, because layout is set early. These numbers are on the latent diffusion model, not Stable Diffusion.
 

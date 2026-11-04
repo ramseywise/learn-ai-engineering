@@ -24,6 +24,7 @@ sources:
   - https://arxiv.org/abs/1207.4708
   - https://arxiv.org/abs/2302.08242
   - https://arxiv.org/abs/2402.14740
+  - https://arxiv.org/abs/2301.04104 (DreamerV3; Nature 2025)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -151,6 +152,20 @@ critic-free GRPO has largely taken over ([03](03-preference-optimization.md)).
 **Model-free vs. model-based:** Model-free agents learn purely from experience.
 Model-based agents learn the transition function P(s'|s,a) and use it for planning —
 more sample-efficient but harder to learn accurate models.
+
+DreamerV3 ([arXiv:2301.04104](https://arxiv.org/abs/2301.04104) (Hafner et al., Nature 2025; numbers from arXiv v2)) shows
+the current form of the idea; its references reach back to Dyna (Sutton, 1991). It learns a world
+model from replayed experience, then trains the actor on rollouts of about 16 predicted latent
+states and the critic on those plus replayed trajectories at lower weight. It acts by sampling the
+actor with no lookahead planning. **One hyperparameter table
+held across 8 benchmark domains and over 150 tasks.** On 57 Atari games at 200M steps it reached a
+gamer-normalized median of 830%, against 693% for MuZero and 180% for PPO. Model size and replay ratio
+still change per benchmark, so "fixed" doesn't mean nothing is set. It isn't best everywhere either:
+EfficientMuZero leads at Atari100k (gamer mean 190% vs 125%, under a different protocol), and it scores 0.01
+on BSuite exploration against 0.68 for Bootstrapped DQN. In Minecraft all 10 runs found a diamond
+within 100M steps with no human data, while no PPO, IMPALA or Rainbow run did. That is a claim about
+runs: only 0.4% of episodes at the 100M budget got a diamond, on a setup the authors modified and with a protocol they
+set themselves. Every domain is a simulator or a game, and none of its experiments involve LLMs.
 
 **On-policy vs. off-policy.** An *on-policy* method learns about the policy that is
 generating the data (SARSA, REINFORCE, A2C, PPO). An *off-policy* method learns about one

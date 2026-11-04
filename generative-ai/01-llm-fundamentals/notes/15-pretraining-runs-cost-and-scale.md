@@ -25,6 +25,7 @@ sources:
   - https://arxiv.org/abs/2211.05100
   - https://arxiv.org/abs/2204.02311
   - https://arxiv.org/abs/2201.11990
+  - https://arxiv.org/abs/2303.17564
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -118,6 +119,8 @@ Five years of tickets: 10,950,000,000 tokens = 0.55% of Llama 2's data
 
 The last line answers the question that opened the chapter. The ticket volume there is an assumption, chosen to be generous. Even so, a company's own text is a fraction of a percent of what a useful base model takes, so that data will not pretrain one. It might suit continued pretraining or fine-tuning, which is what [chapter 07](07-sft-and-instruction-tuning.md) covers.
 
+BloombergGPT is the documented exception, and it shows what "enough" takes. It pretrained a 50.6B model on a 709B-token corpus, 363B of it (51%) from FinPile, Bloomberg's curated finance archive of 2007–2022. That is about 33× the tickets above, but 298B of it is a web crawl and the text Bloomberg wrote itself is about 5B, so even this company did not pretrain on its own writing. The archive mixes public, purchased and private documents. The authors planned around a budget of 1.3M A100-hours, leaving about 30% for failures. Their own Chinchilla fits asked for about 1.1–1.2T tokens at that compute in one pass, so they planned as data-limited, while cautioning that the law may not transfer to their tokenizer. The chosen checkpoint came about 53 days in on 512 GPUs, at 569B tokens, about 80% of one pass, and training ended soon after because validation loss had stalled and the budget was nearly spent. That is roughly 650K GPU-hours to that checkpoint by multiplication; the paper reports neither the hours used nor a dollar cost, and failed runs came on top. At this chapter's $30 per 8×A100 server-hour, the whole budget would price at about $4.9M, an illustration and not a quote. **On Bloomberg's private aspect-sentiment tasks it averaged 62.47 F1, against 35.76 for the next model, OPT-66B.** The gap shrank on the public finance tasks (average 62.51 against BLOOM-176B's 54.35) and nearly vanished on equity social media (72.40 against 71.36). On MMLU it barely led BLOOM-176B (39.18 against 39.13) and trailed the 43.9 published for GPT-3, which the authors did not rerun ([arXiv:2303.17564](https://arxiv.org/abs/2303.17564) (Wu et al., 2023, preprint)). They credit the data first, the tokenizer second and the architecture third, but there is no public-only twin to test that order. The test text, private and public, likely overlaps the training data, though they note competitors may have seen some of it too. The shot counts were picked for the best average across models, and neither weights nor data are released. So this is what 363B of curated finance text and that budget bought, not evidence that your tickets would do the same.
+
 ---
 
 ## Pitfalls
@@ -152,7 +155,7 @@ The last line answers the question that opened the chapter. The ticket volume th
 | Question | Answer |
 |---|---|
 | What dominates the cost of a run? | Compute-hours times price, set by parameters, tokens and hardware utilisation. Pretraining is about 98% of the compute for InstructGPT |
-| Why not pretrain on your company's data? | It is several orders of magnitude too small. Continue pretraining or fine-tune instead |
+| Why not pretrain on your company's data? | It is usually orders of magnitude too small, so continue pretraining or fine-tune. BloombergGPT is the exception, and even it relied on 363B tokens of curated finance text, mostly a web crawl, and a 1.3M A100-hour budget, for a 50.6B model that still lacked data by its own Chinchilla fit |
 | What is the difference between FLOPs and FLOP/s? | FLOPs count the work and FLOP/s the speed. Hours are FLOPs divided by (FLOP/s × utilisation), and mixing them up can leave you an order of magnitude out |
 | Should you train at 20 tokens per parameter? | Only if training cost is all that matters. Llama went past it on purpose, because a smaller model on more tokens costs more to train and less to run |
 | What is the critical batch size? | The batch at which training takes twice the minimum steps and data. The gradient noise scale predicted it to within an order of magnitude, and it grows as the loss falls |
