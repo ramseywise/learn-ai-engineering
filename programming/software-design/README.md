@@ -1,6 +1,7 @@
 # Software design
 
 > How to keep code cheap to change: reading it, refactoring it, testing it, debugging it, and working on it with other people. The rest of the course teaches you to build systems; this track is about still being able to change them a year later.
+> Study deck: [software-design.pptx](slides/software-design.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [Reading order](#reading-order) · [Builds on and feeds into](#builds-on-and-feeds-into) · [Rules of thumb](#rules-of-thumb) · [Layout](#layout) · [Setup](#setup) · [Primary texts](#primary-texts)
 
 ---

@@ -1,0 +1,524 @@
+# Lecture deck for programming/backend-and-system-design. Covers notes/01-10.
+# Build: make slides PILLAR=programming/backend-and-system-design [PREVIEW=1]
+# Spec: .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Backend and System Design
+  subtitle: What happens to this request if the box is slow, down, or running twice?
+  tagline: |-
+    Contracts · Building blocks · Sums and shipping · Whole designs
+  reference: "Notes: programming/backend-and-system-design"
+  output: backend-and-system-design.pptx
+  notes: >-
+    The module's mental model is one question to ask of every box on a diagram: what happens to this request if the
+    box is slow, down, or running twice? Numbers in this deck come from code in the notes, and each states the setup it
+    holds under. Scale figures in the walkthroughs are hypothetical.
+
+parts:
+  - title: The contract and who may use it
+    summary: Retries · Pagination · Tokens · Object-level checks
+    notes: Two chapters. What an API promises when the network fails, and who is allowed to make the call.
+    slides:
+      - layout: statement
+        title: The fact behind a good API
+        kicker: The problem
+        statement: A client that times out does not know whether its request worked.
+        attribution: Most of what makes an API good follows from that one fact.
+        takeaway: Decide what a retry does to each endpoint before you ship it, because a timed-out client will send it again.
+        recall: Why does a client timeout shape API design?
+        source: notes/01-api-design.md
+        notes: >-
+          The request may have been lost on the way in, or the work may have finished and the reply been lost. The client
+          can't tell these apart. Idempotent writes, conditional updates, stable pagination and deadlines all answer this.
+
+      - layout: flow
+        title: What should a client do after a timeout?
+        kicker: Retry decision
+        steps:
+          - {label: Timed out, sub: outcome unknown}
+          - {label: "Idempotent?", sub: "yes: retry with backoff"}
+          - {label: "Key sent?", sub: "yes: retry, server replays"}
+          - {label: Neither, sub: read state before acting}
+        bullets:
+          - "`GET`, `PUT` and `DELETE` are idempotent. `POST` needs an idempotency key, and `PATCH` is safe only if its format is"
+          - "Most 4xx: don't resend unchanged. **408** and **429** are the exceptions; 429 and 503 can carry `Retry-After`"
+          - "Demo: a payment retried with one key returned the same `pay_1` and charged **1 row**. Same key, new body: **422**"
+        takeaway: Retry only what is idempotent or carries a key. Otherwise read the state before acting.
+        source: notes/01-api-design.md
+        notes: >-
+          The Idempotency-Key header is a convention, not part of RFC 9110. The atomic step is a unique constraint in the same
+          database transaction as the business write. Lost updates get the same treatment: ETag and If-Match, 412 on a stale
+          write, 428 when the precondition is missing.
+
+      - layout: table
+        title: Why does a cursor beat an offset on a deep page?
+        kicker: Measured
+        lead: "Time per page: 1M rows, covering index, in-memory SQLite, Apple M4 Pro, best of 20."
+        header: [Depth, Offset, Keyset]
+        widths: [3, 3, 3]
+        rows:
+          - ["0", 0.007 ms, 0.006 ms]
+          - ["10,000", 0.100 ms, 0.008 ms]
+          - ["100,000", 0.989 ms, 0.007 ms]
+          - ["900,000", "**8.332 ms**", "**0.007 ms**"]
+        highlight: [3]
+        takeaway: Offset cost grows with depth and repeats rows when new ones arrive. A keyset cursor does neither, but can't jump to page 50.
+        source: notes/01-api-design.md
+        notes: >-
+          The other half of the case is correctness: after a new post arrives, offset page 2 repeats post 7, and keyset moves on.
+          Keyset costs: no jump to page 50, a count is a separate query, and each sort order needs an index. Use the primary key
+          as a tie-breaker. The cursor is an encoding, not a secret.
+
+      - layout: code
+        title: What makes a JWT check strict?
+        kicker: PyJWT
+        lang: python
+        code: |-
+          OPTIONS = dict(
+              algorithms=["HS256"],
+              issuer="https://id.example",
+              audience="billing",
+              options={"require": ["exp", "iss", "aud"]})
+          jwt.decode(token, SECRET, **OPTIONS)
+
+          # alg none       : InvalidAlgorithmError
+          # wrong audience : InvalidAudienceError
+          # expired        : ExpiredSignatureError
+          # no exp         : MissingRequiredClaimError
+        bullets:
+          - "A JWT is **signed, not encrypted**"
+          - The strictness comes from these arguments, and leaving them out is the common mistake
+          - "Verifying needs no network, but a token **can't be revoked before `exp`** without a denylist"
+          - So keep access tokens short-lived, minutes, with a refresh token
+        takeaway: A JWT's header doesn't choose its own algorithm. Your configuration does, along with issuer, audience and required claims.
+        source: notes/02-auth-sessions-jwt-oauth.md
+        notes: >-
+          Three questions run through the chapter: authentication (who, 401), authorisation (what may they do, 403), delegation
+          (what they let this app do, an OAuth scope). A session is a random id with at least 64 bits of entropy, revoked by
+          deleting a row. A denylist brings back a lookup per request. For OAuth use the code flow with PKCE S256, exact
+          redirect_uri, a single-use code, state, and refresh rotation. An ID token's audience is the client; an access token's
+          is the API.
+
+      - layout: compare
+        title: Is a logged-in user allowed this object?
+        kicker: OWASP API Top 10, ranked first
+        lead: "Broken object level authorisation: the request is authenticated and the row belongs to someone else."
+        emphasis: right
+        left:
+          title: Authenticated, and it leaks
+          code: |-
+            db.execute("select * from invoice
+              where id = ?", (invoice_id,))
+          tag: "alice reads globex's: (2, 'globex', 900)"
+          accent: "D4621A"
+        right:
+          title: Scoped to the tenant
+          code: |-
+            db.execute("select * from invoice
+              where id = ? and tenant = ?",
+              (invoice_id, principal["tenant"]))
+          tag: "alice reads globex's: (404, None)"
+        takeaway: Check access on every object, not only every route, and deny by default. A valid token proves who is asking, not what they may touch.
+        source: notes/02-auth-sessions-jwt-oauth.md
+        notes: >-
+          Code is shortened from the note. The fixed version checks on every request, denies by default (an unknown role gets
+          403) and gives least privilege (a viewer can't delete). It returns 404 so it never says the row exists.
+
+  - title: The building blocks
+    summary: Caches · Stampedes · Queues · Balancing · Rate limits
+    notes: Each block is worth having once you design for how it fails.
+    slides:
+      - layout: statement
+        title: The dependency a cache creates
+        kicker: The problem
+        statement: A cache makes the system depend on a machine it was supposed to be able to lose.
+        attribution: "At a 90% hit rate the database sees 10% of reads. With the cache gone it sees 10x that load."
+        takeaway: Size the database for the day the cache is cold, because at a 90% hit rate losing the cache multiplies its load by 10.
+        recall: What happens to database load when a cache with a 90% hit rate is lost?
+        source: notes/03-caching-and-queues.md
+        notes: >-
+          The database sees the misses, so going from 90% to 95% hits halves its load. In a simulated LRU cache over 1M keys,
+          caching 1% of keys hits 58.4% under Zipf s=1 and 1.0% under uniform traffic: both workloads are invented. The
+          metastable failures paper gives the case of a 300 QPS database serving 3,000 QPS through a 90% cache.
+
+      - layout: cards
+        title: How do you stop a hot key's expiry hitting the database?
+        kicker: Stampedes
+        cards:
+          - title: Single flight
+            body: "100 clients miss one key: **100** database calls become **1**. Per process, so 50 app servers can still make 50."
+          - title: TTL jitter
+            body: "100,000 keys, 3,600 s TTL, warmed in a 60 s batch. Worst second: **1,802** reloads, or **324** with 10% jitter."
+          - title: Leases
+            accent: "0EA5C9"
+            body: "Memcache's fleet-wide token. Peak database queries, herd-prone keys, a week of misses: **17K/s** to **1.3K/s**."
+        takeaway: A TTL doesn't protect you when a popular key expires. Limit its fills to one at a time and jitter the expiry.
+        source: notes/03-caching-and-queues.md
+        notes: >-
+          Leases also solve stale fills: a reader misses and reads 1, a writer writes 2 and deletes, then the reader sets 1. The
+          delete invalidates the reader's token. In the paper the herds come from writes invalidating a hot key, not from expiry.
+          Leases are that system's design, not a default feature of a cache server.
+
+      - layout: flow
+        title: How do a database write and a message stay together?
+        kicker: The outbox
+        steps:
+          - {label: Handler, sub: one transaction}
+          - {label: Order + outbox, sub: rows commit together}
+          - {label: Relay, sub: polls or tails the log}
+          - {label: Broker, sub: at-least-once}
+          - {label: Consumer, sub: processed-ids table}
+        bullets:
+          - "A queue delivers the same message twice on an ordinary day: save position, then process, is at-most-once; the reverse is at-least-once"
+          - "1,000 messages worth 10, 5% of consumers die between work and ack: expected **10,000**, plain consumer **10,510**, idempotent **10,000**"
+        takeaway: Write the row and the outbox entry in one transaction, and make the consumer idempotent, because delivery is at-least-once.
+        source: notes/03-caching-and-queues.md
+        notes: >-
+          Writing to the database and then the broker can lose one of the two. Poison messages go to a dead-letter queue after
+          a few attempts (3 in the note's example), and you alert on its depth. Kafka's exactly-once holds only between topics
+          with read_committed.
+
+      - layout: table
+        title: Which balancing policy keeps the tail down?
+        kicker: Simulated p99
+        lead: "50 servers, Poisson arrivals, exponential service with mean 1, a queue per server. Invented workload."
+        header: [Policy, "90% load", "60%, two servers at 1/4 speed", "60%, counts one time unit stale"]
+        widths: [2.6, 1.8, 3.2, 3.2]
+        rows:
+          - [Round robin, 24.61, "**6,942.83**", 6.98]
+          - [Random, 43.91, "6,437.94", 11.72]
+          - [Two choices, 9.21, 7.79, 6.82]
+          - [Least loaded, 5.21, 5.15, "**41.93**"]
+        highlight: [2]
+        takeaway: Balance on live load, and prefer two random choices, because least loaded melts when its counts go stale. Hash only when a key must land in one place.
+        source: notes/04-load-balancing-and-rate-limiting.md
+        notes: >-
+          The 6,900 p99 measures how long the simulation ran: those queues grow without limit. A failing server that errors fast
+          looks idle, so count errors. A long-lived HTTP/2 or gRPC connection through an L4 balancer pins to one backend. For
+          hashing: adding an 11th node to 100,000 keys moves 91.0% under mod N and 9.2% on a ring with 1,000 virtual nodes (ideal
+          9.1%), where the busiest node carries 1.05x.
+
+      - layout: code
+        title: Why must a rate-limit check be one atomic step?
+        kicker: Measured race
+        lang: sql
+        code: |-
+          insert into counter values (?, ?, 1)
+          on conflict (k, w) do update
+            set n = n + 1 where n < ?
+          returning n
+
+          -- limit 100, 8 threads send 100 each,
+          -- one shared SQLite file
+          -- atomic statement accepted: 100
+          -- read-then-write accepted, five runs:
+          --   748, 722, 749, 693, 734
+        bullets:
+          - A read followed by a write lets every thread see room that another has just taken
+          - "Algorithms, limit 100 per 60 s, attacker at the window boundary: fixed window **200**, sliding log **100**, sliding counter **105**, token bucket **106**"
+          - "Store down: a coarse local limit for most APIs, fail closed on high-risk paths such as login"
+        takeaway: Check and spend in one atomic statement at the store. Read-then-write admitted about seven times a limit of 100 with 8 threads.
+        source: notes/04-load-balancing-and-rate-limiting.md
+        notes: >-
+          State needed: fixed window one counter, sliding log a timestamp per request, sliding counter two counters, token bucket
+          tokens and a time, GCRA one timestamp. A rate limit isn't overload protection. Don't key on client IP, and don't trust
+          X-Forwarded-For.
+
+  - title: Sums and shipping
+    summary: Saturation · Shutdown · Probes · Retry storms · Goodput
+    notes: Estimate the system, deploy it without dropping requests, and keep it up when load turns on you.
+    slides:
+      - layout: statement
+        title: The curve behind capacity planning
+        kicker: The problem
+        statement: At 95% utilisation requests wait about ten times as long as at 80%.
+        attribution: "M/M/c model, 16 workers, 10 ms mean service: 9.75 ms of wait against 0.95 ms."
+        takeaway: Spare capacity only looks wasteful until you compute the wait curve, so write the estimate as a program you can change.
+        recall: Why does running a server near saturation hurt?
+        source: notes/05-estimation-and-scaling.md
+        notes: >-
+          A made-up photo service: 10M daily users, 30 reads and 0.2 uploads each, peak factor 3, gives 10,417 reads/s at peak, and
+          4.0 TB of photos a day. When someone questions a number, change the input and rerun. Availability is the same habit:
+          twenty required dependencies at 99.9% give 98.019%, and two independent 99% copies give 99.990%, or 99.892% with 10%
+          shared failures.
+
+      - layout: table
+        title: How hot should you run a server pool?
+        kicker: Wait versus load
+        lead: "16 workers, 10 ms mean service, M/M/c formula. The wait is on top of the 10 ms of work."
+        header: [Load, Requests/s, Mean wait]
+        widths: [2, 3, 3]
+        rows:
+          - ["50%", "800", 0.01 ms]
+          - ["70%", "1,120", 0.27 ms]
+          - ["80%", "1,280", 0.95 ms]
+          - ["90%", "1,440", 3.70 ms]
+          - ["95%", "1,520", 9.75 ms]
+          - ["99%", "1,584", "**59.60 ms**"]
+        highlight: [5]
+        takeaway: Run servers well below saturation, commonly 50 to 70%, since wait grows sharply near the limit. Larger pools can run hotter.
+        source: notes/05-estimation-and-scaling.md
+        notes: >-
+          For a mean wait under 1 ms with 10 ms service: 100 req/s needs 3 workers at 33.3%, and 100,000 req/s needs 1,008 at
+          99.2%. Scaling steps stop helping at known points: with 5% serial work Amdahl gives 19.6x on 1,024 workers, and a shard key
+          carrying 5% of traffic limits 256 shards of 10,000 ops/s each to 186,182 ops/s, where an even spread would allow 2,560,000.
+
+      - layout: flow
+        title: How does a process stop without dropping requests?
+        kicker: Graceful shutdown
+        steps:
+          - {label: SIGTERM, sub: "default grace 30 s"}
+          - {label: Fail readiness, sub: requests still arrive}
+          - {label: Wait, sub: DRAIN_SECONDS}
+          - {label: Stop accepting, sub: finish in-flight work}
+          - {label: Exit 0, sub: before SIGKILL}
+        bullets:
+          - "One request running at SIGTERM: Python's default exits **-15** and the client sees `RemoteDisconnected`; graceful exits **0** with HTTP 200"
+          - "Shell-form `CMD`, 4 s stop grace: the shell may not forward the signal, so it is killed at the deadline with exit **137**"
+          - "Borg's notice arrived about **80%** of the time, so a crash has to be safe anyway"
+        takeaway: On SIGTERM fail readiness, wait for load balancers to notice, stop accepting, finish in-flight work, then exit before the grace period ends.
+        source: notes/06-containers-cicd-and-deployment.md
+        notes: >-
+          The Docker build and stop test ran on a local daemon. Kubernetes manifests were parsed and never applied to a cluster, so
+          probe, rollout and autoscaler behaviour here comes from the docs and the note's models. A rollout at 40 replicas with
+          default settings may run with 30 available. Rename a column with expand, migrate, contract, since old and new code overlap.
+
+      - layout: table
+        title: Which probe may check the database?
+        kicker: Kubernetes probes
+        lead: A probe is a question, and each failure has a different consequence.
+        header: [Probe, Question, On failure]
+        widths: [1.6, 3.4, 4.6]
+        rows:
+          - [Startup, "Has it finished starting?", "Keeps waiting, then restarts it"]
+          - [Liveness, "Is it unrecoverably stuck?", "**Restarts the container**"]
+          - [Readiness, "Should it get traffic now?", "Removes it from load balancing, no restart"]
+        highlight: [2]
+        takeaway: Only readiness may reflect a dependency. A slow database failing liveness restarts the whole fleet, and a restart could never have fixed it.
+        source: notes/06-containers-cicd-and-deployment.md
+        notes: >-
+          Liveness should depend on nothing external. Readiness may reflect warming up, draining or overload. In the note's
+          hypothetical canary model, 1,000 req/s and errors going from 0.1% to 2%, a 1% canary is spotted within the first
+          one-minute check at 12 errors. In its autoscaler model, a five-fold spike with 60 s pod startup takes two minutes to
+          carry, because saturated CPU hides demand.
+
+      - layout: code
+        title: How can a 10 second blip take a service down for good?
+        kicker: Bronson et al., HotOS 2021
+        lang: text
+        code: |-
+          280 QPS, one retry each, database limit 300 QPS,
+          10 s outage from t = 100. A one-second-step model.
+
+          t    offered  goodput
+          95       280      280
+          100      280        0
+          105      560        0
+          110      560        0
+          111      560        0
+          150      560        0
+        bullets:
+          - "**Metastable**: the trigger has gone, the database is healthy, and retries keep it over its limit"
+          - "Recovers: 280 QPS with no retries or a **5%** budget, or 150 QPS with one retry"
+          - "Stays down: 280 QPS with a **10%** budget, or 151 QPS with one retry"
+          - Restarting doesn't help. Cut the load, then bring it back slowly
+        takeaway: Fix the sustaining effect, not the trigger. Retries need a budget, at one layer, with jittered backoff, and recovery means cutting load.
+        source: notes/07-reliability-under-load.md
+        notes: >-
+          Retrying at every layer multiplies: 4 x 4 x 4 is 64 attempts. Deadlines must travel: pass on the remaining time, and refuse
+          work you can't finish. The tail matters because fan-out multiplies it: with 1% of calls slow, a request fanning out to 100
+          servers waits for a slow one 63.4% of the time. Hedging at p95 in the note's model cut p99 from 144 ms to 31 ms for 4.9%
+          more requests, for idempotent calls only.
+
+      - layout: table
+        title: Why can a server at full throughput be in total outage?
+        kicker: Goodput
+        lead: "Capacity 1,000/s, clients wait 1 s, 1,500/s offered for two minutes. A model."
+        header: [Queue policy, Throughput/s, Goodput/s, Shed/s]
+        widths: [3.6, 2, 2, 1.6]
+        rows:
+          - [Unbounded FIFO, "1,000", "**25**", "0"]
+          - ["FIFO, limit 500", "1,000", "1,000", "496"]
+          - ["FIFO, limit 5,000", "1,000", "**25**", "458"]
+          - ["LIFO, limit 5,000", "1,000", "1,000", "458"]
+        highlight: [1]
+        takeaway: "Measure from the client, and bound the queue: limit below capacity × deadline. Overload needs a queue with a limit, not a longer one."
+        source: notes/07-reliability-under-load.md
+        notes: >-
+          The unbounded queue reached 60,000, a minute's wait, so the server serves requests nobody is waiting for. Report percentiles
+          from histograms and never average them across hosts: one sick host of ten gave a mean of host p99s of 373 ms against a
+          true fleet p99 of 1,189 ms. Losing a region at 1,000 writes/s with 5 s of asynchronous lag puts 5,000 acknowledged writes
+          at risk.
+
+  - title: Whole designs
+    summary: Method · Fencing · Feeds · Log-structured stores · AI gateway
+    notes: Every requirement and scale figure in these walkthroughs is hypothetical. None describes a real company.
+    slides:
+      - layout: statement
+        title: Each design turns on a small fact
+        kicker: The problem
+        statement: Two gateways reading a counter, then both writing it, admitted 10 requests against a limit of 5, on every run.
+        attribution: A forced interleaving in the note's code. Under real concurrency it passes tests and fails in a burst.
+        takeaway: A diagram of boxes hides the fault. Find the one small fact the design turns on, and spend your time there.
+        recall: Why isn't a diagram of boxes enough for a system design?
+        source: notes/08-design-walkthroughs-rate-limiter-notifications-scheduler.md
+        notes: >-
+          The same race as chapter 4, at the scale of a design. For the rate limiter the hard part is this race, for notifications
+          it is fairness between kinds of traffic, and for the scheduler it is two workers believing they own one job.
+
+      - layout: steps
+        title: What order does a design discussion follow?
+        kicker: A method to repeat
+        steps:
+          - {title: Requirements, text: "Who calls it, what must it do, and what's out of scope?"}
+          - {title: Estimate, text: "A short program. What does the arithmetic rule out?"}
+          - {title: API and data model, text: "The contract, and what must be stored."}
+          - {title: Sketch, text: "The boxes, and how one request goes through them."}
+          - {title: The hard part, text: "Usually one issue dominates. Spend your time there.", accent: "D4621A"}
+          - {title: Failure, text: "Take each component away, and say what users see."}
+        takeaway: Name the requirement that drives the design before you draw anything, then take each box away and say what users see.
+        source: notes/08-design-walkthroughs-rate-limiter-notifications-scheduler.md
+        notes: >-
+          Arithmetic picks the design. In the notification walkthrough, one hypothetical campaign of 26 million sends takes 22 minutes
+          at 20,000 sends/s, and 180,556 transactional messages would queue behind it on a shared FIFO, so the first conclusion is
+          separate queues per priority. In the scheduler walkthrough, a million daily jobs at midnight take 33 minutes to launch at
+          500/s, and hashing them into the day gives 12.9/s at the busiest minute.
+
+      - layout: code
+        title: What stops a paused worker overwriting its successor?
+        kicker: Lease and fencing token
+        lang: text
+        code: |-
+          A claims:              ('nightly-report', 100.0, 1)
+          B claims at once:      None
+          A heartbeats at 120:   True
+          B claims after expiry: ('nightly-report', 100.0, 2)
+          A wakes and finishes:  False
+          B finishes:            True
+          effects: [('nightly-report', 2, 'report from B')]
+        bullets:
+          - "**Lease**: lets someone else take over when heartbeats stop"
+          - "**Token**: grows on each claim, and stale ones are refused"
+          - "Primary key `(job, due)`: two firings make one run"
+          - "A provider that doesn't check tokens still sends A's email, so that job must also be idempotent"
+        takeaway: A lease lets someone else take over, and a fencing token stops the old owner's late write. It protects only the systems that compare it.
+        source: notes/08-design-walkthroughs-rate-limiter-notifications-scheduler.md
+        notes: >-
+          A job that always crashes its worker stops after three attempts and goes to failed: that's a poison job. Skip or double-run
+          depends on the job, and the SRE chapter's default is to prefer skipping a launch, since a double send may be impossible to undo.
+
+      - layout: table
+        title: When should a feed do its fan-out work?
+        kicker: Hypothetical model
+        lead: "1M users, invented skewed follows, 0.5 posts and 20 reads a user a day, 10,000 writes/s."
+        header: [Strategy, Timeline writes/day, Lookups on read/day, Worst post]
+        widths: [3, 2.4, 2.4, 3]
+        rows:
+          - [Fan-out on write, 18.5M, 20M, "**500,000 writes, 50 s**"]
+          - [Fan-out on read, 0.5M, 738M, one write]
+          - ["Hybrid, pull the 7 biggest", 17.7M, 50M, "under 100,000 writes"]
+        highlight: [2]
+        takeaway: Choose the hybrid threshold to bound the worst burst, not to minimise a total. Timelines hold IDs, and page by keyset cursor.
+        source: notes/09-design-walkthroughs-kv-store-and-feed.md
+        notes: >-
+          Pulling the 7 biggest accounts removes the 500,000-write bursts for 2.5x more lookups, while total writes fall only 4%.
+          Moving the threshold down keeps trading writes for reads at a poor rate. A timeline is a cache that can be rebuilt from posts
+          and follows. IDs only, so an edit or delete doesn't have to touch every copy.
+
+      - layout: flow
+        title: How does a log-structured store survive a crash?
+        kicker: One node of a KV store
+        steps:
+          - {label: Write, sub: put or tombstone}
+          - {label: Log, sub: fsync before the ack}
+          - {label: Memtable, sub: sorted, in memory}
+          - {label: Sorted tables, sub: immutable}
+          - {label: Compaction, sub: drops old values}
+        bullets:
+          - "Replay after a crash: `k10`, only in memory and the log, survived. The torn `k11` was never acknowledged, so losing it is correct"
+          - "Reads pay for fast writes: bloom filters skipped **2,845 of 3,000** table visits for absent keys, over 3 tables"
+          - "A delete is a write: only a major compaction can drop the tombstone"
+        takeaway: Log with fsync before acknowledging, and replay the log since the last flush. A torn last record was never acknowledged, so losing it is correct.
+        source: notes/09-design-walkthroughs-kv-store-and-feed.md
+        notes: >-
+          The hypothetical store needs 22 nodes by operations and 6 by disk, so it's a traffic problem. Across nodes: with N = 3, R = W = 2
+          overlap and tolerate one node down. With replication deliberately stalled and 1% of nodes down, R = W = 1 read stale 66.40% of
+          the time, and W = 3 was unavailable 2.830% of the time. Waiting for 2 of 3 modelled replicas gave p99 8.1 ms, and all 3 gave
+          139.3 ms. An overlap isn't full consistency: sloppy quorums break it. Vector clocks detect concurrent writes; last write wins
+          drops one silently.
+
+      - layout: cards
+        title: What does a model gateway do differently?
+        kicker: Stub providers, no model called
+        cards:
+          - title: Before the first token
+            body: Fall back to the next provider. Nothing has reached the client, so only the wait shows.
+          - title: After the first token
+            accent: "D4621A"
+            body: End with an explicit error. A second provider would stitch two answers together.
+          - title: On disconnect
+            body: "Cancel upstream, or abandoned requests keep generating tokens somebody pays for."
+          - title: Over budget
+            accent: "0EA5C9"
+            body: "Reserve prompt plus `max_tokens`, then settle. With a 100,000-token limit, counting after overspent **17%**. Reserving stayed under."
+        takeaway: Limit tokens rather than requests, and fall back only before the first token. A hypothetical mix had its costliest request at 67x the median.
+        source: notes/10-ai-system-reference-architecture.md
+        notes: >-
+          The unit of work has changed from a request to a token. The price of reservation is that near the limit it refuses some requests
+          that would have fitted, which is a reason to set max_tokens sensibly. A semantic cache returns what was stored for a similar
+          question, and across tenants that's a leak. The model isn't an authorised caller, so a deterministic policy sits between what it
+          proposes and what runs. A 200 can carry a wrong answer.
+
+      - layout: code
+        title: Why checkpoint a long agent run?
+        kicker: Mean of 20,000 simulated runs
+        lang: text
+        code: |-
+          step failure rate 2%. Model calls needed
+
+          steps  P(no failure)  restart  checkpoint
+              5            90%      5.3         5.1
+             20            67%     24.9        20.4
+             50            36%     87.5        51.0
+            100            13%    324.7       102.0
+        bullets:
+          - Restart cost grows exponentially with steps, and per-step checkpoints keep it close to linear
+          - "A worker can die holding a run: use a lease and a fencing token"
+          - "A resumed step may run twice: tools that write need an idempotency key"
+          - "State and side effect change together: the outbox"
+        takeaway: Save state after each step, because restart cost grows exponentially with run length. The backend tools carry over, and a resumed tool call needs an idempotency key.
+        source: notes/10-ai-system-reference-architecture.md
+        notes: >-
+          This is where the earlier chapters come back: leases and fencing from the scheduler, idempotency keys from the API chapter, the
+          outbox from the queues chapter. Every failed model call may also be billed, which changes the sums on the retry budget.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - title: Retries
+            body: A retry is a write. Ask what happens if every request arrives twice. Retries need a budget.
+          - title: Identity
+            body: Your configuration picks the JWT algorithm. Check access on every object, not only every route.
+          - title: Caches and queues
+            body: Limit a hot key's fills to one at a time. Queues are at-least-once, so make consumers idempotent.
+          - title: Capacity
+            body: Write the estimate as a program. Balance on live load. Run servers well below saturation.
+          - title: Operations
+            body: A failed dependency fails readiness only. Deadlines travel, queues have limits, histograms get summed.
+          - title: Designs
+            accent: "D4621A"
+            body: Name the requirement that drives the design first. For AI, limit tokens and fall back before the first token.
+
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Do a design from a blank page**: pick a walkthrough from chapters 8 and 9, then compare"
+          - "**Run the lab**: `bash practice/check.sh` runs the lab's tests and every code block in the notes"
+          - "**Serving at scale**: `ai-engineering/07-inference-engineering`, for balancing and autoscaling with tokens as the unit"
+          - "**RAG in production**: `generative-ai/02-rag-retrieval`, for caching, latency and tenancy in retrieval"
+          - "**Execution boundaries**: `ai-engineering/03-harness-engineering`, for sandboxes, budgets and permission"
+          - "**Cost and latency dashboards**: `generative-ai/06-observability`, for percentiles and alerts in dollars"

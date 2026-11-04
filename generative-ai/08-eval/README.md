@@ -125,6 +125,8 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 
 Note 14 has its own script, [practice/judge_checks_and_critiques.py](practice/judge_checks_and_critiques.py). It tests the procedure on GA 06's rule judges and measures no real model. Its cue and edit tests need your own model. Run it with `cd practice && uv run judge_checks_and_critiques.py`.
 
+Note 15 and the multi-turn section of note 06 share [practice/conversation_scoring_lab.py](practice/conversation_scoring_lab.py): κ and weighted κ on skewed labels, abstaining when a question was never asked, shrunken per-vertical calibration, whole-conversation against mean-of-turns scoring, and a paired per-vertical regression gate. Its transcripts are generated and its scorers are stubs, so it measures no real model. Run it with `cd practice && uv run conversation_scoring_lab.py`.
+
 ## Layout
 
 ```

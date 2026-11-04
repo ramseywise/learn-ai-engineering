@@ -50,6 +50,7 @@ parts:
           On our synthetic year, half the file is one unused text column. Naming two columns reads 33 MB instead of 103 MB, before any partitioning at all.
       - layout: code
         title: Sorting lets min and max statistics skip row groups
+        recall: "Why does sorted data skip row groups when unsorted data skips none?"
         lang: python
         code: |-
           for f in ['unsorted', 'sorted']:
@@ -69,6 +70,7 @@ parts:
           In an unsorted file each row group spans nearly every zone, so its range rules nothing out. Sort, and each group holds a narrow slice. Partitioning does the same by directory, and that is why the estimator can see it in advance.
       - layout: flow
         title: A groupBy pays for the shuffle, so aggregate first
+        recall: "What does partial aggregation shrink in a groupBy?"
         steps:
           - label: Partial sum
             sub: per executor
@@ -119,6 +121,7 @@ parts:
           The chapter builds this in sixty lines of pyarrow, and it gives you time travel, conflict detection and crash safety almost by accident. Then we find the same thing in Delta's log on disk.
       - layout: code
         title: Delta's log on disk after a delete and a merge
+        recall: "What limits Delta time travel, and what kind of decision does that make retention?"
         lang: text
         code: |-
           00..00.json  commitInfo, protocol, metaData, add
@@ -139,6 +142,7 @@ parts:
           This is real output from deltalake 1.6.6 on a laptop. Copy-on-write means old files stay until cleanup. Forcing retention to zero makes the log list a version whose files are gone.
       - layout: code
         title: Two valid commits can still break a rule
+        recall: "How do you keep a rule that spans rows safe under concurrent commits?"
         lang: text
         code: |-
           ann read version 0, saw 2 on duty, committed version 1
@@ -154,6 +158,7 @@ parts:
           This is write skew from the transactions chapter of the foundations pillar, in a table format. Both jobs read a true snapshot, the rule held for each, and the result is nobody on duty. The chapter maps each log idea to its database name, with pointers into Designing Data-Intensive Applications chapters 7 and 9.
       - layout: table
         title: Three formats, one idea, different structures
+        recall: "What do the open table formats share, and how do you choose between them?"
         header: ["", "Delta Lake", "Iceberg", "Hudi"]
         widths: [2, 3, 3, 3]
         bold_first: true
@@ -167,6 +172,7 @@ parts:
           These projects copy each other every release. Statements in the 2020 and 2021 papers about Hudi's single writer describe those releases, so do not repeat them as current fact.
       - layout: compare
         title: Copy-on-write pays at write, merge-on-read pays at read
+        recall: "What should you know before choosing copy-on-write or merge-on-read, and why?"
         left:
           title: Copy-on-write
           bullets:
@@ -200,6 +206,7 @@ parts:
           The paper's staleness survey, 86 percent of analysts on out-of-date data, was sponsored by an ETL vendor and quoted by a lakehouse vendor. Note that, then look at the mechanism.
       - layout: code
         title: One copy gives three engines, and one trap
+        recall: "What do open files give every engine, and what is the trap?"
         lang: text
         code: |-
           delta-rs : 2000000
@@ -238,6 +245,7 @@ parts:
           Timings are on one laptop, so read only the ratio. The paper's TPC-DS figure, 3,302 seconds for Delta Engine against 2,996 to 37,283 for four anonymised warehouses, is vendor-run. It shows open formats can be fast enough, not that they are faster for you.
       - layout: flow
         title: Medallion layers organise fixes, not detection
+        recall: "What do medallion layers tell you, and what do they not?"
         steps:
           - label: Bronze
             sub: 5 rows, raw
@@ -253,6 +261,7 @@ parts:
           This is the convention lakehouse teams use. Keep raw data so you can reprocess, and let each layer depend only on the one before. But a stage silently trusts the one before it unless a test checks, which is the next pillar.
       - layout: table
         title: Choose by workload, not by camp
+        recall: "What is the real decision behind warehouse versus lakehouse?"
         header: ["Your situation", "Lean", "Why"]
         widths: [5, 2, 5]
         rows:
@@ -300,6 +309,7 @@ parts:
           Plain Python simulation, so you can see each failure. The practice consumer uses enable_auto_commit true, which commits on a timer and can give either failure. A DuckDB version commits totals and offset in one transaction.
       - layout: cards
         title: Exactly-once holds inside a boundary
+        recall: "What does exactly-once mean, and where does it stop?"
         cards:
           - title: Idempotent producer
             body: A producer ID and sequence number let the broker reject a retry.
@@ -317,6 +327,7 @@ parts:
           Kleppmann's framing: effectively-once would be the better name. Ask of any such claim, from where to where?
       - layout: flow
         title: A watermark decides when a window closes
+        recall: "What is a watermark, and what does late data still need?"
         steps:
           - label: Highest event time seen
             sub: from the stream
@@ -334,6 +345,7 @@ parts:
           Delivery says whether a record arrives. It does not say when. By processing time, the first minute in our simulation shows 53 rides against a true 60.
       - layout: table
         title: Allowed lateness trades loss against delay
+        recall: "What does a watermark trade off?"
         header: ["Allowed lateness", "Rides dropped of 600", "Lost"]
         widths: [4, 4, 2]
         highlight: [2]
@@ -365,6 +377,7 @@ parts:
           The ratios come from compressed Parquet, and BigQuery bills logical bytes. So direction and scale carry over, and the exact factor needs a dry run on your table.
       - layout: cards
         title: Four meters, and only two usually matter
+        recall: "Where do you start on warehouse cost, and why not storage?"
         cards:
           - title: Bytes
             body: "$6.25 per TiB on demand, first TiB free each month."
@@ -382,6 +395,7 @@ parts:
           Listing used: logical active storage at us-central1 and Premium Tier internet to North America, read on the first of November 2026. A hundred Enterprise slots for eight hours a day cost the same as 231 TiB on demand.
       - layout: code
         title: Make cost a test that fails at review
+        recall: "What does a byte limit in CI change about finding expensive queries?"
         lang: text
         code: |-
           def dry_run(columns, month=None, limit_usd=1.00):
@@ -400,6 +414,7 @@ parts:
           A two terabyte table scaled by the measured ratio. The first query is stopped before merge with the fix on the screen.
       - layout: flow
         title: Fix the top twenty in this order
+        recall: "Why tune the query before buying capacity?"
         steps:
           - label: Query
             sub: columns and filters

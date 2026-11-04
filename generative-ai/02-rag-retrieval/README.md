@@ -48,7 +48,7 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 | 4 | [Vector databases and ANN](notes/04-vector-databases-and-ann.md) | KNN vs. ANN, NSW and HNSW, the Weaviate API: collections, `near_text`, `bm25`, `hybrid`, rerank |
 | 5 | [Chunking, query parsing and reranking](notes/05-chunking-query-parsing-and-reranking.md) | Chunking strategies and overlap, query rewriting, GLiNER, HyDE, bi- vs. cross-encoder vs. ColBERT, over-retrieve and rerank |
 | 6 | [Generation for RAG](notes/06-generation-for-rag.md) | Sampling (temperature, top-p), choosing an LLM, grounded prompts, structured output, hallucinations and citations, RAGAS, agentic routing, RAG vs. fine-tuning |
-| 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, security, multimodal RAG |
+| 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, security, text that changes by legal effect, multimodal RAG |
 | 8 | [Agentic RAG: the PRINCE stack](notes/08-agentic-rag-prince.md) | Intent clarification, ingestion, the query-time pipeline, Text-to-SQL, domain sub-agents, NER metadata repair, evaluation |
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
 | 10 | [Semantic cache](notes/10-semantic-cache.md) | A three-tier cache for support agents: offline index, runtime module, routing, eval and merge criteria |
@@ -94,6 +94,7 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 | Trace from day one; evaluate components and the system | [07](notes/07-rag-in-production.md) |
 | Cut prompt tokens before changing models | [07](notes/07-rag-in-production.md) |
 | Filter by user permission at retrieval time. Prompt instructions are not access control | [07](notes/07-rag-in-production.md) |
+| Put the as-of date in the query for text that changes by legal effect. Filter on effective dates, not publication dates | [07](notes/07-rag-in-production.md) |
 | Ask a clarifying question before retrieving on an ambiguous query | [08](notes/08-agentic-rag-prince.md) |
 | Counting, filtering and aggregation are Text-to-SQL jobs, not vector search | [01](notes/01-rag-pipeline.md), [08](notes/08-agentic-rag-prince.md) |
 | On a small eval set, test a difference with a paired bootstrap before believing it | [11](notes/11-retrieval-improvements.md) |
@@ -108,6 +109,7 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 ```bash
 cd generative-ai/02-rag-retrieval/practice
 uv run --with numpy python ragkit.py        # the BM25, dense and hybrid scoreboard
+uv run versioned_rules_lab.py               # as-of retrieval over a generated, fictional rulebook
 ```
 
 ## Layout
@@ -116,7 +118,7 @@ uv run --with numpy python ragkit.py        # the BM25, dense and hybrid scorebo
 README.md      this file: what, why, reading order, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes; source quality
 notes/         01–12; figures and code inline
-practice/      ragkit.py (Tallybook corpus and retrieval kit), check_blocks.py
+practice/      ragkit.py (Tallybook corpus and retrieval kit), versioned_rules_lab.py, check_blocks.py
 slides/        deck.yaml and the built deck
 sources/       paper PDFs, routed book chapters (<book-slug>/chNN-*.pdf)
   images/      every figure the notes use (<author>-<slug>-…)
@@ -150,13 +152,14 @@ Everything else: [references.md](references.md).
 - Rows and chapter maps are in [references.md](references.md).
 
 ### Coursework and labs
-None are copied. Every lab is linked upstream, with its label in the note's `## Labs` table.
+None are copied. Every upstream lab is linked, with its label in the note's `## Labs` table. The versioned rules lab is this repo's own.
 
 | Lab | Where | Label |
 |---|---|---|
 | DLAI M1–M5 ungraded labs and Assignments 1–5 | [upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG); notes 02–07 | needs API key (Together.ai via the Coursera proxy); M3–M5 also need embedded Weaviate + a local inference server; M5 needs Phoenix |
 | BM25 from scratch | [01 § BM25 from scratch](notes/01-rag-pipeline.md#bm25-from-scratch); engine at [Li 3-5](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) | runs offline |
 | Retrieved few-shot examples with ChromaDB | [01 § Text-to-SQL](notes/01-rag-pipeline.md#text-to-sql-is-a-retrieval-strategy); DAIR [`pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb) | legacy |
+| Versioned rules: as-of retrieval, cross-references, obligation records, change detection, citation checks | [practice/versioned_rules_lab.py](practice/versioned_rules_lab.py); [07 § Text that changes by legal effect](notes/07-rag-in-production.md#text-that-changes-by-legal-effect) | runs offline |
 | Li ch. 3 labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3) | needs API key |
 
 ### Readings

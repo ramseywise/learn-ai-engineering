@@ -26,6 +26,7 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - 13-case-study-support-agent.md
+  - ../practice/conversation_scoring_lab.py
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -316,7 +317,7 @@ A single cooperative simulated user flatters the agent. In GAUGE (Bodhwani et al
 
 **τ²-bench** (the successor) adds a **dual-control environment**: the simulated user can also call tools on the shared state. The agent says "switch to airplane mode", and the user's action really changes the environment. This fits tech support, where the user has to do part of the work, and tests whether the agent notices state changes it didn't make. It also tightened success conditions ("only an *excellent* speed rating counts") and generates task parameters fresh each run.
 
-Grade multi-turn runs at both levels: per turn (grounded, on-policy) and per conversation (goal reached, turns used, escalation correct).
+Grade multi-turn runs at both levels: per turn (grounded, on-policy) and per conversation (goal reached, turns used, escalation correct). Don't build the second number by averaging the first. A mean of turns can't see order, so a disqualifying last answer gets outvoted, a misunderstanding the agent repaired still drags the score, small talk inflates it, and two answers that contradict each other each look fine alone. Taking the minimum fixes the first case and breaks the repaired one. The [conversation scoring lab](../practice/conversation_scoring_lab.py) plants these in generated conversations with stub scorers: at a threshold tuned on ordinary rows, the mean gets 85% of ordinary conversations right and 0% to 2% of the planted ones. Its whole-conversation stub follows the labellers' rule by construction, so that comparison shows what a mean can't express and doesn't measure any real judge.
 
 Albada's example release gate for a support agent puts both kinds of number in the gate: at least 95% tool recall on refund and cancellation scenarios, and promotion blocked on any regression in multi-turn tests such as address changes (*Building Applications with AI Agents*, ch. 9). The 95% is an illustration, not a measured threshold. Set yours from the cost of a missed refund ([10](10-evals-in-ci.md#the-regression-gate)).
 
@@ -389,6 +390,14 @@ An agent eval environment has five parts. Each one can be wrong on its own:
    <details><summary>Answer</summary>
 
    Here half the suite is flaky, which points at non-determinism: ambiguous instructions, unstable tools or shared state, so read the failing trials against the passing ones. With the 70/30 split the agent has a capability gap on a set of tasks, so check those tasks for faults, then add tools or instructions for them.
+
+   </details>
+
+4. Run section 4 of the [conversation scoring lab](../practice/conversation_scoring_lab.py) (`cd practice && uv run conversation_scoring_lab.py`). On which pattern does the minimum of turn scores beat the mean by most, and on which does neither work? Why can no threshold on a per-turn score fix the second?
+
+   <details><summary>Answer</summary>
+
+   On `padded` the minimum is right 98% of the time and the mean 0%, and on `late_disqualifier` it's 83% against 1%. On `recovery` and `contradiction` neither works: the mean is at 2% and 0%, and the minimum at 0% on both. A contradiction lives between two turns, and a repair needs knowing which answer came last, so a function that sees one turn at a time has nothing to threshold. These rates come from the lab's seed and generated data.
 
    </details>
 

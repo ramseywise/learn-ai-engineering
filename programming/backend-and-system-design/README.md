@@ -2,6 +2,7 @@
 
 > How a service holds up once it has real users: API contracts, identity, caches and queues, balancing and limits, capacity sums, deployment, and behaviour under load, followed by five full design walkthroughs and a reference architecture for an AI system.
 >
+> Study deck: [backend-and-system-design.pptx](slides/backend-and-system-design.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [What this is](#what-this-is) · [Reading order](#reading-order) · [Builds on and feeds into](#builds-on-and-feeds-into) · [Rules of thumb](#rules-of-thumb) · [Layout](#layout) · [Setup](#setup) · [Primary texts](#primary-texts)
 
 ---

@@ -1,0 +1,516 @@
+# Software design track: lecture deck and study deck (flashcards). Covers notes/01-07.
+# Build:  make slides PILLAR=programming/software-design [PREVIEW=1] [STRICT=1] [PDF=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Software design
+  subtitle: Keeping code cheap to change
+  tagline: |-
+    Readable code · Refactoring · Principles · Patterns
+    Testing · Debugging · Git · Review · Design docs
+  reference: "Notes: programming/software-design"
+  output: software-design.pptx
+  notes: >-
+    The lecture deck for the software design track. Most of the cost of software comes after the first version.
+    Three questions run through it: what will have to change, what must a person hold in their head to change it,
+    and how would you know if the change broke something.
+
+parts:
+  - title: Writing code that can change
+    summary: Smells · Refactoring · Information hiding · SOLID · Patterns
+    notes: Readable code and sound design answer the first two questions. Each abstraction comes with what it costs.
+    slides:
+      - layout: statement
+        title: What are you optimising for?
+        kicker: The problem
+        statement: Most of what makes code expensive is what the reader has to keep in their head.
+        attribution: Ousterhout and Martin disagree about nearly everything else, and agree on this goal.
+        takeaway: A rule is good when, in this place, it reduces what the next reader must know.
+        source: notes/01-readable-code-and-smells.md
+        notes: >-
+          The disagreement is instructive. On function length, Martin wants very short functions, Ousterhout decomposes
+          when the interface is much simpler than the implementation, and Google has no hard limit but says to think past
+          about 40 lines. The note's working test, which is judgement and not data: extract when the new name lets a reader
+          skip the body. On comments, comment what the code can't say, not what it already says.
+
+      - layout: steps
+        title: What do you do when you spot a code smell?
+        kicker: Smells
+        lead: "Sjøberg et al. (2013), six developers on four Java systems: **none of 12 smells** was significantly tied to more effort, after adjusting for file size and changes."
+        steps:
+          - {title: Spot a smell, text: "A surface sign that usually means a deeper problem. Fowler: some long methods are just fine"}
+          - {title: "Changing or misread?", text: "If this code is neither changing nor being misread, leave it"}
+          - {title: "A real problem?", text: "If nothing real lies underneath, leave it"}
+          - {title: "Characterize, then refactor", text: "The only path that ends in a change", accent: "D4621A"}
+        takeaway: A smell is a reason to look, never a verdict. Refactor a file because you keep having to change it, not because it smells.
+        source: notes/01-readable-code-and-smells.md
+        notes: >-
+          That's one study with few developers, in Java, measuring effort and not defects or comprehension. Files with at
+          least one smell were on average twice as long as files with none, so adjusting for size may absorb part of what a
+          smell signals. It justifies a priority, not a claim that smells never matter. A complexity score is the same kind
+          of pointer: McCabe counts branches, so it misses coupling and overrates flat dispatch.
+
+      - layout: flow
+        title: What does one step of refactoring look like?
+        kicker: The loop
+        steps:
+          - {label: Tests green, sub: where every step starts}
+          - {label: One small move, sub: structure only}
+          - {label: Run tests, sub: "red: revert, don't debug"}
+          - {label: Commit, sub: then the next move}
+        loop: green, so take the next small move
+        bullets:
+          - "**Two hats**: refactoring keeps the tests green, a feature adds tests and may break some. Wear one at a time"
+          - "**Ask what they mean**: of 328 Microsoft engineers surveyed (Kim et al.), 46% did not mention preserving behaviour"
+        takeaway: Refactoring changes structure and not observable behaviour, in small steps that keep the system working. On red, revert and take a smaller step.
+        source: notes/02-refactoring.md
+        notes: >-
+          A step that took two minutes loses two minutes when you revert. Debugging one that went wrong can take much longer.
+          Fowler's two everyday modes are opportunistic and preparatory refactoring: make the change easy, then make the easy
+          change. If you find a bug while refactoring, write it down and finish the step.
+
+      - layout: code
+        title: How do you pin code you don't understand yet?
+        kicker: Characterization tests
+        lang: python
+        code: |-
+          def cost(model, prompt_tokens):
+              if model == "atlas-large":
+                  return prompt_tokens / 1000 * 0.015
+              return prompt_tokens / 1000 * 0.001
+
+          # Step 1: a test named x, expecting nothing much.
+          def test_x():
+              assert cost("mystery-model", 1000) is None
+
+          # The failure tells us the real value: 0.001.
+          # Step 2: paste it, and name what you learned.
+          def test_unknown_model_is_charged_a_default_price():
+              assert cost("mystery-model", 1000) == 0.001
+        bullets:
+          - "**Feathers**: with legacy code you often don't know what it should do, so find out what it does"
+          - "**A bug?** The context decides. If you don't know yet, leave the test in place"
+          - "**Check the net**: in lab step 2, one price off by 10x failed **16** tests"
+        takeaway: A characterization test records what the code does now, not what it should do. Start with a test named `x`, then paste in the actual value.
+        source: notes/02-refactoring.md
+        notes: >-
+          A golden master is the bulk version: the lab records output, return value and written file across 16 flag
+          combinations. The lab's 22 tests reach 100% statement and branch coverage of the original, and coverage only tells
+          you the lines ran, which is why you put a deliberate error in to see whether the tests notice.
+
+      - layout: table
+        title: Did the refactor make the next feature's diff smaller?
+        kicker: The lab, an n of 1
+        lead: "Feature diff: **+24/-13** on the original, **+26/-14** on the refactored code. One small module, one author who knew the feature in advance."
+        header: [Version, Lines, Worst McCabe, What changed]
+        widths: [3, 1, 1.5, 4.5]
+        rows:
+          - ["`step0_original`", "95", "23", "The start"]
+          - ["`step1_split_phases`", "94", "6", "Extract, split phase, render to one string"]
+          - ["`step2_types_and_table`", "120", "6", "Dataclasses, price table"]
+          - ["`step4_add_feature`", "132", "6", "Cached tokens, `by_tenant`"]
+          - ["`feature_on_original`", "106", "26", "Same feature, no refactor"]
+        highlight: [3, 4]
+        takeaway: "No: the diff came out about the same. The gains were a worst McCabe of 6 against 26, pricing testable alone, and small bug fixes later."
+        source: notes/02-refactoring.md
+        notes: >-
+          This is a worked example and not evidence. The refactored end state is 26 lines longer than the hack. Step 3 changed
+          behaviour on its own: calls went from 58 to 60 and the total from 0.7201 to 0.7483, a billing report moving 3.9%,
+          which is why it belongs in its own reviewed step. Whether it pays depends on how many more changes are coming.
+
+      - layout: cards
+        title: How do you change something other people depend on?
+        kicker: Interfaces with callers
+        cards:
+          - {title: Parallel change, body: "An interface. Expand with the new beside the old, migrate callers, contract by removing the old. Measure old-path use."}
+          - {title: Branch by abstraction, body: "A large component, on mainline. Abstract over it, move clients, build the replacement behind it, remove the old."}
+          - {title: Strangler fig, body: "A whole system. Build the new around the old, divert one flow at a time through seams, accept transitional architecture."}
+        takeaway: You can't change callers you don't control in one commit. Add the new beside the old, move callers gradually, then remove the old.
+        source: notes/02-refactoring.md
+        notes: >-
+          The cost is running two paths for a while, and a contract step that never happens leaves you with both forever, so
+          set a date. A shadow retriever is the LLM-stack version of branch by abstraction: serve from old, also query new and
+          record disagreement. A disagreement isn't necessarily a defect, and the shadow call costs an extra call per query.
+
+      - layout: compare
+        title: What should a module keep secret?
+        kicker: Parnas, 1972
+        lead: "Ousterhout's test: a **deep** module puts a simple interface over a lot of functionality. A shallow one's interface is about as complicated as its body."
+        left:
+          title: Flowchart decomposition
+          bullets:
+            - Each major processing step is a module
+            - "Every step knows the store is a list of `(id, list[float])`"
+            - "Moving to a flat `array` changes **three functions**"
+        right:
+          title: Information hiding
+          bullets:
+            - Each module hides a design decision from the others
+            - "`VectorStore` keeps its layout; callers know `add` and `nearest`"
+            - "The same move changes **one class**"
+        takeaway: Give each module a design decision to hide and an interface that reveals little. Every promise, even an accidental one, is something you can't change later.
+        source: notes/03-design-principles.md
+        notes: >-
+          Parnas notes that this decomposition, implemented naively as subroutine calls, will often be less efficient, so hiding
+          has a cost. Martin's working definition: raise cohesion between things that change for the same reasons, and lower
+          coupling between things that change for different reasons. Depth is a judgement and not a measure, and it matters most
+          for a public interface.
+
+      - layout: compare
+        title: Is duplication always bad?
+        kicker: DRY and the wrong abstraction
+        emphasis: none
+        left:
+          title: Duplicated knowledge
+          bullets:
+            - "Beck: everything said once and only once"
+            - The same fact stated twice
+            - "The lab's pricing branches repeat one formula for one reason, so a table is right"
+          tag: Remove it
+        right:
+          title: Coincidental similarity
+          bullets:
+            - "Metz: \"duplication is far cheaper than the wrong abstraction\""
+            - "Warning sign: parameters and conditional paths through shared code"
+            - "Way out: re-introduce the duplication, then look again"
+          tag: Leave it until the reasons to change agree
+        takeaway: No. Remove the same fact stated twice, but leave code that changes for different reasons alone, even if it looks alike.
+        source: notes/03-design-principles.md
+        notes: >-
+          Abramov tells a similar story against himself: his abstraction traded the ability to change requirements for less
+          duplication. YAGNI sits close by: it covers presumptive features, not making code easier to change. Beck's four rules,
+          in Fowler's wording and order: passes the tests, reveals intention, no duplication, fewest elements.
+
+      - layout: table
+        title: What does each SOLID principle ask of you?
+        kicker: SOLID and its critics
+        header: [Principle, It says, In Python, Watch out]
+        widths: [1.2, 3, 3, 3.8]
+        rows:
+          - ["S", "A module answers to one group of people", "Split along what changes separately", "North: a new field touches content and format together"]
+          - ["O", "Extend without modifying", "A registry or a function argument", "Miller: an unused extension point gets in your way"]
+          - ["L", "Subtypes keep the behaviour callers rely on", "Applies to duck types; use contract tests", "`mypy` passes a broken implementation"]
+          - ["I", "Keep interfaces small", "`Protocol` lets the caller declare its need", "Martin: dynamic languages are affected \"much less\""]
+          - ["D", "Depend in the direction of abstraction", "Pass the thing in", "One more thing to read, plus a wiring place"]
+        takeaway: "S: one group of people. O: extend without editing. L: keep the behaviour. I: ask only for what you use. D: pass it in. Each is a question about what change it makes harder."
+        source: notes/03-design-principles.md
+        notes: >-
+          SRP is often misquoted as "a class should do one thing"; Martin says it is about people. For LSP, a deduping embedder
+          type-checks, and `zip` silently truncates, so vectors attach to the wrong chunks: a shared contract test plus
+          `zip(..., strict=True)` catches it. North offers properties to move towards rather than rules you pass or fail, and
+          Martin's reply is that "just be simple" gives no further guidance. "This violates SRP" with no change scenario is a
+          review weapon, not an argument.
+
+      - layout: compare
+        title: How much does polymorphism really cost?
+        kicker: Muratori, 2023
+        emphasis: none
+        left:
+          title: "C++ (Muratori)"
+          bullets:
+            - "Virtual calls: about **35** cycles per shape"
+            - "Switch: **24** cycles (1.5x)"
+            - "Table: **3.0 to 3.5** cycles (10x)"
+          tag: Shapes with an area function
+        right:
+          title: "CPython 3.14.7 (the note's re-run)"
+          bullets:
+            - "Virtual calls: **42.8** ns per shape"
+            - "Branching: **24.6** ns (1.75x)"
+            - "Table: **22.9** ns (1.87x)"
+          tag: "200,000 shapes, best of 7 runs"
+        takeaway: Same direction, very different size. A table beat virtual calls about 10x in C++ and about 2x in this CPython run, so measure in your own context.
+        source: notes/03-design-principles.md
+        notes: >-
+          Muratori says none of these are hard-core measurements, because the differences are so large, and his gap grows to
+          nearly 15x with one more property. In an interpreter every path pays for bytecode dispatch and boxed floats. For an
+          LLM system dominated by waiting for a model, a few hundred nanoseconds of dispatch won't show on any profile. For an
+          inner loop over a hundred million rows, it may be your whole budget.
+
+      - layout: table
+        title: Which patterns does Python make smaller?
+        kicker: Patterns worth knowing
+        lead: "Norvig (1996): **16 of the 23** Gang of Four patterns are simpler in Lisp or Dylan, for at least some uses. Python shares most of the features he lists."
+        header: ["You'd reach for", First try in Python, The full form earns its keep when]
+        widths: [2.4, 3.4, 4.8]
+        rows:
+          - ["Strategy class", "A function argument", "It holds configuration and several related methods"]
+          - ["Abstract factory", "Pass a callable or the class", "Many related objects must vary together"]
+          - ["Singleton", "A module-level object", "Rarely"]
+          - ["Template method", "A function with hooks as arguments", "It's a framework you ship for subclassing"]
+          - ["Iterator", "A generator", "The iterator needs extra methods"]
+          - ["Decorator class", "A `@wraps` function, if wrapping a call", "You must wrap an object you didn't create"]
+        takeaway: Ask what varies, then start with a function, a table or a module-level object. Move to the class form only when it earns its keep.
+        source: notes/04-patterns-worth-knowing.md
+        notes: >-
+          Norvig's claim is about those languages. Rhodes goes through the patterns in Python itself and gives pattern-by-pattern
+          verdicts. Costs: a gateway loses vendor features such as streaming, an observer hides control flow, a repository can hide
+          the query plan, and mutable globals couple tests. Per call, each layer of wrapping cost tens of nanoseconds in CPython on
+          the note's machine, for example 15.4 ns for a plain function and 52.8 ns through one `@wraps` decorator. The bigger cost
+          is what it asks of the reader: one more place to look.
+
+      - layout: code
+        title: How do you reject illegal state transitions?
+        kicker: State machine
+        lang: python
+        code: |-
+          ALLOWED = {
+              Run.QUEUED: {Run.CALLING_MODEL, Run.FAILED},
+              Run.CALLING_MODEL: {
+                  Run.RUNNING_TOOL, Run.DONE, Run.FAILED},
+              Run.RUNNING_TOOL: {Run.CALLING_MODEL, Run.FAILED},
+              Run.DONE: set(),
+              Run.FAILED: set(),
+          }
+
+          def to(self, new: Run) -> None:
+              if new not in ALLOWED[self.state]:
+                  raise ValueError(
+                      f"{self.state.name} -> {new.name} is not allowed")
+              self.state = new
+        bullets:
+          - "**Booleans** like `is_running` and `is_done` allow combinations that mean nothing"
+          - "**The table is the design**: you can read it, draw it and test it exhaustively"
+          - "**The run**: `DONE -> RUNNING_TOOL is not allowed`"
+        takeaway: Use an enum and a transition table. A move through `to()` that isn't in the table is rejected, and you can test the whole table.
+        source: notes/04-patterns-worth-knowing.md
+        notes: >-
+          It's rigid by design, since a new state means
+          touching the table, and for two states and one transition a boolean is fine. Nothing enforces the table against direct
+          assignment to `run.state`. Durable agents need more: persisted state and resumption.
+
+  - title: Knowing that it works
+    summary: Test doubles · Coverage and mutation · Testing around a model · Debugging · Profiling
+    notes: Tests and debugging tools answer the third question. How would you know if the change broke something?
+    slides:
+      - layout: statement
+        title: What is a test suite for?
+        kicker: The problem
+        statement: "A test suite is an investment with running costs: time to write, time to run, and time to fix when a harmless change breaks it."
+        attribution: Its value is that you can change code without fear.
+        takeaway: A test is worth keeping if it fails when behaviour breaks and stays quiet when it doesn't. Test behaviours through the public API.
+        source: notes/05-testing-strategy.md
+        notes: >-
+          Fowler's test of sufficiency: bugs rarely escape and you're rarely hesitant to change code. Size is the resources a test may
+          use and scope is how much code it validates; size predicts speed and determinism. SWE's very rough guideline is 80% narrow,
+          15% medium and 5% end-to-end by test count, and Fowler says the pyramid depends on broad tests being slow and brittle.
+
+      - layout: steps
+        title: Which test double should you reach for first?
+        kicker: Test doubles
+        axis: SWE's order of preference
+        lead: "In the note's runs, `MagicMock` passed a broken call, and an interaction test failed on a correct refactor that a state test passed."
+        steps:
+          - {title: Real implementation, text: "If it's fast, deterministic and has simple dependencies"}
+          - {title: Fake, text: "A working lightweight implementation, such as an in-memory database"}
+          - {title: Stub, text: "Returns values you specify"}
+          - {title: Interaction test, text: "Checks how a function was called. Only when necessary", accent: "D4621A"}
+        takeaway: Real object first, then a fake, then a stub, and interaction checks only when the call itself is the behaviour.
+        source: notes/05-testing-strategy.md
+        notes: >-
+          SWE learned this the hard way after years of mocking-framework tests that were easy to write, costly to maintain, and rarely
+          found bugs. Treat it as a judgement with a track record, not a settled result. `create_autospec` at least copies the signature.
+          Fakes need tests too: a contract test runs the same checks against the real implementation and the fake. Flakes: at a 0.1%
+          per-test false-failure rate and 1,000 tests, assuming independence, about two runs in three go red for nothing.
+
+      - layout: code
+        title: Why can 100% coverage prove almost nothing?
+        kicker: Coverage versus mutation
+        lang: python
+        code: |-
+          def budget_status(spent, budget, warn_ratio=0.8):
+              if spent >= budget:
+                  return "stop"
+              if spent >= budget * warn_ratio:
+                  return "warn"
+              return "ok"
+
+          # Three suites, 3 operator swaps tried on the code:
+          # no_asserts  coverage 100.0%  killed 0/3
+          # typical     coverage 100.0%  killed 1/3
+          # boundaries  coverage 100.0%  killed 3/3
+        bullets:
+          - "**Mutation test**: if this line were wrong, would any test notice?"
+          - "**The lab**: 22 tests kill **37 of 37** operator swaps. Without the 16 golden cases, **13 of 37**"
+          - "**Google**: mutates only changed, covered lines. Suppression rules raised productive mutants from **15% to 89%**"
+        takeaway: Coverage tells you what ran, not what was checked. A surviving mutant asks whether a behaviour is unspecified, so run it on the code you're changing.
+        source: notes/05-testing-strategy.md
+        notes: >-
+          SWE: an 80% bar soon acts as a ceiling rather than a floor. Fowler expects a thoughtful team in the upper 80s or 90s, and finds
+          100% suspicious. The lab's tool doesn't touch constants. Petrovic et al. warn that a test written to kill an unproductive
+          mutant can be a change-detector that makes the suite worse. Run a new measuring tool twice before believing it.
+
+      - layout: table
+        title: How do you test code around a model?
+        kicker: Testing LLM systems
+        lead: "An LLM call is a slow, costly, nondeterministic dependency, so separate what's deterministic from what isn't."
+        header: [Question, Test, Runs]
+        widths: [4, 4.2, 2.4]
+        rows:
+          - ["Does our logic handle each reply shape, including garbage?", "Small tests with a scripted model", "Every commit"]
+          - ["Do we parse what the vendor really sends?", "Gateway tests against recorded responses", "Every commit"]
+          - ["Is the credential, model name and wiring right?", "A few real calls with weak assertions", "Before deploy, or nightly"]
+          - ["Is the output good enough?", "Evals with graders, on a dataset", "On prompt or model change"]
+        takeaway: Script the model for your logic, record vendor replies for parsing, keep a few live smoke tests, and use evals for quality.
+        source: notes/05-testing-strategy.md
+        notes: >-
+          The scripted stand-in produces the failures a real model only gives you occasionally, and fails loudly when it runs out of
+          replies. Don't assert exact strings from a live model: that test either flakes or pins wording you don't care about. Don't
+          treat an eval's pass rate as a unit test either: 0.91 against 0.92 can be noise.
+
+      - layout: flow
+        title: How do you debug without guessing?
+        kicker: The troubleshooting loop
+        steps:
+          - {label: Triage, sub: stop the bleeding}
+          - {label: Examine, sub: "logs, traces, metrics"}
+          - {label: Hypothesis, sub: "what would cause this?"}
+          - {label: Test it, sub: "wrong: new hypothesis"}
+          - {label: Fix, sub: with a test}
+        bullets:
+          - "**Write the prediction down** before running anything, then look. Ask what changed first"
+          - "**A hung process**: dump every thread's stack with `py-spy dump` or `faulthandler`. Restarting destroys the evidence"
+        takeaway: Stabilise first, then write down a prediction, test one thing at a time, and ask what changed. A failed prediction still tells you something.
+        source: notes/06-debugging-and-profiling.md
+        notes: >-
+          From Google's SRE book, the hypothetico-deductive method. `python -m pdb` drops into post-mortem at the point of failure with
+          every frame alive; `up` shows the caller's frame. In the note's deadlock, `faulthandler.dump_traceback_later` shows both threads
+          stopped on the inner `with`. Order for a misbehaving service: stabilise, read what exists, look at stacks, profile if slow, track
+          memory if it grows, attach a debugger last. On macOS py-spy and `pdb -p` needed root, and the note didn't run them with it.
+
+      - layout: cards
+        title: Which profiler answers which question?
+        kicker: Profiling
+        cards:
+          - {title: "`cProfile`", body: "Hooks every call. `tottime` is the function alone and `cumtime` includes callees. For a local, repeatable run."}
+          - {title: "Where it misleads", accent: "D4621A", body: "Cost is per call. Two functions taking 0.087 s and 0.082 s read **0.382 s** and **0.093 s** under it."}
+          - {title: "Sampling", body: "Looks at stacks at intervals, so overhead doesn't depend on call count. `py-spy` reads a live process from outside."}
+          - {title: "Flame graph", body: "Width is share of samples and y is stack depth. The x axis is alphabetical, not time. Look for wide plateaus."}
+        takeaway: Profile before you optimise. Use `cProfile` for call counts on a local run and a sampler for live services. An on-CPU profile won't show time spent waiting.
+        source: notes/06-debugging-and-profiling.md
+        notes: >-
+          The misleading run: CPython 3.14.7 on macOS, 3.6 million small calls against 7 million loop iterations, and the whole workload ran
+          2.1x slower under cProfile. In the note's toy LLM request, `call_model` took 60.7% of wall-clock samples, and a rerun gave 70.0%,
+          because the sleep is fixed and the CPU work isn't. A profiler counting only on-CPU stacks wouldn't show it at all.
+
+  - title: Working with other people
+    summary: "Git's object model · Bisect · Review · Design docs and ADRs"
+    notes: The team practices keep the answers from getting lost.
+    slides:
+      - layout: statement
+        title: Where does the reasoning behind code end up?
+        kicker: The problem
+        statement: "Code gets read, changed and argued about for longer than it takes to write, mostly through three records: the history, the review and the design document."
+        attribution: Each one costs time and buys something you can name.
+        takeaway: The three records are the history, the review and the design document. Each one costs time and buys something you can name.
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: A commit message has to say what the diff can't, the reason and what you decided against. A linter can police the format, but it can't tell whether the why is there.
+
+      - layout: flow
+        title: What does Git actually store?
+        kicker: The object model
+        steps:
+          - {label: Branch, sub: a small file holding a hash}
+          - {label: Commit, sub: "one tree, parents, author, message"}
+          - {label: Tree, sub: "names, modes and hashes"}
+          - {label: Blob, sub: "a file's bytes, no name"}
+        bullets:
+          - "**The hash covers the parent**, so a rebased commit is a new commit even with an identical patch"
+          - "**Reflog**: finds commits a `reset --hard` dropped. It's local, entries expire (90 days, 30 if unreachable), and uncommitted edits are gone"
+        takeaway: Blobs, trees and commits, addressed by content hash. History is immutable and what moves is pointers, so a bad reset can be undone from the reflog.
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: >-
+          An unchanged file keeps its blob hash, so it costs nothing new: the note's second commit added three objects to the first four.
+          Don't rebase commits that exist outside your repository and that people may have based work on. `git range-diff` compares two
+          versions of a series between review rounds. Commit often, even as `wip`, because a commit is what makes work recoverable.
+
+      - layout: code
+        title: How do you find the commit that broke something?
+        kicker: git bisect
+        lang: bash
+        code: |-
+          git bisect start HEAD <first-good-commit>
+          git bisect run python /outside/the/repo/check.py
+
+          # exit 0: good    exit 125: can't test, skip
+          # exit 1 to 127, except 125: bad
+
+          # The note's run, 64 commits, one that won't parse:
+          # tested: 6, skipped: 1
+          # first bad commit: Tidy the token estimate
+        bullets:
+          - "**A linear walk** could take up to 63 checks on that history"
+          - "**It needs testable commits**: broken intermediates become a run of skips, and giant commits leave 2,000 suspect lines"
+          - "**`git log -S`** is cheaper when you can name the suspect text"
+        takeaway: "`git bisect run` binary-searches history with a check script: 0 is good, 125 skips, any other code up to 127 is bad. It needs commits that can each be tested."
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: >-
+          Any exit code above 127 aborts the search. Keep the check outside the repository, so bisect's checkouts can't change it. A flaky
+          check sends the search down the wrong half, so make it reliable first or repeat it inside the script. A worktree gives you a second
+          checkout of the same repository, and one per agent or task keeps half-done edits apart.
+
+      - layout: bullets
+        title: What is a code reviewer for?
+        kicker: Code review
+        bullets:
+          - "**Standard**: approve once it definitely improves overall code health, even if it isn't perfect. Mark the rest `Nit:`"
+          - "**Order**: design first, then functionality, complexity and tests. Leave style to the tools"
+          - "**Understanding**: SWE at Google says correctness isn't the main benefit, so a reviewer who can't follow the code has a finding"
+          - "**Speed**: one business day at most for a first response"
+          - "**Size**: one self-contained change. Google: 100 lines usually reasonable, 1000 usually too large. SWE: about 200. Neither is a measured threshold"
+        takeaway: Approve once a change improves code health, read for design first, and answer within a business day. Keep refactoring separate from features.
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: >-
+          A reviewer can verify "no behaviour changed" or "this behaviour changed", and struggles when both come at once. The cost of small
+          changes is that the whole is harder to understand, so link a design doc or tracking issue. Comment on the code, not the person, and
+          give the reason. DORA's 2016 and 2017 data associates higher delivery speed with three or fewer active branches and merging at least
+          daily: association across teams, not proof.
+
+      - layout: table
+        title: Which record do you write, and when?
+        kicker: Design docs and ADRs
+        lead: "Test for a design doc: is the solution ambiguous? With no trade-offs or alternatives, it's an implementation manual, and you should write the program."
+        header: [Record, Answers, Size, Written]
+        widths: [2.6, 3.4, 1.8, 3.2]
+        rows:
+          - ["Commit message", "Why this change?", "A paragraph", "With every commit"]
+          - ["Change description", "What should a reviewer know?", "A few paragraphs", "With every review"]
+          - ["ADR", "Why is the system like this?", "1 to 2 pages", "At a significant decision"]
+          - ["Design doc", "Which way should we build this?", "1 to 20 pages", "Before an ambiguous project"]
+        takeaway: Write a design doc when the solution is ambiguous, and an ADR at a significant decision, with its bad consequences and what would change your mind.
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: >-
+          The sections people skip earn the doc: non-goals, which are things that could reasonably be goals and which you're choosing not to pursue,
+          and alternatives considered. Ubl says 1 to 3 pages is fine for an incremental change and roughly 10 to 20 is the sweet spot for a larger
+          project. An ADR is a short numbered file with context, decision, status and all consequences, and a reversed one stays, marked superseded.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        recall: When should you refactor, and what do you do first?
+        cards:
+          - {title: Refactor, body: "When you're about to change the code. Pin behaviour first, and never do both in one step."}
+          - {title: Smells, body: "A smell is a reason to look and a complexity score a reason to read. Neither is a verdict."}
+          - {title: Abstraction, body: "Duplication is cheaper than the wrong abstraction. A table or a function before a class hierarchy."}
+          - {title: Tests, body: "Test behaviour through public interfaces. Coverage tells you what ran, and only a failing test what's checked."}
+          - {title: Debugging, body: "Write your prediction down before the experiment. Profile before you optimise."}
+          - {title: Teamwork, body: "Small enough to review, each commit good enough to bisect. A design doc when the answer is ambiguous."}
+        takeaway: Refactor when you're about to change the code, and pin behaviour with tests before you change structure.
+        source: notes/02-refactoring.md
+        notes: These condense the rules of thumb in the track's README, one card per chapter group.
+
+      - layout: bullets
+        title: What should you do next?
+        kicker: Where next
+        bullets:
+          - "**The lab**: take a real smelly module through refactoring under tests, and make every step one commit that passes"
+          - "**Evals in CI**: evals take over where deterministic tests stop"
+          - "**Tracing and observability**: production evidence for the debugging method"
+          - "**Durable execution**: keeping state explicit on a real agent runtime"
+          - "**Primary texts**: Software Engineering at Google, Google's review practices, Fowler, the Ousterhout and Martin debate, Rhodes, Pro Git"
+        takeaway: Do the lab next, a real smelly module refactored under tests, with every step one commit that passes.
+        source: notes/07-git-code-review-and-design-docs.md
+        notes: "The lab is at programming/software-design/practice/README.md. Do it after chapter 2, and come back after chapter 5 for the mutation test."

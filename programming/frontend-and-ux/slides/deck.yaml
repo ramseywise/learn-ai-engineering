@@ -1,0 +1,452 @@
+# Frontend and UX track: study deck (flashcards). Covers notes/01-05.
+# Build:  make slides PILLAR=programming/frontend-and-ux [PREVIEW=1] [PDF=1] [STRICT=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Frontend and UX
+  subtitle: What state is it in, can people tell, and what can they do?
+  tagline: |-
+    The browser · React state · Accessibility · Usability
+    Streaming · Citations · Uncertainty · Handoff
+  reference: "Notes: programming/frontend-and-ux"
+  output: frontend-and-ux.pptx
+  notes: >-
+    The study deck for the frontend track. Every slide is a flashcard: the title is the question and
+    the takeaway is the answer. Chapters 1 and 2 are how you express the state, 3 and 4 are how it
+    reaches people, and 5 applies all of it to an answer that arrives a word at a time and might be false.
+
+parts:
+  - title: The platform
+    summary: Semantic HTML · The browser's trees · The cascade · State as data · Effects
+    slides:
+      - layout: statement
+        title: What do you owe when you choose a div?
+        kicker: The problem
+        statement: Choose the right element and you get keyboard behaviour, form submission and a screen reader's signposts with no code. Choose a `div` and you owe all of it by hand.
+        attribution: A `div` with a click handler works with a mouse, and nobody on your team notices.
+        takeaway: A `<button>` brings focus, Space and Enter, and a role. A `div` brings none. Inside a form, set `type="button"` on anything that isn't a submit.
+        source: notes/01-html-css-and-the-dom.md
+        notes: >-
+          In the note's measured block a div can't take focus by Tab and a button can, and a button with no type
+          has type submit, so a Cancel button with no type sends the form. A label for names the field and
+          focuses it when clicked. innerHTML is the DOM call to distrust: it parses a string as markup,
+          while textContent writes the same string as characters.
+
+      - layout: flow
+        title: What does a browser build from your page?
+        kicker: The rendering pipeline
+        steps:
+          - {label: DOM and CSSOM, sub: parsed from HTML and CSS}
+          - {label: Style, sub: computes styles}
+          - {label: Layout, sub: lays out boxes}
+          - {label: Paint, sub: paints them}
+          - {label: Composite, sub: combines painted layers}
+        bullets:
+          - "**A third tree**: the accessibility tree is what a screen reader reads instead of your pixels"
+          - "**The DOM is live**: inspect it in DevTools, because \"View source\" shows only what arrived"
+          - "**Geometry costs more than colour**: MDN's main-thread budget for smooth animation is **16.67 ms**, about 60 frames a second"
+        takeaway: A DOM from the HTML, a CSSOM from the CSS and an accessibility tree, then style, layout, paint and composite.
+        source: notes/01-html-css-and-the-dom.md
+        notes: A plain script makes the parser stop and wait. defer runs after parsing finishes, and async runs as soon as it arrives. Streamed text changes geometry too, and this track did not measure what that costs.
+
+      - layout: steps
+        title: Which CSS rule wins?
+        kicker: The cascade
+        steps:
+          - {title: Origin and importance, text: "A page's rules beat the browser's defaults, and `!important` beats normal declarations"}
+          - {title: Cascade layer, text: "A named group declared with `@layer`, unrelated to painted layers"}
+          - {title: Specificity, text: "IDs, then classes, then types, left to right: `#only` beats `.a.b.c.d.e.f`"}
+          - {title: Source order, text: "Breaks the ties that remain"}
+        takeaway: Origin and importance, then layer, specificity and source order. One ID beats any number of classes, so keep selectors flat.
+        source: notes/01-html-css-and-the-dom.md
+        notes: "Find out why the wrong rule won with the Computed panel in DevTools. Box size is a separate question: with padding 20 and border 5, width 200 measures 250 on screen under content-box and 200 under border-box. Flexbox for one direction, grid when rows and columns both matter."
+
+      - layout: flow
+        title: What happens when React state changes?
+        kicker: The screen as a function of state
+        steps:
+          - {label: Event, sub: "click, key, network"}
+          - {label: Set state, sub: requests a render}
+          - {label: Call component, sub: React calls your function}
+          - {label: New description, sub: of the screen}
+          - {label: Update DOM, sub: only what differs}
+        loop: the next event starts it again
+        bullets:
+          - "**Data flows one way**: a child that needs a change calls a function its parent passed down"
+          - "**`key` is identity**: use a stable id, because an index goes wrong when rows are inserted or reordered"
+        takeaway: An event sets state, React calls your function for a new description, and it changes only what differs in the DOM.
+        source: notes/02-react-and-state.md
+        notes: By hand, every transition must fix up the page, and React replaces that with a function from state to elements. A local variable is created fresh on each call and changing one doesn't cause a render. useState keeps a value between calls. Everything in the braces of TSX is ordinary code, which is why map and if do the work.
+
+      - layout: compare
+        title: Why do three setter calls add only 1?
+        kicker: State as a snapshot
+        emphasis: right
+        left:
+          title: From the snapshot
+          code: |-
+            setSnapshot(snapshot + 1);
+            setSnapshot(snapshot + 1);
+            setSnapshot(snapshot + 1);
+          bullets:
+            - "`snapshot` is a constant inside one render"
+            - "Each call says \"set to 0 + 1\""
+          tag: "Shows 1"
+        right:
+          title: With an updater function
+          code: |-
+            setQueued((n) => n + 1);
+            setQueued((n) => n + 1);
+            setQueued((n) => n + 1);
+          bullets:
+            - "Each call says \"add one\""
+            - "React queues them and applies them in order"
+          tag: "Shows 3"
+        takeaway: State is constant within a render, and the setter only schedules the next one. When the next value depends on the last, use the function form.
+        source: notes/02-react-and-state.md
+        notes: Streaming text is exactly this case, setText(t => t + delta) or a reducer. It's also why setX(1); console.log(x) prints the old value.
+
+      - layout: code
+        title: How do you make impossible states unrepresentable?
+        kicker: Modelling state
+        lang: ts
+        code: |-
+          type Live =
+            | { status: "idle" }
+            | { status: "streaming"; id: string; text: string }
+            | { status: "complete"; id: string; text: string }
+            | { status: "error"; id: string; text: string; retryable: boolean };
+
+          function reducer(live: Live, a: Action): Live {
+            if (a.type === "submit") return { status: "streaming", id: a.id, text: "" };
+            // A late event from an abandoned request must not touch the current answer.
+            if (live.status !== "streaming" || live.id !== a.id) return live;
+            switch (a.type) {
+              case "delta": return { ...live, text: live.text + a.text };
+              case "done": return { ...live, status: "complete" };
+              case "fail": return { ...live, status: "error", retryable: a.retryable };
+            }
+          }
+        takeaway: Replace booleans with one status union, and keep transitions in a pure reducer. It tests with no browser and can drop events from old requests.
+        source: notes/02-react-and-state.md
+        notes: "Duplicated data is the same bug: if it never changes, arrives from a parent or can be computed, it isn't state. isSending and isSent permit both true, which means nothing. The lab's chat has nine answer states. Keep state in the closest common parent of everything that reads it."
+
+      - layout: table
+        title: When is an Effect the wrong tool?
+        kicker: You might not need an Effect
+        header: [You want, Do this, Not]
+        widths: [3.2, 2.8, 3.4]
+        rows:
+          - [A value computed from state, Compute it while rendering, An Effect that sets more state]
+          - [Something to happen on a click, Do it in the handler, An Effect watching a flag]
+          - [To POST a form, Do it in the handler, "An Effect, which runs on display and on remount"]
+          - [To reset a subtree when an id changes, "Give it a new `key`", An Effect that clears each field]
+          - [To keep something external in step, An Effect with cleanup, Nothing else fits]
+        takeaway: Compute derived values while rendering and act on clicks in handlers. An Effect with cleanup is only for keeping something outside React in step.
+        source: notes/02-react-and-state.md
+        notes: "Strict Mode mounts each component twice in development so a missing cleanup shows up immediately. Out-of-order responses are a late write without a version check: results for \"hell\" can overwrite those for \"hello\". Ignore stale ones with a flag or request id, and abort them too."
+
+  - title: People
+    summary: What axe can't see · What WCAG asks · A manual pass · Waiting · Errors · Five users
+    slides:
+      - layout: statement
+        title: Does a clean axe run mean a page is accessible?
+        kicker: The problem
+        statement: In this track's lab, axe looks at a deliberately bad chat and reports four rules, none about its click-only Send control, its word-by-word live region or the answer text it blanks on failure.
+        attribution: Engineers reach for automated checkers first, and whole categories of fault are invisible to them.
+        takeaway: No. A clean axe run is a floor. It says nothing about whether the page is usable, so don't write "accessible" in a release note on the strength of it.
+        source: notes/03-accessibility.md
+        notes: A second lab page gets zero violations with a role="button" that ignores the keyboard, a link reading "Delete my account" that opens a help page, and alt="image". Axe checks what's mechanically decidable.
+
+      - layout: table
+        title: Which planted faults did axe 4.14 report?
+        kicker: The lab's naive chat
+        lead: "Axe's README claims **57%** of WCAG issues on average: the vendor's own figure, with no method given."
+        header: [Planted fault, "Axe reported it?"]
+        widths: [5.4, 4]
+        rows:
+          - ["Grey text at 2.85:1", "Yes, `color-contrast`"]
+          - ["No `<main>`, no `<h1>`", "Yes, three rules"]
+          - ["`<textarea>` with only a placeholder", "No: the fallback gives it a name"]
+          - ["Send is a `<div>` with `onClick`", "No: nothing marks it as a control"]
+          - ["Answer in a live region, changing 25 times", "No"]
+          - ["Answer blanked when the stream fails", "No"]
+          - ["Clean end of stream treated as success", "No"]
+          - ["Model output rendered as HTML", "No"]
+        highlight: [0, 1]
+        takeaway: In the lab, axe reported only the contrast and page-structure faults. Whether a control works or a name is true needs someone to try it.
+        source: notes/03-accessibility.md
+        notes: "The automatic checks are still worth running. WebAIM's 2026 automatic scan of a million home pages found detectable WCAG failures on 95.9% of them: low contrast on 83.9% of pages, missing alt text on 53.1%, missing form labels on 51%."
+
+      - layout: cards
+        title: What does WCAG 2.2 ask of an application interface?
+        kicker: The criteria that catch most faults
+        cards:
+          - {title: "2.1.1 Keyboard (A)", body: "Everything works from a keyboard."}
+          - {title: "4.1.2 Name, Role, Value (A)", body: "Assistive technology can tell what a control is, what it's called and its state."}
+          - {title: "1.4.1 Use of Color (A)", body: "Colour isn't the only signal. A red border needs words as well."}
+          - {title: "1.4.3 Contrast (AA)", body: "4.5:1 for text, 3:1 for large text. `#999999` on white is 2.85:1 and fails."}
+          - {title: "2.4.7 Focus Visible (AA)", body: "You can see where the keyboard is. Replace `outline: none` with a `:focus-visible` style."}
+          - {title: "4.1.3 Status Messages (AA)", body: "A change like \"18 results\" reaches assistive technology without moving focus."}
+        takeaway: Keyboard access, names and roles, more than colour, 4.5:1 text contrast, visible focus, and status changes announced without moving focus.
+        source: notes/03-accessibility.md
+        notes: "AA is the usual default in our judgement, the W3C calls the choice a policy decision and advises against blanket AAA. First rule of ARIA: no ARIA is better than bad ARIA, because div role=button promises Tab, Enter and Space and ARIA delivers none of it. A status message uses a role=status element that exists before its content changes, and support varies by browser and screen reader. When an update removes the focused element focus falls to body, so move it first."
+
+      - layout: flow
+        title: How do you check what axe can't?
+        kicker: A ten-minute manual pass
+        steps:
+          - {label: Axe, sub: in every state}
+          - {label: Keyboard only, sub: "reach and use everything, see focus"}
+          - {label: Zoom, sub: "400%, or a 320 px window"}
+          - {label: Screen reader, sub: "one full task, listening"}
+          - {label: Daily users, sub: of assistive technology}
+        bullets:
+          - "**VoiceOver alone isn't enough**: among WebAIM's 1,539 self-selected respondents, primary desktop or laptop use was **40.5% JAWS, 37.7% NVDA, 9.7% VoiceOver**"
+          - "**Ten sighted minutes** only approximate a daily user, who knows shortcuts and strategies you don't"
+        takeaway: After axe, do the main task by keyboard, zoom to 400%, and do one task with a screen reader. Then involve people who use one daily.
+        source: notes/03-accessibility.md
+        notes: On mobile VoiceOver was the most common reader in that survey, at 70.6%. A design can conform and still be hard to use. The lab runs a real keyboard, axe, reflow and the accessibility tree in headless Chromium. No screen reader was run and no person who uses one tried it.
+
+      - layout: steps
+        title: What does each response time limit demand?
+        kicker: Waiting
+        axis: longer wait → more to show
+        steps:
+          - {title: Under 0.1 s, text: "Feels instant. Show the result"}
+          - {title: Under 1 s, text: "Noticed, with flow intact. Keep the page from jumping"}
+          - {title: Under 10 s, text: "Needs a sign it's working: a busy indicator, from early on"}
+          - {title: 10 s and past, text: "Attention wanders: progress, a way to cancel, a result that survives leaving the page"}
+        takeaway: Under 0.1 s feels instant, under 1 s keeps flow, and past 10 s attention wanders, so show progress and a way to stop. Look at your p95 and find its band.
+        source: notes/04-ux-principles.md
+        notes: "NN/g says an indicator earns its place for actions over about a second, and any shorter flickers. Also from this note: a blank prompt box is a recall interface, and mock-ups show only the ideal state, so empty, loading, partial, error, stale and full each need designing. Showing the right thing at 1 s can do better than shaving 200 ms off the server."
+
+      - layout: table
+        title: What makes a good error message?
+        kicker: Writing an error
+        header: [Before, After, What changed]
+        widths: [2.4, 5, 2.8]
+        rows:
+          - ["`Error 503`", "The service is busy right now. Try again in about 2 seconds.", "Plain words, an action, a time"]
+          - ["`Invalid input`", "The file is 40 MB. The limit is 25 MB.", "The precise problem, with numbers"]
+          - ["`Something went wrong`", "The connection was lost. Your text is still here. Retry", "What happened, what's safe, what's next"]
+          - ["`You entered an invalid date`", "Enter the date as 2026-11-02", "No blame, shows the form"]
+        bold_first: false
+        takeaway: Near the source, in plain language, with the precise problem and what to do next, no blame, and the user's input kept.
+        source: notes/04-ux-principles.md
+        notes: "Make it noticeable by more than colour, and don't show it prematurely. If you log a code, keep it visible but secondary. If the API can only say 500, the interface can't say anything useful either, so this is an API design point as much as a UI one."
+
+      - layout: code
+        title: What does "five users" actually claim?
+        kicker: Testing with a few people
+        lang: ts
+        code: |-
+          const L = 0.31;   // Nielsen's averaged projects
+          for (const n of [1, 2, 3, 5, 10, 15]) {
+            const found = 1 - (1 - L) ** n;
+            console.log(n, (found * 100).toFixed(0) + "%");
+          }
+          // 1 31%
+          // 2 52%
+          // 3 67%
+          // 5 84%   (the article rounds to 85%)
+          // 10 98%
+          // 15 100%
+        bullets:
+          - "**The real claim is a budget**: three rounds of five, with fixes between, beat one round of fifteen"
+          - "**`L` differs for your product**: it comes from averaged projects, in a 2000 article on a 1993 model"
+          - "**One group only**: distinct user groups each need their own participants, and quantitative studies around 20"
+        takeaway: With `L` at 31% and one user group, Nielsen's model has five users finding about 85% of problems. It's for finding problems in rounds, not measurement.
+        source: notes/04-ux-principles.md
+        notes: Give someone a real task, ask them to think aloud, then stay quiet. When they get stuck, ask what they expected to happen. Colleagues share your mental model, so find someone who doesn't.
+
+  - title: AI interfaces
+    summary: Parsing a stream · Announcing it · A 200 isn't success · Citations · Uncertainty · Handoff · Untrusted output
+    slides:
+      - layout: statement
+        title: What is new about an AI interface?
+        kicker: The problem
+        statement: A conventional interface shows what the system did. An AI interface shows what a system that can be fluently wrong said, while it is still saying it.
+        attribution: A failed API call produces an error. A wrong answer produces a fluent paragraph.
+        takeaway: Output is untrusted and unpredictable, wrong looks exactly like right, and results arrive over time and can fail partway.
+        source: notes/05-ai-interfaces.md
+        notes: Everything from chapters 1 to 4 still applies. The lab is a chat for a made-up product, Harbour, against a local mock server that can misbehave on demand. Harbour, its documents and its numbers are invented.
+
+      - layout: code
+        title: Why does a stream parser need a buffer?
+        kicker: Server-sent events
+        lang: ts
+        code: |-
+          function buffered(chunks: string[]): string[] {
+            const out: string[] = [];
+            let buffer = "";
+            for (const c of chunks) {
+              buffer += c;
+              const parts = buffer.split("\n\n");
+              // the last piece may be incomplete: keep it
+              buffer = parts.pop()!;
+              out.push(...parts);
+            }
+            return out;
+          }
+        bullets:
+          - "**One event cut by the network**: a naive split gives three fragments, and this gives two whole events"
+          - "**A UTF-8 character can straddle reads too**: decode with `{ stream: true }`"
+          - "**`EventSource` takes only a URL and a credentials option**, so chat clients use `fetch`"
+        takeaway: Chunks don't align with events, so buffer until a blank line and decode UTF-8 in stream mode. Chat clients use `fetch`, because `EventSource` can't POST.
+        source: notes/05-ai-interfaces.md
+        notes: "The format is plain text: field and value lines, with a blank line ending each event. A line starting with a colon is a comment, which is how servers send keep-alives. A first token at 2 s against a full answer at 18 s (illustrative durations) crosses the 10-second limit, but people read it before any check on the complete answer has run."
+
+      - layout: flow
+        title: What should a screen reader hear during a stream?
+        kicker: Status region, untested
+        steps:
+          - {label: Searching, sub: "\"Searching the help centre\""}
+          - {label: Writing, sub: "\"Writing an answer\""}
+          - {label: Complete, sub: "\"Answer complete, 2 sources\""}
+        bullets:
+          - "**The count**: for one 25-word answer, the naive chat's live region changes **25 times** and the lab's status region **3**"
+          - "**The answer** is an ordinary `<article>` with `aria-busy` while incomplete, read at the person's own pace"
+          - "**Not validated**: it's reasoned from the specs, and no screen reader has been run against it"
+        takeaway: No settled answer. The lab keeps the answer out of any live region and announces transitions in a status region, which still needs testing with users.
+        source: notes/05-ai-interfaces.md
+        notes: The lab proves the 25-versus-3 count and nothing about the experience. Screen reader users might prefer hearing text as it arrives, since a long wait with one status line has its own cost. MDN says the log role suits chat.
+
+      - layout: table
+        title: How do you know a stream actually finished?
+        kicker: A 200 no longer means it worked
+        header: [What arrived, Verdict]
+        widths: [4.2, 5.2]
+        rows:
+          - ["200, `delta`, `done`", "Finished"]
+          - ["429, 503 or 529", "Busy: say so, offer retry"]
+          - ["200, but `text/html`", "Not an answer: a proxy page, perhaps"]
+          - ["200, `delta`, `error`", "Failed partway: keep and label the text"]
+          - ["200, `delta`, clean close", "Dropped: no terminal event, so this is **not** success"]
+          - ["200, `delta`, then silence", "Stalled: give up (the lab's choice: after 45 s)"]
+        highlight: [4]
+        takeaway: A 200 means it started, and only a terminal event means it finished. Treat a clean close as a failure, and keep and label the partial text.
+        source: notes/05-ai-interfaces.md
+        notes: "A proxy restart or a tidy crash ends the body with no error at all. Tell slow from dead with a watchdog reset by any byte, including keep-alive comments. The spec suggests one every 15 seconds or so, and the lab's 45 s limit is three of those, a choice and not a sourced figure. Blanking partial text destroys what someone was reading. Stop should abort the work too, because each token costs money."
+
+      - layout: cards
+        title: How often do citations support the answer?
+        kicker: Liu, Zhang and Liang, 2023
+        lead: Paid annotators judged four generative search engines from early 2023, on 1,450 queries each.
+        cards:
+          - {title: "Recall: 51.5%", body: "Of sentences, fully supported by their citations. Engines ran from 11.1 to 68.7."}
+          - {title: "Precision: 74.5%", body: "Of citations, supporting their sentence. Engines ran from 63.6 to 89.5."}
+          - {title: "r = −0.96", body: "Precision against perceived utility, apparently over four per-engine averages. Not answer by answer."}
+          - {title: "People rarely click", accent: "D4621A", body: "NN/g: appearing well cited itself builds trust, so a citation can raise trust unchecked."}
+        takeaway: In that 2023 audit, 74.5% of citations supported their sentence and 51.5% of sentences were fully supported. A supported sentence can still be false.
+        source: notes/05-ai-interfaces.md
+        notes: "All of this describes systems from 2023, so don't quote it as today's. The −0.955 from correlating the four averages is the note's own calculation. Annotators rated utility on responses shown without citations, so that correlation can't be citations making an answer look good. What carries over is the question: does what people like about an answer have anything to do with whether it's supported?"
+
+      - layout: code
+        title: What can you check about a citation in code?
+        kicker: Check before showing
+        lang: ts
+        code: |-
+          function audit(answer: string, retrieved: Citation[]) {
+            const used = new Set(markers(answer));
+            const known = new Set(retrieved.map((c) => c.id));
+            const cited = retrieved.filter((c) => used.has(c.id));
+            const numbers = answer.replace(/\[\d+\]/g, "").match(/\d+/g) ?? [];
+            return {
+              shown: cited.map((c) => c.id),
+              dangling: [...used].filter((n) => !known.has(n)),
+              noMarkers: used.size === 0,
+              numbersNotInAQuote: numbers.filter((n) =>
+                !cited.some((c) => new RegExp("\\b" + n + "\\b").test(c.quote))),
+            };
+          }
+          // Source [1] says 30 days. "refundable within 60 days [1]" -> numbersNotInAQuote: ["60"]
+          // "Refunds are handled under section 9 [4]."               -> dangling: [4]
+          // "Yes, you can get a refund."                             -> noMarkers: true
+        takeaway: Show only what the answer refers to, and check that markers exist and numbers appear in the quote. Whether a passage supports a paraphrase needs a grader.
+        source: notes/05-ai-interfaces.md
+        notes: An appended list of retrieved documents records what the model saw and not what it used, so never show it as sources. Prefer structured citations when the API has them. Anthropic's return the exact cited_text. Make checking easy by putting the source next to the claim and linking to the relevant part.
+
+      - layout: table
+        title: Does showing uncertainty help?
+        kicker: Kim et al., FAccT 2024
+        lead: 404 people answered yes/no medical questions with a fictional LLM tool, right half the time. Hedges were placed on half the answers, regardless of correctness.
+        header: [Condition, Estimated accuracy, Against the plain AI]
+        widths: [4.2, 2.4, 3.4]
+        rows:
+          - ["No AI, could still search the web", "74.2%", "—"]
+          - ["Plain AI", "63.9%", "—"]
+          - ["First-person hedge: \"I'm not sure, but...\"", "72.8%", "Significantly above"]
+          - ["General hedge: \"It's not clear, but...\"", "67.9%", "Not significantly above"]
+        takeaway: It can help, wording matters, and hedging didn't remove overreliance, so test it. Show a reason and an action in words, from a signal outside the model.
+        source: notes/05-ai-interfaces.md
+        notes: "The two wordings weren't significantly different from each other on accuracy. First-person wording lowered trust intention, 2.91 against 3.36 on a five-point scale. NN/g advises against anthropomorphic language, so this is a choice and an untested one. Self-reported model confidence needs calibrating against human labels. Signals to use: nothing retrieved, weak retrieval, a failed citation check, no markers, the length limit, a refusal. PAIR warns about numeric scores."
+
+      - layout: steps
+        title: What must a handoff to a person do?
+        kicker: Handing off
+        steps:
+          - {title: Be reachable, text: "From every finished state, because a confident, wrong answer is the case your system can't detect"}
+          - {title: Carry the context, text: "Question, answer, citations and earlier turns, so nobody repeats themselves"}
+          - {title: Say what happened, text: "A reference number, and what was shared"}
+          - {title: Fail visibly, text: "It's just another service. If it's down, say so and leave another route"}
+        takeaway: Be reachable from every finished state, carry the context, confirm what happened and what was shared, and survive its own failure.
+        source: notes/05-ai-interfaces.md
+        notes: Flag the AI's words as such, so the support person knows they are reading unverified text. PAIR warns that reverting to manual can itself be risky, and a handoff can drop someone into a queue that's closed at night, so state what actually happens next. Log handoffs as an outcome.
+
+      - layout: code
+        title: How do you keep model output from attacking the page?
+        kicker: Rendering is a security boundary
+        lang: ts
+        code: |-
+          function safeHref(
+            url: string, base: string
+          ): string | null {
+            try {
+              const u = new URL(url, base);
+              return u.protocol === "http:"
+                || u.protocol === "https:" ? u.href : null;
+            } catch {
+              return null;
+            }
+          }
+          // /docs/refunds#window  -> kept, resolved against base
+          // JaVaScRiPt:alert(1)   -> null
+          // data:text/html,hi     -> null
+        bullets:
+          - "**The attack**: an injected Markdown image URL holds the conversation, fetched on display, no click"
+          - "**Render as text**: React escapes by default, and Markdown needs raw HTML off and allow-listed hosts"
+          - "**Backstop**: the lab's CSP `img-src 'self'` blocks an injected image even if it reaches the DOM"
+        takeaway: Model output is untrusted input to your page. Render it as text, allow-list URL schemes, and set a Content Security Policy as the backstop.
+        source: notes/05-ai-interfaces.md
+        notes: "Escaping doesn't help an href. React 19 blocked javascript: when rendered with the lab's react-dom 19.3.1, but data: came through unchanged. The lab's URL check permits any https link, so a real deployment should restrict to known source hosts. OWASP LLM05 is Improper Output Handling."
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What rules hold for any streaming AI answer?
+        cards:
+          - {title: Streams, body: "A 200 means it started. Only a terminal event means it finished."}
+          - {title: Failure, body: "A clean close with no terminal event is a failure. Keep and label the partial text."}
+          - {title: Citations, body: "Don't show one you haven't checked, or take one as proof the answer is true."}
+          - {title: Uncertainty, body: "Use a signal you actually have, in words, with an action next to it."}
+          - {title: Handoff, body: "Keep a route to a person from every finished state, and let it fail visibly."}
+          - {title: Output, body: "Untrusted input: render as text, allow-list URL schemes, set a CSP."}
+        takeaway: Trust only a terminal event, check citations, show uncertainty in words, keep a route to a person, and render model output as text.
+        source: notes/05-ai-interfaces.md
+        notes: These condense chapter 5. Everything from chapters 1 to 4 still applies, and the track's full list is in the README.
+
+      - layout: bullets
+        title: Where do you go after this track?
+        kicker: Where next
+        bullets:
+          - "**The lab**: a chat that does most of this wrong and a mock server that misbehaves on demand"
+          - "**Listen to it**: with VoiceOver or NVDA your notes are real evidence, if only from one person"
+          - "**Application patterns**: choosing what kind of interface to build at all"
+          - "**Real-time and multimodal agents**: where much of this changes"
+          - "**Threat model**: the rest of what output handling sits inside"
+        takeaway: Do the lab, read application patterns for which interface to build, and read the threat model for what output handling sits inside.
+        source: notes/05-ai-interfaces.md
+        notes: Parser and state machine exercises need no browser. The chat exercise is bash check.sh exercises. No key exists for the listening exercise, since the track's authors haven't tested it.

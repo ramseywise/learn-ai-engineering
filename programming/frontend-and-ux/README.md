@@ -1,6 +1,7 @@
 # Frontend and UX
 
 > Enough of the browser, React, accessibility and usability for a backend, data or AI engineer to build a usable interface or judge one, and a chapter on what AI interfaces need that ordinary ones don't: streaming, citations, uncertainty, handoff and failure.
+> Study deck: [frontend-and-ux.pptx](slides/frontend-and-ux.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [Reading order](#reading-order) · [Builds on and feeds into](#builds-on-and-feeds-into) · [Rules of thumb](#rules-of-thumb) · [Layout](#layout) · [Setup](#setup) · [Primary texts](#primary-texts)
 
 ---

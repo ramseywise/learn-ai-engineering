@@ -1,0 +1,639 @@
+# /// script
+# requires-python = ">=3.11,<3.13"
+# dependencies = ["numpy", "pandas", "scikit-learn"]
+# ///
+"""A fairness audit of a generated hiring screen, for notes/15-fairness-in-automated-scoring.md.
+
+Run from this folder (about 10 seconds, no downloads, no API key):
+    uv run fairness_audit_lab.py
+
+Everything is generated from SEED. Brackwater Freight is invented, and groups A, B, C and attributes X, Y are labels on
+random draws. The generator gives group B a lower pass rate on a work sample, makes past recruiters mark down groups B
+and C and above all B-and-Y together, and makes postcode band track group. Those are assumptions we planted so that an
+audit has something to find. They are not claims about any real group, employer or product, and no number here is a
+general finding. The metrics, the intervals and the arithmetic are real. Nothing here is legal advice.
+
+Things to change and watch: RECRUITER_BIAS and INTERSECTION_BIAS (0 gives the control), PROXY_STRENGTH (how well postcode
+reveals group), SKILL_GAP (0 equalises base rates, and the impossibility conflict goes away), CAPACITY, AUDIT_SIZE.
+"""
+# %%
+import math
+from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+SEED = 15
+N_TRAIN, N_VAL, N_TEST = 40_000, 20_000, 20_000
+AUDIT_SIZE = 5_000  # applicants who sat the work sample whatever the recruiter decided
+CAPACITY = 0.20  # the share of applicants who can be advanced to interview
+SITE_SIZE = 400  # applicants at one depot, for the small-group section
+
+GROUP_SHARE = {"A": 0.70, "B": 0.24, "C": 0.06}
+SKILL_GAP = {"A": 0.0, "B": -0.35, "C": -0.05}  # mean skill by group: stands in for unequal access to prior training
+RECRUITER_BIAS = {"A": 0.0, "B": 0.8, "C": 0.5}  # log-odds taken off by past recruiters, on top of what skill explains
+INTERSECTION_BIAS = 0.9  # further log-odds taken off applicants who are both B and Y
+GAP_BIAS = 0.25  # log-odds per unit of employment gap, which says nothing about the work sample
+PROXY_STRENGTH = 2.2  # how strongly postcode band tracks group; 0 makes the two independent
+FOUR_FIFTHS = 0.8
+
+BANDS = np.arange(5)
+pd.set_option("display.width", 160, "display.max_columns", 30)
+
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
+# %% The generator: skill drives the true outcome, recruiters add a penalty, postcode tracks group
+def band_probabilities(proxy_strength=PROXY_STRENGTH):
+    """P(postcode band | group). Group A leans to low bands, B to high bands and C sits in the middle."""
+    centre = {"A": 0.0, "B": 4.0, "C": 2.0}
+    table = {}
+    for group, c in centre.items():
+        weight = np.exp(-proxy_strength * 0.5 * np.abs(BANDS - c))
+        table[group] = weight / weight.sum()
+    return table
+
+
+def make_applicants(rng, n, skill_gap=None, recruiter_bias=None, intersection_bias=INTERSECTION_BIAS, gap_bias=GAP_BIAS,
+                    proxy_strength=PROXY_STRENGTH):
+    skill_gap = SKILL_GAP if skill_gap is None else skill_gap
+    recruiter_bias = RECRUITER_BIAS if recruiter_bias is None else recruiter_bias
+    groups = np.array(list(GROUP_SHARE))
+    group = rng.choice(groups, n, p=list(GROUP_SHARE.values()))
+    attr = rng.choice(["X", "Y"], n)
+    skill = rng.normal(np.vectorize(skill_gap.get)(group), 1.0)
+    table = band_probabilities(proxy_strength)
+    band = np.empty(n, dtype=int)
+    for g in groups:
+        at = group == g
+        band[at] = rng.choice(BANDS, at.sum(), p=table[g])
+    test_score = skill + rng.normal(0, 0.7, n)
+    experience = 0.6 * skill + rng.normal(0, 1.0, n)
+    gap = np.maximum(0, rng.normal(0.5 + 0.8 * (attr == "Y"), 0.8, n))  # employment gap, tracks attribute Y
+    passed_work_sample = rng.random(n) < sigmoid(-0.9 + 1.6 * skill)
+    penalty = (np.vectorize(recruiter_bias.get)(group) + intersection_bias * ((group == "B") & (attr == "Y"))
+               + gap_bias * gap)
+    advanced_by_recruiter = rng.random(n) < sigmoid(-1.0 + 1.3 * test_score + 0.4 * experience - penalty)
+    return pd.DataFrame({"group": group, "attr": attr, "band": band, "test_score": test_score, "experience": experience,
+                         "gap": gap, "history": advanced_by_recruiter.astype(int),
+                         "outcome": passed_work_sample.astype(int)})
+
+
+def matrix(df, columns):
+    """Numeric columns plus one-hot bands and groups, with fixed columns whatever the slice holds."""
+    out = pd.DataFrame(index=df.index)
+    for c in columns:
+        if c == "band":
+            for b in BANDS:
+                out[f"band_{b}"] = (df["band"] == b).astype(float)
+        elif c == "group":
+            for g in GROUP_SHARE:
+                out[f"group_{g}"] = (df["group"] == g).astype(float)
+        elif c == "attr":
+            out["attr_Y"] = (df["attr"] == "Y").astype(float)
+        else:
+            out[c] = df[c].astype(float)
+    return out.to_numpy()
+
+
+def fit_score(train, columns, label):
+    model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000))
+    model.fit(matrix(train, columns), train[label])
+    return lambda df: model.predict_proba(matrix(df, columns))[:, 1]
+
+
+# %% The metrics, each written out rather than imported
+def selection_rates(selected, group):
+    return {g: float(selected[group == g].mean()) for g in pd.unique(group)}
+
+
+def impact_ratios(selected, group):
+    """Each group's selection rate over the highest group's rate."""
+    rates = selection_rates(selected, group)
+    top = max(rates.values())
+    return {g: r / top for g, r in rates.items()}
+
+
+def rates_against(selected, label):
+    """TPR, FPR, FNR and PPV of a selection against one label. `label` says which truth we are auditing against."""
+    tp = int((selected & (label == 1)).sum())
+    fp = int((selected & (label == 0)).sum())
+    fn = int((~selected & (label == 1)).sum())
+    tn = int((~selected & (label == 0)).sum())
+    tpr, fpr = tp / max(tp + fn, 1), fp / max(fp + tn, 1)
+    return {"tpr": tpr, "fpr": fpr, "fnr": 1 - tpr, "ppv": tp / max(tp + fp, 1), "base": (tp + fn) / max(tp + fp + fn + tn, 1)}
+
+
+def by_group(selected, label, group):
+    return {g: rates_against(selected[group == g], label[group == g]) for g in GROUP_SHARE if (group == g).any()}
+
+
+def calibration_table(score, label, group, edges=(0.0, 0.1, 0.2, 0.35, 0.5, 0.7, 1.0)):
+    """Observed rate of `label` in each score bin, by group. A calibrated score has rows close to the bin's mean score."""
+    rows = []
+    bins = pd.cut(score, edges, include_lowest=True)
+    for b in bins.categories:
+        at = bins == b
+        row = {"score_bin": str(b), "mean_score": score[at].mean() if at.any() else float("nan")}
+        for g in GROUP_SHARE:
+            mask = at & (group == g)
+            row[f"obs_{g}"] = label[mask].mean() if mask.sum() >= 30 else float("nan")
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def wilson(k, n, z=1.96):
+    if n == 0:
+        return 0.0, 1.0
+    p = k / n
+    d = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / d
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
+def ratio_interval(k1, n1, k2, n2, z=1.96):
+    """95% interval for (k1/n1) / (k2/n2) by the delta method on the log ratio. 0.5 is added when a count is zero."""
+    if k1 == 0 or k2 == 0:
+        k1, k2, n1, n2 = k1 + 0.5, k2 + 0.5, n1 + 0.5, n2 + 0.5
+    ratio = (k1 / n1) / (k2 / n2)
+    se = math.sqrt(max(1 / k1 - 1 / n1 + 1 / k2 - 1 / n2, 0.0))
+    return ratio, ratio * math.exp(-z * se), ratio * math.exp(z * se)
+
+
+def fisher_two_sided(k1, n1, k2, n2):
+    """Exact test that two selection rates are equal, summing tables no likelier than the one observed."""
+    total, picked = n1 + n2, k1 + k2
+
+    def prob(k):
+        return math.comb(n1, k) * math.comb(n2, picked - k) / math.comb(total, picked)
+
+    observed = prob(k1)
+    low, high = max(0, picked - n2), min(n1, picked)
+    return min(1.0, sum(prob(k) for k in range(low, high + 1) if prob(k) <= observed * (1 + 1e-9)))
+
+
+def shortfall(k, n, top_rate, floor=FOUR_FIFTHS):
+    """How many more people this group would need selected to reach the floor against the top rate."""
+    return max(0, math.ceil(floor * top_rate * n - k))
+
+
+def auc(score, label):
+    ranks = pd.Series(score).rank().to_numpy()
+    pos = label == 1
+    n_pos, n_neg = pos.sum(), (~pos).sum()
+    return (ranks[pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg)
+
+
+# %% Decision rules: one cutoff for everybody, or one per group
+def one_cutoff(val_score, capacity=CAPACITY):
+    return float(np.quantile(val_score, 1 - capacity))
+
+
+def parity_cutoffs(val_score, val_group, capacity=CAPACITY):
+    """Equal selection rates: the top `capacity` of each group."""
+    return {g: float(np.quantile(val_score[val_group == g], 1 - capacity)) for g in GROUP_SHARE}
+
+
+def tpr_cutoffs(val_score, val_group, val_label, capacity=CAPACITY):
+    """Equal TPR against `val_label`, at the common TPR that fills capacity overall. Bisection on that TPR."""
+    def cuts(tpr):
+        return {g: float(np.quantile(val_score[(val_group == g) & (val_label == 1)], 1 - tpr)) for g in GROUP_SHARE}
+
+    low, high = 0.0, 1.0
+    for _ in range(40):
+        mid = (low + high) / 2
+        share = np.mean(apply_cutoffs(val_score, val_group, cuts(mid)))
+        low, high = (mid, high) if share < capacity else (low, mid)
+    return cuts((low + high) / 2)
+
+
+def apply_cutoffs(score, group, cutoffs):
+    if isinstance(cutoffs, dict):
+        return score >= np.vectorize(cutoffs.get)(group)
+    return score >= cutoffs
+
+
+@dataclass
+class World:
+    train: pd.DataFrame
+    val: pd.DataFrame
+    test: pd.DataFrame
+    audit: pd.DataFrame
+
+
+def make_world(seed=SEED, **kwargs):
+    rng = np.random.default_rng(seed)
+    train = make_applicants(rng, N_TRAIN, **kwargs)
+    val = make_applicants(rng, N_VAL, **kwargs)
+    test = make_applicants(rng, N_TEST, **kwargs)
+    return World(train, val, test, train.iloc[:AUDIT_SIZE])
+
+
+ALL_COLS = ["group", "attr", "band", "test_score", "experience", "gap"]
+UNAWARE = ["band", "test_score", "experience", "gap"]
+NO_PROXY = ["test_score", "experience"]
+
+
+def evaluate(world, name, score_fn, rule="one", label_for_tpr="history", val_label=None):
+    """Fit the rule on validation, apply it on test, and report against both labels."""
+    val_score, test_score = score_fn(world.val), score_fn(world.test)
+    if rule == "one":
+        cutoffs = one_cutoff(val_score)
+    elif rule == "parity":
+        cutoffs = parity_cutoffs(val_score, world.val["group"].to_numpy())
+    else:
+        labels = world.val[label_for_tpr].to_numpy() if val_label is None else val_label
+        cutoffs = tpr_cutoffs(val_score, world.val["group"].to_numpy(), labels)
+    selected = apply_cutoffs(test_score, world.test["group"].to_numpy(), cutoffs)
+    group, history, outcome = world.test["group"].to_numpy(), world.test["history"].to_numpy(), world.test["outcome"].to_numpy()
+    rates, ratios = selection_rates(selected, group), impact_ratios(selected, group)
+    truth, hist = by_group(selected, outcome, group), by_group(selected, history, group)
+    return {"approach": name, "share": selected.mean(), "sel_A": rates["A"], "sel_B": rates["B"], "sel_C": rates["C"],
+            "ratio_B": ratios["B"], "ratio_C": ratios["C"], "tpr_A": truth["A"]["tpr"], "tpr_B": truth["B"]["tpr"],
+            "fpr_A": truth["A"]["fpr"], "fpr_B": truth["B"]["fpr"], "ppv_A": truth["A"]["ppv"], "ppv_B": truth["B"]["ppv"],
+            "ppv_true": outcome[selected].mean(), "ppv_hist": history[selected].mean(), "_selected": selected, "_hist": hist}
+
+
+# %% 1. The world, and the first ratio
+def section_data(world):
+    test = world.test
+    print("1. Generated applicants at Brackwater Freight (fictional). Train 40,000, validation 20,000, test 20,000")
+    print(test.groupby("group").agg(n=("history", "size"), work_sample_pass=("outcome", "mean"),
+                                    advanced_by_recruiter=("history", "mean")).round(3))
+    pass_hist = selection_rates(test["history"].to_numpy() == 1, test["group"].to_numpy())
+    pass_true = selection_rates(test["outcome"].to_numpy() == 1, test["group"].to_numpy())
+    print(f"   Past recruiters' ratio, B against A: {pass_hist['B'] / pass_hist['A']:.3f}")
+    print(f"   The work sample's ratio, B against A: {pass_true['B'] / pass_true['A']:.3f}. The test would flag this too: "
+          "a ratio is not a verdict on the cause.\n")
+
+
+# %% 2. The approaches side by side
+def section_approaches(world):
+    raw = fit_score(world.train, ALL_COLS, "history")
+    unaware = fit_score(world.train, UNAWARE, "history")
+    no_proxy = fit_score(world.train, NO_PROXY, "history")
+    audited = fit_score(world.audit, NO_PROXY, "outcome")
+    val_outcome = world.val["outcome"].to_numpy()
+    rows = [
+        evaluate(world, "naive: all columns, one cutoff", raw),
+        evaluate(world, "unaware: group dropped, one cutoff", unaware),
+        evaluate(world, "unaware: proxies dropped too, one cutoff", no_proxy),
+        evaluate(world, "group cutoffs on unaware, equal selection", unaware, rule="parity"),
+        evaluate(world, "group cutoffs on unaware, equal TPR on history", unaware, rule="tpr"),
+        evaluate(world, "group cutoffs on unaware, equal TPR on outcomes", unaware, rule="tpr", val_label=val_outcome),
+        evaluate(world, "audited labels, no proxies, one cutoff", audited),
+        evaluate(world, "audited labels, no proxies, equal selection", audited, rule="parity"),
+    ]
+    table = pd.DataFrame(rows).drop(columns=["_selected", "_hist"]).set_index("approach")
+    print(f"2. Approaches at a capacity of {CAPACITY:.0%}, on test. tpr, fpr and ppv are against the work sample, which only the generator knows for all")
+    print(table[["sel_A", "sel_B", "sel_C", "ratio_B", "ratio_C", "ppv_true", "ppv_hist"]].round(3).to_string())
+    print()
+    print(table[["tpr_A", "tpr_B", "fpr_A", "fpr_B", "ppv_A", "ppv_B"]].round(3).to_string())
+
+    best = table["ppv_true"].max()
+    n_sel = table["share"] * N_TEST
+    print("\n   Qualified people advanced out of the same 20% capacity, against the best row:")
+    print(((table["ppv_true"] - best) * n_sel).round(0).astype(int).to_string())
+    for row in rows:
+        assert abs(row["share"] - CAPACITY) < 0.02, f"{row['approach']} missed capacity: {row['share']:.3f}"
+        assert max(impact_ratios(row["_selected"], world.test["group"].to_numpy()).values()) == 1.0
+    parity = rows[3]
+    assert parity["ratio_B"] > 0.9, "equal-selection cutoffs should close the ratio on test"
+    assert rows[1]["ratio_B"] < 0.6 * rows[3]["ratio_B"] or rows[1]["ratio_B"] < FOUR_FIFTHS, "dropping the column should leave the gap"
+    print()
+    return raw, unaware, no_proxy, audited, rows
+
+
+# %% 3. Proxies: removing the column does not remove the effect
+def section_proxy(world, raw, unaware, no_proxy):
+    train = world.train
+    group_b = (train["group"] == "B").astype(int)
+    from_band = fit_score(train.assign(is_b=group_b), ["band"], "is_b")
+    from_all = fit_score(train.assign(is_b=group_b), UNAWARE, "is_b")
+    test_b = (world.test["group"] == "B").astype(int).to_numpy()
+    print("3. Can the remaining columns identify group B? AUC on test")
+    print(f"   from postcode band alone {auc(from_band(world.test), test_b):.3f}; from every unaware column {auc(from_all(world.test), test_b):.3f}")
+    group, selected = world.test["group"].to_numpy(), {}
+    for name, fn in [("all columns", raw), ("group dropped", unaware), ("proxies dropped too", no_proxy)]:
+        cut = one_cutoff(fn(world.val))
+        selected[name] = fn(world.test) >= cut
+        print(f"   {name:<20} selection B {selection_rates(selected[name], group)['B']:.3f}, ratio {impact_ratios(selected[name], group)['B']:.3f}")
+    same = (selected["all columns"] == selected["group dropped"]).mean()
+    print(f"   Decisions identical between the first two rows: {same:.1%}\n")
+
+
+# %% 4. Label bias: the same score audited against two labels
+def section_label_bias(world, unaware):
+    score = unaware(world.test)
+    selected = score >= one_cutoff(unaware(world.val))
+    group, history, outcome = world.test["group"].to_numpy(), world.test["history"].to_numpy(), world.test["outcome"].to_numpy()
+    print("4. One score, two audits. Equal opportunity against history, then against the work sample")
+    for name, label in [("history (what the logs hold)", history), ("work sample (needs an audit)", outcome)]:
+        res = by_group(selected, label, group)
+        print(f"   {name:<30} TPR A {res['A']['tpr']:.3f}, B {res['B']['tpr']:.3f}, gap {res['A']['tpr'] - res['B']['tpr']:+.3f};"
+              f"  PPV A {res['A']['ppv']:.3f}, B {res['B']['ppv']:.3f}")
+    print("\n   Calibration of that score, against history: at the same score, do groups match?")
+    print(calibration_table(score, history, group).round(3).to_string(index=False))
+    print("\n   The same score against the work sample: at the same score, B passes more often")
+    print(calibration_table(score, outcome, group).round(3).to_string(index=False))
+    hist, true = by_group(selected, history, group), by_group(selected, outcome, group)
+    assert abs(hist["A"]["tpr"] - hist["B"]["tpr"]) < abs(true["A"]["tpr"] - true["B"]["tpr"]), "history should flatter the score"
+    print()
+
+
+# %% 5. The impossibility conflict, on a score calibrated within each group
+def calibrate_within_groups(train, score_fn):
+    """Refit a logistic curve per group on the score's log-odds, against outcome. This is calibration by construction."""
+    curves = {}
+    for g in GROUP_SHARE:
+        at = train["group"] == g
+        logit = np.log(np.clip(score_fn(train[at]), 1e-6, 1 - 1e-6)).reshape(-1, 1) - np.log(1 - np.clip(score_fn(train[at]), 1e-6, 1 - 1e-6)).reshape(-1, 1)
+        curves[g] = LogisticRegression(max_iter=2000).fit(logit, train.loc[at, "outcome"])
+
+    def calibrated(df):
+        out = np.zeros(len(df))
+        raw = np.clip(score_fn(df), 1e-6, 1 - 1e-6)
+        logit = (np.log(raw) - np.log(1 - raw)).reshape(-1, 1)
+        for g, curve in curves.items():
+            at = (df["group"] == g).to_numpy()
+            out[at] = curve.predict_proba(logit[at])[:, 1]
+        return out
+    return calibrated
+
+
+def chouldechova_fpr(base, ppv, fnr):
+    """Chouldechova 2017, eq. 2.6: FPR = p/(1-p) * (1-PPV)/PPV * (1-FNR)."""
+    return base / (1 - base) * (1 - ppv) / ppv * (1 - fnr)
+
+
+def equal_ppv_cutoffs(score, group, target):
+    """For each group, the lowest cutoff whose selected people pass at about `target`."""
+    cuts = {}
+    for g in GROUP_SHARE:
+        s = np.sort(score[group == g])[::-1]
+        running_ppv = np.cumsum(s) / np.arange(1, len(s) + 1)  # a calibrated score's own estimate of PPV
+        cuts[g] = float(s[max(np.searchsorted(-running_ppv, -target) - 1, 0)])
+    return cuts
+
+
+def equalised_odds_selection(score, group, label, rng, weak="B", cutoff=0.45):
+    """A derived predictor in the manner of Hardt et al. Take the weak group's ROC point at `cutoff`, and bring every other
+    group down to it: pass only a coin-flip share of those above a stricter cutoff on the ray from the origin."""
+    weak_rates = rates_against(score[group == weak] >= cutoff, label[group == weak])
+    target_fpr, target_tpr = weak_rates["fpr"], weak_rates["tpr"]
+    selected = np.zeros(len(score), dtype=bool)
+    selected[group == weak] = score[group == weak] >= cutoff
+    for g in GROUP_SHARE:
+        if g == weak:
+            continue
+        at = group == g
+        s, y = score[at], label[at]
+        order = np.argsort(-s)
+        tps, fps = np.cumsum(y[order]) / y.sum(), np.cumsum(1 - y[order]) / (1 - y).sum()
+        # The ROC crosses the ray through the target where tpr/fpr falls to the target's slope.
+        slope = target_tpr / max(target_fpr, 1e-9)
+        crossing = np.nonzero(tps <= slope * fps)[0]
+        k = int(crossing[0]) if crossing.size else len(s) - 1
+        keep = np.minimum(1.0, target_tpr / max(tps[k], 1e-9))
+        chosen = np.zeros(len(s), dtype=bool)
+        chosen[order[:k + 1]] = rng.random(k + 1) < keep
+        selected[at] = chosen
+    return selected
+
+
+def conflict_row(name, selected, group, outcome):
+    res = by_group(selected, outcome, group)
+    return {"rule": name, "sel_A": selected[group == "A"].mean(), "sel_B": selected[group == "B"].mean(),
+            "ppv_A": res["A"]["ppv"], "ppv_B": res["B"]["ppv"], "fpr_A": res["A"]["fpr"], "fpr_B": res["B"]["fpr"],
+            "fnr_A": res["A"]["fnr"], "fnr_B": res["B"]["fnr"]}
+
+
+def section_impossibility(world, audited, world_seed=SEED):
+    score_fn = calibrate_within_groups(world.val, audited)
+    score = score_fn(world.test)
+    group, outcome = world.test["group"].to_numpy(), world.test["outcome"].to_numpy()
+    print("5. The conflict. A score trained on audited outcomes and calibrated within each group, on test")
+    print(calibration_table(score, outcome, group).round(3).to_string(index=False))
+    print("\n   Kleinberg et al.: mean score in each class, by group. Calibration forces (1-p)x + py = p")
+    for g in ("A", "B"):
+        at = group == g
+        p = outcome[at].mean()
+        x, y = score[at & (outcome == 0)].mean(), score[at & (outcome == 1)].mean()
+        print(f"   {g}: base rate {p:.3f}, mean score on non-passers x {x:.3f}, on passers y {y:.3f}, (1-p)x + py = {(1 - p) * x + p * y:.3f}")
+        assert abs((1 - p) * x + p * y - score[at].mean()) < 1e-9
+        assert abs(score[at].mean() - p) < 0.02, "a calibrated score's mean should match the base rate"
+
+    cut = 0.45
+    rows = [conflict_row(f"one cutoff at {cut}", score >= cut, group, outcome)]
+    rows.append(conflict_row("equal PPV (0.62)", apply_cutoffs(score, group, equal_ppv_cutoffs(score, group, 0.62)), group, outcome))
+    fair = apply_cutoffs(score, group, tpr_cutoffs(score, group, outcome, capacity=0.25))
+    rows.append(conflict_row("equal TPR", fair, group, outcome))
+    rng = np.random.default_rng(world_seed + 1)
+    rows.append(conflict_row("equal TPR and FPR (randomised)", equalised_odds_selection(score, group, outcome, rng), group, outcome))
+    table = pd.DataFrame(rows).set_index("rule")
+    print("\n   What each rule equalises, and what then moves")
+    print(table.round(3).to_string())
+
+    # The identity holds for every row, in each group, whatever the rule.
+    for row in rows:
+        for g in ("A", "B"):
+            p = outcome[group == g].mean()
+            implied = chouldechova_fpr(p, row[f"ppv_{g}"], row[f"fnr_{g}"])
+            assert abs(implied - row[f"fpr_{g}"]) < 1e-9, "Chouldechova's identity is arithmetic and must hold exactly"
+    pa, pb = outcome[group == "A"].mean(), outcome[group == "B"].mean()
+    print(f"\n   Identity check passed for every row. Base rates {pa:.3f} against {pb:.3f} make it bind.")
+    print(f"   With PPV 0.62 and FNR 0.40 in both groups, the identity alone gives FPR A {chouldechova_fpr(pa, .62, .40):.3f}, B {chouldechova_fpr(pb, .62, .40):.3f}\n")
+
+
+# %% 6. Small groups: an interval on the ratio
+def group_interval_rows(selected, group, top_group=None):
+    rates = selection_rates(selected, group)
+    top = top_group or max(rates, key=rates.get)
+    k2, n2 = int(selected[group == top].sum()), int((group == top).sum())
+    rows = []
+    for g in sorted(rates):
+        k, n = int(selected[group == g].sum()), int((group == g).sum())
+        ratio, low, high = ratio_interval(k, n, k2, n2)
+        rows.append({"slice": g, "n": n, "selected": k, "rate": k / n, "rate_lo": wilson(k, n)[0], "rate_hi": wilson(k, n)[1],
+                     "ratio": ratio, "ratio_lo": low, "ratio_hi": high,
+                     "fisher_p": fisher_two_sided(k, n, k2, n2) if g != top else float("nan"),
+                     "short_by": shortfall(k, n, k2 / n2)})
+    return pd.DataFrame(rows)
+
+
+def forest(rows):
+    """An interval on a text axis from 0 to 1.6, with the 0.8 line marked."""
+    width, top = 48, 1.6
+    pos = lambda v: min(width - 1, int(min(v, top) / top * (width - 1)))
+    lines = [f"{'':>6} 0{'':<{pos(0.8) - 1}}0.8{'':<{width - pos(0.8) - 6}}1.6"]
+    for _, r in rows.iterrows():
+        line = [" "] * width
+        line[pos(0.8)] = "|"
+        for i in range(pos(r["ratio_lo"]), pos(r["ratio_hi"]) + 1):
+            line[i] = "-" if line[i] == " " else line[i]
+        line[pos(r["ratio"])] = "o"
+        lines.append(f"{r['slice']:>6} {''.join(line)} {r['ratio']:.2f} [{r['ratio_lo']:.2f}, {r['ratio_hi']:.2f}] n={r['n']}")
+    return "\n".join(lines)
+
+
+def section_small_groups(world, unaware):
+    site = world.test.iloc[:SITE_SIZE]
+    cut = one_cutoff(unaware(world.val))
+    selected, group = unaware(site) >= cut, site["group"].to_numpy()
+    rows = group_interval_rows(selected, group)
+    print(f"6. One depot, {SITE_SIZE} applicants, the unaware model at one cutoff. Ratio against the highest group")
+    print(rows.round(3).to_string(index=False))
+    print(forest(rows))
+    for _, r in rows.iterrows():
+        assert r["ratio_lo"] <= r["ratio"] <= r["ratio_hi"] and r["rate_lo"] <= r["rate"] <= r["rate_hi"]
+
+    rng = np.random.default_rng(SEED + 2)
+    print("\n   How the four-fifths reading behaves by size. Group A has 1,000 applicants at a rate of 0.30, 20,000 repeats")
+    rows = []
+    for n in (20, 50, 200, 1000):
+        k_top = rng.binomial(1000, 0.30, 20_000)
+        fair = rng.binomial(n, 0.30, 20_000)
+        unfair = rng.binomial(n, 0.18, 20_000)  # a true ratio of 0.6
+        false_flag = np.mean((fair / n) / (k_top / 1000) < FOUR_FIFTHS)
+        missed = np.mean((unfair / n) / (k_top / 1000) >= FOUR_FIFTHS)
+        covered, informative = 0, 0
+        for f, t in zip(unfair[:3000], k_top[:3000]):
+            _, low, high = ratio_interval(int(f), n, int(t), 1000)
+            covered += low <= 0.6 <= high
+            informative += high < FOUR_FIFTHS
+        rows.append({"small_group_n": n, "true_ratio_1.0_flagged": false_flag, "true_ratio_0.6_passed": missed,
+                     "coverage_at_0.6": covered / 3000, "interval_wholly_below_0.8": informative / 3000})
+    table = pd.DataFrame(rows)
+    print(table.round(3).to_string(index=False))
+    assert table["true_ratio_1.0_flagged"].iloc[0] > table["true_ratio_1.0_flagged"].iloc[-1], "small groups should flag more"
+    assert table["coverage_at_0.6"].iloc[-1] > 0.9, "the interval should near 95% at a reasonable size"
+    print()
+
+
+# %% 7. Intersectional slices
+def section_intersections(world, unaware):
+    selected = unaware(world.test) >= one_cutoff(unaware(world.val))
+    test = world.test
+    print("7. Slices, on all 20,000 test applicants. Unaware model at one cutoff")
+    margin = group_interval_rows(selected, test["group"].to_numpy())
+    attr = group_interval_rows(selected, test["attr"].to_numpy())
+    both = group_interval_rows(selected, (test["group"] + "/" + test["attr"]).to_numpy())
+    print(forest(pd.concat([margin, attr])))
+    print()
+    print(forest(both))
+    by_attr = {r["slice"]: r["ratio"] for _, r in attr.iterrows()}
+    by_both = {r["slice"]: r["ratio"] for _, r in both.iterrows()}
+    by_margin = {r["slice"]: r["ratio"] for _, r in margin.iterrows()}
+    print(f"\n   Attribute Y alone reads {by_attr['Y']:.3f}. Group B alone reads {by_margin['B']:.3f}. Together, B/Y reads {by_both['B/Y']:.3f}, against B/X at {by_both['B/X']:.3f}.")
+    tests = len(both) - 1
+    print(f"   {tests} slices against the top one: at 0.05 each, expect {tests * 0.05:.2f} false alarms a year from chance alone if nothing is wrong.\n")
+    assert by_both["B/Y"] < by_both["B/X"], "the planted intersection should show"
+
+
+# %% 8. Measuring without the column
+def section_no_demographics(world, unaware):
+    train, test = world.train, world.test
+    selected = unaware(test) >= one_cutoff(unaware(world.val))
+    group = test["group"].to_numpy()
+    truth = impact_ratios(selected, group)
+
+    # A lookup of P(group | band), which would in practice come from an outside table such as a census.
+    lookup = pd.crosstab(train["band"], train["group"], normalize="index")[list(GROUP_SHARE)]
+    assert np.allclose(lookup.sum(axis=1), 1)
+    posterior = lookup.loc[test["band"]].to_numpy()
+
+    hard = np.array(list(GROUP_SHARE))[posterior.argmax(axis=1)]
+    rows = [{"method": "true group (held out)", **{f"rate_{g}": selection_rates(selected, group)[g] for g in "AB"}, "ratio_B": truth["B"] / truth["A"]}]
+    hard_rates = selection_rates(selected, hard)
+    rows.append({"method": "assign each person their likeliest group", "rate_A": hard_rates["A"], "rate_B": hard_rates["B"], "ratio_B": hard_rates["B"] / hard_rates["A"]})
+    soft = {g: float((posterior[:, i] * selected).sum() / posterior[:, i].sum()) for i, g in enumerate(GROUP_SHARE)}
+    rows.append({"method": "weight each person by P(group | band)", "rate_A": soft["A"], "rate_B": soft["B"], "ratio_B": soft["B"] / soft["A"]})
+
+    # Voluntary self-identification: people advanced answer more, and group B answers less. Both rates are assumptions.
+    rng = np.random.default_rng(SEED + 3)
+    answer = np.where(selected, 0.75, 0.45) * np.where(group == "B", 0.7, 1.0)
+    answered = rng.random(len(group)) < answer
+    survey = selection_rates(selected[answered], group[answered])
+    rows.append({"method": "voluntary survey, answer rate tied to outcome", "rate_A": survey["A"], "rate_B": survey["B"], "ratio_B": survey["B"] / survey["A"]})
+    # Inverse-probability weights fix this, only if the answer rates are known. We know them here because we planted them.
+    w = answered / answer
+    weighted = {g: float((w * selected)[group == g].sum() / w[group == g].sum()) for g in "AB"}
+    rows.append({"method": "same survey, reweighted by known answer rates", "rate_A": weighted["A"], "rate_B": weighted["B"], "ratio_B": weighted["B"] / weighted["A"]})
+    print("8. Estimating the ratio without a group column, on test")
+    print(pd.DataFrame(rows).set_index("method").round(3).to_string())
+    print(f"   Share of people whose likeliest group is their true group: {(hard == group).mean():.3f}. People answering the survey: {answered.mean():.3f}\n")
+
+
+# %% 9. A control, and other seeds
+def headline(seed, **kwargs):
+    world = make_world(seed, **kwargs)
+    unaware = fit_score(world.train, UNAWARE, "history")
+    no_proxy = fit_score(world.train, NO_PROXY, "history")
+    audited = fit_score(world.audit, NO_PROXY, "outcome")
+    out = {}
+    for name, fn in [("unaware", unaware), ("no_proxy", no_proxy), ("audited", audited)]:
+        row = evaluate(world, name, fn)
+        out[f"{name}_ratio_B"] = row["ratio_B"]
+        out[f"{name}_ppv"] = row["ppv_true"]
+    return out
+
+
+def section_control():
+    settings = [
+        ("as planted", {}),
+        ("no recruiter bias", {"recruiter_bias": {g: 0.0 for g in GROUP_SHARE}, "intersection_bias": 0.0, "gap_bias": 0.0}),
+        ("no skill gap", {"skill_gap": {g: 0.0 for g in GROUP_SHARE}}),
+        ("neither", {"skill_gap": {g: 0.0 for g in GROUP_SHARE}, "recruiter_bias": {g: 0.0 for g in GROUP_SHARE}, "intersection_bias": 0.0, "gap_bias": 0.0}),
+    ]
+    print("9. Controls, mean of 5 seeds. Which part of the ratio comes from which planted cause?")
+    rows = []
+    for name, kwargs in settings:
+        runs = pd.DataFrame([headline(SEED + 100 + s, **kwargs) for s in range(5)])
+        rows.append({"world": name, **runs.mean().to_dict(), "unaware_ratio_B_sd": runs["unaware_ratio_B"].std()})
+    table = pd.DataFrame(rows).set_index("world")
+    print(table.round(3).to_string())
+    control = table.loc["neither"]
+    assert control["unaware_ratio_B"] > FOUR_FIFTHS, "with nothing planted, the ratio should clear the floor"
+    assert table.loc["as planted", "unaware_ratio_B"] < control["unaware_ratio_B"], "the planted causes should move the ratio"
+    print()
+
+
+# %% 10. What the audit report states
+def section_report(world, rows):
+    unaware_row = rows[1]
+    group = world.test["group"].to_numpy()
+    k = {g: int(unaware_row["_selected"][group == g].sum()) for g in GROUP_SHARE}
+    n = {g: int((group == g).sum()) for g in GROUP_SHARE}
+    print("10. The findings part of an audit report, filled from this run")
+    print(f"    Model: unaware, trained on recruiter decisions. Decision: top {CAPACITY:.0%} advance. Data: generated, 20,000 test applicants")
+    for g in GROUP_SHARE:
+        ratio, low, high = ratio_interval(k[g], n[g], k["A"], n["A"])
+        print(f"    {g}: {k[g]}/{n[g]} = {k[g] / n[g]:.3f}; ratio to A {ratio:.3f} (95% interval {low:.3f} to {high:.3f}); short of 0.8 by {shortfall(k[g], n[g], k['A'] / n['A'])} people")
+    print("    Outcome label: recruiter decisions are a prior human judgement; 5,000 audited work samples used as the check")
+    print("    Not established: the cause of the gap, job-relatedness, or whether any law is met. That is for counsel.\n")
+
+
+# %%
+def main():
+    world = make_world()
+    section_data(world)
+    raw, unaware, no_proxy, audited, rows = section_approaches(world)
+    section_proxy(world, raw, unaware, no_proxy)
+    section_label_bias(world, unaware)
+    section_impossibility(world, audited)
+    section_small_groups(world, unaware)
+    section_intersections(world, unaware)
+    section_no_demographics(world, unaware)
+    section_control()
+    section_report(world, rows)
+    print("All assertions passed. Every number above describes this generator and these assumptions.")
+
+
+if __name__ == "__main__":
+    main()

@@ -17,6 +17,7 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3"
   - 13-case-study-support-agent.md
+  - ../practice/conversation_scoring_lab.py
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -122,6 +123,22 @@ judge passes 70% in production; corrected: 0.6
 
 The second judge agrees just as often and finds 3 of the 10 bad outputs, which is why κ falls to 0.10 and why TNR, not agreement, is the number to read for a release gate.
 
+### What κ doesn't settle
+
+κ has limits of its own. The [conversation scoring lab](../practice/conversation_scoring_lab.py) shows them on generated screening conversations at a fictional staffing firm, scored by stubs with planted behaviour, so these numbers describe its assumptions.
+
+- **κ moves with the base rate.** One scorer with TPR 0.90 and TNR 0.80 has κ 0.70 when humans pass 50% and κ 0.21 when they pass 98%, and the scorer hasn't changed. Compare κ only on the same label mix, and read TPR and TNR beside it.
+- **Scorers agreeing with each other isn't validity.** On 400 rows, two stubs with the same blind spot reach κ 0.93 with each other and κ 0.33 with the human. The same rows give a lenient scorer 93.2% raw agreement and κ 0.35 (TNR 0.23), and a careful one 87.7% and κ 0.49 (TNR 0.86), so raw agreement picks the wrong one. κ has an error bar too: the careful scorer's bootstrap interval is 0.37 to 0.61.
+- **On a graded scale, a miss has a size.** Plain κ treats 3 against 4 the same as 1 against 5. Weighted κ charges each miss by its distance, linearly or by its square. Two stubs on a 1-to-5 grade with near-equal exact agreement (58.3% and 56.8%) and plain κ (0.45 and 0.46) separate to 0.83 and 0.16 with quadratic weights, because one misses by a grade and the other by two or more.
+
+### Not enough evidence is not a low score
+
+A rubric item whose question was never asked has nothing to grade. Score it as zero and the number measures the agent's coverage while it reports on the person or case in the conversation. This is `CANNOT_GRADE` ([05](05-llm-as-judge.md#writing-the-judge-prompt)) at the level of one rubric item: three outcomes, with abstention reported as its own rate ([09](09-reading-results.md#pitfalls), [04](04-graders.md#binary-vs-scales)).
+
+In the lab's 4,000 generated conversations the agent skips a certification question 3% to 34% of the time, depending on the vertical. In the vertical it skips most, a scorer that treats silence as a fail says 46% of candidates hold the certificate, when 72% do. An abstaining scorer says 70%. 390 of the naive scorer's 569 wrong verdicts are on questions never asked. Abstaining on near-threshold answers as well then trades coverage for error: 86% coverage at 5.2% error, 74% at 1.3%, 61% at 0.1%. Which point to pick is a pricing question, the same one [DS 01/13](../../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) works through, and at the lab's assumed prices (a wrong verdict costs 10, a follow-up call 1) the 74% point is cheapest.
+
+Abstention brings two risks of its own. Error on the scored rows can't see an agent that stops asking: 4.9% against 5.3%, while coverage falls from 86% to 39%. So coverage needs its own floor. And if the agent skips the question more often for candidates without the certificate, the scored rows stop being a fair sample: the abstainer says 80% when 72% do.
+
 ---
 
 ## Keep it calibrated
@@ -131,6 +148,14 @@ The second judge agrees just as often and finds 3 of the 10 bad outputs, which i
 - **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)).
 - **Pin the judge model version.** A provider updating the judge silently changes all your scores.
 - **Don't mix judges** across runs you intend to compare.
+
+### A correction per vertical
+
+Calibration is per domain, and most domains have few labels. One threshold fits the biggest domain and misreads the rest, and a threshold fitted to each domain alone chases noise in the small ones. The tool is partial pooling, derived in [DS 01/13](../../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md#when-customers-differ): one log-odds offset per domain, kept only as far as its labels can justify.
+
+The [conversation scoring lab](../practice/conversation_scoring_lab.py) runs it on six generated verticals with 6 to 120 labels each, over 200 seeds, shrinking towards the pooled fit. Regret here is extra wrong verdicts per conversation above deciding on the true probability. With offsets drawn at a standard deviation of 1.0, the three smallest verticals average 0.047 under one threshold, 0.033 alone and 0.025 shrunk. With no real difference between verticals they average 0.001, 0.035 and 0.002, so fitting each alone pays for noise and shrinking mostly doesn't. Shrinking costs something when a vertical really is far out: nursing, planted 1.3 log-odds low with 30 labels, has regret 0.012 alone and 0.022 shrunk. Six groups also estimate the spread poorly (τ² averages 0.65 with a standard deviation of 0.68 across seeds), and the lab planted a pure shift, which is the one error an offset can repair.
+
+A change to the scorer then has to clear a per-slice gate, because a recalibrated or re-prompted scorer can improve the average and break one vertical. [Note 10](10-evals-in-ci.md#the-regression-gate) has the gate. In the lab's run on 1,196 scored conversations, accuracy rises by 3.2 points overall (paired 95% CI +1.0 to +5.4) while one vertical falls 27.5 points (Bonferroni-adjusted CI −39.3 to −15.8). Over 200 reruns, a gate on the overall number alone blocks none of them and the per-slice gate blocks 97.5%.
 
 ### Cross-checking with other judges
 
@@ -163,6 +188,7 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 - **Reporting raw agreement.** Symptom: "85% agreement" on a skewed set. Fix: lead with κ and report TPR and TNR separately, as the script above shows.
 - **Trusting a consistent judge.** Symptom: reruns match, so nobody checks further. Fix: run the swap check ([05](05-llm-as-judge.md#known-biases)) even on a judge that never changes its mind.
 - **Tuning on the test split.** Symptom: a calibration number that doesn't hold in production. Fix: draw few-shot examples from train, iterate on dev, and read test once.
+- **Scoring a question never asked as a fail.** Symptom: one vertical looks weak, and it's the one where the agent skips that question most. Fix: three outcomes, with abstention and coverage reported per vertical ([above](#not-enough-evidence-is-not-a-low-score)).
 - **Judging with the same family as the system.** Symptom: scores favor your own model, as GAUGE measured ([above](#multi-family-judging)). Fix: use a different family, and don't expect a panel to fix close calls, because correlated judges flip the same pairs.
 
 ## Try it
@@ -191,6 +217,14 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 
    </details>
 
+4. Run the lab: `cd practice && uv run conversation_scoring_lab.py`. In section 1, which scorer does raw agreement prefer, and which do κ and TNR prefer? In section 2, set `WRONG_PRICE` to 50 and then to 3 at the top of the file. Which abstain band is cheapest each time? In section 3's control table, read `security`. What does fitting it alone cost, and why?
+
+   <details><summary>Answer</summary>
+
+   Raw agreement prefers the lenient scorer, 93.2% to 87.7%. κ (0.35 against 0.49) and TNR (0.23 against 0.86) prefer the careful one. The cheapest band is .20 when a wrong verdict costs 50 and .05 when it costs 3 (10 gave .10), since dearer errors justify more follow-up calls. Fitting `security` alone costs 0.049 extra wrong verdicts per conversation, against 0.002 under one threshold or shrunk: it has 6 labels, no vertical really differs in that table, and so its offset is all noise. These numbers come from the lab's seed and generated data.
+
+   </details>
+
 ## Interview checklist
 
 | Prompt | Answer in one line |
@@ -198,6 +232,7 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 | What makes an LLM judge calibrated? | You have measured how often it agrees with humans on your data: 100 to 200 labels split into train, dev and test, with TPR, TNR and κ reported once on test and compared with human–human agreement. |
 | TPR or TNR for a release gate? | TNR, because it measures how many bad outputs get caught. A golden-label builder wants high precision on PASS instead, and if one judge doesn't win both, use two. |
 | Why lead with κ over raw agreement? | Ties and base rates inflate agreement. Norman et al. note that "85% agreement" on MT-Bench corresponds to κ of about 0.48. |
+| A rubric question was never asked. What does the scorer return? | Not enough evidence, not a low score, with the abstention rate reported per vertical. A zero there measures the agent's coverage and blames the candidate, and error on scored rows can't see an agent that stops asking, so coverage needs its own floor. |
 | Two judges from different vendors disagree on a candidate. Add a third? | Not to settle close pairs. In GAUGE's τ²-bench test the four-judge average picked the wrong winner 31% of the time on close pairs, the same as the best single judge, because the judges were correlated. Report "no detectable difference", or abstain when the gap is inside the noise. |
 
 ## Next

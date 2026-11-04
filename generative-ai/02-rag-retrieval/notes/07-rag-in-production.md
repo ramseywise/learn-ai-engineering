@@ -428,6 +428,31 @@ support:   ['kb-18', 'kb-04', 'kb-05']
 
 ---
 
+## Text that changes by legal effect
+
+[Note 01](01-rag-pipeline.md#pitfalls) treats a stale page as a pitfall: mark it superseded and it stops competing. That works for a help centre, where old text is simply wrong. A rulebook is harder. The 2023 wording of an article is the right answer to a question about 2023, and the wording published last month can be the wrong answer today, because it doesn't take effect until next spring. Deleting old versions loses real answers, and keeping them unfiltered lets them compete.
+
+So each version of each provision carries three dates: when it was published, when it takes effect, and when it stops. "In force on date X" and "published but not yet in force" are different questions, and only the first is a filter on the effective dates. The as-of date belongs in the query, as a [metadata filter](03-keyword-semantic-and-hybrid-search.md#metadata-filtering) that runs before ranking.
+
+The [lab](../practice/versioned_rules_lab.py) generates a fictional regulator's rulebook and scores four indexes on 74 generated questions, each with an as-of date (BM25, k=3, seed 7):
+
+| Index | Recall@3 | Questions with a not-in-force version of the provision in the top 3 |
+|---|---|---|
+| As-of filter on effective dates | 0.97 | 0.00 |
+| Filter on publication date | 0.63 | 0.26 |
+| Latest version only | 0.40 | 0.45 |
+| All versions, no filter | 0.91 | 0.70 |
+
+Read the last row. Recall alone calls that index healthy, while 70% of its questions also hand the model text that isn't the law on that date. The as-of zero is by construction, given correct dates, so the real risk moves to the parser that reads those dates. These numbers describe this generated rulebook and say nothing about any real one.
+
+The date has to follow the answer through three later steps:
+
+- **Cross-references.** "As defined in Article 2" sends the reader to a paragraph that the question's words may not reach. On 13 questions needing both paragraphs, the context was complete on 0.54 without expansion and 1.00 with expansion as of the question's date. Expanding to the latest definition reached 0.85 and put text not in force into 0.38 of contexts.
+- **Change detection.** Compare two versions as records (who, must or must not, action, deadline, condition), so a rewording doesn't page anyone and a longer retention period counts as tighter. A changed definition leaves the obligations citing it word for word the same, so finding the customer controls to review also takes the reference graph: recall went from 0.86 to 1.00 across this lab's instruments. The lab's extractor is a few regular expressions standing in for a model, so its scores measure the harness and not extraction.
+- **Citations.** [Citation checks in code](../../08-eval/notes/07-evaluating-rag-and-grounding.md#citation-checks-in-code) fuzzy-match a quote against its passage. For a rule, compare verbatim against the version in force on the as-of date. The number is a small share of the quote, so a 0.9 fuzzy match accepted 3 of the lab's 7 bad answers, one with an invented deadline. A check against any version of the article also accepted 3, including the one quoting a repealed article.
+
+---
+
 ## Multimodal RAG
 
 | Piece | How it works |
@@ -484,6 +509,7 @@ Tracing tells you about one request. These tell you about the system over time, 
 | Cut prompt tokens before changing models | Usually the cheapest win |
 | Price every component in ms and $ | Remove those that don't move metrics |
 | Filter by user permission at retrieval time | Prompt instructions are not access control |
+| Put the as-of date in the query for text that changes by legal effect | Recall can't see a wrong version sitting beside the right one |
 
 ---
 
@@ -493,6 +519,7 @@ Tracing tells you about one request. These tell you about the system over time, 
 |---|---|
 | M5 ungraded lab "Tracing a RAG system" ([upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG)) | needs Phoenix (`arize-phoenix`, local server on :6006), embedded Weaviate, Together API key; not copied |
 | M5 Assignment 5 "Improving a RAG System" | same; not copied |
+| [`versioned_rules_lab.py`](../practice/versioned_rules_lab.py): as-of retrieval, cross-references, obligation records, change detection and citation checks on a generated rulebook | runs offline, `uv run versioned_rules_lab.py` |
 
 This closes the course. Notes 08–12 are production write-ups that apply these ideas.
 
@@ -506,6 +533,7 @@ This closes the course. Notes 08–12 are production write-ups that apply these 
 - **Trusting an uncalibrated LLM judge.** Symptom: scores trend up while users complain. Keep a labelled sample, and correct against it as ARES does with PPI.
 - **Quantizing without rescoring or measuring.** Symptom: recall falls after a memory-saving migration. Measure recall against exact search before and after.
 - **Optimising the wrong step.** Symptom: weeks saving 50 ms on a reranker while generation takes seconds. Price every component in ms and dollars first.
+- **Filtering on the publication date.** Symptom: the bot quotes a rule that is published but doesn't take effect for months. Filter on effective dates, and report a pending change as a pending change.
 - **Treating vectors as harmless.** Symptom: a privacy review assumes embeddings are anonymous. Studies have recovered over 70% of words from them, so protect them like the text.
 
 ---
@@ -515,6 +543,7 @@ This closes the course. Notes 08–12 are production write-ups that apply these 
 1. Rerun the quantization block with 1,000 candidates in place of 100. What happens to recall, and what is the extra cost?
 2. In the cost block, set `OUTPUT_TOKENS = 1_000`. What share of baseline does "retrieved FAQ items" reach, and what do you conclude?
 3. Write a test for the permissions block that would have caught the opening incident. What should it assert, and over which queries?
+4. Run [`versioned_rules_lab.py`](../practice/versioned_rules_lab.py) and read section 2. Which naive index has the best recall, and why is it still unsafe? Then add a rule for "No X may" to `extract_rules`. What happens to the modality score and to the line for the outsourcing paragraph in the review queue?
 
 <details>
 <summary>Answers</summary>
@@ -522,6 +551,7 @@ This closes the course. Notes 08–12 are production write-ups that apply these 
 1. Recall reaches 1.00 on this synthetic set, up from 0.625, and you rescore ten times as many full vectors per query, so disk reads and latency grow. Pick the smallest candidate count that meets your recall target.
 2. It reaches about 83% of baseline, up from about 60% at 200 output tokens: output now costs far more than the prompt, so a 59% prompt cut moves the bill little. Measure input and output separately before picking a lever.
 3. For every query in the eval set, plus queries aimed at restricted titles, assert that `search_for(q, "customer")` returns no document with `audience != "public"`. Assert on document ids, not on the answer text, because the answer can paraphrase.
+4. All-versions, at recall 0.91, and 0.70 of its questions also return a version that isn't in force. With the new rule (seed 7, k=3), modality rises from 0.93 to 0.98 and change-label accuracy from 0.96 to 1.00. The paragraph's label moves from `text_only` to `tightened`. It was in the review queue both ways, because a change the extractor can't read goes to a person and isn't dropped.
 
 </details>
 
@@ -541,6 +571,7 @@ This closes the course. Notes 08–12 are production write-ups that apply these 
 | What is knowledge poisoning? | Crafted documents in the corpus get retrieved for a target question and steer the answer, as in PoisonedRAG. Separate ingestion from the app and sanitise retrieved chunks. |
 | Are injection regexes enough? | No. They miss paraphrases and over-block benign text. Use them as a first filter, log drops, and add a model-based classifier. |
 | What does ARES add? | Lightweight judges fine-tuned on synthetic data, corrected with about 150 human labels through prediction-powered inference. |
+| How do you retrieve from rules that change over time? | Store published, effective-from and effective-to dates on each version, and filter on the effective dates with the as-of date in the query. Resolve cross-references and check quotes against the same date. |
 | Which production metrics do you watch? | Hallucination rate, precision and recall at k, p95 latency, cost per query, user trust, and claim-level accuracy for CRAG systems. |
 
 ---

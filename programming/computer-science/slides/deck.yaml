@@ -1,0 +1,464 @@
+# Computer science foundations: study deck (flashcards). Covers notes/01-06.
+# Build:  make slides PILLAR=programming/computer-science [PREVIEW=1] [STRICT=1] [PDF=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Computer science foundations
+  subtitle: What's being counted, and what does one of them cost?
+  tagline: |-
+    Cost models · Data structures · Algorithm patterns
+    Numbers and memory · Processes and threads · Networks
+  reference: "Notes: programming/computer-science"
+  output: computer-science.pptx
+  notes: >-
+    The study deck for the computer science track. One question runs through it: what's being counted, and what
+    does one of them cost? Measured numbers come from one machine, an Apple M4 Pro on CPython 3.14.7, so the ratios
+    travel better than the absolute values.
+
+parts:
+  - title: Counting work
+    summary: The doubling test · Lower bounds · Amortised cost · The order to optimise in
+    notes: How to count work, how to check the count against a clock, and what to do with the answer.
+    slides:
+      - layout: statement
+        title: Why does a 10 ms job take eleven minutes?
+        kicker: The problem
+        statement: A deduplication step that took 10 ms on your test file takes eleven minutes on the real one, and nothing in the code looks wrong.
+        attribution: "Extrapolated with `k = 2`: 690 ms at 16,000 items, times about 1,000 for 500,000 items. CPython 3.14.7, Apple M4 Pro."
+        source: notes/01-cost-models-and-big-o.md
+        notes: Without a way to predict this, you find out in production. With Big-O alone, you might spend a week on a change that saves nothing. This part teaches both halves.
+
+      - layout: code
+        title: How do you estimate an exponent without any theory?
+        kicker: The doubling test
+        lead: "Best of 5 runs on shuffled ints. CPython 3.14.7, Apple M4 Pro."
+        lang: text
+        code: |-
+          dedupe with a list
+            n=    4,000    43.48 ms  log2(ratio)= 2.01
+            n=    8,000   172.68 ms  log2(ratio)= 1.99
+            n=   16,000   690.83 ms  log2(ratio)= 2.00
+          dedupe with a set
+            n=  250,000    10.24 ms  log2(ratio)= 1.13
+            n=  500,000    24.80 ms  log2(ratio)= 1.28
+            n=1,000,000    61.02 ms  log2(ratio)= 1.30
+          sorted()
+            n=  250,000    25.79 ms  log2(ratio)= 1.15
+            n=  500,000    58.50 ms  log2(ratio)= 1.18
+            n=1,000,000   130.47 ms  log2(ratio)= 1.16
+        bullets:
+          - "If `T(n)` is roughly `c * n^k`, then `T(2n)/T(n) = 2^k`"
+          - "**List: 2.0.** Quadratic, as clean as measurements get"
+          - "**Set: 1.13 to 1.30**, not 1. Lookups stop being one unit once the table outgrows the caches"
+        takeaway: Double `n` and take `log2` of the time ratio, which estimates the exponent. A slope that misses your prediction is telling you something about the machine or the code.
+        source: notes/01-cost-models-and-big-o.md
+        notes: "`n log n` predicts a slope of about 1.07 at this size, and `sorted` measured 1.15 to 1.18. The set's analysis isn't wrong, the cost model is: at a million items each lookup is likelier to miss the cache. Don't explain a slope away."
+
+      - layout: flow
+        title: Why can't comparison sorting beat n log n?
+        kicker: Logarithms are what halving looks like
+        steps:
+          - {label: "`n!` orderings", sub: of n distinct items}
+          - {label: One comparison, sub: rules out at most about half}
+          - {label: "`log2(n!)`", sub: comparisons at least}
+          - {label: "`Θ(n log n)`", sub: for every comparison sort}
+        bullets:
+          - "`lg(n!) / (n lg n)`: **0.66** at n = 10, **0.86** at n = 1,000, **0.91** at n = 100,000"
+          - "It covers sorts nobody has written yet. Radix sort on small integers avoids comparisons, so it isn't bound"
+        takeaway: There are `n!` orderings and each comparison at most halves them, so you need at least `log2(n!)` comparisons, which is `Θ(n log n)`.
+        source: notes/01-cost-models-and-big-o.md
+        notes: "Repeated halving is where `log n` comes from: going from a thousand items to a billion adds 20 steps. Chapter 2's sort can only beat this bound on inputs that aren't in random order."
+
+      - layout: compare
+        title: When is amortised cost the wrong number?
+        kicker: list.append
+        lead: "2 million appends with 92 resizes. CPython 3.14.7, Apple M4 Pro."
+        emphasis: right
+        left:
+          title: "Throughput: the mean is right"
+          bullets:
+            - "Multiplying capacity makes copies a geometric series, `O(n)` in total"
+            - "Mean append: **55.8 ns**"
+            - "Copies per append to reach 1M, if every resize copies: add 1,000 slots **499.50**, multiply by 1.125 **8.68**"
+        right:
+          title: "Latency budget: the mean hides it"
+          bullets:
+            - "Median **42 ns**, worst resize **136,208 ns**"
+            - "Only 19 of the 100 slowest appends were resizes"
+            - "The other 81 ran while something else took the core"
+        takeaway: Amortised means the worst-case total over a sequence, shared out. It's right for throughput and wrong for a latency budget, because one operation can still cost `O(n)`.
+        source: notes/01-cost-models-and-big-o.md
+        notes: "Adding a fixed amount gives an arithmetic series, and the 499.50 keeps growing with n. Any factor above 1 gives a constant, traded against wasted space. Keep the kinds of bound apart: worst case, average case, expected, amortised, adversarial. Reasoning gets you the shape, and measuring gets you what actually happens."
+
+      - layout: steps
+        title: In what order should you optimise?
+        kicker: The order that works
+        lead: "Evidence: tokens for a block list, 20,000 log rows against 2,000 ids."
+        steps:
+          - {title: Measure, text: "Profile, and check the time is even on-CPU. Waiting needs a different fix"}
+          - {title: Stop doing the work, text: "Cache it, batch it, skip it, or move it out of the loop"}
+          - {title: Change the algorithm, text: "Or the data structure. A `set` for the list gained **637.6×** here", accent: "D4621A"}
+          - {title: Change the layout, text: "Or cross into C: `numpy`, `sum`, `join`, `sorted`. Factors of 2 to 100"}
+          - {title: Parallelise, text: "If the work allows it"}
+          - {title: Tune constants last, text: "Local names and tuple unpacking gained **1.0×** here"}
+        takeaway: Measure, stop doing the work, change the algorithm or structure, change the layout, parallelise, and tune constants last.
+        source: notes/01-cost-models-and-big-o.md
+        notes: "Before step 3, work out what you can win: if a share p of the time gets s times faster, the whole gains 1 / ((1 - p) + p / s). A hundredfold speedup of something that takes 5% of the time gains you 5%. Amdahl's 1967 paper argues this in prose; the formula is the textbook version."
+
+  - title: Structures and patterns
+    summary: Inside list and dict · Traps that become outages · One graph loop · The condition behind each pattern
+    notes: What's behind the O(1) claims, then the handful of ideas most algorithms come from.
+    slides:
+      - layout: statement
+        title: What do list and dict details cost you in production?
+        kicker: The problem
+        statement: A work queue that gets slower the longer it runs, a cache that never gives memory back, an endpoint brought down by a few thousand crafted keys.
+        attribution: "Each one is a `list` or `dict` detail. CPython 3.14.7 on 64-bit macOS; layouts are implementation choices that could change."
+        source: notes/02-data-structures.md
+        notes: The chapter reads the CPython source for list and dict and checks every claim with sys.getsizeof and a clock.
+
+      - layout: code
+        title: How is a Python dict laid out?
+        kicker: Two arrays
+        lang: text
+        code: |-
+          d = {"model": "m", "tokens": 512, "ms": 81}
+
+          dk_indices: 8 slots, one byte each (. = EMPTY)
+            slot    0    1    2    3    4    5    6    7
+                  [ . ][ 2 ][ . ][ 0 ][ . ][ . ][ 1 ][ . ]
+
+          dk_entries: dense, in insertion order (room for 5)
+            0: hash("model")   "model"   "m"
+            1: hash("tokens")  "tokens"  512
+            2: hash("ms")      "ms"      81
+            3: free
+            4: free
+
+          Slot positions are illustrative.
+        bullets:
+          - "First slot is `hash & (size - 1)`, the low bits"
+          - "A taken slot probes on: `i = (5*i + perturb + 1) & mask`"
+          - "Iterating walks the dense entries, so insertion order comes free"
+          - "Int keys: **54 to 60 bytes per key** just after a resize, before the key and value objects"
+        takeaway: A sparse table of small integers points into a dense, insertion-ordered array of hash, key and value entries. Load is at most 2/3, and collisions probe within the table.
+        source: notes/02-data-structures.md
+        notes: "Since Python 3.6, following Hettinger's 2012 proposal. Six thousand keys that collide on their low bits cost about 4 probes each with CPython's recurrence, against 3,000 for linear probing, in a table of 32,768 slots. A list, by comparison, is an array of pointers that grows by about 12.5%."
+
+      - layout: table
+        title: Which list and dict habits become outages?
+        kicker: Measured traps
+        lead: "CPython 3.14.7, 64-bit macOS. Each row compares the habit with the alternative."
+        header: [Habit, Measured, Instead]
+        widths: [3.1, 5, 2.4]
+        rows:
+          - ["`list.pop(0)` as a queue", "Drain 200,000 items: **2,305.7 ms**, against 4.0 ms", "`collections.deque`"]
+          - ["Expecting a dict to shrink on delete", "All but 10 of 1M keys deleted: still **41.9 MB**, and 10 keys iterate in 241.6 µs, not 0.13 µs", "Rebuild with `dict(d)`"]
+          - ["`next(iter(d))` as pop-oldest", "Drain 40,000 keys: **205.7 ms**, against 2.9 ms", "`OrderedDict`"]
+          - ["Int keys chosen by a client", "16,000 keys that collide: **1,091.42 ms**, against 0.30 ms for ordinary ints", "Bound or validate the input"]
+        takeaway: A list is a poor queue, a dict keeps its holes until an insert resizes it, and predictable int hashes can be flooded.
+        source: notes/02-data-structures.md
+        notes: "A deleted slot can't simply be emptied, because a lookup stops at the first empty slot, so it's marked DUMMY. Strings are protected by per-process keyed SipHash, so never persist hash() of a string: use hashlib. Ints are still predictable: every multiple of 2**61 - 1 hashes to 0 on this build."
+
+      - layout: flow
+        title: What makes BFS, DFS and Dijkstra the same algorithm?
+        kicker: Whatever-first search
+        steps:
+          - {label: Take one, sub: out of the bag}
+          - {label: "Marked?", sub: then skip it}
+          - {label: Mark it, sub: and record it}
+          - {label: Add neighbours, sub: to the bag}
+        loop: repeat until the bag is empty
+        bullets:
+          - "**Stack:** depth-first. Reversed postorder is a build order"
+          - "**Queue:** breadth-first, so fewest hops"
+          - "**Priority queue:** Dijkstra, at `E log E`. Needs non-negative weights"
+        takeaway: It's one traversal loop, and the bag decides. A stack gives DFS, a queue BFS and a priority queue Dijkstra, which gives wrong answers with no error on negative weights.
+        source: notes/03-algorithm-patterns.md
+        notes: "Erickson calls this whatever-first search. BFS and DFS handle each node and edge once, so V + E. Seeing a node again while it's still active on the current path means a cycle. heapq can't change a priority, so Dijkstra skips stale entries: 9 pops for 6 nodes in the note's example. Latencies are safe as weights; scores or log-probabilities may not be."
+
+      - layout: table
+        title: What must hold before a pattern's shortcut is correct?
+        kicker: Which pattern
+        header: [What you have, Try, It needs]
+        widths: [4.2, 3, 3.6]
+        rows:
+          - [Two sorted sequences, Two pointers, Sorted order]
+          - [Best contiguous stretch, Sliding window, Shrinking helps monotonically]
+          - ["\"Next greater\" or nesting", Monotonic stack, A value can settle its waiters]
+          - [Smallest x that passes a test, Binary search, The test flips exactly once]
+          - [Choose a subset under constraints, Backtracking, "A bound, or small input"]
+          - [Same subproblems recurring, Dynamic programming, Finite overlapping states]
+          - [A rule that never needs undoing, Greedy, An exchange argument]
+          - [Things connected to things, Graph search, Marking what you've visited]
+        bold_first: false
+        takeaway: A pattern is a reason not to look at every pair, subset or path. Its condition is what breaks when you apply it from memory, so check that first.
+        source: notes/03-algorithm-patterns.md
+        notes: "The note's table also has union-find, which only ever merges, and quickselect, which needs random pivots. Honest results matter too: on in-memory lists set(a) & set(b) was about twice as fast as two pointers, 135 ms against 255 ms for 1M by 1M, because the set work happens in C. Ten simulations found a capacity limit among 999 rates by binary search."
+
+      - layout: code
+        title: How do you know a greedy rule is correct?
+        kicker: GPU reservations
+        lang: python
+        code: |-
+          def by_finish(bookings):
+              chosen, free_at = [], float("-inf")
+              by_end = sorted(bookings, key=lambda b: b[1])
+              for start, end in by_end:
+                  if start >= free_at:
+                      chosen.append((start, end))
+                      free_at = end
+              return chosen
+
+          # optimal in 300 random cases, against brute force:
+          # {'finish': 300, 'start': 175, 'shortest': 285}
+        bullets:
+          - "**Exchange:** take any optimal schedule and swap in the earliest finish. It ends no later, so nothing clashes and the size holds"
+          - "**Shortest first** fails on `(0,4), (3,5), (4,8)`: the short booking blocks both others"
+          - "A rule that's about 95% right passes a few tests"
+        takeaway: An exchange argument, or at the least agreement with brute force on many small random cases. Only earliest finish was optimal in all 300 here.
+        source: notes/03-algorithm-patterns.md
+        notes: "The random cases are 10 bookings each. The brute-force test takes minutes to write, and caught two of three rules. The obvious knapsack greedy also fails: best relevance per token gets 60 where the optimum is 62, in the note's token-budget example. Dynamic programming is recursion that doesn't repeat itself."
+
+  - title: Numbers and memory
+    summary: Where float precision goes · The staircase of caches · Why layout sets the constant
+    notes: What the values in those structures really are, in bits and in cache lines.
+    slides:
+      - layout: statement
+        title: Why would the same loop run four times slower?
+        kicker: The problem
+        statement: Python's numbers look like the ones in a maths book, and its memory looks flat and uniform. Neither is true.
+        attribution: "Same sum over the same 2 million floats: 7.8 ns per item in allocation order, 33.2 ns shuffled. Apple M4 Pro, CPython 3.14.7."
+        source: notes/04-numbers-and-memory.md
+        notes: "The useful skill is knowing when it matters. Accumulated rounding on a million costs comes to less than a billionth of a dollar, and you can ignore it. Cosine distance between nearly identical vectors can round to exactly zero."
+
+      - layout: code
+        title: How can two different vectors have distance exactly zero?
+        kicker: Cancellation
+        lang: text
+        code: |-
+             theta      1 - cos    2 sin^2(t/2)  rel. error
+             1e-02  4.999958e-05   4.999958e-05     2.9e-13
+             1e-05  5.000000e-11   5.000000e-11     8.3e-08
+             1e-07  4.996004e-15   5.000000e-15     8.0e-04
+             1e-08  0.000000e+00   5.000000e-17     1.0e+00
+             1e-09  0.000000e+00   5.000000e-19     1.0e+00
+        bullets:
+          - "A double has **53 significant bits**, and near 1 neighbouring values are about 2e-16 apart"
+          - "Subtracting nearly equal numbers cancels the leading digits, leaving mostly rounding error"
+          - "At `θ = 1e-8`: `1 - a @ b` gives `0.0`, and `0.5 * (a - b) @ (a - b)` gives `5.0e-17`"
+        takeaway: Subtracting nearly equal numbers cancels the good digits, so rearrange the formula. To threshold near-duplicates at very small distances on unit vectors, compute the Euclidean form.
+        source: notes/04-numbers-and-memory.md
+        notes: "For normal retrieval scores this doesn't matter at all. float32 has only 24 bits, so the same trap arrives around theta of 1e-4. Never compare computed floats with ==. Summing is usually fine: the plain loop was off by 6.4e-10 on a total of $5,998.86 over a million costs."
+
+      - layout: flow
+        title: What does a random read cost as the working set grows?
+        kicker: The staircase
+        lead: "NumPy reads in C, by throughput, on one Apple M4 Pro. Other machines' steps differ."
+        steps:
+          - {label: 32 KiB, sub: 0.61 ns per read}
+          - {label: 8 MiB, sub: 0.81 ns per read}
+          - {label: 32 MiB, sub: 3.22 ns per read}
+          - {label: 512 MiB, sub: 4.40 ns per read}
+        bullets:
+          - "Sequential stays near **0.5 ns** at every size, because the prefetcher fetches ahead"
+          - "The jump between 8 and 32 MiB is consistent with leaving the 16 MiB L2 cache"
+        takeaway: Caches work on lines and prefetchers predict patterns, and random access defeats both. It cost 8.5 times sequential at 512 MiB here, with no change in big-O.
+        source: notes/04-numbers-and-memory.md
+        notes: "This measures throughput, not the latency of a lone read: an out-of-order core has many misses in flight, so a pointer chase would show a steeper staircase. The mix includes TLB misses at large sizes, not separated out. The first touch of a page cost 674 ns, then none, which is why a fast allocation can be followed by a slow first loop."
+
+      - layout: cards
+        title: Why can a NumPy loop be slower than a list loop?
+        kicker: Layout sets the constant
+        lead: "2 million floats, costs per item. Apple M4 Pro, CPython 3.14.7."
+        cards:
+          - title: List of floats
+            bullets:
+              - "**32.6** bytes"
+              - "Python loop **8.1 ns**"
+              - "`sum()` **1.9 ns**"
+          - title: "`array('d')`"
+            accent: "0F7490"
+            bullets:
+              - "**8.0** bytes"
+              - "Python loop **11.7 ns**"
+              - "`sum()` **7.1 ns**"
+          - title: NumPy array
+            accent: "D4621A"
+            bullets:
+              - "**8.0** bytes"
+              - "Python loop **33.4 ns**"
+              - "`numpy.sum` **0.1 ns**"
+        takeaway: Iterating boxes each element into a new Python object, so a NumPy loop costs the most. Speed comes from getting the whole operation out of the Python loop, and memory from getting rid of the objects.
+        source: notes/04-numbers-and-memory.md
+        notes: "Big-O is equal in all of these, and the ratio between best and worst is more than 300. A list of floats is an array of pointers to 24-byte objects; an array holds the raw 8 bytes in a row. The same reasoning explains why column stores are fast."
+
+  - title: Waiting
+    summary: The price of each boundary · Lost updates · Event loops · Queues · Parallelism · Streams and round trips
+    notes: The largest cost is often waiting, which doesn't show up in Big-O at all.
+    slides:
+      - layout: statement
+        title: Where does the time go when the CPU looks idle?
+        kicker: The problem
+        statement: Most Python performance mysteries are about waiting, and they're not about computing.
+        attribution: A request sits in a queue, a thread sits on a lock, and an event loop stops dead because one handler called something that blocks.
+        source: notes/05-processes-threads-and-io.md
+        notes: This part builds the operating system's model, prices each operation on one machine, and then follows a request out over the network.
+
+      - layout: table
+        title: What does each boundary cost?
+        kicker: Prices on one machine
+        lead: "Per call on an Apple M4 Pro, macOS, CPython 3.14.7."
+        header: [Operation, Cost, Compared]
+        widths: [4.6, 2.2, 3.6]
+        rows:
+          - [Python function call, "0.01 µs", ""]
+          - ["`os.getppid()`, a system call", "0.09 µs", "About 9 function calls"]
+          - ["Pipe round trip, two processes", "4.92 µs", "Kernel wakes each side"]
+          - [Thread start and join, "27.85 µs", ""]
+          - ["`os.fork` and `waitpid`", "718.92 µs", "26 times a thread"]
+          - ["`multiprocessing` spawn and join", "**32,481.50 µs**", "Over 1,000 times a thread"]
+        takeaway: You can start a thread per task if there's a reason to, but a process per request is a mistake at 32 ms a spawn, which is why worker pools exist.
+        source: notes/05-processes-threads-and-io.md
+        notes: "A process has its own address space, and that isolation is why it exists. Threads share memory and have separate stacks. A new python -c pass took 16,304 µs, which suggests that most of spawn's cost is the interpreter starting up."
+
+      - layout: code
+        title: Does the GIL make += safe?
+        kicker: Lost updates
+        lang: python
+        code: |-
+          def plain(box, n=500_000):
+              for _ in range(n):
+                  box["n"] += 1
+
+          # 4 threads, expected 2,000,000
+          # GIL enabled, CPython 3.14.7:
+          #   [2000000, 2000000, 2000000]
+          # free-threaded, python3.14t:
+          #   [567019, 572334, 593672]
+        bullets:
+          - "`+=` is a load, an add and a store, with a gap between them"
+          - "If two threads load the same value, one update is gone"
+          - "The exact total was luck: about **70%** of updates are lost without the GIL"
+          - "An uncontended lock adds about **40 ns** per increment. Contention is the expensive part"
+        takeaway: No, it's not atomic, so a shared read-modify-write needs a lock. With several locks, take them in one global order, which breaks circular wait.
+        source: notes/05-processes-threads-and-io.md
+        notes: "A race condition is a result that depends on timing. Deadlock needs four conditions: mutual exclusion, hold-and-wait, no preemption and circular wait. Timeouts on acquire are also worthwhile, as a hang becomes an error you can log."
+
+      - layout: compare
+        title: What does one blocking call do to an event loop?
+        kicker: Many waits, one thread
+        lead: "One thread, `selectors`, on loopback: one slow client, then 50 others arriving at 20 ms."
+        left:
+          title: No blocking call
+          bullets:
+            - "Median **0.68 ms**"
+            - "Worst 1.13 ms"
+            - "All 50 clients served on one thread"
+        right:
+          title: One handler sleeps 200 ms
+          bullets:
+            - "Median **186.30 ms**"
+            - "Worst 187.26 ms"
+            - "Also blocking: `requests`, a big JSON parse, a long CPU loop"
+        takeaway: An event loop's concurrency only exists at the points where it waits, so one blocking call stops every client on the loop.
+        source: notes/05-processes-threads-and-io.md
+        notes: "186 ms is the rest of that 200 ms after they arrive at 20 ms. Blocking itself is good when it's the kernel putting a thread to sleep: polling and blocking both waited 0.5 s, polling used 0.5 s of CPU, and blocking used none."
+
+      - layout: cards
+        title: How do you reason about a queue?
+        kicker: Little's law and backpressure
+        cards:
+          - {title: "`L = λW`", body: "In flight = arrival rate × time in system. 20 requests a second at 3 s each is **60 in flight**, so a pool of 10 will queue."}
+          - {title: Load bends latency, accent: "0F7490", body: "Two workers, a nominal 10 ms of work: `W` is **12.5 ms** at 52/s and **52.4 ms** at 169/s. Most of the rise is in the last stretch."}
+          - {title: Bound it, accent: "D4621A", body: "2,000 items of 100 KB: unbounded peaks at **200 MB**, a bound of 16 at **1.6 MB**. Both finish in 0.52 s."}
+        takeaway: In flight equals arrival rate times time in system. Give every queue a bound, so overload makes producers wait or reject and doesn't turn into unbounded memory.
+        source: notes/05-processes-threads-and-io.md
+        notes: "Little's law was checked here by measurement: λW matched the sampled L to within about 2%. The default queue.Queue() has no bound, which quietly makes the choice between waiting and rejecting for you. put_nowait and queue.Full are how you reject."
+
+      - layout: bullets
+        title: What does parallelism buy in Python?
+        kicker: Amdahl
+        lead: "8 pure Python tasks, 8 workers, 12 CPUs, GIL build. Serial takes 1.12 s."
+        bullets:
+          - "**Threads: 0.97×.** The GIL lets only one run at a time"
+          - "**Processes: 4.65×.** 0.24 s against an ideal 0.14 s, roughly 0.10 s on starting and passing work"
+          - "**Serial fraction `s`** caps the speedup at `1/s`, however many workers"
+        aside:
+          title: So
+          accent: "0EA5C9"
+          bullets:
+            - "Waiting: threads or `asyncio`"
+            - "Pure Python CPU: processes, with big enough tasks"
+            - "Numeric: vectorise, or a library that releases the GIL"
+        takeaway: Threads or `asyncio` for waiting, processes for pure Python CPU work with big enough tasks, and vectorising for numeric work.
+        source: notes/05-processes-threads-and-io.md
+        notes: "With n workers the speedup is 1 / (s + (1 - s) / n). 4.65x on 8 workers implies s of about 0.10, a ceiling of about 10x, and here that serial part is mostly startup. Don't send a 1 ms task to a process pool one at a time."
+
+      - layout: code
+        title: Why isn't one recv one message?
+        kicker: TCP is a stream
+        lead: "Measured on loopback."
+        lang: python
+        code: |-
+          for msg in (b"first", b"second", b"third"):
+              client.sendall(msg)
+          time.sleep(0.05)
+          print("3 sends, 1 recv:", server.recv(1024))
+          # 3 sends, 1 recv: b'firstsecondthird'
+
+          # And one sendall of 4,000,000 bytes:
+          # 54 recvs, sizes from 416 to 433,604
+        bullets:
+          - "TCP gives an ordered, reliable stream of bytes, and no message boundaries"
+          - "`recv` returns whatever has arrived"
+          - "So assuming one message per `recv` passes on loopback with small messages, then fails in production"
+        takeaway: TCP is a byte stream, and `recv` boundaries don't relate to `send` boundaries. Every protocol on top has to mark its own, with a length prefix or a delimiter.
+        source: notes/06-networks.md
+        notes: "HTTP/1.1 solves the same problem with Content-Length, chunked coding or connection close. A server-sent event can be split across chunks, so buffer until you've got a complete one. Reject an oversized length header before you buffer the body."
+
+      - layout: flow
+        title: Where does a cold HTTPS request spend its time?
+        kicker: Count the round trips
+        lead: "One run to `example.com`, RTT about 50 ms. Run it yourself before quoting it."
+        steps:
+          - {label: DNS, sub: "2.9 ms, cached here"}
+          - {label: TCP, sub: "61.9 ms, 1 RTT"}
+          - {label: TLS 1.3, sub: "40.4 ms, 1 RTT"}
+          - {label: HTTP, sub: "211.8 ms, 1+ RTT and server time"}
+        bullets:
+          - "Cold total **316.9 ms**. A second request on the same connection: **21.2 ms**"
+          - "TLS crypto was 0.33 ms of CPU for both sides. What's slow is the round trip"
+          - "Slow start, modelled with no loss: under about 14 KB takes 1 round trip, and 1 MB takes 7"
+        takeaway: Count the round trips and multiply by the RTT. Reuse connections, since a reused one skips the TCP and TLS handshakes, and a warmed-up one skips slow start.
+        source: notes/06-networks.md
+        notes: "A library's Session or Client object holds the pool, so creating one per request throws it away. The HTTP row includes the server's own work. A POST isn't idempotent, and if the connection dies mid-request you can't tell whether it took effect, which is why LLM and payment APIs offer idempotency keys."
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules to keep
+        recall: When code is slow, what do you do first, and which do you fix before the other, the algorithm or the constant factor?
+        cards:
+          - {title: Counting, body: "Measure before you optimise. Name the variable in every Big-O claim."}
+          - {title: Structures, body: "Reach for `dict`, `set`, `sort` and `heapq` first. They run at C speed."}
+          - {title: Numbers, body: "No `==` on computed floats. Money goes in integers or `Decimal` from strings."}
+          - {title: Memory, accent: "0F7490", body: "When numeric code is slow, change the layout first."}
+          - {title: Concurrency, accent: "0F7490", body: "Lock shared read-modify-writes. One global lock order. Bound every queue."}
+          - {title: Networks, accent: "0F7490", body: "A timeout on every connection, and an idempotency key on every retried POST."}
+        takeaway: Measure first, and fix the algorithm or data structure before you tune the constant factor.
+        source: notes/01-cost-models-and-big-o.md
+        notes: "These condense the track's rules of thumb, one card per layer, and each comes from its own note. The flashcard itself comes from chapter 1. NaN is the other silent number trap: sorted on a list containing one returns a list that isn't sorted, so check math.isnan on the way in."
+
+      - layout: bullets
+        title: Where next?
+        bullets:
+          - "**Build it:** the lab's `FrameDecoder` and `RtoEstimator`, against their tests"
+          - "**Measure it:** `bash check.sh network` runs the two real-network blocks, so compare your own numbers"
+          - "**Next track:** Software design, the same habit of measuring first, applied to the structure of the code"
+          - "**At larger scale:** When distributed systems fail, for where this chapter's failures go"
+        takeaway: Build the lab's frame decoder and retransmission timer, then go on to software design.
+        source: notes/06-networks.md
+        notes: "The cold-request numbers came from one run, so run the block from your own location."

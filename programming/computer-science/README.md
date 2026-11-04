@@ -1,6 +1,7 @@
 # Computer science foundations
 
 > The university-level ideas behind the Python you already write, and how to reason about making it faster: cost models, data structures, algorithm patterns, numbers and memory, processes and threads, and networks. Math is taught where it's used, and claims about speed are measured in the note that makes them.
+> Study deck: [computer-science.pptx](slides/computer-science.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [Reading order](#reading-order) · [Builds on and feeds into](#builds-on-and-feeds-into) · [Rules of thumb](#rules-of-thumb) · [Layout](#layout) · [Setup](#setup) · [Primary texts](#primary-texts)
 
 ---
