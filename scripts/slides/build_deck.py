@@ -5,7 +5,8 @@ navy title bar with an orange edge, a pale breadcrumb strip, white cards with co
 stripes, square bullet markers, and a tinted takeaway strip.
 
     uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py \
-        python scripts/slides/build_deck.py <area>/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict]
+        python scripts/slides/build_deck.py <area>/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict] \
+        [--level {core,practice,deep}]
     python scripts/slides/build_deck.py [deck.yaml ...] --check     # is each pptx built from its yaml? See deck_stamp.py
 
 The spec format and layout catalogue are in .claude/skills/slides/references/deck-spec.md.
@@ -60,6 +61,11 @@ ROW_ALT = "F8FAFC"
 CODE_BG = "0F172A"
 CODE_FG = "E2E8F0"
 BORDER = "D5DEEA"
+
+# Per-slide keys in deck-spec.md. LEVELS is ordered: a build at one level keeps that level and those before it.
+LEVELS = ("core", "practice", "deep")
+BEATS = ("problem", "fundamentals", "practice", "pitfalls", "wrap")
+PART_BEATS = ("fundamentals", "practice", "pitfalls")
 
 PART_ACCENTS = [ORANGE, NAVY, TEAL_DARK, PURPLE, TEAL, GREEN]
 FLOW_FILLS = [NAVY, TEAL_DARK, TEAL, PURPLE, GREEN]
@@ -835,10 +841,36 @@ def section_slide(prs, part, idx, number):
 # ---------------------------------------------------------------------------
 
 
-def build(spec_path: Path) -> Path:
+def check_keys(parts: list[dict]) -> None:
+    """Stop the build on a `level` or `beat` the spec does not define. Runs on every build, filtered or not."""
+    for part in parts:
+        for sl in part.get("slides", []):
+            if sl.get("level", LEVELS[0]) not in LEVELS:
+                sys.exit(f"ERROR slide '{sl.get('title')}': unknown level '{sl['level']}' (use {', '.join(LEVELS)})")
+            if "beat" in sl and sl["beat"] not in BEATS:
+                sys.exit(f"ERROR slide '{sl.get('title')}': unknown beat '{sl['beat']}' (use {', '.join(BEATS)})")
+
+
+def filter_parts(parts: list[dict], level: str) -> list[dict]:
+    """The parts a build at `level` draws. Closing parts stay whole; an agenda part left with no slides goes."""
+    limit = LEVELS.index(level)
+    kept = []
+    for part in parts:
+        if not part.get("agenda", True):
+            kept.append(part)
+            continue
+        slides = [sl for sl in part.get("slides", []) if LEVELS.index(sl.get("level", LEVELS[0])) <= limit]
+        if slides:
+            kept.append({**part, "slides": slides})
+    return kept
+
+
+def build(spec_path: Path, level: str | None = None) -> Path:
     spec = yaml.safe_load(spec_path.read_text())
-    deck, parts = spec["deck"], spec["parts"]
+    deck, all_parts = spec["deck"], spec["parts"]
     base = spec_path.parent
+    check_keys(all_parts)
+    parts = filter_parts(all_parts, level) if level else all_parts
 
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(SLIDE_W), Inches(SLIDE_H)
@@ -881,8 +913,12 @@ def build(spec_path: Path) -> Path:
         if in_agenda:
             agenda_idx += 1
 
-    check_story(parts, base)
+    # The story rules judge the deck as written, so a filtered build reports what the full one does.
+    check_story(all_parts, base)
     out = base / deck.get("output", f"{base.parent.name}.pptx")
+    if level:
+        # deck_stamp.py only looks at the unsuffixed name, so this file is never read as the deck.
+        out = out.with_name(f"{out.stem}-{level}{out.suffix}")
     prs.core_properties.keywords = deck_stamp.stamp_value(spec_path)
     prs.save(out)
     return out
@@ -934,12 +970,24 @@ def check_story(parts: list[dict], base: Path) -> None:
             continue
         names = [sl.get("layout", "bullets") for sl in part.get("slides", [])]
         has_code = "code" in names or "code:" in yaml.safe_dump(part.get("slides", []))
-        if not has_code:
+        # An overview is the map for any audience, so it owes no code.
+        if not has_code and not part.get("overview"):
             warn(f"part '{part['title']}'", "no code or worked example")
         if not {"image", "flow"} & set(names):
             warn(f"part '{part['title']}'", "no image or flow slide")
         if names and names[0] not in ("statement", "image"):
             warn(f"part '{part['title']}'", "should open on a statement or image that poses the problem")
+    if any("beat" in sl for _, sl in slides):
+        agenda = [p for p in parts if p.get("agenda", True)]
+        if agenda and not agenda[0].get("overview"):
+            warn(f"part '{agenda[0]['title']}'", "the first agenda part should be marked overview: true")
+        for part in agenda:
+            if part.get("overview"):
+                continue
+            beats = {sl.get("beat") for sl in part.get("slides", [])}
+            missing = [b for b in PART_BEATS if b not in beats]
+            if missing:
+                warn(f"part '{part['title']}'", f"no slide with beat: {', '.join(missing)}")
     notes_dir = base.parent / "notes"
     cited = " ".join(str(sl.get("source", "")) for _, sl in slides)
     for note in sorted(notes_dir.glob("*.md")) if notes_dir.is_dir() else []:
@@ -1039,6 +1087,7 @@ def main() -> None:
     ap.add_argument("--preview", type=Path, metavar="DIR", help="write per-slide PNGs + contact sheets here")
     ap.add_argument("--pdf", action="store_true", help="also write <output>.pdf next to the .pptx (macOS)")
     ap.add_argument("--strict", action="store_true", help="exit 1 on any warning (overflow or story rules)")
+    ap.add_argument("--level", choices=LEVELS, help="draw only slides at or below this level, to <output>-<level>.pptx")
     ap.add_argument("--check", action="store_true", help="build nothing; exit 1 if a pptx is stale against its yaml")
     args = ap.parse_args()
 
@@ -1046,7 +1095,7 @@ def main() -> None:
         sys.exit(1 if deck_stamp.check(args.spec or deck_stamp.all_specs()) else 0)
     if len(args.spec) != 1:
         ap.error("give exactly one deck.yaml to build")
-    out = build(args.spec[0])
+    out = build(args.spec[0], args.level)
     print(f"deck: {out}  ({len(Presentation(out).slides)} slides)")
     if args.preview or args.pdf:
         with tempfile.TemporaryDirectory() as tmp:

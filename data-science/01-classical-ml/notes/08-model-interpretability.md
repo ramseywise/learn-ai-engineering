@@ -331,4 +331,4 @@ So: test your explanation on the person it is for. Answer the contrastive questi
 
 ## Next
 
-The classical families are done, so next comes the discipline of fitting them: [Training and tuning](09-training-and-tuning.md) runs the whole loop, from splits and regularisation to search and a final score you can defend.
+[Unsupervised learning](05-unsupervised-learning.md): the labels go away. Scaling, PCA, NMF, t-SNE, clustering, anomaly detection and recommenders, using the forests, metrics and explanations you now have.

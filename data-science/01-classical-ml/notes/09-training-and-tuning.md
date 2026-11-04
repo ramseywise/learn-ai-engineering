@@ -721,7 +721,7 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 | 7. Stop early | Set patience, keep the best round, not the last | Round 16, loss 0.2918 |
 | 8. Search | Random or TPE, on a fixed budget, with rows set aside to check the winner | +0.0025 to 0.0041 on report rows |
 | 9. Final number | Refit on train plus validation, read the test rows once, give an interval | 0.9272, 95% 0.9209 to 0.9337 |
-| 10. Stop | If a later step moves less than the spread, ship it. [Note 10](10-imbalance-errors-and-drift.md) picks up from here | |
+| 10. Stop | If a later step moves less than the spread, ship it. [Note 10](10-imbalance-errors-and-drift.md) asks what this number hides | |
 
 ---
 
@@ -773,4 +773,4 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 
 ## Next
 
-[Imbalance, Errors and Drift](10-imbalance-errors-and-drift.md): you have a number you can defend. Next comes what it hides: which errors the model makes, what happens when the positive class is rare, and how to tell when the world has moved away from your training rows.
+[Model interpretability](08-model-interpretability.md): you have a good model and a number you can defend. Now explain what it learned, without fooling yourself. What that number hides comes later, in [Imbalance, errors and drift](10-imbalance-errors-and-drift.md).

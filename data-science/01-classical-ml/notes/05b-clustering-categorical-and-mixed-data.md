@@ -396,7 +396,7 @@ Gower with PAM is *stable* at 0.802 while recovering the truth at 0.263 on that 
 
 ## Explaining segments: useful, but not proof
 
-Fitting CatBoost, a gradient-boosted tree classifier ([note 07](07-boosting-in-practice.md), still ahead), to predict the cluster labels and reading SHAP values ([note 08](08-model-interpretability.md)) is a good way to describe segments. [SHAP assigns each feature an importance for a prediction](https://arxiv.org/abs/1705.07874) (Lundberg and Lee, NIPS 2017), and here the prediction is your own label. So high accuracy can't validate anything:
+Fitting CatBoost, a gradient-boosted tree classifier ([note 07](07-boosting-in-practice.md)), to predict the cluster labels and reading SHAP values ([note 08](08-model-interpretability.md)) is a good way to describe segments. [SHAP assigns each feature an importance for a prediction](https://arxiv.org/abs/1705.07874) (Lundberg and Lee, NIPS 2017), and here the prediction is your own label. So high accuracy can't validate anything:
 
 ```python
 for world in ("both", "control"):
@@ -487,4 +487,4 @@ In every row, run the control, and rerun on a numeric-only and a category-only v
 
 ## Next
 
-[Ensembles](06-ensembles.md): back to labels, where trees handle categories and interactions without any of this.
+[Imbalance, errors and drift](10-imbalance-errors-and-drift.md): back to labels, and to what a good score hides when the positive class is rare and the world moves.

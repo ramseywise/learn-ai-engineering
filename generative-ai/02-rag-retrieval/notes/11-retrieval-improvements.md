@@ -4,6 +4,7 @@ sources:
   # own work notes (production support-agent evaluation, anonymised)
   - https://arxiv.org/abs/2212.10496
   - https://arxiv.org/abs/2305.18290
+  - https://arxiv.org/abs/2301.12652
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -347,6 +348,8 @@ ceiling for 32 queries and 5 configs: 192
 ```
 
 Even a perfect split of every query stops short of 200, at 192, and real queries where everyone hits or everyone misses contribute nothing. So the blocker is more annotated queries, and more configs would not help much: pairs from one question are not independent examples.
+
+A retriever can also be trained with no human preference pairs at all, by letting the generator score the documents. REPLUG keeps the language model frozen, prepends each of the top-k retrieved documents to the prompt in a separate pass, and ensembles the next-token probabilities weighted by retrieval score. REPLUG LSR then trains the retriever to match a distribution over the top 20 documents given by how much each one raised the model's likelihood of the gold continuation, so the labels are the model's own probabilities on 800K Pile sequences, with no annotator. With Codex (175B) and ten Wikipedia passages, that took 5-shot MMLU from 68.3 to 71.8 and 16-shot Natural Questions from 40.6 to 45.5. The untrained Contriever retriever already gave 71.4 and 44.7, so retrieval itself is most of the gain and the training adds about a point. The supervising model was the 6.7B Curie, and the same retriever was then used with the 175B models. Every prediction costs k forward passes, the ensemble needs per-token output probabilities, which chat APIs do not return, and retrieval is always on whether or not the question needs it, which the authors list as a limit ([arXiv:2301.12652](https://arxiv.org/abs/2301.12652), Shi et al., NAACL 2024). For Tallybook the practical reading is that once the eval set stores golden answers, the answer model's likelihood of each one under each retrieved page is a retriever label that costs no annotation, provided the model exposes log probabilities.
 
 ## Priority order
 

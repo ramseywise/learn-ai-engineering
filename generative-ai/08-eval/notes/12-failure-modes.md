@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2601.11868
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://www.langchain.com/blog/agent-evaluation-readiness-checklist
   - https://arxiv.org/abs/2404.12272
@@ -44,6 +45,8 @@ A score drop is a claim that the system got worse. Often it's the eval that chan
 | **Stale reference** | "Wrong" answers that are now right | Docs updated, gold answer wasn't |
 | **Version mismatch** | A jump on no change | Judge model updated, dataset v3 vs v4 |
 | **Dropped rows** | A jump in pass rate | Errored tasks silently left the denominator ([09](09-reading-results.md#pitfalls)) |
+
+Test tasks and environments before you trust a failure. Terminal-Bench requires an oracle solution to pass every test and a no-op agent to fail. It also runs a cheat-seeking agent and has an author read each trajectory, which turned up "monkey-patching test environments, guessing answers". It kept 89 of 229 contributed tasks, at roughly three reviewer-hours per final task, but gives no count of exploits found. Its debug prompt reads the same tests failing with similar errors in every trial as a fault in the instructions, and different failures as fair difficulty, with no accuracy reported for that rule. Log command errors as well. In its Terminus 2 runs, 9.2% (Grok 4) to 26.7% (GPT-OSS-120B) of commands errored, and the largest single kind of failure, 24.1%, was calling an executable that wasn't installed or on the PATH ([arXiv:2601.11868](https://arxiv.org/abs/2601.11868) (Merrill et al., ICLR 2026); errors detected by a GPT-5 judge, 92.4% agreement with a three-annotator majority on 66 pairs; failures categorised by a GPT-5 judge on 3,800 samples, 82% agreement with one author on 50). That suggests a fault in the environment or in the agent's assumptions about it, rather than in its logic.
 
 ### The debug order
 

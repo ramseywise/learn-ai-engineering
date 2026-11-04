@@ -24,12 +24,15 @@ parts:
     summary: How models read prompts · Prompt anatomy   # shown on the title slide and the divider
     divider: true                               # navy section slide before the part (default true)
     agenda: true                                # numbered + listed on the title slide (default true)
+    overview: true                              # this part opens the deck; exempt from the beat check (default false)
     notes: speaker notes for the divider
     slides: [...]
 ```
 
 Use `agenda: false, divider: false` for a closing part (rules of thumb, where next). It gets
 no number and no divider.
+
+An `overview: true` part is still an agenda part: it gets a number, a divider and a line on the title slide.
 
 ## Every slide
 
@@ -43,6 +46,8 @@ no number and no divider.
 | `recall` | optional flashcard question when the title is not one. Not drawn on the slide |
 | `source` | note path, shown in the footer and appended to the speaker notes |
 | `notes` | speaker notes: what to say, context left off the slide |
+| `level` | `core` (default), `practice` or `deep`: the audience this slide is for. See Levels below. Any other value stops the build |
+| `beat` | `problem`, `fundamentals`, `practice`, `pitfalls` or `wrap`: what this slide does in its part. See The story. Any other value stops the build |
 
 **Inline markup.** In any text, `**bold**` and `` `code` `` are supported, and nothing else.
 
@@ -57,6 +62,27 @@ no number and no divider.
 **Images.** `.png`, `.jpg` and `.svg` work. Check the real format with `file`, because downloaded "`.png`" files are often WebP, which fails. Convert them with `sips -s format png in.png --out out.png`.
 
 **Image size.** Images are embedded at about 220 dpi of their displayed size, never larger, and as JPEG when that is smaller. Plan on 60–150 KB per image slide. The whole `.pptx` must stay under 1000 KB, which is the pre-commit limit, so a deck has room for about 6–10 image slides. Give each one a reason to be there.
+
+## Levels
+
+One `deck.yaml` holds the whole lecture, and a build can draw a shorter talk from it. Each level adds to the one before.
+
+| Level | Meaning |
+|---|---|
+| `core` | tells the idea to any audience. A slide with no `level` is `core` |
+| `practice` | adds how it is done |
+| `deep` | adds the code and math |
+
+```bash
+make slides PILLAR=<pillar> LEVEL=core      # writes slides/<topic>-core.pptx next to the full deck
+```
+
+A filtered build keeps the title slide, every part's divider, the closing parts whole (`agenda: false`, whatever their
+slides' levels) and every slide at or below the requested level. A part left with no slides is dropped, from the title
+slide's agenda too, and the remaining parts renumber. `PDF=1` writes `<topic>-<level>.pdf`.
+
+Filtered files are gitignored and never overwrite the full deck, and `make deck-check` does not look at them. The story
+rules and coverage are checked against the full deck, so a filtered build reports the same story warnings as a full one.
 
 ## Layouts
 
@@ -164,14 +190,20 @@ stamped deck no longer matches its yaml, and reports decks with no stamp without
 - **Spine.** Every part runs problem, what breaks, principle, technique, evidence, what you do on
   Monday. The first slide of a part is a `statement` or `image` that poses the problem. The last
   one's `takeaway` closes the part.
+- **Beats.** A part runs fundamentals, then practice, then pitfalls, and `beat` on each slide says which it is
+  (`problem` and `wrap` mark the slides around them). The deck opens with an overview part (`overview: true`) that says
+  which problems exist, which model families answer them, and where this pillar sits in the course. These checks apply
+  only to a deck where at least one slide sets `beat`: the builder warns when an agenda part has no slide for one of
+  `fundamentals`, `practice` or `pitfalls` (it checks that they are there, not their order; an overview part is exempt),
+  and when the first agenda part is not marked `overview: true`.
 - **Layout mix.** No layout above 25% of the deck. No three consecutive slides with one layout.
-  Each part has at least one `code` block or worked example and one `image` or `flow`.
+  Each part has at least one `code` block or worked example and one `image` or `flow`. An `overview: true` part owes no code.
 - **Flashcard pairs.** `title` (or `recall`) is the prompt and `takeaway` is the answer. Librarian
   imports one card per slide and attaches it to the lesson named in `source:`, so write a takeaway
   that stands alone. `source:` must name the note file, as in `notes/03-estimation.md`.
 - **Coverage.** Every note in the pillar has at least one slide with `source:` pointing at it.
 - **Size.** 30 to 45 content slides for a pillar of 10 or more notes, 15 to 30 for a smaller pillar,
-  15 to 25 for a programming module.
+  15 to 25 for a programming module. `deep` slides don't count towards these limits, because the talk is the deck without them.
 
 Closing parts (`agenda: false`) are exempt from takeaway and part-mix checks.
 

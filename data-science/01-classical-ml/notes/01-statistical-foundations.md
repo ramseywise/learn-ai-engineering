@@ -23,7 +23,7 @@ Code blocks in this pillar run top to bottom within a note, as in a notebook, fr
 
 ## Why a readings layer comes first
 
-Classical machine learning is applied statistics with a compute budget. Every technique in notes 02–10 answers the same question, *how do I estimate a function from samples so that it holds on samples I haven't seen?*, and every failure is a failure to answer it: overfitting, leakage, a metric that rewards the wrong thing, a test set you peeked at.
+Classical machine learning is applied statistics with a compute budget. Every technique in this pillar answers the same question, *how do I estimate a function from samples so that it holds on samples I haven't seen?*, and every failure is a failure to answer it: overfitting, leakage, a metric that rewards the wrong thing, a test set you peeked at.
 
 This layer is mostly reading. The serious code starts in [02](02-supervised-learning.md). What this note does is fix the terms, demonstrate the bias-variance trade-off once, show the one API shape you will use everywhere, and say which book chapter to read alongside which later note.
 
@@ -228,28 +228,7 @@ Because every estimator has this shape, you can chain them ([03 — pipelines](0
 
 ## The shape of this pillar
 
-Classical ML is a tree, not a line: after supervised learning you can go to evaluation or to unsupervised learning in either order. Ensembles, boosting and interpretability build on the running example from [03](03-feature-engineering-and-pipelines.md).
-
-```text
-01 Statistical foundations
- ├── 02 Supervised ── 03 Features and pipelines ── 04 Evaluation
- ├── 05 Unsupervised             (independent of 04)
- └── 06 Ensembles ── 07 Boosting in practice ── 08 Interpretability
-           09 Training and tuning ── 10 Imbalance, errors and drift  (after 04 and 07)
-           then 02-deep-learning  (after 02 and 04)
-```
-
-| Layer | Notes | Depends on |
-|---|---|---|
-| Foundations | 01 | none |
-| Supervised | 02, 03 | 01 |
-| Evaluation | 04 | 02 |
-| Unsupervised | 05 | 01 (02 helps) |
-| Ensembles | 06, 07 | 02, 03, 04 |
-| Explaining a model | 08 | 04, 07 |
-| Training and trust | 09, 10 | 04, 07 |
-| Neural networks | [02-deep-learning](../../02-deep-learning/README.md) | 02, 04 |
-| Bayesian methods | [data-analytics](../../../data-analytics/04-bayesian-analysis/README.md) | 01 |
+The pillar runs as a line of six sections, and the [syllabus in the README](../README.md#syllabus) gives the order. It opens with an overview of which problem each family answers. Note numbers are stable ids, not the reading order: the unsupervised notes 05 and 05b come after note 08, because they use the metrics, forests and SHAP taught before them. Neural networks follow in [deep learning](../../02-deep-learning/README.md), and Bayesian methods are in [data analytics](../../../data-analytics/04-bayesian-analysis/README.md).
 
 ## Reading map
 

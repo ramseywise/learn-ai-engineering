@@ -629,4 +629,4 @@ Where the fixes landed:
 
 ## Next
 
-[Unsupervised learning](05-unsupervised-learning.md): no labels: scaling, PCA, NMF, t-SNE, clustering, anomaly detection and recommenders.
+[Ensembles](06-ensembles.md): you can now score a model honestly, so build the strongest one for a table, through bagging, random forests and gradient boosting.

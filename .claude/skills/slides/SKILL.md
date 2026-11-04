@@ -48,6 +48,8 @@ first and keep what still matches the notes. A deck inherits its notes' errors, 
   each slide's layout from the content's shape (see the writing rules in deck-spec.md).
   Avoid long runs of the same layout.
 - **Order.** Follow the notes. Put a pillar's thesis first, as a `statement`.
+- **Syllabus, beats and levels.** If the README has a Syllabus section, plan the parts from it. Open with an
+  `overview: true` part, and give each slide a `beat` and, where it is not `core`, a `level` (see deck-spec.md).
 
 ## Step 4 — Write `<pillar>/slides/deck.yaml`
 

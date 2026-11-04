@@ -6,6 +6,8 @@ sources:
   - "Oshin & Campos, Learning LangChain (O'Reilly, 2025), ch. 3"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 6"
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 6"
+  - https://arxiv.org/abs/2501.05366
+  - https://arxiv.org/abs/2501.09136
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -586,6 +588,8 @@ Each agent gets the context for its job and nothing else:
 
 Splitting the monolithic agent this way also made each part testable and debuggable on its own.
 
+Search-o1 measures the writer's row: QwQ-32B-Preview searches Bing mid-reasoning, and a separate pass by the same model condenses the ten results before they enter the chain. On-demand search beat one-shot RAG by 23.2% relative exact match on four multi-hop QA sets; single-hop did not move. Condensing took HotpotQA from 43.0 to 45.2, and on LiveCodeBench raw retrieval cut 33.0 to 24.1 while the condensed version held 33.0. No training, temperature 0.7, no variance or cost reported ([arXiv:2501.05366](https://arxiv.org/abs/2501.05366), Li et al., 2025-01, preprint).
+
 ---
 
 ## NER to repair the metadata
@@ -692,6 +696,8 @@ Recall falls from 0.95 to 0.50 because half the queries now cannot succeed. An a
 | Accuracy matters more than speed | You can't afford complex operations |
 | Provenance is non-negotiable | Your data quality is poor |
 | Human-level analysis is expected | |
+
+The field survey agrees: not the default, no cure for poor retrieval, and corrective and hierarchical designs pay in latency ([arXiv:2501.09136](https://arxiv.org/abs/2501.09136), Singh et al., 2025-01, preprint).
 
 **Before shipping**, check: multiple retrieval strategies are implemented; the planner is separate from the generator; a validation step exists; every claim has traceable evidence; tool use is rate-limited; human override paths exist; metrics go beyond answer quality. Skip one and pause.
 

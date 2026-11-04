@@ -12,28 +12,79 @@ Most business data is a table. On tables of ordinary size, boosted trees remain 
 
 ## The story
 
-You are asked whether someone will earn over $50k. A one-line split and a linear model give a number, but is it believable? So you split the data properly, wrap every fitted step in a pipeline so nothing leaks, and pick a metric from what each mistake costs. The adult census runs through the pillar: a dummy scores 0.759 accuracy, logistic regression reaches AUC 0.901, and boosting gets to about 0.93, at which point four libraries tie within noise. With no labels at all, you look for structure instead. Finally a reviewer asks why the model rejected this applicant, and you need tools that explain a model without fooling you.
+You are asked whether someone will earn over $50k. A one-line split and a linear model give a number, but is it believable? So you split the data properly, wrap every fitted step in a pipeline so nothing leaks, and pick a metric from what each mistake costs. The adult census runs through the pillar: a dummy scores 0.759 accuracy, logistic regression reaches AUC 0.901, and boosting gets to about 0.93, at which point four libraries tie within noise. A reviewer then asks why the model rejected this applicant, and you need tools that explain a model without fooling you. With no labels at all, you look for structure instead. Back with labels, you ask what the good score hides when the event is rare and the world moves, which metric you should have asked for, and which rows are wrong. Last, people join the decision: which cases a person reviews, what their corrections teach the model, and who bears its errors.
 
-## Reading order
+## Overview: what kind of problem do you have?
+
+Start from the problem, then pick the family. Each row names the note and heading that covers it.
+
+| Problem | Families in this pillar | When to use which | Where |
+|---|---|---|---|
+| Predict a number | OLS, ridge, lasso, kNN, trees, forests, boosting | Default to ridge. Use lasso when you expect only a few features to matter. The loss sets the target: squared gives the mean, absolute the median, pinball a quantile | Note 02, "Regression: OLS, ridge, lasso". Note 11, "The loss decides what you are estimating" |
+| Predict a class | Logistic and linear SVM, kNN, naive Bayes, tree, kernel SVM, MLP | Linear for high-dimensional, sparse, large data. kNN for small data and a baseline. Naive Bayes for very fast text baselines. A tree to explain a model to people | Note 02, "Which model, when" |
+| Either, on a table | Random forest, gradient boosting | The forest is the first serious model. Boosting is for the last points of accuracy | Note 06, "Rules of thumb". Note 07 |
+| A rare event | Boosting plus a threshold from costs | Tune the threshold and leave the data alone, on the data tested there | Note 10, "Imbalance: what each remedy does" |
+| Predict a count | Poisson, negative binomial | Loss, metric and baseline only. The model is in [DA 02/06](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Note 11, "Counts" |
+| Fewer columns, or a picture | PCA, NMF, t-SNE | t-SNE is for visualisation only | Note 05 |
+| Find groups | k-means, agglomerative, DBSCAN, Gaussian mixture | Numeric columns | Note 05, "Comparing and evaluating" |
+| Find groups in mixed columns | FAMD, MCA, Gower with PAM, k-prototypes, latent class | Depends on the column types, missing values and whether "no groups" must be a possible answer | Note 05b, "Which to reach for" |
+| Spot anomalies | Density estimation, classifier, isolation forest | Density when positives are very few and may look new. A classifier when positives are many and stable | Note 05, "Anomaly detection" |
+| Explain a prediction | Permutation importance, PDP and ICE, SHAP, LIME | Permutation for the whole model, PDP and ICE for a shape, SHAP or LIME for one row | Note 08, "Which question are you asking?" |
+| Decide with a person | Two priced thresholds | Thresholds follow from the price of each route | Note 13, "Price each route, and the thresholds follow" |
+| Get or clean labels | Annotators, finding wrong labels, weak rules, active learning, random audit | By the shape of the noise and what you need to audit | Note 14 |
+| Measure group gaps | Impact ratio, demographic parity, equalized odds, calibration within groups | They can't all be closed together | Note 15, "The impossibility, in numbers" |
+
+**Taught elsewhere.** Forecasting is in [DS 05/01](../05-time-series-and-recommenders/notes/01-time-series-ml.md), recommenders in [DS 05/02](../05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md), learning to rank in [DS 05/04](../05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md), time to event in [DA 06/07](../../data-analytics/06-applied-analyses/notes/07-survival-and-event-history.md), and causal effects in [DA 03/04](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md).
+
+## Syllabus
+
+Read in this order. It is the pillar's reading order, and note numbers are stable ids rather than positions. Each section's notes cover the fundamentals, how it looks in practice, and what goes wrong.
+
+### 1. What a model is
 
 | # | Note | Question it answers |
 |---|---|---|
-| 1 | [Statistical foundations](notes/01-statistical-foundations.md) | What is a model estimating, and why does it fail on new data? |
-| 2 | [Supervised learning](notes/02-supervised-learning.md) | Which family first, and what controls its complexity? |
-| 3 | [Feature engineering and pipelines](notes/03-feature-engineering-and-pipelines.md) | What should the model see, and how do you keep it from cheating? |
-| 4 | [Model evaluation](notes/04-model-evaluation.md) | A model scored 90%. Is that good? |
-| 5 | [Unsupervised learning](notes/05-unsupervised-learning.md) | What can you learn with no labels? |
-| 5b | [Clustering categorical and mixed data](notes/05b-clustering-categorical-and-mixed-data.md) | How do you segment customers when the columns aren't all numbers? |
-| 6 | [Ensembles](notes/06-ensembles.md) | Why do many trees beat one? |
-| 7 | [Boosting in practice](notes/07-boosting-in-practice.md) | Which library, and which knobs? |
-| 8 | [Model interpretability](notes/08-model-interpretability.md) | What did the model learn, and why this answer for this row? |
-| 9 | [Training and tuning](notes/09-training-and-tuning.md) | How do you run the whole loop and end with a number you can defend? |
-| 10 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
-| 11 | [Choosing a metric](notes/11-choosing-a-metric.md) | Given this target and this decision, which loss, metric and baseline? |
-| 12 | [Reading the errors](notes/12-reading-the-errors.md) | Which rows does the model get wrong, why, and how do you learn from them without fitting to them? |
-| 13 | [Automate, review or reject](notes/13-automate-review-or-reject.md) | Which decisions may the model take alone, and what is a person's review worth? |
-| 14 | [Learning from corrections](notes/14-learning-from-corrections.md) | What can people's corrections teach a model, and how do you measure what they never see? |
-| 15 | [Fairness in automated scoring](notes/15-fairness-in-automated-scoring.md) | Which group gaps can you measure in a screening model, which can't be closed together, and what must an audit state? |
+| 1.1 | [Statistical foundations](notes/01-statistical-foundations.md) | What is a model estimating, and why does it fail on new data? |
+| 1.2 | [Supervised learning](notes/02-supervised-learning.md) | Which family first, and what controls its complexity? |
+
+### 2. Honest inputs, honest scores
+
+| # | Note | Question it answers |
+|---|---|---|
+| 2.1 | [Feature engineering and pipelines](notes/03-feature-engineering-and-pipelines.md) | What should the model see, and how do you keep it from cheating? |
+| 2.2 | [Model evaluation](notes/04-model-evaluation.md) | A model scored 90%. Is that good? |
+
+### 3. Winning on tables
+
+| # | Note | Question it answers |
+|---|---|---|
+| 3.1 | [Ensembles](notes/06-ensembles.md) | Why do many trees beat one? |
+| 3.2 | [Boosting in practice](notes/07-boosting-in-practice.md) | Which library, and which knobs? |
+| 3.3 | [Training and tuning](notes/09-training-and-tuning.md) | How do you run the whole loop and end with a number you can defend? |
+| 3.4 | [Model interpretability](notes/08-model-interpretability.md) | What did the model learn, and why this answer for this row? |
+
+### 4. No labels
+
+| # | Note | Question it answers |
+|---|---|---|
+| 4.1 | [Unsupervised learning](notes/05-unsupervised-learning.md) | What can you learn with no labels? |
+| 4.2 | [Clustering categorical and mixed data](notes/05b-clustering-categorical-and-mixed-data.md) | How do you segment customers when the columns aren't all numbers? |
+
+### 5. What the number hides
+
+| # | Note | Question it answers |
+|---|---|---|
+| 5.1 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
+| 5.2 | [Choosing a metric](notes/11-choosing-a-metric.md) | Given this target and this decision, which loss, metric and baseline? |
+| 5.3 | [Reading the errors](notes/12-reading-the-errors.md) | Which rows does the model get wrong, why, and how do you learn from them without fitting to them? |
+
+### 6. People and accountability
+
+| # | Note | Question it answers |
+|---|---|---|
+| 6.1 | [Automate, review or reject](notes/13-automate-review-or-reject.md) | Which decisions may the model take alone, and what is a person's review worth? |
+| 6.2 | [Learning from corrections](notes/14-learning-from-corrections.md) | What can people's corrections teach a model, and how do you measure what they never see? |
+| 6.3 | [Fairness in automated scoring](notes/15-fairness-in-automated-scoring.md) | Which group gaps can you measure in a screening model, which can't be closed together, and what must an audit state? |
 
 ## Builds on and feeds into
 

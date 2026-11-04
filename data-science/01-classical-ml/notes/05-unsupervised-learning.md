@@ -644,4 +644,4 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 
 ## Next
 
-[Clustering categorical and mixed data](05b-clustering-categorical-and-mixed-data.md): what to feed these methods when the columns aren't all numbers, and how to tell if the groups mean anything. After that, [Ensembles](06-ensembles.md) combines many trees through bagging, random forests and gradient boosting.
+[Clustering categorical and mixed data](05b-clustering-categorical-and-mixed-data.md): what to feed these methods when the columns aren't all numbers, and how to tell if the groups mean anything.

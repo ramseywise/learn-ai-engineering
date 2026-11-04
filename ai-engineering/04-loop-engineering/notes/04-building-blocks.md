@@ -10,6 +10,7 @@ sources:
   - https://notes.kodekloud.com/docs/Loop-Engineering/Components/Sub-agents/page.md
   - https://notes.kodekloud.com/docs/Loop-Engineering/Tie-It-All-Together/The-Whole-Loop-in-Motion/page.md
   - https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
+  - https://arxiv.org/abs/2602.12670
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -85,6 +86,8 @@ Rules that matter inside a loop:
 - **Point at helpers** (scripts, cheat sheets) rather than pasting them in.
 
 Why not one giant prompt? **Consistency**: the same steps every pass, so behavior doesn't drift. **Clarity**: the base prompt stays small and know-how is pulled in only when needed (Anthropic calls this *progressive disclosure*). Osmani's name for the cost of skipping skills is **intent debt**: agents confidently guessing your conventions.
+
+The evidence for short skills is observational but consistent. Across SkillsBench's 87 tasks, compact and standard-length Skills gained 19.0 and 21.5 points of pass rate, against 0.7 for comprehensive documentation, and tasks given four or more Skills gained 10.1 against 18.0 for one ([arXiv:2602.12670](https://arxiv.org/abs/2602.12670) (Li et al., 2026-02, v4 2026-06, preprint); compact 22 tasks, standard 22, comprehensive only 5, and the largest bucket, detailed (38 tasks), gained 14.5; tasks weren't randomised to a length, and baselines differ by bucket). Don't let the agent write its own and assume it helps: self-generated Skills scored 8.1 to 11.5 points below no Skills on the three setups tested, partly because agents often never opened them. Details in [eval 06](../../../generative-ai/08-eval/notes/06-evaluating-agents.md#scoring-tool-calls).
 
 ---
 

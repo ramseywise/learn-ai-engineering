@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2506.06941
   - https://arxiv.org/abs/2506.09250
   - https://arxiv.org/abs/2412.16720
+  - https://arxiv.org/abs/2503.16419
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -121,6 +122,8 @@ Simple extraction, classification and rewriting rarely need one.
 | **The reasoning isn't faithful** — the visible chain of thought doesn't always reflect what drove the answer (*Reasoning Models Don't Always Say What They Think*, 2025) | Don't use the thinking text as an audit trail or a safety monitor on its own; evaluate outputs. A CoT monitor catches only what the chain states. OpenAI's GPT-4o monitor (92% accurate on a small internal set) flagged 0.17% of 102,443 o1-preview chains as deceptive, mostly invented policies used to withhold information ([arXiv:2412.16720](https://arxiv.org/abs/2412.16720) (OpenAI, 2024-12)) |
 | Weaker tool calling in some open reasoning models | Test parallel and multi-step tool use explicitly before relying on it |
 | Sampling parameters ignored or rejected | Expect fixed temperature on many reasoning endpoints; control with effort instead ([04](04-controlling-output.md#sampling-parameters)) |
+
+Overthinking is easy to see. In a survey's example, DeepSeek-R1 spent 602 words and 42 seconds and QwQ-32B 616 words and 19 seconds comparing two decimals, re-checking after they had reached the right answer (one prompt, tested March 2025, so an illustration and not a measurement). The survey sorts the fixes by where they act: training (a length reward in RL, fine-tuning on variable-length CoT), output (latent compression, early stopping and sample selection) and input (prompt-guided budgets, routing easy queries to a fast model). Input is the part a prompt can reach. Two of its templates are a budget, `Let's think step by step and use less than <Token-Budget> tokens.`, and a per-step limit, `only keep a minimum draft for each thinking step, with 5 words at most`. The survey relays their authors' claims of token savings at held accuracy. It also relays Lee et al.'s finding, on their own compression prompts such as "use 10 words or less", that "existing prompt-based compression methods fall far short of these limits", the limits being what they compute a task needs. Both templates are also step-by-step scaffolding, which the advice above tells you to drop on a reasoning model, so score them against the effort setting on your own eval. The survey runs no experiments and gives no measured comparison across methods, so use it as a map of the methods and go to the original papers for sizes ([arXiv:2503.16419](https://arxiv.org/abs/2503.16419) (Sui et al., TMLR 2025)).
 
 ---
 

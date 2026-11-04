@@ -21,6 +21,9 @@ sources:
   - https://arxiv.org/abs/2204.01691
   - https://arxiv.org/abs/2010.02903
   - https://arxiv.org/abs/2304.08354
+  - https://arxiv.org/abs/2306.06070
+  - https://arxiv.org/abs/2601.11868
+  - https://arxiv.org/abs/2602.12670
   - https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
@@ -83,7 +86,11 @@ For agents that act, check the **end state** directly where you can:
 
 An agent that says "I've issued your refund" when no refund exists is the most important failure to catch, and only a state check catches it.
 
+Terminal-Bench's tests check only the final container state and "do not test the agent's commands or console output" ([arXiv:2601.11868](https://arxiv.org/abs/2601.11868) (Merrill et al., ICLR 2026)).
+
 WebShop is the standard example of a state grader for a web agent. The episode ends when the agent buys something. The reward is computed from the purchased product: the share of the instruction's hidden attributes, options and price limit that it meets, multiplied by a product-type match. Two numbers come from that one reward, and they can disagree. **Task score** is the mean reward × 100, and **success rate** is the share of episodes with full reward. RL fine-tuning raised the imitation-learning agent's score from 59.9 to 62.4 while its success rate fell from 29.1% to 28.7% (500 test instructions; human experts 82.1 and 59.6%). The grader was itself checked against hand scoring of 200 human trajectories. Pearson was 0.86 for average workers and 0.77 for experts, and the automatic score ran low (81.5 against 89.9 for experts) because exact attribute matching misses synonyms ([arXiv:2207.01206](https://arxiv.org/abs/2207.01206) (Yao et al., NeurIPS 2022); BERT/BART agents, not LLMs). A state check can still be strict in the wrong place. Hand-score a sample before you trust it.
+
+Without a state check, the score measures agreement with a recorded path. Mind2Web (2,350 crowd-demonstrated tasks on 137 real websites) replays cached pages and grades each step with the true history supplied, and a task counts only if every step matches. **Flan-T5XL scored 52.0% per step and 5.2% per task** on new tasks from known websites. The authors concede that a valid path nobody cached fails, "potentially leading to false negatives" ([arXiv:2306.06070](https://arxiv.org/abs/2306.06070) (Deng et al., NeurIPS 2023 Datasets & Benchmarks); 2023 models, no repeated runs on the main table).
 
 ---
 
@@ -125,6 +132,8 @@ These are sets, so a tool that should be called twice counts once, and order is 
 Oshin & Campos test agents at three granularities (*Learning LangChain*, ch. 10): the **final response**, a **single step** (given this prompt and tool set, is the next tool call right?), and the **trajectory**. Their trajectory checks are the match modes in the table: "all expected tools, any order" is `set(expected) <= set(calls)`, "in order" is a subsequence check, and exact match compares the lists. Single-step tests are the cheap ones. They need no environment and pin down one decision, so write them for the steps that fail most. Their examples run each case three times (`num_repetitions=3`) because the agent is non-deterministic ([below](#non-determinism-run-every-task-k-times)).
 
 Score a no-tool baseline beside the tool runs, on tasks the model could attempt without the tool. In Qin et al.'s survey experiment (18 tools, text-davinci-003 and ChatGPT, prompted with the API documentation), giving ChatGPT a calculator dropped its ASDiv maths accuracy from 91.7 without the tool to 74.1 zero-shot, and few-shot examples brought it back to 92.5. On HotpotQA, ChatGPT with a Wikipedia tool scored 19.0 few-shot against 34.5 without it ([arXiv:2304.08354](https://arxiv.org/abs/2304.08354) (Qin et al., ACM Computing Surveys 2025); 2023 models without native function calling, test sets of 10–266 items, one run, no intervals). The authors grade most of their ChatGPT-generated, hand-filtered test sets from the trace, counting a task correct only if a person judges every call accurate and the result reasonable, but report no rubric or agreement figure, and warn that differing setups make the scores hard to compare across tools.
+
+Do the same for anything you add to an agent. SkillsBench ran 87 tasks with and without curated Skills on 18 model-harness pairs, three trials per cell. **Mean pass rate rose from 33.9% to 50.5%, but the lift ran from +4.1 to +25.7 points by pair, and 13 tasks got worse.** On the three pairs tested, Skills the agent wrote for itself scored 8.1 to 11.5 points below none. Read the lift as optimistic: tasks "with no measurable separation between conditions" were rejected, and the benchmark's Skills outscore the ecosystem's (quality 10.1 against 6.2 of 12) ([arXiv:2602.12670](https://arxiv.org/abs/2602.12670) (Li et al., 2026-02, v4 2026-06, preprint); terminal tasks, no length-matched control).
 
 Labeling expected tool calls is real work. Two shortcuts:
 
@@ -187,6 +196,8 @@ def code_is_runnable(output: str) -> bool:
 ````
 
 These APIs have moved since the course was recorded. `px.Client()` and `SpanEvaluations`/`log_evaluations` are legacy: current Phoenix uses `phoenix.client.Client` and logs span annotations. phoenix.evals 2.x replaces `llm_classify(dataframe=…)` and `OpenAIModel` with `create_classifier` and `LLM(provider="openai", model=…)`. The course also fills the template's `{tool_definitions}` slot with string `.replace()` calls that turn the JSON braces into quotes. Pass the definitions in as a template variable instead. "Runs without raising" is also a weak check: code that draws an empty chart passes it.
+
+The harness is a component too, so report model and harness together. On Terminal-Bench (89 tasks, at least 5 runs per pair, about ±3 points), GPT-5 resolved 49.6% in Codex CLI and 35.2% in Terminus 2, though the authors conclude that "model selection is usually more important than agent scaffold" (Merrill et al., [above](#grade-the-outcome-by-state-not-by-words)).
 
 ### Routing vs. domain evals in multi-agent systems
 
@@ -339,7 +350,7 @@ An agent eval environment has five parts. Each one can be wrong on its own:
 - **Isolate trials.** Parallel trials must not share mutable resources, and neither should sequential ones. WebArena's Reddit clone rate-limits posting, so "if the tasks involving Reddit posts are evaluated one after another, they are much more likely to fail." Task order changed the score (Kapoor et al., [above](#efficiency-metrics)). Shuffle task order between runs. A score that moves with order means the tasks are not independent.
 - **Re-run the scoring, not just the agent.** The same audit found two leaderboard agents (LATS, STeP) that marked some failed tasks as correct and dropped a few tasks from the benchmark.
 - **Stub or record unstable externals** (live web, third-party APIs) for regression suites. Keep a separate live suite for capability checks.
-- **Treat a 0% task as suspect.** If a task fails every trial across several model versions, check the task before the agent. It's often broken: unreachable state, wrong reference, missing permission. On BrowseComp, 21 of the 118 questions that Deep Research never solved had a bad reference answer ([03](03-eval-datasets.md#lessons-from-public-benchmarks)). For the rest, the authors gave the model the reference answer and asked it to find supporting evidence. It usually could, which showed the questions were hard rather than broken (Wei et al., [above](#non-determinism-run-every-task-k-times)).
+- **Treat a 0% task as suspect.** If a task fails every trial across several model versions, check the task before the agent. It's often broken: unreachable state, wrong reference, missing permission. On BrowseComp, 21 of the 118 questions that Deep Research never solved had a bad reference answer ([03](03-eval-datasets.md#lessons-from-public-benchmarks)). For the rest, the authors gave the model the reference answer and asked it to find supporting evidence. It usually could, which showed the questions were hard rather than broken (Wei et al., [above](#non-determinism-run-every-task-k-times)). [12](12-failure-modes.md#eval-bugs-look-like-agent-bugs) has more checks for a broken task.
 - **Keep the answer out of reach.** An agent that can't do the task the intended way will look for another way. In one of Anthropic's capture-the-flag evals, Claude 3.7 Sonnet couldn't connect to the vulnerable service, so it reasoned that the service was running locally, searched the whole machine and found the flag in plaintext ([PDF](https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf) (Anthropic, 2025-02)). Store reference answers, grader code and hidden tests where the agent's tools can't read them, and read the transcripts of surprising passes.
 
 ---

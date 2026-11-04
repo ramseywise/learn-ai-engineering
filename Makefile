@@ -28,6 +28,8 @@ test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum 
 
 unit:  ## Run the tests for the repo's scripts
 	@out=$$(python3 -m unittest discover -s scripts -p 'test_*.py' 2>&1); rc=$$?; echo "$$out" | grep -E '^(Ran |OK|FAILED|FAIL:|ERROR:)'; exit $$rc
+	@# test_build_deck.py skips itself above, because the builder needs packages the other tests do not. It runs here.
+	@out=$$(uv run -q --with python-pptx --with pyyaml python -m unittest discover -s scripts -p 'test_build_deck.py' 2>&1); rc=$$?; if [ $$rc -eq 0 ]; then echo "$$out" | grep -E '^(Ran |OK)'; else echo "$$out" | tail -20; fi; exit $$rc
 
 da06-smoke:  ## Run the DA 06 chNN labs headless in a temporary copy, each with a time limit (slow, so not in make test): make da06-smoke [SMOKE_TIMEOUT=600]
 	@python3 scripts/smoke_labs.py data-analytics/06-applied-analyses/practice --pattern 'ch[0-9]*.py' --timeout $(or $(SMOKE_TIMEOUT),600) $(SMOKE_ARGS)
@@ -124,8 +126,8 @@ papers-nightly-uninstall:  ## Remove the nightly /papers job
 # PILLAR is a dir under ai-engineering/ (01-prompt-engineering) or a path (generative-ai/02-rag-retrieval)
 SLIDES_DIR = $(if $(findstring /,$(PILLAR)),$(PILLAR),ai-engineering/$(PILLAR))
 
-slides:  ## Build a deck: make slides PILLAR=01-prompt-engineering|data-analytics/02-probability-and-statistics|programming/python/01-foundations [PREVIEW=1] [PDF=1] [STRICT=1]
-	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1]"; exit 1; }
+slides:  ## Build a deck: make slides PILLAR=01-prompt-engineering|data-analytics/02-probability-and-statistics|programming/python/01-foundations [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]
+	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1] [LEVEL=core|practice|deep]"; exit 1; }
 	@uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py python scripts/slides/build_deck.py \
 		$(SLIDES_DIR)/slides/deck.yaml \
-		$(if $(PREVIEW),--preview $(SLIDES_DIR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict)
+		$(if $(PREVIEW),--preview $(SLIDES_DIR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict) $(if $(LEVEL),--level $(LEVEL))

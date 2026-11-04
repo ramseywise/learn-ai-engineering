@@ -283,4 +283,4 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 
 ## Next
 
-[Model interpretability](08-model-interpretability.md): you have a good model. Now explain what it learned, without fooling yourself.
+[Training and tuning](09-training-and-tuning.md): you have a strong model family. Now run the whole loop, from splits and regularisation to search and a final score you can defend.

@@ -43,7 +43,8 @@ see [chapter](path) in data analytics for the derivation
 
 The notes are the product. Everything else in the folder serves them.
 
-- **One topic per note**, numbered in reading order. A source never gets its own note
+- **One topic per note**, numbered when written. The number is a stable id: the README sets the reading order, and
+  may group notes into a `## Syllabus` with sections. A source never gets its own note
   ("Chapter 6 summary"). Its content is folded into the notes on the topics it covers.
 - **Frontmatter**:
   ```yaml
