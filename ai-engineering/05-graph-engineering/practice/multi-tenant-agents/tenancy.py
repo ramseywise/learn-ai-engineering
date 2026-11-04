@@ -45,7 +45,7 @@ class TenantConfig:
 
 
 def validate_config(raw: dict) -> TenantConfig:
-    """Report every problem at once, and never fill a gap with a default."""
+    """Report key problems first, then every value problem at once, and never fill a gap with a default."""
     tenant = str(raw.get("tenant_id", "?"))
     errors = [f"missing {k}" for k in sorted(REQUIRED - raw.keys())]
     errors += [f"unknown key {k}" for k in sorted(raw.keys() - REQUIRED)]  # a typo must not silently mean "unset"

@@ -393,11 +393,11 @@ An agent eval environment has five parts. Each one can be wrong on its own:
 
    </details>
 
-4. Run section 4 of the [conversation scoring lab](../practice/conversation_scoring_lab.py) (`cd practice && uv run conversation_scoring_lab.py`). On which pattern does the minimum of turn scores beat the mean by most, and on which does neither work? Why can no threshold on a per-turn score fix the second?
+4. Run section 4 of the [conversation scoring lab](../practice/conversation_scoring_lab.py) (`cd practice && uv run conversation_scoring_lab.py`). On which pattern does the minimum of turn scores beat the mean by most, and on which does neither work? Why can no threshold fix the second without breaking the other rows?
 
    <details><summary>Answer</summary>
 
-   On `padded` the minimum is right 98% of the time and the mean 0%, and on `late_disqualifier` it's 83% against 1%. On `recovery` and `contradiction` neither works: the mean is at 2% and 0%, and the minimum at 0% on both. A contradiction lives between two turns, and a repair needs knowing which answer came last, so a function that sees one turn at a time has nothing to threshold. These rates come from the lab's seed and generated data.
+   On `padded` the minimum is right 98% of the time and the mean 0%, and on `late_disqualifier` it's 83% against 1%. On `recovery` and `contradiction` neither works: the mean is at 2% and 0%, and the minimum at 0% on both. A contradiction lives between two turns, and a repair needs knowing which answer came last, so a function that sees one turn at a time has nothing to threshold. The scores show it: a repaired conversation (human PASS) has a mean of 0.58, below the failing `padded` (0.70) and `late_disqualifier` (0.71), while a contradictory one (human FAIL) scores 0.82, above ordinary rows at 0.69. The ordering is wrong for any cut. A mean threshold of .50 gets `recovery` right but drops ordinary rows from 85% to 73%, and a minimum threshold of .80 gets `contradiction` 96% right but drops ordinary rows from 79% to 42%. These rates come from the lab's seed and generated data.
 
    </details>
 

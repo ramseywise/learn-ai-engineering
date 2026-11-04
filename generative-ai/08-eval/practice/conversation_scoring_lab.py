@@ -29,7 +29,7 @@ BOOTSTRAPS = 400
 GOLD_SET = 1200  # labelled conversations in the regression suite, section 5
 RERUNS = 200  # repeats of the whole gate, section 5
 WRONG_PRICE, ABSTAIN_PRICE = 10.0, 1.0  # assumed, section 2: a wrong verdict, and a follow-up call instead of a verdict
-SCORE_MEAN, SCORE_SD = .9, 1.6  # true log-odds of a human PASS, section 3. A mean of .9 is about 67% PASS
+SCORE_MEAN, SCORE_SD = .9, 1.6  # true log-odds of a human PASS, section 3. A mean of .9 is about 65% PASS
 
 
 @dataclass(frozen=True)
@@ -217,6 +217,8 @@ def check_kappa():
     labels = [1, 2, 3, 4, 5, 3, 3, 2]
     other = [2, 2, 3, 5, 4, 3, 1, 2]
     assert weighted_kappa(labels, labels) == 1.0
+    assert round(weighted_kappa(labels, other, weights="linear"), 4) == .5238
+    assert round(weighted_kappa(labels, other, weights="quadratic"), 4) == .6889
     assert abs(weighted_kappa(labels, other, weights="quadratic") - weighted_kappa(other, labels, weights="quadratic")) < 1e-12
     binary = (["PASS", "PASS", "FAIL", "PASS"], ["PASS", "FAIL", "FAIL", "PASS"])
     assert abs(weighted_kappa(*binary) - weighted_kappa(*binary, weights="quadratic")) < 1e-12  # two labels: weights change nothing
@@ -246,12 +248,13 @@ def agreement_section(n=400):
                        ("twin A vs twin B", twin_a, twin_b)]:
         kappa, (low, high) = weighted_kappa(a, b), bootstrap_kappa(rng, a, b)
         tpr, tnr = rates(b, a)
-        results[name] = dict(raw=agreement(a, b), kappa=kappa)
+        results[name] = dict(raw=agreement(a, b), kappa=kappa, tnr=tnr)
         print(f"   {name:25s} {agreement(a, b):.3f}  {kappa:5.2f}  [{low:5.2f}, {high:5.2f}]  {tpr:.2f}  {tnr:.2f}")
     print("   Raw agreement prefers the lenient scorer to the careful one, and kappa and TNR reverse that. The twins agree with")
     print("   each other because they share a blind spot, which says nothing about whether they agree with a person.")
     assert results["lenient scorer vs human"]["raw"] > results["careful scorer vs human"]["raw"]
     assert results["lenient scorer vs human"]["kappa"] < results["careful scorer vs human"]["kappa"]
+    assert results["careful scorer vs human"]["tnr"] > results["lenient scorer vs human"]["tnr"] + .3
     assert results["twin A vs twin B"]["kappa"] > results["twin A vs human"]["kappa"]
 
     print("\n   One scorer with TPR 0.90 and TNR 0.80 at four base rates: kappa moves though the scorer hasn't changed")
@@ -340,6 +343,7 @@ def abstain_section(n=4000, wrong_price=WRONG_PRICE, abstain_price=ABSTAIN_PRICE
         table.append(dict(label=label, band=band, coverage=len(scored) / n, error=error, cost=cost))
         print(f"   {label:17s} {len(scored) / n:8.1%}  {error:15.1%}  {len(wrong):5d}  {never:19d}  {cost:21.2f}")
     assert table[0]["coverage"] == 1.0 and table[1]["error"] < table[0]["error"]
+    assert table[1]["coverage"] > table[3]["coverage"]  # the band really abstains
     assert all(a["coverage"] >= b["coverage"] for a, b in zip(table[1:], table[2:]))  # a wider band can only abstain more
     assert all(a["error"] >= b["error"] for a, b in zip(table[1:5], table[2:5]))
     best = min(table, key=lambda r: r["cost"])
@@ -458,6 +462,7 @@ def calibration_section(seeds=200, test=500, spread=1.0):
     drawn, planted, control = summary.values()
     assert drawn["weighted"]["shrunk"] < drawn["weighted"]["shared"]
     assert drawn["smalls"]["shrunk"] < drawn["smalls"]["alone"]  # the case for pooling is the small verticals
+    assert drawn["smalls"]["shrunk"] < drawn["smalls"]["fallback"] and control["smalls"]["shrunk"] < control["smalls"]["fallback"] / 5
     assert control["weighted"]["shrunk"] < control["weighted"]["alone"]  # no real differences: alone pays for noise, pooling doesn't
     print("\n   Regret is extra wrong verdicts per conversation above using the true probability. We planted a pure shift, which is")
     print("   what one offset can fix. A vertical whose score ranks differently needs its own check, and this lab doesn't run one.")
@@ -538,9 +543,30 @@ def turn_section(n=3000):
     print(f"   all rows: kappa against human, mean {kappas['mean']:.2f}, min {kappas['min']:.2f}, whole {kappas['whole']:.2f}")
     print("   The whole scorer follows the labellers' rule by construction, so its lead is what the mean can't express, not a")
     print("   measurement of any whole-conversation judge. Min fixes the late failure and breaks on the recovery.")
+
+    # The scores themselves, read with their own rng so the table above doesn't move.
+    read = random.Random(SEED + 9)
+    means, mins, right = {}, {}, {}
+    for pattern in names:
+        rows = [c for c in conversations if c.pattern == pattern]
+        m, low = [mean_of_turns(read, c) for c in rows], [min_of_turns(read, c) for c in rows]
+        means[pattern] = statistics.mean(m)
+        mins[pattern] = statistics.mean(low)
+        right[pattern] = (sum((x >= .50) == (c.human == "PASS") for x, c in zip(m, rows)) / len(rows),
+                          sum((x >= .80) == (c.human == "PASS") for x, c in zip(low, rows)) / len(rows))
+    print("\n   Can another threshold rescue a per-turn score? The human verdicts don't follow the order of the scores")
+    print("   pattern            human PASS  mean score  min score  right with mean >= .50  right with min >= .80")
+    for pattern in names:
+        rows = [c for c in conversations if c.pattern == pattern]
+        share = sum(c.human == "PASS" for c in rows) / len(rows)
+        print(f"   {pattern:17s}  {share:10.0%}  {means[pattern]:10.2f}  {mins[pattern]:9.2f}  {right[pattern][0]:22.0%}  {right[pattern][1]:21.0%}")
+    print("   A repaired conversation (all PASS) has a lower mean than the padded and late-failure ones (all FAIL), and a")
+    print("   contradictory one (all FAIL) scores above ordinary rows. A cut that rescues one of them gives up ordinary rows.")
     assert table["late_disqualifier"]["mean"] < table["late_disqualifier"]["whole"] - .3
     assert table["recovery"]["min"] < table["recovery"]["whole"] - .3
     assert table["contradiction"]["mean"] < .3 and table["padded"]["mean"] < table["padded"]["whole"]
+    assert table["contradiction"]["whole"] > .8
+    assert means["recovery"] < min(means["padded"], means["late_disqualifier"]) and means["contradiction"] > means["ordinary"]
     return table, kappas
 
 
@@ -630,15 +656,21 @@ def gate_section(n=GOLD_SET, reruns=RERUNS):
     print("   what the gate emits:")
     emitted = {k: v for k, v in report.items() if k != "all_slices"}
     print("   " + json.dumps(emitted))
-    assert overall["verdict"] == "pass" and report["verdict"] != "pass"  # the headline clears it, the slice stops it
+    # The headline clears it, the slice stops it. This holds for this SEED's draw of rows, not for every seed.
+    assert overall["verdict"] == "pass" and report["verdict"] != "pass", f"SEED {SEED}'s draw of rows tripped this, not a gate bug: the story needs a clean overall verdict, and this draw's is {overall['verdict']} {overall_ci}"
 
-    broken = [r for r in scored if r["vertical"] == "trucking"]
-    paired = paired_ci([r["candidate"] - r["baseline"] for r in broken], 1.96)
-    apart = unpaired_ci([r["baseline"] for r in broken], [r["candidate"] for r in broken])
-    print(f"\n   Why paired: trucking at 95%, paired CI width {paired[2] - paired[1]:.3f}, unpaired on the same rows {apart[2] - apart[1]:.3f}")
+    paired = paired_ci([c - b for b, c in zip(base, cand)], 1.96)
+    apart = unpaired_ci(base, cand)
+    print(f"\n   Why paired: all {len(scored)} scored rows at 95%, paired CI width {paired[2] - paired[1]:.3f}, unpaired on the same rows {apart[2] - apart[1]:.3f}")
     assert paired[2] - paired[1] < apart[2] - apart[1]
 
+    # A thin slice is never a pass: one big clean slice plus five clean rows, so thinness is the only thing wrong.
+    clean = dict(baseline=1, candidate=1, error=False)
+    thin = assert_phase([dict(clean, vertical="big") for _ in range(200)] + [dict(clean, vertical="thin") for _ in range(5)])
+    assert thin["verdict"] == "inconclusive" and not thin["passed"]
+
     small = assert_phase(run_phase(SEED + 7, 300))
+    assert small["verdict"] != "pass"
     worst = small["worst_slices"][0]
     print(f"   The same change on {300} rows: gate says {small['verdict']}, worst slice {worst['slice']} n={worst['n']} {worst.get('ci', '')}. {small['next_action']}")
 
@@ -655,12 +687,17 @@ def gate_section(n=GOLD_SET, reruns=RERUNS):
             counts["overall"] += result["metrics"]["accuracy_delta"]["verdict"] == "block"
         outcome[label] = counts
         print(f"   {label:40s} {counts['overall'] / reruns:15.1%}  {counts['block'] / reruns:11.1%}  {counts['passed'] / reruns:11.1%}  {counts['unsure'] / reruns:12.1%}")
-    assert outcome["planted regression, Bonferroni"]["block"] > .8 * reruns
+    assert outcome["planted regression, Bonferroni"]["block"] > .8 * reruns, "this suite is too small to block the planted regression"
     assert outcome["planted regression, Bonferroni"]["overall"] < .1 * reruns
     assert outcome["no change, Bonferroni"]["block"] <= .02 * reruns
 
+    bonferroni, plain = outcome["no change, Bonferroni"], outcome["no change, plain 95% per slice"]
+    cost = (plain["passed"] - bonferroni["passed"]) / reruns
+    saved = (plain["block"] - bonferroni["block"]) / reruns
+    print(f"   Bonferroni costs {cost * 100:.1f} points of no-change passes here and {'prevents no false blocks' if not saved else f'prevents {saved * 100:.1f} points of false blocks'} at this floor.")
+
     infra = run_phase(SEED + 8, n)
-    for r in infra[:60]:
+    for r in infra[:n // 20]:
         r["error"] = True
     assert assert_phase(infra)["verdict"] == "rerun"
     print("   With 5% of rows errored by infrastructure the gate says rerun, not block. The same rule as notes/10.")

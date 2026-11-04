@@ -13,6 +13,8 @@ sources:
   - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
   - Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — https://arxiv.org/abs/2610.28380
   - https://arxiv.org/abs/2609.11999
+  - https://arxiv.org/abs/2306.14898
+  - https://arxiv.org/abs/2305.04207
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
@@ -389,6 +391,10 @@ The move that makes retries more than repetition:
 An identical retry re-runs the reasoning that just failed and tends to fail identically. PRINCE passes the failure back in — the database error message, the generated query, and the original context all return to the model, which then produces a *corrected* query rather than the same one. Capped at 3 attempts, after which the tool reports failure honestly.
 
 This is the same instinct as the schema-violation row above (return the validation error, retry with it in context) generalized to every retryable failure, and it's what makes a retry a re-plan. It also explains why the two-retry rule holds: once the error is already in context, further attempts add no new information, so a third failure genuinely indicates a bad spec rather than bad luck.
+
+How much the error is worth, and where it stops paying. In InterCode ([arXiv:2306.14898](https://arxiv.org/abs/2306.14898) (Yang et al., NeurIPS 2023 Datasets and Benchmarks)), letting the model see execution output and retry for up to 10 turns took GPT-4 from **9.1% to 73.7%** on 1,034 Spider-derived SQL tasks, and gpt-3.5-turbo from 10.5% to 47.3%; on 200 NL2Bash-derived shell tasks the gain was smaller (GPT-4 34.0% → 48.5%). Two limits. The retrying agent saw a reward computed from the gold answer and stopped once it reached 1, so this measures retry against an oracle, not self-verification. And the curves plateau: in later turns models make *"small, cursory adjustments to the prior action"*, repeat earlier moves and ignore fresh observations, which is the empirical case for the attempt cap above and for [loop detection](#loop-detection). A reasoning scaffold helped on SQL (ReAct 58.7% vs. 47.3% for plain retry, gpt-3.5-turbo) and hurt on Bash (20.5% vs. 46.5%), so no one retry prompt wins everywhere.
+
+The same loop with a real stopping rule, and its blind spot. ChatTester ([arXiv:2305.04207](https://arxiv.org/abs/2305.04207) (Yuan et al., FSE 2024)) feeds Java compiler errors, the buggy line and the missing class context back to gpt-3.5-turbo, and counts a round as invalid when the error count doesn't fall; once more than three invalid rounds have accumulated, the loop ends. On 100 focal methods the repair loop alone lifted compilation from 39.0% to 60.6% and passing tests from 22.3% to 34.0% (73.3% and 41.0% with an intention-first prompt added), at about 30 s per round. It repairs only compile errors, because a failing run could mean a bad test or a bad method, and that leaves the main failure untouched: in the 1,000-method baseline study, **85.5% of tests that compiled but failed did so on an assertion, and every one inspected was a wrong assertion rather than a real bug**. A green compile is layer 1 of the [termination check](#the-three-layer-termination-check), not evidence the test checks anything.
 
 ---
 

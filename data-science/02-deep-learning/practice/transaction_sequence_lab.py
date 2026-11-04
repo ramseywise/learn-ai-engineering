@@ -4,7 +4,7 @@
 # ///
 """Card fraud as a sequence problem, for notes/05: aggregates against a GRU, leaks, late labels, cost and drift.
 
-Run from this folder (about four minutes on a laptop CPU, downloads nothing, needs no key):
+Run from this folder (4 to 12 minutes on a busy laptop CPU, downloads nothing, needs no key):
     uv run transaction_sequence_lab.py
     uv run transaction_sequence_lab.py --delay-median 60      # chargebacks take longer
     uv run transaction_sequence_lab.py --drift none           # the pattern never changes
@@ -588,8 +588,9 @@ def main():
     print()
 
     # %% 6. Drift
-    label = "the planted pattern changes" if args.drift == "slow" else "no change (--drift none)"
-    print(f"6. Drift from day {TEST_END}: {label}. Tests and the cash-out now run hours apart, through other categories")
+    label = ("the planted pattern changes. Tests and the cash-out now run hours apart, through other categories" if args.drift == "slow"
+             else "no change (--drift none)")
+    print(f"6. Drift from day {TEST_END}: {label}")
     dr = (d >= TEST_END) & (d < DRIFT_END)
     ydr = y[dr]
     pd_dr = {n: s(x[dr]) for n, s in scorers.items()} | {"gru": gru(dr)}

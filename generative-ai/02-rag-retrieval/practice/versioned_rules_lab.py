@@ -17,7 +17,7 @@ standing in for one, so the scores in section 4 measure the harness.
 
 Things to change and watch move:
   - `extract_rules`: add a rule for "No X may ...". Modality, who and the change-detection score all rise.
-  - `FUZZY_THRESHOLD`: lower or raise it and see which planted citations slip past the fuzzy check.
+  - `FUZZY_THRESHOLD`: raise it past 0.93 and the three slip-throughs all stop; lowering it changes nothing until about 0.21.
   - `Book.in_force`: compare on `published_on` instead of `effective_from` and watch the asserts fire.
   - `--k`: a larger k hides wrong versions in recall and raises the wrong-version rate of the naive indexes.
 """
@@ -65,7 +65,7 @@ def render(c: Clause) -> str:
     if c.form == "where":
         return f"Where {c.condition}, {det.lower()} {c.who} must {c.action}{tail}."
     if c.form == "no_may":
-        return f"No {c.who} may {c.action}{tail}" + (f" unless {c.condition}." if c.condition else ".")
+        return f"No {c.who} may {c.action}{tail}".rstrip(",") + (f" unless {c.condition}." if c.condition else ".")
     verb = {"must": "must", "must_not": "must not", "shall": "shall", "required": "is required to"}[c.form]
     word = "unless" if c.modality == "must_not" else "if"
     return f"{det} {c.who} {verb} {c.action}{tail}" + (f" {word} {c.condition}." if c.condition else ".")
@@ -148,7 +148,7 @@ FILLER = [
 
 
 def generate(seed: int):
-    """Return (instruments, parts, numbers). Numbers and dates vary with the seed. The direction of each change doesn't."""
+    """Return (instruments, parts, late articles). Numbers and dates vary with the seed. The direction of each change doesn't."""
     r = random.Random(seed)
 
     def on(y, m, d):
@@ -236,7 +236,7 @@ def generate(seed: int):
     ])
 
     def reconcile(d):
-        return O("payment firm", "reconcile safeguarded funds, as defined in §defs,", f"within {d} days of each settlement date")
+        return O("payment firm", "reconcile safeguarded funds, as defined in §defs,", f"within {d} day{'s' if d != 1 else ''} of each settlement date")
 
     safeguarding = Art("safeguarding", "Safeguarding", [
         Para("how often must safeguarded funds be reconciled", W(reconcile(recon_d[0])),
@@ -1065,6 +1065,7 @@ def planted_answers(rb: Rulebook) -> list[Answer]:
     changed_number = re.sub(r"within \d+", "within 99", clause(text("incident", 1, 1)))
     return [
         Answer("right version, today", TODAY, p_notify, clause(text("incident", 1, 1)), "ok"),
+        Answer("right version, upper-cased and line-broken", TODAY, p_notify, clause(text("incident", 1, 1)).upper().replace(" ", "\n", 1), "ok"),
         Answer("old version, asked about the old date", i["BASE"].effective_from + timedelta(days=30), p_notify, text("incident", 1, 0), "ok"),
         Answer("old deadline, asked about today", TODAY, p_notify, clause(text("incident", 1, 0)), "quote_from_superseded"),
         Answer("PLANTED: quotes a repealed article", TODAY, p_paper, text("statements", 1, 0), "quote_from_repealed"),
@@ -1141,6 +1142,15 @@ def main() -> int:
     assert table["as-of"]["ALL"]["hit"] > table["latest-only"]["ALL"]["hit"]
     print("   The as-of zero is by construction: the filter can't return what it excludes, given correct dates. Its recall is")
     print("   what BM25 manages on these questions, and the all-versions column shows recall hiding the wrong text beside it.")
+    # The filter belongs in the query. Ranking first and dropping afterwards leaves fewer than k hits, sometimes none.
+    answerable = [q for q in gold if q.gold]
+    after = sum(q.gold in [h for h in ret.run("all-versions", q.question, q.as_of, k) if book.by_vid[h].in_force_on(q.as_of)]
+                for q in answerable)
+    before = table["as-of"]["ALL"]["hit"]
+    print(f"   Filter before ranking finds {before} of {len(answerable)} answerable versions; rank first, then drop: {after}.")
+    assert before >= after, "filtering before ranking should never find less than dropping afterwards"
+    if k <= K:
+        assert before > after, "expected the filter applied after ranking to lose versions at a small k"
 
     # --- 3. Cross-reference expansion
     xrows = build_xref_gold(rb)

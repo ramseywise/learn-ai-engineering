@@ -21,6 +21,7 @@ sources:
   - https://ogletree.com/insights-resources/blog-posts/eeoc-sends-oira-final-rule-rescinding-uniform-guidelines-on-employee-selection-procedures/
   - https://rules.cityofnewyork.us/wp-content/uploads/2023/04/DCWP-NOA-for-Use-of-Automated-Employment-Decisionmaking-Tools-2.pdf
   - http://data.europa.eu/eli/reg/2024/1689/oj
+  - http://data.europa.eu/eli/reg/2026/1744/oj
   - https://artificialintelligenceact.eu/article/10/
   - https://artificialintelligenceact.eu/article/4a/
   - https://artificialintelligenceact.eu/annex/3/
@@ -32,7 +33,7 @@ cleaned: 2026-11-04
 ---
 # Fairness in Automated Scoring: What to Measure, and What No Metric Settles
 
-> A screening model advances 22.8% of one group and 10.7% of another. The second number is 0.469 of the first, and four other definitions of fair give four other readings of the same decisions. Some of those definitions cannot all hold at once, by arithmetic. An audit does not find out whether the model is fair. It states which gaps exist, how sure you are of them, which label they were measured against, and what closing each would cost.
+> A screening model advances 22.8% of one group and 10.7% of another. The second number is 0.469 of the first, and four other definitions of fair give four other readings of the same decisions. Some of those definitions cannot all hold at once, by arithmetic. An audit does not find out whether the model is fair. It states which gaps exist, how sure you are of them, which label they were measured against, and what closing each would cost. Skip that, and you ship whichever definition your default happened to satisfy, with nobody having chosen it.
 
 **In plain words.** Suppose a swimming club picks its squad with a timed trial. You can ask whether each neighbourhood gets the same share of places, whether strong swimmers from each neighbourhood are equally likely to get in, or whether a trial time means the same thing wherever the swimmer comes from. Each is a reasonable question. When one neighbourhood has fewer pools, they have different answers, and you can't make all of them come out equal. You also have a harder problem if your record of who counted as strong was written by last year's selectors.
 
@@ -44,7 +45,7 @@ cleaned: 2026-11-04
 
 Brackwater Freight is invented. It wants to screen applicants for shift supervisor with a model, and has capacity to interview the top 20%. The lab [`fairness_audit_lab.py`](../practice/fairness_audit_lab.py) generates 80,000 applicants from a seed, with groups A, B and C (70%, 24% and 6% of applicants) and a second attribute, X or Y (half each). These are labels on random draws. The differences between them are what we planted, so that an audit has something to find. They say nothing about any real group, employer or product, and every number below describes this generator.
 
-We planted three things, and every applicant also has a true outcome, which only a generator can know for everybody.
+We planted four things: unequal prior training that lowers group B's skill, a recruiter penalty on groups B and C that is harshest on applicants who are both B and Y, a further recruiter penalty for an employment gap, which is more common among Y, and a postcode band that tracks group. Every applicant also has a true outcome, a work sample, which only a generator can know for everybody.
 
 ```mermaid
 flowchart LR
@@ -86,7 +87,8 @@ def ratio_interval(k1, n1, k2, n2, z=1.96):
     se = math.sqrt(1 / k1 - 1 / n1 + 1 / k2 - 1 / n2)
     return ratio, ratio * math.exp(-z * se), ratio * math.exp(z * se)
 
-# The unaware model on 20,000 generated test applicants: selected, then applicants
+# The unaware model (group and attribute columns dropped, postcode and gap kept)
+# on 20,000 generated test applicants: selected, then applicants
 print("B against A: %.3f [%.3f, %.3f]" % ratio_interval(515, 4817, 3178, 13937))
 print("C against A: %.3f [%.3f, %.3f]" % ratio_interval(229, 1246, 3178, 13937))
 ```
@@ -98,21 +100,21 @@ C against A: 0.806 [0.714, 0.910]
 
 ### The four-fifths rule: what it is
 
-Applies to: US federal employment selection. The Uniform Guidelines at [29 CFR 1607.4(D)](https://www.law.cornell.edu/cfr/text/29/1607.4) say a rate "less than four-fifths (4/5) (or eighty percent)" of the highest group's is generally regarded as evidence of adverse impact. The same paragraph then limits itself: "Smaller differences in selection rate may nevertheless constitute adverse impact", and "Greater differences in selection rate may not constitute adverse impact where the differences are based on small numbers".
+Applies to: US federal employment selection. The Uniform Guidelines at [29 CFR 1607.4(D)](https://www.law.cornell.edu/cfr/text/29/1607.4) say a rate "less than four-fifths (4/5) (or eighty percent)" of the highest group's is generally regarded as evidence of adverse impact. The same paragraph then limits itself: "Smaller differences in selection rate may nevertheless constitute adverse impact, where they are significant in both statistical and practical terms or where a user's actions have discouraged applicants disproportionately", and "Greater differences in selection rate may not constitute adverse impact where the differences are based on small numbers and are not statistically significant".
 
 So it is a rule of thumb an enforcement agency used to decide what to look at. It is not:
 
 - **A pass mark.** A ratio of 0.82 is not compliance. The Guidelines say so, and Fairlearn's documentation warns of "an unjustified feeling of legal invulnerability by conflating fairness with legality" ([Fairlearn, common fairness metrics](https://fairlearn.org/main/user_guide/assessment/common_fairness_metrics.html)).
-- **A finding of discrimination.** Fairlearn again: "A violation of the rule is still not sufficient to demonstrate that illegal discrimination has occurred." In US law, a showing of disparate impact is the start of an argument about job-relatedness and alternatives, under [42 U.S.C. 2000e-2(k)](https://www.law.cornell.edu/uscode/text/42/2000e-2).
+- **A finding of discrimination.** Fairlearn again: "A violation of the rule is still not sufficient to demonstrate that illegal discrimination has occurred." Disparate impact (a neutral practice that falls harder on a protected group, also called adverse impact) is a claim under Title VII, the US employment discrimination statute. Showing it is the start of an argument about job-relatedness and alternatives, under [42 U.S.C. 2000e-2(k)](https://www.law.cornell.edu/uscode/text/42/2000e-2).
 - **Portable.** "Outside its particular context in US federal employment law, the 'four fifths rule' has no validity," says the same page. Don't report it as a fairness standard for loans, content ranking or anything in the EU.
 
-**Its status is changing. Check before relying on it.** As of 2026-11-04, the US Equal Employment Opportunity Commission's final rule "Rescission of Uniform Guidelines on Employee Selection Procedures" (RIN 3046-AB43) [was under White House review](https://www.reginfo.gov/public/do/eoDetails?rrid=1545969), received 16 October 2026 and not concluded, and the [regulatory agenda](https://www.reginfo.gov/public/do/eAgendaViewRule?pubId=202510&RIN=3046-AB43) targets final action in November 2026. We found no final publication. A June 2026 [opinion of the Justice Department's Office of Legal Counsel](https://www.justice.gov/olc/media/1444871/dl) says the Guidelines "embrace an unconstitutional reading of Title VII", which is an executive-branch position and not a court ruling. One [law-firm summary](https://ogletree.com/insights-resources/blog-posts/eeoc-sends-oira-final-rule-rescinding-uniform-guidelines-on-employee-selection-procedures/) (Ogletree, October 2026, secondary) notes that the statute remains and private plaintiffs can still sue, and that rescission "removes the roadmap", not the burden. The arithmetic of the ratio won't change. Its federal standing may.
+**Its status is changing. Check before relying on it.** As of 2026-11-04, the US Equal Employment Opportunity Commission's final rule "Rescission of Uniform Guidelines on Employee Selection Procedures" (RIN 3046-AB43) [was under White House review](https://www.reginfo.gov/public/do/eoDetails?rrid=1545969), received 16 October 2026 and not concluded, and the [regulatory agenda](https://www.reginfo.gov/public/do/eAgendaViewRule?pubId=202510&RIN=3046-AB43) targets final action in November 2026. We found no final publication. The agenda describes rescinding "the interpretive rulemaking portions" of the EEOC's version and says this "would not impact other agencies' interpretation and application". The rule's text isn't public, so whether 1607.4(D) itself goes is reported only as likely. A June 2026 [opinion of the Justice Department's Office of Legal Counsel](https://www.justice.gov/olc/media/1444871/dl) says the Guidelines "embrace an unconstitutional reading of Title VII", which is an executive-branch position and not a court ruling. One [law-firm summary](https://ogletree.com/insights-resources/blog-posts/eeoc-sends-oira-final-rule-rescinding-uniform-guidelines-on-employee-selection-procedures/) (Ogletree, October 2026, secondary) notes that the statute remains and private plaintiffs can still sue, that rescission "removes the roadmap", not the burden, and that the Labor Department's contractor office removed its own version effective 26 October 2026. The arithmetic of the ratio won't change. Its federal standing may.
 
 Applies to: New York City. The [Local Law 144 rules](https://rules.cityofnewyork.us/wp-content/uploads/2023/04/DCWP-NOA-for-Use-of-Automated-Employment-Decisionmaking-Tools-2.pdf) define selection rate and impact ratio, require them by sex, by race and ethnicity and by the intersections, and require an audit no more than a year old with published results. We found no pass threshold in that text. An auditor may exclude a category under 2% of the data, with a justification and the counts reported.
 
 ### A low ratio does not name its cause
 
-Here is why you report a ratio and don't stop at it. Section 9 of the lab reruns the world with plants removed, over five seeds per row. The unaware model drops the group column, and the third column also drops postcode and gap.
+Section 9 of the lab reruns the world with plants removed, over five seeds per row. The unaware model drops the group and attribute columns, and the third column also drops postcode and gap.
 
 ```text
                    unaware_ratio_B  no_proxy_ratio_B  unaware_ratio_B_sd
@@ -126,12 +128,12 @@ With recruiters playing fair, the ratio is still 0.641, because a skill gap of 0
 
 ## Demographic parity, equalized odds, equal opportunity
 
-These three criteria ask different questions of the same decisions. Y is the true outcome and A is the group.
+These three criteria ask different questions of the same decisions. "Qualified" below means having the true outcome, and TPR and FPR are the share of qualified and of unqualified people who get selected.
 
 | Criterion | Asks for equality of | Needs a true outcome? | Fails when |
 |---|---|---|---|
 | Demographic parity | Selection rate | No | Base rates differ and the score is accurate |
-| Equal opportunity | TPR: P(selected given Y=1) | Yes | Qualified people in one group are passed over more |
+| Equal opportunity | TPR | Yes | Qualified people in one group are passed over more |
 | Equalized odds | TPR and FPR | Yes | As above, or unqualified people in one group get through more |
 
 The last two come from [arXiv:1610.02413](https://arxiv.org/abs/1610.02413) (Hardt, Price and Srebro, NeurIPS 2016), who point out that a perfect predictor always satisfies them, which demographic parity doesn't promise. Chouldechova calls parity "well-suited to contexts such as employment or admissions", where equal proportions may be wanted or required ([arXiv:1703.00056](https://arxiv.org/abs/1703.00056)). Parity says nothing about who within a group gets selected, and [arXiv:1711.07076](https://arxiv.org/abs/1711.07076) (Lipton, Chouldechova and McAuley, NeurIPS 2018) shows that methods reaching it indirectly can do so by reordering people within a group.
@@ -155,7 +157,7 @@ A selection 0.50  TPR 0.75  FPR 0.25  PPV 0.75
 B selection 0.25  TPR 0.50  FPR 0.17  PPV 0.50
 ```
 
-Group B's rate is half of A's and its TPR is two-thirds of A's. The numbers answer different questions, and all of them are right. With 16 people, its only purpose is to show the arithmetic.
+Group B's rate is half of A's and its TPR is two-thirds of A's. The numbers answer different questions, and all of them are right. With 16 people, this only shows the arithmetic.
 
 ## Calibration within groups
 
@@ -169,7 +171,7 @@ Calibration has a hole we will come back to: it is only calibration against the 
 
 Two papers showed this at about the same time.
 
-**Chouldechova's identity.** From the definitions alone, in each group with base rate p ([arXiv:1703.00056](https://arxiv.org/abs/1703.00056), [Big Data 2017](https://doi.org/10.1089/big.2016.0047), eq. 2.6):
+**Chouldechova's identity.** From the definitions alone, in each group with base rate p ([arXiv:1703.00056](https://arxiv.org/abs/1703.00056), [Big Data 2017](https://doi.org/10.1089/big.2016.0047), eq. 2.6), and FNR is the miss rate from [note 12](12-reading-the-errors.md#step-4-slice-and-count):
 
 ```text
 FPR = p / (1 - p) * (1 - PPV) / PPV * (1 - FNR)
@@ -188,7 +190,7 @@ print(round(fpr(0.4, 0.6, 0.7), 3), round(fpr(0.3, 0.6, 0.7), 3))
 0.311 0.2
 ```
 
-**Kleinberg's result.** [arXiv:1609.05807](https://arxiv.org/abs/1609.05807) (Kleinberg, Mullainathan and Raghavan, [ITCS 2017](https://doi.org/10.4230/LIPIcs.ITCS.2017.43)) works on the score, with no threshold. Take calibration within groups, and call the average score among people without the outcome x, and among people with it y. Balance means x matches across groups, and so does y. Calibration forces a line in each group, since the average score must equal the base rate:
+**Kleinberg's result.** [arXiv:1609.05807](https://arxiv.org/abs/1609.05807) (Kleinberg, Mullainathan and Raghavan, [ITCS 2017](https://doi.org/10.4230/LIPIcs.ITCS.2017.43)) works on the score, with no threshold. Take calibration within groups, and call the average score among people without the outcome x, and among people with it y. Balance means x matches across groups, and so does y. This is equalized odds stated on the score rather than at a cutoff. Calibration forces a line in each group, since the average score must equal the base rate:
 
 ```text
 (1 - p) x + p y = p     which rearranges to     x + p (y - x - 1) = 0
@@ -196,7 +198,7 @@ print(round(fpr(0.4, 0.6, 0.7), 3), round(fpr(0.3, 0.6, 0.7), 3))
 
 For two different values of p to share one x and one y, both terms must vanish: x = 0 and y = 1, the perfect predictor. So their theorem says all three conditions together need perfect prediction or equal base rates. They also prove an approximate version, so being nearly fair on all three doesn't rescue it, and they don't tell you how to choose.
 
-Section 5 of the lab runs this on a score trained on audited work samples, without proxies, and recalibrated per group on validation. Calibration holds: observed rates agree across groups in each bin to within a few points. The two lines:
+Section 5 of the lab runs this on a different score from the rest of the chapter. Trained on the work samples of 5,000 audited applicants instead of recruiter decisions, it uses no proxies and is recalibrated per group on validation. Calibration holds: observed rates agree across groups in each bin to within a few points. The two lines:
 
 ```text
 A: base rate 0.345, mean score on non-passers x 0.279, on passers y 0.486, (1-p)x + py = 0.350
@@ -210,14 +212,14 @@ The values of x and y differ by group, as the theorem says they must. The left s
 one cutoff at 0.45              0.308  0.173  0.621  0.601  0.178  0.094  0.446  0.608
 equal PPV (0.62)                0.309  0.152  0.621  0.616  0.179  0.080  0.444  0.646
 equal TPR                       0.257  0.228  0.653  0.565  0.136  0.135  0.514  0.514
-equal TPR and FPR (randomised)  0.197  0.173  0.687  0.601  0.094  0.094  0.608  0.608
+equal TPR and FPR (randomised)  0.196  0.173  0.686  0.601  0.094  0.094  0.609  0.608
 ```
 
-Read down the columns. Equalise PPV and B's miss rate is 0.646 against 0.444. Equalise TPR and FPR and PPV spreads to 0.687 against 0.601. The lab asserts Chouldechova's identity for each row and group, and it holds exactly. These rows select different numbers of people, so don't compare their quality here.
+Equalise PPV and B's miss rate is 0.646 against 0.444. Equalise TPR and FPR and PPV spreads to 0.686 against 0.601. The lab asserts Chouldechova's identity for each row and group, and it holds exactly. These rows select different numbers of people, so don't compare their quality here.
 
-The last row shows what equalized odds can cost. Hardt et al. note that it may need "different (possibly randomized) thresholds", because group ROC curves cross at few points. Our version brings A down to B's point: A's selection falls from 0.308 to 0.197 and its miss rate rises from 0.446 to 0.608, with coin flips deciding some of it, while B gains nothing against the one-cutoff row. That is **leveling down**, and Fairlearn's [postprocessing guide](https://fairlearn.org/main/user_guide/mitigation/postprocessing.html) warns about it by name. Ask whether you could defend a coin flip deciding someone's job before using this.
+The last row shows what equalized odds can cost. Hardt et al. note that it may need "different (possibly randomized) thresholds", because group ROC curves cross at few points. On this seed our version brings A down to B's point (on some seeds B must come down too): A's selection falls from 0.308 to 0.196 and its miss rate rises from 0.446 to 0.609, with coin flips deciding some of it, while B gains nothing. That is **leveling down**, and Fairlearn's [postprocessing guide](https://fairlearn.org/main/user_guide/mitigation/postprocessing.html) warns about it by name. Ask whether you could defend a coin flip deciding someone's job before using this.
 
-So you choose, and someone must own the choice. As Chouldechova puts it, fairness "is a social and ethical concept, not a statistical one". Set `SKILL_GAP` to zero in the lab and the one-cutoff row reads FPR 0.178 and 0.158, FNR 0.445 and 0.463: the conflict falls to a small gap once base rates match, as the theorems say.
+So someone must own the choice. As Chouldechova puts it, fairness "is a social and ethical concept, not a statistical one". Set `SKILL_GAP` to zero in the lab and the one-cutoff row reads FPR 0.178 and 0.158, FNR 0.445 and 0.463: the conflict falls to a small gap once base rates match, as the theorems say.
 
 ## Small groups: put an interval on the ratio
 
@@ -268,15 +270,15 @@ Slices can hide inside margins. The lab applies the first remedy people reach fo
    C/Y                ----o---|                         0.65 [0.53, 0.80] n=606
 ```
 
-Every margin clears 0.8, and B/Y and C/Y read 0.77 and 0.65. The cause here is mundane. This model has no interaction term, so it can't learn the extra penalty we planted on B/Y. It does learn the gap penalty, which pushes Y down inside each group, and cutoffs set on group alone leave that in place. The planted interaction sits in the recruiter decisions, where a more flexible model could pick it up.
+On this draw every margin clears 0.8, and B/Y and C/Y read 0.77 and 0.65. That is one seed. Over 30 other seeds of this generator, B/Y averages 0.832 and falls under 0.8 on 6, and some crossing falls under 0.8 on 18. The worst crossing read below the worst margin on all 30, so that is the result to carry away, not 0.77. The cause here is mundane. This model has no interaction term, so it can't learn the extra penalty we planted on B/Y. It does learn the gap penalty, which pushes Y down inside each group, and cutoffs set on group alone leave that in place. The planted interaction sits in the recruiter decisions, where a more flexible model could pick it up.
 
-The same pattern has been measured on real systems. [Gender Shades](https://proceedings.mlr.press/v81/buolamwini18a.html) (Buolamwini and Gebru, PMLR 2018) found error rates up to 34.7% for darker-skinned women against at most 0.8% for lighter-skinned men in commercial gender classifiers (abstract read). [arXiv:1711.05144](https://arxiv.org/abs/1711.05144) (Kearns, Neel, Roth and Wu, ICML 2018) gives this the name fairness gerrymandering: pass on predefined groups while failing a structured subgroup (abstract read).
+Real systems show it too. [Gender Shades](https://proceedings.mlr.press/v81/buolamwini18a.html) (Buolamwini and Gebru, PMLR 2018) found error rates up to 34.7% for darker-skinned women against at most 0.8% for lighter-skinned men in commercial gender classifiers (abstract read). [arXiv:1711.05144](https://arxiv.org/abs/1711.05144) (Kearns, Neel, Roth and Wu, ICML 2018) gives this the name fairness gerrymandering: pass on predefined groups while failing a structured subgroup (abstract read).
 
-Slicing has two costs. Cells shrink, so intervals widen; report the n. Comparisons multiply: five slices against a top slice at a 5% level expect 0.25 false alarms per audit from chance alone. Choose the slices before looking, and treat a finding on an unplanned slice as something to retest on the next window.
+Slicing has two costs. Cells shrink, so intervals widen; report the n. Comparisons multiply: five slices against a reference chosen in advance, at a 5% level, expect 0.25 false alarms per audit from chance alone. Picking the top slice from the data, as these panels do, makes it worse: with six equal slices the lab measures 0.47 false alarms per audit, and at least one in 28% of audits. Choose the slices before looking, and treat a finding on an unplanned slice as something to retest on the next window.
 
 ## Label bias: when the label is a previous decision
 
-"Trained on recruiter decisions" means the target is what past recruiters did, and every metric that needs Y inherits that. Here is the same selection audited against each label, from section 4.
+"Trained on recruiter decisions" means the target is what past recruiters did, and every metric that needs a label inherits that. Here is the same selection audited against each label, from section 4. The naive model is the one trained on all columns, group included.
 
 ```text
    naive    against history (the logs)   TPR A 0.583, B 0.251;  PPV A 0.720, B 0.613
@@ -285,7 +287,7 @@ Slicing has two costs. Cells shrink, so intervals widen; report the n. Compariso
    unaware  against the work sample      TPR A 0.437, B 0.261;  PPV A 0.660, B 0.649
 ```
 
-For the naive model the PPV gap changes sign. The logs say the B applicants it picked are worse than the A applicants it picked (0.613 against 0.720). On the work sample they are better (0.726 against 0.650), because the model holds them to a higher bar. The unaware model's PPV gap reads 26 points on the logs and 1 point on the work sample. The gaps in TPR are also different: note how far 0.251 is from 0.131.
+For the naive model the PPV gap changes sign. The logs say the B applicants it picked are worse than the A applicants it picked (0.613 against 0.720). On the work sample they are better (0.726 against 0.650), because the model holds them to a higher bar. The unaware model's PPV gap reads 26 points on the logs and 1 point on the work sample. The two labels also disagree on TPR. The naive model's gap is much the same size on both, 33 and 35 points, but B's TPR as a share of A's falls from 0.43 on the logs to 0.28 on the work sample. The unaware model's gap grows from 11 points to 18.
 
 Calibration is the worst case for this, because it looks like a clean bill of health. The naive model is close to calibrated against history in every group (mean gap between A and B across bins: 0.033). Against the work sample the gap is 0.124, with B passing more often at the same score.
 
@@ -296,9 +298,9 @@ Calibration is the worst case for this, because it looks like a clean bill of he
    (0.5, 0.7]       0.596  0.549  0.667
 ```
 
-[Note 14](14-learning-from-corrections.md#audit-a-random-sample) gave the fix for labels nobody checked: a random audit. Here it is 5,000 applicants who sit the work sample whatever a recruiter says. Hardt et al. spell out why you can't avoid this: "no oblivious test can resolve which of the two scenarios applies", where oblivious means using only the joint distribution of score, group and label. If the label is the problem, no metric computed from the label can tell you.
+[Note 14](14-learning-from-corrections.md#audit-a-random-sample) gave the fix for labels nobody checked: a random audit. Here it is 5,000 applicants who sit the work sample whatever a recruiter says. Hardt et al. warn that "the measurement of the target variable might in itself be unreliable or biased" and that "Domain-specific scrutiny is required in defining and collecting a reliable target variable." The inference is ours: if the label is the problem, no metric computed from the label can tell you, so you need a check from outside it.
 
-The same failure outside hiring: [Obermeyer et al.](https://doi.org/10.1126/science.aax2342) (Science 2019) report on a widely used US health algorithm that "Bias occurs because the algorithm uses health costs as a proxy for health needs" (abstract read; full text was not available to us). A target can be a proxy too. A work sample is itself a choice of target, so validate it and don't call it the truth just because it beats the log.
+The same failure outside hiring: [Obermeyer et al.](https://doi.org/10.1126/science.aax2342) (Science 2019) report on a widely used US health algorithm that "The bias arises because the algorithm predicts health care costs rather than illness" (abstract read; full text was not available to us). A target can be a proxy too. A work sample is itself a choice of target, so validate it and don't call it the truth just because it beats the log.
 
 ## Proxies: removing the column doesn't remove the effect
 
@@ -307,13 +309,14 @@ The instinct is to delete the sensitive column. Section 3:
 ```text
 3. Can the remaining columns identify group B? AUC on test
    from postcode band alone 0.827; from every unaware column 0.838
-   all columns          selection B 0.048, ratio 0.189
-   group dropped        selection B 0.107, ratio 0.469
-   proxies dropped too  selection B 0.131, ratio 0.600
+   all columns                  selection B 0.048, ratio 0.189
+   group and attribute dropped  selection B 0.107, ratio 0.469
+   proxies dropped too          selection B 0.131, ratio 0.600
    Decisions identical between the first two rows: 96.5%
+   Most of that is people both reject. Of those either row advances, both do: 83.6%
 ```
 
-Dropping the column moved the ratio from 0.189 to 0.469, and left 96.5% of decisions unchanged. A model trained on a biased label reaches for whatever predicts that bias, so postcode picks up what the group column carried. Postcode and gap say nothing about the work sample in this generator, so dropping them moved the ratio to 0.600 and raised the work-sample pass rate of those selected, from 0.659 to 0.669. Set `PROXY_STRENGTH` to 0 in the lab and the AUC falls to 0.503, and the unaware ratio rises to 0.611.
+Dropping the columns moved the ratio from 0.189 to 0.469, and 83.6% of those advanced by either version are advanced by both. Don't lean on the 96.5%: at 20% capacity, two unrelated selections already agree on about 68% of decisions. A model trained on a biased label reaches for whatever predicts that bias, so postcode picks up what the group column carried. Postcode and gap say nothing about the work sample in this generator, so dropping them moved the ratio to 0.600 and raised the work-sample pass rate of those selected, from 0.659 to 0.669. Set `PROXY_STRENGTH` to 0 in the lab and the AUC falls to 0.503, and the unaware ratio rises to 0.611.
 
 Two limits. Real features rarely split so neatly into clean and tainted, and here the test score is clean by construction. Dropping a feature is also a decision to verify, as a real proxy can carry real signal. The test is to predict the group from your features, then ask which of the features that help have a job-related reason to be there. And 0.600 is still under 0.8: dropping proxies removed the recruiter effect, and left the base-rate gap.
 
@@ -330,39 +333,39 @@ voluntary survey, answer rate tied to outcome and group   0.332   0.255    0.768
 same survey, reweighted by the true answer rates          0.230   0.103    0.446
 ```
 
-The first method's exact match is luck: both rates are off. Over five more seeds, the true ratio against the likeliest-group estimate read 0.482 and 0.440, 0.517 and 0.459, 0.498 and 0.525, 0.564 and 0.545, 0.498 and 0.477, so its error goes either way by up to 0.06. The weighted estimate read 0.69 to 0.73 on all five, against a truth of 0.48 to 0.56, so it hides much of the gap. That is what [arXiv:1811.11154](https://arxiv.org/abs/1811.11154) (Chen, Kallus, Mao, Svacha and Udell, FAT* 2019) analyses: bias of a thresholded estimate "varies strongly with the threshold chosen", and a weighted estimate's bias depends on how the outcome and the true class covary. Inference never removes the need for a validation set where the true group is known. Note the awkward loop: a proxy good enough to audit with is also good enough to discriminate with.
+The likeliest-group row's exact match is luck: both rates are off. Over five more seeds, the true ratio against the likeliest-group estimate read 0.482 and 0.440, 0.517 and 0.459, 0.498 and 0.525, 0.564 and 0.545, 0.498 and 0.477, so its error goes either way by up to 0.06. The weighted estimate read 0.69 to 0.73 on all five, against a truth of 0.48 to 0.56, so it hides much of the gap. That is what [arXiv:1811.11154](https://arxiv.org/abs/1811.11154) (Chen, Kallus, Mao, Svacha and Udell, FAT* 2019) analyses: bias of a thresholded estimate "varies strongly with the threshold chosen", and a weighted estimate's bias depends on how the outcome and the true class covary. Inference never removes the need for a validation set where the true group is known. Note the awkward loop: a proxy good enough to audit with is also good enough to discriminate with.
 
 The survey's answer rates are assumptions: 75% and 45% for selected and rejected in A and C, 60% and 20% in B. Rejected applicants in group B going quiet makes the ratio read 0.768, and it needs the true answer rates to correct, which you won't have. Report the response rate by decision.
 
 Other options need no group data at all. Run the [counterfactual swap from AIE 09/03](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md#harm-and-fairness-in-deployed-output) where the input has text. Or test on data built for the audit: New York's rules allow test data when historical data isn't enough, if you explain how it was made.
 
-Applies to: the EU, under [Regulation (EU) 2024/1689](http://data.europa.eu/eli/reg/2024/1689/oj) as amended by Regulation (EU) 2026/1744. Recruitment screening is a high-risk use ([Annex III, point 4(a)](https://artificialintelligenceact.eu/annex/3/)), and for those systems [Article 10](https://artificialintelligenceact.eu/article/10/) requires examining data for possible biases and "appropriate measures to detect, prevent and mitigate" them, with data "relevant, sufficiently representative". It names no numeric threshold. Article 10(5), which covered processing sensitive data to detect bias, was deleted by the 2026 amendment, and the permission now sits in [Article 4a](https://artificialintelligenceact.eu/article/4a/). That allows special categories of personal data for bias detection and correction where strictly necessary, under conditions: other data including synthetic or anonymised can't do the job, pseudonymisation, access controls, deletion once corrected, and records of why it was necessary. We read these articles on a third-party copy of the text, because EUR-Lex returned nothing to our fetch, so check the Official Journal. [AIE 09/07](../../../ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md) has the dates.
+Applies to: the EU, under [Regulation (EU) 2024/1689](http://data.europa.eu/eli/reg/2024/1689/oj) as amended by [Regulation (EU) 2026/1744](http://data.europa.eu/eli/reg/2026/1744/oj). Recruitment screening is a high-risk use ([Annex III, point 4(a)](https://artificialintelligenceact.eu/annex/3/)), and for those systems [Article 10](https://artificialintelligenceact.eu/article/10/) requires examining data for possible biases and "appropriate measures to detect, prevent and mitigate" them, with data "relevant, sufficiently representative". It names no numeric threshold. Article 10(5), which covered processing sensitive data to detect bias, was deleted by the 2026 amendment, and the permission now sits in [Article 4a](https://artificialintelligenceact.eu/article/4a/). That allows special categories of personal data for bias detection and correction where strictly necessary, under conditions: other data including synthetic or anonymised can't do the job, pseudonymisation, access controls, deletion once corrected, and records of why it was necessary. We read these articles on a third-party copy and checked them against the Publications Office's copy of the official text, because EUR-Lex returned nothing to our fetch. [AIE 09/07](../../../ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md) has the dates.
 
 ## Threshold mitigation, and what it costs
 
 The direct remedy is a separate cutoff per group. Section 2 of the lab compares it with the alternatives, all at 20% capacity, and reports how many people pass the work sample (`ppv_true`) alongside the rate on the logs (`ppv_hist`).
 
 ```text
-                                                 sel_A  sel_B  sel_C  ratio_B  ratio_C  ppv_true  ppv_hist
-naive: all columns, one cutoff                   0.252  0.048  0.172    0.189    0.681     0.657     0.711
-unaware: group dropped, one cutoff               0.228  0.107  0.184    0.469    0.806     0.659     0.699
-unaware: proxies dropped too, one cutoff         0.218  0.131  0.194    0.600    0.889     0.669     0.689
-group cutoffs on unaware, equal selection        0.202  0.182  0.169    0.902    0.837     0.653     0.672
-group cutoffs on unaware, equal TPR on history   0.223  0.131  0.152    0.584    0.682     0.660     0.692
-group cutoffs on unaware, equal TPR on outcomes  0.211  0.162  0.165    0.771    0.781     0.656     0.678
-audited labels, no proxies, one cutoff           0.220  0.132  0.194    0.601    0.884     0.668     0.687
-audited labels, no proxies, equal selection      0.204  0.185  0.169    0.904    0.824     0.662     0.669
+                                                  sel_A  sel_B  sel_C  ratio_B  ratio_C  ppv_true  ppv_hist
+naive: all columns, one cutoff                    0.252  0.048  0.172    0.189    0.681     0.657     0.711
+unaware: group and attribute dropped, one cutoff  0.228  0.107  0.184    0.469    0.806     0.659     0.699
+unaware: proxies dropped too, one cutoff          0.218  0.131  0.194    0.600    0.889     0.669     0.689
+group cutoffs on unaware, equal selection         0.202  0.182  0.169    0.902    0.837     0.653     0.672
+group cutoffs on unaware, equal TPR on history    0.223  0.131  0.152    0.584    0.682     0.660     0.692
+group cutoffs on unaware, equal TPR on outcomes   0.211  0.162  0.165    0.771    0.781     0.656     0.678
+audited labels, no proxies, one cutoff            0.220  0.132  0.194    0.601    0.884     0.668     0.687
+audited labels, no proxies, equal selection       0.204  0.185  0.169    0.904    0.824     0.662     0.669
 ```
 
 Five things to read from it, all conditional on this generator.
 
-- **The cost depends on the label you price it with.** Moving the unaware model to equal selection costs 2.7 points on the logs (0.699 to 0.672) and 0.6 points on the work sample (0.659 to 0.653). A business case built on history overstates the price of fairness when the history is biased. The real cost is about 23 of roughly 2,630 qualified people, out of 4,000 selected.
-- **Fixing the inputs beat fixing the output.** Dropping proxies raised the ratio and the quality. Then equal selection reaches 0.904 at 0.662, against 0.902 at 0.653 for cutoffs on the tainted score.
-- **Equalising selection isn't free inside the groups.** On the unaware model, PPV goes from 0.660 and 0.649 at one cutoff to 0.676 and 0.570 at group cutoffs. The B applicants added sit further down the score and pass less often, which is the gap the impossibility section predicts.
+- **The cost depends on the label you price it with.** Moving the unaware model to equal selection costs 2.7 points on the logs (0.699 to 0.672) and 0.6 points on the work sample (0.659 to 0.653). A business case built on history overstates the price of fairness when the history is biased. Counted on test, 2,585 people who pass the work sample are advanced before the move (of 3,922 advanced) and 2,554 after (of 3,909), so about 31 people.
+- **Fixing the inputs beat fixing the output.** Dropping proxies raised the ratio and the quality with no group cutoffs at all. The audited row with equal selection reaches 0.904 at 0.662, against 0.902 at 0.653 for cutoffs on the tainted score, but it changes the label as well as the features, so this table doesn't separate the two.
+- **Equalising selection isn't free inside the groups.** On the unaware model, PPV against the work sample for A and B goes from 0.660 and 0.649 at one cutoff to 0.676 and 0.570 at group cutoffs (the lab's second table). The B applicants added sit further down the score and pass less often, which is the gap the impossibility section predicts.
 - **Equal TPR on history is worth little.** That row equalises a TPR measured against the biased label, and leaves B's ratio at 0.584.
-- **A fix fitted on one sample doesn't stay exact.** The equal-outcomes row has equal TPR on validation, using outcomes only a generator has for everyone, and reads 0.410 against 0.358 on test. C's selection in the equal-selection row is 0.169, not 0.200. Group cutoffs need monitoring like any threshold, per [note 13](13-automate-review-or-reject.md).
+- **A fix fitted on one sample doesn't stay exact.** The equal-outcomes row has equal TPR on validation, using outcomes only a generator has for everyone, and reads 0.410 for A against 0.358 for B on test (the lab's second table). C's selection in the equal-selection row is 0.169, not 0.200. Group cutoffs need monitoring like any threshold, per [note 13](13-automate-review-or-reject.md).
 
-These costs need real cases to set them against. On 301,536 FICO credit scores, in a profit model that lends down to the score where 82% of people do not default, Hardt et al. report race-blind, equal opportunity, equalized odds and demographic parity at 99.3%, 92.8%, 80.2% and 69.8% of the maximum profit. [arXiv:1701.08230](https://arxiv.org/abs/1701.08230) (Corbett-Davies et al., KDD 2017; abstract read) reports that the unconstrained best rule is a single threshold and constrained rules use group-specific ones, a trade-off "can be large in practice". Our 0.6 points describes one generator, so don't quote it as the price of fairness.
+These costs need real cases to set them against. On 301,536 FICO credit scores, in a profit model that lends down to the score where 82% of people do not default, Hardt et al. report race-blind, equal opportunity, equalized odds and demographic parity at 99.3%, 92.8%, 80.2% and 69.8% of the maximum profit. [arXiv:1701.08230](https://arxiv.org/abs/1701.08230) (Corbett-Davies et al., KDD 2017; abstract read) looks at pretrial release decisions in Broward County, Florida, with public safety as the objective. There the unconstrained best rule is a single threshold and constrained rules use group-specific ones, and the trade-off "can be large in practice". Our 0.6 points describes one generator, so don't quote it as the price of fairness.
 
 **Group cutoffs may not be legal or even possible.**
 
@@ -402,9 +405,9 @@ C's line is a useful one to teach from. The point reads 0.806 and the interval r
 - **Reporting a ratio without counts.** Symptom: a depot reads 0.28 and alarms everyone, on 2 selected out of 30, with an interval reaching 1.08.
 - **Treating 0.8 as a pass.** Symptom: a report reads "compliant" because a ratio is 0.806, with an interval down to 0.714, in a place where the rule may not even apply.
 - **Auditing with the training label.** Symptom: calibration across groups looks clean (a mean gap of 0.033), and against an independent check it isn't (0.124).
-- **Deleting the column and declaring the model blind.** Symptom: 96.5% of decisions unchanged after removing it, and a feature set that predicts group with an AUC of 0.838.
+- **Deleting the column and declaring the model blind.** Symptom: 83.6% of the people advanced stay the same after removing it, and a feature set that predicts group with an AUC of 0.838.
 - **Chasing every metric at once.** Symptom: each fix opens another gap, and a project review keeps finding a new failing number. With unequal base rates, some of those can't close. Choose a primary metric with the people who own the decision, and write down why.
-- **Stopping at margins.** Symptom: group, attribute and all pass, and B/Y reads 0.77.
+- **Stopping at margins.** Symptom: group and attribute pass, and a crossing doesn't: on the lab's default seed B/Y reads 0.77, and over 30 seeds some crossing falls under 0.8 on 18.
 - **Dropping small groups.** Symptom: the "excluded under n=30" footnote covers the people most likely to be harmed and least able to complain.
 - **Pricing the fix on biased labels.** Symptom: the fix appears to cost 2.7 points of precision on the logs, and 0.6 on the work sample.
 - **Assuming a low ratio proves model bias.** Symptom: an expensive retrain closes nothing. With recruiters playing fair the ratio was still 0.641, from the base rates.
@@ -426,7 +429,7 @@ The ratio is 0.20 / 0.30 = 0.667. With `ratio_interval(20, 100, 300, 1000)`, the
 
 <details><summary>Answer</summary>
 
-Band's AUC falls from 0.827 to 0.503, chance. The unaware ratio rises from 0.469 to 0.611, close to the proxies-dropped row, since there is nothing left to pick up the group. The naive row moves little (0.189 to 0.193) because it sees the group column directly. Section 7's assertion then trips because B/Y reads 0.802, a hair above the floor. That is one seed's reading next to the line, so don't call it fixed.
+Band's AUC falls from 0.827 to 0.503, chance. The unaware ratio rises from 0.469 to 0.611, close to the proxies-dropped row, since there is nothing left to pick up the group. The naive row moves little (0.189 to 0.193) because it sees the group column directly. Section 7 reads B/Y 0.802 here, a hair above the floor, and 10 of the 30 other seeds read under it, so don't call it fixed.
 
 </details>
 
@@ -453,12 +456,12 @@ There isn't one, and asking for one assumes the criteria agree. Offer the decisi
 | Define the impact ratio. | A group's selection rate over the highest group's. It needs only decisions and groups. |
 | What is the four-fifths rule? | A US federal employment rule of thumb in 29 CFR 1607.4(D): under 80% is generally regarded as evidence of adverse impact. Not a pass mark, not a finding of discrimination, not valid elsewhere, and under rescission review as of November 2026. |
 | Equal opportunity or equalized odds? | Equal opportunity equalises TPR. Equalized odds also equalises FPR. Use the first when missing qualified people is the harm you care about, and know that both need a label you trust. |
-| Can you have calibration and equalized odds? | Not with unequal base rates and an imperfect predictor: Kleinberg et al. and Chouldechova. Show it with FPR = p/(1-p) x (1-PPV)/PPV x (1-FNR). |
+| Can you have calibration and equalized odds? | Not with unequal base rates and an imperfect predictor, and two results say so. Kleinberg et al.: calibration plus balance of the mean score in each class, from the line (1-p)x + py = p. Chouldechova, at a threshold: equal PPV plus equal error rates, from FPR = p/(1-p) x (1-PPV)/PPV x (1-FNR). Her identity is about PPV, not calibration, since a calibrated score needn't have equal PPV at a cutoff. |
 | Does a higher accuracy solve it? | Only at perfect prediction. Kleinberg et al. also prove an approximate version, so nearly satisfying all conditions needs nearly perfect prediction or nearly equal base rates. |
 | Your ratio is 0.68 on 104 people. Report it how? | With counts and an interval: here 0.42 to 1.10. It doesn't establish a gap or its absence. Say what data would, such as a longer window. |
-| Why isn't dropping the protected column enough? | Other columns can reconstruct it, and the model learns what predicts its label. Test by predicting the group from your features. In the lab: AUC 0.838, 96.5% of decisions unchanged. |
-| The training labels are past recruiter decisions. What now? | Every label-based metric inherits their bias, and calibration can look clean. Get an independent check on a random sample. Hardt et al. show that tests on score, group and label alone can't resolve this. |
-| Which slices do you check? | Each attribute and pre-chosen intersections, with counts and intervals and a plan for multiple comparisons. Margins can pass while a crossing fails: 0.90 and 0.85 against 0.77 in the lab. |
+| Why isn't dropping the protected column enough? | Other columns can reconstruct it, and the model learns what predicts its label. Test by predicting the group from your features. In the lab: AUC 0.838, and 83.6% of those advanced by either version are advanced by both. |
+| The training labels are past recruiter decisions. What now? | Every label-based metric inherits their bias, and calibration can look clean. Get an independent check on a random sample. Hardt et al. warn that the target's measurement may itself be biased, and that it needs domain scrutiny. |
+| Which slices do you check? | Each attribute and pre-chosen intersections, with counts and intervals and a plan for multiple comparisons. Margins can pass while a crossing fails: 0.90 and 0.85 against 0.77 on the lab's default seed, and some crossing fails on 18 of 30 other seeds. |
 | You may not hold demographic data. How do you audit? | Check what the law allows there (in the EU, Article 4a). Options are inference against a validated sample, voluntary data with response rates by decision, and counterfactual tests. Inference can understate or overstate a gap. Report the error. |
 | Why not just use group thresholds? | They may close the ratio, but need the attribute at decision time, can level down, and in US employment may be barred outright by 42 U.S.C. 2000e-2(l). Try features and labels first. |
 | What must an audit report say? | The decision, population, label provenance, group-data method, counts with intervals, error rates by named label, alternatives and their costs, jurisdiction and date, and what is not established. |

@@ -83,7 +83,9 @@ value, so it fails closed. The price is that those five Tallow documents now mat
 
 The stub ignores the sentence in its prompt, as a model can after a prompt injection. The second failure is the one an
 allowlist doesn't catch: `lookup_record` is allowed, and the record belongs to someone else. The tool takes the tenant
-from the run, never from the model's arguments, and answers "not found" as it would for an id that doesn't exist.
+from the run, never from the model's arguments, and answers "not found" as it would for an id that doesn't exist. Write
+tools get the same ownership check, so `issue_refund` on another tenant's order changes nothing, even for a tenant
+that has the tool.
 
 ```text
 5. Queueing: pinwheel-retail bursts 400 requests at tick 50. Wait in ticks, one tick = one simulated second
@@ -137,7 +139,9 @@ version. If a check ever passes on the naive version, the test file itself fails
    context. The read still leaks 3 spans, because the read path has its own check to add.</details>
 4. Change Larkspur's volume in `QUALITY_VOLUME` to 20, 40 and 600. When does each alert fire?
    <details><summary>Answer</summary>At 20 the tenant reports `too_few_runs`, at 40 it reports `regressed`. The fleet
-   alert stays silent until Larkspur has 600 runs, when the fleet mean falls from 88.9% to 86.7%.</details>
+   alert stays silent until Larkspur has 600 runs, when the fleet mean falls from 88.9% to 86.7%. At 20 and at 600 the
+   `assert` at the end of section 7 stops the script with an `AssertionError`, because the result it pins has changed.
+   That is expected: the table above the traceback is the answer.</details>
 5. Set Pinwheel's `rate_per_s` to 20 and `burst` to 400. Do the quiet tenants suffer?
    <details><summary>Answer</summary>Barely: their p95 goes from 0 to 1 tick, and Pinwheel's own p95 goes to 288. The
    fair queue protects the neighbours; the rate limit protects Pinwheel from its own backlog.</details>

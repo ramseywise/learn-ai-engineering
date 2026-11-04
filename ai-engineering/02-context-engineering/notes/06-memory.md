@@ -11,6 +11,8 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 4 — generative-ai/01-llm-fundamentals/sources/learning-langchain/"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6, 13 — sources/building-applications-with-ai-agents/"
   - https://arxiv.org/abs/2606.16707
+  - https://arxiv.org/abs/1410.5401
+  - https://arxiv.org/abs/1503.08895
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -74,6 +76,8 @@ The survey *Memory in the Age of AI Agents* organises the field along three diff
 | **Dynamics** | How does it operate over time? | **Formation** (summarise, distil, build triples or schemas, encode, fine-tune). **Evolution** (consolidate, update, forget). **Retrieval** (timing, query construction, strategy — sparse, dense, graph, hybrid — and post-processing before injection) |
 
 Almost everything in this note is token-level memory. Parametric and latent memory are where the research is heading ([gen-AI 05](../../../generative-ai/05-RL/README.md)); the KV-cache reuse in [02](02-context-anatomy.md#ordering-stable-before-dynamic) is the one latent form already in production.
+
+The idea of a model reading an external store by attention is older than LLMs. **Neural Turing Machines** coupled a neural controller to a memory matrix that it read and wrote with soft attention. The controller found a slot either by matching a key against the contents or by shifting from the slot it used last. Trained on copy sequences of up to 20 random 8-bit vectors, it still copied sequences of length 120 nearly correctly (a few errors, one a duplicated vector), while an LSTM degraded past 20. The authors name the 128-slot memory as the limiting factor: past it, writes wrap around and overwrite earlier ones ([arXiv:1410.5401](https://arxiv.org/abs/1410.5401) (Graves et al., 2014-10, preprint)). **End-To-End Memory Networks** kept only the content read: a softmax of the query against every memory slot, a weighted sum, repeated over several hops. They trained it from question–answer pairs alone. On the synthetic bAbI tasks with 1k training examples, for the jointly trained model, **going from one hop to three cut mean error from 25.8% to 13.3%**. The best variant (12.6% in the text, 12.4% in Table 1) still trailed a Memory Network that was told which facts to read (6.7%) ([arXiv:1503.08895](https://arxiv.org/abs/1503.08895) (Sukhbaatar et al., NeurIPS 2015)). Both papers use toy tasks with memories of 128 slots or 50 sentences, and the MemN2N authors warn that smooth lookups "may not scale well" to larger memories. Two lessons carry over to token-level memory. The store sits outside the model, read by similarity to the query. And the store's size, not the reader, is often what breaks first. Infini-attention's compressive memory ([01](01-why-context-is-finite.md#context-rot)) puts the same idea inside a transformer layer.
 
 ### Storage formats
 

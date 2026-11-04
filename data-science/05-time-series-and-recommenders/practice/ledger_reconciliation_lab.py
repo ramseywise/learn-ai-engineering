@@ -463,7 +463,7 @@ class Book:
         bank = OPENING_CASH - statement_total
         if balances[BANK] != bank:
             gap = abs(balances[BANK] - bank)
-            hint = "; a gap divisible by 9 often means two digits swapped" if gap % 9 == 0 and gap > 0 else ""
+            hint = "; a gap divisible by 9 often means two digits swapped" if (gap * 100) % 9 == 0 and gap > 0 else ""
             fails.append(f"bank account {balances[BANK]} differs from the statement {bank} by {gap}{hint}")
         held = sum(self.queue.values(), ZERO)
         if balances[SUSPENSE] != held:
@@ -579,6 +579,7 @@ class Result:
     corrected: int = 0
     would_refuse: int = 0        # naive posts the invariants would have stopped
     would_refuse_wrong: int = 0  # of those, how many were wrong links
+    would_refuse_right_eur: int = 0  # right links in euros: the invoice had already been paid down by earlier posts
     closes: list = field(default_factory=list)
     snapshot: Book | None = None
     statement_p1: Decimal = ZERO
@@ -712,7 +713,9 @@ def act_on_line(book, res, world, cands, row, policy, gate):
             return
         if book.violations(Plan(line, day, amount, [Alloc(posted, amount, book.doc[posted])])):
             res.would_refuse += 1
-            res.would_refuse_wrong += not is_right(world, line, (posted,))
+            right_link = is_right(world, line, (posted,))
+            res.would_refuse_wrong += not right_link
+            res.would_refuse_right_eur += right_link and world.invoices[posted].currency == "EUR"
         book.track(book.ledger.post(day, f"bank line {line} to invoice {posted}",
                                     [Posting(AP, debit=amount, invoice=posted), Posting(BANK, credit=amount)],
                                     "bank", policy, float(c.iloc[0].p), f"bank:{line}"))
@@ -807,15 +810,23 @@ def show_entry(title, e):
         print(f"     {side}  {ACCOUNTS[p.account]}{tag}")
 
 
+def show_kind(label, entries):
+    entry = next(entries, None)
+    if entry is None:
+        print(f"   {label}: none in this run.")
+    else:
+        show_entry(label, entry)
+
+
 def show_worked_entries(book):
-    """One entry of each kind, from the clean books. Each has debits equal to credits."""
+    """One entry of each kind, from the clean books. Each has debits equal to credits. A flag can switch a kind off."""
     journal, invoices = book.ledger.journal, book.world.invoices
     bank = [e for e in journal if e.source == "bank"]
-    show_entry("An invoice with VAT", next(e for e in journal if e.source == "invoice" and len(e.lines) == 3))
-    show_entry("A credit note reverses part of the expense and the VAT", next(e for e in journal if e.source == "credit_note" and len(e.lines) == 3))
-    show_entry("One payment settling several invoices", next(e for e in bank if sum(p.account == AP for p in e.lines) > 1 and not any(p.account == FX_REALISED for p in e.lines)))
-    show_entry("A settlement difference", next(e for e in bank if any(p.account == SETTLEMENT for p in e.lines)))
-    show_entry("A USD invoice paid at a later rate", next(e for e in bank if any(p.account == FX_REALISED for p in e.lines)))
+    show_kind("An invoice with VAT", (e for e in journal if e.source == "invoice" and len(e.lines) == 3))
+    show_kind("A credit note reverses part of the expense and the VAT", (e for e in journal if e.source == "credit_note" and len(e.lines) == 3))
+    show_kind("One payment settling several invoices", (e for e in bank if sum(p.account == AP for p in e.lines) > 1 and not any(p.account == FX_REALISED for p in e.lines)))
+    show_kind("A settlement difference", (e for e in bank if any(p.account == SETTLEMENT for p in e.lines)))
+    show_kind("A USD invoice paid at a later rate", (e for e in bank if any(p.account == FX_REALISED for p in e.lines)))
     eur = {}
     parts = book.world.lines[book.world.lines.kind == "part"]
     i = book.world.links[int(parts.iloc[0].line)][0]
@@ -929,7 +940,8 @@ def main():
     print(f"   Stopped by the gate itself: {gated.held_for_confidence}")
     print(f"   Wrong links reversed and reposted after the supplier-statement check: {gated.corrected}. This check is a perfect oracle here, a real one isn't")
     print(f"   Run over the per-line matcher's posts, the invariants would have stopped {per_line.would_refuse} of {per_line.auto - len(world.lines[world.lines.kind == 'none'])}, "
-          f"{per_line.would_refuse_wrong} of them wrong links; the rest were right links with a difference no one booked")
+          f"{per_line.would_refuse_wrong} of them wrong links. Of the right links, {per_line.would_refuse_right_eur} were in euros, whose invoice earlier posts "
+          f"had already paid down, so a wrong link also blocks the right one after it; {per_line.would_refuse - per_line.would_refuse_wrong - per_line.would_refuse_right_eur} were USD, where a moved rate can leave a difference")
     print("   In the third column the search only proposes what fits, so the checks above are its second lock and rarely fire.")
     print("   The invariants catch what is impossible. A wrong link that fits the arithmetic still passes, which is why wrong isn't zero.\n")
     probe_book = gated.snapshot
@@ -989,7 +1001,7 @@ def main():
         b.track(b.ledger.post(day, "rekeyed payment", [Posting(AP, debit=swapped, invoice=allocated.invoice), Posting(BANK, credit=swapped)], "bank", "someone"))
 
     def plant_overpaid(b):
-        """Balanced, in the bank and the payables, but more than the invoice ever owed."""
+        """Balanced, in suspense and the payables, but more than the invoice ever owed."""
         i = next(k for k, v in b.eur.items() if v == 0 and b.world.invoices[k].currency == "EUR")
         b.ledger.post(day, "duplicate payment", [Posting(AP, debit=Decimal("40.00"), invoice=i), Posting(SUSPENSE, credit=Decimal("40.00"))], "manual", "someone")
 
@@ -1028,7 +1040,7 @@ def main():
         for e in final.journal:
             if e.memo.startswith(f"bank line {ln} ") or e.memo.startswith(f"reversal of entry") and final.journal[e.reverses].memo.startswith(f"bank line {ln} ") or e.memo.startswith(f"clear held line {ln} "):
                 conf_text = f"confidence {e.confidence:.2f}" if e.confidence is not None else ""
-                print(f"     entry {e.id:5d} day {e.day:3d} {e.actor:8s} {e.memo[:50]:50s} {conf_text} {e.reason}")
+                print(f"     entry {e.id:5d} day {e.day:3d} {e.actor:8s} {e.memo[:60]:60s} {conf_text} {e.reason}")
     p1 = final.balances(through=P1_END)
     sample = next(e for e in final.journal if e.day <= P1_END and e.source == "bank" and e.id not in final.reversed_ids and e.lines[0].account == AP and e.lines[0].debit > 0)
     demo = copy.deepcopy(gated.book)

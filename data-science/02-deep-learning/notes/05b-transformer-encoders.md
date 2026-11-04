@@ -15,9 +15,9 @@ cleaned: 2026-11-03
 
 # Transformer encoders
 
-> An encoder reads every token at once and pays for it three ways: it knows nothing about order until you tell it, its cost grows with the square of the length, and it assumes less about the data than a CNN or an LSTM, so it has to learn more from examples. This chapter builds one in PyTorch, shows the silent bugs a shape mistake causes, and runs it on the same split as the linear model, the CNN and the LSTM. On 1,257 digits it comes third, behind a CNN at 0.988 and level with an LSTM. On a memory task where an LSTM stays at chance for some seeds, it is right on every seed. Knowing which of those you have is the point of the chapter.
+> An encoder reads every token at once and pays for it three ways: it knows nothing about order until you tell it, its cost grows with the square of the length, and it assumes less about the data than a CNN or an LSTM, so it has to learn more from examples. This chapter builds one in PyTorch, shows the silent bugs a shape mistake causes, and runs it on the same split as the linear model, the CNN and the LSTM. On 1,257 digits it comes third, behind a CNN at 0.988 and level with an LSTM. On a memory task where an LSTM stays at chance for some seeds, it is right on every seed.
 
-**In plain words.** An LSTM reads a report line by line and keeps notes. An encoder lays all the lines out on a table and lets each one look at every other. Nothing fades, because nothing has to be carried. But pages on a table have lost their page numbers, so you have to write the numbers on, and a thousand pages means a million comparisons. A CNN, which assumes local shapes matter, learns from fewer examples when that assumption holds. At work this decides whether a transformer is worth trying on your sensor readings, event logs or tables.
+**In plain words.** An LSTM reads a report line by line and keeps notes. An encoder lays all the lines out on a table and lets each one look at every other. But pages on a table have lost their page numbers, so you have to write the numbers on, and a thousand pages means a million comparisons. A CNN, which assumes local shapes matter, learns from fewer examples when that assumption holds. At work this decides whether a transformer is worth trying on your sensor readings, event logs or tables.
 
 ```mermaid
 flowchart TD
@@ -35,7 +35,7 @@ flowchart TD
 
 This chapter treats the encoder as a model you choose and train. [Attention and the transformer block](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md) covers causal masks and why LLMs are built this way, and [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) builds a language model from nothing.
 
-Each block below continues from the previous ones in one file. It needs `torch`, `scikit-learn` and `numpy`, and no GPU. On a laptop CPU the whole file took about 17 minutes, about 10 of them in the memory and pattern comparison, and timings printed below are from one such run.
+Each block below continues from the previous ones in one file. It needs `torch`, `scikit-learn` and `numpy`, and no GPU. On a laptop CPU the whole file took about 17 minutes, about 10 of them in the memory and pattern comparison, and printed timings are from one run.
 
 ## Self-attention, and the encoder around it
 
@@ -81,9 +81,9 @@ d_k   64  std of q.k   7.99  after dividing by sqrt(d_k) 1.00
 d_k 1024  std of q.k  32.09  after dividing by sqrt(d_k) 1.00
 ```
 
-Two things follow. The first is the scaling. Under the Transformer paper's assumption of independent unit-variance components, a dot product has variance $d_k$, and its authors "suspect" large values push the softmax into regions with "extremely small gradients", so they divide by $\sqrt{d_k}$ ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), §3.2.1 (Vaswani et al., NeurIPS 2017)). The standard deviations above confirm the growth; the paper runs no scaled against unscaled experiment, and leans on an outside result where additive attention beat unscaled dot product at large $d_k$.
+Two things follow. The first is the scaling. Under the Transformer paper's assumption of independent unit-variance components, a dot product has variance $d_k$, and its authors "suspect" large values push the softmax into regions with "extremely small gradients", so they divide by $\sqrt{d_k}$ ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), §3.2.1 (Vaswani et al., NeurIPS 2017)). The standard deviations above confirm the growth. The paper runs no scaled against unscaled experiment, leaning on an outside result for additive attention at large $d_k$.
 
-The second matters more. Shuffle the input tokens and each output moves with its input and nothing else changes, so this layer has no idea what order its tokens came in. The exact term is *equivariant*: the output permutes as the input does. A mean over tokens is then *invariant*: it does not change at all. So self-attention followed by a mean pool sees a set, not a sequence.
+The second matters more. Shuffle the input tokens and each output moves with its input, so this layer doesn't know their order. The exact term is *equivariant*: the output permutes as the input does. A mean over tokens is then *invariant*. So self-attention followed by a mean pool sees a set, not a sequence.
 
 An **encoder block** wraps attention with three things: several **heads** (attention run in parallel on narrower projections, so the total width stays fixed), a small **feed-forward** network applied to each token separately, and a residual connection with LayerNorm around each. The paper's base model has $N = 6$ blocks, $d_{model} = 512$, $h = 8$ heads and a feed-forward width of 2,048, for 65M parameters, decoder stacks included, on English to German translation (§3, Table 3). Ours is far smaller:
 
@@ -166,7 +166,7 @@ one block's feed-forward     4192
 whole model                 18026
 ```
 
-Attention's 4,224 parameters are four linear layers of $32 \times 32 + 32$: query, key, value and an output projection. The head count isn't in that sum, because more heads means narrower heads over the same 32 dimensions, which is why `d` must divide by `heads`. Only `pos` is tied to sequence length: the other weights serve 8 tokens or 800.
+Attention's 4,224 parameters are four linear layers of $32 \times 32 + 32$: query, key, value and an output projection. The head count isn't in that sum, because more heads means narrower heads over the same 32 dimensions. Only `pos` is tied to sequence length: the other weights serve 8 tokens or 800.
 
 ## Position is an input you choose
 
@@ -189,15 +189,15 @@ sinusoid  params  17770  test 0.984 +- 0.002  rows upside down 0.395
 learned   params  18026  test 0.975 +- 0.004  rows upside down 0.551
 ```
 
-With no position, accuracy is 0.902: a bag of rows gets far on digits, and the upside-down score doesn't move at all. Add position and test accuracy rises to 0.984 for sinusoids and 0.975 for a learned table, and the upside-down score collapses, as it should, because the model is now reading the order. Under one point on three seeds separates sinusoids from the table, so call it a tie.
+With no position, a bag of rows gets far on digits, and the upside-down score doesn't move at all. Add position and test accuracy rises while the upside-down score collapses, as it should, because the model is now reading the order. Under one point on three seeds separates sinusoids from the table, so call it a tie.
 
-The learned table has a limit worth stating: `Encoder(n=8)` has no entry for a ninth token, so it raises an error on longer input. That failure is loud. Sinusoids will run on any length, whether or not they generalise there.
+The learned table has a limit: `Encoder(n=8)` has no entry for a ninth token, so it raises an error on longer input. Sinusoids will run on any length, whether or not they generalise there.
 
-Other data shows how far the choice goes. ViT (Vision Transformer) is an encoder over image patches. On ImageNet 5-shot linear accuracy, which I read as a linear classifier on frozen features with 5 labelled images per class (the paper doesn't spell out the 5), its smallest model, ViT-B/16, scored 0.61382 with no position embedding, 0.64206 with learned 1-D and 0.64001 with 2-D-aware, so most of the benefit came from having any at all ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929), Table 8 (Dosovitskiy et al., ICLR 2021)). FT-Transformer, an encoder for tables, has no position term in its tokenizer equations, which I read as fitting columns having no order: each feature gets its own weights and bias instead ([arXiv:2106.11959](https://arxiv.org/abs/2106.11959) (Gorishniy et al., NeurIPS 2021)).
+ViT (Vision Transformer) is an encoder over image patches. On ImageNet 5-shot linear accuracy, which I read as a linear classifier on frozen features with 5 labelled images per class (the paper doesn't spell out the 5), its base model, ViT-B/16, scored 0.61382 with no position embedding, 0.64206 with learned 1-D and 0.64001 with 2-D-aware, so most of the benefit came from having any at all ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929), Table 8 (Dosovitskiy et al., ICLR 2021)). FT-Transformer, an encoder for tables, has no position term in its tokenizer equations, which I read as fitting columns having no order: each feature gets its own weights and bias instead ([arXiv:2106.11959](https://arxiv.org/abs/2106.11959) (Gorishniy et al., NeurIPS 2021)).
 
 ## Padding, masks and three silent shape bugs
 
-Real sequences have different lengths, so batches are padded. Attention would then happily attend to the padding, unless told not to. `src_key_padding_mask` tells it: **`True` means ignore**. The test is a property you can assert in a unit test, and it should hold exactly: padding a sequence must not change its output.
+Real sequences have different lengths, so batches are padded. Attention would then happily attend to the padding, unless told not to. `src_key_padding_mask` tells it: **`True` means ignore**. The test you can assert: padding a sequence must not change its output.
 
 ```python
 torch.manual_seed(0)
@@ -218,7 +218,7 @@ padded to 10: logits move 0.2876 without the mask, 0.000000 with it
 padded to 20: logits move 0.4305 without the mask, 0.000000 with it
 ```
 
-Without the mask, the same input gives different logits depending on its batch's longest member, so the score depends on how you batch. Masking attention isn't sufficient by itself: the pool has to skip the padding too, which is what the `keep` weights do. Pass the mask inverted (`~mask`, the convention in some other libraries) and nothing raises and no `nan` appears: in this test the real tokens' outputs moved by 1.37, because they were attending only to padding.
+Without the mask, the same input gives different logits depending on its batch's longest member. Masking attention isn't sufficient by itself: the pool has to skip the padding too, which is what the `keep` weights do. Pass the mask inverted (`~mask`, the convention in some other libraries) and nothing raises and no `nan` appears: in this test the real tokens' outputs moved by 1.37, because they were attending only to padding.
 
 Next is the worst of the three, because the model still trains well. `nn.TransformerEncoderLayer` defaults to `batch_first=False`. Give it `(batch, n, d)` and it reads the batch as the sequence, so **each digit attends to the other digits in its batch**:
 
@@ -242,7 +242,7 @@ print(f"test scored as one batch {np.mean(whole):.3f}, scored one digit at a tim
 test scored as one batch 0.966, scored one digit at a time 0.658
 ```
 
-Training raises no error and the test score looks healthy at 0.966, because a large batch gives every example neighbours to borrow from. Then production sends one request at a time and accuracy is 0.658. To catch it, score the same examples at batch size 1 and at batch size 32, and check that the logits match. `Encoder` above sets `batch_first=True`, and `nn.MultiheadAttention` has the same default.
+The test score looks healthy at 0.966, because a large batch gives every example neighbours to borrow from. Then production sends one request at a time and accuracy is 0.658. To catch it, score the same examples at batch size 1 and at batch size 32, and check that the logits match. `Encoder` above sets `batch_first=True`, and `nn.MultiheadAttention` has the same default.
 
 The third bug is the interview classic, "the model runs but doesn't learn". A regression head outputs `(batch, 1)`, and the target is `(batch)`. Subtracting them broadcasts to `(batch, batch)`, so every prediction is compared with every target, and the best constant is the mean:
 
@@ -277,7 +277,7 @@ output (batch, 1), target (batch)  R2 per seed [-0.084  0.089 -0.135]
 output squeezed to (batch)         R2 per seed [0.897 0.966 0.946]
 ```
 
-The buggy model's $R^2$ sits around zero, as predicting about the mean would, which is what the loss rewards. PyTorch does warn: `Using a target size that is different to the input size`. The block silences that warning to show the result. Yours shouldn't. Add `assert pred.shape == target.shape` before the loss.
+The buggy model's $R^2$ sits around zero, as predicting the mean would. PyTorch does warn: `Using a target size that is different to the input size`. The block silences that to show the result. Yours shouldn't. Add `assert pred.shape == target.shape` before the loss.
 
 ## A token is a design choice
 
@@ -308,11 +308,11 @@ for name, size, make in [("64 tokens of 1 pixel", 1, lambda: Encoder(inp=1, n=64
 4 tokens of 4x4         params  18154  test 0.975 +- 0.002    3.5 s a run
 ```
 
-Sixteen times the tokens buys nothing here: 64 single pixels give 0.948 at 18.1 s a run, while 4 patches of 4×4 give 0.975 at 3.5 s. A single pixel doesn't say much, and a patch already carries local shape. This is 3 seeds and 40 epochs on small digits, so more training might narrow the gap, but published work on larger problems also uses patches, for its own reasons:
+Sixteen times the tokens buys nothing here: 64 single pixels score below 4 patches of 4×4, at five times the time. A single pixel doesn't say much, and a patch already carries local shape. This is 3 seeds and 40 epochs on small digits, so more training might narrow the gap, but published work on larger problems also uses patches, for its own reasons:
 
 - **Images.** ViT's paper title states the choice, *An Image is Worth 16x16 Words*: ViT-B/16 makes one token per patch of 16×16 pixels. The reason given is cost ("With quadratic cost in the number of pixels, this does not scale"), and more tokens did help there: from ImageNet pre-training, B/16 scored 77.91 against 73.38 for the coarser B/32 (Table 5, [arXiv:2010.11929](https://arxiv.org/abs/2010.11929) (Dosovitskiy et al., ICLR 2021)).
 - **Time series.** PatchTST, an encoder for forecasting, gives this reason for patches: "a single time step does not have semantic meaning like a word in a sentence". On Traffic at horizon 96 and look-back 336, MSE fell from 0.397 to 0.367 with patching (Table 7, PatchTST/42, channel-independent both ways, though the appendix cuts epochs to 20 for that table's comparison runs on Traffic), and running time at look-back 336 fell from 10,040 s to 464 s (Table 1, patch length 16, stride 8, [arXiv:2211.14730](https://arxiv.org/abs/2211.14730) (Nie et al., ICLR 2023)).
-- **Tables.** FT-Transformer makes one token per feature, plus a [CLS] token. Its training time against a ResNet ran from 0.9x to 13.8x, the worst being Yahoo, which the authors put down to its 700 features. It doesn't rise steadily with width: Adult, 14 features, was 0.9x and California Housing, 8 features, 2.6x, and the widest table, Epsilon at 2,000 features, was 1.3x only because they switched to an approximation ([arXiv:2106.11959](https://arxiv.org/abs/2106.11959), Table 10 (Gorishniy et al., NeurIPS 2021)). The authors name the cause as "the quadratic complexity of the vanilla MHSA with respect to the number of features".
+- **Tables.** FT-Transformer makes one token per feature, plus a [CLS] token. Its training time against a ResNet ran from 0.9x to 13.8x, the worst being Yahoo, which the authors put down to its 700 features; they blame "the quadratic complexity of the vanilla MHSA" in general. It doesn't rise steadily with width: Adult, 14 features, was 0.9x, California Housing, 8 features, 2.6x, and Epsilon, 2,000 features, 1.3x with an approximation of attention (§E.3), which I read as the reason ([arXiv:2106.11959](https://arxiv.org/abs/2106.11959), Table 10 (Gorishniy et al., NeurIPS 2021)).
 
 ## Choosing it over the other families
 
@@ -320,7 +320,7 @@ Three measurements decide most cases: score at your data size, fit to your probl
 
 ### At your data size
 
-The linear model, the CNN from [note 04](04-convolutional-networks.md#a-cnn-on-the-digits), the LSTM from note 05 and the encoder all get the same test set and the same number of training steps. Linear and encoder use a learning rate of 1e-3, and the CNN and LSTM use 3e-3, as in their chapters. "Down" and "right" score a test set moved by one pixel, with no such examples in training:
+The linear model, the CNN from [note 04](04-convolutional-networks.md#a-cnn-on-the-digits), the LSTM from note 05 and the encoder all get the same test set and the same number of training steps. Linear and encoder use a learning rate of 1e-3, and the CNN and LSTM use 3e-3. "Down" and "right" score a test set moved by one pixel, with no such examples in training:
 
 ```python
 class Reader(nn.Module):
@@ -384,11 +384,11 @@ train 1257  lstm     params  19594  test 0.975 +- 0.001  down 0.707  right 0.467
 train 1257  encoder  params  18026  test 0.973 +- 0.002  down 0.683  right 0.448    4.6 s
 ```
 
-The CNN wins at every size, and it's the result to expect: digits are small local shapes, and the CNN assumes exactly that. At 100 labels the encoder at 0.862 loses even to the linear model at 0.913, and it overtakes linear only by 300. With all 1,257 labels it reaches 0.973, level with the LSTM at 0.975 and behind the CNN's 0.988, at three times the CNN's parameters and about the same time per run. Moving digits sideways takes the encoder to 0.448, since each row's pixels feed one linear layer. That beats the linear model and loses to the CNN's 0.673. Moved down, where each row stays whole, the encoder beats the CNN at all three sizes, 0.680 against 0.615 at 100 labels, so its token choice is doing some of the work.
+The CNN wins at every size, as expected: digits are small local shapes, and the CNN assumes exactly that. At 100 labels the encoder at 0.862 loses even to the linear model at 0.913, and it overtakes linear only by 300. With all 1,257 labels it reaches 0.973, level with the LSTM at 0.975 and behind the CNN's 0.988, at three times the CNN's parameters and about the same time per run. Moving digits sideways takes the encoder to 0.448, since each row's pixels feed one linear layer. That beats the linear model and loses to the CNN's 0.673. Moved down, where each row stays whole, the encoder beats the CNN at all three sizes, 0.680 against 0.615 at 100 labels, so its token choice is doing some of the work.
 
-The published evidence points the same way on data size, at a much larger scale, though not with the same shape: on digits the CNN wins at every size, while ViT's paper reports a crossover. ViT's authors say it has "much less image-specific inductive bias than CNNs": locality, 2-D neighbourhoods and translation equivariance are built into each CNN layer, and "all spatial relations between the patches have to be learned from scratch". Pre-trained on ImageNet (1.3M images), ViT-B/16 reached 77.91, on ImageNet-21k (14M) 83.97 and on JFT-300M 84.15, top-1 on ImageNet at resolution 384 ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929), Table 5). That table changes regularisation along with size (for B/16, weight decay 0.3, 0.03 and 0.1, Table 3) and has no CNN rows; the CNN comparison is in the text: "The BiT CNNs outperform ViT on ImageNet, but with the larger datasets, ViT overtakes". The authors' summary is "large scale training trumps inductive bias", a finding about image classification.
+The published evidence also says data size matters, at a much larger scale, but ViT's paper reports a crossover. Its authors say it has "much less image-specific inductive bias than CNNs": locality, 2-D neighbourhoods and translation equivariance are built into each CNN layer, and "all spatial relations between the patches have to be learned from scratch". Pre-trained on ImageNet (1.3M images), ViT-B/16 reached 77.91, on ImageNet-21k (14M) 83.97 and on JFT-300M 84.15, top-1 on ImageNet at resolution 384 ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929), Table 5). That table changes regularisation along with size (for B/16, weight decay 0.3, 0.03 and 0.1, Table 3) and has no CNN rows; the CNN comparison is in the text: "The BiT CNNs outperform ViT on ImageNet, but with the larger datasets, ViT overtakes". The authors' summary is "large scale training trumps inductive bias", a finding about image classification.
 
-The requirement also depends on the recipe. DeiT, a training recipe, took the same 86M-parameter architecture from 77.9 to 83.1 on ImageNet alone (resolution 384, fine-tuned) with heavy augmentation, stochastic depth, repeated augmentation and different optimiser settings. Removing Mixup and CutMix, which blend pairs of images and their labels, cost it 6 points at resolution 224, 81.8 to 75.8, with other settings left fixed, which the authors say may be suboptimal. The gap isn't gone: "transformers require a larger amount of data", and on CIFAR-10 from scratch, at up to 7,200 epochs with images rescaled to 224, DeiT-B scored 97.5 against 98.0 for a CNN, though a version distilled from a CNN reached 98.5 ([arXiv:2012.12877](https://arxiv.org/abs/2012.12877) (Touvron et al., ICML 2021)). No paper here gives a threshold in rows or images. Run the learning curve on your own data.
+The requirement also depends on the recipe. DeiT, a training recipe, took the same 86M-parameter architecture from 77.9 to 83.1 on ImageNet alone (resolution 384, fine-tuned) with heavy augmentation, stochastic depth, repeated augmentation and different optimiser settings. Removing Mixup and CutMix, which blend pairs of images and their labels, cost it 6 points at resolution 224, 81.8 to 75.8, with other settings left fixed, which the authors say may be suboptimal. The gap isn't gone: "transformers require a larger amount of data", and on CIFAR-10 from scratch, at up to 7,200 epochs with images rescaled to 224, DeiT-B scored 97.5 against 98.0 for a CNN ([arXiv:2012.12877](https://arxiv.org/abs/2012.12877) (Touvron et al., ICML 2021)). No paper here gives a threshold in rows or images. Run the learning curve on your own data.
 
 ### When the structure doesn't match
 
@@ -478,11 +478,11 @@ motif, 2000 labels  cnn          per seed [0.766 0.759 0.756]    8.9 s a run
 motif, 2000 labels  encoder      per seed [0.577 0.534 0.559]   14.8 s a run
 ```
 
-On the first task, the encoder with position is right on every seed at every length, since position 0 is one attention step from everything. The maximum path length, the steps information takes between two positions, is $O(1)$ in Table 1 of the Transformer paper ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762)), against $O(n)$ for a recurrent layer, and the LSTM's trouble in this budget shows what $O(n)$ costs: even with its forget bias at 2, it failed on two seeds of three at $T = 200$. Remove position and the encoder drops to 0.509 at $T = 200$. Its higher scores at short lengths aren't order: the first number is also one of those counted, so the share of +1s leaks the label. A plain majority vote on the same test sets scores 0.605, 0.580 and 0.509. That's the order problem from the first section, now costing a whole task.
+On the first task, the encoder with position is right on every seed at every length: position 0 is one attention step from everything. The maximum path length, the steps information takes between two positions, is $O(1)$ in Table 1 of the Transformer paper ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762)), against $O(n)$ for a recurrent layer, and the LSTM's trouble in this budget shows what $O(n)$ costs: even with its forget bias at 2, it failed on two seeds of three at $T = 200$. Remove position and the encoder drops to 0.509 at $T = 200$. Its higher scores at short lengths aren't order: the first number is also one of those counted, so the share of +1s leaks the label. A plain majority vote on the same test sets scores 0.605, 0.580 and 0.509.
 
-A result worth pausing on: the CNN solves the first task at every length, though its two layers see only five steps at a time. The reason is `padding=1`. The zeros added at each end mark the boundary, so a filter can recognise "the start" and max pooling then finds it anywhere. Exercise 1 tests this.
+The CNN also solves the first task at every length, though its two layers see only five steps at a time. The reason is `padding=1`: the zeros at each end mark the boundary, so a filter can recognise "the start". Exercise 1 tests this.
 
-On the pattern task the encoder loses. At 2,000 labels and 1,000 steps it scores 0.534 to 0.577 where the CNN gets about 0.76 and the LSTM 0.585 to 0.922 depending on the seed. At 200 labels only the CNN is clear of chance, at 0.662 to 0.698. More data and training might help the encoder, but in this budget a model that must learn that a pattern means the same thing at step 3 and step 30 loses to one built to assume it.
+On the pattern task the encoder loses. At 2,000 labels and 1,000 steps it scores 0.534 to 0.577 where the CNN gets about 0.76 and the LSTM 0.585 to 0.922 depending on the seed. In this budget, a model that must learn that a pattern means the same thing at step 3 and step 30 loses to one built to assume it.
 
 ### At your length
 
@@ -513,7 +513,7 @@ torch.set_num_threads(torch.get_num_interop_threads())
 2048     327.15    16.98
 ```
 
-Table 1 of the Transformer paper gives per-layer complexity: $O(n^2 \cdot d)$ for self-attention, $O(n \cdot d^2)$ for a recurrent layer, and $O(k \cdot n \cdot d^2)$ for a convolution, so self-attention is cheaper than a recurrent layer when $n < d$ (§4, [arXiv:1706.03762](https://arxiv.org/abs/1706.03762)). The measured block (two blocks and a head, so not a pure layer comparison) shows the shape. From 512 to 2,048 tokens, four times the length, the encoder's time grows by about 15 times and the LSTM's by about 4 (my arithmetic: 327.15 / 22.18 and 16.98 / 4.28). One thread hides the other column of Table 1: self-attention needs $O(1)$ sequential operations and a recurrent layer $O(n)$, so parallel hardware should help the encoder more, which is my inference, since the paper gives only those orders. Memory also grows as $n^2$, by PatchTST's account: its variant without patching or channel independence (modelling each variable of a series separately) ran out of memory on some datasets on a 48 GB GPU at batch size 1, Traffic included ([arXiv:2211.14730](https://arxiv.org/abs/2211.14730), Table 7). Tokens aren't the only cause there: the channel-independent variant with the same token count ran on Traffic at every horizon.
+Table 1 of the Transformer paper gives per-layer complexity: $O(n^2 \cdot d)$ for self-attention, $O(n \cdot d^2)$ for a recurrent layer, and $O(k \cdot n \cdot d^2)$ for a convolution, so self-attention is cheaper than a recurrent layer when $n < d$ (§4, [arXiv:1706.03762](https://arxiv.org/abs/1706.03762)). The measured block (two blocks and a head, so not a pure layer comparison) shows the shape. From 512 to 2,048 tokens, four times the length, the encoder's time grows by about 15 times and the LSTM's by about 4 (my arithmetic). One thread hides Table 1's other column: $O(1)$ sequential operations for self-attention, $O(n)$ for a recurrent layer. Memory also grows as $n^2$, by PatchTST's account: its variant without patching or channel independence (modelling each variable of a series separately) ran out of memory on some datasets on a 48 GB GPU at batch size 1, Traffic included ([arXiv:2211.14730](https://arxiv.org/abs/2211.14730), Table 7). Tokens aren't the only cause there: the channel-independent variant with the same token count ran on Traffic at every horizon.
 
 ### What the evidence says by data type
 
@@ -527,9 +527,7 @@ Table 1 of the Transformer paper gives per-layer complexity: $O(n^2 \cdot d)$ fo
 | Large tables | Boosting and FT-Transformer, both | Below |
 | Very many classes | FT-Transformer, since boosting struggles | Below |
 
-**Forecasting.** Zeng et al. found that one-layer linear models beat five earlier Transformer forecasters across 9 multivariate benchmarks, with most Transformer scores copied from FEDformer's paper rather than re-run. For example Electricity at horizon 96 had MSE 0.140 against FEDformer's 0.193. By default the linear models looked back 336 steps and the Transformers 96, because linear models underfit short windows and Transformers tend to overfit long ones (Appendix B.2). The printed improvement column ran from 0.80% (ETTh1, horizon 96) to 47.86% (ILI, horizon 24), which I read as against the best Transformer's MSE ([arXiv:2205.13504](https://arxiv.org/abs/2205.13504), Table 2 (Zeng et al., AAAI 2023)). One of them, DLinear, is also much cheaper: 139.7K parameters and 0.4 ms inference against FEDformer's 20.68M and 40.5 ms (Electricity, look-back 96, horizon 720, Table 8). PatchTST replied with a plain encoder using patches and separate channels, which "can still outperform" DLinear "in general": for PatchTST/42 at DLinear's look-back of 336, Traffic at horizon 96 was 0.367 against 0.410, but Electricity at horizon 720 only 0.202 against 0.203 ([arXiv:2211.14730](https://arxiv.org/abs/2211.14730), Table 3 (Nie et al., ICLR 2023)). My count of that table, on MSE at /42: 30 wins, 1 tie and 1 loss in 32 rows, with 13 of the wins under 5% and 17 at 5% or more, on one seed and 8 of Zeng's 9 datasets (Exchange-Rate is left out). So the design choices mattered, and the margin depends on the dataset. [Time-series ML](../../05-time-series-and-recommenders/notes/01-time-series-ml.md) has the baselines to run first.
-
-Zeng et al. also call self-attention "permutation-invariant" and argue it loses temporal information even with positional encoding. Treat that as an argument: strictly the operation is equivariant (block 1), and position does carry order on the digits (block 3).
+**Forecasting.** Zeng et al. found that one-layer linear models beat five earlier Transformer forecasters across 9 multivariate benchmarks, with most Transformer scores copied from FEDformer's paper rather than re-run. By default the linear models looked back 336 steps and the Transformers 96, because linear models underfit short windows and Transformers tend to overfit long ones (Appendix B.2). The printed improvement column ran from 0.80% (ETTh1, horizon 96) to 47.86% (ILI, horizon 24), against the underlined best Transformer, FEDformer's 3.228; that row also prints Pyraformer at 1.420, impossible beside its MAE of 2.012, so probably a misprint ([arXiv:2205.13504](https://arxiv.org/abs/2205.13504), Table 2 (Zeng et al., AAAI 2023)). PatchTST replied with a plain encoder using patches and separate channels, which "can still outperform" DLinear "in general": for PatchTST/42 at DLinear's look-back of 336, Traffic at horizon 96 was 0.367 against 0.410, but Electricity at horizon 720 only 0.202 against 0.203 ([arXiv:2211.14730](https://arxiv.org/abs/2211.14730), Table 3 (Nie et al., ICLR 2023)). My count of that table, on MSE at /42: 30 wins, 1 tie and 1 loss in 32 rows, with 13 of the wins under 5% and 17 at 5% or more, on one seed and 8 of Zeng's 9 datasets (Exchange-Rate is left out). So the design choices mattered, and the margin depends on the dataset. [Time-series ML](../../05-time-series-and-recommenders/notes/01-time-series-ml.md) has the baselines to run first.
 
 **Tables.** Across 11 datasets of 20,640 to 1,200,192 objects, tuned FT-Transformer ensembles were best on 7 and gradient boosting ensembles on 4, with tuned boosting absent on one dataset (my count of the bold entries in Table 4). Bold marks the best mean with no significance test, and FT-Transformer's Yahoo and Epsilon entries weren't fully tuned. The authors call boosting "unsuitable" for very many classes, and warn their benchmark is "slightly biased towards 'DL-friendly' problems", concluding there is "no universal solution" ([arXiv:2106.11959](https://arxiv.org/abs/2106.11959) (Gorishniy et al., NeurIPS 2021)). With training capped at 10,000 samples across 45 datasets, after excluding missing data, high-cardinality categoricals and time series, "tree-based models remain state-of-the-art" even with FT-Transformer as deep learning's "best case" ([NeurIPS 2022](https://proceedings.neurips.cc/paper_files/paper/2022/hash/0378c7692da36807bdec87ab043cdadc-Abstract-Datasets_and_Benchmarks.html) (Grinsztajn et al., Datasets and Benchmarks Track), [arXiv:2207.08815](https://arxiv.org/abs/2207.08815)). I read these as different regimes, not a contradiction, though neither paper says so, and Grinsztajn et al. call their sign of the gap narrowing at 50,000 samples tentative. Their finding is about tree-based models, random forests included, so my advice from it is that for a business table of ordinary size, [boosting](../../01-classical-ml/notes/07-boosting-in-practice.md) comes first.
 
@@ -601,20 +599,18 @@ lr 0.01   pre-norm   warmup 0    epoch 5 0.788  final 0.935  per seed [0.954 0.9
 lr 0.01   pre-norm   warmup 200  epoch 5 0.860  final 0.948  per seed [0.948 0.937 0.957]
 ```
 
-At 1e-3 nothing here matters: all four land between 0.963 and 0.973, and warm-up slows the first epochs. At 1e-2, ten times the highest Adam rate Xiong et al. tried, a result like theirs appears: post-norm without warm-up is stuck at chance on 0.101, warm-up recovers it to 0.905, and pre-norm gets 0.935 without warm-up. So the setting matters near the edge of the learning rate range, on this one small dataset and three seeds. Use pre-norm, and sweep the learning rate by factors of ten as [note 02](02-optimisation-and-regularisation.md) says.
+At 1e-3 nothing here matters: all four land between 0.963 and 0.973. At 1e-2, ten times the highest Adam rate Xiong et al. tried on IWSLT14 (1e-3; their WMT14 runs reached 1.5e-3), a result like theirs appears: post-norm without warm-up is stuck at chance on 0.101, warm-up recovers it to 0.905, and pre-norm gets 0.935 without warm-up. That's near the edge of the learning rate range, on one small dataset and three seeds. Use pre-norm, and sweep the learning rate by factors of ten as [note 02](02-optimisation-and-regularisation.md) says.
 
-Xiong et al. argue warm-up "can be safely removed" with pre-norm, but ViT is pre-norm and still warms up for 10k steps, and it reports no run without. The ViT authors found "strong regularization to be key" when training from scratch on ImageNet, and DeiT's numbers above show a recipe moving the score on one architecture. Neither paper compares regularisation against warm-up or norm placement, so which matters more is open.
+Xiong et al. argue warm-up "can be safely removed" with pre-norm, but ViT is pre-norm and still warms up for 10k steps, and it reports no run without. The ViT authors found "strong regularization to be key" when training from scratch on ImageNet. Neither paper compares regularisation against warm-up or norm placement, so which matters more is open.
 
 ## Pitfalls
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | Test accuracy falls from 0.966 to 0.658 when requests arrive one at a time | `batch_first=False`, the default: tokens attend across the batch | `batch_first=True`, then compare logits at two batch sizes |
-| The same input gives different logits in different batches | Padding is attended to, or averaged into the pool | Pass `src_key_padding_mask` and pool over real tokens only. Assert padding doesn't change the output |
-| No error and a poor score after a mask change | Mask is inverted: `True` means ignore in PyTorch | Check it with the padding test above |
+| The same input gives different logits in different batches | Padding is attended to, or averaged into the pool | Pass `src_key_padding_mask` and pool over real tokens only |
+| No error and a poor score after a mask change | Mask is inverted: `True` means ignore | The padding test above |
 | Regression $R^2$ near zero, with loss falling to the target's variance | `(batch, 1)` against `(batch)` broadcasts to `(batch, batch)` | Assert the shapes match. Don't silence the warning |
-| Flipping the order of the input doesn't change the score | No position encoding, so the model sees a set | Add one, or keep it out on purpose if the data has no order |
-| `RuntimeError` on a sequence longer than training's | A learned position table has one row per position | Truncate, interpolate or use sinusoids, and test on that length |
 | Loss stuck at chance from the first epoch | Post-norm at a high learning rate with no warm-up (0.101 at 1e-2 here) | `norm_first=True`, a learning rate sweep, a short warm-up |
 
 ## Try it
@@ -631,7 +627,7 @@ Xiong et al. argue warm-up "can be safely removed" with pre-norm, but ViT is pre
 
    <details><summary>Answer</summary>
 
-   Attention has 4,224 parameters at every $h$, because the projections stay $32 \times 32$ and the heads split the width. Scores were 0.961, 0.974, 0.975 and 0.977 (3 seeds, standard deviations 0.001 to 0.007). One head is a little behind, and past 2 heads the differences are within the noise. The paper's translation result is similar, with 1 head 0.9 BLEU behind the best and 32 worse than 8 (§6.2): heads are worth having, at no parameter cost, but more doesn't keep helping.
+   Attention has 4,224 parameters at every $h$, because the projections stay $32 \times 32$ and the heads split the width. Scores were 0.961, 0.974, 0.975 and 0.977 (3 seeds, standard deviations 0.001 to 0.007). One head is a little behind, and past 2 the differences are within the noise. The paper's translation result is similar, with 1 head 0.9 BLEU behind the best and 32 worse than 8 (§6.2).
 
    </details>
 
@@ -639,7 +635,7 @@ Xiong et al. argue warm-up "can be safely removed" with pre-norm, but ViT is pre
 
    <details><summary>Answer</summary>
 
-   Gradient boosting first, on a split that matches the deployment, with a small linear baseline. Grinsztajn et al.'s 10,000-sample benchmark is, I'd say, the closest setup in this chapter, and trees won there. Then try FT-Transformer: its 31 tokens, 30 features plus [CLS], are affordable, at 1.5x and 2.8x a ResNet's training time on Gorishniy et al.'s 27- and 28-feature datasets, and they report that it "allows building powerful ensembles out of the box", so tuning isn't a precondition. What would change your mind: a learning curve on your own data showing it ahead by more than the difference between seeds, or very many classes, where Gorishniy et al. call boosting "unsuitable".
+   Gradient boosting first, on a split that matches the deployment, with a small linear baseline. Grinsztajn et al.'s 10,000-sample benchmark is, I'd say, the closest setup in this chapter, and trees won there. Then try FT-Transformer: 31 tokens are affordable, at 1.5x and 2.8x a ResNet's training time on Gorishniy et al.'s 27- and 28-feature datasets, whose object counts are larger than yours. What would change your mind: a learning curve on your own data showing it ahead by more than the difference between seeds, or very many classes, where Gorishniy et al. call boosting "unsuitable".
 
    </details>
 
@@ -647,18 +643,18 @@ Xiong et al. argue warm-up "can be safely removed" with pre-norm, but ViT is pre
 
 | Question | Answer |
 |---|---|
-| Is self-attention order-aware? | No. It is permutation-equivariant: shuffle the tokens and the outputs shuffle with them. With a mean pool the result is invariant, so here it scored the same on upside-down digits (0.902) until position was added. |
-| Sinusoids or learned position? | They scored about the same in the paper (25.8 and 25.7 dev BLEU) and here. Learned can't go past its table and fails loudly. Sinusoids run on any length, though the paper says only that they "may allow" it. |
+| Is self-attention order-aware? | No. It is permutation-equivariant, and with a mean pool invariant, so here it scored the same on upside-down digits (0.902) until position was added. |
+| Sinusoids or learned position? | About the same in the paper (25.8 and 25.7 dev BLEU) and here. Learned fails past its table. Sinusoids run on any length, though the paper says only that they "may allow" extrapolation. |
 | What does multi-head add, at what cost? | Parallel attention on narrower projections. No extra parameters at fixed width: 4,224 at any head count here. |
-| What's the complexity of a self-attention layer against an LSTM? | $O(n^2 \cdot d)$ against $O(n \cdot d^2)$, with $O(1)$ against $O(n)$ sequential steps and path length. Measured: 4x length cost 15x time for the encoder and 4x for the LSTM. |
-| When would you not use a transformer? | Ordinary tables around 10K rows (trees win), long-horizon forecasting where a linear baseline must be beaten first, little data with strong local structure (CNN won at every size on digits), or very long raw sequences without patching. |
-| Why do ViTs need more data than CNNs? | Locality and translation equivariance aren't built in, so they must be learned. But the recipe matters: DeiT took the same architecture from 77.9 to 83.1 on ImageNet alone at resolution 384 with augmentation and regularisation. |
+| What's the complexity of a self-attention layer against an LSTM? | $O(n^2 \cdot d)$ against $O(n \cdot d^2)$, with $O(1)$ against $O(n)$ sequential steps and path length. |
+| When would you not use a transformer? | Ordinary tables around 10K rows, long-horizon forecasting before a linear baseline has run, little data with strong local structure, or very long raw sequences without patching. |
+| Why do ViTs need more data than CNNs? | Locality and translation equivariance aren't built in, so they must be learned. The recipe matters too: DeiT took the same architecture from 77.9 to 83.1 on ImageNet alone at resolution 384. |
 | Do Transformers work for forecasting? | Zeng et al. found linear models beat five earlier ones on 9 benchmarks. PatchTST, with patches and independent channels, then beat DLinear on most of its 8 datasets, by under 5% on 13 of 30 wins (my count, MSE). Baseline with linear first. |
-| Pre-norm or post-norm? | Pre-norm. Post-norm has large gradients near the output at initialisation and needs warm-up with Adam at the rates tested (8.45 against about 34 BLEU in Xiong et al.; RAdam is an exception). Final quality was comparable, and the gain is in training speed and tuning. |
-| Model runs but doesn't learn: what do you check for shapes? | Broadcasting in the loss: `(batch, 1)` against `(batch)` gives `(batch, batch)`, and $R^2$ fell from about 0.94 to about 0 here. |
-| Accuracy drops when serving single requests. Why? | Suspect `batch_first=False`, where tokens attend across the batch: 0.966 fell to 0.658 here. Compare logits at two batch sizes. |
-| How do you test a padding mask? | Pad a sequence, and assert that the output doesn't change. Here it moved by 0.43 without the mask and by nothing with it. |
+| Pre-norm or post-norm? | Pre-norm. Post-norm's gradients near the output are large at initialisation, and it needs warm-up with Adam at the rates tested (8.45 against about 34 BLEU in Xiong et al.; RAdam is an exception). Final quality was comparable. |
+| Model runs but doesn't learn: what do you check for shapes? | Broadcasting in the loss: `(batch, 1)` against `(batch)` gives `(batch, batch)`. |
+| Accuracy drops when serving single requests. Why? | Suspect `batch_first=False`. Compare logits at two batch sizes. |
+| How do you test a padding mask? | Pad a sequence, and assert that the output doesn't change. |
 
 ## Next
 
-[Neural text models](06-neural-text-models.md): the same encoders pre-trained on far more text than you have, and the test of whether they beat word counts on 5,000 reviews.
+[Neural text models](06-neural-text-models.md): the same encoders pre-trained on far more text than you have.

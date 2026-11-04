@@ -67,7 +67,7 @@ one          16025   51.97     37.98       0.46    0.49
 
 ## Frame, coverage and the errors a margin can't see
 
-A survey has four groups. The **target** is who you want to know about: every customer. The **frame** is the list you can draw from: the emailable ones. The **sample** is who you select from the frame, and the **respondents** are who answer. Each gap has a name.
+A survey has four groups. The **target** is who you want to know about: every customer. The **frame** is the list you can draw from: the emailable ones. The **sample** is who you select from the frame, and the **respondents** are who answer.
 
 ```mermaid
 flowchart LR
@@ -77,7 +77,7 @@ flowchart LR
     R -->|measurement error| A[Answers: what they say]
 ```
 
-**Total survey error** is "the accumulation of all errors that may arise in the design, collection, processing, and analysis of survey data". That is Biemer's 2016 definition as quoted in [Maslovskaya's slides](<https://repository.ncrm.ac.uk/resources/online/data_quality_and_survey_error/downloads/slides/data_quality_total_survey_error.pdf>) for the National Centre for Research Methods; I read the slides, not Biemer. The [AAPOR task force on non-probability sampling](https://aapor.org/wp-content/uploads/2022/11/NPS_TF_Report_Final_7_revised_FNL_6_22_13-2.pdf) (2013) groups the first three gaps as errors of non-observation. A margin of error measures only one of them, the sampling step. [AAPOR's fact sheet](https://aapor.org/wp-content/uploads/2023/01/Margin-of-Sampling-Error-508.pdf) says it flatly: "There is no such thing as a measurable overall margin of error for a poll".
+**Total survey error** is "the accumulation of all errors that may arise in the design, collection, processing, and analysis of survey data". That is Biemer's 2016 definition as quoted in [Maslovskaya's slides](https://repository.ncrm.ac.uk/resources/online/data_quality_and_survey_error/downloads/slides/data_quality_total_survey_error.pdf) for the National Centre for Research Methods; I read the slides, not Biemer. The [AAPOR task force on non-probability sampling](https://aapor.org/wp-content/uploads/2022/11/NPS_TF_Report_Final_7_revised_FNL_6_22_13-2.pdf) (2013) groups the first three gaps as errors of non-observation. A margin of error measures only one of them, the sampling step. [AAPOR's fact sheet](https://aapor.org/wp-content/uploads/2023/01/Margin-of-Sampling-Error-508.pdf) says: "There is no such thing as a measurable overall margin of error for a poll".
 
 The blanket email splits its error across the gaps:
 
@@ -107,7 +107,7 @@ Coverage cost 2.5 points and nonresponse 20.9. Neither shrinks with more email: 
 
 A **probability sample** is what makes the sampling step measurable. [Statistics Canada's *Survey Methods and Practices*](https://www150.statcan.gc.ca/n1/en/pub/12-587-x/12-587-x2003001-eng.pdf) requires that "all units in the survey population have a non-zero inclusion probability in the sample and that these probabilities can be calculated". It adds: "It is not necessary for all units to have the same inclusion probability". Our email fails that test twice. Nobody chose who replied, and 39% of customers had no chance at all. For samples like that, the AAPOR report suggests "exclusion bias" as the better name than coverage bias, and AAPOR's fact sheet says a margin of sampling error "does not apply to opt-in online surveys and other non-probability based polls".
 
-The evidence that size doesn't rescue this is large-scale. [Bradley et al.](https://www.nature.com/articles/s41586-021-04198-4) (*Nature*, 2021) compared US COVID-19 first-dose estimates with the CDC benchmark. Delphi-Facebook, with about 250,000 responses a week, overestimated uptake by 17 points in May 2021. Axios-Ipsos, with about 1,000 a week and careful panel recruitment, overestimated it by 4.2. By their reckoning Delphi-Facebook's effective sample in April 2021 was under 10.
+The evidence that size doesn't rescue this is large-scale. [Bradley et al.](https://www.nature.com/articles/s41586-021-04198-4) (*Nature*, 2021) compared US COVID-19 first-dose estimates with the CDC benchmark. Delphi-Facebook, with about 250,000 responses a week, overestimated uptake by 17 points in May 2021. Axios-Ipsos, with about 1,000 a week and careful panel recruitment, overestimated it by 4.2. By their reckoning Delphi-Facebook's bias-adjusted effective sample in April 2021 was under 10, a measure that counts bias as well as variance.
 
 ## Strata and allocation: where to spend a fixed sample
 
@@ -221,13 +221,13 @@ intra-cluster correlation 0.026; budget 12000, 60 per area visited, 8 per interv
        40     31        1240 2.0234     612.8166      0.0202        0.0193
 ```
 
-More people per area buys more interviews but not more information past a point. The effective sample peaks around 15 to 20 per area, and 40 per area gives more interviews (1,240) and less information (613 against 724). The correlation is only 0.026. The formula's standard errors run a little above the simulated ones, because the formula treats the areas as drawn from an endless supply and here 85 of the 120 are visited.
+The effective sample peaks around 15 to 20 per area, and 40 per area gives more interviews (1,240) and less information (613 against 724). The correlation is only 0.026. The formula's standard errors run a little above the simulated ones, because the formula treats the areas as drawn from an endless supply and here 85 of the 120 are visited.
 
 The [UN's household survey handbook](https://unstats.un.org/unsd/publication/seriesf/seriesf_98e.pdf) (2008) puts the trade-off in one line: the sampler "can exercise no control over the intra-class correlation" but "can still adjust the cluster size". Its worked example has a correlation of 0.03: 50 people per cluster gives a design effect of 2.5, 100 gives 4.0, and it calls effects "much larger than 2.5-3.0" undesirable for key indicators.
 
 ## Nonresponse: a low rate is not the same as high bias
 
-Fernhill's designed survey goes into the field. Report what happened to every case, not just the rate. [AAPOR's *Standard Definitions*](https://aapor.org/wp-content/uploads/2023/05/Standards-Definitions-10th-edition.pdf) (10th edition, 2023) defines six response rates, which differ on partial interviews and on cases of unknown eligibility. RR1 counts completes over everyone who might be eligible. RR3 discounts the unknowns by $e$, the estimated eligible share, and AAPOR calls it "the most-common" in reporting, adding "One must not select a proportion to boost the response rate". RR6 counts partials and drops the unknowns, which makes it "the maximum". The same fieldwork gives three figures:
+Fernhill's designed survey goes into the field. Report what happened to every case, not just the rate. [AAPOR's *Standard Definitions*](https://aapor.org/wp-content/uploads/2023/05/Standards-Definitions-10th-edition.pdf) (10th edition, 2023) defines six response rates, which differ on partial interviews and on cases of unknown eligibility. RR1 counts completes over everyone who might be eligible. RR3 discounts the unknowns by $e$, the estimated eligible share, and AAPOR calls it "the most-common" in reporting, adding "One must not select a proportion to boost the response rate". RR6 counts partials and drops the unknowns, which makes it "the maximum", and AAPOR allows it only if no unknown case is assumed eligible. That conflicts with the $e = 0.8$ below, so read our RR6 as an upper bound. The same fieldwork gives three figures:
 
 ```python
 def field_survey(rng, size=2000):
@@ -259,7 +259,7 @@ RR1 0.426; RR3 with e = 0.8: 0.433; RR6 0.490
 
 (The dispositions are generated in the script, and $e = 0.8$ is our assumption. Each section draws its own fieldwork, so this one has 908 answers and the weighting section below has 966.) Always say which rate you quote. AAPOR also says response rates "make little sense" for non-probability samples, where selection probabilities are unknowable.
 
-Does a low rate matter? Less than you'd expect, and not in the way people assume. The bias of the respondents' mean is driven by the covariance between someone's chance of answering, $p$, and their answer, $y$: $\text{bias} \approx \text{cov}(p, y) / \bar{p}$. Response rate appears only in the denominator. So:
+Does a low rate matter? The bias of the respondents' mean is driven by the covariance between someone's chance of answering, $p$, and their answer, $y$: $\text{bias} \approx \text{cov}(p, y) / \bar{p}$. Response rate appears only in the denominator. So:
 
 ```python
 y = frame.true_satisfied.to_numpy(float)
@@ -287,7 +287,7 @@ designed, with reminders         response 0.460; bias +0.047; check +0.047
 
 A flat 8% has no bias at all, and a 42% mailing that invites people to say what they loved has 14.7 points.
 
-[Groves's talk slides](<http://www.dc-aapor.org/documents/NRW07_NonresponseRatesandBiasinHouseholdSurveysGroves.pdf>) (posted by DC-AAPOR; I couldn't reach his 2006 article of the same title in *Public Opinion Quarterly*) pool about 959 estimates from 59 studies and conclude that "The nonresponse rate by itself is not a good predictor of nonresponse bias", with variation lying "mostly among estimates within the same survey". Don't over-read that. A plain regression on those 959 estimates would have an $R^2$ of 0.04, by Groves and Peytcheva's 2008 figure, which I know only through [Brick and Tourangeau](https://reference-global.com/download/article/10.1515/jos-2017-0034.pdf) (*Journal of Official Statistics*, 2017). Brick and Tourangeau's reanalysis of the same data correlates each study's mean or median absolute relative bias with its response rate, finds about −0.36 to −0.50 depending on the weighting, and concludes that response rates "may not be very good predictors of nonresponse bias, but they are far from irrelevant". A low rate gives bias more room. It doesn't tell you how much of the room got used.
+[Groves's talk slides](http://www.dc-aapor.org/documents/NRW07_NonresponseRatesandBiasinHouseholdSurveysGroves.pdf) (posted by DC-AAPOR; I couldn't reach his 2006 article of the same title in *Public Opinion Quarterly*) pool about 959 estimates from 59 studies and conclude that "The nonresponse rate by itself is not a good predictor of nonresponse bias", with variation lying "mostly among estimates within the same survey". Don't over-read that. A plain regression on those 959 estimates would have an $R^2$ of 0.04, by Groves and Peytcheva's 2008 figure, which I know only through [Brick and Tourangeau](https://reference-global.com/download/article/10.1515/jos-2017-0034.pdf) (*Journal of Official Statistics*, 2017). Brick and Tourangeau's reanalysis of the same data correlates each study's mean or median absolute relative bias with its response rate, finds about −0.36 to −0.50 depending on the weighting, and concludes that response rates "may not be very good predictors of nonresponse bias, but they are far from irrelevant". A low rate gives bias more room. It doesn't tell you how much of the room got used.
 
 Groves's slides also separate the causes, into models including "Common Cause" and "Survey Variable Cause", and I read those as the two standard [missing data](../../01-python-for-data-analysis/notes/02-loading-and-cleaning.md#missing-data-decide-what-a-gap-means) names; the mapping is mine, not his. If something else drives both answering and the answer, such as being a heavy buyer, that's consistent with **missing at random**, and a variable holding that cause can repair it. If the answer itself drives answering, because the unhappy don't reply, that's **not missing at random**. And as [Brick](https://reference-global.com/download/article/10.2478/jos-2013-0026.pdf) (*Journal of Official Statistics*, 2013) notes, you can't tell the two apart "without obtaining additional data for the nonrespondents".
 
@@ -295,7 +295,7 @@ Groves's slides also separate the causes, into models including "Common Cause" a
 
 Weighting makes respondents add up to known population totals. An analyst has an advantage over a pollster here: those totals come from the CRM exactly, not from a census estimate.
 
-**Post-stratification** cross-classifies the **auxiliary variables**, the columns you know for both respondents and the whole population, then weights each cell up to its population count. It's clean until cells run out. **Raking**, or iterative proportional fitting, matches each variable's population shares in turn (its **margin**, nothing to do with a margin of error) and repeats until all of them hold, so it needs only the margins and no cross-classification. [Kalton and Flores-Cervantes](https://www.scb.se/contentassets/ca21efb41fee47d293bbee5bf7be7fb3/weighting-methods.pdf) (*Journal of Official Statistics*, 2003) give the trade: raking assumes response probabilities multiply across the variables, which is an additional assumption and "leads to less variability in the weights". They suggest cells when there are few and they're well filled, and raking when there are many. They count the variance cost as 1 plus the squared coefficient of variation of the weights, the same quantity as [Kish](https://www.scb.se/contentassets/ca21efb41fee47d293bbee5bf7be7fb3/methods-for-design-effects.pdf)'s factor for unequal weights, $1 + L = n\sum w^2 / (\sum w)^2$, where $L$ is the relative variance of the weights. They warn it "does not apply for weighting adjustments that benchmark survey estimates to population values", and Kish offers it as an assumption for haphazard weights, so treat it here as a rough measure of cost. Effective sample then follows as $n / (1 + L)$, a form neither paper prints, [the same quantity](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md#judging-the-designs) the matching chapter uses.
+**Post-stratification** cross-classifies the **auxiliary variables**, the columns you know for both respondents and the whole population, then weights each cell up to its population count. It's clean until cells run out. **Raking**, or iterative proportional fitting, matches each variable's population shares in turn (its **margin**, nothing to do with a margin of error) and repeats until all of them hold, so it needs only the margins and no cross-classification. [Kalton and Flores-Cervantes](https://www.scb.se/contentassets/ca21efb41fee47d293bbee5bf7be7fb3/weighting-methods.pdf) (*Journal of Official Statistics*, 2003) give the trade: raking assumes response probabilities multiply across the variables, which is an additional assumption and "leads to less variability in the weights". They suggest cells when there are few and they're well filled, and raking when there are many. They count the variance cost as 1 plus the squared coefficient of variation of the weights, the same quantity as [Kish](https://www.scb.se/contentassets/ca21efb41fee47d293bbee5bf7be7fb3/methods-for-design-effects.pdf)'s factor for unequal weights, $1 + L = n\sum w^2 / (\sum w)^2$, where $L$ is the relative variance of the weights. They warn it "does not apply for weighting adjustments that benchmark survey estimates to population values", and Kish offers it as an assumption for haphazard weights, so treat it here as a rough measure of cost. Effective sample then follows as $n / (1 + L)$, a form neither prints, [the same quantity](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md#judging-the-designs) the matching chapter uses.
 
 ```python
 def rake(data, margins, iterations=500, tolerance=1e-6):
@@ -363,11 +363,11 @@ blanket email   cells, 5 empty, 62 customers lost     0.666 1.907     1388.247
 raking steps to converge, designed survey: 29
 ```
 
-Read it in three steps. Variables matter more than method: raking on channel alone moves the email figure 2.6 points, adding segment and active moves it about 6, and raking, then cells, land on the same number. Kalton and Flores-Cervantes say this too: the choice of auxiliaries, and of how they're used, "may be of more significance than the choice of a particular method". Weights cost precision: the email's effective sample fell from 2,648 to about 1,500. And cells lose people: 62 and 325 customers sat in cells where nobody answered, so those estimates no longer cover them.
+Variables matter more than method: raking on channel alone moves the email figure 2.6 points, adding segment and active moves it about 6, and raking, then cells, land on the same number. Kalton and Flores-Cervantes say this too: the choice of auxiliaries, and of how they're used, "may be of more significance than the choice of a particular method". Weights cost precision: the email's effective sample fell from 2,648 to about 1,500. And cells lose people: 62 and 325 customers sat in cells where nobody answered, so those estimates no longer cover them.
 
 The designed survey's 49.9% looks nearly perfect. Be suspicious of that, since the repeat runs below show it's a lucky draw. The email's 66.6% is still 17 points out. Most of what's left is the part where satisfaction itself drives replying, and no CRM column holds it. [Pew's study of opt-in panels](https://www.pewresearch.org/methods/2018/01/26/for-weighting-online-opt-in-samples-what-matters-most/) (Mercer, Lau and Kennedy, 2018; not peer-reviewed) found the same on real data: across 24 benchmarks and over 30,000 interviews, the best adjustment "was only able to remove about 30% of the original bias", and complex methods never beat simpler ones by more than 0.3 points on average. Bradley et al. reach the same conclusion: "Weighting on observed covariates alone cannot explain or correct the discrepancies we observe."
 
-The counterexample is [the Xbox poll](https://sites.stat.columbia.edu/gelman/research/unpublished/forecasting-with-nonrepresentative-polls.pdf) (Wang, Rothschild, Goel and Gelman; author's preprint, published in *International Journal of Forecasting*, 2015). Men were 93% of 750,148 interviews against 47% of the electorate, and yet the day-before estimate of voter intent was 0.6 points from the result. It used [partial pooling](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) over 176,256 cells, and those cells included party identification and past vote. The variables held the selection. Raking should also look familiar: its distance is the one [entropy balancing](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md#entropy-balancing) uses ([Hartman, Hazlett and Sterbenz](https://arxiv.org/abs/2107.08075), *J. R. Stat. Soc. A*, 2024; arXiv version read).
+The counterexample is [the Xbox poll](https://sites.stat.columbia.edu/gelman/research/unpublished/forecasting-with-nonrepresentative-polls.pdf) (Wang, Rothschild, Goel and Gelman; author's preprint, published in *International Journal of Forecasting*, 2015). Men were 93% of the Xbox sample (750,148 interviews) against 47% of the electorate, and yet the day-before estimate of voter intent was 0.6 points from the result. It used [partial pooling](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) over 176,256 cells, and those cells included party identification and past vote. The variables held the selection. Raking should also look familiar: its distance is the one [entropy balancing](../../03-experimentation-and-causality/notes/05-matching-and-weighting.md#entropy-balancing) uses ([Hartman, Hazlett and Sterbenz](https://arxiv.org/abs/2107.08075), *J. R. Stat. Soc. A*, 2024; arXiv version read).
 
 Extreme weights invite **trimming**, which caps them and spreads the excess over everyone else:
 
@@ -390,7 +390,7 @@ print(pd.DataFrame(rows).round(3).to_string(index=False))
             2.0    2.254 1.401     1889.719     0.681
 ```
 
-A cap of 2 raises the email's effective sample by about 26% and moves the estimate 1.5 points further from the truth. (The largest weight ends above the cap because the weights are rescaled afterwards.) Kalton and Flores-Cervantes describe that bargain: "accepting some possible loss in bias reduction". [Battaglia, Hoaglin and Frankel](https://www.surveypractice.org/article/2953-practical-considerations-in-raking-survey-data) (*Survey Practice*, 2009) say raking generally converges in 3 to 10 iterations and give no numeric rule for the bounds. Our run took 29, since segment and spend band overlap heavily and the tolerance is tight.
+A cap of 2 raises the email's effective sample by about 26% and moves the estimate 1.5 points further from the truth. Kalton and Flores-Cervantes describe that bargain: "accepting some possible loss in bias reduction". [Battaglia, Hoaglin and Frankel](https://www.surveypractice.org/article/2953-practical-considerations-in-raking-survey-data) (*Survey Practice*, 2009) say raking generally converges in 3 to 10 iterations and give no numeric rule for the bounds. Our run took 29, since segment and spend band overlap heavily and the tolerance is tight.
 
 ## Reporting a margin that reflects the design
 
@@ -467,13 +467,13 @@ if non-respondents are 10 points less satisfied than the weighted answers: 0.447
 
 Subgroups get wide fast: the referral margin is 9.2 points on 117 people. A gap between groups needs its own margin. Paid social against organic is 13.4 points, with a margin of about 7.4 (my arithmetic: the root of the two squared margins, for independent groups). Between two candidates' shares on the same question, [Pew](https://www.pewresearch.org/short-reads/2016/09/08/understanding-the-margin-of-error-in-election-polls/) says it's "about twice" a single candidate's.
 
-The three "if non-respondents" lines are a sensitivity check, and the honest way to state what the margin omits. In this frame the real gap works out at about 6 points (my arithmetic, from a mean raked estimate of 52.8% against 49.6% at a 46% response rate), and the second line is close to that.
+The three "if non-respondents" lines are a sensitivity check. In this frame the real gap works out at about 6 points (my arithmetic, from a mean raked estimate of 52.8% against 49.6% at a 46% response rate), and the second line is close to that.
 
 [AAPOR's code](https://aapor.org/standards-and-ethics/disclosure-standards/) (revised 2021) requires disclosure of "whether or not the reported sampling error or statistical analyses have been adjusted for the design effect", how weights were calculated, and the unweighted sample sizes behind subgroups. It allows precision measures for non-probability samples only with a description of the underlying model.
 
 ## The question itself: measurement error
 
-Everything above assumes the answer means what you think. Wording alone moved a real result by 25 points. [Pew's methods page](https://www.pewresearch.org/writing-survey-questions/) reports a January 2003 split: 68% favoured military action against Iraq when asked plainly, and 43% when the question added "even if it meant that U.S. forces might suffer thousands of casualties". Order moves answers too: dissatisfaction with the country was 88% straight after a question on presidential approval, 78% without it.
+Everything above assumes the answer means what you think. Wording alone moved a real result by 25 points. [Pew's methods page](https://www.pewresearch.org/writing-survey-questions/) reports a January 2003 survey: 68% favoured military action against Iraq when asked plainly, and 43% when the question added "even if it meant that U.S. forces might suffer thousands of casualties". Order moves answers too: dissatisfaction with the country was 88% straight after a question on presidential approval, 78% without it.
 
 The usual faults follow. **Acquiescence** is the tendency to agree with whatever is put to you.
 
@@ -484,7 +484,7 @@ The usual faults follow. **Acquiescence** is the tendency to agree with whatever
 | Social desirability | An interviewer asks whether the driver was rude | Self-administer, or use [randomised response](../../04-bayesian-analysis/notes/01-bayesian-inference.md#the-survey-nobody-answers-honestly) |
 | Order | Overall rating asked after a list of complaints | Overall first; rotate the items |
 
-Acquiescence has the best evidence against it. [Saris, Revilla, Krosnick and Shaeffer](https://ojs.ub.uni-konstanz.de/srm/article/view/2682) (*Survey Research Methods*, 2010) ran split-ballot experiments in the European Social Survey and found agree/disagree items "had much lower quality" than item-specific versions, which offer answers specific to the thing asked: on one immigration item (23-country means), .85 in the main questionnaire and .76 in the supplement against .48, where quality is a model-based product of reliability and validity. [Lelkes and Weiss](https://pure.uva.nl/ws/files/2653460/169196_506179.pdf) (*Research & Politics*, 2015) qualify that: on one US political efficacy battery they found the two formats equally valid. On scale length, [DeCastellarnau](https://link.springer.com/article/10.1007/s11135-017-0533-4) (*Quality & Quantity*, 2018) finds no single best number, and that labelling every point generally helps reliability, though it raises acquiescence.
+Acquiescence has the best evidence against it. [Saris, Revilla, Krosnick and Shaeffer](https://ojs.ub.uni-konstanz.de/srm/article/view/2682) (*Survey Research Methods*, 2010) ran split-ballot experiments in the European Social Survey and found agree/disagree items "had much lower quality" than item-specific versions, which offer answers specific to the thing asked: on one immigration item (23-country means), .85 in the main questionnaire and .76 in the supplement against .48 (5-point; .44 at 7 points), where quality is a model-based product of reliability and validity. [Lelkes and Weiss](https://pure.uva.nl/ws/files/2653460/169196_506179.pdf) (*Research & Politics*, 2015) qualify that: on one US political efficacy battery they found the two formats equally valid. On scale length, [DeCastellarnau](https://link.springer.com/article/10.1007/s11135-017-0533-4) (*Quality & Quantity*, 2018) concludes from the literature, in line with Cox (1980), that no single number is best, and that labelling every point generally helps reliability, though it raises acquiescence.
 
 Mode matters too. [Keeter at Pew](https://www.pewresearch.org/short-reads/2015/05/14/where-web-surveys-produce-different-results-than-phone-interviews/) (2015) reports randomly assigned phone and web groups differing by 5.5 points on average across 60 questions.
 
@@ -510,11 +510,11 @@ margin on either form alone about 0.022; the margin says nothing about which for
 
 The 12% acquiescence is planted in the script. Form B reads 4.6 points higher, and both forms come with a tidy margin of 2.2 points. Only the comparison shows the problem.
 
-Before any of this, pretest. The [US Census Bureau's quality standards](https://census.gov/about/policies/quality/standards/appendixa2.html) accept cognitive interviews, where a respondent talks through how they understand and answer each question, and note that "as few as fifteen" can reveal major problems. Expert review alone is allowed only as a last resort. [Lenzner, Hadler and Neuert](https://link.springer.com/article/10.1007/s11135-022-01489-4) (*Quality & Quantity*, 2023) tested one question this way: ten interviews found a real ambiguity but the rewritten version didn't improve validity, so split-ballot the fix.
+Before any of this, pretest. The [US Census Bureau's quality standards](https://census.gov/about/policies/quality/standards/appendixa2.html) accept cognitive interviews, where a respondent talks through how they understand and answer each question, and note that "as few as fifteen" can reveal major problems if respondents keep flagging the same questions. Expert review alone is allowed only as a last resort. [Lenzner, Hadler and Neuert](https://link.springer.com/article/10.1007/s11135-022-01489-4) (*Quality & Quantity*, 2023) tested one question this way: ten interviews found a real ambiguity, but the rewritten version didn't improve criterion validity and improved content validity only in part, so split-ballot the fix.
 
 ## Reading a five-point scale
 
-A 1-to-5 answer is [ordinal](../../02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md), and averaging it assumes the gap from 4 to 5 equals the gap from 1 to 2. [Liddell and Kruschke](https://osf.io/9h3et/) (*Journal of Experimental Social Psychology*, 2018; authors' draft read) checked 68 psychology articles using Likert outcomes (ratings on an ordered scale) and found every one treated them as metric: plain numbers with equal gaps. In their worked examples, with settings they picked to show the problem, the metric model reported a standardised effect of 0.49 where none existed and of −0.01 where the true effect was 0.66. An **ordered probit** recovered both: it assumes a hidden continuous score, cut at thresholds into the answers, so gaps needn't be equal and the hidden mean can sit above 5. Averaging several items didn't help. On the other side, [Norman](https://link.springer.com/article/10.1007/s10459-010-9222-y) (*Advances in Health Sciences Education*, 2010; abstract read only) argues parametric methods are robust on such data. Liddell and Kruschke answer that such earlier work didn't test unequal variability or means near one end of the scale, the cases where they find inflated false alarms, so look at the shares.
+A 1-to-5 answer is [ordinal](../../02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md), and averaging it assumes the gap from 4 to 5 equals the gap from 1 to 2. [Liddell and Kruschke](https://osf.io/9h3et/) (*Journal of Experimental Social Psychology*, 2018; authors' draft read) checked 68 psychology articles using Likert outcomes (ratings on an ordered scale) and found every one treated them as metric: plain numbers with equal gaps. In their worked examples, with settings they picked to show the problem, the metric model reported a standardised effect of 0.49 where none existed and of −0.01 where the true effect was 0.66. An **ordered probit** recovered both: it assumes a hidden continuous score, cut at thresholds into the answers, so gaps needn't be equal and the hidden mean can sit above 5. Averaging several items didn't help. [Norman](https://link.springer.com/article/10.1007/s10459-010-9222-y) (*Advances in Health Sciences Education*, 2010; abstract read only) argues parametric methods are robust on such data. Liddell and Kruschke answer that such earlier work didn't test unequal variability or means near one end of the scale, the cases where they find inflated false alarms, so look at the shares.
 
 ```python
 cuts = np.array([1.5, 2.5, 3.5, 4.5])
@@ -574,8 +574,6 @@ Run `uv run ch12_surveys.py` from `practice/`, which takes under a minute. It ne
 | Optimising allocation for one number | Fine on spend, and the satisfaction margin is 40% wider | Use proportional unless one statistic dominates |
 | Plain margin after weighting or clustering | Intervals too narrow | Multiply by deft; say that you did |
 | Taking a weighted number as debiased | Rows agree with each other, and all miss the truth | State the unmeasured risk; follow up a sample of non-respondents |
-| Trimming as a default | Effective sample up, estimate moves away from the benchmark | Trim with a reason; report both |
-| Averaging a five-point item only | Two items tie on the mean and one hides a tail | Report the shares |
 
 ## Try it
 
@@ -583,7 +581,7 @@ Run `uv run ch12_surveys.py` from `practice/`, which takes under a minute. It ne
 
 <details><summary>Answer</summary>
 
-By the formula's effective sample: £60 peaks at 15 (724), £120 at 25 (568) and £240 at 30 (426). Dearer travel pushes you to fewer areas with more people in each, and the same money buys less information.
+By the formula's effective sample: £60 peaks at 15 (724), £120 at 25 (568) and £240 at 30 (426). Dearer travel pushes you to fewer areas with more people in each.
 </details>
 
 2. Rake the blanket email on channel and segment only, without `active`. How much does it lose?
@@ -597,34 +595,34 @@ By the formula's effective sample: £60 peaks at 15 (724), £120 at 25 (568) and
 
 <details><summary>Answer</summary>
 
-Ignoring it, $1.96^2 \times 0.25 / 0.05^2 = 384$, nearly every account. With it, $384 / (1 + 384/400) = 196$. That's my arithmetic, at the worst case $p = 0.5$. Then divide by the expected response rate to get how many to approach.
+Ignoring it, $1.96^2 \times 0.25 / 0.05^2 = 384$, nearly every account. With it, $384 / (1 + 384/400) = 196$. That's my arithmetic, at the worst case $p = 0.5$.
 </details>
 
 4. Five respondents have weights 1, 1, 1, 1 and 4. What are 1 + L and the effective sample?
 
 <details><summary>Answer</summary>
 
-$1 + L = 5 \times 20 / 8^2 = 1.5625$, and the effective sample is $5 / 1.5625 = 3.2$. One heavy weight costs more than a third of the sample.
+$1 + L = 5 \times 20 / 8^2 = 1.5625$, and the effective sample is $5 / 1.5625 = 3.2$.
 </details>
 
 ## Interview checklist
 
 | Question | Answer |
 |---|---|
-| Why does a margin of error fail on an email blast? | It measures sampling error from a probability sample. An email blast has no known selection probabilities, and its bias doesn't shrink with n |
+| Why does a margin of error fail on an email blast? | It measures sampling error from a probability sample. An email blast has no known selection probabilities |
 | Target, frame, sample, respondents? | Each gap has its own error: coverage, sampling, nonresponse. Measurement error sits on top |
 | What makes a sample a probability sample? | Random selection with a known, non-zero chance for every unit. The chances needn't be equal |
-| Stratified or cluster? | Stratify to gain precision: every group is sampled. Cluster to save money: some groups are sampled, and precision falls |
-| Proportional or Neyman allocation? | Proportional is never worse than simple random and suits many questions. Neyman minimises variance for one statistic, at others' expense |
-| When does the finite population correction matter? | When the sampling fraction is large; a common rule of thumb is above about 5%. It reduces the variance by 1 − f |
+| Stratified or cluster? | Stratify for precision: every group is sampled. Cluster to save money: some groups are, and precision falls |
+| Proportional or Neyman allocation? | Proportional is never worse than simple random. Neyman minimises variance for one statistic, at others' expense |
+| When does the finite population correction matter? | Above a sampling fraction of about 5%, by a common rule. It reduces the variance by 1 − f |
 | How many interviews per cluster? | Trade per-cluster cost against the intra-cluster correlation: compare by effective sample within the budget |
-| Does a low response rate mean high bias? | Not by itself: bias comes from the covariance of response propensity and the answer. It's a weak predictor for any one estimate, though not irrelevant at study level |
+| Does a low response rate mean high bias? | Not by itself: bias comes from the covariance of response propensity and the answer. The rate predicts bias poorly for one estimate, but isn't irrelevant across studies |
 | Which response rate do you quote? | Name it. RR3 is the most common: it estimates the eligible share of unknown cases |
-| Post-stratification or raking? | Cells when few and well filled; raking when there are many variables or you hold only margins. Raking assumes no interaction in response |
+| Post-stratification or raking? | Cells when few and well filled; raking for many variables or only margins. Raking assumes no interaction in response |
 | What can't weighting fix? | Selection on anything the auxiliaries don't hold, including the answer itself. Pew's best adjustment removed about 30% of opt-in bias |
-| What's Kish's 1 + L? | The variance inflation from unequal weights, 1 plus the relative variance of the weights. Effective sample then follows as n / (1 + L). It's Kish's assumption for haphazard weights |
+| What's Kish's 1 + L? | Variance inflation from unequal weights, assuming they're haphazard. Effective sample then follows as n / (1 + L) |
 | Deff or deft? | Deff is the variance ratio; deft its root, on the scale of the standard error. Multiply the margin by deft |
-| Mean of a Likert item? | It assumes equal gaps. It can hide a tail or reverse an order, so report the shares and use an ordinal model or a rank test |
+| Mean of a Likert item? | It assumes equal gaps and can hide a tail, so report the shares and use an ordinal model or a rank test |
 | How do you test a question? | Cognitive interviews to find problems, then a split ballot to measure the fix |
 
 ## Next

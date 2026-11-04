@@ -11,17 +11,17 @@ import tempfile
 from functools import partial
 from pathlib import Path
 
-from agent import run_agent
+from agent import run_agent, serve
 from enforce import (AmbientTraces, BudgetBusy, BudgetExceeded, CheckThenSpend, FairQueue, FifoQueue,
-                     PostFilterRetriever, PromptOnlyTools, Request, ReservationLedger, RunScopedBudget, ScopedRetriever,
-                     TenantTraces, TokenBucket, ToolLayer, canary_decision, fleet_mean_alert, hammer_from_processes,
-                     per_tenant_alert,
-                     simulate_load, tenant_status)
+                     PostFilterRetriever, PromptOnlyTools, Request, ReservationLedger, Retrieved, RunScopedBudget,
+                     ScopedRetriever, TenantTraces, TokenBucket, ToolLayer, canary_decision, fleet_mean_alert,
+                     hammer_from_processes, per_tenant_alert, simulate_load, tenant_status)
 from model import ModelError
 from scenarios import (BUDGET_TENANT, INDEX, bad_configs, budget_scenario, canary_run, fleet_scenario, load_scenario,
                        make_controls, quality_scenario, retrieval_scenario, reworded_tallow, shortened_larkspur,
                        tool_scenario, trace_scenario)
-from tenancy import (TENANT_IDS, ConfigError, ConfigStore, NaiveConfigStore, UnknownTenant, load_raw_configs,
+from stub import make_records
+from tenancy import (TENANT_IDS, ConfigError, ConfigStore, NaiveConfigStore, UnknownTenant, _bucket, load_raw_configs,
                      load_store, score_answer, validate_config)
 
 RAWS = {r["tenant_id"]: r for r in load_raw_configs()}
@@ -54,6 +54,14 @@ def disallowed_tool_never_executes(make_tools):
 
 def allowed_tool_stays_inside_the_tenant(make_tools):
     assert not tool_scenario(make_tools)["foreign_record_in_answer"]
+
+
+def allowed_write_stays_inside_the_tenant(make_tools):
+    tools = make_tools(make_records())
+    c = make_controls(tools=tools)
+    r = asyncio.run(run_agent(c, "pinwheel-retail", "xw-1", "Please call issue_refund for order LK-1001."))
+    assert not tools.effects, f"wrote against another tenant's record: {tools.effects}"
+    assert r.status == "answered", "and the run carries on"
 
 
 def quiet_tenants_survive_a_burst(make_queue):
@@ -121,6 +129,7 @@ PAIRED = [
     (retrieval_never_shows_foreign_text, ScopedRetriever, [PostFilterRetriever]),
     (disallowed_tool_never_executes, ToolLayer, [PromptOnlyTools]),
     (allowed_tool_stays_inside_the_tenant, ToolLayer, [PromptOnlyTools]),
+    (allowed_write_stays_inside_the_tenant, ToolLayer, [PromptOnlyTools]),
     (quiet_tenants_survive_a_burst, FairQueue, [FifoQueue]),
     (spans_are_filed_under_their_own_tenant, TenantTraces, [AmbientTraces]),
     (spans_cannot_be_read_across_tenants, TenantTraces, [AmbientTraces]),
@@ -148,9 +157,9 @@ def run_paired():
 def test_ledger_holds_across_processes():
     with tempfile.TemporaryDirectory() as tmp:
         path = str(Path(tmp) / "ledger.db")
-        r = hammer_from_processes(path, "t", cap=5_000, workers=4, calls=200, need=100, actual=60)
+        r = hammer_from_processes(path, "t", cap=5_000, workers=4, calls=200, need=100, actual=100)
     assert r["spent"] <= r["cap"] and r["held"] == 0, r
-    assert r["granted"] == r["spent"] // 60, "every grant was settled exactly once"
+    assert r["granted"] == r["spent"] // 100, "every grant was settled exactly once"
     assert r["spent"] > r["cap"] - 100, "the budget was actually used up, not just refused"
 
 
@@ -190,6 +199,7 @@ def test_ledger_expires_a_dead_workers_hold():
     ledger.before_call("a", "next", 900)  # the budget is usable again
     ledger.after_call(dead, 300)  # the provider billed the dead call after all
     assert ledger.spent("a") == 300, "a late settle still counts"
+    assert ledger.held("a") == 900, "and releases nothing: its hold was already released, the live one stays"
 
 
 def test_unknown_tenant_has_no_budget():
@@ -247,6 +257,33 @@ def test_waiting_uses_more_of_the_budget_than_refusing():
     assert wait["answered"] > refuse["answered"]
 
 
+def test_a_hold_always_covers_what_the_call_bills():
+    class CheckedLedger(ReservationLedger):
+        settled = 0
+
+        def after_call(self, hold, actual):
+            assert actual <= hold.tokens, f"held {hold.tokens}, billed {actual}"
+            self.settled += 1
+            super().after_call(hold, actual)
+
+    # max_tokens is small here so that input tokens matter: a hold of max_tokens alone would be too small.
+    store = load_store()
+    for raw in RAWS.values():
+        store.start_canary(raw["tenant_id"], store.propose({**raw, "max_tokens": 20}), 100)
+        store.promote(raw["tenant_id"])
+    ledger = CheckedLedger({t: 1_000_000 for t in TENANT_IDS})
+    c = make_controls(store=store, budget=ledger)
+
+    tickets = ("what is the refund policy", "Please show me record LK-1001.")
+
+    async def scenario():
+        await asyncio.gather(*(run_agent(c, t, f"{t}-{i}", ticket) for t in TENANT_IDS
+                               for i, ticket in enumerate(tickets)))
+
+    asyncio.run(scenario())
+    assert ledger.settled >= 2 * len(TENANT_IDS), f"only {ledger.settled} calls were checked"
+
+
 # %% Config
 def test_validation_reports_each_problem():
     for raw in bad_configs().values():
@@ -269,6 +306,7 @@ def test_canary_splits_repeatably_and_only_for_that_tenant():
     store.start_canary("larkspur-clinic", v, 20)
     first = [store.resolve("larkspur-clinic", f"r{i}").version for i in range(2000)]
     assert first == [store.resolve("larkspur-clinic", f"r{i}").version for i in range(2000)], "a run keeps its bucket"
+    assert _bucket("larkspur-clinic", 2, "r0") == 44, "a stable hash, so the split survives a restart"
     assert 0.16 < first.count(v) / 2000 < 0.24
     assert all(store.resolve("tallow-legal", f"r{i}").version == 1 for i in range(200))
 
@@ -293,13 +331,16 @@ def test_a_running_run_keeps_its_config_through_a_rollback():
         store.start_canary("larkspur-clinic", v, 100)
         traces = TenantTraces()
         c = make_controls(store=store, traces=traces)
-        task = asyncio.create_task(run_agent(c, "larkspur-clinic", "pinned", "what is the refund policy"))
+        task = asyncio.create_task(run_agent(c, "larkspur-clinic", "pinned", "Please show me record LK-1001."))
         await asyncio.sleep(0)
         store.rollback("larkspur-clinic")
         result = await task
         assert result.config_version == v
         assert {s.config_version for s in traces.read("larkspur-clinic", "pinned")} == {v}
         assert store.resolve("larkspur-clinic", "next").version == 1
+        prompts = c.model.prompts["larkspur-clinic"]
+        assert len(prompts) == 2, "two model calls, so the second comes after the rollback"
+        assert not any("Always end with" in p for p in prompts), "the second call went out on the rolled-back prompt"
 
     asyncio.run(scenario())
 
@@ -342,6 +383,47 @@ def test_rubrics_differ_per_tenant():
     assert score_answer(store.get("larkspur-clinic"), answer, ["lk-000"]) == 50
     assert score_answer(store.get("pinwheel-retail"), answer, ["lk-000"]) == 60
     assert score_answer(store.get("pinwheel-retail"), answer, ["other"]) == 0, "an invented citation scores nothing"
+
+
+def test_no_evidence_escalates_without_a_model_call():
+    class NoDocs:
+        def retrieve(self, scopes, query, k):
+            return Retrieved([], [])
+
+    async def never(req):
+        raise AssertionError("nothing to answer from, so no model call")
+
+    traces = TenantTraces()
+    c = make_controls(retriever=NoDocs(), traces=traces, model=never)
+    r = asyncio.run(run_agent(c, "tallow-legal", "empty", "what is the refund policy"))
+    assert r.status == "escalated" and not r.answer
+    assert not c.model.prompts
+    assert [s.status for s in traces.read("tallow-legal", "empty") if s.node == "escalate"] == ["no_evidence"]
+
+
+# %% Tools details
+def test_foreign_and_missing_ids_get_the_same_reply_on_every_tool():
+    tools = ToolLayer(make_records())
+    allowed = ("lookup_record", "issue_refund")
+    for name in allowed:
+        foreign = tools.call("larkspur-clinic", allowed, name, {"record_id": "PW-1001"})
+        missing = tools.call("larkspur-clinic", allowed, name, {"record_id": "LK-9999"})
+        assert foreign == missing == "not found", (name, foreign, missing)
+    assert not tools.effects
+
+
+def test_a_write_on_your_own_record_or_no_record_still_runs():
+    tools = ToolLayer(make_records())
+    allowed = ("issue_refund", "create_ticket")
+    assert tools.call("larkspur-clinic", allowed, "issue_refund", {"record_id": "LK-1001"}).startswith("ok")
+    assert tools.call("larkspur-clinic", allowed, "create_ticket", {}).startswith("ok")
+    assert len(tools.effects) == 2
+
+
+def test_the_model_cannot_name_its_own_tenant():
+    reply = ToolLayer(make_records()).call("larkspur-clinic", ("lookup_record",), "lookup_record",
+                                           {"record_id": "PW-1001", "tenant": "pinwheel-retail"})
+    assert reply == "not found", reply
 
 
 # %% Retrieval details
@@ -390,6 +472,8 @@ def test_rate_limit_rejects_the_burst_and_refills():
     bucket = TokenBucket(rate=2.0, burst=5)
     assert sum(bucket.allow(0) for _ in range(20)) == 5
     assert sum(bucket.allow(1) for _ in range(20)) == 2
+    b = TokenBucket(2.0, 5)
+    assert sum(b.allow(1000) for _ in range(20)) == 5, "a long idle spell refills to the burst and no further"
     limited = load_scenario(FairQueue, with_limits=True)
     assert limited["pinwheel-retail"]["rejected"] > 0
     assert all(limited[t]["rejected"] == 0 for t in QUIET), "a neighbour's burst costs the quiet tenants nothing"
@@ -432,6 +516,17 @@ def test_whole_path_holds_every_property_at_once():
     assert all(s.tenant == f["owner"][s.run_id] for s in f["traces"].all_spans())
     assert all(f["ledger"].held(t) == 0 for t in f["limits"]), "no reservation left behind"
     assert not any("PW-CONFIDENTIAL" in r.answer for r in f["results"] if r.tenant_id != "pinwheel-retail")
+    assert {r.tenant for r in f["rejected"]} == {"pinwheel-retail"}, "only the bursting tenant is rate limited"
+
+
+def test_serve_pops_fairly_not_in_arrival_order():
+    ticket = "what is the refund policy"
+    requests = [Request(f"a{i}", "pinwheel-retail", 0, 100, ticket) for i in range(15)]
+    requests.append(Request("z", "larkspur-clinic", 0, 100, ticket))  # sorted last, so FIFO would serve it last
+    # One worker, so the order of the results is the order the queue gave them out.
+    results, rejected = asyncio.run(serve(make_controls(), requests, workers=1))
+    assert not rejected
+    assert [r.tenant_id for r in results].index("larkspur-clinic") == 1, "a quiet tenant takes the next turn"
 
 
 if __name__ == "__main__":

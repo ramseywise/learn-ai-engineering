@@ -11,3 +11,4 @@ Each file walks through a full system design using the five-step process from th
 | Eval & monitoring | [eval-harness.md](eval-harness.md) | "Design an eval pipeline for an LLM product" | Three-tier eval, golden set design, LLM-as-judge calibration, online monitoring |
 | Part matching | [part-matching.md](part-matching.md) | "Find interchangeable parts in industrial catalogues" | Retrieval ceiling, attributes vs similarity, cost-priced routing, closure, document reading |
 | Scaling & cost | [scaling.md](scaling.md) | "Scale a RAG system 100x" | Per-component scaling, model routing, caching, cost model |
+| Voice agent | [voice-agent.md](voice-agent.md) | "Design a voice agent that conducts thousands of structured phone conversations a day and scores each one" | Cascade vs speech-to-speech, endpointing, barge-in with tools, per-vertical config, calibrated scoring |

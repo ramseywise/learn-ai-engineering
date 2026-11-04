@@ -8,6 +8,9 @@ Run from this folder (under a minute on a laptop CPU, no API key, downloads no d
     uv run voice_stream_lab.py
     uv run voice_stream_lab.py --silence-ms 250 --hangover-ms 60 --barge-confirm-ms 100   # move a knob, watch the tables move
 
+The checks about what the default setup shows are asserts at the defaults. Move a knob and they print as warnings, because
+a moved knob is allowed to break them. Checks that hold for any setting, such as history matching what was played, stay asserts.
+
 Optional, off by default, downloads a Whisper model (about 75 MB) and a public speech clip into ~/.cache:
     uv run --with faster-whisper voice_stream_lab.py --asr              # a short public clip of real speech
     uv run --with faster-whisper voice_stream_lab.py --asr my_clip.wav  # or your own WAV file
@@ -64,6 +67,22 @@ SNRS = (30, 20, 10, 5, 0)
 # The note's placeholders. STREAMING_P95 comes from voice_turn_lab; the batch lines are the note's other budget row.
 BATCH_P95 = {"ASR final": 300, "LLM to first token": 500, "LLM full reply": 900, "TTS full audio": 400}
 TOKEN_S, WORD_S = 0.03, 0.30  # assumed: time per generated word, and how long one word takes to play
+
+
+AT_DEFAULTS = True  # main() clears this when a knob moves
+
+
+def claim(holds, message):
+    """A check on what the default setup shows: an assert at the defaults, a printed warning once a knob has moved."""
+    if holds:
+        return
+    if AT_DEFAULTS:
+        raise AssertionError(message)
+    print(f"   warning, with the knobs moved: {message}")
+
+
+def median_of(values):
+    return statistics.median(values) if values else math.nan
 
 
 # %% Generated audio. These waveforms are not speech.
@@ -188,7 +207,7 @@ class EnergyVad:
             self.on, self.hold = True, self.hangover
         elif self.on:
             self.hold -= 1
-            self.on = self.hold > 0
+            self.on = self.hold >= 0
         return self.on
 
 
@@ -251,9 +270,9 @@ def vad_section(n_calls, hangover_ms):
             results[label, snr] = row
             print(f"   {label:30}{snr:>7}{row[0]:>13.1%}{row[1]:>8.1%}{row[2]:>20.1f}{row[3]:>17.0%}")
     # The invariants this section exists to show.
-    assert results["adaptive floor, hangover", 20][2] < results["adaptive floor, no hangover", 20][2], "the hangover merges runs"
+    claim(results["adaptive floor, hangover", 20][2] < results["adaptive floor, no hangover", 20][2], "the hangover should merge runs")
     assert results["fixed threshold, no hangover", 10][0] > 0.5, "noise above a fixed threshold reads as speech"
-    assert results["adaptive floor, hangover", 10][0] < results["fixed threshold, no hangover", 10][0]
+    claim(results["adaptive floor, hangover", 10][0] < results["fixed threshold, no hangover", 10][0], "adaptive should false-alarm less than fixed at 10 dB")
     print("   The hangover's false alarms are its tails: the price of not flipping off inside every word. Energy alone fires on")
     print("   coughs at every SNR, and at 0 dB it has little left to work with. A trained VAD is the next step.\n")
 
@@ -292,8 +311,9 @@ def endpoint_section(n_calls, hangover_ms):
         cut_t, _, delays = endpoint_stats(talk, make_vad, silence)
         cut_d, _, delays_d = endpoint_stats(nums, make_vad, silence)
         rows[silence] = cut_t, cut_d, delays, delays_d
-        print(f"   {silence:>13} ms{cut_t:>15.1%}{cut_d:>17.1%}{statistics.median(delays):>13.0f} ms{percentile(delays, 0.95):>13.0f} ms")
-    assert rows[100][0] > rows[1200][0] and statistics.median(rows[100][2]) < statistics.median(rows[1200][2])
+        p95 = percentile(delays, 0.95) if delays else math.nan
+        print(f"   {silence:>13} ms{cut_t:>15.1%}{cut_d:>17.1%}{median_of(delays):>13.0f} ms{p95:>13.0f} ms")
+    claim(rows[100][0] > rows[1200][0] and median_of(rows[100][2]) < median_of(rows[1200][2]), "a short window should cut off more and wait less than a long one")
 
     short, long = 300, 900
     cut_short_t, _, delay_short_t = endpoint_stats(talk, make_vad, short)
@@ -305,7 +325,7 @@ def endpoint_section(n_calls, hangover_ms):
     for label, a, b, c, d in [(f"fixed {short} ms", cut_short_t, cut_short_d, delay_short_t, delay_short_d),
                               (f"fixed {long} ms", cut_long_t, cut_long_d, delay_long_t, delay_long_d),
                               (f"{short} ms, or {long} ms after asking digits", cut_short_t, cut_long_d, delay_short_t, delay_long_d)]:
-        print(f"   {label:34}{a:>15.1%}{b:>17.1%}{statistics.median(c):>13.0f} ms{statistics.median(d):>15.0f} ms")
+        print(f"   {label:34}{a:>15.1%}{b:>17.1%}{median_of(c):>13.0f} ms{median_of(d):>15.0f} ms")
 
     print(f"\n   Naive against adaptive at a {SILENCE_MS} ms window, by SNR. A hung turn never ends without the {MAX_TURN_S:.0f} s backstop:")
     print(f"   {'SNR dB':>9}{'fixed: hung':>14}{'adaptive: hung':>16}{'adaptive wait p50':>19}{'adaptive cut off':>18}")
@@ -319,7 +339,7 @@ def endpoint_section(n_calls, hangover_ms):
             hung_fixed_10, hung_adaptive_10 = hung_fixed, hung
         wait = f"{statistics.median(delays):.0f} ms" if delays else "none"
         print(f"   {snr:>9}{hung_fixed:>14.1%}{hung:>16.1%}{wait:>19}{cut:>18.1%}")
-    assert hung_fixed_10 > hung_adaptive_10, "a fixed threshold in noise never sees silence"
+    claim(hung_fixed_10 > hung_adaptive_10, "a fixed threshold in noise should hang more turns than the adaptive VAD")
     print()
 
 
@@ -345,9 +365,9 @@ def barge_section(n_calls, hangover_ms):
         false_stop = sum(fired_at(c, confirm) is not None for c in coughs_) / n_calls
         missed = sum(fired_at(c, confirm) is None for c in short) / n_calls
         react = [(t - c.bursts[0][1]) * 1000 for c in full if (t := fired_at(c, confirm)) is not None]
-        rows[confirm] = false_stop, missed, statistics.median(react)
+        rows[confirm] = false_stop, missed, median_of(react)
         print(f"   {confirm:>8} ms{false_stop:>28.1%}{missed:>22.1%}{rows[confirm][2]:>17.0f} ms")
-    assert rows[20][0] > rows[480][0] and rows[20][1] < rows[480][1] and rows[20][2] < rows[480][2]
+    claim(rows[20][0] > rows[480][0] and rows[20][1] < rows[480][1] and rows[20][2] < rows[480][2], "a longer confirmation should stop fewer coughs, miss more replies and react later")
     print("   No setting wins, because energy can't tell a cough from a short 'no'. Pausing at onset and resuming if the burst\n"
           "   doesn't confirm is one way out. It is not built here.\n")
 
@@ -452,7 +472,7 @@ class VoiceCall:
         self.done = asyncio.Event()
         self.user_turns = self.llm_calls = self.talk_overs = 0
         self.t_start = self.first_audio_after_end = self.t_endpoint = self.t_barge = None
-        self.frame_lateness, self.want_announce, self.told = [], False, False
+        self.frame_lateness, self.want_announce, self.told, self.history_says_told = [], False, False, False
         self.plans, self.duplicate_call, self.speech_frames, self.answer_owed = 0, False, 0, False
         self.vad_tail_ms = getattr(self.vad, "hangover", 0) * FRAME_MS
 
@@ -506,7 +526,6 @@ class VoiceCall:
         words, use_tool = (GONE_THROUGH, False) if announce else self.plan()
         if use_tool:
             self.start_tool(group)
-        self.told = self.told or words is GONE_THROUGH
         for word in words:
             if self.cfg.streaming:
                 await asyncio.sleep(TOKEN_S)
@@ -578,6 +597,11 @@ class VoiceCall:
             # The fix and the bug are this one line: what goes into history, what was heard or what was generated.
             reply.said = reply.generated if self.cfg.barge == "mute" else reply.heard
             self.history.append({"role": "assistant", "text": " ".join(reply.said), "interrupted": reply.interrupted or reply.muted})
+            # The caller knows only what played. The agent knows only what history says, and retries on that.
+            self.told = self.told or reply.heard == GONE_THROUGH
+            self.history_says_told = self.history_says_told or reply.said == GONE_THROUGH
+            if any(h["role"] == "tool" for h in self.history) and not self.history_says_told:
+                self.want_announce = True
 
     def start_reply(self, text=None, announce=False):
         reply = Reply()
@@ -644,13 +668,19 @@ class VoiceCall:
                 started_at, self.speech_frames = None, 0
             if self.want_announce and not self.reply_active() and not self.ep.talking:
                 self.want_announce = False
-                if not self.told:
+                if not self.history_says_told:
                     self.start_reply(announce=True)
             if self.done.is_set():
                 return
             if self.backend is not None and self.scenario_over():
                 self.done.set()
                 return
+
+    def started_early(self):
+        """The only reply began before the caller finished and was still playing when they did. Answered, but over them."""
+        end = self.t_start + self.call.true_end
+        return self.first_audio_after_end is None and any(
+            r.first_audio is not None and r.last_audible is not None and r.last_audible >= end for r in self.replies)
 
     def scenario_over(self):
         return (self.user_turns >= 2 and not self.reply_active() and not self.tool_tasks and not self.want_announce
@@ -682,7 +712,8 @@ def stage_draws(seed):
 
 
 def latency_stats(results):
-    """One latency per call in ms. A call that never got an answer counts as infinite, so it can't flatter the percentiles."""
+    """One latency per call in ms. A call with no reply that waited for the caller to finish counts as infinite, so it can't
+    flatter the percentiles. That covers no reply at all and a reply that started early; the table counts the two apart."""
     return [math.inf if c.first_audio_after_end is None else (c.first_audio_after_end - c.t_start - c.call.true_end) * 1000
             for c in results]
 
@@ -709,7 +740,7 @@ def latency_section(n_turns, silence_ms, hangover_ms, confirm_ms):
             Config("streaming, shorter window", **{**common, "silence_ms": max(FRAME_MS, silence_ms // 2)})]
     print(f"4. End of speech to first audio, measured on the running loop. {n_turns} generated calls, SNR mixed over {sorted(set(mix))} dB")
     print(f"   Real samples and a real VAD set the wait; the note's placeholders drive the stubs, sigma {SPREAD}, paired draws per call")
-    print(f"   {'':32}{'window':>9}{'wait p50':>10}{'p50':>8}{'p95':>8}{'p99':>8}{f'<= {TARGET_MS} ms':>11}{'no answer':>11}{'talked over':>13}{'LLM calls/turn':>16}")
+    print(f"   {'':32}{'window':>9}{'wait p50':>10}{'p50':>8}{'p95':>8}{'p99':>8}{f'<= {TARGET_MS} ms':>11}{'no reply':>10}{'began early':>13}{'talked over':>13}{'LLM calls/turn':>16}")
     show = lambda x: "never" if math.isinf(x) else f"{x:.0f}"
     out = {}
     for cfg in arms:
@@ -719,12 +750,14 @@ def latency_section(n_turns, silence_ms, hangover_ms, confirm_ms):
         llm = sum(c.llm_calls for c in done) / len(done)
         p50, p95, p99 = percentile(lat, .5), percentile(lat, .95), percentile(lat, .99)
         waits = [(c.t_endpoint - c.t_start - c.call.true_end) * 1000 for c in done if c.first_audio_after_end is not None]
-        unanswered = sum(math.isinf(x) for x in lat) / len(lat)
-        out[cfg.name] = p50, p95, unanswered, statistics.median(waits)
-        print(f"   {cfg.name:32}{cfg.silence_ms:>6} ms{statistics.median(waits):>10.0f}{show(p50):>8}{show(p95):>8}{show(p99):>8}"
-              f"{sum(x <= TARGET_MS for x in lat) / len(lat):>11.1%}{unanswered:>11.1%}{over:>13.1%}{llm:>16.2f}")
-    assert out["streaming, adaptive VAD"][0] < out["batch stages, adaptive VAD"][0], "streaming lowers time to first audio"
-    assert out["streaming, adaptive VAD"][2] == 0 and out["streaming, fixed-threshold VAD"][2] > 0, "a VAD that can't see silence interrupts itself"
+        early = sum(c.started_early() for c in done) / len(done)
+        no_reply = sum(math.isinf(x) for x in lat) / len(lat) - early
+        out[cfg.name] = p50, p95, no_reply, median_of(waits)
+        print(f"   {cfg.name:32}{cfg.silence_ms:>6} ms{median_of(waits):>10.0f}{show(p50):>8}{show(p95):>8}{show(p99):>8}"
+              f"{sum(x <= TARGET_MS for x in lat) / len(lat):>11.1%}{no_reply:>10.1%}{early:>13.1%}{over:>13.1%}{llm:>16.2f}")
+    claim(out["streaming, adaptive VAD"][0] < out["batch stages, adaptive VAD"][0], "streaming should lower time to first audio")
+    claim(out["streaming, adaptive VAD"][2] == 0, "the adaptive VAD should leave no caller without a reply")
+    claim(out["streaming, fixed-threshold VAD"][2] > 0, "a fixed threshold that can't see silence should leave some callers without a reply")
     print(f"   The note's streaming budget adds up to {sum(STREAMING_P95.values())} ms with a {STREAMING_P95['VAD end of speech']} ms placeholder for the VAD line. Here that line is")
     print(f"   measured: {out['streaming, adaptive VAD'][3]:.0f} ms at the median, the wait column, from the audio. A fixed threshold in noise keeps hearing 'speech', so it")
     print("   cancels its own replies and some callers never get an answer.\n")
@@ -764,12 +797,18 @@ def barge_tool_section(n_trials, hangover_ms, confirm_ms):
     example, results = None, {}
     for cfg in arms:
         stop, tokens, unheard, refunds, retried, told = [], [], [], [], [], []
+        failed = {}
+
+        def check(holds, message):
+            failed[message] = failed.get(message, 0) + (not holds)
+
         for i, call in enumerate(calls):
             voice = tool_trial(cfg, call, i)
-            first = voice.replies[0]
+            first = voice.replies[0] if voice.replies else Reply()
             barge_onset = voice.t_start + call.bursts[1][1]
-            assert voice.t_barge is not None, "the caller must have talked over the reply"
-            stop.append((first.last_audible - barge_onset) * 1000)
+            check(voice.t_barge is not None, "the caller should talk over the reply")
+            if voice.t_barge is not None and first.last_audible is not None:  # otherwise no audio was there to stop
+                stop.append((first.last_audible - barge_onset) * 1000)
             tokens.append(first.tokens_after_barge)
             said = first.said
             unheard.append(len(said) - len(first.heard))
@@ -779,15 +818,21 @@ def barge_tool_section(n_trials, hangover_ms, confirm_ms):
             if cfg.barge == "correct":
                 # The invariants: what history says is what was heard, the refund happened once, and the caller found out.
                 assert said == first.heard, "history must hold only what was played"
-                assert len(voice.backend.applied) == 1 and voice.told
-                assert any(h["role"] == "tool" for h in voice.history), "the tool outcome must survive the barge-in"
-                assert first.interrupted and first.last_audible <= voice.t_barge + 0.05, "no audio after the cancel"
+                check(len(voice.backend.applied) == 1, "the refund should happen once")
+                check(not voice.duplicate_call, "a surviving tool should never be sent again")
+                check(voice.told, "the caller should hear the whole outcome")
+                check(any(h["role"] == "tool" for h in voice.history), "the tool outcome should survive the barge-in")
+                check(first.interrupted, "the first reply should be cancelled")
+                check(voice.t_barge is None or first.last_audible is None or first.last_audible <= voice.t_barge + 0.05, "no audio after the cancel")
                 example = example or voice
+        for message, count in failed.items():
+            claim(count == 0, f"{cfg.name}: {message}, fails on {count} of {n_trials} calls")
         results[cfg.name] = statistics.mean(refunds), statistics.mean(unheard)
-        print(f"   {cfg.name:31}{statistics.median(stop):>12.0f} ms{statistics.mean(tokens):>14.1f}{statistics.mean(unheard):>18.1f}"
+        print(f"   {cfg.name:31}{median_of(stop):>12.0f} ms{statistics.mean(tokens):>14.1f}{statistics.mean(unheard):>18.1f}"
               f"{statistics.mean(refunds):>9.2f}{statistics.mean(retried):>11.0%}{statistics.mean(told):>13.0%}")
-    assert results["cancel everything"][0] > 1.5, "cancelling the client doesn't undo the server, so a retry pays twice"
-    assert results["cancel everything, keyed tool"][0] == 1 and results["mute the speaker only"][1] > 0
+    claim(results["cancel everything"][0] > 1.5, "cancelling the client doesn't undo the server, so a retry should pay twice")
+    claim(results["cancel everything, keyed tool"][0] == 1, "the key should hold a retry to one refund")
+    claim(results["mute the speaker only"][1] > 0, "muting should leave words in history that the caller never heard")
     print("\n   One history from the last arm, in commit order. A reply commits when it ends, so the outcome can land while a stale")
     print("   'still running' is being spoken. The next reply corrects it, because the outcome is in history:")
     for entry in example.history:
@@ -818,7 +863,7 @@ def wall_section():
     blocked = summary(asyncio.run(arm(Config(block_the_loop=True))))
     for label, row in [("virtual clock", virtual), ("wall clock", real), ("wall clock, LLM stub blocks the loop", blocked)]:
         print(f"   {label:37}{row[0]:>11.0f} ms{row[2]:>18.1f} ms{row[1]:>7.0f} ms")
-    assert blocked[1] > real[1], "a synchronous call stalls every call sharing the loop"
+    assert blocked[1] > real[1] + 200, "a synchronous call stalls every call sharing the loop"
     print()
 
 
@@ -897,6 +942,8 @@ def main():
     parser.add_argument("--skip-wall", action="store_true", help="skip section 6, which is the only one that varies between runs")
     parser.add_argument("--asr", nargs="?", const="default", metavar="WAV", help="also run a real speech model (downloads a model)")
     args = parser.parse_args()
+    global AT_DEFAULTS
+    AT_DEFAULTS = (args.silence_ms, args.hangover_ms, args.barge_confirm_ms, args.turns) == (SILENCE_MS, HANGOVER_MS, BARGE_CONFIRM_MS, 200)
     vad_section(40, args.hangover_ms)
     endpoint_section(300, args.hangover_ms)
     barge_section(200, args.hangover_ms)

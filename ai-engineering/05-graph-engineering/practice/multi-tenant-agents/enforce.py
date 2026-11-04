@@ -242,16 +242,18 @@ class _ToolBackend:
 
 
 class ToolLayer(_ToolBackend):
-    """The allowlist is checked here, at execution. The tenant comes from the run, never from the model's arguments."""
+    """The allowlist and record ownership are checked here, at execution, for reads and writes alike. The tenant comes
+    from the run, never from the model's arguments."""
 
     def call(self, tenant: str, allowed, name: str, args: dict) -> str:
         if name not in allowed:
             raise ToolDenied(f"{name} is not enabled for {tenant}")
-        if name == "lookup_record":
+        if name == "lookup_record" or "record_id" in args:
             record = self.records.get(args.get("record_id"))
             if record is None or record["owner"] != tenant:
                 return "not found"  # the same answer as a missing id, so it doesn't reveal that the id exists
-            return f"ok: {record['text']}"
+            if name == "lookup_record":
+                return f"ok: {record['text']}"
         return self._write(tenant, name, args)
 
 

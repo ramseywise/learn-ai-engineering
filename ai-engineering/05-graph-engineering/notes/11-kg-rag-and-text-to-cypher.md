@@ -7,6 +7,7 @@ sources:
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L4–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
   - https://arxiv.org/abs/2404.16130
+  - https://arxiv.org/abs/2310.01061
   - https://neo4j.com/docs/neo4j-graphrag-python/current/
   - "flowtivity.ai (vendor, Tier 2): https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/"
   - https://arxiv.org/abs/2408.04187
@@ -63,13 +64,15 @@ The book's design advice: make the graph **text-attributed** (nodes and edges ca
 
 ### The evidence
 
-The primary source is Microsoft Research's GraphRAG paper, Edge et al., *From Local to Global: A Graph RAG Approach to Query-Focused Summarization* ([arXiv 2404.16130](https://arxiv.org/abs/2404.16130)). It builds an entity graph, detects communities and pre-summarises them, then answers **global sensemaking** questions over corpora of about 1M tokens. Against vector RAG it reports:
+The primary source is Microsoft Research's paper, Edge et al., *From Local to Global: A GraphRAG Approach to Query-Focused Summarization* ([arXiv 2404.16130](https://arxiv.org/abs/2404.16130), 2024, preprint). It pre-summarises the communities of an entity graph and answers **global sensemaking** questions by map-reduce over them. Setup: GPT-4-turbo, podcast (~1M tokens) and news (~1.7M) corpora, 125 questions each, an LLM judging answer pairs. Against vector RAG, GraphRAG reports:
 
-- **Comprehensiveness** win rates of 72–83% (podcast transcripts) and 72–80% (news).
-- **Diversity** win rates of 75–82% and 62–71%.
-- Vector RAG **wins on directness** (concise answers).
+- **Comprehensiveness** win rates of 72–79% on both corpora.
+- **Diversity** win rates of 75–81% (podcasts) and 62–71% (news).
+- Vector RAG **wins on directness**, and the root-level summaries (C0) lose to it on empowerment, 43% to 57%.
 
-The judge was an LLM in head-to-head comparisons, not people and not a ground-truth accuracy measure. So the result is "graph community summaries help whole-corpus questions". It does not show that graphs are more accurate than vectors in general.
+**Most of the win comes from going global, not from the graph.** Its baseline TS map-reduces over raw chunks, no graph, and beats vector RAG about as often (83% and 80% on comprehensiveness). Counting extracted claims instead showed **no significant difference between GraphRAG and TS**. What the graph buys is cost: **C0 uses over 97% fewer context tokens per query than TS and still wins at least 72% (comprehensiveness) and 62% (diversity) against vector RAG**. Indexing the podcasts took 281 minutes.
+
+With no human judge, no ground truth and no local or multi-hop questions, the result is "pre-summarised map-reduce helps whole-corpus questions, cheaply", not "graphs beat vectors".
 
 A figure you will see quoted is **53.4% vs. 42.9%** multi-hop accuracy for graph over vector retrieval. It comes from a vendor post, flowtivity.ai's [graph engineering 2026 guide](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/), which gives no dataset, method or judge. **Vendor number, unverified** (see the [Source quality](../references.md#source-quality) table in references.md): don't quote it as evidence. To get a number for your own data, write 20 multi-hop questions with gold answers *and gold paths*, and score vector-only, hybrid and text-to-Cypher on answer correctness, path validity and tokens.
 
@@ -92,6 +95,8 @@ The chapter's headline application is MedGraphRAG (Wu et al., [arXiv 2408.04187]
 **Triples lose meaning.** "If it rains next week I'll cancel the beach trip and go to the museum" becomes `(user, plans, beach trip)` and `(user, backup, museum)`, and the condition is gone. Extraction errors also contaminate the graph. Li's recommendation (*AI Agents in Depth*, ch. 3): keep the core record in natural language, and use the graph as an *index* for the domains that need multi-hop and disambiguation (medical, legal, family relationships). For "drill from concept to detail" questions, a RAPTOR summary tree fits better than a graph ([02-context 04](../../02-context-engineering/notes/04-retrieval.md#distill-at-index-time-beyond-flat-chunks)).
 
 **Default order:** start with vector. Add canned traversals for the multi-hop question shapes you can name. Add text-to-Cypher only for the long tail, and only with a validator. Ch13 takes a similar position, but more narrowly. Its KG retriever tool *does* generate Cypher from the schema; only the document retriever is a **precanned query**, because generating that query "would introduce another possible point of failure when the Cypher queries are complex". The book adds that production Graph RAG systems carry many KG tools, "many of which are based on precanned Cypher queries for types of questions that are frequently repeated" (§13.4.3). This is the agency rule from [note 02](02-graph-primitives.md) again.
+
+**A trained middle path: plan a relation path, not a query.** Reasoning on Graphs (RoG; Luo et al., [arXiv:2310.01061](https://arxiv.org/abs/2310.01061), ICLR 2024) has the LLM write only a sequence of relation types (`sports.mascot.team → sports.sports_team.arena_stadium`). A constrained BFS walks it from the question's entities; the LLM answers from the paths found. With LLaMA2-Chat-7B trained jointly on WebQSP and CWQ, **RoG reached 85.7 Hits@1 on WebQSP and 62.6 on CWQ, against 73.9 and 53.5 for the same model fine-tuned on the question–answer pairs alone**, and its paths lifted ChatGPT from 66.8 to 81.5 on WebQSP. But question entities were gold-linked, the planner is fine-tuned per KG (38 hours on two A100s), and "faithful" rests on case studies.
 
 ### What to retrieve, and how to hand it over
 
@@ -512,7 +517,7 @@ Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 
 | Prompt | Answer in one line |
 |---|---|
 | Name failures of vector RAG that a graph helps with. | Context fragmentation, embedding compression, and misses on aggregate questions: similarity optimises closeness, not coverage. |
-| What did Edge et al. actually show? | GraphRAG won LLM-judged head-to-heads on comprehensiveness (72–83%, 72–80%) and diversity (75–82%, 62–71%), and vector RAG won directness. It wasn't a ground-truth accuracy measure. |
+| What did Edge et al. actually show? | LLM-judged wins over vector RAG on comprehensiveness and diversity (62–81%), with no ground truth. Map-reduce over raw chunks did about as well; the graph mostly cuts tokens. |
 | What do triples lose? | Conditions and nuance, so the beach-trip plan loses "if it rains". Extraction errors also contaminate the graph, so keep the source text. |
 | How do you make text-to-Cypher reliable before retries? | An LLM-ready schema with value annotations, a query-writing prompt allowing `success: false`, the question restated last, and an `information` slot for the error on retry. |
 | Would you use text-to-Cypher for "firms near Palo Alto"? | No, if it is a known question: a fixed query with a parameter and `point.distance` in metres is cheaper and more reliable. |

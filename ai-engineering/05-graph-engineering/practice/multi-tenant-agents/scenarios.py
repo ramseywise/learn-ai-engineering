@@ -228,6 +228,9 @@ def bad_configs() -> dict[str, dict]:
             {"name": "cites", "weight": 90, "kind": "cites"}]}},
         "typo in a key": {k if k != "tools" else "tool": v for k, v in lark.items()},
         "zero budget": {**lark, "monthly_tokens": 0},
+        "unknown model alias": {**lark, "model_alias": "support-model@v9"},
+        "contains criterion with no text": {**lark, "rubric": {**lark["rubric"], "criteria": [
+            {"name": "cites", "weight": 50, "kind": "cites"}, {"name": "caveat", "weight": 50, "kind": "contains"}]}},
     }
 
 
