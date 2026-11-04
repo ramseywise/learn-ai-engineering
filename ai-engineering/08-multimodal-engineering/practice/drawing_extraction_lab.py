@@ -4,7 +4,7 @@
 # ///
 """Reading engineering drawings for notes/02: whole-page OCR against crop-first, typed fields, checks, review routing.
 
-Run from this folder (about eight minutes on a laptop CPU, downloads no data beyond its packages):
+Run from this folder (about five to eight minutes on a laptop CPU, depending on load; downloads no data beyond its packages):
     uv run drawing_extraction_lab.py
     uv run drawing_extraction_lab.py --n 3      # fewer drawings per quality level, for a quick look
 
@@ -41,6 +41,7 @@ QUALITY = {"clean": dict(dpi=150, blur=0, noise=0, skew=0),
            "poor scan": dict(dpi=100, blur=.7, noise=22, skew=1.5)}
 ROUTES = ["page only", "page + regions", "crop-first", "crop, true regions"]
 SCALE_LIMIT, INK_RATIO = .04, 1.4        # how far a line may disagree with its value, and how much unread ink is too much
+REGION_TOL_MM = 3.0                      # how far a found region may sit from the true one and still count as found
 # Stated assumptions, in one currency unit. Change them and the routing table moves.
 REVIEW_MINUTES, FRAME_LOOK_MINUTES, REVIEW_PER_HOUR, COST_OF_WRONG_FIELD = 6, 1.5, 40.0, 150.0
 pd.set_option("display.width", 170)
@@ -304,6 +305,7 @@ def render(drw, dpi):
     # Hole callout on a shelf, with the frame under it
     hole = by["hole_dia"]
     strip, w, h = pen.label(hole, f"{hole.count}X Ø", "THRU")
+    shelf_w = w                                              # the title block loop below reuses the name w
     sx, sy = drw["centres"][0][0] + 8, 26.0
     pen.im.paste(strip, (round(sx * pen.k), round((sy - h - .3) * pen.k)))
     pen.line((sx, sy), (sx + w + 1, sy))
@@ -336,7 +338,7 @@ def render(drw, dpi):
             pen.text(x + 1.2, y + 3.8, LABELS[name], LABEL_MM)
             pen.text(x + 1.8 + pen.width(LABELS[name], LABEL_MM), y + 3.1, values[name], TEXT_MM)
     small = pen.im.resize((round(PAGE_MM[0] * dpi / 25.4), round(PAGE_MM[1] * dpi / 25.4)), Image.LANCZOS)
-    return small, dict(lines=drw["lines"], shelf=((sx, sy), (sx + w + 1, sy)), fcf_cells=fcf_cells, title_cells=title_cells)
+    return small, dict(lines=drw["lines"], shelf=((sx, sy), (sx + shelf_w + 1, sy)), fcf_cells=fcf_cells, title_cells=title_cells)
 
 
 def degrade(im, r, dpi, blur, noise, skew):
@@ -512,6 +514,19 @@ def find_regions(image, ppm):
         shelf = min(shelves, key=lambda s: s[0][1])
         layout.shelf = shelf if shelf[0][0] < shelf[1][0] else shelf[::-1]
     return layout
+
+
+def region_match(layout, regions, tol_mm=REGION_TOL_MM):
+    """Compare what the finder found with the generator's regions, in page millimetres. A region counts only if it is in the right place."""
+    centre = lambda p, q: ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+    line_ok = lambda found_px, true_mm: found_px is not None and math.dist(centre(*[(v[0] / layout.ppm, v[1] / layout.ppm) for v in found_px]), centre(*true_mm)) <= tol_mm
+    box_ok = lambda found_px, true_mm: all(abs(a / layout.ppm - b) <= tol_mm for a, b in zip((found_px[0], found_px[1], found_px[0] + found_px[2], found_px[1] + found_px[3]),
+                                                                                             (true_mm[0], true_mm[1], true_mm[0] + true_mm[2], true_mm[1] + true_mm[3])))
+    cells = layout.fcf_cells
+    return dict(lines=sum(line_ok(layout.lines.get(k), v) for k, v in regions["lines"].items()) / len(regions["lines"]),
+                shelf=line_ok(layout.shelf, regions["shelf"]),
+                title=sum(any(box_ok(c, t) for c in layout.title_cells) for t in regions["title_cells"]) / len(regions["title_cells"]),
+                frame=len(cells) == len(regions["fcf_cells"]) and all(box_ok(c, t) for c, t in zip(cells, regions["fcf_cells"])))
 
 
 def true_regions(image, angle, regions, drw, ppm):
@@ -990,6 +1005,23 @@ def test_pieces():
     next(d for d in x.dims if d.feature == explicit.feature).plus = None
     rows = [c for c in score(x, drw) if c["field"] == "tolerance"]
     assert sum(c["fn"] for c in rows) == 1, "a dropped tolerance must count as a miss"
+    field_misses = lambda x, name: sum(c["fn"] for c in score(x, drw) if c["field"] == name)
+    x = perfect_read(drw)
+    x.dims[0].unit = "in" if x.dims[0].unit == "mm" else "mm"
+    assert field_misses(x, "unit") == 1 and field_misses(x, "whole dimension") == 1, "a wrong unit must fail the unit and the whole dimension"
+    x = perfect_read(drw)
+    x.dims[0].feature = "some other line"
+    assert field_misses(x, "feature") == 1 and field_misses(x, "whole dimension") == 1, "a value on the wrong line must fail the feature and the whole dimension"
+    x = perfect_read(drw)
+    x.dims.append(Dim(D("999.00"), unit=drw["unit"], feature="invented"))
+    assert f1([c for c in score(x, drw) if c["field"] == "value"]) < 1, "a prediction with no true dimension behind it must lower the value score"
+    _, regions = render(drw, 100)
+    exact = Layout(None, 1.0, lines=regions["lines"], shelf=regions["shelf"], fcf_cells=regions["fcf_cells"], title_cells=regions["title_cells"])
+    assert region_match(exact, regions) == dict(lines=1, shelf=True, title=1, frame=True), "the true regions must match themselves"
+    away = lambda p: (p[0], p[1] + 2 * REGION_TOL_MM)
+    moved = Layout(None, 1.0, lines={k: (away(a), away(b)) for k, (a, b) in regions["lines"].items()}, shelf=tuple(away(p) for p in regions["shelf"]),
+                   fcf_cells=[away(c) + c[2:] for c in regions["fcf_cells"]], title_cells=[away(c) + c[2:] for c in regions["title_cells"]])
+    assert region_match(moved, regions) == dict(lines=0, shelf=False, title=0, frame=False), "a region in the wrong place must not count as found"
 
 
 # %% Run
@@ -1019,8 +1051,7 @@ def main(n):
                 quality=quality, drw=drw, page_seconds=page_seconds, crop_seconds=crop_seconds,
                 reads={"page only": whole_page(tokens), "page + regions": read_regions(found, deskew),
                        "crop-first": crop, "crop, true regions": read_regions(truth_layout)},
-                m=measure(found), m_true=measure(truth_layout), n_found=len(found.lines), n_title=len(found.title_cells), n_cells=len(found.fcf_cells),
-                has_shelf=found.shelf is not None))
+                m=measure(found), m_true=measure(truth_layout), found=region_match(found, regions)))
     report(records, sample, n, time.perf_counter() - t_start)
 
 
@@ -1044,13 +1075,12 @@ def show_table(records, route):
 
 def report(records, sample, n, seconds):
     print(f"{len(records)} GENERATED drawings: {len(QUALITY)} quality levels, {n} of each, one layout, one font. Reader: RapidOCR. No vision model.\n")
-    print("Region finding from pixels alone, share of the true regions found")
+    print(f"Region finding from pixels alone, share of the true regions found within {REGION_TOL_MM} mm: a line by its midpoint, a cell by its edges, the frame only if every cell is right")
     rows = []
     for quality in QUALITY:
         xs = [x for x in records if x["quality"] == quality]
-        rows.append(dict(quality=quality, dimension_lines=np.mean([x["n_found"] / 10 for x in xs]), shelf=np.mean([x["has_shelf"] for x in xs]),
-                         title_cells=np.mean([x["n_title"] / 8 for x in xs]),
-                         frame_found=np.mean([x["n_cells"] == 2 + len(x["drw"]["fcf_datums"]) for x in xs])))
+        rows.append(dict(quality=quality, **{name: np.mean([x["found"][key] for x in xs]) for name, key in
+                                             [("dimension_lines", "lines"), ("shelf", "shelf"), ("title_cells", "title"), ("frame_found", "frame")]}))
     print(pd.DataFrame(rows).to_string(index=False, float_format=lambda v: f"{v:.3f}"))
 
     print("\nField F1, the four routes side by side (exact match after normalising number format)")
@@ -1132,7 +1162,7 @@ def report(records, sample, n, seconds):
     print(pd.DataFrame(rows).to_string(index=False, float_format=lambda v: f"{v:.2f}"))
     print(f"perfect reads the checks flag anyway (false alarms with no misread at all): {base_fail} of {len(records)}")
     print(f"A row at {base_fail / len(records):.2f} is that false alarm and nothing else: the checks can't see that misread. Arithmetic and geometry say nothing about a material or a part number.")
-    assert rows[CORRUPTIONS.index("first digit of a segment")]["caught"] == 1, "the chain must catch any changed segment"
+    assert rows[CORRUPTIONS.index("last digit of a segment")]["caught"] == 1, "the chain must catch a one-step segment error, which the line check mostly can't see"
     assert base_fail <= .34 * len(records), "the checks should mostly pass a perfect read"
 
     print(f"\nRouting. Assumptions: full review {REVIEW_MINUTES} min, a look at one frame {FRAME_LOOK_MINUTES} min, {REVIEW_PER_HOUR} per hour, "
@@ -1169,6 +1199,7 @@ def report(records, sample, n, seconds):
           f"{REVIEW_MINUTES * minute / max(pol.wrong_fields_shipped[1], 1e-9):.2f}")
 
     routed, everyone = pol.iloc[2], pol.iloc[4]
+    print(f"Routing shipped {routed.wrong_fields_shipped * len(records):.0f} wrong fields across {len(records)} drawings, so one more or fewer moves its error cost by {COST_OF_WRONG_FIELD / len(records):.2f} a drawing")
     if routed.wrong_fields_shipped > 0:
         print(f"Routing on the checks beats reviewing every drawing only if a wrong field costs less than "
               f"{(everyone.review_cost - routed.review_cost) / routed.wrong_fields_shipped:.2f}, because what passes the checks is shipped unseen")

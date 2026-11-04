@@ -146,17 +146,17 @@ The **endpointer** sits on top of the VAD. It counts silence once the VAD has tu
 
 | Silence window | Cut off, open talk | Cut off, digit strings | Added wait, p50 |
 |---|---|---|---|
-| 100 ms | 90.0% | 100.0% | 198 ms |
-| 300 ms | 40.0% | 100.0% | 401 ms |
-| 400 ms | 18.0% | 97.0% | 501 ms |
-| 800 ms | 0.7% | 31.7% | 901 ms |
-| 1200 ms | 0.3% | 7.3% | 1301 ms |
+| 100 ms | 87.0% | 100.0% | 219 ms |
+| 300 ms | 34.3% | 100.0% | 421 ms |
+| 400 ms | 15.7% | 95.7% | 521 ms |
+| 800 ms | 0.7% | 28.7% | 921 ms |
+| 1200 ms | 0.3% | 7.0% | 1321 ms |
 
-No single window serves a caller chatting and a caller reading out an account number with pauses between the groups. The dialogue knows which question it just asked, so let it choose. In the same setup, using 300 ms normally and 900 ms after asking for digits leaves open talk where it was, at 401 ms and 40.0% cut off, and cuts digit strings off 23.7% of the time, where a fixed 300 ms cut them off every time. The cost lands only on the digit question, which waits 1002 ms at the median.
+No single window serves a caller chatting and a caller reading out an account number with pauses between the groups. The dialogue knows which question it just asked, so let it choose. In the same setup, using 300 ms normally and 900 ms after asking for digits leaves open talk where it was, at 421 ms and 34.3% cut off, and cuts digit strings off 21.0% of the time, where a fixed 300 ms cut them off every time. The cost lands only on the digit question, which waits 1022 ms at the median.
 
-The budget's 300 ms placeholder looks hopeful next to this. In the lab's full loop (200 generated calls, SNR mixed over 10, 20 and 30 dB, stage stubs drawn around the placeholders above), a 400 ms window gives a median wait of 520 ms and a median of 855 ms from end of speech to first audio, with a p95 of 1431 ms. Halving the window brings the median to 652 ms, and first audio within 800 ms goes from 29.0% of calls to 80.0%. But the agent talks over the caller on 31.0% of calls instead of 8.5%, and it makes 2.04 language model calls per call instead of 1.22, because every false endpoint starts a reply that then gets cancelled. A shorter window buys speed with those two.
+The budget's 300 ms placeholder looks hopeful next to this. In the lab's full loop (200 generated calls, SNR mixed over 10, 20 and 30 dB, stage stubs drawn around the placeholders above), a 400 ms window gives a median wait of 540 ms and a median of 876 ms from end of speech to first audio, with a p95 of 1451 ms. Halving the window brings the median to 675 ms, and first audio within 800 ms goes from 19.5% of calls to 74.5%. But the agent talks over the caller on 24.5% of calls instead of 8.0%, and it makes 1.90 language model calls per call instead of 1.20, because every false endpoint starts a reply that then gets cancelled. On one more call (0.5%), the only reply began before the caller had finished. A shorter window buys its speed with those costs.
 
-Energy has limits. It fires on coughs at every SNR in that test, and at 0 dB the detector with hangover misses 71.1% of speech frames. A trained VAD is the usual next step, and [the real-time agents note](../../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md#streaming-voice-perception-replacing-vad--asr) looks at replacing silence detection altogether. Test on real audio as well. An earlier floor tracker in this lab passed everything on generated audio, then stuck at the digital silence that opens a real clip and stayed on for 99% of its frames.
+Energy has limits. It fires on coughs at every SNR in that test, and at 0 dB the detector with hangover misses 65.7% of speech frames. A trained VAD is the usual next step, and [the real-time agents note](../../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md#streaming-voice-perception-replacing-vad--asr) looks at replacing silence detection altogether. Test on real audio as well. An earlier floor tracker in this lab passed everything on generated audio, then stuck at the digital silence that opens a real clip and stayed on for 99% of its frames.
 
 ## Interruption is a state machine
 
@@ -214,14 +214,14 @@ Two things sit outside that class. The first is deciding that a sound is an inte
 
 The second is what cancellation reaches. In an asyncio loop, one reply can be a task group holding the LLM, TTS and playback tasks, so a barge-in cancels the group, and generation stops along with the audio. A tool call isn't part of the reply. Cancelling your side of a request doesn't undo what the server has already done, so a tool belongs to the call and outlives the turn that started it. The lab replays this with a refund in flight (40 generated calls, the tool takes an assumed 3 to 6 s, the money moves at 40% of that, and the LLM stub retries if history shows no refund):
 
-| Version | Tokens generated after barge-in | Tokens in history the caller never heard | Refunds per call | Calls that re-issue it |
-|---|---|---|---|---|
-| Mute the speaker only | 20.5 | 33.9 | 1.00 | 0% |
-| Cancel everything | 0.0 | 0.0 | 2.10 | 100% |
-| Cancel everything, tool has an idempotency key | 0.0 | 0.0 | 1.00 | 100% |
-| Cancel the turn, tool survives | 0.0 | 0.0 | 1.00 | 0% |
+| Version | Tokens generated after barge-in | Tokens in history the caller never heard | Refunds per call | Calls that re-issue it | Calls where the caller heard the outcome |
+|---|---|---|---|---|---|
+| Mute the speaker only | 21.1 | 34.5 | 1.00 | 0% | 92% |
+| Cancel everything | 0.0 | 0.0 | 2.12 | 100% | 95% |
+| Cancel everything, tool has an idempotency key | 0.0 | 0.0 | 1.00 | 100% | 100% |
+| Cancel the turn, tool survives | 0.0 | 0.0 | 1.00 | 0% | 100% |
 
-All four stop the audio at the same median, 215 ms after the caller starts, so that number can't tell them apart. Keep the key anyway, as [the tool design note](../../03-harness-engineering/notes/03-tool-design.md#write-operation-safety) says, because a line can drop and a retry can come from anywhere. And keep the loop itself free. In one wall-clock run of 8 calls on one loop, an LLM stub that blocked the loop instead of awaiting moved the median first audio from 878 ms to 2142 ms and left a microphone frame 820 ms late at worst. Those two numbers vary by machine.
+All four stop the audio at the same median, 215 ms after the caller starts, so that number can't tell them apart. The last column counts a caller as told only when the whole outcome sentence played. An agent that commits only what was heard can see a cut-off outcome and say it again. Muting can't, because its history says the sentence was spoken. Keep the key anyway, as [the tool design note](../../03-harness-engineering/notes/03-tool-design.md#write-operation-safety) says, because a line can drop and a retry can come from anywhere. And keep the loop itself free. In one wall-clock run of 8 calls on one loop, an LLM stub that blocked the loop instead of awaiting moved the median first audio from 898 ms to 2165 ms and left a microphone frame 831 ms late at worst. Those two numbers vary by machine.
 
 ## Measuring recognition honestly
 
@@ -299,7 +299,7 @@ If something downstream reads the transcript, such as a model that scores the ca
 2. Stop speaking, but don't discard the tool's outcome. The action may have happened, so record the tool result in history and tell the caller the true state on the next turn. Consequential actions should normally need confirmation before this point.
 3. Per-sentence WERs are 2% and 20%, averaging to 11%, while the corpus WER is `2/55`, about 3.6%. Averaging over-weights short sentences, so divide total errors by total reference words across the corpus.
 4. Independent stages rarely peak in the same turn: with our assumed spread the stage p95s add up to 940 ms while the turn's p95 is about 733 ms. If a shared slow spell moves every stage together, the turn's p95 is about 945 ms, so don't count on the gap. The naive version keeps listening with an empty history, so the next reply knows nothing about a refund that went through. For billing, take engine B: its corpus WER is worse (0.051 against 0.035), but it recalls critical terms at 0.98 against 0.82.
-5. Going from 400 ms to 200 ms moved median first audio from 855 ms to 652 ms and first audio within 800 ms from 29.0% to 80.0%. It raised calls where the agent talked over the caller from 8.5% to 31.0%, and language model calls from 1.22 to 2.04 per call. "Cancel everything" cancels the client, but the refund has usually gone through on the server, and nothing in history says so, so the model tries again: 2.10 refunds per call. A key holds that to 1.00, yet the agent still sent the request again in 100% of calls, because it lost track of the first one. Only the version where the tool survives the turn gets 1.00 refunds and 0% re-issued.
+5. Going from 400 ms to 200 ms moved median first audio from 876 ms to 675 ms and first audio within 800 ms from 19.5% to 74.5%. It raised calls where the agent talked over the caller from 8.0% to 24.5%, and language model calls from 1.20 to 1.90 per call, and on 0.5% of calls the only reply began before the caller finished. "Cancel everything" cancels the client, but the refund has usually gone through on the server, and nothing in history says so, so the model tries again: 2.12 refunds per call. A key holds that to 1.00, yet the agent still sent the request again in 100% of calls, because it lost track of the first one. Of the versions that cancel the turn, only the one where the tool survives gets 1.00 refunds and 0% re-issued.
 
 </details>
 

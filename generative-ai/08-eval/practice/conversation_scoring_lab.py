@@ -253,7 +253,7 @@ def agreement_section(n=400):
     print("   Raw agreement prefers the lenient scorer to the careful one, and kappa and TNR reverse that. The twins agree with")
     print("   each other because they share a blind spot, which says nothing about whether they agree with a person.")
     assert results["lenient scorer vs human"]["raw"] > results["careful scorer vs human"]["raw"]
-    assert results["lenient scorer vs human"]["kappa"] < results["careful scorer vs human"]["kappa"]
+    assert results["lenient scorer vs human"]["kappa"] < results["careful scorer vs human"]["kappa"], f"SEED {SEED}'s draw of 400 rows tripped this: the two kappas' intervals overlap, so their order isn't an invariant"
     assert results["careful scorer vs human"]["tnr"] > results["lenient scorer vs human"]["tnr"] + .3
     assert results["twin A vs twin B"]["kappa"] > results["twin A vs human"]["kappa"]
 
@@ -462,7 +462,7 @@ def calibration_section(seeds=200, test=500, spread=1.0):
     drawn, planted, control = summary.values()
     assert drawn["weighted"]["shrunk"] < drawn["weighted"]["shared"]
     assert drawn["smalls"]["shrunk"] < drawn["smalls"]["alone"]  # the case for pooling is the small verticals
-    assert drawn["smalls"]["shrunk"] < drawn["smalls"]["fallback"] and control["smalls"]["shrunk"] < control["smalls"]["fallback"] / 5
+    assert drawn["smalls"]["shrunk"] < drawn["smalls"]["fallback"] and control["smalls"]["shrunk"] < control["smalls"]["fallback"] / 5, f"SEED {SEED}'s draw of offsets tripped this if the control half holds: with few labels, shrunk and fallback can swap on the drawn offsets"
     assert control["weighted"]["shrunk"] < control["weighted"]["alone"]  # no real differences: alone pays for noise, pooling doesn't
     print("\n   Regret is extra wrong verdicts per conversation above using the true probability. We planted a pure shift, which is")
     print("   what one offset can fix. A vertical whose score ranks differently needs its own check, and this lab doesn't run one.")

@@ -404,7 +404,7 @@ Instead of learning embeddings from 5,000 or 25,000 reviews, start from an encod
 ![Accuracy of IMDb classifiers built on different TF-Hub sentence encoders, frozen vs fine-tuned](../../sources/images/sarkar-universal-embeddings-classification.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), ch. 10, from the companion notebooks*
 
-The modern equivalent needs no TF 1.x estimator: encode, then fit a linear head. It uses Sentence-BERT encoders ([arXiv:1908.10084](https://arxiv.org/abs/1908.10084) (Reimers and Gurevych, EMNLP 2019)). This block runs a small encoder and a larger one against the TF-IDF baseline as the labels grow. It takes a few minutes on a laptop GPU and longer on CPU:
+The modern equivalent needs no TF 1.x estimator: encode, then fit a linear head. It uses encoders from `sentence-transformers`, the library released with Sentence-BERT ([arXiv:1908.10084](https://arxiv.org/abs/1908.10084) (Reimers and Gurevych, EMNLP 2019)); the two models here are newer than the paper. That paper finds frozen vectors with a logistic-regression head competitive across seven tasks (87.69 average for its large NLI model, 84.94 for averaged BERT), but its authors say transfer is not the purpose of these embeddings and prefer full fine-tuning for a new task, which the next block tries. This block runs a small encoder and a larger one against the TF-IDF baseline as the labels grow. It takes a few minutes on a laptop GPU and longer on CPU:
 
 ```python
 from sentence_transformers import SentenceTransformer

@@ -206,7 +206,7 @@ print(knn.score(X_test, y_test))           # 4. score: accuracy for classifiers,
 0.9736842105263158
 ```
 
-That uniformity is a design decision. The scikit-learn paper names it as a goal of the library: a consistent, simple interface over many algorithms, written for non-specialists ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011).
+That uniformity is a design decision. The scikit-learn paper names it as a goal of the library: "API consistency" over many algorithms, for non-specialists, by code convention rather than inheritance, so that anything with a `fit` method can join in ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011). Consistency is a design claim there: the paper reports no usability study, and its one benchmark table measures time on a single dataset.
 
 Before fitting, **look at the data**. A scatter matrix (`pd.plotting.scatter_matrix(df, c=y_train)`) shows whether the classes separate on the raw features at all, and catches unit errors and outliers before they cost you a day.
 

@@ -740,7 +740,7 @@ def latency_section(n_turns, silence_ms, hangover_ms, confirm_ms):
             Config("streaming, shorter window", **{**common, "silence_ms": max(FRAME_MS, silence_ms // 2)})]
     print(f"4. End of speech to first audio, measured on the running loop. {n_turns} generated calls, SNR mixed over {sorted(set(mix))} dB")
     print(f"   Real samples and a real VAD set the wait; the note's placeholders drive the stubs, sigma {SPREAD}, paired draws per call")
-    print(f"   {'':32}{'window':>9}{'wait p50':>10}{'p50':>8}{'p95':>8}{'p99':>8}{f'<= {TARGET_MS} ms':>11}{'no reply':>10}{'began early':>13}{'talked over':>13}{'LLM calls/turn':>16}")
+    print(f"   {'':32}{'window':>9}{'wait p50':>10}{'p50':>8}{'p95':>8}{'p99':>8}{f'<= {TARGET_MS} ms':>11}{'no reply':>10}{'began early':>13}{'talked over':>13}{'LLM calls/call':>16}")
     show = lambda x: "never" if math.isinf(x) else f"{x:.0f}"
     out = {}
     for cfg in arms:
@@ -830,6 +830,7 @@ def barge_tool_section(n_trials, hangover_ms, confirm_ms):
         results[cfg.name] = statistics.mean(refunds), statistics.mean(unheard)
         print(f"   {cfg.name:31}{median_of(stop):>12.0f} ms{statistics.mean(tokens):>14.1f}{statistics.mean(unheard):>18.1f}"
               f"{statistics.mean(refunds):>9.2f}{statistics.mean(retried):>11.0%}{statistics.mean(told):>13.0%}")
+    print("   Caller told means the whole outcome sentence played. Muting has no retry: its history says the sentence was spoken.")
     claim(results["cancel everything"][0] > 1.5, "cancelling the client doesn't undo the server, so a retry should pay twice")
     claim(results["cancel everything, keyed tool"][0] == 1, "the key should hold a retry to one refund")
     claim(results["mute the speaker only"][1] > 0, "muting should leave words in history that the caller never heard")

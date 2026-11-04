@@ -113,7 +113,9 @@ for [chapter 3](notes/03-multimodal-rag.md), [`practice/voice_turn_lab.py`](prac
 [chapter 4](notes/04-speech-and-voice-agents.md) and [`practice/pair_eval_lab.py`](practice/pair_eval_lab.py) for
 [chapter 7](notes/07-evaluating-multimodal-systems.md). [`practice/voice_stream_lab.py`](practice/voice_stream_lab.py) takes
 chapter 4 down to audio samples: VAD, endpointing and barge-in by task cancellation on generated waveforms, in under a
-minute, with an optional `--asr` flag that downloads a small speech model.
+minute, with an optional `--asr` flag that downloads a small speech model. [`practice/drawing_extraction_lab.py`](practice/drawing_extraction_lab.py)
+takes chapter 2 to generated engineering drawings: whole-page OCR against crop-first, per-field scores, checks and review
+routing, in five to eight minutes on a laptop CPU.
 
 ---
 

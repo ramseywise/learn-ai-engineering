@@ -8,6 +8,7 @@ sources:
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://adk.dev/agents/workflow-agents/loop-agents/
   - https://github.com/karpathy/autoresearch
+  - https://arxiv.org/abs/2304.05128
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -80,6 +81,8 @@ Masood's rule: **anchor on deterministic checks** (tests, compilers, linters, ty
 | Deterministic | `pytest`, `tsc`, link checker, "diff touches only `src/auth/`" | Only by editing the check, so protect it |
 | Rubric + separate model | "Does the PR description explain *why*?" graded against written criteria | Somewhat. Needs a fixed rubric and a grader that isn't the maker |
 | Human | Taste, architecture, "should this exist?" | No, but it's slow and doesn't scale |
+
+Self-Debug ([arXiv:2304.05128](https://arxiv.org/abs/2304.05128) (Chen et al., ICLR 2024)) measures how much the floor is worth to a model fixing its own code, using few-shot prompts and no training. **Most of the gain comes from the executed test, not the self-critique.** When the model saw failing unit-test results and explained its own code line by line, C++→Python translation accuracy on TransCoder rose from 80.4% to 92.5% for Codex and from 77.3% to 90.4% for GPT-4. Those runs used greedy decoding and allowed up to 10 turns, and most of the gain came in the first turn (shown for Codex). With execution removed and the model judging its own answer, gains fell to between −4 and +5 points. Codex on MBPP dropped from 61.4% to 57.6% when it had to judge its own code without running the tests (simple feedback), and the authors found GPT-3.5 and GPT-4 "overconfident in their own initial predictions". On Spider text-to-SQL, where there are no tests to run, simple self-judged feedback changed nothing for Codex (81.3% → 81.3%). A line-by-line explanation of its own SQL lifted it to 84.1%, and execution traces gave consistent small gains, so self-feedback is not worthless, only much weaker. The loop is also cheaper than sampling more: on Spider with Codex, debugging one greedy answer matched a 16-sample majority vote. That comparison counts candidate programs, not tokens. These results come from single runs on short-function benchmarks with 2023 models.
 
 If the end state can only be described as "looks right," you have no scorekeeper yet. Stay at autonomy rung 1 ([note 07](07-autonomy-ladder.md)) until you can write one.
 

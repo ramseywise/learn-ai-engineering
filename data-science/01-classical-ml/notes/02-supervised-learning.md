@@ -221,7 +221,7 @@ A linear model in a richer feature space. Adding $x_1^2$ as a feature turns a cu
 | Polynomial | All products of features up to a degree |
 | RBF (Gaussian) | Infinite-dimensional; similarity decays with distance: $k(x, x') = \exp(-\gamma \lVert x - x' \rVert^2)$ |
 
-Only the training points on the margin, the **support vectors**, define the boundary. The soft-margin formulation, where `C` prices each margin violation so that non-separable data still has a solution, is the contribution of the original paper, which combined ten degree-4 polynomial classifiers to reach 1.1% test error on the NIST digit benchmark ([doi:10.1007/bf00994018](https://doi.org/10.1007/bf00994018), Cortes and Vapnik, Machine Learning 1995).
+Only the training points on the margin, the **support vectors**, define the boundary. The soft-margin formulation, where `C` prices each margin violation so that non-separable data still has a solution, is the contribution of the original paper, which combined ten degree-4 polynomial classifiers to reach 1.1% test error on the NIST digit benchmark, 60,000 training images and 10,000 test images with no pre-processing ([doi:10.1007/bf00994018](https://doi.org/10.1007/bf00994018), Cortes and Vapnik, Machine Learning 1995). That ties the purpose-built LeNet4 rather than beating it, while using nothing about image geometry. On the smaller USPS digits, polynomial degrees 2 to 7 all reach 4.2 to 4.7% error against 12.0% for linear, while the implicit feature space grows from about 33,000 to about $10^{16}$ dimensions. The authors read that as no over-fitting, from one dataset with no error bars. The paper runs polynomial kernels only, penalises squared slack in its experiments rather than the linear penalty `SVC` uses, and reports no value of `C`, so the tuning advice below doesn't rest on it.
 
 ```python
 from sklearn.svm import SVC
@@ -347,7 +347,7 @@ A probability is only as good as the model's **calibration**: an overfit model r
 | Kernel SVM | `C`, `gamma` | Yes | Medium data, similar-scale features | Large n |
 | MLP | layers, `alpha` | Yes | Large data, time to tune | Small tabular data |
 
-M&G's advice when faced with a new dataset: start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks. All of them sit behind the same API, which is the reason a sweep across families costs a few lines ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011).
+M&G's advice when faced with a new dataset: start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks. All of them sit behind the same API, which is the reason a sweep across families costs a few lines. The scikit-learn paper makes that its case, a "consistent, task-oriented interface" that enables "easy comparison of methods" ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011), though it asserts this rather than measuring it.
 
 ---
 

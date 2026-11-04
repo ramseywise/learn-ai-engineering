@@ -4,11 +4,11 @@
 # ///
 """Card fraud as a sequence problem, for notes/05: aggregates against a GRU, leaks, late labels, cost and drift.
 
-Run from this folder (4 to 12 minutes on a busy laptop CPU, downloads nothing, needs no key):
+Run from this folder (3 to 6 minutes on a laptop CPU, depending on what else is running, downloads nothing, needs no key):
     uv run transaction_sequence_lab.py
     uv run transaction_sequence_lab.py --delay-median 60      # chargebacks take longer
     uv run transaction_sequence_lab.py --drift none           # the pattern never changes
-    uv run transaction_sequence_lab.py --seeds 1              # skip the repeat on other generated datasets
+    uv run transaction_sequence_lab.py --seeds 1              # skip the repeat on other generated datasets, and run faster
 
 What is generated: every customer, merchant, charge and label comes from a seeded generator. No real card data is
 involved. What we planted: fraud is a few small online test charges followed quickly by a large online charge, with no
@@ -371,6 +371,14 @@ def cost_per_1000(y, amount, block):
     return float(event_costs(y, amount, block).mean() * 1000)
 
 
+def cost_parts(y, amount, block):
+    """The same cost split in two: fraud losses and friction on good charges, both per 1,000 scored charges."""
+    loss = (LOSS_SHARE * amount + CB_FEE)[(y == 1) & ~block].sum() / len(y) * 1000
+    friction = FP_COST * ((y == 0) & block).sum() / len(y) * 1000
+    assert abs(loss + friction - cost_per_1000(y, amount, block)) < 1e-6
+    return float(loss), float(friction)
+
+
 def psi(reference, current, bins=10):
     edges = np.unique(np.quantile(reference, np.linspace(0, 1, bins + 1)))
     if len(edges) < 3:
@@ -398,12 +406,28 @@ def checks(ev, x, seq, meta, delay_median):
     assert (known_labels(fraud, day, delay, 240) <= fraud).all(), "a label cannot be known without being true"
     assert (known_labels(fraud, day, delay, 10 ** 6) == fraud).all(), "every chargeback eventually arrives here"
     assert (seq["amount"][:, -1] > 0).all(), "left padding must leave the scored charge in the last step"
-    # No look-ahead: dropping every later charge must not change a customer's features.
-    cust = int(meta.customer.iloc[len(meta) // 2])
-    g = ev[ev.customer == cust]
-    cut = g.index[len(g) // 2]
-    full, short = customer_features(g), customer_features(g.loc[:cut])
-    assert len(short) and full.loc[short.index].equals(short[full.columns]), "features looked ahead"
+    assert (seq["amount"][:, -1] == np.digitize(meta.amount.to_numpy(), AMOUNT_EDGES) + 1).all(), "the sequence must end on the scored charge"
+    customers = meta.customer.to_numpy()
+    for cust in customers[np.linspace(0, len(customers) - 1, 8).astype(int)]:
+        g = ev[ev.customer == cust]
+        full = customer_features(g)
+        t, a, onl = g.t.to_numpy(), g.amount.to_numpy(), g.online.to_numpy()
+        for cut in full.index[np.linspace(0, len(full) - 1, 3).astype(int)]:
+            # No look-ahead: end the history right after a scored charge, and nothing about that charge may change.
+            short = customer_features(g.loc[:cut])
+            assert full.loc[short.index].equals(short[full.columns]), "features looked ahead"
+            # Windows hold only earlier charges: recount them the slow way, leaving out the scored charge itself.
+            i = g.index.get_loc(cut)
+            row = full.loc[cut]
+            for name, minutes in {**WINDOWS, "30d": 30 * MINUTES}.items():
+                earlier = (t >= t[i] - minutes) & (np.arange(len(t)) < i)
+                assert row[f"n_{name}"] == earlier.sum(), "a window counted the current charge"
+                assert abs(row[f"sum_{name}"] - a[earlier].sum()) < 1e-6, "a window summed the current charge"
+                if name in WINDOWS:
+                    assert row[f"present_{name}"] == (onl[earlier] == 0).sum(), "a window counted the current charge as present"
+                else:
+                    assert row.max_30d == (a[earlier].max() if earlier.any() else 0.0), "max_30d read the current charge"
+            assert i == 0 or row.gap_1 == t[i] - t[i - 1], "gap_1 must reach back to the charge before"
     assert abs(pr_auc(fraud, np.random.default_rng(0).random(len(fraud))) - fraud.mean()) < 5 * fraud.mean()
 
 
@@ -413,13 +437,13 @@ def choose_boost(x, y, tr, va, seed):
     return BOOST_GRID[int(np.argmax(scores))]
 
 
-def compare(ev, x, meta, seq, seed, params):
+def compare(ev, x, meta, seq, seed, params, epochs=8):
     """Train on days before TRAIN_END with final labels, tune on the next window, test on the one after."""
     y, d = meta.fraud.to_numpy(), meta.day.to_numpy()
     tr, va, te = d < TRAIN_END, (d >= TRAIN_END) & (d < VAL_END), (d >= VAL_END) & (d < TEST_END)
     models = {"totals": TOTALS, "velocity": VELOCITY, "oracle": ORACLE}
     scorers = {n: fit_boost(x[tr], y[tr], c, params, seed=seed) for n, c in models.items()}
-    gru = fit_gru(seq, y, tr, va, seed=seed)
+    gru = fit_gru(seq, y, tr, va, seed=seed, epochs=epochs)
     return (tr, va, te), scorers, gru
 
 
@@ -431,7 +455,7 @@ def main():
     ap_.add_argument("--drift", choices=["slow", "none"], default="slow")
     ap_.add_argument("--epochs", type=int, default=8)
     args = ap_.parse_args()
-    torch.set_num_threads(4)
+    torch.set_num_threads(1)                    # on these small batches, one thread beat four on a busy laptop
     start = time.time()
 
     # %% 0. The data
@@ -447,7 +471,7 @@ def main():
 
     tr, va = d < TRAIN_END, (d >= TRAIN_END) & (d < VAL_END)
     params = choose_boost(x, y, tr, va, args.seed)
-    (tr, va, te), scorers, gru = compare(ev, x, meta, seq, args.seed, params)
+    (tr, va, te), scorers, gru = compare(ev, x, meta, seq, args.seed, params, args.epochs)
     p_val = {n: s(x[va]) for n, s in scorers.items()} | {"gru": gru(va)}
     p_te = {n: s(x[te]) for n, s in scorers.items()} | {"gru": gru(te)}
     yte, yva = y[te], y[va]
@@ -492,7 +516,7 @@ def main():
             ev2 = make_events(s, args.drift, args.delay_median)
             x2, meta2 = build_table(ev2)
             seq2 = build_sequences(ev2, x2.index.to_numpy())
-            (_, _, te2), scorers2, gru2 = compare(ev2, x2, meta2, seq2, s, params)
+            (_, _, te2), scorers2, gru2 = compare(ev2, x2, meta2, seq2, s, params, args.epochs)
             y2 = meta2.fraud.to_numpy()[te2]
             rows.append({"data seed": s, **{n: pr_auc(y2, sc(x2[te2])) for n, sc in scorers2.items()}, "gru": pr_auc(y2, gru2(te2))})
         print("   the same comparison on other generated datasets, PR-AUC")
@@ -501,7 +525,7 @@ def main():
 
     # %% 3. A random split against a time split
     print("3. Random split against time split, days before", VAL_END, "(merchant fraud rate and merchant embeddings allowed)")
-    print("   Fraud moves between a few merchants each month, so merchant history is a strong signal inside a month and stale after it.")
+    print("   The generator moves fraud between a few merchants each month, so merchant history is a strong signal inside a month and stale after it.")
     pool = np.flatnonzero(d < VAL_END)
     rng = np.random.default_rng(args.seed)
     shuffled_pool = rng.permutation(pool)
@@ -526,7 +550,12 @@ def main():
     for name, a, b, c in table:
         print(f"   {name:36s} {a:15.3f} {b:23.3f} {c:28.3f}")
     print(f"   without any merchant signal, velocity aggregates scored {pr_auc(yte, p_te['velocity']):.3f} and the GRU {pr_auc(yte, p_te['gru']):.3f} on those later days")
-    print("   The random holdout makes the merchant signal look safe. On later days both models do better without it.\n")
+    plain = (pr_auc(yte, p_te["velocity"]), pr_auc(yte, p_te["gru"]))
+    if all(a > max(b, c) for _, a, b, c in table) and all(max(b, c) < q for (_, _, b, c), q in zip(table, plain)):
+        print("   The random holdout makes the merchant signal look safe. On later days both models do better without it.\n")
+    else:
+        print("   Warning: the default run's reading (the holdout flatters the merchant signal, and both models do better without it\n"
+              "   on later days) doesn't hold in full on these settings. Read the table instead.\n")
 
     # %% 4. Late labels
     print(f"4. Labels arrive late: median {args.delay_median:.0f} days to a chargeback, standing on day {VAL_END}")
@@ -551,17 +580,22 @@ def main():
         vmask = np.zeros(len(d), bool)
         vmask[cut_val] = True
         g = fit_gru(seq, labels_used, mask & ~vmask, vmask, seed=args.seed, epochs=args.epochs)
-        delay_rows.append((name, int(labels_used[mask].sum()), pr_auc(yte, boost(x[te])), pr_auc(yte, g(te))))
-    print(f"   {'training labels':44s} {'frauds in train':>16s} {'boosting':>9s} {'GRU':>7s}   PR-AUC on test days, judged on final labels")
-    for name, n, a, b in delay_rows:
-        print(f"   {name:44s} {n:16d} {a:9.3f} {b:7.3f}")
+        delay_rows.append((name, int(labels_used[mask].sum()), int(labels_used[mask & ~vmask].sum()), pr_auc(yte, boost(x[te])), pr_auc(yte, g(te))))
+    print("   PR-AUC on test days, judged on final labels. The GRU keeps the last fifth of its days to checkpoint on, so it trains on fewer frauds.")
+    print(f"   {'training labels':44s} {'frauds in train, boosting':>26s} {'GRU':>6s} {'PR-AUC, boosting':>17s} {'GRU':>7s}")
+    for name, n, n_gru, a, b in delay_rows:
+        print(f"   {name:44s} {n:26d} {n_gru:6d} {a:17.3f} {b:7.3f}")
     as_of = TEST_END
     s_seen = known_labels(y[te], d[te], delay[te], as_of)
     pv = p_te["velocity"]
     t_blocks = pv >= np.quantile(pv, .99)
     print(f"   Judging the test days as of day {as_of}, with the labels known by then:")
-    print(f"     frauds visible {int(s_seen.sum())} of {int(yte.sum())};  PR-AUC looks like {pr_auc(s_seen, pv):.3f}, truly {pr_auc(yte, pv):.3f};  "
-          f"fraud losses look like {cost_per_1000(s_seen, amount[te], t_blocks):,.0f} per 1,000, truly {cost_per_1000(yte, amount[te], t_blocks):,.0f}\n")
+    print(f"     frauds visible {int(s_seen.sum())} of {int(yte.sum())};  PR-AUC looks like {pr_auc(s_seen, pv):.3f}, truly {pr_auc(yte, pv):.3f}")
+    loss_seen, friction_seen = cost_parts(s_seen, amount[te], t_blocks)
+    loss_true, friction_true = cost_parts(yte, amount[te], t_blocks)
+    print("     blocking the top 1% of scores, cost per 1,000 charges:")
+    print(f"       as seen: fraud losses {loss_seen:.1f} + friction {friction_seen:.1f} = {loss_seen + friction_seen:.1f}")
+    print(f"       truly:   fraud losses {loss_true:.1f} + friction {friction_true:.1f} = {loss_true + friction_true:.1f}\n")
 
     # %% 5. A threshold from prices
     print(f"5. A threshold from prices. Assumed: blocking a good charge costs {FP_COST:.0f}; a missed fraud costs {LOSS_SHARE:.0%} of its amount plus {CB_FEE:.0f}")
@@ -625,20 +659,23 @@ def main():
                              (f"retrain on labels older than {MATURITY_DAYS} days", d < DRIFT_END - MATURITY_DAYS, seen_now),
                              ("retrain on everything reported so far", d < DRIFT_END, seen_now)):
         if mask is None:
-            rows.append((name, int(y[tr].sum()), 0, pr_auc(yaf, scorers["velocity"](x[after])), pr_auc(yaf, gru(after))))
+            rows.append((name, int(y[tr].sum()), 0, int(y[tr].sum()), 0, pr_auc(yaf, scorers["velocity"](x[after])), pr_auc(yaf, gru(after))))
             continue
         boost = fit_boost(x[mask], used[mask], VELOCITY, params, seed=args.seed)
-        window = np.flatnonzero(mask)
-        cut_val = window[d[window] >= np.quantile(d[window], .8)]
+        # Hold out at random, as section 3 does. The new pattern only exists in the latest days, so keeping the last
+        # days for checkpointing would keep every one of its frauds out of the GRU's training.
+        window = np.random.default_rng(args.seed).permutation(np.flatnonzero(mask))
         vmask = np.zeros(len(d), bool)
-        vmask[cut_val] = True
+        vmask[window[:len(window) // 10]] = True
         g = fit_gru(seq, used, mask & ~vmask, vmask, seed=args.seed, epochs=args.epochs)
-        new_pattern = int(used[mask & (d >= TEST_END)].sum())
-        rows.append((name, int(used[mask].sum()), new_pattern, pr_auc(yaf, boost(x[after])), pr_auc(yaf, g(after))))
+        since = d >= TEST_END
+        rows.append((name, int(used[mask].sum()), int(used[mask & since].sum()), int(used[mask & ~vmask].sum()),
+                     int(used[mask & ~vmask & since].sum()), pr_auc(yaf, boost(x[after])), pr_auc(yaf, g(after))))
     print(f"   Retraining on day {DRIFT_END}, PR-AUC on days {DRIFT_END} to {DAYS}, judged on final labels:")
-    print(f"     {'':42s} {'frauds in train':>16s} {'of the new pattern':>19s} {'boosting':>9s} {'GRU':>7s}")
-    for name, n, k, a, b in rows:
-        print(f"     {name:42s} {n:16d} {k:19d} {a:9.3f} {b:7.3f}")
+    print(f"     {'':42s} {'boosting: frauds':>16s} {'new pattern':>12s} {'PR-AUC':>7s} {'GRU: frauds':>12s} {'new pattern':>12s} {'PR-AUC':>7s}")
+    for name, n, k, n_gru, k_gru, a, b in rows:
+        k, k_gru = (k, k_gru) if args.drift == "slow" else ("n/a", "n/a")   # with --drift none there's no new pattern to count
+        print(f"     {name:42s} {n:16d} {k:>12} {a:7.3f} {n_gru:12d} {k_gru:>12} {b:7.3f}")
 
     print(f"\nRuntime {time.time() - start:.0f} s. Results describe this generated data, these prices and these seeds, not fraud in general.")
 

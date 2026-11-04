@@ -13,11 +13,14 @@ mean it is untested: fields are left out where the mapping is unclear.
 | [`ai-engineering/03-harness-engineering`](../ai-engineering/03-harness-engineering/README.md) | [system-design-round/agent-system](interviewing/rounds/system-design-round/examples/agent-system.md) | - |
 | [`ai-engineering/04-loop-engineering`](../ai-engineering/04-loop-engineering/README.md) | [system-design-round/agent-system](interviewing/rounds/system-design-round/examples/agent-system.md) | - |
 | [`ai-engineering/05-graph-engineering`](../ai-engineering/05-graph-engineering/README.md) | [system-design-round/agent-system](interviewing/rounds/system-design-round/examples/agent-system.md) | - |
+| [`ai-engineering/05-graph-engineering/notes/08-governance-and-production.md`](../ai-engineering/05-graph-engineering/notes/08-governance-and-production.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md`](../ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md) | [system-design-round/rag-system](interviewing/rounds/system-design-round/examples/rag-system.md) | - |
 | [`ai-engineering/07-inference-engineering`](../ai-engineering/07-inference-engineering/README.md) | [system-design-round/scaling](interviewing/rounds/system-design-round/examples/scaling.md) | - |
 | [`ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md`](../ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md) | [system-design-round](interviewing/rounds/system-design-round/README.md) | - |
 | [`ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md`](../ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
+| [`ai-engineering/08-multimodal-engineering/notes/04-speech-and-voice-agents.md`](../ai-engineering/08-multimodal-engineering/notes/04-speech-and-voice-agents.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`ai-engineering/09-safety-and-security`](../ai-engineering/09-safety-and-security/README.md) | [code-review-round/security](interviewing/rounds/code-review-round/examples/security.md) | - |
+| [`ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md`](../ai-engineering/09-safety-and-security/notes/07-compliance-and-regulation.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 
 ## data-analytics
 
@@ -48,7 +51,7 @@ mean it is untested: fields are left out where the mapping is unclear.
 | Unit | Rounds | Drills |
 |---|---|---|
 | [`data-science/01-classical-ml`](../data-science/01-classical-ml/README.md) | [case-study/churn-prediction-takehome](interviewing/rounds/case-study/examples/ml-track/churn-prediction-takehome.md), [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
-| [`data-science/01-classical-ml/notes/13-automate-review-or-reject.md`](../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
+| [`data-science/01-classical-ml/notes/13-automate-review-or-reject.md`](../data-science/01-classical-ml/notes/13-automate-review-or-reject.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md), [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`data-science/02-deep-learning`](../data-science/02-deep-learning/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 | [`data-science/03-nlp`](../data-science/03-nlp/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 | [`data-science/05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md`](../data-science/05-time-series-and-recommenders/notes/04-entity-matching-and-learning-to-rank.md) | [system-design-round/part-matching](interviewing/rounds/system-design-round/examples/part-matching.md) | - |
@@ -67,9 +70,12 @@ mean it is untested: fields are left out where the mapping is unclear.
 | [`generative-ai/05-RL`](../generative-ai/05-RL/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 | [`generative-ai/06-observability`](../generative-ai/06-observability/README.md) | [system-design-round/eval-harness](interviewing/rounds/system-design-round/examples/eval-harness.md) | - |
 | [`generative-ai/07-agentic-applications`](../generative-ai/07-agentic-applications/README.md) | [system-design-round/agent-system](interviewing/rounds/system-design-round/examples/agent-system.md) | - |
+| [`generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md`](../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md`](../generative-ai/07-agentic-applications/notes/07-scoping-an-ai-product.md) | [case-study](interviewing/rounds/case-study/README.md), [case-study/retail-support-automation](interviewing/rounds/case-study/examples/aie-track/retail-support-automation.md) | - |
 | [`generative-ai/08-eval`](../generative-ai/08-eval/README.md) | [system-design-round/eval-harness](interviewing/rounds/system-design-round/examples/eval-harness.md) | - |
+| [`generative-ai/08-eval/notes/04-graders.md`](../generative-ai/08-eval/notes/04-graders.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`generative-ai/08-eval/notes/13-case-study-support-agent.md`](../generative-ai/08-eval/notes/13-case-study-support-agent.md) | [case-study/retail-support-automation](interviewing/rounds/case-study/examples/aie-track/retail-support-automation.md) | - |
+| [`generative-ai/08-eval/notes/15-calibration-against-human-labels.md`](../generative-ai/08-eval/notes/15-calibration-against-human-labels.md) | [system-design-round/voice-agent](interviewing/rounds/system-design-round/examples/voice-agent.md) | - |
 | [`generative-ai/09-llms-from-scratch`](../generative-ai/09-llms-from-scratch/README.md) | [technical-questions](interviewing/rounds/technical-questions/README.md) | - |
 
 ## programming

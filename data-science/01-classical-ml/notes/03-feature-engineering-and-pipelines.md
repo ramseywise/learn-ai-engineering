@@ -5,6 +5,7 @@ sources:
   - ../practice/intro-to-ml-in-python/04-representing-data-feature-engineering.ipynb
   - ../practice/intro-to-ml-in-python/06-algorithm-chains-and-pipelines.ipynb
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
+  - https://arxiv.org/abs/1201.0490
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -349,7 +350,7 @@ The correct answer is that there is no signal, and a score below zero says so. S
 
 ## Pipelines
 
-A pipeline chains transformers and a final estimator into one estimator, so `fit`, `predict`, `score` and cross-validation treat the whole chain as one model.
+A pipeline chains transformers and a final estimator into one estimator, so `fit`, `predict`, `score` and cross-validation treat the whole chain as one model. The scikit-learn paper gives this two sentences: a `Pipeline` "behaves as a standard estimator", so `GridSearchCV` can tune all its steps ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011). It sells that as convenience and never mentions leakage. The case for pipelines in the section above is M&G's.
 
 ![Overview of the training and prediction process in a pipeline](../../sources/images/mueller-guido-pipeline.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/pipeline.png`*

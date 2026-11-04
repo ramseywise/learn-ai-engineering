@@ -2,7 +2,6 @@
 origin: synthesis  # was: own experiment plus papers and library documentation
 sources:
   - ../practice/boosting-comparison/compare_boosters.py
-  - https://doi.org/10.1145/2939672.2939785
   - https://arxiv.org/abs/1706.09516
   - https://arxiv.org/abs/2301.09627
   - https://papers.nips.cc/paper/6907-lightgbm-a-highly-efficient-gradient-boosting-decision-tree
@@ -49,13 +48,13 @@ Read it in this order:
 2. **Boosting beats the untuned forest by 0.03 AUC.** The forest is the fast bar to clear. Its log-loss of 0.40 is much further behind than its AUC, and log-loss punishes confident mistakes, so check [calibration](04-model-evaluation.md#calibration-is-a-08-really-80) before using its probabilities.
 3. **Speed varies by 30x.** The classic booster sorts every feature at every node, while the histogram libraries bin once. On a table this small it hardly matters. On 10M rows it decides what you can afford.
 
-The original benchmarks agree in shape. CatBoost's authors report their library ahead by 1 to 2% in log-loss on Adult against LightGBM and XGBoost (0.270 against +2.4% and +2.2%), but they tune each on their own split and preprocess all with ordered target statistics, and it is their own benchmark ([arXiv:1706.09516](https://arxiv.org/abs/1706.09516), Prokhorenkova et al., NeurIPS 2018). Our untuned run, which gives each library its own default handling of categories, does not show that lead: the gap is inside the noise.
+The original benchmarks agree in shape. CatBoost's authors report their library ahead of LightGBM and XGBoost on all nine of their datasets, by about 2% in log-loss on Adult (0.270 against +2.4% and +2.2%), though by their paired t-test the wins on Appetency, Churn and Upselling aren't significant. It is their own benchmark, on one 80/20 split per dataset, with every library tuned (on Epsilon, only the number of trees) and given ordered target statistics, and only CatBoost also had ordered boosting and feature combinations. Stripped to a setting close to classic boosting, CatBoost roughly ties the others, on average 0.2% better on zero-one loss and 0.2% worse on log-loss across eight datasets ([arXiv:1706.09516](https://arxiv.org/abs/1706.09516), Prokhorenkova et al., NeurIPS 2018). Our untuned run, which gives each library its own default handling of categories, does not show that lead: the gap is inside the noise.
 
 The choice between trees and neural networks is a separate question. Grinsztajn et al. benchmark both across 45 tabular datasets and find tree-based models remain state of the art on medium-sized data of about 10K samples, with a 20,000 compute-hour search for each learner ([arXiv:2207.08815](https://arxiv.org/abs/2207.08815), NeurIPS 2022).
 
 ## What every library shares
 
-They all fit trees one at a time to gradient statistics. Chen and Guestrin's formulation is the clearest statement of what happens at each node, and the others are variations on it ([arXiv:1603.02754](https://arxiv.org/abs/1603.02754), KDD 2016).
+They all fit trees one at a time to gradient statistics. Chen and Guestrin's formulation is the clearest statement of what happens at each node, and the others are variations on it ([arXiv:1603.02754](https://arxiv.org/abs/1603.02754), KDD 2016). The idea is older than the library: the authors credit the second-order method to Friedman, Hastie and Tibshirani (*Annals of Statistics* 2000) and call their own changes to the objective minor.
 
 For each row, take the first derivative $g_i$ and second derivative $h_i$ of the loss at the current prediction. With a penalty $\gamma T + \frac{1}{2}\lambda \lVert w \rVert^2$ on the number of leaves $T$ and on leaf weights $w$, the best weight for a leaf holding rows $I$, and the gain from splitting $I$ into $L$ and $R$, are
 
@@ -91,7 +90,7 @@ leaf 1 rows 472 by hand -1.1513 in the model -1.1513
 leaf 2 rows 528 by hand 1.1729 in the model 1.1729
 ```
 
-The same paper shows two other things worth knowing. Its sparsity-aware algorithm learns a default direction for missing values at each split, and runs more than 50 times faster than a naive version on the Allstate-10K dataset, because it only visits non-missing entries. And it gives a benchmark of one era's libraries: on 1M Higgs rows, 500 trees of depth 8, XGBoost took 0.68 seconds per tree where scikit-learn took 28.5, for AUCs of 0.8304 and 0.8302. Neither of those is a modern sklearn: that is the gap `HistGradientBoosting` closed.
+The same paper shows two other things worth knowing. Its sparsity-aware algorithm learns a default direction for missing values at each split, and runs more than 50 times faster than a naive version on the Allstate-10K dataset, which is sparse mainly from one-hot encoding, because it only visits non-missing entries. That figure is speed alone: the paper doesn't test default directions against imputation. And it gives a benchmark of one era's libraries: on 1M Higgs rows, 500 trees of depth 8, XGBoost took 0.68 seconds per tree where scikit-learn took 28.5, for AUCs of 0.8304 and 0.8302. The runs used all available cores and the paper's own table lists scikit-learn as not parallel, so threading may explain part of that gap, and with one run per system there is no spread to judge the AUCs against. Neither of those is a modern sklearn: that is the gap `HistGradientBoosting` closed.
 
 Boosting is also sequential by nature, not just by habit. Karbasi and Larsen show that cutting rounds below a threshold forces an exponential blow-up in training work ([arXiv:2301.09627](https://arxiv.org/abs/2301.09627), preprint). This is why every library here parallelises *inside* a tree, on split finding, and never across rounds.
 
@@ -188,7 +187,7 @@ ordered    train AUC 0.953  test AUC 0.925
 
 The greedy encoding has learned the leak. Training AUC rises, because the column now carries each row's own label, and test AUC falls from 0.927 to 0.811, because the model leans on a column that means nothing on new rows. The ordered version keeps test AUC near the no-ID baseline at 0.925.
 
-Their paper quantifies the same effect across libraries: with greedy target statistics, log-loss on Adult is 1.1% worse than with ordered ones, on Amazon it is 40% worse, and leave-one-out on Adult is 5.5% worse. Ordered statistics are the safe default. The same argument extends to the boosting itself: a model's residuals on its own training rows are biased ("prediction shift"), so CatBoost's ordered mode computes each row's gradient from a model that has not seen it. That is most useful on small data, where the plain mode on Adult loses 1.1% log-loss and on Internet 3.9%, and it costs about 1.7 times the training time of plain mode on Epsilon.
+Their paper quantifies the same effect inside CatBoost, changing only the target statistic: with greedy ones, log-loss on Adult is 1.1% worse than with ordered ones, on Amazon it is 40% worse, and leave-one-out on Adult is 5.5% worse. Ordered statistics are the safe default. The same argument extends to the boosting itself: a model's residuals on its own training rows are biased ("prediction shift", proved only for a toy case of squared loss on two binary features, where the bias falls as $1/(n-1)$), so CatBoost's ordered mode computes each row's gradient from a model that has not seen it. That is most useful on small data, where the plain mode on Adult loses 1.1% log-loss and on Internet 3.9%. It isn't a free win: plain has the lower log-loss on four of the nine datasets, including small Amazon (by 0.6%), and ordered mode costs about 1.7 times the training time of plain mode on Epsilon.
 
 The takeaway generalises past CatBoost. **Any encoding that reads the target must be fitted out of fold**, like every other fitted step in [feature engineering and pipelines](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist). scikit-learn's `TargetEncoder` does this with internal cross-fitting.
 
@@ -229,7 +228,7 @@ On this table the whole search moves AUC by under 0.003, about the size of the s
 | 2 | Rounds | Early stopping, patience 50 | Rounds and learning rate trade against each other, so never grid them jointly |
 | 3 | Tree size (`num_leaves`, `max_depth`) | 8 to 64 leaves, depth 3 to 8 | The main control of interaction order and overfitting |
 | 4 | Minimum leaf size (`min_child_samples`) | 5 to 200 | Stops small noisy leaves; matters on small data |
-| 5 | Row and column sampling | 0.5 to 1.0 | Decorrelates trees and speeds fitting. XGBoost's Higgs run at `colsample=0.5` trades a little AUC for a little speed |
+| 5 | Row and column sampling | 0.5 to 1.0 | Decorrelates trees and speeds fitting. In XGBoost's paper, `colsample=0.5` over 500 trees cut time per tree on both datasets, lowered AUC on Higgs-1M (0.8304 to 0.8245) and raised NDCG@10 on Yahoo LTRC (0.7892 to 0.7913), so the effect on quality depends on the data |
 | 6 | L1 and L2 on leaf weights | 0 to 10 on a log scale | Usually the smallest effect |
 
 Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don't report the score it finds as the final one: reserve a test set, or use [nested CV](04-model-evaluation.md#nested-cross-validation).
@@ -271,7 +270,7 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 | Question | Answer |
 |---|---|
 | Which boosting library is best? | On many tables they tie after sensible settings. Choose by speed, categorical handling and what is already in the stack |
-| What does XGBoost add to classic gradient boosting? | Second-order leaf weights, explicit regularisation, sparsity-aware splits, and a fast systems design |
+| What does XGBoost add to classic gradient boosting? | Explicit regularisation, sparsity-aware splits, a weighted quantile sketch and a fast systems design, on second-order leaf weights its authors credit to Friedman et al. (2000) |
 | What makes LightGBM fast? | Histograms, GOSS sampling, EFB bundling, leaf-wise growth |
 | Leaf-wise vs depth-wise growth? | Leaf-wise splits the best leaf anywhere, so it gets lower loss per leaf but risks deep overfit trees on small data |
 | What is a symmetric tree? | Every node at a level uses the same split. Fast to predict, and regularised by its shape |

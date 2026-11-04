@@ -9,6 +9,7 @@ sources:
   - ../practice/intro-to-nlp/tensorFlow/encoding-embeddings/
   - ../practice/intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb
   - https://arxiv.org/abs/1301.3781
+  - https://arxiv.org/abs/1908.10084
   - https://nlp.stanford.edu/projects/glove/
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 1"
   - https://aclanthology.org/Q18-1034/
@@ -298,7 +299,7 @@ Trained for one task, the vectors organise by that task. In the projector the IM
 | TF-IDF-weighted average | Weight each word vector by its TF-IDF | Often better: downweights common words |
 | Doc2Vec | Learn a paragraph vector alongside word vectors | Better than averaging; needs training |
 | Topic proportions | LDA/NMF ([topic models](03-topic-models-and-summarization.md)) | Interpretable, coarse |
-| Sentence encoders | Universal Sentence Encoder ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)), Sentence-BERT, modern embedding APIs | Current practice |
+| Sentence encoders | Universal Sentence Encoder ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)), [Sentence-BERT](https://arxiv.org/abs/1908.10084) (Reimers and Gurevych, EMNLP 2019), modern embedding APIs | Current practice |
 
 We can compare the first two with pretrained GloVe on the same genre task.
 
