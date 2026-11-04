@@ -28,7 +28,7 @@ parts:
         title: A reliable step is not a reliable agent
         statement: "A step that works 90% of the time, chained five times, lands near 60%."
         attribution: "Real tasks run far more than five steps once you count tool calls and parses"
-        takeaway: Reliability compounds downward across steps, so a demo that works once says little about a run of many steps.
+        takeaway: Five 90% steps land near 60%, so a demo that works once says little about a run of many steps.
         recall: What does chaining five 90%-reliable steps give you, and why does it matter for agents?
         source: notes/01-what-a-harness-is.md
         notes: >-
@@ -113,7 +113,7 @@ parts:
           - [Shipped broken code, "\"It can't code\"", No typecheck back-pressure in the loop]
           - [Rated its own work 9/10, "\"It's sycophantic\"", Generator and evaluator are the same agent]
         takeaway: Every agent failure should be restated as a missing piece of harness, because that restatement is a build task.
-        recall: How do you restate "the model is unsafe" as a harness problem?
+        recall: What should you restate every agent failure as, and why?
         source: notes/01-what-a-harness-is.md
         notes: >-
           The whole discipline fits in this table. Each right-hand cell is a thing you can go and build, and
@@ -133,7 +133,7 @@ parts:
             accent: "D4621A"
             body: How a bad action gets undone. The most often **missing** part.
         takeaway: A system missing any of acceptance, boundary, feedback or rollback is a prompt with tools attached, not a harness.
-        recall: What four parts must every harness have, and which is most often missing?
+        recall: What four parts must every harness have?
         source: notes/01-what-a-harness-is.md
         notes: >-
           Four questions. What counts as done? What can it touch? How does it learn it was wrong? How do we undo
@@ -153,7 +153,7 @@ parts:
           - "Keep `AGENTS.md` under about **60 lines**: a pilot's checklist, not a style guide"
           - Lines that cannot name their originating failure are speculative, so delete them
         takeaway: A harness grows by encoding each real failure as a check, so the same failure cannot happen again.
-        recall: What is the harness ratchet, and how do you tell a speculative AGENTS.md line?
+        recall: What is the harness ratchet?
         source: notes/01-what-a-harness-is.md
         notes: >-
           You don't design a harness up front. You grow it. Each slip gets a home in one subsystem and a
@@ -188,7 +188,7 @@ parts:
           - {title: Verification gate, accent: "D4621A", text: one binary pass/fail check}
           - {title: Structured traces, text: of every step}
         takeaway: Build capability first, then the constraints that make it survive scale, and productize last.
-        recall: What belongs in a minimum viable harness?
+        recall: In what order do you build up a harness?
         source: notes/02-harness-anatomy.md
         notes: >-
           If you start something on Monday, build these six. Note the single verification gate: one binary check
@@ -237,7 +237,7 @@ parts:
             - Needs examples **inside** the definition
           tag: What it cannot see does not exist
         takeaway: When a tool is misused, check the tool description before questioning the model.
-        recall: How does an agent's view of a tool differ from a programmer's view of an API?
+        recall: "A tool is misused: what do you check first?"
         source: notes/03-tool-design.md
         notes: >-
           An API has a reader who can look things up. An agent-computer interface has a reader who sees only a
@@ -256,7 +256,7 @@ parts:
           - [DO NOT USE FOR, "Hard negatives: misuse seen in practice"]
           - [EXAMPLES, Concrete invocations with realistic arguments]
         takeaway: "Adding one to five invocation examples moved tool-call accuracy from about 72% to 90% in Li's measurement."
-        recall: What five sections belong in a tool contract, and what did examples alone buy?
+        recall: What did adding invocation examples buy in Li's measurement?
         source: notes/03-tool-design.md
         notes: >-
           Most descriptions stop at the first row. The highlighted rows are the boundary between neighbouring
@@ -271,8 +271,8 @@ parts:
           - {title: "Idempotent?", accent: "D4621A", body: "If not, never retry it without an idempotency key."}
           - {title: "Observable?", body: "If not, it cannot be debugged, so add a trace."}
           - {title: "Parallel-safe?", body: "If not, serialize it in the orchestrator."}
-        takeaway: Gate only the irreversible, because gating reversible actions is the fastest way to make an agent useless.
-        recall: What four questions must a tool answer before it ships?
+        takeaway: Gate only the irreversible, because gating reversible actions is the most common way to make an agent useless.
+        recall: Which tool actions deserve a gate?
         source: notes/03-tool-design.md
         notes: >-
           Run process_refund through these. Reversible? Not easily, so it gets a gate. Idempotent? Not unless you
@@ -289,7 +289,7 @@ parts:
           - "Dynamic discovery: Opus 4 **49% to 74%** on tool selection"
           - "MCP-Zero: **~98% fewer tokens** across ~2,800 tools; Cursor's tool folder: **46.9%** fewer"
         takeaway: Eagerly loaded tool definitions can take a large share of the window, so discover them on demand and append new ones.
-        recall: How much of a 200K window can five MCP servers consume before the first message, and what is the fix?
+        recall: Why discover tool definitions on demand instead of loading them all up front?
         source: notes/03-tool-design.md
         notes: >-
           Definitions are not free. Li measures five typical MCP servers at about 55 thousand tokens, roughly
@@ -313,6 +313,8 @@ parts:
           code: |-
             description: Use when deploying
               to production or rolling back.
+              Don't call this skill when…
+              (and what to do instead).
           tag: Add when not to fire, and what instead
         takeaway: Only a skill's name and description stay resident, so the description's job is deciding when the skill fires.
         recall: Why should a skill description read like a routing rule rather than a summary?
@@ -349,7 +351,7 @@ parts:
           - {title: Container, n: "2", text: "process, filesystem and network namespaces"}
           - {title: microVM, n: "3", accent: "D4621A", text: "Firecracker-class, for untrusted code and production agents"}
         takeaway: "A virtualenv isolates dependencies and not effects, so real isolation starts at the OS level and pairs every rung with quotas."
-        recall: Why is a virtualenv not a sandbox, and what are the real rungs of isolation?
+        recall: Why is a virtualenv not a sandbox?
         source: notes/04-execution-boundaries.md
         notes: >-
           The first row is a common mistake: a virtualenv separates dependencies and does nothing about effects.
@@ -385,14 +387,14 @@ parts:
         kicker: Guardrails
         title: Guard at each point where trust changes
         image: ../sources/images/context-engineering-multi-agent-systems-fig8-2.png
-        caption: "Two-stage moderation (Rothman, Context Engineering for Multi-Agent Systems, Fig. 8.2)"
+        caption: "Two of the five layers (Rothman, Context Engineering for Multi-Agent Systems, Fig. 8.2)"
         bullets:
           - "Five layers: pre-input, pre-retrieval, pre-generate, post-generate, escalation"
           - Each guardrail lives in the component it protects
           - "Tool inputs are model-written, so they are **semi-trusted**"
           - Validate them against the schema like an external request
         takeaway: Treat model-written tool inputs as semi-trusted, and validate them against the schema as you would an external request.
-        recall: What are the five protection layers, and how should you treat model-written tool inputs?
+        recall: How should you treat model-written tool inputs?
         source: notes/04-execution-boundaries.md
         notes: >-
           The figure shows the simplest version, a check before the plan and a check before the user. The notes
@@ -430,7 +432,7 @@ parts:
           - {title: Runtime, text: "tests run, app reaches ready, side effects correct. It runs"}
           - {title: System, accent: "D4621A", text: "end to end as a user drives it, real dependencies. It is correct"}
         takeaway: Do not run a later layer while an earlier one fails, and treat skipping a required layer as not done.
-        recall: What does each of the three termination layers prove?
+        recall: When may a later termination layer run, and what does skipping a required one mean?
         source: notes/05-verification-loops.md
         notes: >-
           Three layers, each proving something different. For the refund agent: it parses, then the refund tool
@@ -548,8 +550,8 @@ parts:
           - title: Set ceilings from data
             accent: "D4621A"
             body: "Before Claude Code's breaker (trips at **3**), one session failed **3,000+** times; futile retries cost **~250K** API calls a day."
-        takeaway: Each recovery path needs a ceiling set from data, since an unbounded retry loop fails silently and expensively.
-        recall: What is the two-retry rule, and what evidence argues for a circuit breaker?
+        takeaway: Each recovery path needs a ceiling set from data, since an unbounded retry loop fails repeatedly and expensively.
+        recall: What must every recovery path have, and why?
         source: notes/05-verification-loops.md
         notes: >-
           The last thing to add this week. Two retries, then conclude the spec is wrong. Count edits per file to
@@ -595,7 +597,7 @@ parts:
             - "Fails when something was not written down"
           tag: Multi-day work
         takeaway: Resets beat compaction on Sonnet 4.5 and later models need them less, so re-test the choice on each model upgrade.
-        recall: How do compaction and context reset fail differently?
+        recall: Why re-test compaction versus context reset on each model upgrade?
         source: notes/06-long-horizon-execution.md
         notes: >-
           Two ways to survive the end of a window. Compaction drifts as summaries of summaries pile up. A reset
@@ -699,7 +701,7 @@ parts:
           - Red lines at the top or bottom, never the middle
           - "Each rule records its source, scope and expiry"
         takeaway: The entry file should route to topic docs and keep hard constraints at its edges, so dead rules can be audited and deleted.
-        recall: How long should AGENTS.md be, what goes in it, and where do the hard constraints go?
+        recall: What goes in AGENTS.md, and where do the hard constraints go?
         source: notes/09-repo-as-system-of-record.md
         notes: >-
           Treat this as an index. A short overview, the commands, the hard constraints at the top where they
@@ -783,7 +785,7 @@ parts:
           - [Concurrency collision, Branches write the same state, Join barriers; key ownership]
           - [Consensus deadlock, Reviewers never agree, "Tie-break, majority or an arbiter"]
         takeaway: When components pass and the end-to-end run fails, suspect a handoff bug, and evaluate at both levels.
-        recall: Name four multi-agent failure modes and what each needs.
+        recall: "Components pass, end-to-end fails: suspect what?"
         source: notes/07-orchestration.md
         notes: >-
           Four failures to know by name. None of them is about the model. Each is a missing counter, a missing
@@ -882,7 +884,7 @@ parts:
             accent: "0EA5C9"
             body: Approve the plan. Fewest agents the task allows. Strip scaffolding on each upgrade.
         takeaway: When an agent fails, change the system around it, and then make sure that failure cannot happen again.
-        recall: Give one rule of thumb each for tools, boundaries, verification and long horizons.
+        recall: What do you do when an agent fails?
         source: notes/08-maturity-and-failure-modes.md
         notes: >-
           Six cards, one per decision you now own. The first is the attitude behind the other five: an agent's
@@ -900,9 +902,9 @@ parts:
           title: The one idea to keep
           accent: "1E3A5F"
           body: The model holds the intelligence, and the harness makes it useful.
-        takeaway: The next pillar takes the harness and asks what makes the loops it runs improve over time.
+        takeaway: Loop engineering runs the harness again, against a goal, until a scorekeeper says stop.
         recall: Which pillar covers the loops a harness runs?
-        source: notes/08-maturity-and-failure-modes.md
+        source: notes/10-scope-and-done.md
         notes: >-
           The next pillar takes this harness and asks about the loop itself: when to stop, and how it improves.
           Before then, run the tool server sandbox in the practice folder, and try the canary pattern on your own

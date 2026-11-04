@@ -23,7 +23,8 @@ still prints the large-tree score so you can see what that mistake would have cl
 no search, so try --epochs, or change its hidden size, before concluding anything about GRUs.
 
 The fundamentals of imbalance, PR-AUC, the cost rule, calibration and PSI are in
-data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md. This lab applies them to ordered events.
+data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md, with real tabular data in
+data-science/01-classical-ml/practice/credit-default-lab. This lab applies them to ordered events.
 """
 # %%
 import argparse

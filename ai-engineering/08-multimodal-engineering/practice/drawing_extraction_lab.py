@@ -4,7 +4,7 @@
 # ///
 """Reading engineering drawings for notes/02: whole-page OCR against crop-first, typed fields, checks, review routing.
 
-Run from this folder (about six minutes on a laptop CPU, downloads no data):
+Run from this folder (about eight minutes on a laptop CPU, downloads no data beyond its packages):
     uv run drawing_extraction_lab.py
     uv run drawing_extraction_lab.py --n 3      # fewer drawings per quality level, for a quick look
 
@@ -34,7 +34,7 @@ from rapidocr_onnxruntime import RapidOCR
 import chartstyle as cs
 import matplotlib.pyplot as plt
 
-SEED, N_PER_QUALITY = 11, 20
+SEED, N_PER_QUALITY = 11, 15
 PAGE_MM, SUPERSAMPLE = (297, 210), 2
 QUALITY = {"clean": dict(dpi=150, blur=0, noise=0, skew=0),
            "scan": dict(dpi=150, blur=.6, noise=12, skew=.8),
@@ -532,7 +532,8 @@ ZOOM = 10                                                    # crop pixels per p
 
 def frame(p1, p2):
     dx, dy = p2[0] - p1[0], p2[1] - p1[1]
-    if dx < 0 or (abs(dx) < 1e-6 and dy > 0) or (abs(dx) < .05 * abs(dy) and dy > 0):
+    near_vertical = abs(dx) < .05 * abs(dy)                  # text on a vertical line reads upward, whichever way a pixel of skew tips it
+    if (near_vertical and dy > 0) or (not near_vertical and dx < 0):
         dx, dy = -dx, -dy
     n = math.hypot(dx, dy) or 1.0
     d = (dx / n, dy / n)
@@ -943,7 +944,7 @@ def corrupt(x, kind, drw):
     elif kind == "tolerance digit wrong":
         explicit[0].plus = explicit[0].plus + (D("0.001") if drw["unit"] == "in" else D("0.01"))
     elif kind == "tolerance ten times too big":
-        explicit[0].plus = explicit[0].minus = explicit[0].plus * 100
+        explicit[0].plus = explicit[0].minus = explicit[0].plus * 10
     elif kind == "hole count wrong":
         by["hole_dia"].count += 1
     elif kind == "hole size first digit":
@@ -1089,9 +1090,10 @@ def report(records, sample, n, seconds):
     for kind, seen in counts.items():
         top = pd.Series(seen).value_counts().head(6).to_dict()
         print(f"  {kind:17s} {len(seen):3d} frames  printed: {top}")
-    frame_rows = [c for x in records for c in score(x["reads"]["crop, true regions"], x["drw"]) if c["field"] == "frame symbol"]
-    symbol_f1 = f1(frame_rows)
-    print(f"frame symbol F1, given a perfect crop of the cell: {symbol_f1:.3f}")
+    symbol_score = lambda route: f1([c for x in records for c in score(x["reads"][route], x["drw"]) if c["field"] == "frame symbol"])
+    symbol_f1, symbol_found = symbol_score("crop, true regions"), symbol_score("crop-first")
+    print(f"frame symbol F1: {symbol_found:.3f} on the cell the finder cut, {symbol_f1:.3f} on the true cell. The two differ only by a few pixels of crop, so that gap is noise, not skill.")
+    print("It scores at all only through SYMBOL_GUESSES, a table of what the OCR might print, written with some of this output in view, so it flatters. Nothing in it reads position or flatness here.")
 
     print(f"\nChecks on the crop-first read, by quality. 'wrong' means at least one field is wrong or missing, symbol excluded")
     rows, fired, passed_wrong = [], {}, {}
@@ -1129,15 +1131,18 @@ def report(records, sample, n, seconds):
         rows.append(dict(misread=kind, caught=caught / len(records), by=max(by, key=by.get) if by else "nothing"))
     print(pd.DataFrame(rows).to_string(index=False, float_format=lambda v: f"{v:.2f}"))
     print(f"perfect reads the checks flag anyway (false alarms with no misread at all): {base_fail} of {len(records)}")
+    print(f"A row at {base_fail / len(records):.2f} is that false alarm and nothing else: the checks can't see that misread. Arithmetic and geometry say nothing about a material or a part number.")
+    assert rows[CORRUPTIONS.index("first digit of a segment")]["caught"] == 1, "the chain must catch any changed segment"
     assert base_fail <= .34 * len(records), "the checks should mostly pass a perfect read"
 
     print(f"\nRouting. Assumptions: full review {REVIEW_MINUTES} min, a look at one frame {FRAME_LOOK_MINUTES} min, {REVIEW_PER_HOUR} per hour, "
           f"{COST_OF_WRONG_FIELD} per wrong field shipped, and a reviewer who fixes everything they see (optimistic)")
     minute = REVIEW_PER_HOUR / 60
 
-    def policy(name, route, review):
+    def policy(name, route, review, subset=None):
+        subset = subset or records
         shipped, spent, reviewed, frames = 0, 0.0, 0, 0
-        for x in records:
+        for x in subset:
             y, wrong = x["reads"][route], wrong_fields(x["reads"][route], x["drw"])
             mode = review(y, x["m"])
             if mode == "full":
@@ -1149,7 +1154,7 @@ def report(records, sample, n, seconds):
                     frames += 1
                     wrong = [f for f in wrong if f != "frame symbol"]
                 shipped += len(wrong)
-        count = len(records)
+        count = len(subset)
         return dict(policy=name, full_review=reviewed / count, frame_look=frames / count, wrong_fields_shipped=shipped / count, review_cost=spent / count,
                     error_cost=shipped / count * COST_OF_WRONG_FIELD, total=spent / count + shipped / count * COST_OF_WRONG_FIELD)
 
@@ -1160,14 +1165,21 @@ def report(records, sample, n, seconds):
         policy("same, plus a person reads every frame", "crop-first", lambda y, m: "full" if checks(y, m) else "frame"),
         policy("a person reviews every drawing", "crop-first", lambda y, m: "full")])
     print(pol.to_string(index=False, float_format=lambda v: f"{v:.2f}"))
-    no_review = pol.total[1]
     print(f"crop-first shipped without review spends more on errors than a full review (at {REVIEW_MINUTES} min) as soon as a wrong field costs more than "
           f"{REVIEW_MINUTES * minute / max(pol.wrong_fields_shipped[1], 1e-9):.2f}")
+
+    routed, everyone = pol.iloc[2], pol.iloc[4]
+    if routed.wrong_fields_shipped > 0:
+        print(f"Routing on the checks beats reviewing every drawing only if a wrong field costs less than "
+              f"{(everyone.review_cost - routed.review_cost) / routed.wrong_fields_shipped:.2f}, because what passes the checks is shipped unseen")
+    by_quality = pd.DataFrame([{**policy(q, "crop-first", lambda y, m: "full" if checks(y, m) else "ship", [x for x in records if x["quality"] == q])} for q in QUALITY])
+    print("\nThe same routing by quality (crop-first, review if a check fails)")
+    print(by_quality.rename(columns=dict(policy="quality")).drop(columns="frame_look").to_string(index=False, float_format=lambda v: f"{v:.2f}"))
 
     print("\nWhat this cannot show")
     print("- These drawings are generated. One part family, one layout, one font, no hatching, no section views, no handwriting, no stamps, no real scanner.")
     print("- name_features() is a rule written for this layout. Feature scores here are close to the best case, and a new layout would break them.")
-    print(f"- The frame symbol F1 above is {symbol_f1:.3f}, on symbols we drew ourselves, with a perfect crop. We did not train or template-match a recogniser, because")
+    print(f"- The frame symbol F1 above is {symbol_found:.3f} and {symbol_f1:.3f}, on symbols we drew ourselves. We did not train or template-match a recogniser, because")
     print("  matching our own strokes would score well and tell you nothing. Assume a text OCR can't read these symbols, and test a real recogniser on real frames.")
     print("- A generated part always closes: the chain always sums and the lines are to scale. Real drawings can be marked 'not to scale', and then the line check is void.")
     print("- No published figure is reproduced here, and these numbers can't be compared with the papers in the note.")

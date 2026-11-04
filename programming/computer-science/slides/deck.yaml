@@ -79,7 +79,7 @@ parts:
           bullets:
             - "Multiplying capacity makes copies a geometric series, `O(n)` in total"
             - "Mean append: **55.8 ns**"
-            - "Copies per append to reach 1M, if every resize copies: add 1,000 slots **499.50**, multiply by 1.125 **8.68**"
+            - "Copies per append to reach 1M, if every resize copies. Add 1,000 slots: **499.50**; ×1.125: **8.68**"
         right:
           title: "Latency budget: the mean hides it"
           bullets:
@@ -180,6 +180,7 @@ parts:
       - layout: table
         title: What must hold before a pattern's shortcut is correct?
         kicker: Which pattern
+        recall: Why check a pattern's condition first?
         header: [What you have, Try, It needs]
         widths: [4.2, 3, 3.6]
         rows:
@@ -216,7 +217,7 @@ parts:
           - "**Exchange:** take any optimal schedule and swap in the earliest finish. It ends no later, so nothing clashes and the size holds"
           - "**Shortest first** fails on `(0,4), (3,5), (4,8)`: the short booking blocks both others"
           - "A rule that's about 95% right passes a few tests"
-        takeaway: An exchange argument, or at the least agreement with brute force on many small random cases. Only earliest finish was optimal in all 300 here.
+        takeaway: An exchange argument, or at the least agreement with brute force on many small random cases. Only earliest finish was optimal in all 300 random booking cases.
         source: notes/03-algorithm-patterns.md
         notes: "The random cases are 10 bookings each. The brute-force test takes minutes to write, and caught two of three rules. The obvious knapsack greedy also fails: best relevance per token gets 60 where the optimum is 62, in the note's token-budget example. Dynamic programming is recursion that doesn't repeat itself."
 
@@ -263,7 +264,7 @@ parts:
         bullets:
           - "Sequential stays near **0.5 ns** at every size, because the prefetcher fetches ahead"
           - "The jump between 8 and 32 MiB is consistent with leaving the 16 MiB L2 cache"
-        takeaway: Caches work on lines and prefetchers predict patterns, and random access defeats both. It cost 8.5 times sequential at 512 MiB here, with no change in big-O.
+        takeaway: Caches work on lines and prefetchers predict patterns, and random access defeats both. It cost 8.5 times sequential at 512 MiB on an Apple M4 Pro, with no change in big-O.
         source: notes/04-numbers-and-memory.md
         notes: "This measures throughput, not the latency of a lone read: an out-of-order core has many misses in flight, so a pointer chase would show a steeper staircase. The mix includes TLB misses at large sizes, not separated out. The first touch of a page cost 674 ns, then none, which is why a fast allocation can be followed by a slow first loop."
 
@@ -300,7 +301,7 @@ parts:
       - layout: statement
         title: Where does the time go when the CPU looks idle?
         kicker: The problem
-        statement: Most Python performance mysteries are about waiting, and they're not about computing.
+        statement: Most Python performance mysteries are about waiting, not computing.
         attribution: A request sits in a queue, a thread sits on a lock, and an event loop stops dead because one handler called something that blocks.
         source: notes/05-processes-threads-and-io.md
         notes: This part builds the operating system's model, prices each operation on one machine, and then follows a request out over the network.
@@ -308,6 +309,7 @@ parts:
       - layout: table
         title: What does each boundary cost?
         kicker: Prices on one machine
+        recall: Why use worker pools, not a process per request?
         lead: "Per call on an Apple M4 Pro, macOS, CPython 3.14.7."
         header: [Operation, Cost, Compared]
         widths: [4.6, 2.2, 3.6]
@@ -379,6 +381,7 @@ parts:
       - layout: bullets
         title: What does parallelism buy in Python?
         kicker: Amdahl
+        recall: Which parallelism fits which Python work?
         lead: "8 pure Python tasks, 8 workers, 12 CPUs, GIL build. Serial takes 1.12 s."
         bullets:
           - "**Threads: 0.97×.** The GIL lets only one run at a time"
@@ -459,6 +462,5 @@ parts:
           - "**Measure it:** `bash check.sh network` runs the two real-network blocks, so compare your own numbers"
           - "**Next track:** Software design, the same habit of measuring first, applied to the structure of the code"
           - "**At larger scale:** When distributed systems fail, for where this chapter's failures go"
-        takeaway: Build the lab's frame decoder and retransmission timer, then go on to software design.
         source: notes/06-networks.md
         notes: "The cold-request numbers came from one run, so run the block from your own location."

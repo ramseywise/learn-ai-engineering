@@ -19,6 +19,7 @@ sources:
   - https://github.com/AutodeskAILab/Fusion360GalleryDataset/blob/master/LICENSE.md
   - https://deep-geometry.github.io/abc-dataset/
   - ../practice/invoice_pipeline.py
+  - ../practice/drawing_extraction_lab.py
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -280,7 +281,25 @@ Those models have dated, so run your own test. Two things are likely to hold any
 
 3D parts come in three forms. A **B-rep** (boundary representation, what a STEP file stores) holds exact faces and edges. A **mesh** approximates them with triangles, and a **point cloud** samples the surface. Each conversion loses something. [BRepNet](https://arxiv.org/abs/2104.00706) reports that meshing failed on 13% of its B-reps, and that sampling 2,048 points can miss small holes and grooves. On its Fusion 360 segmentation task, per-face IoU was 77.10 for BRepNet, 34.78 for PointNet++ and 20.59 for MeshCNN. Native B-rep isn't always that far ahead. On the synthetic MFCAD set, per-face IoU was 99.87 for [UV-Net](https://arxiv.org/abs/2006.10211), 99.70 for MeshCNN and 7.15 for PointNet. The UV-Net authors suggest MeshCNN keeps up because the labels correlate with the dihedral angles it uses as a feature.
 
-For finding similar parts, the question most teams bring, we found less. UV-Net shows retrieval only as pictures of nearest neighbours, and we could read no part-to-part retrieval score with its setup. So measure it yourself, as in [Learning a similarity function](../../../data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md): recall on labelled matches, plus how many look-alikes reach the top results. Check licences first. [Fusion 360 Gallery](https://github.com/AutodeskAILab/Fusion360GalleryDataset/blob/master/LICENSE.md) is for non-commercial research only, and [ABC's](https://deep-geometry.github.io/abc-dataset/) models belong to their creators. This section has no lab, and the numbers above are the papers' own.
+For finding similar parts, the question most teams bring, we found less. UV-Net shows retrieval only as pictures of nearest neighbours, and we could read no part-to-part retrieval score with its setup. So measure it yourself, as in [Learning a similarity function](../../../data-science/05-time-series-and-recommenders/notes/05-learning-a-similarity-function.md): recall on labelled matches, plus how many look-alikes reach the top results. Check licences first. [Fusion 360 Gallery](https://github.com/AutodeskAILab/Fusion360GalleryDataset/blob/master/LICENSE.md) is for non-commercial research only, and [ABC's](https://deep-geometry.github.io/abc-dataset/) models belong to their creators. The numbers above are the papers' own.
+
+### A drawing lab you can run
+
+[`practice/drawing_extraction_lab.py`](../practice/drawing_extraction_lab.py) tries the crop-first idea on 45 drawings it generates itself: 15 at each of three scan qualities, with one part family, one layout and one font. The reader is RapidOCR and no vision model is called. It finds dimension lines, the title block and the feature control frame from pixels, turns each dimension's text level, reads it, and parses it into a value, tolerance, unit and feature. It compares that with whole-page OCR, which has no geometry.
+
+![The same generated drawing family at clean and poor scan quality, with dimensions, a hole callout, a feature control frame and a title block](../sources/images/docs-drawing-sample.png)
+
+![Field F1 for the four routes at each quality level](../sources/images/docs-drawing-field-f1.png)
+
+These are generated drawings, so read the results as a demonstration of what to measure, not as a finding about real ones.
+
+- **A value-only score hides the damage.** On clean drawings whole-page OCR gets value F1 0.972, but whole-dimension F1 only 0.025, mostly because it can't say which line a number belongs to. Crop-first scores 0.950 clean, 0.842 on an ordinary scan and 0.169 on a poor one (100 dpi with heavy noise). On the poor scans, 76% of dimensions with a stated tolerance had the right value, but only 38% had the right value and tolerance, and 33 of those 100 tolerances were dropped outright.
+- **Geometry did the work there, not cleaner reading.** Giving page OCR the same regions scores 0.934, 0.771 and 0.204. Reading the crops helped on the ordinary scan, by 0.071, and didn't on the poor one.
+- **Checks see what they can compare.** With one known misread planted in a perfect read, the chain sum and the line-length check caught every wrong first digit of a value. A last-digit error in a hole position was caught 36% of the time. A dropped tolerance was caught 78% of the time, by measuring text ink nobody had read. A wrong material or part number stayed at the 2% false-alarm rate, so these checks can't see them. Those are jobs for master data.
+- **Passing the checks is not the same as being right.** Routing on the checks sent 82% of drawings to a person, and the ones that passed still shipped wrong fields, 0.18 per drawing averaged over all 45. With a 6-minute review at 40 an hour and a stated 150 per wrong field, reviewing everything costs 4.00 a drawing and routing costs 29.96. Routing only wins if a wrong field costs less than about 4. All of these prices are assumptions, and the reviewer is assumed to catch everything.
+- **Symbols stay unread.** RapidOCR mostly printed `中` or nothing for the position symbol and `口` for flatness. The symbol F1 of 0.636 on clean drawings comes only from a table of guesses at what the OCR might print, written with some of the output in view, so it flatters. Treat it as a sign that a text OCR isn't reading these symbols, and test a real recogniser on real frames.
+
+The lab can't show how any of this behaves on real drawings, with hatching, section views, stamps, other layouts or a part marked "not to scale", which voids the line check. Its rule for naming a line is hand-written for its one layout. Its output ends with this list.
 
 ## Choosing a route
 
@@ -310,6 +329,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 2. `repeated_tail` looks only at the suffix. Build a text where the loop stops before the end of the output, and change the function to catch it.
 3. Extend `field_scores` with a numeric rule: amounts count as correct if they match after removing thousand separators. Why not allow a tolerance?
 4. In the pipeline's table, text-only scores exactly 0.667 on born-digital `label over value`. Work out from the F1 formula which fields it found and which it missed.
+5. Run [`practice/drawing_extraction_lab.py`](../practice/drawing_extraction_lab.py). In the table of planted misreads, which rows sit at the false-alarm rate, and what would you add to catch them? For what happens after the reading, [the parts capstone](../../../data-science/05-time-series-and-recommenders/practice/06_parts_capstone_lab.py) finds interchangeable parts from the text of a generated catalogue.
 
 <details><summary>Answers</summary>
 
@@ -317,6 +337,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 2. Search a sliding window instead: for each unit size, count consecutive matches of the unit anywhere in the string. A compact way is the regular expression `(.{8,}?)\1{2,}` with `re.DOTALL`, which looks for any unit of at least 8 characters repeated at least three times in a row.
 3. Normalisation removes formatting differences that aren't errors. A tolerance would accept real errors, and small differences in invoice amounts are exactly what you are trying to detect.
 4. Four fields right and four missing, with none wrong, gives precision 1.0, recall 0.5 and F1 0.667. Those labels are drawn in one pass and their values in another, so the invoice number, both dates and the IBAN never follow their labels. The vendor and the three amounts still do.
+5. The tolerance digit, material, part number and frame tolerance rows sit at 0.02, the one perfect read in 45 that the checks flag anyway. Neither arithmetic nor geometry says anything about those values, so they need something independent: master data for material and part number, and a second read or a person for tolerances. The hole position's last digit is caught 0.36 of the time because one step is small against the 4% line limit.
 
 </details>
 

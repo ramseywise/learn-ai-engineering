@@ -48,25 +48,23 @@ parts:
 
       - layout: compare
         title: When do you use == and when do you use is?
-        kicker: Equality and hashability
+        kicker: Equality and identity
         emphasis: none
         left:
-          title: == and is
+          title: "`==`"
           bullets:
-            - "`==` compares values by calling `__eq__`"
-            - "`is` compares identity"
-            - "Use `is` only for `None`, `True`, `False` and sentinels"
+            - Compares values
+            - "Calls `__eq__`"
           tag: Equal is not identical
         right:
-          title: Hashable
+          title: "`is`"
           bullets:
-            - "Dict keys and set members need a hash that never changes"
-            - "Immutable built-ins are hashable, lists and dicts aren't"
-            - "A tuple is hashable only if its contents are"
-          tag: "Define `__eq__`? Define `__hash__` too"
+            - Compares identity
+            - "Use only for `None`, `True`, `False` and sentinels"
+          tag: "Everything else uses `==`"
         takeaway: "`==` compares values and `is` compares identity. Use `is` only for `None`, `True`, `False` and sentinels."
         source: notes/01-data-model-and-idioms.md
-        notes: Defining __eq__ without __hash__ stops instances working as keys. A frozen dataclass solves it.
+        notes: Hashability is a separate idea. Dict keys and set members need a hash that never changes. Immutable built-ins are hashable, lists and dicts aren't, and a tuple is hashable only if everything inside it is. Defining __eq__ without __hash__ stops instances working as keys. A frozen dataclass solves it.
 
       - layout: table
         title: How does Python syntax map to methods?
@@ -117,6 +115,7 @@ parts:
       - layout: table
         title: Which itertools do you actually use?
         kicker: itertools
+        recall: What must you do before `itertools.groupby`?
         header: [Function, Does]
         widths: [3.2, 5]
         rows:
@@ -126,9 +125,9 @@ parts:
           - ["`batched(it, n)`", "Tuples of n (3.12+)"]
           - ["`pairwise(it)`", "`(a, b), (b, c), …`"]
           - ["`accumulate(it)`", "Running totals"]
-        takeaway: "`groupby` only groups consecutive keys, so sort first. Pair infinite streams with `islice` or `zip`."
+        takeaway: "`groupby` only groups consecutive keys, so sort first."
         source: notes/02-generators-and-iteration.md
-        notes: collections adds Counter, defaultdict, deque with maxlen for a sliding window, and namedtuple.
+        notes: Pair infinite streams such as count and cycle with islice or zip. collections adds Counter, defaultdict, deque with maxlen for a sliding window, and namedtuple.
 
       - layout: compare
         title: What do closures capture?
@@ -178,13 +177,14 @@ parts:
         kicker: The problem
         statement: Failures that surface clearly, cleanup that always happens, signatures a checker can read, and an environment anyone can rebuild.
         attribution: Each one is a small habit, and the tools do most of the work.
-        takeaway: Catch only what you can handle, let the rest crash loudly, and put cleanup in `with` or `finally`.
+        takeaway: Code others depend on fails clearly, always cleans up, has signatures a checker can read, and has an environment anyone can rebuild.
         source: notes/04-errors-and-context-managers.md
-        notes: The next slides take these one at a time.
+        notes: The next slides take these one at a time. Failures and cleanup are in this note, signatures in note 05, and the environment in note 06.
 
       - layout: flow
         title: What does each clause of try do?
         kicker: Exceptions
+        recall: How do you write a safe try/except?
         steps:
           - {label: "`try`", sub: only the line that can fail}
           - {label: "`except`", sub: "the narrowest exception you can handle"}
@@ -281,13 +281,14 @@ parts:
       - layout: table
         title: Threads, asyncio or processes?
         kicker: Which tool
+        recall: Why do threads help waiting but not computing?
         header: [Work, Tool, Why]
         widths: [3.4, 2.4, 3.2]
         rows:
           - ["A few dozen blocking HTTP calls, existing sync code", "`ThreadPoolExecutor`", Threads release the GIL while waiting on I/O]
           - ["Hundreds+ requests, an async SDK, a web server", "`asyncio`", "One thread, cheap tasks, explicit `await` points"]
           - [CPU-heavy pure Python, "`ProcessPoolExecutor`", "Separate interpreters, so no GIL contention"]
-        takeaway: The GIL lets one thread run Python bytecode at a time, so threads help with waiting and processes help with computing.
+        takeaway: The GIL lets one thread run Python bytecode at a time, and threads release it while waiting on I/O. So threads help with waiting, and processes help with computing.
         source: notes/07-concurrency.md
         notes: Free-threaded builds (3.13t+) remove the GIL, but most code and libraries still assume it.
 
@@ -395,7 +396,7 @@ parts:
           - "**C3 guarantees** a class before its parents, parents in written order, and an order subclasses can't reshuffle"
           - "**It can refuse:** parents that disagree on order raise `TypeError` when the class is defined"
           - "**The cost:** to read a mixin's method, you have to know what class it was mixed into"
-        takeaway: "`super()` continues from the entry after the current class in the MRO of the instance's type, so it can reach a sibling, not only a parent."
+        takeaway: "It reaches `Logged`: `super()` continues from the entry after the current class in the MRO of the instance's type, so it can reach a sibling, not only a parent."
         source: notes/08-objects-inheritance-and-mro.md
         notes: >-
           Print type(self).__mro__ and read the order. Every occurrence of the method must call super(), or the chain stops there
@@ -406,24 +407,25 @@ parts:
       - layout: bullets
         title: What is a memory leak in Python, and how do you find it?
         kicker: Measured on CPython 3.14.7, macOS arm64
-        recall: Why can no garbage collector free a Python "leak", and why is rising RSS not enough to call something one?
         bullets:
           - "**Most objects** are freed when their refcount hits zero, and a cycle collector handles the cycles"
           - "**A leak is still reachable:** an unbounded cache, a listener, `lru_cache` on a method, a stored exception"
-          - "**RSS is not proof:** keeping 1,500 of 3 million small dicts held RSS at 686 MiB, because survivors pin arenas"
+          - "**RSS is not proof:** keeping 1,500 of 3 million dicts held RSS at 686 MiB, because survivors pin arenas"
         aside:
           lang: python
           code: |-
             tracemalloc.start()
+            snap = tracemalloc.take_snapshot
             traffic(0, 1_000)
-            before = tracemalloc.take_snapshot()
+            old = snap()
             traffic(1_000, 50_000)
-            after = tracemalloc.take_snapshot()
-            after.compare_to(before, "lineno")[:2]
+            new = snap()
+            new.compare_to(old, "lineno")[:2]
         takeaway: A Python leak is an object something can still reach, so diff two `tracemalloc` snapshots after warm-up, and don't trust RSS alone.
         source: notes/09-memory-and-the-runtime.md
         notes: >-
-          These figures hold for CPython 3.14.7 on macOS arm64, and this area changes between releases. Dropping the last 1,500
+          These figures hold for CPython 3.14.7 on macOS arm64, and this area changes between releases. The dicts are small objects from
+          pymalloc's 1 MiB arenas, and an arena goes back to the OS only when nothing in it is live. Dropping the last 1,500
           dicts gave back about 640 MiB. In a service, take the snapshots some time apart, because filling caches look like leaks
           in the first minutes. tracemalloc misses memory a C extension allocates privately, and slowed an allocation-heavy loop
           about 4 times here. Over 200,000 two-field records, __slots__ saved about a quarter, 112.1 against 152.1 bytes each, and

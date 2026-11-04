@@ -65,7 +65,7 @@ File formats such as Firebase's [Dotprompt](https://firebase.google.com/docs/gen
 Zhou et al. (2022) framed instruction-writing as black-box search:
 
 1. An LLM sees input/output demonstrations and **generates candidate instructions**.
-2. Each candidate is run on a **target model** and scored. The default score is execution accuracy on held-out demonstrations. It tracked test accuracy better than the log-probability of the correct output, the alternative the authors tried.
+2. Each candidate is run on a **target model** and scored. The default score is execution accuracy on random subsets of the training examples (the final test uses a held-out set). It tracked test accuracy better than the log-probability of the correct output, the alternative the authors tried.
 3. Keep the best, optionally resample variants of it, and repeat. Repeating gave only marginal gains, levelling off after about three rounds, so the default is a single round of 50 candidates.
 
 ![APE pipeline](../sources/images/zhou-ape-overview.png)
@@ -73,7 +73,7 @@ Zhou et al. (2022) framed instruction-writing as black-box search:
 
 With text-davinci-002, the instructions APE chose matched or beat human-written ones on all 24 Instruction Induction tasks and on 17 of 21 BIG-Bench tasks (interquartile mean 0.810 against 0.749 on the 24) ([arXiv:2211.01910](https://arxiv.org/abs/2211.01910) (Zhou et al., ICLR 2023)). The score can be gamed. On a rhyming task, 4 of the 5 best instructions told the model to echo the input word, which scores near-perfectly because every word rhymes with itself. Instructions found for InstructGPT also lost much of their gain when used on base GPT-3, and the reverse, so search on the model you will run.
 
-The famous result: APE found a better zero-shot CoT trigger than *"Let's think step by step"*. Here the score was different: the likelihood of reasoning chains that "Let's think step by step" had produced and that reached the right answer. **"Let's work this out in a step by step way to be sure we have the right answer"** scored 82.0 on MultiArith against 78.7 for the human-written trigger, and 43.0 on GSM8K against 40.7. It helped on only 6 of the 12 reasoning tasks tried. The table also shows how much the wording alone moves the score: human-written triggers range from 45.7 to 78.7, and no trigger at all gets 17.7:
+The famous result: APE found a better zero-shot CoT trigger than *"Let's think step by step"*. Here the score was different: the likelihood of reasoning chains that "Let's think step by step" had produced and that reached the right answer. **"Let's work this out in a step by step way to be sure we have the right answer"** scored 82.0 on MultiArith against 78.7 for the human-written trigger, and 43.0 on GSM8K against 40.7. It helped on only 6 of the 12 reasoning tasks tried. The table also shows how much the wording alone moves accuracy: on MultiArith, human-written triggers range from 45.7 to 78.7, and no trigger at all gets 17.7:
 
 ![Zero-shot CoT triggers: APE's discovered prompt vs. human-designed ones](../sources/images/zhou-ape-zero-shot-cot-triggers.png)
 *Image Source: Zhou et al. (2022), via DAIR*

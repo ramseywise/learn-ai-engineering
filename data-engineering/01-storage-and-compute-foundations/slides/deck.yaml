@@ -26,6 +26,7 @@ parts:
         kicker: The problem
         statement: "A taxi app is a database, a cache, a search index, a queue and a warehouse, held together by your own application code."
         attribution: Chapter 1, after Kleppmann, ch. 1
+        recall: "Who states the guarantees of a system stitched together from storage tools?"
         takeaway: Combining storage tools with application code makes you the designer of a data system, so its guarantees are yours to state.
         source: notes/01-data-systems-and-data-models.md
         notes: >-
@@ -79,6 +80,7 @@ parts:
         kicker: The problem
         statement: "Bytes on disk are all they share. A CSV leaves everything to inference: 02134 comes back as 2134, with no error."
         attribution: Measured with pyarrow's CSV reader in chapter 2
+        recall: "What does a file format decide for its reader?"
         takeaway: A file format decides how much its reader must guess, and CSV makes it guess everything.
         source: notes/02-encoding-and-files.md
         notes: >-
@@ -165,6 +167,7 @@ parts:
         kicker: The problem
         statement: "Ana and Ben each check that two doctors are on duty, each sign off, and both commit. Now nobody is on duty."
         attribution: Write skew, run on PostgreSQL 16 in chapter 4, after Kleppmann, ch. 7
+        recall: "When does write skew happen?"
         takeaway: Write skew happens when two transactions read the same premise and write different rows, so neither sees a conflict.
         source: notes/04-transactions-and-isolation.md
         notes: >-
@@ -252,6 +255,7 @@ parts:
         kicker: The problem
         statement: "Partitioning decides which machine holds a row. Replication decides what a reader sees just after a write."
         attribution: Chapter 5, after Kleppmann, ch. 5 and 6
+        recall: "How do partitioning and replication differ?"
         takeaway: Partitioning spreads data for scale and replication copies it for availability, and replication lag shows up as wrong-looking data.
         source: notes/05-partitioning-and-replication.md
         notes: >-
@@ -320,6 +324,7 @@ parts:
         kicker: The problem
         statement: "The request or the reply may have been lost. In this simulation, 57% of timeouts hid a write that had in fact been applied."
         attribution: Simulated in chapter 6, after Kleppmann, ch. 8
+        recall: "What does a timeout tell a client about its request?"
         takeaway: A timed-out request may or may not have been applied, and from where the client sits those two cases look identical.
         source: notes/06-when-distributed-systems-fail.md
         notes: >-
@@ -338,13 +343,13 @@ parts:
           - "**Without retries** you lose payments."
           - "**With retries** you repeat them."
           - "**With an id** the receiver can drop repeats."
-        takeaway: Plain retries trade lost writes for duplicates, and only an id that the receiver can check gets rid of both.
+        takeaway: Plain retries trade lost writes for duplicates, and only an id the receiver checks stops the duplicates.
         source: notes/06-when-distributed-systems-fail.md
         notes: >-
           This is the root of every exactly-once claim in the later pillars: at-least-once delivery plus an idempotent receiver.
       - layout: table
         title: Last-write-wins loses data on a skew of milliseconds
-        recall: Why are the dropped writes invisible?
+        recall: "What does ordering writes by wall clock risk?"
         header: [Clock skew, "Acknowledged writes silently dropped"]
         widths: [2, 4]
         rows:
@@ -354,7 +359,7 @@ parts:
           - ["35 ms", "41.25%"]
           - ["1000 ms", "50.01%"]
         highlight: [2]
-        takeaway: Ordering by wall clock across machines silently drops acknowledged writes, so use logical versions when order matters.
+        takeaway: Ordering by wall clock across machines silently drops acknowledged writes, so order by a sequence number from one source.
         source: notes/06-when-distributed-systems-fail.md
         notes: >-
           A quartz clock at 200 parts per million drifts 6 ms in 30 seconds and 17.3 seconds in a day. Every write that vanished had been acknowledged, and no
@@ -387,6 +392,7 @@ parts:
         kicker: The problem
         statement: "With n=3, w=3, r=2, 22% of runs were not linearizable: one read saw the new value, a later read saw the old one."
         attribution: Simulated in chapter 7, after Kleppmann, ch. 9
+        recall: "Does quorum overlap give you linearizability?"
         takeaway: Quorum overlap does not give you linearizability, which needs a system that behaves as if there were one copy.
         source: notes/07-consistency-and-consensus.md
         notes: >-
@@ -410,7 +416,7 @@ parts:
           book treats heterogeneous distributed transactions as a source of amplified failures.
       - layout: code
         title: A real in-doubt transaction survives a restart
-        recall: What ended the block?
+        recall: "What releases a prepared transaction's locks?"
         lang: text
         code: |-
           PREPARE TRANSACTION 'trip-42', then the client dies
@@ -420,7 +426,7 @@ parts:
           another writer: canceling statement due to lock timeout
           after a restart, still in doubt: [('trip-42',)]
           after commit prepared: 2000
-        takeaway: A prepared transaction outlives its client and a restart and keeps its locks until someone commits it, so a lost coordinator stops others.
+        takeaway: A prepared transaction outlives its client and a restart and keeps its locks until someone commits or rolls it back, so a lost coordinator stops others.
         source: notes/07-consistency-and-consensus.md
         notes: >-
           This ran on PostgreSQL 16 with no simulation at all. An operator had to resolve it by hand, which is what the book means by in-doubt
@@ -452,13 +458,14 @@ parts:
         kicker: The problem
         statement: "In the COST paper, GraphX on 128 cores took 419 s for 20 PageRank iterations. One good thread on an SSD took 300 s."
         attribution: McSherry, Isard and Murray, HotOS 2015, with 2014 systems. Chapter 8
+        recall: "Why measure against one good thread before using a cluster?"
         takeaway: Distributed compute adds shuffles, retries and stragglers, so measure against one good thread and use a cluster when you must.
         source: notes/08-distributed-compute.md
         notes: >-
           Graphs partition badly, so this is a hard case, and scans are friendlier to clusters. The point is to measure absolute time and not a scaling curve.
       - layout: flow
         title: MapReduce is a Unix sort across machines
-        recall: Why does the partition hash have to be stable across processes?
+        recall: "How does MapReduce make retries safe?"
         steps:
           - Split input
           - Map to key and value
@@ -475,7 +482,7 @@ parts:
           files with lineage: a lost partition is recomputed from its parents, which needs deterministic operators.
       - layout: code
         title: The same query on a laptop, with pushdown
-        recall: What does PROJECT 3/7 COLUMNS tell you?
+        recall: "Why test one machine before a cluster?"
         lang: python
         code: |-
           lazy = (pl.scan_parquet("trips.parquet")
@@ -504,6 +511,7 @@ parts:
         kicker: The problem
         statement: "An API returns 200 and the row is saved. In a process buffer, a crash takes it. In the page cache, a power cut. On a replica, your own bad DELETE follows it."
         attribution: Chapter 9, crashing a private Postgres 16.2 on purpose
+        recall: "What do you ask first when deciding how saved a write must be?"
         takeaway: Each rung of saved survives a different failure and costs a different amount, so first ask which failure you must survive.
         source: notes/09-persistence.md
         notes: >-
@@ -565,12 +573,12 @@ parts:
         recall: When does plain Postgres stop being enough?
         lang: text
         code: |-
-          one private Postgres 16.2, one trial each, synthetic
-          key-value, 1M keys    33,181 reads/s, 20,741 upserts/s
-          document, 1M docs     seq scan 31.387 ms, GIN 0.017 ms
-          text, 300,000 docs    LIKE 138,026 hits, tsquery 257,679
-          time, 12 partitions   DELETE month 64 ms, DROP 5.4 ms
-          graph, 500,000 edges  6 hops in 15 ms
+          Postgres 16.2, one trial each, synthetic
+          key-value, 1M   33,181 reads/s, 20,741 upserts/s
+          document, 1M    seq scan 31.387 ms, GIN 0.017 ms
+          text, 300k docs LIKE 138,026 hits, tsquery 257,679
+          time, 12 parts  DELETE month 64 ms, DROP 5.4 ms
+          graph           500k edges, 6 hops in 15 ms
         bullets:
           - "**Not a benchmark** against the specialised stores, which were not run."
           - "**Upserts** used macOS fsync, which does not flush the drive."
