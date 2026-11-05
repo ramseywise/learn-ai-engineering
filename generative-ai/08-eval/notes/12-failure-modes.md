@@ -1,10 +1,12 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2302.03494
   - https://arxiv.org/abs/2601.11868
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://www.langchain.com/blog/agent-evaluation-readiness-checklist
   - https://arxiv.org/abs/2404.12272
+  - https://arxiv.org/abs/2307.09009
   - https://arxiv.org/abs/2505.11831
   - https://arxiv.org/abs/2501.14249
   - https://arxiv.org/abs/2509.04664
@@ -14,6 +16,8 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf
+  - https://arxiv.org/abs/2402.19450
+  - https://arxiv.org/abs/2410.05229
   - https://arxiv.org/abs/2312.11805
   - https://doi.org/10.18653/v1/2023.findings-acl.824
   - https://arxiv.org/abs/2103.06332
@@ -198,6 +202,10 @@ Two detection heuristics, with a cost trade-off (*AI Engineering*, ch. 4):
 | **N-gram overlap** | An eval sample that shares a 13-token sequence with the training data is "dirty" | More accurate. Needs the training data, and comparing every sample against it is expensive |
 | **Perplexity** | Unusually low perplexity on the eval text means the model finds it easy to predict, so it has probably seen it | Cheap and works without training data. Less accurate |
 
+A third check needs no training data: regenerate the test. Rewrite each question as a template, draw fresh values, and compare the score with the one on the published wording. [arXiv:2402.19450](https://arxiv.org/abs/2402.19450) (Srivastava et al., 2024-02, preprint) rewrote 2,060 of the 5,000 MATH test problems as code. Counting a problem as solved only when the original and all three monthly snapshots were answered, **GPT-4 fell from 25.98% to 10.82%**, a relative drop of 58.35% and the smallest among 13 models (few-shot, no chain of thought, pass@1). Both percentages are out of all 5,000 problems, and 239 of the 541 problems GPT-4 kept could not be turned into templates and stayed identical, which leaves 6.04% on problems that actually changed. [arXiv:2410.05229](https://arxiv.org/abs/2410.05229) (Mirzadeh et al., ICLR 2025) did the same to 100 GSM8K questions with 50 draws each. The score on the original questions sat above the centre of the regenerated distribution for 21 of 25 models. Measured from the full GSM8K test set, the drop in mean accuracy for the 22 models the paper plots ranged from 0.3 points (GPT-4o) to 9.2 (Mistral-7B-instruct-v0.1). Srivastava et al. read their gap as memorization against reasoning, but neither result isolates memory. Requiring four correct answers in a row lowers the score of any noisy solver, fresh values can be harder than the originals, and neither paper checks training data. A drop on regenerated items is a reason to suspect contamination, not proof of it.
+
+The rewording test began as an anecdote. A 2023 archive of ChatGPT failures ([arXiv:2302.03494](https://arxiv.org/abs/2302.03494) (Borji, 2023-02, preprint)) reports one prompt pair, each tried once on an unnamed ChatGPT version: "Mr. Smith has 4 daughters. Each of his daughters has a brother" was answered correctly with 5 children, and "My dad has 4 sons. Each of his sons has a sister" was answered 8. The archive sorts examples drawn mainly from Twitter into eleven categories the author calls arbitrary, measures no failure rate, and notes that some failures were already fixed in later versions. A collection like this supplies candidate rows ([03](03-eval-datasets.md#harvest-from-failures)), but only a templated re-run like the two above turns the observation into a number.
+
 Contamination is usually accidental: web scrapes pick up published benchmarks, and training and eval sets can share a source (the same maths textbooks). It is also sometimes deliberate and reasonable: a developer selects the model on clean benchmarks, then trains on the benchmark data before release because it is good data. Either way, report the score on the **clean subset** next to the full score. In OpenAI's GPT-3 analysis, 13 benchmarks had at least 40% of their samples in the training data, and the clean-vs-full gap went both ways (Brown et al. 2020): Google's Gemini report measured how small the gap can be. About a hundred fine-tuning steps on web extracts matching HellaSwag's training set, which were not in pre-training, **lifted 1-shot validation accuracy to 89.6% for Gemini Pro and 96.0% for Gemini Ultra**, against 92.3% measured for GPT-4. Google then reported HellaSwag only in a decontaminated 10-shot setting, and dropped LAMBADA after finding leaks ([arXiv:2312.11805](https://arxiv.org/abs/2312.11805) (Gemini Team, 2023-12)).
 
 ![Relative difference in GPT-3's performance on the clean subset vs the full benchmark, per benchmark](../sources/images/huyen-ai-engineering-fig4-10.png)
@@ -214,7 +222,7 @@ Benchmark maintainers can keep part of the data private and evaluate submissions
 | Problem | Fix |
 |---|---|
 | Judge model silently updated | Pin the version; re-calibrate on change ([15](15-calibration-against-human-labels.md#keep-it-calibrated)) |
-| Provider model update changes the system's behaviour | Re-run the suite on every model change. Chen et al. (2023) found GPT-3.5 and GPT-4 scores changed significantly on many benchmarks between March and June 2023. Moving from GPT-3.5-turbo-0301 to -1106 cost Voiceflow 10% on intent classification while it improved GoDaddy's support bot (*AI Engineering*, ch. 4): the same update can help one app and hurt another |
+| Provider model update changes the system's behaviour | Re-run the suite on every model change. [arXiv:2307.09009](https://arxiv.org/abs/2307.09009) (Chen, Zaharia & Zou, Harvard Data Science Review 2024; numbers from arXiv v3) compared the March and June 2023 snapshots of GPT-3.5 and GPT-4: on 1,000 prime-or-composite questions GPT-4 fell from 84.0% to 51.1% as it stopped following the step-by-step instruction, while GPT-3.5 rose from 49.6% to 76.2% ([11](11-production-and-the-maturity-ladder.md#drift)). Moving from GPT-3.5-turbo-0301 to -1106 cost Voiceflow 10% on intent classification while it improved GoDaddy's support bot (*AI Engineering*, ch. 4): the same update can help one app and hurt another |
 | Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift); [Shankar et al.](https://arxiv.org/abs/2404.12272), UIST 2024: criteria move as people grade) |
 | Uncalibrated judge used as a release gate | Grader states: experimental never gates ([04](04-graders.md#grader-states-which-ones-can-block-a-release)) |
 | Judge from the same family as the SUT | Different model family ([05](05-llm-as-judge.md#known-biases)) |

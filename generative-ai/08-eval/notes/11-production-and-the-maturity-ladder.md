@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents
+  - https://arxiv.org/abs/2307.09009
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://developers.openai.com/cookbook/examples/realtime_eval_guide
   - https://nicktalwar.substack.com/p/6-things-your-ai-agents-need-that
@@ -103,6 +104,8 @@ Performance changes after launch even when you change nothing:
 | **Input shift** | New product launch, new user segment, seasonal questions |
 | **Upstream changes** | A tool API changes its response shape. Docs get rewritten |
 | **Corpus staleness** | The index lags the source of truth |
+
+The first row has a measured case. [arXiv:2307.09009](https://arxiv.org/abs/2307.09009) (Chen, Zaharia & Zou, Harvard Data Science Review 2024; numbers from arXiv v3) ran the same prompts against the March and June 2023 snapshots of GPT-4 and GPT-3.5 at temperature 0.1. **What moved most was whether the model followed the output format, and that broke pipelines before it changed answers.** On 50 LeetCode easy problems with the instruction to return code only, the share of GPT-4 answers that ran as returned fell from 52.0% to 10.0%, because June wrapped the code in markdown fences. With the fences stripped, the share that passed rose from 52% to 70%. A stock LangChain ReAct agent on HotpotQA (7,405 questions) moved the other way, from 1.2% exact match to 37.8%, because March GPT-4 failed the agent's output format. The average also hides churn: on 340 USMLE questions GPT-4's accuracy fell 4.5 points (86.6% to 82.1%) while 12.2% of its answers changed. The study compares two dated snapshots, so it shows that versions differ, not that a pinned snapshot changes. It reports no confidence intervals, and rerun noise only for one task. The regression suite therefore needs format checks as well as correctness checks ([04](04-graders.md#code-graders-more-than-you-think)), and a model change needs a diff of answers, not only of the pass rate.
 
 Detecting it:
 

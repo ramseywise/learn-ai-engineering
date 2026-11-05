@@ -11,6 +11,7 @@ sources:
   - https://arxiv.org/abs/1810.03993
   - https://arxiv.org/abs/1804.09301
   - https://arxiv.org/abs/2101.11718
+  - https://arxiv.org/abs/2410.05229
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -175,6 +176,8 @@ The lab ends with v1 and v2 side by side in the Phoenix UI. Read it with this no
 With *k* trials per task ([06](06-evaluating-agents.md#non-determinism-run-every-task-k-times)), first average the trials **within** each task, then compute the SE across tasks. Treating 100 tasks × 5 trials as 500 independent samples understates the error bar, because trials of the same task are correlated.
 
 Repeats reduce the noise from sampling randomness within each task. They don't reduce noise from *which tasks you picked*. For that you need more tasks. Beyond a few repeats, more tasks beat more repeats.
+
+The wording of a task is a draw too. GSM-Symbolic turned 100 GSM8K questions into templates and drew 50 sets of 100 with new names and numbers (25 models, 8-shot chain of thought, greedy decoding). **The same model's accuracy moved by more than 12 points between its best and worst set** for Gemma2-9B, whose mean was 79.1 with a spread of 3.0, and by about 15 for Phi-3.5-mini ([arXiv:2410.05229](https://arxiv.org/abs/2410.05229) (Mirzadeh et al., ICLR 2025)). Hold that against the error bar before reading it as fragility: by the formula above, a 100-question set at 79% carries a standard error of about 4 points, so this spread is what sets of that size give. The paper's appendix concedes that whether its drop from the original questions is significant depends on the test chosen (p = 0.6 for GPT-4o under theirs). The finding that survives is larger: one irrelevant clause added to each question cost o1-preview 17.5 points and Phi-3-mini 65.7.
 
 ### Clustered tasks
 
