@@ -13,6 +13,8 @@ sources:
   - Agashe et al., Evolving Agent Interfaces (2026), arXiv 2610.28601 — https://arxiv.org/abs/2610.28601
   - https://github.com/openclaw/openclaw
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
+  - https://arxiv.org/abs/2603.25723
+  - https://arxiv.org/abs/2605.18747
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -33,6 +35,8 @@ A raw model is a text transformer. It becomes an *agent* only when something giv
 The formal version (harness-engineering.ai): harness engineering is *"the discipline of designing, building, and operating the infrastructure that constrains, informs, verifies, and corrects AI agents in production."*
 
 Four verbs worth keeping — a harness **constrains** (boundaries), **informs** (context), **verifies** (checks), and **corrects** (recovery). Most incomplete harnesses have the first two and are missing the last two.
+
+Two 2026 preprints define the term in the same shape. [arXiv:2605.18747](https://arxiv.org/abs/2605.18747) (Ning et al., 2026-05, a survey) describes the harness as the software layer of tools, sandboxes, memory, validators, permission boundaries, execution loops and feedback channels that turns a stateless model into a long-running agent, and argues the bottleneck of autonomy is "not only the reasoning ability of the base model" but the reliability of that system. It states this rather than measuring it: the survey runs no experiment that separates harness from model. [arXiv:2603.25723](https://arxiv.org/abs/2603.25723) (Pan et al., 2026-05, preprint) lists eleven things a harness decides, adding observability, retry and recovery, runtime defaults and budget control to the four above, and splits them by medium: natural language carries policy, while code carries mechanisms such as tool execution, sandboxing and logging, and "safety, permissions, evaluation, and key parsing logic" should stay in code.
 
 ### The expanded equation
 
@@ -249,6 +253,8 @@ Harness complexity doesn't shrink as models improve — it **shifts**. Better mo
 Meanwhile the useful primitives get standardized into products, then embedded into the next generation's training data, which makes models better at exactly those primitives. Harness design and model development co-train.
 
 This is the harness's answer to Sutton's *Bitter Lesson*: general methods that scale with compute beat hand-encoded priors. Li's stance is to **endorse the direction but stay pragmatic about the pace**. Models do absorb harness layers; tool calling and long-horizon planning both used to be external orchestration. But training cycles take months, and no model internalizes every business's constraints at once. The harness covers what the model can't yet do reliably, drops each layer the model absorbs, and moves to the next frontier. Updates also have more than one home: in-context adaptation, external artifacts (docs, prompts, code) and weights each persist on a different timescale ([gen-AI 03](../../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md#how-agents-learn)).
+
+Harnesses are also tuned to the model they were built for. In Pan et al. ([arXiv:2603.25723](https://arxiv.org/abs/2603.25723)), a Terminal-Bench 2.0 harness optimised for Claude Opus 4.6 scored 36.0% under gpt-5.4-mini, against 53.9% for the same task logic written as a natural-language harness (single attempt, 89 tasks). In 66 of 89 runs the loop timed out: the harness's two-call `task_complete` stopping protocol never fired because the new model answered "DONE" without a tool call, and 21 of those timed-out runs had already earned verifier reward 1.0. The setup is one model, one attempt and no variance, so read it as a mechanism, not a ranking.
 
 Practical consequence: **a harness needs periodic subtraction, not just addition.** See [note 08](08-maturity-and-failure-modes.md#iterative-simplification).
 

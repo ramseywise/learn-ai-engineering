@@ -1,11 +1,18 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2511.20639
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/06_tool_integrated_reasoning/00–03, 00_COURSE/07_multi_agent_systems/00–03, cognitive-tools/cognitive-architectures/) — snapshot 2026-08-14)
   - "Kyle Stratis, AI Agents with MCP (O'Reilly, 2025), ch. 1–5 — sources/ai-agents-with-mcp/"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 2, 6, appendix A — sources/context-engineering-multi-agent-systems/"
+  - https://arxiv.org/abs/2505.20286
+  - https://arxiv.org/abs/2504.08725
+  - https://arxiv.org/abs/2606.30317
+  - https://arxiv.org/abs/2606.19135
+  - https://arxiv.org/abs/2511.01854
+  - https://arxiv.org/abs/2609.06702
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -35,6 +42,8 @@ flowchart TB
 ```
 
 The sub-agent's window is **discarded**, not merged. That discarding is the feature.
+
+ParSer pushes this to the whole document. The lead agent never sees the text. It broadcasts each query to frozen 4B subagents, one per 4,096-token chunk, and each subagent returns either a verbatim quote with an answer or the single word "Unknown". The "Unknown" replies are dropped before anything reaches the lead ([arXiv:2609.06702](https://arxiv.org/abs/2609.06702) (Li et al., CUHK, 2026-09, preprint)). On padded HotpotQA, with the same 128 questions at every length, **a 4B lead trained with RL held 84.6% on average from 7K to 896K tokens. Full-context prompting with the same model (non-thinking mode) fell from 75.8% to 34.4%**, and the best sequential-memory agent averaged 78.9%. Feeding one subagent the whole document instead of a chunk cut the average to 73.8%. The costs of isolation showed up too. The lead cannot see where a finding came from, so it sometimes adopted a wrong answer from a chunk about a different person with a similar name. The authors give no rate for this. The benchmark is synthetic multi-hop QA, the training budgets of the methods were not matched, and the Agentic RAG baseline they describe has no reported numbers.
 
 ### Orchestrator-holds-plan
 
@@ -167,11 +176,16 @@ The Model Context Protocol standardises how context from outside the agent reach
 
 The book's ch. 2 calls prompts application-controlled. Its own ch. 5 and the spec say user-controlled.
 
+**MCP is the context-facing kind of protocol.** A taxonomy of nine open agent protocols, built from the authors' reading of the specs with no experiments, separates protocols whose counterparty is context from those whose counterparty is another agent, with one protocol (LMOS) classed as hybrid ([arXiv:2606.19135](https://arxiv.org/abs/2606.19135) (Sander et al., TUM, 2026-06, preprint)). MCP is the context kind. It is stateless, and its discovery is static: a client can list a server's tools at run time, but it must know the server's address first. The seven protocols that support agent-to-agent communication, A2A among them, all keep session state. That makes the context-engineering split concrete. With MCP, whatever must persist between calls is the host's job, so it lands in the window or in [memory](06-memory.md). The paper classifies mid-2025 specs.
+
 Everything else about the protocol is in [harness 03](../../03-harness-engineering/notes/03-tool-design.md#the-protocol): the architecture, server-initiated requests, transports and a minimal server.
 
 ### Designing MCP servers for the window
 
 - **Don't auto-generate a server from a REST API.** REST endpoints are granular, so one user action becomes several tool choices, and the errors compound. At 95% accuracy per choice, five choices succeed about 77% of the time (0.95⁵). Each call also re-sends the previous turns. A back-of-envelope estimate on the book's ch. 3 example server puts that at about 8× the tokens and nearly 7× the cost. If you start from a generated server, "aggressively curate" it (Jeremiah Lowin, Prefect). Better, build from **agent stories**: user stories written for the agent, each mapped to one end-to-end tool (*AI Agents with MCP*, ch. 5).
+- **Keep the tool count per context small, and expose a subset when there are more.** One voice-AI vendor's production logs give the only per-model numbers we hold, though they come from one company with a conflict of interest and one tool surface. With 200 operator-checked turns per bucket, **Claude Haiku 4.5 chose the right tool 91% of the time with 10 tools and 87% with 15. Claude Sonnet 4 held 90% or better up to 20 tools and fell below it at 30** ([arXiv:2606.30317](https://arxiv.org/abs/2606.30317) (Rodrigues and Vas, 2026-06, preprint)). The CIs are ±4 points, so the 10-to-15 line is not firm, and the descriptions were never varied. The authors recommend 10–15 tools per context. Past that, they suggest a proxy that retrieves the relevant tools for each request, because statically merging several servers' tools makes the problem worse. That recommendation was not tested. The retrieval step has been measured on its own. Indexing tools and their parent servers together, then mapping each retrieved tool to its server, reached a Recall@5 of 0.83 on the server labels of LiveMCPBench, against 0.70 for server-first routing (MCP-Zero), with one embedding model (OpenAI ada-002); across eight embedding models the authors report 0.80–0.87 against 0.65–0.74. That is 95 questions over 70 servers, and only retrieval recall was measured, not task success or tokens saved ([arXiv:2511.01854](https://arxiv.org/abs/2511.01854) (Lumer et al., PwC, 2025-11, preprint)).
+- **Generating a tool at run time is a different bet.** Alita ([arXiv:2505.20286](https://arxiv.org/abs/2505.20286) (Qiu et al., 2025-05, preprint)) ships almost no predefined tools: when the manager finds a capability gap, a web agent finds code on GitHub, a script is generated, run in its own Conda environment and, if it works, stored for reuse as an "MCP". It scores 75.15% pass@1 on the GAIA validation set (Claude-Sonnet-4 manager, GPT-4o); the baselines are single runs and its 87.27% pass@3 is best of three. Handing its stored tools to another agent lifted ODR-smolagents (GPT-4o) from 27.88% to 33.94%, but the tools were collected on the same GAIA questions, and the paper does not say they were held out. With GPT-4o-mini generating its own tools it scores 43.64%, so the method needs a strong coder. These are packaged scripts, not protocol-level servers, with no sandbox beyond Conda, and the tool store grows with no stated pruning, which adds to the [tool-overlap](#tool-overlap) problem.
+
 - **Measure tool choice before and after you change descriptions.** The book suggests Promptfoo or PromptBench. This is the [tool-overlap](#tool-overlap) test, run as an eval.
 - **Resources carry hints for the host.** Annotations are `audience` (user, assistant), `priority` (0.0–1.0) and `lastModified`. They need FastMCP 2.11+ or the low-level API. Resource reads should be lazy and free of side effects. Three patterns from the book:
   - Documentation servers (Context7, AWS).
@@ -194,6 +208,8 @@ The upstream multi-agent module has an orchestration progression and a coordinat
 
 The upstream "emergent behaviour" and "field orchestration" material claims that collective intelligence arises from simple agent rules. In LLM systems, emergence mostly shows up as *unplanned* behaviour: agents duplicating work, echoing each other or drifting off-task. Treat it as a failure mode to monitor, not a feature to design for ([11](11-failure-modes.md), [99](99-speculative-field-track.md)).
 
+DocAgent shows ordering as a context-control device. To document a repository it sorts components so callees come first, which means each writer needs only its one-hop dependencies' finished docs ([arXiv:2504.08725](https://arxiv.org/abs/2504.08725) (Yang et al., Meta, 2025-04, preprint)). Reader, Searcher, Writer and Verifier agents run under an orchestrator that truncates the largest context sections once a token threshold is passed. In a random-order ablation (366 components from 9 Python repos, GPT-4o judge), helpfulness fell from 3.88 to 3.44 with GPT-4o mini and from 2.35 to 2.18 with CodeLlama-34B. The share of named repo entities that exist fell from 94.64% to 86.75% and 87.76% to 83.06% (50 components). The paper's tables contradict its prose and its own count columns in places, there is no per-agent ablation, and the baselines are single-shot with no retrieval, so the gain cannot be credited to the multi-agent roles.
+
 ### Inter-agent messages are context
 
 Every hand-off is a prompt someone else will read. Give messages a schema (task, constraints, evidence, return shape), keep them self-contained, and log them. Cognition's warning applies: agents that share no context make decisions that conflict. Pass the decisions, not just the task.
@@ -206,6 +222,8 @@ Every hand-off is a prompt someone else will read. Give messages a schema (task,
 The book's ch. 2 calls its envelope `{protocol_version, sender, content, metadata}` "MCP". It is a homemade dict checked by key, not the Model Context Protocol ([above](#mcp-a-protocol-for-moving-context)).
 
 **Make plan dependencies explicit.** In the same book's engine, the planner emits a JSON plan whose steps refer to earlier outputs by placeholder (`$$STEP_1_OUTPUT$$`). The executor resolves the placeholders, and the trace logs both the **planned** input and the **resolved** one. A bad step can then be traced either to the plan or to the data it received. The engine also keeps its instructions (style and structure "blueprints") in a separate vector namespace and retrieves them by intent. That is [procedural memory](06-memory.md#episodic-semantic-procedural) retrieved like documents (*Context Engineering for Multi-Agent Systems*, appendix A).
+
+**Hand-offs without text.** LatentMAS passes the hand-off as the previous agent's layer-wise KV cache instead of a message: each agent runs a tuned number of auto-regressive steps (swept 0 to 80; accuracy peaks around 40 to 80) on its last-layer hidden states, a one-off linear map keeps those states in the input-embedding range, and only the last agent decodes text ([arXiv:2511.20639](https://arxiv.org/abs/2511.20639) (Zou et al., ICML 2026)). Across 9 benchmarks, five open backbones (Qwen3 4B to 14B, Llama3 3B and 8B) and sequential and hierarchical set-ups (mean of 3 runs), it used 59.4 to 87.9% fewer output tokens than a text multi-agent baseline and ran 2.6 to 7 times faster than that baseline on vLLM. **Most of the gain is cost, not accuracy**: it averaged 2.8 and 4.6 points above text agents but tied or lost on some cells (Qwen3-4B GSM8K 88.2 vs 89.8; Qwen3-8B HumanEval+ 80.5 vs 80.5). Passing the cache without latent reasoning, or latent reasoning with the last 128 text tokens passed on, each scored lower than the full method (GSM8K 90.1 and 85.5 vs 93.8, Qwen3-8B). The price is that it needs white-box access and identical model shapes across agents, so it cannot join API-only models, and the messages are unreadable. A debug mode that decodes a text probe per agent was right about the answer's correctness in 96.2% of 80 correct and 90.0% of 20 wrong cases (100 GSM8K cases, Qwen3-14B). Nothing was tested beyond 3 to 4 agents, 14B models or tool use.
 
 ---
 

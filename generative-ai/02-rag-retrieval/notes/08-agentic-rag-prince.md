@@ -8,6 +8,8 @@ sources:
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 6"
   - https://arxiv.org/abs/2501.05366
   - https://arxiv.org/abs/2501.09136
+  - https://arxiv.org/abs/2504.21252
+  - https://arxiv.org/abs/2508.04604
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -94,6 +96,8 @@ the bank link stopped updating   retrieve (best cosine 0.84)
 ```
 
 The floor is a corpus-specific number. Set it by reading scores on your labelled queries, and expect to move it when the embedder changes, because cosine scores from different models are not comparable.
+
+A clarifying step can also add to the query before retrieval instead of asking the user. Discuss-RAG has a recruited panel of LLM "experts" write down, over several rounds, the background a question needs, and the panel is told not to answer it. A verifier condenses their notes, and the summary goes to the retriever alongside the original query. After retrieval, a decision agent rejects chunks that don't fit the summary, and a chain-of-thought prompt answers instead. Added to MedRAG (gpt-3.5-turbo, MedCPT over a medical-textbook corpus), accuracy rose on all four medical QA sets, by **4.40 points on MedQA-US (62.45 to 66.85) up to 16.67 on BioASQ (58.61 to 75.28)**. There is one model, one retriever and one baseline, no seeds, and no ablation separating the pre-retrieval panel from the post-retrieval check. The paper gives no count of agents, rounds or tokens, and the authors concede the overhead ([arXiv:2504.21252](https://arxiv.org/abs/2504.21252), Dong et al., 2025-04, preprint). Before copying it, test the cheap half on its own: one call that writes the needed background, used as a second query, is HyDE's idea ([11](11-retrieval-improvements.md#3-hyde-hypothetical-document-embeddings)) at a fraction of a panel's cost.
 
 ---
 
@@ -540,6 +544,8 @@ my client says the bill never arrived      sql 0.46
 The book's logical router matches the returned label by lowercase substring (`"python_docs" in result.datasource.lower()`). That's fine for two labels; validate against the exact set once routes multiply. The book's code imports `langchain_core.pydantic_v1`, a shim deprecated since LangChain 0.3; use plain Pydantic v2 models.
 
 Look at the last line. "My client says the bill never arrived" is a support question, and it went to SQL because the description of the SQL route contains "customer" and "invoices". A route description is a document in a very small index, and it fails the way documents do. Before you trust it, score it on labelled queries the way [note 03](03-keyword-semantic-and-hybrid-search.md) scores retrieval: a wrong route is a recall of zero, and nothing downstream can repair it. PRINCE's domain sub-agents below are what routing becomes once the routes outnumber what one prompt can hold.
+
+Baidu's TURA measured what fixes a description-based router once the routes are tools. It treats 61 MCP servers, web search among them, as documents. **Embedding about 20 synthetic queries per server beside its description, and splitting multi-intent queries before retrieval, raised Recall@5 from 0.42 to 0.83** over plain dense retrieval (ERNIE, Qwen3-1.7B decomposer, 10,683 logged queries). Without the split, recall was 0.45, so most of the gain comes from decomposition. Independent sub-tasks then run as a DAG, the parallel planning LLMCompiler introduced (Kim et al., ICML 2024). That cut latency from 1,650 to 920 ms on the multi-hop subset, but only 5% of queries had more than one intent. A distilled Qwen3-4B executor called tools correctly 88.3% of the time at 750 ms P80 per step, against 82.4% at 8,700 ms for its DeepSeek-V3 teacher. The baselines are the authors' own, judging mixes humans and LLMs, the online test used 103 queries with no significance test despite claiming one, and no end-to-end latency or cost is given ([arXiv:2508.04604](https://arxiv.org/abs/2508.04604), Zhao et al., 2025-08, v2 2026-03, preprint).
 
 ---
 

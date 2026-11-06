@@ -9,6 +9,10 @@ sources:
   - https://arxiv.org/abs/2404.07143
   - https://arxiv.org/abs/2501.15383
   - https://arxiv.org/abs/2512.23675
+  - https://arxiv.org/abs/2304.11062
+  - https://arxiv.org/abs/2512.13898
+  - https://arxiv.org/abs/2510.26493
+  - https://arxiv.org/abs/2511.12869
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -24,7 +28,7 @@ A model with a one-million-token window can still fail a question whose answer i
 
 **Find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome.**
 
-That single sentence is Anthropic's framing of the whole discipline. It is a *minimization* objective, which is counterintuitive: the instinct with a 200k or 1M window is to fill it. The instinct is wrong, and the rest of this note explains why.
+That single sentence is Anthropic's framing of the whole discipline. It is a *minimization* objective, which is counterintuitive: the instinct with a 200k or 1M window is to fill it. The instinct is wrong, and the rest of this note explains why. Hua et al. state the same objective as a design principle, **minimal sufficiency**: "The context value lies in sufficiency, not volume." They trace context engineering back to pre-LLM context-aware computing, with Dey's 2001 definition of context as information that characterizes the situation of an entity (a person, place or object relevant to the user-application interaction) ([arXiv:2510.26493](https://arxiv.org/abs/2510.26493) (Hua et al., 2025-10, preprint)). It is a position paper with no experiments, useful for the lineage, not as evidence.
 
 The field around that sentence is now large. Mei et al.'s survey sorts about 1,400 papers into foundational components (retrieval and generation, processing, management) and the implementations built from them (RAG, memory, tool use, multi-agent), plus evaluation and open problems. This pillar covers both halves: retrieval in [04](04-retrieval.md); processing in [05](05-compression-compaction.md), [07](07-structured-context.md) and [08](08-cognitive-tools.md); management in [03](03-budgeting-the-window.md); and the implementations in [06](06-memory.md) (memory) and [10](10-tools-and-multi-agent.md) (tools and multi-agent).
 
@@ -46,6 +50,8 @@ Two consequences follow:
 - Token cost is **not** the binding constraint. A 150k-token window that fits comfortably in budget and latency can still degrade output quality.
 - "It fits in the window" is not an argument for including something. Window capacity is an upper bound on what is *possible*, not a target.
 
+The cost side of that arithmetic is why some work gives up full attention. [arXiv:2304.11062](https://arxiv.org/abs/2304.11062) (Bulatov et al., AAAI 2024) adds recurrent memory tokens to a BERT backbone and passes them between 512-token segments, so compute grows linearly and inference memory stays constant. It used memory on synthetic fact-retrieval tasks out to **4,096 segments (about 2M tokens)**. By the authors' analytic FLOP estimate at 2,048,000 tokens, that is 29x fewer FLOPs than OPT-175B, and a plain GPT-2 ran out of memory at 8K tokens on an 80GB GPU without FlashAttention. The result is narrow: single and two-fact lookups among off-distribution filler, small backbones (BERT, GPT-2), no long-context benchmark and no full-attention comparison at length. The authors call full attention an upper bound, since the memory is compressed state, not the exact past.
+
 A quick way to feel the n² point: hold the useful material at 2,000 tokens and grow only the filler. The share of attention pairs that join two useful tokens collapses long before the window is full. This is arithmetic about pairs, not a measured accuracy curve, so read it as the shape of the problem and take the accuracy numbers from the benchmarks above.
 
 ```python
@@ -66,6 +72,13 @@ Output:
   200,000 tokens     40,000,000,000 pairs  signal-to-signal  0.0100%
 1,000,000 tokens  1,000,000,000,000 pairs  signal-to-signal  0.0004%
 ```
+
+The same dilution has been measured on the attention weights themselves. Bansal et al. ([arXiv:2512.13898](https://arxiv.org/abs/2512.13898) (Bansal et al., Meta, 2025-12, preprint)) prove that if many distractors score close to the needle, softmax attention on the needle falls toward zero. To hold a fixed share of attention, the needle's score has to beat the distractors by a gap that grows with the log of the context length. A survey of LLM limits derives the same ln N margin under stylized assumptions (one relevant token, independent distractors, one head) and adds no experiments of its own ([arXiv:2511.12869](https://arxiv.org/abs/2511.12869) (Mohsin et al., 2025-11, preprint, under review at TMLR)). On a synthetic bank-transaction lookup with Qwen3-4B in thinking mode, **the attention mass on the target fell from 0.46 at 512 tokens to 0.04 at about 9.5K, and accuracy fell from 36% to 1%**. Their argument is that more thinking tokens cannot fix this, because each new token reads through the same diluted attention. Their fix changes the attention instead: a few gradient steps on the query projections only, over spans of the context itself. At the same FLOPs as 8,192 thinking tokens, that lifted Qwen3-4B's LongBench-v2 average from 27.0 (no thinking) and 33.5 (thinking) to 39.6. Caveats:
+- One run per configuration, with no sample sizes or intervals.
+- The learning rate is tuned per dataset, and bad rates fail badly.
+- Qwen3 models only (1.7B–32B), with synthetic contexts of about 10K tokens.
+- Summarization gains were no bigger than thinking's.
+- Baselines are only thinking, best-of-n and beam search, with no retrieval or compression.
 
 ---
 

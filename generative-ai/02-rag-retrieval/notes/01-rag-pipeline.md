@@ -2,9 +2,14 @@
 origin: curated  # was: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here) - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
+  - https://arxiv.org/abs/2510.18234
   - https://arxiv.org/abs/2212.10496
   - https://arxiv.org/abs/2312.10997
   - https://arxiv.org/abs/2402.19473
+  - https://arxiv.org/abs/2409.14924
+  - https://arxiv.org/abs/2509.10697
+  - https://arxiv.org/abs/2609.03874
+  - https://arxiv.org/abs/2609.37226
   - https://pub.towardsai.net/9-rag-architectures-that-save-you-months-of-dev-work-0e219eb637cb
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md
@@ -404,6 +409,12 @@ Flat chunks fail on aggregation and rule-induction questions however good the re
 | **Knowledge discovery** | Extract a schema per case (bottom-up factor discovery), encode it, cluster into prototypes, rank the factors | "What decides outcomes here?" | The ranked factors also tell the agent which questions to ask, in order. Lab: upstream [3-13](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/structured-knowledge-extraction) (Chinese legal data) |
 
 Raieli and Iuculano's *hierarchical indexing* is the two-level version of RAPTOR. Summarise each document (one or more summaries per ~10 pages or 10K tokens), search the summaries first, then search chunks only inside the documents that matched. More levels give more precise routing, but the summaries multiply and each level adds a search step. The authors warn that with too many levels the number of summaries explodes combinatorially (*Building AI Agents*, ch. 6).
+
+The structure can also be built at query time. Jiang et al. survey what they call retrieval and structuring augmented generation. The graph-retrieval line they map includes HippoRAG (Gutiérrez et al., NeurIPS 2024), which extracts triples from passages with an LLM, then runs personalized PageRank around the query's entities to find passages linked only through other passages. They also propose a loop in which each round's retrieved text is turned into a subgraph of a knowledge graph built for that one query, and the model writes its next subquery from that graph until it has enough. The loop is a proposal that was never run, and the survey reports no experiments, latency or indexing cost, so it shows the design space and not whether structure beats hybrid chunk retrieval ([arXiv:2509.10697](https://arxiv.org/abs/2509.10697), Jiang et al., KDD 2025).
+
+A document's own table of contents is a structure that costs nothing to build. STAIR puts a book's whole table of contents in the prompt and fine-tunes the model to write the title of the one leaf section that answers the query. It extends the differentiable search index (DSI, Tay et al., NeurIPS 2022), where a model learns to generate document ids. On SearchTome (18 open textbooks in 6 domains, with Mixtral-generated test questions), a LoRA-tuned Mistral-7B reached **Recall@1 of 82.6 against 76.9 for DSI on the same base model**, 68.7 for off-the-shelf NV-Embed-v2 and 59.5 for BM25. The gap over DSI was significant in each domain, and only 0.05% of its outputs named a section that is not a leaf. It is trained per book with up to 14k tokens of contents in each prompt, so a changed corpus means retraining. It was never compared with tuned chunk retrieval or a reranker, and it reports no answer quality. The authors limit it to corpora that have a global structure ([arXiv:2609.03874](https://arxiv.org/abs/2609.03874), Kumar et al. (IBM), 2026-09, v2 2026-10, preprint).
+
+Entities can be the structure an agent walks instead. GraphRAG and HippoRAG keep their graph inside the retriever. CorpusMap writes it out as files: one page per entity that appears in at least two documents, linking to those documents, for an agent searching with find, grep and cat. Across three enterprise-style benchmarks of 2.8k–6.4k documents (multi-document questions only, four GPT-5.5/5.6 models, 3 runs), it **raised overall quality by 6.4 to 11.7 points over the agent searching the raw files, with 34–57% fewer input tokens**. Other navigation layers (per-document pages, cluster pages, an LLM wiki) did not reliably beat the raw files. Adding entity-to-entity edges, as a knowledge graph would, changed document recall by −2.6 to +0.2 points and enlarged the pages by 27–52%. On one benchmark, against fixed-context retrievers with GPT-5.5, it scored 76.60 against 65.05 for dense, 64.66 for HippoRAG and 47.95 for GraphRAG, but that compares an agent with full file access to a fixed context. The authors estimate a one-time build cost of up to $4,732 with GPT-5.5, recovered after about 9,000 queries (12,400 to 26,300 for the other builders), and a map built by the cheapest model still beat the raw files for every answering model. A judge model scored all the results, and pooling content by entity can expose documents across permission levels, so the authors advise one map per permission level ([arXiv:2609.37226](https://arxiv.org/abs/2609.37226), Jeong et al. (KAIST, Microsoft), 2026-09, preprint).
 
 ### Embed one thing, return another
 

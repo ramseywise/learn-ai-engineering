@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2601.07136
   - https://arxiv.org/abs/2607.20709
   - https://aclanthology.org/2024.emnlp-demo.8/
+  - https://arxiv.org/abs/2309.07870
+  - https://arxiv.org/abs/2408.15247
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -166,6 +168,8 @@ To put a price on it, assume each call sends 2,000 input tokens and returns 100 
 | Eval | Built-in harness? | ADK ships one; others rely on LangSmith/Langfuse/your own |
 | Deployment | Library you host, or a managed runtime? | Ops burden vs vendor dependency |
 
+The control-flow row is an old design choice. [Zhou et al. (2023-12, preprint)](https://arxiv.org/abs/2309.07870) built the AGENTS library around a symbolic graph of states that the author writes (a "standard operating procedure"), with an LLM only choosing transitions, and argued this makes agents "more stable/predictable". Treat that as a design claim: the paper reports **no benchmark, ablation or user study**, only case-study screenshots (customer service, sales, a multi-agent fiction studio). Its framework comparison is a self-scored five-column feature checklist over nine 2023 frameworks, in which AGENTS is the only one ticking all five, with no criteria or versions given. Its main loop, `while not sop.finished`, has no turn limit, so termination (see the stop-condition section above) depends on the SOP.
+
 ---
 
 ## The frameworks
@@ -223,6 +227,8 @@ Treat the exact percentages loosely. The paper's own text disagrees with itself:
 [Liu et al. (preprint, Jan 2026)](https://arxiv.org/abs/2601.07136) looked at the frameworks themselves: eight multi-agent systems, more than 42,000 commits and 4,700 resolved issues. Perfective work led at 40.83% of commits, then corrective at 27.36% and adaptive at 24.30%. So these projects are spending more on adding and reshaping than on fixing, and your code sits on that moving surface. Median issue resolution ran from about a day for LlamaIndex to more than ten days for Semantic Kernel and Haystack, with long right tails. LangChain, AutoGen and CrewAI are in that sample. LangGraph and ADK are not, so check a candidate's issue tracker yourself: this is a ten-minute job and the study shows the differences are large.
 
 [Dibia et al. (EMNLP 2024 System Demonstrations)](https://aclanthology.org/2024.emnlp-demo.8/) suggest one defence. AutoGen Studio treats a workflow as a declarative JSON specification that can be exported and run elsewhere. Any time your agent's definition is data, you can keep it when the runtime changes.
+
+The evidence behind that suggestion is thin, and the paper says so. [arXiv:2408.15247](https://arxiv.org/abs/2408.15247) (Dibia et al., EMNLP 2024 System Demonstrations) reports **over 200K package installs in 5 months and over 135 GitHub issues** as its only quantitative evidence; installs are not active or production users. It runs no user study, benchmark or comparison with other tools, and it states that the tool "is not production ready" (no authentication or security measures). Its own list of issue-driven fixes (a database layer to persist and reuse components, a test button for components and workflows) points the same way as the defence: definitions that can be stored, exported and re-run.
 
 ---
 

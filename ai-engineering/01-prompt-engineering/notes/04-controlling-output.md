@@ -7,6 +7,7 @@ sources:
   - https://arxiv.org/abs/2408.02442
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3"
   - https://arxiv.org/abs/2104.08691
+  - https://arxiv.org/abs/2307.09702
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -115,6 +116,8 @@ flowchart LR
 6. **Route it through a tool** — define a tool whose parameters *are* your output schema and require the model to call it ([05](05-tools-and-function-calling.md)).
 
 A schema guarantees **shape, not truth**: a valid JSON object can still hold hallucinated values. Validate the content as well ([09](09-evaluating-prompts.md)).
+
+Rung 5 works by masking: at each step the decoder sets the probability of every token that would break a regex or grammar to zero, then samples. The naive version scans the whole vocabulary each step. Outlines precomputes, for each state of the regex's state machine, which tokens are allowed, so the per-step lookup is O(1) on average instead of O(N) in vocabulary size (about 50k for GPT-2). The paper's one timing test (GPT-2, one regex, one sample per length, against one library) shows the other library's runtime growing with generated length while Outlines stays flat. It measures no accuracy effect of masking, and its own GPT-2-medium demo returned a valid but wrong yes/no answer ("Is 1+1=2? Always"), which is the shape-not-truth point again ([arXiv:2307.09702](https://arxiv.org/abs/2307.09702) (Willard & Louf, 2023, preprint)).
 
 At rungs 1–3, write the parser for what actually comes back, not what you asked for. Phoenix & Taylor's list of what comes back (*Prompt Engineering for Generative AI*, ch. 1, 3):
 

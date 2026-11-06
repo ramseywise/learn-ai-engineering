@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2303.10420
   - https://arxiv.org/abs/2411.00640
   - https://arxiv.org/abs/2509.04664
   - https://www.anthropic.com/research/statistical-approach-to-model-evals
@@ -12,6 +13,8 @@ sources:
   - https://arxiv.org/abs/1804.09301
   - https://arxiv.org/abs/2101.11718
   - https://arxiv.org/abs/2410.05229
+  - https://arxiv.org/abs/2502.16797
+  - https://arxiv.org/abs/2506.02126
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -44,6 +47,8 @@ On 50 tasks, 80% and 72% are not distinguishable. That's the most important tabl
 For small *n* or *p* near 0 or 1, use the **Wilson interval** instead of the normal approximation. It doesn't produce bounds outside [0, 1].
 
 See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#standard-errors-and-confidence-intervals) in data analytics for the derivation of the standard error, the [Wilson interval](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson) and [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap). These bars cover sampling error only. They say nothing about how the tasks got into the suite, which is the [data generating process](../../../data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md#big-is-not-the-same-as-representative) question.
+
+Nor does a zero tell you about deployment scale. A behaviour that never shows on 1,000 test queries can still show at 100,000. Jones et al. ([arXiv:2502.16797](https://arxiv.org/abs/2502.16797) (Jones, Tong et al., 2025-02, preprint)) give each query a continuous elicitation probability, sampled repeatedly, and fit a power law to the top ten of them to extrapolate the worst query at larger *n*. Forecasting from 100–1,000 queries to 10,000–90,000 on Claude models, **the fit's mean error on misuse risk was 1.7 orders of magnitude (base-10 log), against 2.4 for a log-normal fit, and it landed within one order of magnitude 72% of the time**. It underestimated 34% of the time against 72% for the log-normal fit, where an unbiased method would sit at 50%. "Deployment" was simulated by splitting one generated query pool into non-overlapping evaluation and deployment sets, so the forecast covers more queries, not different ones: "We do not study distribution shifts between evaluation and deployment queries". It gives no intervals on its forecasts.
 
 ---
 
@@ -236,6 +241,8 @@ Numbers say how much. Transcripts say why. Before accepting any change in a scor
 
 Anthropic's guidance puts it plainly: you won't know whether your graders work unless you read transcripts and grades together.
 
+A right final answer can sit on wrong steps. Wu et al. ([arXiv:2506.02126](https://arxiv.org/abs/2506.02126) (Wu et al., 2025-06, preprint)) split a reasoning trace into steps and score each one twice: whether its facts match a reference (a GPT-4o check) and whether it lowers the perplexity of the gold answer. On five medical benchmarks with Qwen2.5-7B models, **the base model fine-tuned with SFT and RL averaged 60.02% accuracy and a knowledge score of 64.23, against 31.48% and 54.29 for the R1-distilled model given the same training, while their information-gain scores were nearly equal (2.348 and 2.309)**. The older ROSCOE step metrics hardly moved: faithfulness-step was 0.781 for the untrained, SFT and SFT+RL base checkpoints alike (four of the benchmarks). Read it as a reason to check facts in the transcript, not as a validated metric: GPT-4o makes every knowledge call with no human check, only Qwen 7B models were tested, nothing was run twice, and the paper's text disagrees with its own Table 1 in several places.
+
 ---
 
 ## From a benchmark report to hypotheses
@@ -307,6 +314,8 @@ Two more from this chapter, outside that paper:
 - **Picking a winner among many slices.** Symptom: one slice of 20 is "significant". Fix: declare hypotheses up front, correct for the number of tests, or re-run the positive result as an independent confirmation.
 
 Rule: **never let errors or refusals silently leave the denominator.** Count errors as failures. For refusals, it depends on whether declining was a legitimate answer. Where the system should have answered, a refusal is a failure. Where "I don't know" is acceptable, counting it as a failure scores a confident wrong answer the same as an honest abstention, which pushes the system toward guessing ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09)). In that case report three rates: correct, wrong and abstained. Or use a grader that penalizes wrong answers more than abstentions ([04](04-graders.md#binary-vs-scales)).
+
+Unscoreable outputs and unequal samples are the same fault in a model comparison. A capability study of six GPT-3 and GPT-3.5 models on 21 language-understanding datasets ([arXiv:2303.10420](https://arxiv.org/abs/2303.10420) (Ye et al., 2023-03, preprint)) scored davinci and code-davinci-002 on 100 samples, text-davinci-001 and text-davinci-002 on 1,000, and the two newest models on the whole set (datasets under 1,000 records were used in full), then set the scores side by side. **Rows were left blank where too many outputs could not be parsed, at a threshold the paper never gives**, and davinci's parseable rate on MRPC went from 0 to 100% (100 items, zero-shot) when the prompt ended with the word "Answer". In the per-dataset tables every score carries a ± that is never defined, and one reads 26.00 ± 45.03. The paper states no run count, sampling method or decoding settings, so its rankings can't be checked, and all six models are retired.
 
 ### A cautionary write-up
 

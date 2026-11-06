@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2403.03163
   - https://arxiv.org/abs/1904.08920
   - https://arxiv.org/abs/2502.17651
+  - https://arxiv.org/abs/2604.05081
   - https://arxiv.org/abs/1912.13318
   - https://arxiv.org/abs/2411.03707
   - https://arxiv.org/abs/2506.17374
@@ -78,6 +79,8 @@ Cost differs between routes by orders of magnitude, so measure before you pick. 
 These numbers show a long tail, about twenty times the median at the 95th percentile on CPU. A single page full of tables and images can stall a worker that was sized for the median. Disabling OCR saved around 60% of the runtime on CPU and M3 and about 50% on the L4, and disabling table structure saved another 16 to 24%. For comparison, the Nougat authors report a base model batch of 6 pages taking 19.5 seconds on a single A10G with 24 GB of VRAM, while GROBID processed 10.6 PDFs per second ([arXiv:2308.13418](https://arxiv.org/abs/2308.13418)). Those are their setups in those years, so use them to reason about shape, not as a price list.
 
 The practical pattern follows from the numbers: route by page. Check whether a page has a text layer before running OCR, and send only the hard pages to the expensive route.
+
+Medical imaging shows the same budget problem in three dimensions. MedGemma 1.5 turns a CT or MRI volume into 2D slices of 256 tokens each at 896×896, capped at 85 slices (21,760 tokens) to stay under a 32K context, and a whole-slide pathology image into at most 126 patches (32,256 tokens). On the authors' internal, class-balanced yes/no condition sets, MRI accuracy rose from 51.3% to 64.7% and CT from 58.2% to 61.1%, so the older model was near chance on MRI. Lab-report extraction to JSON, scored by macro F1 on internal sets of rendered report pages, rose from 78 to 91 and from 50 to 71 on two datasets and stayed at 85 on a 14-image public one. These are single runs at temperature 0 on non-public data. The cost of the added skills was a fall in general knowledge, with MMLU-Pro dropping from 39.1 to 33.8 ([arXiv:2604.05081](https://arxiv.org/abs/2604.05081) (Sellergren et al., 2026-05, preprint)).
 
 ## Check the result without trusting the model
 

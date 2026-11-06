@@ -3,6 +3,7 @@ origin: curated  # was: notion-export
 sources:
   # own work notes (production support-agent evaluation, anonymised)
   - https://aclanthology.org/2023.nlposs-1.24/
+  - https://arxiv.org/abs/2512.21309
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -218,6 +219,8 @@ serve  How do I reset my API key?
 ```
 
 The rule catches the code, the plan and the direction, and the last line shows where it stops: "API key" against "password" passes, because neither word is on the list. A guard list is a set of known hazards that you grow from reviewed false hits. It can never be complete, so a cache in production also needs a sampled review of what it served.
+
+The opposite move removes the hazard instead of listing it: take the slots out before you compare. AgentReuse caches an agent's plan rather than its answer, because "Hefei to Beijing" and "Changsha to Shanghai" need the same steps with different arguments. It classifies the intent, strips the parameters, and searches only within that intent's entries. On 2,664 Chinese assistant commands (23 intents, m3e-small, threshold 0.75), **F1 was 0.9718 against 0.9100 for GPTCache comparing raw text**. GPTCache lost on recall (0.84), not precision (0.99). In 93 of 100 AutoGen runs, the reused plan with new arguments gave the same response as a freshly generated one. The 93% latency saving is arithmetic: it assumes 31.8 s per GPT-4 plan and leaves out execution time. Only 20 requests were run through the agent, and the paper calls itself exploratory ([arXiv:2512.21309](https://arxiv.org/abs/2512.21309), Li et al., 2025-12, preprint; English version of a 2024 *Journal of Computer Research and Development* paper). For Tallybook the transferable part is that an invoice number or plan name is a parameter to strip, not text to match.
 
 ---
 

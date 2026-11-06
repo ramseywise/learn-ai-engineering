@@ -39,6 +39,7 @@ sources:
   - https://arxiv.org/abs/2504.12216
   - https://arxiv.org/abs/2510.07242
   - https://arxiv.org/abs/2601.05242
+  - https://arxiv.org/abs/2606.08501 (Back on Track, step rewards for diffusion-LLM RL)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -522,6 +523,13 @@ right, so they cannot supply them directly. d1
 estimates them with a mean-field decomposition and a single unmasking pass under a random
 prompt mask. On LLaDA-8B-Instruct, this diffu-GRPO beat SFT in all 12 task and length setups.
 SFT followed by RL took Countdown from 20.7% to 42.2%.
+diffu-GRPO still scores every denoising step with the one final reward, and it trains on states
+the model never produced. Back on Track (PAPO) ([arXiv:2606.08501](https://arxiv.org/abs/2606.08501) (Shao et al., 2026-06, preprint))
+fixes both. Each step is rewarded by scoring its one-step denoised guess, and the update replays
+states from the real rollout, chosen by entropy. With no SFT on LLaDA-8B-Instruct,
+**Countdown at length 256 reached 65.6% against 31.3% for diffu-GRPO and 19.5% for the base**,
+while GSM8K and MATH500 moved little and sometimes trailed other baselines. The best checkpoint
+was picked on the evaluation sets, one seed, LoRA only.
 
 **When to use GRPO:** Reasoning tasks with verifiable outcomes (math, code, logic).
 Not appropriate for general instruction following or alignment training.

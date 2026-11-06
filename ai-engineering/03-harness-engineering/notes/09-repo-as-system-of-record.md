@@ -8,6 +8,11 @@ sources:
   - https://github.com/walkinglabs/learn-harness-engineering
   - https://addyosmani.com/blog/agent-harness-engineering/
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
+  - https://arxiv.org/abs/2602.11988
+  - https://arxiv.org/abs/2607.13285
+  - https://arxiv.org/abs/2609.05364
+  - https://arxiv.org/abs/2608.11095
+  - https://arxiv.org/abs/2602.20478
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -89,6 +94,8 @@ The common failure: the agent makes a mistake, you add a rule, it works for a wh
 - **Flat priority.** "Never use `eval()`", "prefer functional style" and "we fixed a WebSocket leak last week" look identical. The agent has no signal for which is a red line.
 - **Decay and contradiction.** Adding feels free and deleting feels risky, so the file only grows, and rules written months apart start disagreeing.
 
+The growth is measured. Across 1,867 public GitHub repos (247,694 instruction lifetimes in `CLAUDE.md`, `AGENTS.md` and Copilot instruction files), instruction count rose **+226% over a file's lifetime**, a net +4.9 instructions per commit outside mass rewrites, and 64.3% of multi-version repos grew against 26.6% that shrank ([arXiv:2608.11095](https://arxiv.org/abs/2608.11095) (Chakrabarti, 2026-08, preprint)). Old rules were *less* likely to be deleted than new ones, the opposite of what staleness would predict. 77.3% of deletions came in a wholesale rewrite or migration, after which the file regrew to 91.5% of its old size within 10 commits. This is observational, with the instructions' language not measured and a line matcher checked on 50 hand-labelled transitions.
+
 The fix is **progressive disclosure.** The entry file is an index, and the details live in topic docs read on demand. OpenAI calls `AGENTS.md` a *table of contents, not an encyclopedia*, and keeps theirs to about 100 lines.
 
 ```mermaid
@@ -101,6 +108,8 @@ flowchart LR
 ```
 
 Everything to the right of the router costs tokens only when a task opens it. Each arrow answers one question from the fresh session test above.
+
+Measure before you add to it. Gloaguen et al. ([arXiv:2602.11988](https://arxiv.org/abs/2602.11988) (Gloaguen et al., 2026, preprint)) ran four coding agents (Claude Code with Sonnet-4.5, Codex with GPT-5.2 and GPT-5.1 Mini, Qwen Code with Qwen3-30B) on SWE-bench Lite (300 tasks) and CtxBench (138 tasks from 12 repos that commit their own file), one sample each. LLM-generated context files changed success by -0.5% and -2% and raised cost by 20% and 23%; developer-written files gained +2.4% on CtxBench (p=0.21, not significant) and beat the generated ones (p=0.038). Overviews did not get agents to the right file in fewer steps, and the agents did follow the file, running `uv` 1.6 times per task when it was named against under 0.01 when not. With all other docs deleted, generated files helped (+2.7%), so the finding holds mainly where docs already exist. It covers Python only, small sets and dated models.
 
 How long, exactly? The sources disagree. Osmani says under ~60 lines ([note 01](01-what-a-harness-is.md#the-ratchet)), OpenAI about 100, the *learn-harness-engineering* course 50–200. They agree on the rule behind the number: **everything in the root file is read on every task, so each line has to earn that.** Start near 60. Grow only when a line traces to a real failure ([the ratchet](01-what-a-harness-is.md#the-ratchet)), and move a section out to a topic doc once it applies to only some tasks:
 
@@ -123,6 +132,8 @@ Python 3.11 FastAPI backend, PostgreSQL 15.
 
 Topic docs run 50–150 lines each and are read only when the task needs them.
 
+A large repo stretches these sizes. One developer's experience report on a 108,256-line C# game built with Claude Code ([arXiv:2602.20478](https://arxiv.org/abs/2602.20478) (Vasilopoulos, 2026-02, preprint)) split the context into three tiers: an always-loaded "constitution" of about 660 lines with conventions, build commands and trigger tables that route file areas to agents; 19 specialist agent specs; and 34 subsystem specs served on demand by a keyword-search MCP server, which was called 1,478 times across 218 sessions. The whole set came to about 26,200 lines, 24.2% of the code size. The author found **stale specs to be the main failure mode**, because "agents trust documentation absolutely and out-of-date specs cause silent failures", and reports spending 1–2 hours a week keeping them current. It is one developer, one project and one tool, with no baseline or tier ablation. Its outcome claims are observational case studies the author judged, so the report shows the hot/cold split in practice rather than proving it works.
+
 **What stays in the root vs. what moves out:**
 
 | Keep in the root | Move out |
@@ -133,7 +144,9 @@ Topic docs run 50–150 lines each and are read only when the task needs them.
 | Required state artifacts | Examples that apply to one subsystem |
 | End-of-session rules | Tool manuals |
 
-**Each rule records three things:** its *source* (why it was added), its *applicability* (when it matters), and its *expiry* (what would make it removable). Audit on a schedule and remove dead rules the way you remove unused dependencies. If a rule must sit in a long file, put it at the top or bottom, never the middle.
+**Each rule records three things:** its *source* (why it was added), its *applicability* (when it matters), and its *expiry* (what would make it removable). Audit on a schedule and remove dead rules the way you remove unused dependencies.
+
+The same paper tests the source field. It gives each instruction a *prompt comment*, stripped before the agent sees it, that records what failed and what happened when the rule was added. In a simulated maintenance loop where the optimal prompt is known (IFEval constraints; claude-haiku-4-5 as both maintainer and executor; 15 steps, 552 histories, 3 seeds), excess prompt size was +60.4% without comments and −5.8% with them, at equal constraint satisfaction. Comments shaped like these but holding noise left it at +53.2%, and comments describing the attempts without their outcomes did worst. Only the 15-step result has three seeds. The effect appears only in a regime the author found by search and vanishes when the verifier's spec is disclosed. About 1 prompt in 8 was emptied, and the method was never tried on a real `CLAUDE.md` or real coding tasks. So it supports writing the *why* and the outcome down, not automated pruning. If a rule must sit in a long file, put it at the top or bottom, never the middle.
 
 Anti-patterns to check for: the same rule in several places; obsolete rules nobody audits; conditional rules so specific they almost never fire; long tool manuals in startup context.
 
@@ -170,6 +183,8 @@ Write for discoverability, not completeness: short files, clear names, linked to
 
 That layout is OpenAI's. Start with the minimal set (`AGENTS.md`, `init.sh`, `feature_list.json`, `progress.md`) and add the `docs/` folders when the repo outgrows it.
 
+The extreme version makes the docs the source and the code a build product. SMART, a Google TPU performance-modeling library ([arXiv:2609.05364](https://arxiv.org/abs/2609.05364) (Kushnir et al., 2026-09, preprint)), keeps almost no code on its main branch. It holds a dependency graph of 50 design docs (about 9,000 lines of prose), and one sub-agent per doc regenerates the whole implementation in dependency order with each new version. Humans edit only the docs. Two devices keep the prose precise: worked examples that trace intermediate values, and a **reconciliation anchor** at the end of every number-bearing doc, a small preset whose exact expected outputs generated tests enforce. The authors report that a clean rebuild with Claude Code takes 1.5–3 hours and costs about $100, and that regenerated models match hand-audited references "to round-off precision". These are single self-reported figures, with no model named, no run count, no baseline against incremental development and no ablation. The domain is also numeric and exactly checkable, which suits regeneration. Read it as a design position, not evidence that the approach works.
+
 ---
 
 ## Make the map enforceable
@@ -187,6 +202,8 @@ Cross-cutting concerns (auth, telemetry, external APIs) enter only through named
 3. Make the guardrail's error message tell the agent how to fix it ([note 05](05-verification-loops.md#agent-oriented-error-messages)).
 
 Done when a fresh agent can tell which layer owns a change and at least one important boundary is enforced mechanically. This is the practical form of [note 04 — encode constraints, don't document them](04-execution-boundaries.md#encode-constraints-dont-document-them).
+
+The map itself can be checked the same way. Harness Handbook ([arXiv:2607.13285](https://arxiv.org/abs/2607.13285) (Wang et al., 2026-07, preprint)) generates a three-level, behavior-organized map of a harness repo in which every entry carries a locator that must resolve to current code or the entry is frozen and excluded, and each diff triggers a scoped resync. Planners using it beat raw repo exploration on plan-quality win rate, 38.3% vs. 28.3% on Codex (2,267 files) and 45.6% vs. 26.7% on Terminus-2 (30 requests per harness, three LLM judges, one planner model). It scores plans, not executed edits, and was not compared with an AGENTS.md or a flat repo map, so it doesn't settle the Gloaguen result above.
 
 ---
 

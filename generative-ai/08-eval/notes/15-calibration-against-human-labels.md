@@ -18,6 +18,7 @@ sources:
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3"
   - 13-case-study-support-agent.md
   - ../practice/conversation_scoring_lab.py
+  - https://arxiv.org/abs/2608.18300
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -145,7 +146,7 @@ Abstention brings two risks of its own. Error on the scored rows can't see an ag
 
 - **Re-calibrate when anything changes**: judge model, judge prompt, the system under test (new failure types appear), or the user population.
 - **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](13-case-study-support-agent.md#domain-shift)). Calibration is per domain. Public benchmarks show the same: in Norman et al.'s study 11 of 21 judges moved four or more places between benchmarks, and Llama 3.3 70B went from 5th on MT-Bench to 20th on JudgeBench, so a judge's leaderboard rank says little about how it does on your data.
-- **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)).
+- **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)). Decide in advance what counts as drift. Netflix's explanation judge ([arXiv:2608.18300](https://arxiv.org/abs/2608.18300) (Kong et al., Lifelong Agents and AIMS workshops at COLM 2026)) gets a weekly sample of about 300 items, each labelled by at least 3 trained raters, and **is re-tuned when its score on any metric falls more than 2 standard deviations below the raters' mean, with the spread measured across the raters themselves**, so the bar loosens in weeks when the raters disagree more. The same check runs separately on newly added titles. In a 5-week A/B test the judge never left the band, so the re-tune path has been validated only offline. The band is estimated from as few as 3 raters and alerts only when the judge does worse, never suspiciously better. The authors also found that the weekly reading caught long-tail problems (explanations that passed every must-have criterion but read as confusing) that the agreement numbers would not necessarily flag.
 - **Pin the judge model version.** A provider updating the judge silently changes all your scores.
 - **Don't mix judges** across runs you intend to compare.
 

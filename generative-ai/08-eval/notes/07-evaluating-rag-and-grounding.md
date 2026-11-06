@@ -18,6 +18,8 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
+  - https://arxiv.org/abs/2508.01781
+  - https://arxiv.org/abs/2512.10791
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -132,7 +134,7 @@ Not every claim needs the same evidence. The case study grades on tiers:
 | **Paraphrase** | Explanations, procedures in other words | Semantically entailed by a passage |
 | **General** | Greetings, hedges, common knowledge, "let me know if…" | Exempt |
 
-Without tiers, a judge either fails harmless filler or waves through invented specifics.
+Without tiers, a judge either fails harmless filler or waves through invented specifics. FACTS Grounding, the grounding part of Google's FACTS Leaderboard ([arXiv:2512.10791](https://arxiv.org/abs/2512.10791) (Cheng et al., 2025-12, preprint)), takes the strict end: a response counts as accurate only if every claim that carries information is grounded in the prompt's document (up to 32k tokens), and it must also be judged eligible, because "metrics that are focused on evaluating the factuality of the generated text with respect to a context document can be 'hacked' by ignoring user intent." The score averages two judges from different families (Gemini 2.5 Flash and GPT-5) to blunt self-preference. **Against human labels on 320 held-out items (79:19 accurate to inaccurate), the chosen judges reached macro-F1 of only about 65 (65.33 and 65.18)**, so even a leaderboard's grounding judge disagrees with people often. Among the 15 API models in the first release, Gemini 2.5 Pro topped grounding at 74.2 (±2.0, public and private sets averaged) and o3 scored 36.2. The authors are Google, one of the two judges is a Google model from a family it also ranks, and the private split cannot be rerun by outsiders.
 
 The word "faithfulness" doesn't mean one thing across tools. MLflow, Ragas and LlamaIndex all ship a faithfulness judge, with different prompts and scales: 1–5, 0/1 and YES/NO (*AI Engineering*, ch. 3). A faithfulness number is only comparable to another from the same judge version ([05](05-llm-as-judge.md#three-judge-shapes)).
 
@@ -149,7 +151,7 @@ The word "faithfulness" doesn't mean one thing across tools. MLflow, Ragas and L
 
 ### Faithful is not correct
 
-An answer can be perfectly faithful to a stale or wrong document. Faithfulness measures the generator. **Correctness** against a reference measures the system. Track both: faithful-but-wrong points at the corpus. A survey of the factuality literature draws the same line as a 2×2 ([arXiv:2310.07521](https://arxiv.org/abs/2310.07521) (Wang et al., ACM Computing Surveys 2025; read as arXiv v3, 2023-12)): hallucination is departure from the source or prompt, factuality is agreement with facts that a reliable source can ground, and all four cells occur. An accurate answer that ignores the prompt is hallucinated but factual, and "I don't know" is neither hallucinated nor factual. The survey runs no experiments of its own, and it chooses not to focus on summarization faithfulness: the NLI and question-answering checkers above do not appear in it.
+An answer can be perfectly faithful to a stale or wrong document. Faithfulness measures the generator. **Correctness** against a reference measures the system. Track both: faithful-but-wrong points at the corpus. A survey of the factuality literature draws the same line as a 2×2 ([arXiv:2310.07521](https://arxiv.org/abs/2310.07521) (Wang et al., ACM Computing Surveys 2025; read as arXiv v3, 2023-12)): hallucination is departure from the source or prompt, factuality is agreement with facts that a reliable source can ground, and all four cells occur. An accurate answer that ignores the prompt is hallucinated but factual, and "I don't know" is neither hallucinated nor factual. The survey runs no experiments of its own, and it chooses not to focus on summarization faithfulness: the NLI and question-answering checkers above do not appear in it. A later taxonomy ([arXiv:2508.01781](https://arxiv.org/abs/2508.01781) (Cossio, 2025-08, preprint)) keeps the same split, faithfulness as adherence to the input and factuality as absolute correctness, and adds intrinsic (contradicts the context) against extrinsic (can't be checked against it). It is a definitions source and runs no experiments either.
 
 ### Grounding without retrieval
 

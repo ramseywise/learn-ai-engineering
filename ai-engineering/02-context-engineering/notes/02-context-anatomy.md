@@ -6,6 +6,8 @@ sources:
   - https://developers.openai.com/api/docs/guides/compaction
   - https://github.com/davidkimai/Context-Engineering (00_foundations/01–03, 00_COURSE/01_context_retrieval_generation/01–03) — snapshot 2026-08-14)
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2608.12610
+  - https://arxiv.org/abs/2609.02702
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -70,6 +72,8 @@ Test for this layer: *if it isn't true in nearly every task, it doesn't belong h
 Reusable procedures and domain knowledge relevant only to certain tasks: skills, playbooks, deployment procedures, evaluation methodologies, debugging checklists, API-specific instructions, long reference docs.
 
 Governed by **progressive disclosure** — only a short name and description (*what* + *when*) stay permanently visible; full content loads when the task activates it. The `skills/` directory is this pattern made concrete: ~10 tokens of description resident, thousands of tokens of procedure loaded on demand.
+
+Real descriptions run larger than that, and the resident part adds up. In one working setup, a team building a skills product measured **50–280 tokens per installed skill, about 1,500–2,000 tokens on every request for 18 skills**. Across 56,245 public `SKILL.md` bodies crawled in July 2026, the median body was 921 words ([arXiv:2608.12610](https://arxiv.org/abs/2608.12610) (Yin et al., SylphAI, UT Austin, 2026-08, preprint)). Their rule: "resident context is a budget; spend it only on what must fire implicitly, and deliver everything else at the point of use". Their claim that an agent has fewer than 100 reliable auto-trigger slots is argued from other papers, not measured. The authors sell the protocol they propose.
 
 **Write the description as a routing rule, not a feature summary.** Use "Use when … / Do not use when …" and include negative examples. "Help with backend" fires on unrelated tasks. Explicit exclusions are what make routing precise.
 
@@ -159,6 +163,8 @@ The server turns API messages into one token stream through the model's **chat t
 
 - **Mislabelled roles change behaviour, not just formatting.** Qwen3's template keeps `<think>` content across tool calls but resets it on a new user turn. If tool results are sent as user messages, the reasoning resets in the middle of a task.
 - **Pass reasoning back.** In the DeepSeek-R1 era the guidance was to strip historical reasoning (it was out of distribution). DeepSeek V4 reversed this: `reasoning_content` must be returned verbatim on every assistant message, including tool-call turns. Kimi K2 and GLM-5 follow the same protocol. Claude requires signed thinking blocks to be passed back inside the tool loop. For agents, reasoning carries *why this tool was called and which hypotheses were ruled out*, so stripping it makes the model repeat mistakes. Check each model's current template docs.
+
+Treating reasoning as state also says *where* to put it. Trace as State reruns a long-context task with the first pass's reasoning traces placed **before** the document instead of after it ([arXiv:2609.02702](https://arxiv.org/abs/2609.02702) (Zou and Tang, Z.ai, Tsinghua, 2026-09, preprint)). That order won in **26 of 27 model, task and metric cells**. The setup was DeepSeek V4 Pro Preview, GLM-5.2 and Qwen 3.7 Max on GraphWalks 256K, MRCRv2 8-needle at 256K and 512K, and NUB-1M, with five first-pass traces and the question last in both orders. The largest effect was on GraphWalks Parents with DeepSeek: exact match went from 29.2% on the first pass to 43.0% with the traces appended and 81.8% with them first. Traces from *other* problems scored 14.2%, and putting the first-pass answers (not the traces) before the document scored 45.4%, so it is this problem's reasoning text, placed first, that carries the state. The costs are real: five source runs plus a fresh pass, so more latency and tokens (the paper gives no single figure), a lost KV-cache prefix in multi-round agent settings (state goes in front of the document), and the raw traces, which closed APIs may not return. It is three models, on GraphWalks and MRCRv2 plus 20 questions on one novel (NUB-1M). The controls ran on GraphWalks with one model, and no multi-round agent tasks were evaluated. The authors also report more sandbox-escape attempts in their agentic coding tests, without a number.
 
 Position bias, the attention sink on the first token, and the "triangle" patterns of reasoning and output are all visible in [2-2 attention_visualization](https://github.com/bojieli/ai-agent-book/tree/main/chapter2/attention_visualization). [2-1 local_llm_serving](https://github.com/bojieli/ai-agent-book/tree/main/chapter2/local_llm_serving) shows a 0.6B model doing reliable tool calls, and the TTFT jump when you edit one character of the prefix.
 

@@ -9,6 +9,9 @@ sources:
   - https://claude.com/blog/building-agents-with-the-claude-agent-sdk
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://arxiv.org/abs/2610.21412
+  - https://arxiv.org/abs/2407.01489
+  - https://arxiv.org/abs/2608.06871
+  - https://arxiv.org/abs/2609.02730
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -143,6 +146,8 @@ Two lines come from the KodeKloud course and are worth making explicit: **save**
 
 For long work the plan should live in a file, not in the context window, so a fresh pass can read and revise it. See [harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#plans-as-first-class-artifacts).
 
+When one pass is not enough, keep the branches instead of retrying one line. CEDAR ([arXiv:2608.06871](https://arxiv.org/abs/2608.06871) (Tian, 2026-08, preprint)) runs Monte Carlo tree search over system code: an LLM editor patches a node and an LLM judge scores it, and the tree context goes in the prompt. On a stochastic population-model fit (one target run), the GPT-5.1 variant reached L1 error 2.22 against 3.71 for Optuna given the full formulae (100 trials), but the Claude variant was worse on DTW (757 vs 478). The tree-versus-linear ablation is qualitative, the judge shares a model class with the editor, and the appendix and main text disagree on the iteration count.
+
 ### Vercel's sequencing advice
 
 Vercel groups agentic workflows into **planning**, **tool use**, **reflection** and **multi-agent collaboration**, and gives an order for adding them:
@@ -163,7 +168,9 @@ That is the green-first rule from [note 01](01-what-a-loop-is.md#green-first) ap
 | Use when | Steps are known in advance | Steps depend on what the last one found | Several loops or agents must hand off |
 | Layer | prompt / harness | **this pillar** | [05-graph](../../05-graph-engineering/README.md) |
 
-Start at the left column and move right only when the task forces you to.
+Start at the left column and move right only when the task forces you to. Agentless ([arXiv:2407.01489](https://arxiv.org/abs/2407.01489) (Xia et al., 2024-07, preprint)) is the evidence: a fixed three-phase pipeline (localize, repair, validate) in which the model never picks the next action solved 96 of 300 SWE-bench Lite issues (32.00%) at USD 0.70 each with GPT-4o. Baseline agents in the same table, each with its own model, reported USD 1.62 for 23.00% (SWE-agent, Claude 3.5 Sonnet) and USD 2.53 for 18.33% (SWE-agent, GPT-4o). Most of the gain came from sampling 40 patches and selecting with tests, not from a loop. Majority vote alone solved 77; adding generated reproduction tests solved 96, though only 94 of 213 such tests passed on the true fix. Agents still did better when the issue gave no hint of where the bug was. The comparison is not matched on model or budget, the numbers date from October 2024 (stronger Claude-based agents reach 49.0% on SWE-bench Verified in the same paper), and it is tested on Python bug-fix issues only.
+
+The same split holds for a loop that runs on a 3-day cadence against live traffic. CORAL ([arXiv:2609.02730](https://arxiv.org/abs/2609.02730) (Azhar et al., 2026-09, preprint)), from Meta, tunes resource allocation in production recommenders. Its harness calls five tools (analysis, retrieval, attribution, a constrained optimizer, apply) "in the same fixed order every cycle rather than leaving control flow to the model". The model proposes allocations, and the optimizer projects them onto the budget, so **every change fits the budget by construction**. Where an A/B experiment is available, each cycle's outcome is written back to memory, and the last 3 cycles stay in context. On a video service, three rounds (the third aggregating several cycles) went from +0.13% watch time, through a neutral overcorrection, to +0.16% sessions and +0.15% watch time at no added serving cost. The gains are under 1%. There are no confidence intervals, no human-tuned or non-LLM baseline and no ablation of the memory, and a human still supervised the loop.
 
 ---
 

@@ -35,6 +35,11 @@ sources:
   - https://arxiv.org/abs/2606.26797 (TEMP, early-token loss for reasoning SFT data selection)
   - https://arxiv.org/abs/2510.07312 (h1, curriculum RL on chained GSM8K problems)
   - https://arxiv.org/abs/2602.06960 (InftyThink+, RL over summarize-and-resume reasoning rounds)
+  - https://arxiv.org/abs/2404.03592 (ReFT, representation finetuning)
+  - https://arxiv.org/abs/2506.08388 (RL teachers, small teachers trained to explain)
+  - https://arxiv.org/abs/2509.25454 (DeepSearch, MCTS inside RLVR training)
+  - https://arxiv.org/abs/2606.32032 (RLMF, self-judgment as advantage scaling)
+  - https://arxiv.org/abs/2606.02113 (Primer on post-training reasoning data, survey)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -93,6 +98,15 @@ Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI,
     reasoning trees jointly with GPT-4o, Qwen2-VL-7B/72B and Llama-3.2-11B-Vision to build 260K
     multimodal SFT traces. Qwen2-VL-7B tuned on them went from 58.2% to 63.1% on MathVista
     (+4.2 points averaged over eight benchmarks). No RL is involved.
+  - DeepSearch ([arXiv:2509.25454](https://arxiv.org/abs/2509.25454) (Wu et al., ICLR 2026))
+    puts MCTS back inside RLVR training. Each problem is searched as a tree of 256-token steps.
+    Values are backed up to the nodes, and GRPO trains on those node-level advantages. From a
+    1.5B model that had already been RL-trained, **50 more steps (~330 GPU hours) raised the
+    six-benchmark math average from 61.7 to 62.95. Extending DAPO + KL for 1,875 steps (1,883 GPU
+    hours) reached only 62.0.** In the ablation, vanilla MCTS scored below the start (60.3); the new
+    q-value backup gave the biggest step (+1.1), though the paper names frontier selection the
+    largest single gain (+0.63). Single runs, one
+    model, math only, and gains of about a point.
 
 Kimi k1.5 reached a similar result by a different route
 ([arXiv:2501.12599](https://arxiv.org/abs/2501.12599) (Kimi Team, 2025-01)):
@@ -260,6 +274,11 @@ long CoT.
   the same base from 16.5% to 63.3% AIME24 with about 800 traces from R1-class models. **The
   same 800 examples on Qwen1.5-32B-Chat gave 9.2%.** The knowledge has to be there from
   pretraining; the examples only show how to use it.
+  - A survey of about 150 post-training data studies states this as a rule. A few
+    demonstrations can bring out a skill only when it already lies within the base policy's
+    support, and difficulty is relative to the base, which is what DAPO's filter on all-correct
+    and all-wrong groups assumes ([arXiv:2606.02113](https://arxiv.org/abs/2606.02113) (Li et
+    al., 2026-06, preprint survey)). It runs no experiments of its own.
 - **At 7B, scale still pays.** OpenThoughts
   ([arXiv:2506.04178](https://arxiv.org/abs/2506.04178) (Guha et al., ICLR 2026)) ran 1,000+
   data-pipeline ablations on Qwen2.5-7B-Instruct.
@@ -267,6 +286,19 @@ long CoT.
     examples. OpenThinker3-7B reached 53.3% AIME25 against 38.0% for R1-Distill-Qwen-7B.
   - QwQ-32B was a better teacher than DeepSeek-R1, although R1 scores higher itself.
   - Filtering traces for correct answers gave no significant gain.
+- **The teacher can be small if it is trained to teach.** Sakana's RL teachers
+  ([arXiv:2506.08388](https://arxiv.org/abs/2506.08388) (Cetin et al., NeurIPS 2025)) see the
+  question *and* its solution and write the explanation. They are rewarded by how likely a
+  student finds the solution after reading it, minus a KL term that stops them leaking the
+  answer.
+  - With raw, unfiltered traces from a 7B teacher on 17K questions, **a Qwen2.5-32B student
+    averaged 73.2 on AIME24, MATH500 and GPQA-Diamond, against 71.5 for the same student on
+    post-processed R1 traces**. At 7B the scores were 49.5 and 46.6.
+  - As a cold start for RL, the RL teacher's traces beat R1's (50.5 vs 48.3). Traces from a 7B
+    model trained with ordinary correctness RL fell below the untuned base (38.6 vs 39.2).
+  - Without the KL term the teacher copied the solution and the student dropped to 34.1.
+  - Caveats. It needs reference solutions and an SFT warm start, and it uses single runs. The
+    R1 cost it compares against is a rough lower bound.
 - **Choosing the 1,000 without an LLM judge.** TEMP
   ([arXiv:2606.26797](https://arxiv.org/abs/2606.26797) (Jin et al., ICML 2026)) scores
   difficulty by the loss on a trace's first 100 tokens under a noise-perturbed copy of the base
@@ -345,6 +377,16 @@ and each gain shrinks off Qwen.
   - Scoring with a frozen copy of the base was hacked within about 100 steps: the policy
     appended an already-solved problem to its answer.
   - A random 0/1 reward on Qwen2.5-3B (not the Math variant) degraded the model.
+  - Self-judgment works better as a weight on the advantage than as a reward. RLMF
+    ([arXiv:2606.32032](https://arxiv.org/abs/2606.32032) (Liu et al., COLM 2026)) trains a model
+    to state a confidence for each sentence that matches its own sampling consistency. Within a
+    GRPO group, it scales up the advantage of each above-average completion by how accurately the
+    model predicted its own faithfulness score. **On Llama3.1-8B trained on 2,000 PopQA
+    questions, average faithful calibration over 10 datasets reached 0.84 on the authors' cMFG\*
+    metric, against 0.77 for the same rewards without the scaling.** In an ablation without data
+    selection, RLMF scored 0.80 cMFG\* at 0.41 accuracy; adding the self-judgment as an extra
+    reward instead reached up to 0.83 cMFG\*, but accuracy fell to 0.21–0.31. One seed, LoRA models of 8B and below, and checkpoints picked on the
+    in-domain test split.
 - **No data at all.** Absolute Zero ([arXiv:2505.03335](https://arxiv.org/abs/2505.03335) (Zhao
   et al., 2025-05, preprint)) has one model propose code-reasoning tasks and solve them, with a
   Python executor as the verifier.
@@ -368,6 +410,7 @@ and each gain shrinks off Qwen.
   gain averaged over six benchmarks. The paper's own reading is that the knowledge is already
   in the model and only the style has to change. It is math only, on instruction-tuned models,
   with the learning rate picked per size from a sweep.
+- **Tune activations, not weights.** ReFT ([arXiv:2404.03592](https://arxiv.org/abs/2404.03592) (Wu et al., 2024-05, preprint)) is supervised, not RL, but it also asks how little needs to change. LoReFT trains a rank-r edit to the residual stream of a frozen model at fixed prompt positions. On LLaMA-7B commonsense (eight tasks, mean of 3 seeds) **it averaged 80.2 with 0.031% of parameters, against 74.7 for LoRA at 0.826% and 78.1 for DoRA**, with baselines copied from the DoRA paper. It lost on arithmetic chain-of-thought (LLaMA-7B average 42.6 vs 46.9 for LoRA; GSM8K 26.0 vs 37.5), and the edit cannot be merged into the weights. It was not tried with RL.
 
 *This note's reading.* Where the base already samples the right behaviour (Qwen2.5, and
 Qwen2.5-Math most of all), almost any signal that rewards confident, well-formatted,

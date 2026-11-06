@@ -20,6 +20,10 @@ sources:
   - https://arxiv.org/abs/2312.06585
   - https://arxiv.org/abs/2406.04151
   - https://arxiv.org/abs/2207.05608 (Inner Monologue)
+  - "Yang et al. 2023, Foundation Models for Decision Making — https://arxiv.org/abs/2303.04129"
+  - "Chu et al. 2026, Agentic World Modeling — https://arxiv.org/abs/2604.22748"
+  - "Kambhampati 2024, Can LLMs Reason and Plan? — https://arxiv.org/abs/2403.04121"
+  - "Jin et al. 2024, From LLMs to LLM-based Agents for Software Engineering — https://arxiv.org/abs/2408.02479"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -120,9 +124,15 @@ Expansion has to be **on-demand, relevant and controlled**. Irrelevant context i
 
 Production agents of every kind share three traits. The action space is **open-ended**: they generate language and code, not button presses. They **reason internally** before acting. They **interact continuously**, adjusting to feedback from the environment.
 
+There is no settled line between an agent and a model with tools. A 2024 survey of software-engineering agents ([arXiv:2408.02479](https://arxiv.org/abs/2408.02479) (Jin et al., 2024-08, preprint)) says so directly and offers its own test of six criteria drawn from the papers it reviewed (139 papers, mid-2023 to December 2024): the LLM as reasoning core, planning, autonomous tool choice, picking the best of several results (criteria 1 to 4, "fundamental for a basic level of agency"), then multi-turn context and autonomous learning (5 and 6, "more advanced"). A system counts as an agent if it meets "most" of them, and the line is a judgement call: the survey counts Self-collaboration as an agent even though, in its own words, "it lacks external tool integration and dynamic adjustment capabilities". It is the authors' synthesis, scoped to software engineering and not validated; the survey lists the missing consensus on autonomy and a unified benchmark as open problems.
+
 ---
 
 ## Tools
+
+Treating tool calls as part of a decision loop predates the frameworks. Yang et al. ([arXiv:2303.04129](https://arxiv.org/abs/2303.04129) (2023-03, preprint survey)) cast an agent that emits API calls as a sequential decision problem, with the tool's response as environment feedback, and note that it must also decide when to call a tool, which one, and how to rephrase after a poor result. The survey reports no experiments.
+
+What the agent holds as its model of the environment is the subject of a 2026 survey ([arXiv:2604.22748](https://arxiv.org/abs/2604.22748) (Chu et al., 2026-04, preprint)). It sorts such models into a predictor of one-step transitions, a simulator that composes them into action-conditioned multi-step rollouts that respect the domain's rules, and an evolver that revises its own model from evidence through persistent, regression-checked updates. A model that predicts one step well but breaks under composition, ignores edits to the action or violates the rules still counts as a predictor. The survey runs no experiments and relays its numbers from other papers.
 
 Tools can be sorted by the direction of interaction:
 
@@ -410,7 +420,7 @@ The loop above has no opinion about what a tool is allowed to do, so that has to
 ## Pitfalls
 
 - **Calling a single LLM call an agent, or a workflow an agent.** Ask who decides the next step at run time. If your code does, it is a workflow, and that is often the better system.
-- **Trusting the model's own explanation.** A fluent justification is not a check. In the example above, the arithmetic found a stockout the explanation left out. Compute what can be computed.
+- **Trusting the model's own explanation.** A fluent justification is not a check. In the example above, the arithmetic found a stockout the explanation left out. Compute what can be computed. Kambhampati ([arXiv:2403.04121](https://arxiv.org/abs/2403.04121) (2024-03, perspective paper)) reports from his group's plan- and constraint-verification studies that self-verification made performance worse, because the model hallucinated both false positives and false negatives, and he argues for an external sound verifier that certifies the answer. His evidence is GPT-3 to GPT-4 on classical planning (GPT-4 about 30% on Blocks World; far lower once action names were obfuscated), so it does not cover later reasoning models.
 - **Treating "the agent said it finished" as success.** Verify the goal against the environment: read the order back from the system of record.
 - **Stopping at the step cap with no wrap-up.** The trajectory ends on a tool result and the user gets nothing, or the last message implies work that never happened.
 - **Putting permissions in the prompt.** A prompt can be edited or overridden. Use read-only credentials and tools that cannot perform the forbidden action.
@@ -453,4 +463,4 @@ The loop above has no opinion about what a tool is allowed to do, so that has to
 
 ## Next
 
-→ [02 — tool use and the ReAct loop](02-tool-use-and-react.md): the mechanics of a tool call, from raw function calling to MCP. Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).
+→ [01b — what an agent costs](01b-what-an-agent-costs.md): where the tokens go in a loop, cost per solved task, and which components are worth it. Then [02 — tool use and the ReAct loop](02-tool-use-and-react.md). Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).

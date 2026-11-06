@@ -3,6 +3,7 @@ origin: book-condensed
 sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 2, 6"
   - https://docs.nvidia.com/cuda/cuda-c-programming-guide/
+  - https://arxiv.org/abs/2312.11514
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -122,6 +123,8 @@ kernel<<<grid, block, 0, stream>>>(buf);
 ```
 
 For inference, prefer explicit placement: weights and the active KV cache in HBM, and Grace memory only for tiers you choose to page from ([07](07-prefill-decode-kv-cache.md#sizing-the-cache)). Use **Compute Sanitizer** (`compute-sanitizer --tool memcheck`) whenever you hand-write memory movement; out-of-bounds writes on a GPU fail silently far more often than on a CPU.
+
+The hierarchy goes one tier further down on devices whose DRAM cannot hold the weights. Apple's LLM in a Flash keeps the model in flash and loads only the feed-forward neurons a small low-rank predictor says will fire. It reuses those from the last few tokens (windowing) and reads each neuron's up-projection column and down-projection row as one chunk (bundling). With about half of the model fitting in DRAM, batch size 1, a 128-token prompt and 256 generated tokens, OPT 6.7B ran up to 4× faster on CPU and 20× faster on an RTX 4090 than naive loading. Per-token latency went from 3,182 to 669 ms on CPU and from 2,218 to 84 ms on the GPU. The baseline is credited with its best theoretical I/O. The method needs ReLU-style sparsity: OPT is 97% sparse, while Falcon and Llama 2 rely on ReLU-converted versions fine-tuned in earlier work (95% and 90% sparse). It covers single-batch decode only ([arXiv:2312.11514](https://arxiv.org/abs/2312.11514) (Alizadeh et al., 2023-12, preprint)).
 
 ---
 

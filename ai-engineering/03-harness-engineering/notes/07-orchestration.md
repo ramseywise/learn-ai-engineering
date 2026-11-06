@@ -12,6 +12,16 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 5"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 4, 5, 8"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
+  - https://arxiv.org/abs/2403.16971
+  - https://arxiv.org/abs/2603.21489
+  - https://arxiv.org/abs/2605.02396
+  - https://arxiv.org/abs/2602.01465
+  - https://arxiv.org/abs/2508.03923
+  - https://arxiv.org/abs/2601.14351
+  - https://arxiv.org/abs/2609.26781
+  - https://arxiv.org/abs/2609.15983
+  - https://arxiv.org/abs/2602.16485
+  - https://arxiv.org/abs/2610.07832
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -82,6 +92,8 @@ Splits decomposition from implementation. The fix for "the agent got lost in a 4
 
 Splits production from judgment — the structural answer to self-evaluation bias ([note 05](05-verification-loops.md#separating-generation-from-evaluation)).
 
+Vijayaraghavan et al. ([arXiv:2601.14351](https://arxiv.org/abs/2601.14351) (Vijayaraghavan et al., 2026-01, preprint, Isotopes AI)) push the split into an org chart: "Code writers cannot declare their own success. Executors cannot declare success. Only independent critics can approve work." The planner declares acceptance criteria before execution, critics on a different provider hold a veto rather than a vote, and a team that needed three retries hands its manager only the approved output. In 522 production finance sessions, 24.9% passed first time and the critic layers recovered most of the rest. 7.9% were still rejected by users, with no control arm. On one invoice-reconciliation task, a single agent was right in 6 of 10 trials and the team in 18 of 20, at 4.2 minutes against 1 to 2. Asking the single agent to verify its own answer turned 3 of 5 correct answers wrong. The models aren't named and the samples are tiny, so read it as a vendor case study. Its cost figure is the useful one: recovery added 38.6% of credits.
+
 ### Topologies
 
 | Topology | Shape | Use when |
@@ -95,6 +107,10 @@ Albada's rules for the static shapes (*Building Applications with AI Agents*, ch
 
 How to cut the work is a separate choice from the topology. **Functional** decomposition splits by expertise (research, code, review). **Spatial** splits by file or directory, which parallelizes well until the files depend on each other. **Temporal** splits into stages where later ones need earlier ones finished. **Data-driven** splits by data partition for large datasets processed chunk by chunk.
 
+The parallel shape's join step is a choice too: count votes, or have a model read every branch and write one answer. HeavySkill ([arXiv:2605.02396](https://arxiv.org/abs/2605.02396) (Wang et al., 2026-05, preprint)) runs the second as the smallest orchestration unit, K parallel reasoning traces and then a summarising call, and packages it as a skill an orchestrator can run. With K=8 traces, the mean accuracy of four summary calls beat a single majority vote for Kimi K2 Thinking on GPQA-Diamond (86.9 vs. 82.3) and **tied or lost elsewhere**: 96.7 for both on AIME25 with GPT-5 Thinking, and 63.3 vs. 66.0 on BeyondAIME with Claude 4.5 Thinking. Read as a cost, that is K+4 calls (eight traces plus four summaries) to sometimes match a vote. The test sets are small (AIME25 is 30 problems) with no seeds or error bars, the harness is a Python workflow rather than a tested agent harness, and the RL result the abstract claims is only a training curve with about +10% in the appendix.
+
+When outputs can't be compared by exact match, a vote stops working. Stellar Colosseum ([arXiv:2609.15983](https://arxiv.org/abs/2609.15983) (Lin, Woodruff et al., 2026-09, preprint, Google Research)) builds proofs, where "agreement among candidates can still hide a shared error". At each stage, candidates face an adversarial falsifier, and the join is "constructive rather than a vote or ranking": it may merge, keep competing branches, or repair a local flaw. The stages form a DAG, and a failed section retries locally so finished work elsewhere is kept. On 300 theorem-proving tasks from FOCS, STOC and SODA, scored by an LLM grader, it lifted Gemini 3.1 Pro from **30.3% to 54.0%** (one run, one proof per problem), against 52.0% for Gemini 3.1 DeepThink. No cost or token figures are given anywhere, and the authors concede that "compute-matched evaluation would be needed to distinguish improved allocation from simply using more inference." The falsifier, the aggregation tree and the decomposition are never ablated.
+
 ### Full pipeline
 
 Rob Earlam's harness runs a role chain end to end: **Orchestrator → PO-Spec → Feature Design → Tech Lead → Build → QA.** Around it, three supporting concepts worth naming:
@@ -104,6 +120,8 @@ Rob Earlam's harness runs a role chain end to end: **Orchestrator → PO-Spec �
 - **Workflow standards** — governance covering technology practice, inter-agent communication, and state tracking.
 
 Because artifacts are stored and indexed by task ID, they become a **searchable historical record**: past implementations serve as reference patterns for future work (reuse the pagination approach from task 214). Multi-agent state that persists is organizational memory, not just plumbing.
+
+Agyn ([arXiv:2602.01465](https://arxiv.org/abs/2602.01465) (Benkovich & Valkov, 2026-02, preprint)) is a coding team built as a manager hierarchy. A manager, researcher, engineer and reviewer each run in their own sandbox, and they "do not communicate directly with each other": every message goes through the manager's `manage` tool. Done is a protocol event, not a sentence, since a task counts only when the reviewer agent approves the pull request. With GPT-5 for the manager and researcher and GPT-5-Codex for the engineer and reviewer, it resolved **72.2% of SWE-bench Verified's 500 tasks**, against 71.8% for OpenHands with GPT-5 (apparently one run, with interrupted runs resumed from saved GitHub state, and no cost reported). There is no ablation, so the paper doesn't show the team structure caused anything. The failure it reports is the one a protocol should prevent: the manager sometimes waited on agents that had already finished.
 
 ---
 
@@ -223,6 +241,10 @@ What crosses a boundary is the whole design. The short version: **define interfa
 - **Key the payload, and keep the keys stable.** Rothman's engine broke when two agents were "upgraded" to return dicts (`{"blueprint_json": ...}`, `{"facts": ...}`) instead of strings. The Writer still expected raw strings, so the upgraded pipeline broke at its last step (*Context Engineering for Multi-Agent Systems*, ch. 5). Whenever an agent's output shape changes, every consumer of that output has to change in the same commit.
 - **Synthesize, don't delegate understanding.** "Based on your findings, fix the auth bug" pushes the orchestrator's job onto the worker. The orchestrator reads the findings and hands down a precise spec: the file, the line, the change, and what done looks like.
 
+CoAct-1 ([arXiv:2508.03923](https://arxiv.org/abs/2508.03923) (Song et al., ICLR 2026)) shows the summary rule and its cost in one system. An o3 orchestrator (o4-mini for the programmer and summariser) hands each subtask to a GUI operator or a programmer that writes Python and Bash. Executors don't share histories, their working memory is cleared after each report, and a summariser condenses the run into a short report plus the final screenshot. It reached **60.76% on OSWorld's 369 tasks**, against 50.68% with the GUI operator alone and 35.73% with the programmer alone (the paper gives no run counts or cost). That ablation varies the executors, not the split itself. The authors' own failure analysis names the handoff's blind spot: since "only the final state of the OS will be returned to the orchestrator", a mid-task error that a later action covers up never reaches it. The GUI operator's self-checks also hallucinated, so the orchestrator re-verifies rather than trusting the report.
+
+Team of Thoughts ([arXiv:2602.16485](https://arxiv.org/abs/2602.16485) (Wong et al., 2026-02, preprint, Imperial College London)) measured the summary rule directly. An orchestrator calls two of seven different models as tools and aggregates their answers. When the tools returned only their final answers rather than their full reasoning traces, pass@1 was **95.33 vs. 78.67 on AIME25** and 85.93 vs. 80.90 on MBPP+, and the authors found that full trajectories "consistently degrades orchestration performance across all benchmarks." Fan-out has a ceiling too. On MBPP+ with a 25-model pool, calling two or four tools scored about 83, and calling eight or sixteen fell to about 60. The setting is single-turn math and code with exact-match or test scoring, AIME has 30 problems a year, no run counts are given, and the gain over the best single model is only about 1.3 to 1.5 points (on HumanEval+ it trails by about 1).
+
 ---
 
 Collaboration tools reduce to a small set of primitives: `spawn` and `cancel`, `send_message`, and `list_agents`. Each one runs in one of four modes: **sync** (wait for the result), **async** (task ID plus an event later), **streaming** (partial results as they come), or **multi-turn** (a conversation with the worker). Choose the mode per task; a 30-minute research job should never be a sync call.
@@ -296,6 +318,10 @@ The chat stayed small: **229 messages** across 2,783 programs, roughly 50 to 80 
 
 The caution: one run, one game, on Easy. It shows that emergent coordination *can* hold for a day. It doesn't show that it will in your domain, where a silently wrong shared note costs more than a death in Minecraft.
 
+Agensh ([arXiv:2609.26781](https://arxiv.org/abs/2609.26781) (Zhan et al., 2026-09, technical report, Microsoft Research)) scales the same idea to software, with no orchestrator at all. Each worker gathers context, claims a sub-task, acts, verifies and merges, coordinating only through a Git server, a chat channel and an append-only shared board. Its prompt asks workers to post falsified hypotheses, "the highest-value entry: it stops peers spending budget on it". With GPT-5.6-sol on the five hardest ProgramBench rebuilds (FFmpeg, pandoc and others, six hours each), mean pass rate went from **19.31% with one agent to 28.78% with 128**. Eight agents added only 1.4 points, and on pandoc going from 128 to 1,024 agents added 4.12. There are no cost figures, no repeats, no ablation of the board or chat, and no orchestrator baseline, so it doesn't show that the orchestrator is the bottleneck it was built to remove.
+
+Scheduling is a separate layer from coordination. AIOS ([arXiv:2403.16971](https://arxiv.org/abs/2403.16971) (Mei et al., COLM 2025)) turns each agent query into LLM, memory, storage and tool syscalls queued in one scheduler (FIFO or round robin) beneath existing frameworks, and snapshots a half-finished generation so a time slice loses no work. On one GPU with Llama-3.1-8b and Reflexion agents on HumanEval it reports up to 2.1x throughput, mostly from not retrying prompts that overflow the GPU, and, with GPT-4o-mini in its Table 1, benchmark success rates move by 0 to 2.8 points. It evaluates neither its memory, storage nor access managers, and it schedules resources, not agent roles or handoffs.
+
 ---
 
 ## When *not* to go multi-agent
@@ -308,6 +334,10 @@ Multi-agent is the expensive option. Single agent with verification is the corre
 - **Branches are genuinely independent** — real parallelism, not sequential work in costume.
 
 Absent one of these, added agents multiply token cost and introduce the four failure modes above while solving nothing. The three architectural patterns, in order of increasing cost: **single agent with verification → two-agent supervisor → multi-agent with a shared harness layer.**
+
+One measured case: CAID ([arXiv:2603.21489](https://arxiv.org/abs/2603.21489) (Geng and Neubig, 2026-03, v2 2026-07, preprint)), a manager that delegates to engineers each working in its own git worktree and merging through tests, beat a single agent with the model held fixed (OpenHands SDK): PaperBench Code-Dev +25.6 (MiniMax 2.5), +7.4 (GLM 4.7) and +6.1 (Claude 4.5), and Commit0-Lite +14.7, +3.6 and +6.0. Cost rose (Claude on Commit0-Lite: $1.9 to $8.1) and wall-clock did not fall (692.6 s to 1583.2 s). Giving each engineer its own worktree beat a shared workspace where the manager only asked for non-overlapping files (Claude, PaperBench: 63.3 vs. 55.5, below the single agent's 57.2). More engineers was not better: on one repo, simpy passed 0.0%, 92.1% and 44.3% of tests with 2, 4 and 8 engineers, because at 8 several were assigned functions in the same file. The GLM gain on Commit0-Lite (p=0.095) was not significant.
+
+HERMES ([arXiv:2610.07832](https://arxiv.org/abs/2610.07832) (Jin et al., 2026-10, preprint, UIUC)) splits work by artifact rather than by role. Every source, config and test file gets its own resident model, and only the files the task touches are activated, following dependency edges. Each one may edit only its own file and sends typed messages to the components it affects ("Messages are directed rather than broadcast"). A diagnosis call maps test failures back to the files responsible, and only those are reactivated, for up to three rounds. The ablation that answers this section's question replaced the per-file workers with **one central editor over the same selected files**. With the paper's GPT-5.6 Sol backbone, that editor lost 14.2 points on the 20-task SWE Refactor Bench and 13.0 on Terminal-Bench 4.0. Given the same token budget, it still trailed by 6.3 points on Terminal-Bench (45.5 vs. 51.8). The payoff tracks how cross-file the task is. On SWE-bench Verified the score barely moved (97.0 vs. 96.2 for mini-SWE-agent, one run), and on SWE Refactor Bench it rose from 6.5 to 31.0 over Codex, with cost per task going from $6.0 to $24.8. Among the other mechanisms, dropping diagnosis feedback cost the most, so the split doesn't work without a verifier that names the faulty file. The paper is a single-group preprint on software tasks. Most cells are one run (Terminal-Bench has five runs, and the SWE Refactor result was repeated three times for 31.0±1.3), some baselines are leaderboard numbers rather than matched runs, and nothing is reported on message loss or conflicting edits between workers.
 
 ---
 

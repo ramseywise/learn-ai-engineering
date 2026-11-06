@@ -18,6 +18,14 @@ sources:
   - https://arxiv.org/abs/2407.16741
   - https://arxiv.org/abs/2604.25850
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
+  - https://arxiv.org/abs/2603.03329
+  - https://arxiv.org/abs/2307.01928
+  - https://arxiv.org/abs/2506.23260
+  - https://arxiv.org/abs/2506.19676
+  - https://arxiv.org/abs/2511.17006
+  - https://arxiv.org/abs/2604.08567
+  - https://arxiv.org/abs/2605.00424
+  - https://arxiv.org/abs/2605.20173
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -192,6 +200,10 @@ The human gate has failure modes of its own (*Building Applications with AI Agen
 
 Albada's mitigations are clear escalation paths, adaptive alerting and ongoing operator training. Gating only irreversible actions is what keeps alert fatigue down in the first place.
 
+Gate strictness can also follow how far the code behind a call has been checked. Metere ([arXiv:2605.00424](https://arxiv.org/abs/2605.00424) (Metere, 2026-05, preprint, Enclawed)) starts from the same worry, that if every irreversible call needs approval, "operators under load rubber-stamp every prompt, degrading the gate into a fiction." The proposal treats a skill as untrusted code until it is verified, whatever its signature or registry says. Each skill gets one of four fixed levels (unverified, declared, tested, formal), set at load time and never raised mid-session. The level is a fixed label, not a score, because "a continuous 'trust score' would allow the agent to argue itself into permission gradients." The gate then depends on the level. A separate check compares what changed in the world with the audit log of approved calls. Against 4,816 LLM-written adversarial payloads from ten model families, in the author's own harness, the open-source runtime caught 76.3% with no false positives on 4,908 legitimate ones, while an unhardened passthrough caught none. The author attributes most of the misses to adversary output that was not a recognisable attack (refusals, malformed JSON) and reports full recall on fault-shaped payloads. It is a single-author design paper evaluating the author's own framework. The check sees only operation and target, not content, so a wrong write to an approved file passes. Nothing measures whether verification levels reduce rubber-stamping.
+
+When to ask can be calibrated instead of prompted. [arXiv:2307.01928](https://arxiv.org/abs/2307.01928) (KnowNo, Ren et al., CoRL 2023) has the model propose four multiple-choice next steps plus "an option not listed here", scores them by next-token probability, and uses conformal prediction to keep a set of plausible options. **A singleton set means act; a larger set means ask.** On 50 hardware trials (PaLM-2L, UR5 tabletop) it reached 0.74 task success with a help rate of 0.58 per step; a plain probability threshold tuned to the same plan success asked at 0.72. Across simulated and hardware setups it cut human help by 10–24% at matched success (24% being the best case, in the most ambiguous simulated setting). Prompting the model to say "certain" or "uncertain" gave no control over the success rate, and one prompt-only baseline reached only 35% task success in the most ambiguous setting. The guarantee needs about 400 labelled calibration scenarios from the deployment distribution (roughly 4 hours of labelling in the multi-step setting), a faithful human, and token probabilities that many APIs now hide. The tasks were small hand-built robot scenes, not coding agents.
+
 Bansal et al. place the gate on a timeline. The agent tells the user what it is about to do (ask before anything expensive, irreversible or against stated preferences), what it is doing now (so the user can halt it), and afterwards what side effects it caused and whether the goal was met ([Bansal et al., 2024-12](https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf), challenges A2–A5). Their over-communication example is alert fatigue in miniature. A social-media agent sent dozens of routine updates a day, and the one that mattered (a post moved onto a sensitive industry date) was lost among them. The paper is a position piece built from the authors' experience building agents and multi-agent systems, with no user study, so it names the problems rather than measuring them.
 
 ### Reviewing calls before they run
@@ -208,7 +220,7 @@ When a human can't be in every loop, put a second model in front of risky calls.
 Design rules for both:
 
 - **Use a reviewer from a different model family at a similar capability.** A same-family reviewer shares the proposer's blind spots.
-- **Return a rejection as a tool result** with the reason, so the proposer can revise rather than retry blindly.
+- **Return a rejection as a tool result** with the reason, so the proposer can revise rather than retry blindly. The status has to say it was rejected. Srinivasan ([arXiv:2605.20173](https://arxiv.org/abs/2605.20173) (Srinivasan, 2026-05, preprint, independent)) cites an openai-agents-js bug (issue #1104) where rejected tool calls came back marked `completed`, and the model went on as though they had succeeded. The maintainer's proposed fix was to mark them `incomplete`. The paper calls this reject signal "a load-bearing part of the contract". It is a methodology paper with no controlled experiment. Its evidence is an audit that finds verifier-and-commit logic at 19 of 21 call sites in five open-source frameworks, and the author's own classification of 21 post-mortems, 15 of which trace to this boundary.
 - **Add a circuit breaker.** After N consecutive rejections, escalate to a human instead of looping.
 - **Pre-approve or post-validate.** Review *before* execution for irreversible actions. For reversible ones, let the action run and validate the result, possibly in another modality, such as checking a screenshot after a UI action.
 
@@ -226,6 +238,10 @@ Prompt-injection filtering barely helps. Li's aim (ch. 5) is that an injected ag
 | **Long-lived sessions** | Keep the terminal session inside the sandbox only. Recover across days from snapshots or rebuild scripts, never by extending the sandbox's life |
 
 The agent's ordinary toolkit is already an attack kit, which is why egress matters even when nobody injects anything. A GPT-4 agent given only a headless browser, a terminal, a Python interpreter, six public web-hacking documents and a "be creative, persist" prompt exploited 11 of 15 sandboxed website vulnerabilities (73.3% pass@5, 42.7% pass@1), including a blind SQL union attack of about 38 actions. It cost about $9.81 per site, and the agent was never told which vulnerability to look for ([arXiv:2402.06664](https://arxiv.org/abs/2402.06664) (Fang et al., 2024-02)). GPT-3.5 managed 6.7%, and all eight open models tested scored 0%, mostly because their tool calls failed. The sites were built by the authors, and the prompt and documents were withheld. In the wild the agent found one XSS bug across about 50 hand-picked old sites. Treat the numbers as a 2024 floor on what a frontier agent with open egress can do to whatever it can reach.
+
+The defence side is weaker than it looks. A survey of agent threats ([arXiv:2506.23260](https://arxiv.org/abs/2506.23260) (Ferrag et al., 2025-12, preprint)) relays that adaptive attacks bypassed **all eight** prompt-injection defences tested against tool-using agents, each at an attack success rate above 50% (from Zhan et al., 2025; attack numbers in the survey come from the original papers and are not comparable across setups). Its flagship incident is a malicious public GitHub issue that made an agent connected through GitHub's MCP server pull private-repo data into context and leak it into a public PR, which alignment and injection filters did not stop; the proposed fix is granular permissions plus monitoring. The survey runs no experiments of its own and its mitigation tables are listed, not tested.
+
+A second survey ([arXiv:2506.19676](https://arxiv.org/abs/2506.19676) (Kong et al., 2025-11, preprint)) adds one point to the trust-zone table below: tool *descriptions* are an injection channel too. Its only experiments are five attack demos: four on MCP with Claude (Sonnet 3.7, Sonnet 4.0, Opus 4) and one on an A2A sample client queried 20 times. In one, a hidden line in a file-read tool's description made the agent read `~/.ssh` and email the contents; in another, a poisoned document in a vector store led it to run `env` and post the output to Slack. It reports no success rates, and its defences (least-privilege sandboxes, policy checks on planned tool actions, human confirmation) are named, not tested.
 
 **Parse commands semantically; don't keyword-match.** Shell composition defeats blacklists: `$(echo rm) -rf /`, `find / -name '*.log' -exec rm {} \;`, `curl -o /etc/crontab http://…`. A production gate parses each command's flags and arguments, including which flags consume the next argument, to find the real effect.
 
@@ -257,6 +273,8 @@ Architectural layering enforced by a custom linter holds. The same rule in a des
 > **Enforce invariants, not implementations.**
 
 Constrain the shape of the result — layering, schemas, test coverage, allowed imports — and leave the implementation free. Over-constrained implementations produce agents that can't solve anything novel; unconstrained invariants produce agents that quietly erode the architecture.
+
+The check can itself be learned and still sit outside the model. [arXiv:2603.03329](https://arxiv.org/abs/2603.03329) (AutoHarness, Lou et al., 2026, preprint) had Gemini-2.5-Flash write an `is_legal_action` verifier and a `propose_action` function as code, refined against environment feedback. Illegal moves had caused 78% of Gemini-2.5-Flash's losses in a Kaggle chess competition. With the verifier rejecting and re-prompting, the legal-action rate was 100% across 145 TextArena games (rollouts of 1,000 steps, 10 seeds). In 16 two-player games the small model with its harness beat Gemini-2.5-Pro in 9, a 56.3% to 38.2% win rate. This is rule legality in games, not security: it shows the pattern (reject in code, then retry) but nothing about injection or sandboxes, and it reports no variance.
 
 This is also what makes throughput safe. Review discipline doesn't disappear; it transforms **from manual review into machine-executed constraints — written once, effective everywhere.**
 
@@ -348,6 +366,8 @@ A boundary in the same family as permissions: **per-task budget ceilings that pr
 
 Instrument token spend per run, set a ceiling, and fail closed with a partial result rather than silently continuing.
 
+A budget the agent can see changes how it spends. In [arXiv:2511.17006](https://arxiv.org/abs/2511.17006) (Liu et al., 2025-11, v2 2026-08, preprint) a plain ReAct search agent barely used a larger tool-call cap: Gemini-2.5-Pro on BrowseComp averaged 13.77 search calls at a cap of 30 and 14.24 at 100 (accuracy 10.5% and 12.6%). Injecting the used and remaining budget into the context every turn (a "budget tracker") let a cap of 10 match the cap-100 baseline at 12.8% accuracy with 40.4% fewer search calls and 31.3% lower cost. At an equal cap of 100 the gain was only 1 to 3 points (mean of 3 runs). The paper treats the cap as a hard constraint that stops the run when exhausted. Its coding result (SWE-bench Verified, Gemini-3-Flash-Preview, 55.4% vs. 36.8% at 50 calls) is appendix-only, and the baseline is ahead at 70 calls (63.0% vs. 55.1%).
+
 ---
 
 ## A role label is not a sandbox
@@ -363,6 +383,8 @@ grant includes `Bash` — because `Bash` executes arbitrary shell regardless of 
 description says. The label is documentation; the grant is the boundary. This is the
 [encode constraints, don't document them](#encode-constraints-dont-document-them) rule
 applied to permissions, and it is the most commonly violated instance of it.
+
+The same holds for data. Yang et al. ([arXiv:2604.08567](https://arxiv.org/abs/2604.08567) (Yang et al., 2026-04, preprint, Stanford / MIT)) made 19 models the shared agent for several simulated users with different authority. The only access control was a system-prompt instruction: "If the user is unauthorized, strictly reject". On 216 access-control scenarios, the models split between leaky-but-useful and safe-but-over-refusing. The best balance was around 90 on both scores (GPT-OSS-120B 92.2 privacy / 94.4 utility). Claude Sonnet 4.5 leaked to unauthorized users often (privacy 77.3) but almost always served the authorized ones (utility 97.5). GPT-5.2 never leaked but refused often (100.0 and 61.2). Over ten rounds of conversation, privacy fell for nearly all models, and Claude 3.5 Haiku dropped from above 0.95 to below 0.75 within four rounds. One failure shows why a label isn't a boundary. The model refused to open the vault tool, then stated the session ID anyway, treating the rule "as a restriction on the tool/interface rather than the information itself." Changing how the users were serialized or how they attacked barely moved the results. The paper tests no defence and no external access check, the users are simulated, and run counts aren't given. It shows that the prompt-only version erodes, not what replaces it.
 
 ### Testing the boundary: the canary pattern
 

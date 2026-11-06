@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2310.19736
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://docs.langchain.com/langsmith/evaluation-concepts
   - https://inspect.aisi.org.uk/
@@ -196,7 +197,7 @@ You need both. Offline evals are the lab: cheap, repeatable, comparable. Online 
 
 ## What an eval is not
 
-- **Not a benchmark score.** Public benchmarks (MMLU, SWE-bench, τ-bench) tell you about a model in general. Your eval tells you about *your* system on *your* tasks. A model's leaderboard rank predicts little about your support bot.
+- **Not a benchmark score.** Public benchmarks (MMLU, SWE-bench, τ-bench) tell you about a model in general. Your eval tells you about *your* system on *your* tasks. A model's leaderboard rank predicts little about your support bot. Most of the research literature is about the first kind. Guo et al.'s survey sorts LLM evaluation into knowledge and capability, alignment, and safety, plus specialized domains and how benchmarks are organized, and has no section on evaluating an application, on regression suites or on error bars ([arXiv:2310.19736](https://arxiv.org/abs/2310.19736) (Guo et al., 2023-10, preprint); a catalogue with no experiments and no stated method for choosing its papers).
 - **Not a vibe check.** Reading ten outputs and feeling good is level 0 of the maturity ladder ([11](11-production-and-the-maturity-ladder.md#the-ladder)). It's where everyone starts. It is not where you stay.
 - **Not a one-off.** An eval suite is a living artifact. It changes as the product, the users and the failure modes change. Anthropic describes evals as maintained by a team that owns the infrastructure, with domain experts contributing tasks.
 - **Not only quality.** Latency, cost and steps-to-completion are eval metrics too. Log them on every trial: they're free to capture and catch regressions that quality scores miss ([06](06-evaluating-agents.md#efficiency-metrics)).

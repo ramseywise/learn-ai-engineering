@@ -5,6 +5,11 @@ sources:
   - https://arxiv.org/abs/2507.13334
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://arxiv.org/abs/2610.28577
+  - https://arxiv.org/abs/2306.15595
+  - https://arxiv.org/abs/2309.16039
+  - https://arxiv.org/abs/2307.03170
+  - https://arxiv.org/abs/2402.08268
+  - https://arxiv.org/abs/2605.23071
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -46,6 +51,10 @@ There are two consequences worth remembering:
 
 1. **The constraint binds before `L_max`.** Quality starts to fall long before the hard limit ([01](01-why-context-is-finite.md)), so the *effective* budget is smaller than the advertised window. Budget against the effective size.
 2. **The value of a component is marginal, not absolute.** In information-theoretic terms, a chunk is worth what it adds about the answer *given everything already in the window*: `I(Y*; c | C_rest)`. A second document that restates the first has close to zero marginal value, even though it is "relevant". Redundancy is the most common way budget gets wasted.
+
+**Where the advertised window comes from.** Two Meta papers show that the number on the box depends on how the model was extended. Position Interpolation ([arXiv:2306.15595](https://arxiv.org/abs/2306.15595) (Chen et al., 2023-06, preprint)) rescales position indices so a longer input fits the trained range. On LLaMA 7B trained at 2,048 tokens, running past that window directly sent perplexity above 1,000, while interpolation plus about 200 to 1,000 fine-tuning steps reached 8K to 32K windows. Passkey retrieval, on which their "effective window" is measured, is a very easy test, and short-context benchmark scores dropped by up to 2% at 8K (more at longer extensions). Xiong et al. ([arXiv:2309.16039](https://arxiv.org/abs/2309.16039) (Meta, 2023-09, preprint)) found the stock Llama 2 position encoding could not attend usefully beyond about 4,000 to 6,000 tokens even after long continued pretraining; raising the RoPE base frequency from 10,000 to 500,000 held a first-sentence-retrieval probe up to the full 32,768 tokens (7B, 80B continued-pretraining tokens). For the 70B model, validation loss kept falling as context grew to 32K with diminishing returns (doubling the context cuts the reducible loss by about 30%), and long-document task scores rose with input length from 4K to 16K (QuALITY flat after 8K), for example Qasper F1 28.9 to 35.7. These are capability results on Llama 2 from 2023, measured on loss and extractive tasks. They show that a long window can be real and cheap to train (about 17% slower per step from 4K to 16K at 70B), not that a prompt of that length is worth filling.
+
+**Extension at the training end, and what it leaves open.** Two more recipes show the same dependence on how the window was built. LongLLaMA ([arXiv:2307.03170](https://arxiv.org/abs/2307.03170) (Tworkowski et al., NeurIPS 2023)) fine-tunes OpenLLaMA-3B on 8K contexts with a memory layer, trained so that keys from unrelated documents appear as negatives (the paper's "distraction issue": in a 184M model with standard training the attention on the right document falls to about 1/d of the total as d documents share the memory). It retrieves a passkey with 94.5% accuracy at 100K tokens and 73% at 256K, where the base model cannot go past its 2K training length. Longer context also helps few-shot classification: TREC accuracy rises from 67.0 at 2K to 73.3 at 8K (3B) and from 63.2 to 75.9 (7B), averaged over 20 trials. Passkey is an easy test, the memory layers use dense attention, and the real tasks are three on 3B and 7B models. LWM ([arXiv:2402.08268](https://arxiv.org/abs/2402.08268) (Liu et al., ICLR 2025)) grows a 7B LLaMA-2 to 1M tokens in stages (32K to 1M) with Blockwise RingAttention, which serves a 1M-token context only on a TPU v4-128 or larger. Harder retrieval is where the window frays: with several needles to find, LWM-Text-1M scores 0.67, 0.84 and 0.69 on its three multi-needle settings at 1M tokens, against 0.84, 0.97 and 0.84 at 32K, and the authors say 1M is still under-used. Other 7B to 8B models stretched to 1M by position extrapolation score 0.0 to 0.32 on the same tasks (Qwen2.5-7B-Instruct 0.0 on all three). Its MMLU also slips from 0.41 (128K stage) to 0.35 (1M stage) while the text claims no negative effect.
 
 ---
 
@@ -170,7 +179,7 @@ This needs control of the serving stack, so it's not something you can do throug
 
 1. **Log tokens per component** on every call: system, tools, retrieved, memory, history, input, output. You can't budget what you don't measure.
 2. **Ablate.** Drop one component, re-run the eval set and record the change in quality. Components whose removal costs nothing are candidates to cut.
-3. **Track quality per 1k tokens** alongside absolute quality. Two configurations with equal scores aren't equal if one uses half the window.
+3. **Track quality per 1k tokens** alongside absolute quality. Two configurations with equal scores aren't equal if one uses half the window. Count one-off preprocessing (an index, a compressed memory) divided by how often it is reused. On HotpotQA with GPT-5.4 mini, scored that way, compressed memory reused 100 times matched TF-IDF retrieval at F1 0.78 on about 25% fewer tokens (424 vs 566). Near F1 0.80 it replaced full-context prompting at under half the cost (584 vs 1,308). The last few F1 points cost more than twice the tokens ([arXiv:2605.23071](https://arxiv.org/abs/2605.23071) (Shen et al., Northwestern, 2026-05, accepted to LMIAT 2026 per its arXiv comment)). That is one dataset, one model, and reuse tested only at 1 and 100, so treat it as the shape of the trade, not its size.
 4. **Watch for cliff edges.** Plot score against total context length. Where it bends down is your effective budget for that model and task.
 
 The upstream course's first experiment makes step 2 concrete. It starts from an atomic prompt and adds one layer at a time, logging what each layer costs and what it returns:

@@ -43,6 +43,18 @@ sources:
   - https://arxiv.org/abs/2511.19333
   - https://arxiv.org/abs/2602.08234
   - https://arxiv.org/abs/2608.13787
+  - https://arxiv.org/abs/2603.21383 (PivotRL, turn-level RL on SFT trajectories)
+  - https://arxiv.org/abs/2509.23045 (Kimi-Dev, Agentless RL as a skill prior for SWE agents)
+  - https://arxiv.org/abs/2609.09134 (Co-Evolving Harnesses and Models, imitation vs on-policy correction)
+  - https://arxiv.org/abs/2512.16848 (LaMer, meta-RL for cross-episode exploration)
+  - https://arxiv.org/abs/1611.02779 (RL², origin of meta-RL over trials)
+  - https://arxiv.org/abs/2609.24974 (Harness-Zero, distilling a harness via reviewer correction)
+  - https://arxiv.org/abs/2605.22502 (Compiling agentic workflows into weights)
+  - https://arxiv.org/abs/2603.05218 (KARL, multi-task RL vs distilled SFT out of distribution)
+  - https://arxiv.org/abs/2604.28181 (Synthetic Computers, skills from simulated month-long work)
+  - https://arxiv.org/abs/2609.24985 (Critical-State RL, choosing the turn to train)
+  - https://arxiv.org/abs/2610.05923 (VERA, co-evolving model and harness)
+  - https://arxiv.org/abs/2609.27717 (SkillGym, skills distilled into weights)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -151,6 +163,55 @@ earlier SFT checkpoint, not their best-scoring one, "to improve final RL outcome
 ([arXiv:2505.00949](https://arxiv.org/abs/2505.00949) (Bercovich et al., 2025-05, preprint)).
 Neither report gives a rule for when to stop SFT.
 
+The same split shows up on agentic data when RL reuses the SFT trajectories. PivotRL takes the
+expert trajectories an SFT run would imitate, keeps only the turns where sampled actions
+sometimes pass and sometimes fail (on τ²-bench and SWE-Bench, 71% of random turns gave GRPO
+no signal), and runs GRPO on one-turn rollouts from those states. Its reward accepts any action
+the verifier judges equivalent, not only an exact match to the expert action. On
+Qwen3-30B-A3B-Thinking with identical data, **SFT cost an average 9.83 points across eight
+non-agentic benchmarks (AIME25 86.0 → 21.6 after terminal training), while PivotRL moved them
++0.21** ([arXiv:2603.21383](https://arxiv.org/abs/2603.21383) (Yi et al., 2026-03, preprint)).
+In-domain it beat SFT on τ²-bench, Terminal-Bench and BrowseComp but lost on SWE-Bench
+Verified (32.7 vs 37.4). With exact-match reward it scored 57.3 on τ²-bench, below SFT's 58.4. Matching
+end-to-end RL's SWE-Bench accuracy took about 4× fewer rollout turns. The paper reports no seeds, runs
+the end-to-end comparison on one benchmark only, and has no replay-regularized SFT baseline.
+
+A turn where outcomes are mixed is not always a turn where the action matters. In a Gemma pilot,
+every rollout made the same clean refusal while the reward swung between 0 and 1, so a filter on
+mixed outcomes would have kept it. Critical-State RL ranks candidate turns by how much the
+expected return varies *across actions* at that turn. It estimates this from the base policy,
+with 8 actions and 4 continuations per action, then trains only the chosen call. On no-think
+Gemma-4-26B-A4B, **BFCL v4 multi-turn missing-function items rose from 14.0% to 28.3% (±1.5,
+4 seeds) when training the recovery turn it picked, and fell to 9.5% when training the decision
+turn instead** ([arXiv:2609.24985](https://arxiv.org/abs/2609.24985) (Chen et al., 2026-09,
+preprint)). Missing-parameter items gained 3.8 points. Full multi-turn return-to-go credit hit
+0.997 on the training gym but scored 45% on BFCL missing-parameter items, against 47.3%. The best turn changed with the
+model: Nemotron gained on the decision turn. The alternatives are single seeds, and people
+propose the candidate turns.
+
+RL done before the agent loop can also leave a better starting point for it. Kimi-Dev mid-trained
+Qwen2.5-72B on about 150B tokens of GitHub diffs, PR commits and synthetic reasoning data, cold-started it with SFT, then ran
+outcome-only RL on single-turn Agentless bug-fixing (0/1 test reward). It reached 60.4% on
+SWE-bench Verified in that workflow, with test-time self-play, and **48.6% as a SWE-Agent after SFT on 5k Claude 3.7
+trajectories, with no agentic RL**. The RL prior reached the base prior's best agent pass@1
+with **2²³ agent SFT tokens, against 1.5 × 2²⁸ for the base**, roughly 48× fewer
+([arXiv:2509.23045](https://arxiv.org/abs/2509.23045) (Yang et al., 2025-09, preprint)). Against
+the SFT-only prior the edge is small. SFT was better zero-shot, and the two ended
+"slightly" apart after 300 steps of end-to-end agent RL. Given enough agent data, the out-of-distribution advantage of
+both priors over base disappeared. One model family, and no error bars on the data sweep.
+
+The gap shows up on search agents too. KARL trains GLM 4.5 Air on two of six enterprise-search
+tasks (BrowseComp-Plus and TREC-Biogen) with an iterative, large-batch off-policy RL loss (OAPL).
+The questions are ones the model synthesizes from each corpus, kept when its own 8 rollouts solve
+them only sometimes. The comparison is SFT distilled from the two single-task RL experts.
+**Parallel sampling lifted the distilled model six points in distribution (69.1 → 75.3) but
+almost nothing on the four held-out tasks (59.4 → 59.6), where multi-task RL with 10 parallel
+rollouts reached 62.7** ([arXiv:2603.05218](https://arxiv.org/abs/2603.05218) (Chang et al.,
+2026-03, preprint)). With a single call, KARL scored 58.9 on the authors' six-task benchmark,
+against 58.6 for Claude Sonnet 4.5 and 52.6 for its base, at under $0.10 per query at list
+prices. The agent has one tool (vector search), the held-out tasks are the rest of the same
+suite, the baselines ran in the authors' harness, and no seeds are reported.
+
 **Why RL's ceiling is higher: it is online.**
 
 1. **Offline is capped by the data; online is capped by the task.** SFT can at best match its demonstrator, so 60-point demos never make a 90-point student. RL reinforces anything that scores well. Llama-Nemotron-Ultra (253B) shows the cap directly. SFT on DeepSeek-R1 traces got it to 66.4 on GPQA-Diamond, short of the teacher's 71.5. About 140k H100-hours of GRPO took it to **76.0, past the teacher** ([arXiv:2505.00949](https://arxiv.org/abs/2505.00949) (Bercovich et al., 2025-05, preprint)). SimpleVLA-RL invented a "pushcut" grasp that no human demonstrated. The cap still has a floor under it: the base model. On math, code and visual-reasoning benchmarks, zero-RL models beat their base models at pass@1 but lose to them at large k. Base Qwen2.5-32B solves about 9% more Minerva problems at k=128 than its RL-trained version. So current RLVR mostly re-weights paths the base model could already sample ([arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (Yue et al., 2025-04); details in [08](08-reasoning-rl-deepseek-r1.md#the-deepseek-r1-story)). The floor holds for agents, where tool-calling skills were assumed to come from post-training. Across 14 open base and post-trained pairs from Gemma-4, Ministral-3, Qwen2.5 and Qwen3.5 (3B–35B) on BFCL v4 multi-turn, WebShop and ACEBench, base models with a light prompt-and-parsing harness passed their post-trained versions at large k in most settings. On WebShop, gemma-4-31B base reached **over 85% pass@128 against 56% for the instruct model**, and post-training shrank the share of tasks solved only sometimes from 87.6% to 30.0%, pushing them to always-solved or never-solved ([arXiv:2610.01509](https://arxiv.org/abs/2610.01509) (Oh et al., 2026-10, preprint)). Larger models crossed over sooner: on WebShop, after about 3 samples at 31B against more than 128 at 4B. The instruct models' recipes are undisclosed and their thinking mode was off, though turning it on did not change the trend. The authors' fix, a per-prompt rollout temperature set from a Beta posterior on the prompt's success rate, raised both pass@1 and pass@128 for PPO and GRPO on Qwen2.5-7B-Instruct in Sokoban and FrozenLake over five seeds. For PPO on Sokoban that was 46.5→61.1 pass@1 and 55.0→69.7 pass@128, though it was still below the base model's 76.6.
@@ -247,6 +308,11 @@ SFT writes stable mappings and protocols into weights.
   - *Which teacher.* The best teacher can be a normative model rather than one that knows the answer. On a five-round flight-recommendation task with simulated users, off-the-shelf LLMs stopped improving after round one. Gemma 2 9B fine-tuned on an oracle that always picks the user's true choice reached 61% final-round accuracy. **Fine-tuned instead on a Bayesian assistant's best guesses, often wrong early on, it reached 76%**, against 81% for the Bayesian assistant itself and 37% before tuning. The gain transferred to hotel recommendation and to web shopping ([arXiv:2503.17523](https://arxiv.org/abs/2503.17523) (Qiu et al., Nature Communications 2025)). With real people as users every model scored lower, though Bayesian-taught models still beat oracle-taught ones.
   - An open-source teacher is enough when the student is ≤200B parameters. Closed models usually hide or rewrite their raw chain of thought anyway.
   - Distillation inherits the teacher's systematic errors. It also loses robustness the teacher got from tools.
+  - **It can also undo a harness tuned to the student.** Yu et al. evolved a harness around Qwen3-Coder-30B-A3B, which took it from 29.2% to 78.0% mean success on seven enterprise tool tasks. LoRA-SFT on Gemini-3.1-Pro's successful trajectories under that harness then **lowered it to 63.1%, with every task worse (−4 to −30 points)**. Planning failures rose from 1.1% to 14.6% of failures, because the student copied a plan it could not carry out. The same imitation helped under the unevolved harness (29.2 → 35.5). Having the expert rewrite only the failing turn in the student's own rollouts gave 79.7%, about 1–2 standard errors above 78.0 ([arXiv:2609.09134](https://arxiv.org/abs/2609.09134) (Yu et al., 2026-09, preprint); 3-run means, one round of correction, Gemma-4 replication on one task). The imitation and correction sets are not size-matched. Dense on-policy alternatives are in [07](07-reward-design-and-tool-calling.md#dense-signals-on-policy-distillation-and-self-distillation).
+    Harness-Zero runs the same correction idea with a reviewer agent in place of the evolved harness. A GPT-5.6 Sol reviewer that holds the harness's knowledge passes or replaces each of the student's proposed steps, and the student is LoRA-tuned on the corrected rollouts under a bare one-tool harness. **Qwen3.5-9B went from a 23.3% macro average to 44.3% with no special harness at deployment, against 41.7% with that harness attached** (SpreadsheetBench, AppWorld and USPTO retrosynthesis, single seed, pass@1) ([arXiv:2609.24974](https://arxiv.org/abs/2609.24974) (Ye et al., 2026-09, preprint)). On USPTO, plain SFT on the teacher's own trajectories left the student at its 12% base score. Trajectories collected under the evolved harness gave 3%, because the student kept calling tools it no longer had. Domain knowledge transferred less well: 30% distilled vs 38% with the harness. The reviewer hurt weaker models, and the ablation is USPTO only.
+    Taken further, the harness can be dropped entirely when the procedure is fixed. Dennis et al. sample paths through a customer-service flowchart, have Claude Sonnet 4.5 write dialogues along them, and fully fine-tune a small model that runs with a one-line system prompt. **Qwen3-8B reached 92–98% of Sonnet-with-the-flowchart-in-context on a 55-node insurance procedure, at about 1/460 of the cost per conversation** (A100 serving vs. API pricing, throughput taken from other papers). At 3B, the compiled model beat the same model run under an explicit orchestrator on task success by 0.18 on a 5-point scale ([arXiv:2605.22502](https://arxiv.org/abs/2605.22502) (Dennis et al., 2026-05, preprint)). Quality is judged by Claude Sonnet 4.5 on users it also simulates (a GPT-4.1 judge agrees on the ranking), over 200 scenarios per condition with one trained model per domain, in three dialogue-only domains. The model is retrained whenever the procedure changes.
+
+    The opposite move keeps the harness and trains the two together. VERA alternates rounds of GRPO on Qwen3.5-9B with harness edits. The GRPO uses rubric rewards per stage, on 9,000+ environments rebuilt from benchmark trajectories. An edit is kept only if it passes self-tests and raises the development-set Overall score by at least 5 points. **On the authors' AutoCoWorkBench it reached 31.0 Overall, against 18.9 with the harness frozen, 18.2 with the model frozen and 20.7 for ADAS harness search; on AutoMedBench-Lite it reached 69.1 against 43.3 and 56.1** ([arXiv:2610.05923](https://arxiv.org/abs/2610.05923) (Liu et al., 2026-10, preprint)). Outcome-only GRPO with the same budget of 500 updates collapsed to 5.8. At 4B and 9B the training cost general skill: Qwen3.5-9B's AIME 2026 score fell from 92.5 to 36.7 on the CoWork run. A 27B model held its scores. The authors built both benchmarks, one GPT-5.6 model judges, verifies and attributes, and no training seeds are reported (benchmark scores average three evaluation seeds).
 - **Rejection-sampling fine-tuning (RFT).**
   1. Sample k = 4–16 candidates per prompt.
   2. Verify each with rules, tests or a reference answer.
@@ -312,6 +378,42 @@ model to use skills cut it to 65.2%, and replacing distilled skills with raw ret
 trajectories cut it to 61.7%. The setup is a single 7B model with an o3 teacher. The
 "10–20× compression" the paper claims for skills over raw trajectories doesn't match its own
 measured prompt lengths, which fell only about 10%.
+
+Reflexion's loop can itself be trained. Meta-RL, which goes back to RL²
+([arXiv:1611.02779](https://arxiv.org/abs/1611.02779) (Duan et al., 2016-11, preprint)), trains
+over a *trial* of several episodes, so exploring early pays off later. LaMer applies it to
+language agents. Each trial is three attempts at the same task from the same start, with a
+written reflection after each failure, and the reflection is credited with the next attempt's
+reward through a cross-episode discount. On Qwen3-4B (GiGPO, matched trajectories per step),
+**pass@3 over sequential attempts rose to 55.9% on Sokoban, 74.4% on MineSweeper and 89.1% on
+WebShop, against 44.1, 55.1 and 75.2 for plain RL**
+([arXiv:2512.16848](https://arxiv.org/abs/2512.16848) (Jiang et al., ICLR 2026)). Giving the RL
+agent the same memory only at test time closed little of the gap. First-attempt success fell on
+MineSweeper and WebShop (44.1 vs 52.0, 67.8 vs 73.4), and training took about twice as long,
+because a trial's episodes run in sequence. Reflection-only memory beat reflection plus raw
+trajectory. There are no seeds, and the models are 4B and 8B on games and WebShop.
+
+ExpeL's rule list also scales when the experience comes from simulated work. Ge et al. built
+1,000 synthetic computers from personas, each a user profile, a folder tree and documents that
+depend on each other. On each one, Claude Code with Sonnet 4.6 ran a month of simulated work:
+about 20 working days, with averages of 4.1 deliverables, 5.5 simulated collaborators, 2,272
+turns and 8.6 hours per run. Retrospectives from 900 of the runs were distilled into occupation skills.
+**On 100 held-out computers, the rubric score rose from 61.6% to 68.6%, and the agent with skills
+won 83 of 100 paired comparisons** ([arXiv:2604.28181](https://arxiv.org/abs/2604.28181) (Ge et
+al., 2026-04, preprint)). Skills from only 10 computers gave no gain. On 220 GDPval tasks, the
+Sonnet agent won 105 and lost 67. The transfer to Haiku 4.5 and Opus 4.6 was weaker. No weights
+were updated, despite the paper's framing as a substrate for RL. Opus 4.6 is the judge, each arm
+is one run, and the test computers come from the same persona distribution as the training ones.
+
+SkillGym goes the other way and trains the skills into the weights. It builds 2,756 Docker
+environments around human-written skills from a public registry, in 12 categories. Teacher agents
+run in them under Claude Code and Codex, and 17.4% of 48,152 trials passed the verifiers.
+Qwen3.5-35B-A3B is then fine-tuned on the 8,364 passing trajectories. **Under Claude Code with no
+skills at inference, the trained model scored 26.81% on SkillsBench, above its own base given the
+skills (23.34%)**, and Terminal-Bench 2.1 rose from 39.33% to 58.43%
+([arXiv:2609.27717](https://arxiv.org/abs/2609.27717) (Ge et al., 2026-09, preprint)). Skills in
+context still helped the trained model. This is SFT on strong teachers, not RL, with one run per
+cell, and the Codex comparison also changed the system prompt.
 
 **When to fine-tune, and when to hold off.** Albada's checklist:
 

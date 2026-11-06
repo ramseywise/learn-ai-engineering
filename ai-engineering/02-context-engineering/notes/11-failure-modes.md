@@ -6,7 +6,12 @@ sources:
   - https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html
   - https://arxiv.org/abs/2302.00093
   - https://arxiv.org/abs/2505.06120
+  - https://arxiv.org/abs/2404.02060
+  - https://arxiv.org/abs/2403.08319
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 10, appendix A — sources/context-engineering-multi-agent-systems/"
+  - https://arxiv.org/abs/2404.16811
+  - https://arxiv.org/abs/2311.11829
+  - https://arxiv.org/abs/2605.08060
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -42,6 +47,10 @@ Covered mechanistically in [01-why-context-is-finite.md](01-why-context-is-finit
 
 **Anti-fix.** Repeating the constraint more forcefully. This adds tokens, which is the cause.
 
+**A claimed window is not a usable one.** LongICLBench ([arXiv:2404.02060](https://arxiv.org/abs/2404.02060) (Li et al., 2024-04, preprint)) fills the prompt with labelled examples for classification with 28 to 174 labels, at 2K to 50K tokens, and tests 15 models on 500 examples per dataset. Most models peak at around 13K to 25K tokens and then fall; only GPT-4-turbo and GPT-4o keep improving on TacRED and DialogRE. Claude 3 Opus on DialogRE goes from 30.3 at about 13K tokens to 0.8 at 25K. On the 174-label Discovery task nearly every model scores close to zero (Gemini-1.5-Pro 14.0 at 10K tokens) against 87.4 for a fine-tuned model, and open models advertised at 100K to 200K tokens such as LLaMA-2-7B-LongLora score 0 on BANKING77 at 2K to 14K. Grouping same-label examples together also hurts: on TacRED at about 10K tokens, GPT-4-turbo drops from 79.5 to 59.2 and Mistral from 51.6 to 5.1. Caveats: classification only, one demonstration set shared by all models, no confidence intervals, and the open models are 7B base models set against instruction-tuned APIs, so some zeros may be output-format failures.
+
+**Training can shrink the middle dip; near-perfect needle scores don't show it is gone.** [arXiv:2404.16811](https://arxiv.org/abs/2404.16811) (An et al., 2024-04, preprint) probes Mistral-7B-Instruct-v0.2 at about 32K tokens with three retrieval tasks (document, code, database) and measures the gap between its best and worst answer position. The gap is 56.2 points averaged over the tasks, against 13.9 after fine-tuning on synthetic long-context QA that forces the answer into random segments (FILM-7B, about 300 GPU days). Average accuracy goes from 47.3 to 85.9. GPT-4-Turbo, which scores near-perfect on needle-in-a-haystack, still has a 32.1-point gap (average 79.0). The authors' cause, a position bias in ordinary training data, is a hypothesis with no ablation. The probes are retrieval-only, single-run and greedy, and the fix is a training-time one: it does nothing for a model you call through an API.
+
 ---
 
 ## Context poisoning
@@ -51,6 +60,14 @@ A hallucination, stale fact, or wrong retrieval enters context and is subsequent
 Memory makes this durable. A poisoned entry written to long-term memory is re-injected in every future session. A single hallucination becomes a permanent false belief.
 
 **The model's own early guess can do it too.** Laban et al. gave 15 LLMs 600 instructions across six tasks (code, SQL, API actions, math, data-to-text, summaries), either whole or revealed over several turns by a simulated user who says as little as possible. **Every model did worse overall, by 39% on average, and the spread between a model's strong and weak runs on one instruction (90th minus 10th percentile) more than doubled (+112%, to about 50 points)**, while 90th-percentile scores fell only 16% ([arXiv:2505.06120](https://arxiv.org/abs/2505.06120) (Laban et al., ICLR 2026)). The information isn't what's lost: the same pieces joined into one message score 95.1% of the original, though instructions were filtered in advance to keep that control high. Occupancy looks unlikely as the main cause, though the paper doesn't test it: in a follow-up with GPT-4o and GPT-4o-mini on 31 instructions, two turns were enough. Models tend to answer before they have the details and then build on their own assumptions. On code and math, runs whose first attempt came in the first 20% of turns scored 30.9, against 64.4 for the last 20%, but that link is observational and the mechanism is the authors' hypothesis. The conversations are simulated, with a minimal system prompt, tool calls that are scored but not executed, and no compaction described, so this doesn't size the effect for an agent. Retrying in a fresh session with the requirements restated is the authors' advice. The retry itself wasn't tested, though the single-message control is the evidence they point to, and it's the same move as step 5 of the flow below.
+
+**A long record of the other side's moves can do it in multi-agent settings.** Liu et al. ran 7 open models in self-play on four repeated social dilemmas (prisoner's dilemma, traveler's dilemma, public goods, trust), showing each agent between 0 and 80 past rounds, with 3 seeds per setting ([arXiv:2605.08060](https://arxiv.org/abs/2605.08060) (Liu et al., CMU, 2026-05, preprint)). **In 18 of 28 model-game pairs, cooperation fell below the paper's "immune" bar (95% or more at every history length from 1 to 80 rounds) as the visible history grew.** Not every one of those is a collapse: Mistral-7B in the prisoner's dilemma only went from 96.9% to 85.3%. GPT-OSS-20B in the prisoner's dilemma dropped from 92.1% at 2 rounds to 20.6% at 80. The cause was the content, not the length. In the trust game the authors kept the prompt at 80 rounds but replaced 78 of them with synthetic records of mutual cooperation, and Llama-3.3-70B went from 6.9% to 97.4%. Chain-of-thought made it worse: the same model at 80 rounds cooperated 100% without reasoning and 6.9% with it. That is its worst game, not an average: across all 28 pairs at 80 rounds, dropping the reasoning helped in most but hurt in four, and the authors call the no-reasoning runs unstable and seed-dependent. Caveats:
+- Stylized games, open models up to 120B, the same model on every side.
+- Variance is large at 80 rounds (±24 points for one model).
+- The sanitization test is in one game only, and the rescue fades as real history returns: Llama-4-Scout fell from 87.9% with 2 real rounds to 11.6% with 40.
+- Curation fixes such as summarizing or forgetting are proposed but not tested.
+
+Like poisoning, this means a window can be filled with true records and still steer the agent wrong.
 
 **Sources.** Model hallucination captured into notes; outdated documents retrieved without freshness checks; a tool returning stale data; a summarization step introducing a detail the source didn't contain.
 
@@ -72,6 +89,8 @@ Enough marginally relevant content accumulates that the model's attention drifts
 
 **One sentence can be enough.** Shi et al. added a single irrelevant sentence to 100 easy GSM8K word problems. With code-davinci-002 and a one-exemplar greedy prompt, **chain-of-thought fell from 95.0% to 72.4%, and only 6% of the base problems stayed correct under every sampled distractor** ([arXiv:2302.00093](https://arxiv.org/abs/2302.00093) (Shi et al., ICML 2023)). Distractors on the problem's own topic did the most damage (63.1% vs. 80.7% off-topic), which fits the point above that plausible content is worse than merely extra content. Adding "Feel free to ignore irrelevant information given in the questions." raised it to 77.8%, and a majority vote over 20 samples to 88.1%. The right answer was among those 20 samples 99.7% of the time, so the model could produce it and the failure was in settling on it. These numbers come from one templated sentence, on arithmetic, with GPT-3-family models. There's no retrieval and the amount of distraction is never varied, so it doesn't test the rerank fix or show that 40 documents are worse than 3.
 
+**Regenerating the context removes the distractor.** System 2 Attention (S2A) asks the model to rewrite the prompt, keeping only the relevant, unbiased part, and then answers from the rewrite ([arXiv:2311.11829](https://arxiv.org/abs/2311.11829) (Weston & Sukhbaatar, 2023-11, preprint)). With LLaMA-2-70B-chat on 200 opinion-laden TriviaQA prompts (GPT-4 judge), accuracy went from **62.8% to 80.3%** against an 82.0% oracle without the opinion. On GSM-IC (100 GSM8K problems with an irrelevant sentence, 3 seeds) it went from 51.7% to 61.3% for in-topic distractors, against 69.7% oracle. An instruction to ignore the text helped less (71.7% on QA). Keeping the original beside the rewrite cut QA to 74.5%, so the authors argue attention has to be hard, not soft. One model, small samples, synthetic distractors, an extra generation pass, and anything wrongly dropped is gone.
+
 ---
 
 ## Context clash
@@ -81,6 +100,8 @@ Two pieces of context contradict each other and both are present. The model reso
 **Common sources.** Two retrieved docs from different versions. A memory entry contradicting the current codebase. A system-prompt rule contradicting a `CLAUDE.md` convention. A user correction mid-session that doesn't invalidate the earlier statement still sitting in history.
 
 The last one is subtle and common: a user says "actually, use pnpm" at turn 12, but "we use npm" from turn 3 is still in the window. Both are context; nothing marks one as superseded.
+
+The survey by [arXiv:2403.08319](https://arxiv.org/abs/2403.08319) (Xu et al., 2024, preprint) sorts these by where the clashing pieces sit: **context vs. the model's own memory**, **context vs. context** (retrieved documents, history), and **memory vs. memory** (the model contradicting itself on equivalent questions). Two of its points matter for the fixes below. First, the model has no stable rule for which side to believe: coherent, convincing evidence tends to win, and how the conflict was built changes the result (in the studies it compiles, with substituted entities only three of six models chose their own memory over 60% of the time, while with LLM-written counter-evidence all six chose the context more than 80% of the time). Second, models are sensitive to the order of conflicting evidence and weigh relevance to the query over credibility cues such as citations, so "later supersedes earlier" has to be enforced outside the model. The survey also warns that blind faithfulness to the context is no cure, since the context may be the wrong side. It compiles other papers' numbers and ran no experiments, mostly on QA with constructed conflicts and models up to early 2024, so treat the percentages as indicative.
 
 **Fix.**
 - Conflict detection at the validation stage — surface conflicts rather than silently injecting both

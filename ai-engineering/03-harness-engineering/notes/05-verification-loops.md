@@ -18,8 +18,16 @@ sources:
   - https://arxiv.org/abs/2609.11999
   - https://arxiv.org/abs/2306.14898
   - https://arxiv.org/abs/2305.04207
+  - https://arxiv.org/abs/2402.09171
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
+  - https://arxiv.org/abs/2308.07921
+  - https://arxiv.org/abs/2606.03303
+  - https://arxiv.org/abs/2512.14012
+  - https://arxiv.org/abs/2605.29682
+  - https://arxiv.org/abs/2607.02134
+  - https://arxiv.org/abs/2610.00972
+  - https://arxiv.org/abs/2606.17929
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -60,6 +68,8 @@ Enforcement is a hook, not a hope. `PreCompletionChecklistMiddleware` intercepts
 
 This is what grounds a solution in tests and creates the feedback signal that self-improvement runs on. It's also why sandbox tooling matters ([note 04](04-execution-boundaries.md)) — test runners, logs, and screenshots are what "verify" reads.
 
+The check has to be executable. Zhou et al. ([arXiv:2308.07921](https://arxiv.org/abs/2308.07921) (Zhou et al., 2023-08, preprint)) prompted GPT-4 Code Interpreter to verify its own answer with code: on the MATH test set, zero-shot, accuracy rose from 69.69% to 73.54%, and verifying in natural language did not help (69.29%). A verdict of "True" was right 95.88% of the time, but only 79.11% of correct answers earned it. This is one closed model on math, where a computable check exists, with no variance reported, and the model grades its own answer.
+
 ---
 
 ## The three-layer termination check
@@ -89,6 +99,8 @@ This is what grounds a solution in tests and creates the feedback signal that se
 E2E also **changes how the agent writes code.** An agent that knows it will be checked end to end starts thinking about upstream interfaces, boundaries and error paths. The cost is seconds of test time, which is negligible in an agent loop.
 
 One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [note 10](10-scope-and-done.md).)
+
+Done can be a state of the workspace rather than a sentence. Hans and Bilionis ([arXiv:2607.02134](https://arxiv.org/abs/2607.02134) (Hans & Bilionis, 2026-07, preprint, Purdue)) built a replication skill where "completion depend[s] on workspace evidence and validation checks rather than on the agent's final message." It keeps a matrix of targets, a ledger and a run record. Each target gets an acceptance rule written before it is judged. A hash check is there to detect copied paper figures, and "an output artifact alone, such as a generated figure or table, does not count as evidence." Exactly one target may be active at a time. The gate opens only when every check passes, every target matches, none is active and the report exists. Codex with GPT-5.4 replicated four scientific-ML papers three times each without the authors' code. All 12 runs passed the gate, and 37 of 39 scalar results fell inside fixed paper-based thresholds. The two that didn't were still marked matched under the agent's own rules, which shows the gate is only as strict as the rules the agent writes. The authors say plainly that there is no run without the skill, so this "characterizes what Paper-replication produces rather than estimating the workflow's effect".
 
 ---
 
@@ -172,6 +184,10 @@ A gate that cries wolf gets routed around by whoever operates it, which is worse
 
 The generalization: **verify with the cheapest mechanism that is actually decisive.** Schema check before reference comparison before LLM judge — the eval-tier ladder below, applied to gates. This is note 08's [iterative simplification](08-maturity-and-failure-modes.md#iterative-simplification) reaching verification itself; verification layers are subject to the subtraction pass like everything else.
 
+A deterministic filter chain is the working example. [arXiv:2402.09171](https://arxiv.org/abs/2402.09171) (TestGen-LLM, Alshahwan et al., FSE 2024) runs LLM-written Kotlin tests through three scripted gates before any human sees them: the test builds, it passes on all five repeated runs (a flakiness check), and it raises line coverage. On 86 Instagram Reels and Stories components, 75% of test classes had a test that built, 57% had one that also passed reliably, and 25% had one that also added coverage. Per attempt only 4–5% of generated tests survived (831 of 23,535 on Instagram), so the design is generate many and filter. In three deployed test-a-thons, 73% of recommendations were accepted by engineers and about 10% of the 1,979 classes were improved. The gates do not check correctness: a test that merely executed an uncovered method passed the coverage filter and was rejected by a reviewer for having no assertion, and the authors call line coverage "an expedient proxy". Models were internal 2023 ones, and there is no baseline without the filters.
+
+A gate whose removal has been measured shows what it buys. PreAct ([arXiv:2606.17929](https://arxiv.org/abs/2606.17929) (Li, 2026-06, preprint, Pine AI)) compiles a computer-use agent's first successful run into a replayable program, then replays it on repeat tasks without model calls, 8.5–13× faster on WebArena. A new program enters the store only if it is re-run from a reset environment and the benchmark's evaluator passes it. That check targets one failure: programs where "the program executes every action to completion (100% coverage) yet the end state does not satisfy the evaluator." Turning the gate off made warm runs worse than cold ones. On AndroidWorld with Gemini 3 Flash, the warm-minus-cold change was +1.2 tasks with the gate and −1.4 without it (n=5). On a 6-task OSWorld subset with Claude Sonnet 4.6 it was +0.2 against −2.4. On WebArena both settings regressed (−4.0 against −5.75), because the gate emptied the store. Pooled over the three benchmarks, gate-on beat gate-off in 13 of 14 paired runs, and the 14th was a tie. The price is a verify replay for each stored program. It takes 162% (Android) to 217% (OSWorld) more wall time than the median original agent solve, but it is paid only once per program. The subsets are tiny (6 to 15 tasks), the work is a single-author preprint, and the gate assumes the task can be re-run. The author notes that re-running "send the email" or "submit the payment" duplicates the side effect.
+
 ---
 
 ## Separating generation from evaluation
@@ -200,6 +216,8 @@ A second run in the same post (a browser DAW) shows where the money goes: planne
 
 **The evaluator needs calibrating too.** Early versions found real problems, then talked themselves into calling them minor and approved anyway. The fix was a development loop on the evaluator: read its logs, find where its judgment diverged from a human's, and tighten the QA prompt on exactly those points. Hard per-dimension thresholds (any dimension below the bar fails the sprint) stopped one strong dimension from averaging away a weak one.
 
+Separation can come from context and evidence rather than from a different model. VeriHarness ([arXiv:2610.00972](https://arxiv.org/abs/2610.00972) (Zhang et al., 2026-10, preprint, Cambridge / Google Cloud AI Research)) has the generator's own model verify a pool of 10 rollouts per task, using a workspace and evidence tools. A resolver tests claims the rollouts disagree on against the files. A separate challenger, in its own context, hunts for errors they share. A fresh adjudicator then picks a rollout and plans the revision. The reason for the challenger is that agreement can mislead. On APEX-Agents with Claude Opus 4.8, 34% of values the rollouts agreed on were wrong, while a disputed claim had a correct candidate 74% of the time. Across five document, spreadsheet and code-patch benchmarks, with the scores averaged over 3 verifier runs, the harness lifted Opus **from 49.6 to 56.1** against a single rollout once its revision plan was applied (selection alone reached 53.7). Selection-only baselines such as majority vote, best-of-N and a pairwise tournament scored 50.4–51.3, and baselines that also revised scored 52.3–53.1, and giving a verifier environment access without the protocol "recovers only about half of the harness's gain". Two limits matter for the asymmetric-QA rule. No stronger verifier was tested, and selection gained only +0.6 on unanimous pools. Selection cost $3.92 per task with Opus at 86–91% cache hits ($13.06 uncached), on top of generating ten rollouts. Most graders are LLM judges.
+
 ### An observer that checks claims against the record
 
 The Gemini Minecraft run (Faldor et al., 2026) put the same split into a team of agents playing without a human. Four agents were told to verify each action, build reusable tools, share memory and **report honestly**. A fifth agent, the **Observer**, did no playing. It checked agents' claims against the game record, reported specification gaming, and intervened only when the environment itself failed (six server restarts in 27 hours).
@@ -210,6 +228,8 @@ The instruction to report honestly showed up in the transcripts. At hour 12 one 
 *Image Source: Faldor et al. (2026)*
 
 An unguarded branch that prints "success" without checking the world is the same failure as code written and never tested. What caught it was a habit the harness asked for: check the real state, then report. Without the retraction, three other agents would have planned around Ender Eyes that didn't exist.
+
+A compiler is the strongest external check there is, and it still isn't enough alone. LEAP ([arXiv:2606.03303](https://arxiv.org/abs/2606.03303) (Kung et al., 2026-06, preprint)) drives Gemini-3.1-pro with the Lean compiler as verifier and adds an LLM reviewer that judges whether each proposed subgoal is relevant and simpler than its parent. On one problem (Putnam 2025 A5), without the reviewer the agent kept proposing a lemma identical to its grandparent goal, which the compiler accepts, and failed even after eight rollouts; with it, A5 was solved in two. On Lean-IMO-Bench (60 problems, rollout=2) it scores 83.3% Basic and 56.7% Advanced. The reviewer ablation covers one problem, and baselines get unequal sampling budgets.
 
 ---
 
@@ -415,6 +435,8 @@ verification: extra-high
 
 High effort at the ends, where decisions are made and checked; moderate through the middle, where work is mechanical. LangChain found this split avoided timeouts while preserving quality. The shape mirrors asymmetric QA — pay for judgment, economize on labor.
 
+What a budget buys is feedback, not tokens. Zhang et al. ([arXiv:2605.29682](https://arxiv.org/abs/2605.29682) (Zhang et al., 2026-05, preprint, Harbin Institute of Technology)) scored each feedback event for how informative, valid, non-redundant and retained it was. Raw spend predicted harness failure rates poorly (R² 0.27 for tokens and 0.01 for cost on their synthetic tasks). Their feedback measure, normalised by how hard the task is, reached 0.99 there and 0.93 on pooled traces from HumanEval, Terminal-Bench 2.0 and SWE-bench Verified. **On the synthetic tasks, holding cost and tool calls fixed and changing only feedback quality raised success from 0.27 to 0.90.** Verifier strength was one of the three largest levers, alongside routing quality and memory fidelity. Read this as direction, not law. The core experiments are partly simulated harness roles, the real-trace scores use gates and constants the authors set by hand, the R² values are fits to group averages, and the paper gives no task counts, run counts or dollar costs. It uses only three small models.
+
 ---
 
 ## Trace-driven improvement
@@ -443,6 +465,8 @@ Two distinct functions:
 2. **Visible intermediate steps make a wrong answer diagnosable** rather than merely wrong — the user sees *where* it went off, which is a bug report instead of a complaint.
 
 The general principle: **in any domain where a human must sign off, traceability is a harness feature, not a UI nicety.** It also disciplines the generator — an agent required to cite can only assert what it retrieved, which constrains hallucination at the point of writing rather than catching it afterward. Where the output is regulated, the harness produces a draft and a qualified human authors the final submission; the citation layer is what makes that review tractable.
+
+Experienced developers already do this review themselves, and keep agents on a short leash to make it possible. In Huang et al.'s study ([arXiv:2512.14012](https://arxiv.org/abs/2512.14012) (Huang, Reyna et al., 2025-12, preprint, UC San Diego / Cornell)), 9 of 13 developers with three or more years of professional experience reviewed every change, in single 45-minute sessions in 2025. They checked through diffs, UI testing, debuggers and CLI tests. Plans ran to 70+ steps, but participants executed a median of 1.8 steps per prompt, and the two developers with 70+ step plans never ran more than six at once. Five tested more systematically when using agents, but testing stayed manual for UI, databases and remote apps. In a survey of 99 developers, "one-shotting code without modification or verification" was named unsuitable for agents 23 times and suitable 5 times. In the authors' words, "no respondent indicated that agents are suitable for completely autonomous operation." This is self-report from a small, enthusiast-skewed sample (6% response rate), with themes coded by hand. It shows how practitioners verify, not that this review improves outcomes.
 
 ---
 

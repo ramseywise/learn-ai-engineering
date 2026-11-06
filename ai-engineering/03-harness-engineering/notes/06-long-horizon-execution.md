@@ -11,6 +11,13 @@ sources:
   - https://openai.com/index/harness-engineering/
   - https://github.com/walkinglabs/learn-harness-engineering
   - Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — https://arxiv.org/abs/2610.22319
+  - https://arxiv.org/abs/2608.23552
+  - https://arxiv.org/abs/2604.13018
+  - https://arxiv.org/abs/2606.02373
+  - https://arxiv.org/abs/2609.01481
+  - https://arxiv.org/abs/2512.10398
+  - https://arxiv.org/abs/2511.09030
+  - https://arxiv.org/abs/2610.13075
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -64,6 +71,14 @@ The canonical pattern:
 - **Progress passes via files**, independent of any context window.
 
 This is why the filesystem is *"arguably the most foundational harness primitive"* ([note 02](02-harness-anatomy.md#why-the-filesystem-is-foundational)). Every other long-horizon technique depends on it.
+
+AiScientist ([arXiv:2604.13018](https://arxiv.org/abs/2604.13018) (Chen et al., 2026-04, preprint)) puts a number on it for 24-hour ML research tasks (one H20 GPU, GLM-5 backbone). An orchestrator holds only summaries and a workspace map, while specialists read and write schema-governed files (a "File-as-Bus"). Removing the files cost 31.82 Any Medal points on MLE-Bench Lite and 6.41 points on PaperBench. Valid-submission and Bronze rates stayed largely intact, so durable state matters for improving over later rounds, not for a first runnable result. The ablation removes the whole coordination mechanism rather than single artifacts, and PaperBench is reported without repeats (a full evaluation costs about $832 to grade).
+
+Harness-1 ([arXiv:2606.02373](https://arxiv.org/abs/2606.02373) (Jiang et al., 2026-06, preprint)) tests the same idea inside one search episode (40 turns, 32K context), not across sessions. With its RL-trained 20B search policy unchanged, switching off all seven harness mechanisms at inference (importance tags, compression, auto-seed, evidence graph, verification, document review, dedup) cuts recall from 0.584 to 0.513 and final-answer recall from 0.667 to 0.624, on 100 BrowseComp+ queries with no error bars. In single-mechanism ablations, on queries the full system solves and the ablated run fails, the agent reverts to wide, shallow searching and reads and verifies 2 to 6 times less. "Long-horizon" here means a long search, so it supports the principle by analogy only.
+
+LongHarness ([arXiv:2610.13075](https://arxiv.org/abs/2610.13075) (Huang et al., 2026-10, preprint)) tests the *shape* of external state, again inside one task: question answering over a 100M-token corpus. It keeps two states outside the history, a source-linked evidence bank and a conclusion state with explicit open gaps, and revises superseded evidence instead of appending it. With GLM-5.3-Flash on OfficeQA Pro (133 and 90 questions), removing the persistent states cut exact match from 60.2 to 55.6 and from 61.1 to 53.3, and **swapping them for free-text working notes cut it to 53.4 and 53.3**. Append-only evidence did about as badly. The main comparison and ablations are one run each (only the harness comparison gets a three-run check), and the comparison with Codex and Claude Code gives LongHarness purpose-built search and read tools against a shell. Its case study is the failure a progress log guards against: Codex recognised a corrected value but kept the earlier one in its final answer.
+
+Harness-of-Harness ([arXiv:2609.01481](https://arxiv.org/abs/2609.01481) (Yan et al., 2026-09, preprint)) tests it across sessions. It wraps an unchanged coding harness in repeated Planner, Developer and QA loops, each a fresh invocation, because "information retained only in its interaction history disappears when the invocation ends." Two things carry between loops: the code and the QA findings, kept as files behind a short index. With Codex and GPT-5.5 on 45 GameCraft-Bench tasks, three loops scored 71.52 against 58.24 for three same-session "continue developing" passes (8.41M vs. 6.33M tokens per task). **Rebuilding from an empty workspace each loop cost 7.85 points and raised tokens to 11.12M**, and dropping the QA evidence cost 6.28. No repeated runs are reported, and the benchmarks are subsets. In a six-day, 70-loop case study, 17 of 81 issues were reopened after a later change broke behaviour already verified, which is the drift this section is about, with no baseline to compare it to.
 
 ### Shallow vs. deep agents
 
@@ -311,6 +326,8 @@ Anthropic's finding: **context resets outperformed compaction for Claude Sonnet 
 
 Compaction tuning, when you use it: **maximize recall first, then improve precision** by cutting superfluous content. Distill architectural decisions and unresolved issues; discard redundant tool outputs. A reset's handoff document is subject to the same discipline, written deliberately rather than generated.
 
+Confucius Code Agent ([arXiv:2512.10398](https://arxiv.org/abs/2512.10398) (Wong et al., 2025-12, preprint)) shows what such a summary holds and that its quality matters. Near a set threshold, a separate model call replaces older turns with a structured summary of goals, decisions, errors and open TODOs, and keeps a window of recent raw messages. On 50 SWE-Bench-Pro instances where compaction fired, with Claude 4 Sonnet driving, **a Sonnet 4 summariser resolved 26 and a Haiku 3.5 summariser 22**. Haiku's summaries lost which phase the work was in. The ablations are small, though: on a 100-task subset, scored only on tasks both variants finished, context management added 6.6 points for Claude 4 Sonnet and 0.6 for Claude 4.5 Sonnet, against 7.0 from better tool prompts. There is no run-to-run variance and no comparison with a reset.
+
 The handoff document and when to write it are in [the session lifecycle](#when-to-hand-off).
 
 Depth on both: [02-context-engineering/notes/05](../../02-context-engineering/notes/05-compression-compaction.md).
@@ -376,6 +393,8 @@ The timeline also shows where long runs spend time. The agents reached The End a
 
 Limitations the authors state: the bot API gives privileged information a human player wouldn't have, the game ran on Easy, the model knew Minecraft from pretraining, and it was a single run.
 
+Prime Agent ([arXiv:2608.23552](https://arxiv.org/abs/2608.23552) (Karten et al., 2026-08, technical report)) makes the same point as a design principle: a model should fail because the task exceeds it, not because "the harness dropped state". It keeps an append-only event history on disk, keeps the originals retrievable after compaction, lets forks branch without deleting history, and runs a goal or end-condition test after each turn under turn, token and wall-clock limits. A seven-day Sonnet 5 run on Factorio (one run) used 23.4M output tokens and finished 24 of 196 technologies. Across 18 nanoGPT-speedrun runs, harness choice "has little effect on final records compared to the noise", and its ARC-AGI-3 headline (30.2% to 95.5%) is not a clean harness comparison because the authors' reruns of native harnesses scored below published numbers.
+
 ---
 
 ## Autonomous end-to-end execution
@@ -401,6 +420,8 @@ This posture only works if the constraint layer is genuinely strong. Adopting th
 For long-running work, **breaking complex tasks into tractable chunks and assigning specialized personas** prevents coherence degradation and improves output.
 
 The caveat from Anthropic's own results: decomposition is **scaffolding around a model limitation.** When Opus 4.6 arrived, sprint decomposition could be **removed entirely** with no quality loss. Build it when the model needs it; re-test when the model changes.
+
+MAKER ([arXiv:2511.09030](https://arxiv.org/abs/2511.09030) (Meyerson et al., 2025-11, preprint)) takes decomposition to its limit. The arithmetic is the reason: "a system with a 1% per-step error rate is expected to fail after only 100 steps of a million-step task." Each agent makes one move, sees only the current state and the given strategy, and samples are voted on until one answer leads by k. Responses that run long or break format are discarded rather than repaired, which mainly cuts correlated errors. With gpt-4.1-mini, k=3 and a 750-token cap, it **solved 20-disk Towers of Hanoi, 1,048,575 dependent moves, with zero errors** in the one full run reported. Its theory has cost growing about as s ln s with one step per agent and exponentially with steps per agent, assuming independent errors. The strategy is handed over in every prompt and every step has a checkable answer, so it shows reliable execution of a known plan, not planning. The authors call correlated errors "an open foundational problem".
 
 Multi-agent depth: [note 07](07-orchestration.md).
 

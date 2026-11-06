@@ -425,7 +425,7 @@ BQML is the cheapest path from warehouse to a baseline model. The MLflow path in
 
 ## When one machine is enough: DuckDB and Polars
 
-**DuckDB**: an in-process OLAP engine, which its authors describe as SQLite for analytics ([Raasveldt and Mühleisen, SIGMOD 2019](https://mytherin.github.io/papers/2019-duckdbdemo.pdf)). It queries Parquet, CSV and S3/GCS directly with vectorised columnar execution. For single-node workloads up to hundreds of GB it largely replaces both a local Spark setup and a warehouse round-trip.
+**DuckDB**: an in-process OLAP engine, which its authors position as the analytical counterpart to SQLite, built because SQLite's row-major engine performs very poorly on OLAP ([Raasveldt and Mühleisen, SIGMOD 2019 demo](https://mytherin.github.io/papers/2019-duckdbdemo.pdf)). The paper describes a vectorised interpreted engine (1,024 values per vector by default) over compressed column chunks, and says nothing about file formats; reading Parquet, CSV and S3/GCS directly comes from the [DuckDB docs](https://duckdb.org/docs/). For single-node workloads up to hundreds of GB it largely replaces both a local Spark setup and a warehouse round-trip.
 
 ```python
 # illustrative: needs the green-taxi Parquet files from DE 05's download_data.sh

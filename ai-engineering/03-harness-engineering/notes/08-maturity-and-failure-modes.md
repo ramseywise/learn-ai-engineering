@@ -13,6 +13,9 @@ sources:
   - https://arxiv.org/abs/2607.12227
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
+  - https://arxiv.org/abs/2601.13597
+  - https://arxiv.org/abs/2607.28802
+  - https://arxiv.org/abs/2605.21516
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -99,6 +102,8 @@ When an agent fails, audit:
 3. **Model** — last, and rarely the answer
 
 *"The model itself is rarely the bottleneck in mature setups."* Reaching for a model upgrade before auditing tool descriptions is the field's most expensive reflex.
+
+The same symptom can need either fix, so attribute before you repair. Raj et al. ([arXiv:2607.28802](https://arxiv.org/abs/2607.28802) (Raj et al., 2026-07, preprint, Scale AI)) give the case: an agent ignores an earlier user instruction because the harness's compaction removed it, or because it was still in context and the model didn't follow it. "The observed behavior is the same, but the first case requires a harness-level fix." Their taxonomy labels each failure by the interaction where it starts (tool to model, for example) and by the side whose repair is needed. A tool wrapper that swallows an error is a tool fault, and a model that ignores a returned error is a model fault. With cascades, they label "the earliest failure from which execution does not recover". On 40 worked examples, four frontier-model judges matched one human annotator's category label with Cohen's kappa 0.70 to 0.76. The paper is descriptive: it doesn't estimate how often each failure occurs, and its 36-of-41 model-side modes follow from its rule that blames the model whenever a stronger model could have recovered, so it says nothing about how often the model is the bottleneck.
 
 ### Sequence accuracy before cost
 
@@ -211,6 +216,8 @@ It does three jobs. A fresh session reads it and **fixes the lowest grade first.
 
 Failure 1 is the meta-failure — it hides the other four. The honest test is not *"do we have verification?"* but *"can I point to the code that runs it, on every task, without a human remembering to?"*
 
+Adoption data shows why a gate on structure matters, not only on tests passing. Agarwal et al. ([arXiv:2601.13597](https://arxiv.org/abs/2601.13597) (Agarwal et al., MSR 2026)) matched open-source GitHub repos (at least 10 stars) before and after their first agent pull request, with a staggered difference-in-differences design. Repos with no earlier AI tool gained +36.3% commits and +76.6% lines added; repos that already used an AI IDE gained +3.1% and -6.3%. In both groups static-analysis warnings rose about 18% and cognitive complexity about 39%, and in agent-first repos the complexity rise grew to about +49% by month five. Intent-to-treat, observational, with some significant pre-trends, and the study does not look at harness or prompt differences between repos.
+
 ---
 
 ## Iterative simplification
@@ -235,6 +242,8 @@ Practical protocol on every model upgrade:
 This requires the binary eval from failure mode 5. Without it, subtraction is unmeasurable and nobody dares — which is exactly how harnesses calcify.
 
 Note the direction of travel: harness complexity **shifts rather than shrinks.** Removing anxiety-mitigation scaffolding frees budget for constraints on newly-unlocked failure modes.
+
+There is a first, small measurement of why more structure can hurt. Wang et al. ([arXiv:2605.21516](https://arxiv.org/abs/2605.21516) (Wang et al., 2026-05, preprint)) had a planner write a workflow of k steps, for k from 1 to 10, for a GLM-5 solver on 32 Terminal-Bench 2 tasks (chosen after the fact, dropping four tasks that scored zero at every k). **Pass rate rose and then fell, peaking at six steps.** That was one attempt per task and step count, with no confidence intervals. In a synthetic task, stronger agents peaked at fewer steps. Their rule is to "keep extending the harness only while the next scaffolded stage saves more residual risk than it introduces". The claim that a partial workflow can beat a full one rests on a single task, so treat it as a hypothesis for your own ablations, not a result.
 
 Two independent corroborations are worth having, because this is the practice teams most doubt:
 

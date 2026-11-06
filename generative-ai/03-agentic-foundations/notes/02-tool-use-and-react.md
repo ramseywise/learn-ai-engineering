@@ -32,6 +32,11 @@ sources:
   - https://arxiv.org/abs/2610.18861
   - https://arxiv.org/abs/2205.12255
   - https://arxiv.org/abs/2209.07753
+  - "Zhu et al. 2024, KnowAgent — https://arxiv.org/abs/2403.03101"
+  - "Zhang et al. 2023, Igniting Language Intelligence — https://arxiv.org/abs/2311.11797"
+  - "Zhou et al. 2024, Self-Discover — https://arxiv.org/abs/2402.03620"
+  - "Yang et al. 2024, Buffer of Thoughts — https://arxiv.org/abs/2406.04271"
+  - "Valmeekam et al. 2024, LLMs Still Can't Plan; Can LRMs? — https://arxiv.org/abs/2409.13373"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -55,7 +60,7 @@ Every agent framework in [05](05-framework-survey.md) wraps the same four steps:
 | 3. Execute | client | your code parses the arguments and runs the function |
 | 4. Observe | client → model | the result goes back as a tool message; return to step 2 |
 
-The loop stops when the model answers without a tool call, or when a step or token budget runs out. The names differ by vendor: Toolformer called it tool use, Andrew Ng and Anthropic say **tool use**, OpenAI and Gemini say **function calling**. Lakshmanan and Hapke file it as pattern **P21 Tool Calling** and note that ReAct is "just CoT + Tool Calling".
+The loop stops when the model answers without a tool call, or when a step or token budget runs out. The names differ by vendor: Toolformer called it tool use, Andrew Ng and Anthropic say **tool use**, OpenAI and Gemini say **function calling**. Lakshmanan and Hapke file it as pattern **P21 Tool Calling** and call ReAct "just" CoT plus Tool Calling; with Reflection, tool calling is "usually considered the threshold" of an agentic application (*Generative AI Design Patterns*, ch. 7).
 
 The training recipe came nine months earlier in TALM ([arXiv:2205.12255](https://arxiv.org/abs/2205.12255) (Parisi et al., 2022 ⚑)). It fine-tuned T5 models (220M–3B) to write a text tool call, read the result and then answer. Starting from about 150 hand-written tool demonstrations, it sampled many tool calls per training example and kept only those that led to the right answer, for several rounds. With a BM25 retriever on Natural Questions, the 220M TALM beat a 3B T5 without tools. The paper reports these gains only as figures, and every call was single-hop.
 
@@ -269,11 +274,13 @@ If you do run ReAct as text, Phoenix and Taylor's hand-built loop shows the thre
 
 Their comparison table (Table 6-2) is dated. It credits OpenAI function calling with single tool execution but not with sequential tool execution or an iterative thought process, and it calls ReAct less stable. That described 2023 agent wrappers, not the mechanism. Today a native tool-calling loop does both multi-step sequential calls and parallel calls in one turn, so the right column above is the one to build on.
 
+A fixed list of legal moves can cut the invalid ones. KnowAgent ([arXiv:2403.03101](https://arxiv.org/abs/2403.03101) (Zhu et al., 2024-03, preprint)) targets planning hallucination, such as a Lookup before any Search, by writing an action knowledge base into the prompt: the allowed actions and which may follow which (Search may be followed by Search, Retrieve, Lookup or Finish). On HotpotQA with Llama-2-13b, invalid actions fell to 0.35% of steps from 2.08% for ReAct and misordered ones to 1.23% from 3.54%. On ALFWorld the rules in the prompt alone lifted unseen-task success from 9.70 to 38.06; after LoRA fine-tuning on self-generated trajectories that obey the rules (two rounds), it reached 58.71 against 38.81 for GPT-4 with ReAct. The graph is hand-written over four actions, and GPT-4-distilled rules matched it on ALFWorld but lost on HotpotQA (25.72 against 39.26 F1 at 13b). Test sets are small (100 questions per level), single runs, Llama-2 era.
+
 ---
 
 ## What reasoning steps fix, and what they do not
 
-ReAct is "CoT + Tool Calling", so it inherits the strengths and limits of chain of thought. Lakshmanan and Hapke's pattern P13 is the clearest statement of both (*Generative AI Design Patterns*, ch. 5).
+ReAct is CoT plus Tool Calling, so it inherits the strengths and limits of chain of thought. Lakshmanan and Hapke's pattern P13 is the clearest statement of both (*Generative AI Design Patterns*, ch. 5).
 
 CoT helps when a model knows the rule but does not apply it, and it comes in three strengths. **Zero-shot** just asks for step-by-step reasoning. **Few-shot** shows worked examples, and it fixes what zero-shot misses: on a baggage question for a Singapore–Dallas–Toronto trip under a 50 kg/40 kg rule, zero-shot Gemini answered 50 kg, while few-shot examples got the correct 40 kg. **Auto-CoT** retrieves the closest examples from a store. Their image for the difference from RAG is that RAG gives the model a few fish, while few-shot CoT shows it how to fish.
 
@@ -288,6 +295,10 @@ Three failure modes matter more for agents than the technique itself:
 The reasoning a model shows can also be a story told after the fact, so asking "why" does not audit it. The book's own success case makes this point by accident. Asked for the flow of crude oil through a 25 cm pipe, zero-shot Claude applied the laminar-flow formula and reported 84 m³/s, while itself remarking that the figure seemed very high and the flow would be turbulent. Dividing by the pipe's area gives a speed of about 1,700 m/s, so the formula does not apply and the number is meaningless. The book still counts this as the prompt triggering the right behavior. Well-formed steps are not evidence of a correct answer, so check the result independently, as with the restock arithmetic.
 
 Providers now apply much of this inside their models, so zero-shot CoT helps small models more than reasoning models, and thinking modes replace the hand-written instruction. The authors' practical advice is to use a thinking model as a teacher that writes examples for a smaller one, and to set a reminder to retest any CoT prompt every six months, since a hotfix or new model may make it unnecessary.
+
+A 2023 survey of the road from chain of thought to agents ([arXiv:2311.11797](https://arxiv.org/abs/2311.11797) (Zhang et al., 2023-11, preprint)) gathers two conditions from other papers under which CoT works: a model of preferably at least 20 billion parameters, and parametric knowledge that is relevant to the task and interconnected. It also reports that CoT-verification gains often came from oracles or external tools such as search engines and calculators, which is the table's advice to supply the fact. It runs no experiments, covers ReAct in one descriptive paragraph without numbers, and stops at October 2023.
+
+Three papers show where the limit sits. Self-Discover ([arXiv:2402.03620](https://arxiv.org/abs/2402.03620) (Zhou et al., 2024-02, preprint)) has the model compose a JSON reasoning plan once per task. Zero-shot with GPT-4 it scored 81% on 23 BigBench-Hard tasks against 75% for zero-shot CoT, and 73% against 71% on a 200-problem MATH subsample. A hand-check of 99 wrong MATH answers found **74.7% were calculation errors and 25.3% bad plans**: a better plan does not fix arithmetic, which is the table's second row. Buffer of Thoughts ([arXiv:2406.04271](https://arxiv.org/abs/2406.04271) (Yang et al., NeurIPS 2024)) retrieves a stored thought-template, often code, and instantiates it. With GPT-4 it solved 82.4% of Game of 24 against 74.0% for Tree of Thoughts, at about 12% of the cost of multi-query methods. Valmeekam et al. ([arXiv:2409.13373](https://arxiv.org/abs/2409.13373) (2024-09, preprint)) ran 600 Blocksworld planning instances: o1-preview solved 97.8% zero-shot, but **only 52.8% once the predicates were renamed**, where no non-reasoning LLM reached 5%, and 23.63% on 110 larger problems. The classical planner Fast Downward solved 600 of 600 in 0.265 s. It was one run of a preview model; the authors' remedy is an LLM plus a sound verifier.
 
 ---
 
@@ -382,7 +393,7 @@ code_writer_agent.update_system_message(
 | Each action has side effects you must gate | The output is a program or a DSL (SQL, Graphviz) |
 | The arguments are short | Many calls would be chained anyway |
 
-The book's rules for P22: run in a sandbox with CPU, memory, network and time limits (Docker or a VM); validate before running (parse, static analysis); send errors back so the model can repair them (P18 Reflection). It works best with a narrow DSL plus a parser. `LocalCommandLineCodeExecutor` runs on the host: the lab is fine, production is not. Execution boundaries are covered in [harness 04](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
+The book's rules for P22: run in a sandbox with CPU, memory, network and time limits (Docker or a VM); validate before running (parse, static analysis); send errors back so the model can repair them (P18 Reflection). Keep the sandbox patched. For database writes, have the model emit SQL run as one transaction, not trust it to keep data consistent. In June 2025 they found it tended to be unreliable without tightly controlled inputs or a sandbox that allows Reflection; it works best with a narrow DSL plus a parser (*Generative AI Design Patterns*, ch. 7). `LocalCommandLineCodeExecutor` runs on the host: the lab is fine, production is not. Execution boundaries are covered in [harness 04](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
 
 Code can also replace the loop itself. Chameleon ([arXiv:2304.09842](https://arxiv.org/abs/2304.09842) (Lu et al., NeurIPS 2023)) had the LLM write the whole tool sequence before running any of it: a short program over modules such as Bing search, an image captioner and a Python generator. With GPT-4 it beat GPT-4 CoT by only 2.55 points on ScienceQA (86.54%). The ChatGPT planner mostly copied the tool habits of its in-context examples: it called knowledge retrieval on 72% of ScienceQA questions and Bing search on 3%. ActionEngine ([arXiv:2602.20502](https://arxiv.org/abs/2602.20502) (Zhong et al., 2026-02, preprint)) adds what Chameleon lacked, a model of the environment. A crawler explores a web app offline and records a state machine: its pages, the operations on each and the transitions between them. At run time one LLM call writes a program against that map, which then runs without further model calls. On 655 WebArena tasks, with Claude Opus 4.6 behind every system, it **succeeded on 91.2% against 82.7% for Claude Code driving Playwright MCP step by step**. It used 1.5–3.5 LLM calls per task instead of 7–16, and $0.05 per task instead of $0.40. There are three caveats. The map was refined in a warm-up pass over every WebArena task template, and with the crawler's map alone it scored 73.1%. Failed tasks were re-graded by hand for all systems. And crawling cost $12–37 per site. Search-dependent tasks still failed, because the program must choose its search terms before seeing any results. That failure is the case for ReAct: when the next step depends on an observation, keep the loop.
 
@@ -513,4 +524,4 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 
 ## Next
 
-→ [03 — memory as an operating system](03-memory-as-an-operating-system.md): what the loop remembers between turns, and how the agent edits it with the same tool calls.
+→ [02b — planning and tool use](02b-planning-and-tool-use.md): plans that name their tools, restated state, independent calls run together, and choosing among many tools.

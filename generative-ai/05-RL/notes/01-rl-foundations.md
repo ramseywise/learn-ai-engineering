@@ -10,6 +10,7 @@ sources:
   - https://cdn.openai.com/WebGPT.pdf (WebGPT)
   - https://arxiv.org/abs/1312.5602
   - https://arxiv.org/abs/1707.06347
+  - https://arxiv.org/abs/2503.06072 (post-training survey, notation and taxonomy)
   - https://arxiv.org/abs/2402.03300
   - https://arxiv.org/abs/2503.14476 (DAPO)
   - https://arxiv.org/abs/1003.0146
@@ -25,6 +26,7 @@ sources:
   - https://arxiv.org/abs/2302.08242
   - https://arxiv.org/abs/2402.14740
   - https://arxiv.org/abs/2301.04104 (DreamerV3; Nature 2025)
+  - https://arxiv.org/abs/2502.21321 (Kumar et al., LLM post-training survey)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -554,6 +556,10 @@ LLMs are trained using RL primarily at two stages:
 2. **Agentic RL (tool use, retrieval, reasoning):** The LLM takes multi-step actions
    in an environment (web browser, code executor, knowledge base). Rewards are task
    completion signals. This section and the next cover this use case.
+
+Kumar et al.'s survey ([arXiv:2502.21321](https://arxiv.org/abs/2502.21321) (2025-03, preprint)) sorts post-training into fine-tuning, RL and test-time scaling, and states the two update rules this note uses: PPO's clipped ratio with a learned critic, and GRPO's group-normalised advantage (r - mean) / std with no critic. It runs no experiments, and the figures it relays carry no setup, so use it as a map and go to the cited papers for numbers. Its Table 1 has doubtful rows, and its DPO reference points at a different paper.
+
+Tie et al.'s larger survey ([arXiv:2503.06072](https://arxiv.org/abs/2503.06072) (2025-03, preprint)) writes the notation chain this note uses (advantage as Q minus V, the PPO clip, the KL-penalised reward, the DPO derivation, reasoning as an MDP) and tabulates alignment methods by reward type and on/off-policy, but runs no experiments, never writes out GRPO's advantage, and has contradictory R1 details and implausible parameter counts in its Table 1, so cite it for taxonomy only.
 
 A third use is still experimental: **RL in place of next-token prediction.** Reinforcement Pre-Training makes every token of a corpus a verifiable task. The model reasons, guesses the next token, and gets reward 1 for an exact byte-prefix match ([arXiv:2506.08007](https://arxiv.org/abs/2506.08007) (Dong et al., 2025-06, preprint)). Thinking before each token comes from Quiet-STaR ([arXiv:2403.09629](https://arxiv.org/abs/2403.09629) (Zelikman et al., COLM 2024)), which instead rewarded a rationale by how much it raised the true token's likelihood. Starting from R1-Distill-Qwen-14B, it was trained with GRPO on 4,428 OmniMATH problems, keeping only high-entropy token positions. **Next-token accuracy on the hard split went from 20.4% to 23.8%**, about level with R1-Distill-Qwen-32B. The headline "+22 points on MMLU-Pro over the 32B" compares RPT reasoning against the 32B answering directly. Against the same 14B in reasoning mode the gain is 2.2 points (68.9→71.1), and on SuperGPQA 2.9 (36.1→39.0). The corpus is math only, the start is already a reasoning model, and there is one model size, so "scales RL to web text" is the goal, not the result.
 

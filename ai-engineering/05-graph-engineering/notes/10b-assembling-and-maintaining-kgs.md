@@ -4,6 +4,7 @@ sources:
   - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4, ch. 6 and appendix C
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
+  - https://arxiv.org/abs/2609.15779
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -214,6 +215,8 @@ The book connects traceability to privacy: if every fact links to its source doc
 Whatever the method, an inferred triple is a prediction. It goes in flagged, with a confidence score, and stays out of default traversals until confirmed ([note 13](13b-representation-learning-and-gnns.md#predictions-in-a-shared-graph)).
 
 **Plan the pipelines that run after deployment.** "Deployment is the last step in the pipeline. That doesn't mean it's the end of the story" (ch. 7). A live KG needs four standing pipelines: updates as sources change, assessment of every write so that new data doesn't add errors or conflicts, cleaning for facts that are outdated or must be deleted for legal or privacy reasons, and access and security control. The book doesn't connect these to the earlier stages, but they are the same stages run again. An update pipeline is chunk → extract → resolve → assemble on the changed documents, gated by the same Stage 6 metrics. If the first build was a one-off notebook, none of this can be done.
+
+EvoOntology (Chong et al., [arXiv:2609.15779](https://arxiv.org/abs/2609.15779), Renmin University, 2026-09, preprint) runs that update loop on a small semantic layer for data agents instead of a full KG. An LLM builder writes terms, mappings to tables and columns, constraints and evidence. Agent trajectories then drive diagnose → attribute → patch rounds, and a patch is kept only if it raises the score on a paired validation split. On DDR-Bench, the mean trajectory-wise score over four backbones rose 12.3 points with the built layer and another 7.7 with evolution. **Removing the validation gate cost the most of the four evolution-loop steps (−11.2 points)**, so the assessment-on-every-write rule above is the part that pays. Two other results matter for anyone building a semantic layer. Serving the layer through two tools (browse and resolve) beat pasting the same content into the prompt, which hurt one model by 15 points. And the evolved stores were specific to the backbone: running a model on a store evolved for another model lost at least 6.6 points, by the paper's text (its figure shows at least one smaller drop). Each layer is built on one half of a benchmark and tested on the other half, with no test for schema drift or a new domain, there is no variance, and the InsightBench gain was under 2 points.
 
 On hosting, the chapter's survey is short: relational tables, document stores, graph databases (Neo4j with Cypher) and RDF triple stores, or a KG layer over an existing database (ch. 7). The choice that matters for an LLM-built graph, labelled property graph or RDF, is in [note 09](09-kg-fundamentals-and-cypher.md#two-data-models-lpg-vs-rdf).
 

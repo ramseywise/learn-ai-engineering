@@ -91,7 +91,7 @@ statsmodels, Cohen's h          31,217
 Kohavi's 16 sigma^2 / delta^2   30,400
 ```
 
-Use any of them. They agree within a few percent, and your baseline estimate is rarely better than that.
+Use any of them. They agree within a few percent, and your baseline estimate is rarely better than that. Kohavi and colleagues use the 16σ²/δ² rule for the same point about metric choice that the exercises make: with 5% of users buying about $75 (average spend $3.75, standard deviation $30) and a 5% change to detect at 80% power, a revenue metric needs over 409,000 users per variant and a conversion metric under 122,000 (at 95% confidence), a factor of 3.3 ([Kohavi et al., DMKD, 2009](https://doi.org/10.1007/s10618-008-0114-1)). Their rule assumes equal-sized variants and the large-sample normal approximation, and the factor 16 becomes 21 for 90% power.
 
 The two practice notebooks do this calculation too, and it is worth checking them, because one of them has a bug in a form you will see elsewhere:
 

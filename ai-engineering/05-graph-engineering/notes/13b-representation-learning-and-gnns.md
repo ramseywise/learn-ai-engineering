@@ -6,6 +6,13 @@ sources:
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
   - https://arxiv.org/abs/2403.04483
   - https://arxiv.org/abs/2404.14809
+  - https://arxiv.org/abs/2301.08210
+  - https://arxiv.org/abs/2312.02783
+  - https://arxiv.org/abs/2405.20139
+  - https://arxiv.org/abs/2305.09645
+  - https://arxiv.org/abs/2309.15427
+  - https://arxiv.org/abs/2504.03137
+  - https://arxiv.org/abs/2508.00429
 confidence: medium-high
 cleaned: 2026-11-01
 ---
@@ -96,6 +103,8 @@ Raieli and Iuculano add two decoders that answer the table's weaknesses (*Buildi
 ### Message passing
 
 A GNN layer has each node **aggregate** its neighbours' vectors and **update** its own. After *k* layers a node's embedding encodes its *k*-hop neighbourhood, both its shape (an atom can come to "know" it sits in a benzene ring) and its neighbours' features (a paper absorbs related papers' content) (*KG & LLMs in Action*, ch. 11).
+
+Veličković's short survey ([arXiv:2301.08210](https://arxiv.org/abs/2301.08210), 2023-01, preprint, no experiments) sorts layers into convolutional, attentional and general message-passing, with expressive power rising in that order at the cost of interpretability, scalability or training stability. It also frames a Transformer as an attentional GNN on a complete graph, where the attention layer infers the edges. That is a framing, not a measured result.
 
 ![Message passing for target node A: A aggregates messages from its neighbours D, B and C, and each of those messages was itself aggregated from that neighbour's own neighbours, so two layers reach A's two-hop neighbourhood](../sources/images/negro-kg-and-llms-in-action-fig11-5.png)
 *Image Source: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 11.5 (2025)*
@@ -220,6 +229,16 @@ The predictor pattern is what the book's advisory systems do: a structural resul
 
 The labeller row is worth noting for cost. [The task map](13-graph-ml-and-gnns.md#the-task-map) says node classification needs training, and training needs labels. A zero-shot LLM pass gives a first set of labels quickly, and a person can check a sample of them before the GNN learns from them. The book also mentions fine-tuning the LLM and the GNN jointly (ch. 7).
 
+Jin et al. (*Large Language Models on Graphs: A Comprehensive Survey*, TKDE 2024, [arXiv:2312.02783](https://arxiv.org/abs/2312.02783)) sort the field by graph type (pure, text-attributed, text-paired) and by LLM role (predictor, encoder, aligner). The survey runs no experiments of its own. It reports that LLMs given a verbalised graph answer easy questions such as connectivity and neighbour identification but fail at cycle detection and Hamiltonian paths, and that linearised structure helps on text-attributed graphs mainly when the node text is scarce. For the encoder cascade it names an inference cost: the LLM must encode sampled neighbours' text, and the fix is to distil into a text-only student.
+
+**GNN-RAG** (Mavromatis & Karypis, 2024-05, [arXiv:2405.20139](https://arxiv.org/abs/2405.20139), preprint) uses the GNN as the retriever. It scores every node in a 2,000-entity question subgraph, takes shortest paths from the question entities to the likely answers, verbalises them and passes them to a fine-tuned LLaMA2-Chat-7B. On WebQSP and CWQ (Freebase), multi-hop F1 is 69.8 and 68.2, against 63.3 and 59.3 for RoG, which retrieves with an LLM. On 1-hop WebQSP questions the LLM retriever wins (F1 73.4 vs. 72.0). The union of both retrievers scored best (F1 73.5 and 60.4), and adding a third lowered it because the longer input confused the reader. A weaker GNN (NSM) gave CWQ H@1 52.5, below RoG's 57.8. The reader is tuned on these benchmarks, while the "matches GPT-4" comparison is with prompted ToG (CWQ Hit 68.7 vs. 69.5), and each figure is one run.
+
+**Graph Neural Prompting** (Tian et al., AAAI 2024, [arXiv:2309.15427](https://arxiv.org/abs/2309.15427)) passes the subgraph to the LLM as a vector, not as text. A GAT encodes the 2-hop subgraph around the entities in the question and its options, cross-attention against the LLM's token embeddings pools it, and a projector turns it into one soft prompt, trained with a link-prediction loss. On six multiple-choice sets with FLAN-T5 (ConceptNet and UMLS), the frozen 11B model averaged **77.84 vs. 68.55 for prompt tuning**, and LoRA plus the graph prompt 80.83 vs. 79.41 for LoRA alone. Putting the triples into the prompt as text (KG Flattening, KAPING) scored 58.87 to 64.35 against 66.88 with no KG at all. The setting is narrow: encoder-decoder models, multiple-choice questions, training per dataset, and no variance reported.
+
+**LightPROF** (Ao et al., AAAI 2025, [arXiv:2504.03137](https://arxiv.org/abs/2504.03137)) takes the same soft-prompt route to KG question answering with a decoder LLM. A BERT classifier predicts the hop count. A breadth-first search from the question entities collects relation chains, an LLM ranks them, and the top chains become reasoning paths. A trained adapter then encodes each path's text and structure into **one token** for a frozen LLaMA3-8B. On Freebase it scored **Hits@1 83.8 on WebQSP and 59.3 on CWQ**, against 75.1 for the best fine-tuned baseline (UniKGQA) and 57.6 for ToG with LLaMA2-70B. Against StructGPT (run on Llama-3-8B) on WebQSP it used about **98% fewer input tokens** in total (365,380 vs. 24,750,610; 224 vs. 6,400 per request) and 30% less time. Retrieval carries most of the result: swapping in random paths dropped WebQSP to 53.4, while removing the structural embedding cost only 1.4 points. The adapter is trained on each benchmark and the prompted baselines are not. The paper does not say whether the LLM call that ranks relations is counted in the cost table, the encoder must be retrained for a new KG, and the method needs open weights.
+
+**ReaGAN** (Guo et al., [arXiv:2508.00429](https://arxiv.org/abs/2508.00429), Rutgers, 2025-08, preprint v5 2026-07) goes the other way and replaces fixed message passing with a per-node choice of aggregation for node classification. Each node is an agent with its own memory. At each of up to three layers, a frozen LLM decides for that node whether to pull from its neighbours, retrieve similar nodes by text from anywhere in the graph, do both, or do nothing. It then predicts the label from the few-shot examples it has gathered. With Qwen2.5-14B on text-attributed graphs (60/20/20 split), it **matched GCN on Cora (84.95 vs. 84.71) but trailed GraphSAGE by 18 points on Citeseer (60.25 vs. 78.24) and GPRGNN by 24 points on heterophilous Chameleon (43.80 vs. 67.48)**. It took about 3 minutes per batch of 64 nodes on a 14B model, against one forward pass for a simple MLP or GNN. Two engineering details hold beyond this paper. Label names had to be replaced with anonymous ids, because readable names let the LLM guess from its priors. And the LLM picks from a fixed action list, while a deterministic layer validates the choice and applies the state change. The ablations are reported only as bars, with no numbers. Only one LLM was run, and the paper does not discuss whether Cora and Citeseer appear in its pretraining data. On the evidence, a trained GNN is still the default for node classification.
+
 ### When the LLM does the graph reasoning itself
 
 The alternative to pairing an LLM with a GNN is asking the LLM to reason over the graph directly. Raieli and Iuculano separate two kinds of task, following a graph-and-LLM survey ([arXiv 2404.14809](https://arxiv.org/abs/2404.14809), not yet read for this course) (ch. 7):
@@ -235,6 +254,8 @@ The chapter is frank about the limits. LLMs read a graph as linear text and atte
 *Image Source: Salvatore Raieli & Gabriele Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), Fig. 7.31*
 
 The figure comes from the paper the book cites ([arXiv 2403.04483](https://arxiv.org/abs/2403.04483), not yet read for this course). It shows a single question. Behind the book's claim that "SFT on graph datasets allows for results that are better than much larger models", the chapter gives one example, not a benchmark. The miss is worth studying anyway. Node 0's edge to 3 is on the **last line** of the list, and ChatGPT's answer goes through the edges in order and leaves that one out. Asking a model to scan a list of edges is a poor way to run a graph algorithm.
+
+**StructGPT** (Jiang et al., 2023, [arXiv:2305.09645](https://arxiv.org/abs/2305.09645), preprint) is the middle path. It gives the model a few read-only interfaces (list a node's relations, fetch the triples for chosen relations) and loops. With ChatGPT it lifted WebQSP Hits@1 from 61.2 to 72.6 zero-shot, and MetaQA 3-hop from 43.2 to 80.2, still below supervised UniKGQA (99.1). In 100 hand-sorted WebQSP errors, 74% were relation-selection errors, choosing among thousands of relations. It assumes the topic entity is already linked, and the June-to-August ChatGPT update moved the baseline by up to 5.1 points, about the size of its gain on Spider (+4.7).
 
 The practical rule follows. **Don't ask the model to do what a graph query does exactly.** Degree, paths, predecessors and topological order are one line of Cypher or `networkx`, and both are always right. Give the model those as tools (the API-call approach and the canned traversals of [note 11](11-kg-rag-and-text-to-cypher.md#retrieval-modes)), and keep the model for reading the question and explaining the result. Fine-tune only if you have a graph task no algorithm covers and enough labelled examples.
 

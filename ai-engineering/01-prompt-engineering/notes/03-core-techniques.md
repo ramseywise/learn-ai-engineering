@@ -22,6 +22,8 @@ sources:
   - https://arxiv.org/abs/2112.00114
   - https://arxiv.org/abs/2205.09712
   - https://arxiv.org/abs/2302.13814
+  - https://arxiv.org/abs/2407.12994
+  - https://arxiv.org/abs/2310.01714
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -49,6 +51,8 @@ Teams copy a technique because a paper reported a big gain, then pay for it on t
 | Long task with separable stages | Prompt chaining ([06](06-chaining-and-workflows.md)) | Orchestration code |
 
 **Reasoning models change the defaults** — many of the reasoning techniques below are built in. See [07-prompting-reasoning-models](07-prompting-reasoning-models.md) before adding CoT scaffolding to one.
+
+A survey of 44 papers on 39 methods and 29 tasks runs no experiments and relays each paper's own numbers. Its caveat is that models, metrics and dataset versions differ across papers, so the gains cannot be compared; by its labels, plain prompting still won most medical-QA sets ([arXiv:2407.12994](https://arxiv.org/abs/2407.12994) (Vatsal & Dubey, 2024-07, preprint)).
 
 ---
 
@@ -95,6 +99,8 @@ The book's three drawbacks — **use few-shot only when something is genuinely n
 Anchoring survives even perfect coverage. Give one example for each rating 1 through 5 and the model may infer the ratings are equally common, so on an uninformative review it guesses 3. In the real data 5 is by far the most common rating, and the right uninformed guess. Covering edge cases is still worth a little bias: a model that has never seen an edge case has no idea how to handle it (book, Ch 5).
 
 Spurious patterns turn up by luck more often than you'd expect: three examples land in accidentally ascending order 1 time in 6 (17%), and descending just as often. With ten examples, a perfect ordering by chance is rarer than death by lightning (1 in 1.8 million against about 1 in 100,000 for US residents), but patterns that only mostly hold, or emerge partway through, still sway the model. Hand-written examples are the risk, because enumerating cases systematically produces ordered lists. The "happy path first, edge cases last" habit is the classic trap. In the book's apple-counting puzzles (text-davinci-003), three solvable examples come first and four "NA" cases (no integer solution, infinitely many) follow. The model continues the sequence and answers the solvable main question with "NA # no integer solutions". Swap one solvable example to the end and it gives an answer, though a wrong one ("Olive 4, Paul 5"): that puzzle needs chain-of-thought, not better examples. Shortening examples to dodge the context drawback has its own cost: it can nudge the model away from the deeper reasoning the full context would have supported, and examples much thinner than the real question have little left to teach except the output format (book, Ch 5). At four shots, arbitrary order alone is enough to break a prompt. Lu et al. ran all 24 orders of one fixed, balanced set of four SST-2 examples on GPT-2 and GPT-3 models from 0.1B to 175B. **Some orders scored over 85% and others about 50%, which is chance.** Scale narrowed the spread but did not remove it on Subj, and adding examples (up to 32, GPT-2 only) raised accuracy without shrinking the variance. A good order did not transfer between models. Its rank correlation between GPT-3 175B and 2.7B was 0.05, and one order fell from 88.7% to 51.6% moving from GPT-2 XL to GPT-2 Large. Most bad orders produced highly unbalanced predictions, skewed toward one label. The authors' fix needs no labelled dev set: generate a probing set with the model itself, then keep the orders whose predicted labels on it are most evenly spread (highest entropy). Across 11 classification tasks that gave a 13% relative gain, up to 30% where the variance was high. On GPT-3 175B SST-2, where the spread was already ±0.6 points, it changed nothing ([arXiv:2104.08786](https://arxiv.org/abs/2104.08786) (Lu et al., ACL 2022)). These are 2021 base models on classification. The same de Wynter study found that *randomly shuffling* the same exemplars barely moved accuracy, so its results count against fragility to arbitrary order at 50–100 shots. That is a different case from a systematic order such as happy path first, which teaches a pattern of its own, and the study did not test that case.
+
+**Analogical prompting** has the model write its own examples: recall three relevant problems, solve them, then solve the target. On GSM8K it scored 77.8% against 76.7% for 5-shot CoT (GPT-3.5-turbo; PaLM 2: 81.7% against 80.7%) and 37.3% against 34.9% on MATH. At text-davinci-001 and below labeled examples did as well or better, and no variance is reported ([arXiv:2310.01714](https://arxiv.org/abs/2310.01714) (Yasunaga et al., ICLR 2024)).
 
 Few-shot alone doesn't fix multi-step reasoning. When examples aren't enough, add reasoning to them — that's chain-of-thought.
 

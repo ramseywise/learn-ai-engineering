@@ -7,6 +7,8 @@ sources:
   - https://medium.com/@adnanmasood/loop-engineering-a-guide-for-engineers-and-practitioners-893bb65ea943
   - https://ghuntley.com/ralph/
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
+  - https://arxiv.org/abs/2608.27454
+  - https://arxiv.org/abs/2610.20563
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -98,6 +100,10 @@ Check the token refresh path in auth/session.py
 The run-stats row is what the evolve loop reads later ([note 08](08-self-improving-loops.md#cadence-and-inputs)), and what tells you a loop is rolling back more than it saves.
 
 "What was tried" earns its place. Without it, a fresh pass reruns the attempt that failed an hour ago.
+
+A persistent wiki can sit between raw traces and the rules the agent follows. WikiSkill ([arXiv:2608.27454](https://arxiv.org/abs/2608.27454) (Tang et al., 2026-08, preprint)) keeps immutable traces, a wiki of root-cause pattern pages, and the skills themselves; a skill edit is accepted only if validation score strictly rises, and on rejection only the skills roll back while the wiki stays, so failed attempts stay as notes ("what was tried"). Removing the wiki and its maintainer from the skill proposer dropped the average over four benchmarks from 63.7% to 48.7% (Gemini-3.5-Flash, three runs, no per-run spread; the no-wiki arm also drops an analysis call). Letting the agent read the wiki during training rollouts lowered it to 60.9%. Across five models it beat three skill-evolution baselines by 3.3 to 12.0 points average, on small validation splits (10 to 40 tasks), with skills injected whole, so retrieval is untested.
+
+
 
 ### Context drift
 
@@ -203,6 +209,8 @@ Two rules from the essay that apply to any long loop:
 | Risk | Summary-of-a-summary drift | Anything not written down is lost |
 
 Loops lean toward **reset**, because the Ralph and initializer/worker patterns already keep state on disk. Details and the model-dependence of this choice: [harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#compaction-vs-context-reset).
+
+For an optimization loop, a reset can drop even the history of what was tried. In Scaling Discovery Requires Forgetting ([arXiv:2610.20563](https://arxiv.org/abs/2610.20563) (Tan et al., 2026-10, preprint)), a team of four agents throws away every session and the whole candidate history three times per run, keeping only the best candidate and its score. Long sessions became anchored to their own past attempts. A single agent's edits shrank from about 100 lines to a few. On one kernel task, across three single-agent runs, 532 of 763 turns produced no candidate at all and used 66% of the spend. Starting from the same plateaued state on AHC014, **continuing gained 1.4% and forgetting gained 9.2% (±6.9), at about 60% of the cost** ($15.32 against $24.67). At equal spend across four tasks, the team with forgetting beat four parallel agents by 10% on average. The setup is one model (DeepSeek V4.1 Flash), three runs per task, and tasks that all have a numeric scorer. Most of the gain came from the first forget. This does not contradict the "What was tried" field above: that field stops a fresh pass from repeating a failure, while this loop restarts only from a scored best candidate.
 
 ---
 

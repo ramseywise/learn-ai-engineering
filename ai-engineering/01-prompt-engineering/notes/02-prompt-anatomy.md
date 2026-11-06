@@ -9,6 +9,9 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://arxiv.org/abs/2307.03172
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1"
+  - https://arxiv.org/abs/2411.10541
+  - https://arxiv.org/abs/2307.11760
+  - https://arxiv.org/abs/2312.16171
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -121,6 +124,10 @@ Format examples the way the rest of the document is formatted: in a chat prompt,
 | Specify the output | "Extract the places" | "Extract the places. Format: `Place: <comma_separated_list>`" |
 
 Reasons generalize better than bare commands: a model that knows *why* a rule exists applies it sensibly to cases you didn't list. Modern models also follow instructions more literally than older ones, so shouting (CRITICAL, MUST) now tends to cause over-application rather than compliance.
+
+Emotional pressure is a weak, dated lever. Li et al. appended lines such as "This is very important to my career." to the task on Instruction Induction and BIG-Bench with six 2023 models (Flan-T5-Large to GPT-4). Their headline is +8.00% and +115% relative, but that takes the best of 11 stimuli per task, chosen on the test set. Averaged over all 11, the Instruction Induction zero-shot mean moved from 51.65 to 51.98. The large BIG-Bench figure is relative on a tiny base (normalized score 2.39 to 5.20 with automatic prompts). The best stimulus differed by task, there was no neutral-filler control, and no variance was reported, so test any such line against your own eval ([arXiv:2307.11760](https://arxiv.org/abs/2307.11760) (Li et al., 2023, preprint)).
+
+Bsharat et al. list 26 such "principles" (affirmative directives, a role, delimiters, "I'm going to tip $xxx", no "please") and scored each on 20 ATLAS questions by human side-by-side judgement, one response per question, with no rater details. They report GPT-4 gains of 57.7% in quality and 36.4% in accuracy on average, growing with model size. Each cell moves in 5-point steps and the tip and politeness lines have no separate ablation, so treat the list as hypotheses to test ([arXiv:2312.16171](https://arxiv.org/abs/2312.16171) (Bsharat et al., 2023-12, preprint)).
 
 **Imagine the context a human would need, then supply it.** Phoenix & Taylor organize the craft as five principles: give direction, specify format, provide examples, evaluate quality, divide labor. They map onto this pillar as 02, [04](04-controlling-output.md), [03](03-core-techniques.md#few-shot), [09](09-evaluating-prompts.md) and [06](06-chaining-and-workflows.md) (*Prompt Engineering for Generative AI*, ch. 1). Two direction tactics from their chapter that this note doesn't cover elsewhere:
 
@@ -244,6 +251,8 @@ How a piece of data (say, a weather API result) enters the prompt should match t
 - **Conversation:** `Assistant: It'll be sunny and 75 degrees.`
 - **Report:** a `#### Weather` heading followed by a prose sentence.
 - **Structured:** `<weather><description>sunny</description><temperature>75</temperature></weather>`
+
+Whole-prompt format matters too, and the best one is model-specific. He et al. wrote the same five parts (persona, instructions, examples, output format, user ask) as plain text, Markdown, YAML and JSON. On gpt-35-turbo-0613, JSON beat Markdown on MMLU 59.7% to 50.0% (14,079 questions), and JSON beat plain text on HumanEval pass@1 59.8% to 40.2%. GPT-4-1106-preview varied far less (dispersion below 0.036 on every benchmark), and GPT-4-32k fell to 21.95% on HumanEval with JSON against 76.22% with plain text because it wrote its reasoning and skipped the code (the authors' reading of the outputs). The top formats overlapped little across model families, so a format tuned on one model should be re-tested before you move it. Structure and layout were changed together, only OpenAI models from 2023 were tested, and some of the paper's headline percentages do not match its own tables ([arXiv:2411.10541](https://arxiv.org/abs/2411.10541) (He et al., 2024-11, preprint)).
 
 Content that doesn't fit the main flow can go in an **aside** — a clearly marked digression (a blockquote, a `Note:` paragraph, a code comment) that the document's genre already allows. An aside hints strongly without obliging the model to use it. Copilot's code completions pull in code from other files this way (book, Ch 6):
 

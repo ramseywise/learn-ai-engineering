@@ -289,7 +289,7 @@ lr 1.0     test 0.100
 
 In a real training run, the rate also changes over time. [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) uses AdamW with warmup and cosine decay.
 
-D-Adaptation tries to remove the search: it maintains a lower bound on the distance to the solution and sets the rate from it, with no extra evaluations ([arXiv:2301.07733](https://arxiv.org/abs/2301.07733) (Defazio and Mishchenko, ICML 2023)). The authors report matching hand-tuned rates across more than a dozen problems, with `lr=1.0` as the setting to leave alone. On my small MLP and these short runs, it did not:
+D-Adaptation tries to remove the search: it maintains a lower bound on the distance to the solution and sets the rate from it, with no extra evaluations ([arXiv:2301.07733](https://arxiv.org/abs/2301.07733) (Defazio and Mishchenko, ICML 2023)). The authors report matching hand-tuned rates across more than a dozen problems, with `lr=1.0` as the setting to leave alone. Their own numbers are close but not uniform: ImageNet ResNet-50 76.43% against 76.09% for tuned SGD, and ViT-tiny on ImageNet 71.62% against 74.24% for Adam, the one clear loss, which they leave unexplained. The guarantee covers only convex Lipschitz problems with deterministic gradients, the deep-learning variants have no theory, and the largest model was RoBERTa at 110M parameters. On my small MLP and these short runs, it did not:
 
 ```python
 from dadaptation import DAdaptAdam                    # pip install dadaptation

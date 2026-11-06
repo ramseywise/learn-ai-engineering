@@ -7,6 +7,13 @@ sources:
   - https://arxiv.org/abs/2607.11881
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 13"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
+  - https://arxiv.org/abs/2506.06576
+  - https://arxiv.org/abs/2404.14387
+  - https://arxiv.org/abs/2609.11873
+  - https://arxiv.org/abs/2602.11865
+  - https://arxiv.org/abs/2606.28277
+  - https://arxiv.org/abs/2512.21782
+  - https://arxiv.org/abs/2512.05356
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -151,6 +158,8 @@ Oshin and Campos draw the trade-off underneath the ladder as a frontier (*Learni
 
 Climbing a rung moves you along the curve. The engineering goal is to **push the curve outward**: more agency at the same reliability. Their four levers are streaming intermediate output (so latency is easier to accept), structured output, human-in-the-loop controls, and a deliberate policy for input that arrives mid-run ([harness note 07](../../03-harness-engineering/notes/07-orchestration.md#double-texting-the-same-problem-in-a-chat-app)). The verifier this note keeps insisting on is a fifth: it buys reliability without taking autonomy away.
 
+The same ladder shows up outside software loops, with the same reliability cost. Google's Paper Assistant Tool ([arXiv:2606.28277](https://arxiv.org/abs/2606.28277) (Jayaram et al., 2026-06, preprint)) sorts AI in peer review into four roles, modelled on SAE driving levels: a tool for authors, a tool for reviewers, a supporting reviewer, and full automation. Each role moves responsibility from the author or reviewer up to the area chair and finally to nobody. The tool was deployed only at the first rung, to authors before submission, on more than 4,700 STOC and ICML papers. Even there, only 55.8% (STOC) and 64.8% (ICML) of surveyed authors found its feedback mostly or fully grounded. The survey was self-selected and reports no false-positive rate. Feedback that falls short of mostly grounded for 35–44% of respondents needs a person at the gate.
+
 ### The controls a human needs while a loop runs
 
 At rungs 1 and 2 the human is still in the loop, and the harness has to give them more than approve or deny. *Learning LangChain* (ch. 8) lists six controls, all of which need a checkpointer and a thread ID:
@@ -165,6 +174,16 @@ At rungs 1 and 2 the human is still in the loop, and the harness has to give the
 | **Fork** | Go back to any earlier checkpoint and run again from there |
 
 The LangGraph calls for each are in [note 10](10-framework-bindings.md#langchain--langgraph). The design point is that "approve each tool call" (rung 1) is only one of six. A loop that can't be edited or forked mid-run pushes humans toward approving whatever is in front of them.
+
+Workers and experts disagree about the right rung. In an audit of 844 tasks in 104 occupations ([arXiv:2506.06576](https://arxiv.org/abs/2506.06576) (Shao et al., 2025, preprint)), people rated a five-point Human Agency Scale from H1 (agent alone) to H5 (human essential). Workers' and AI experts' majority levels matched on 26.9% of tasks, and on 47.5% workers wanted more human involvement than experts judged necessary. H3, equal partnership, was the dominant worker-desired level in 47 of 104 occupations. The scale records preferences and expert judgement per task, not measured oversight, and it is a snapshot of early 2025 on computer-based tasks. It argues that the right rung is a choice about people, not only about capability.
+
+Self-evolving systems have their own ladder. The survey by Tao et al. ([arXiv:2404.14387](https://arxiv.org/abs/2404.14387) (Tao et al., 2024-04, preprint)) splits a self-evolution loop into experience acquisition, refinement, updating and evaluation, and rates autonomy by who sets the objective and designs the modules: the user fixes both (low), the model builds the modules (medium), or the model also diagnoses its own weakness and sets the next objective (high). It reports most work at the low level and, citing two other papers, that methods struggle to improve beyond about three rounds. It has no experiments of its own.
+
+SAGA ([arXiv:2512.21782](https://arxiv.org/abs/2512.21782) (Du et al., 2025-12, preprint)) builds the high end of that ladder for scientific design: an outer loop of agents reads results, proposes new objectives and writes them as scoring functions, and an inner loop optimizes against them. It runs at three levels. In co-pilot a human edits the plan and the analysis, in semi-pilot only the analysis, and autopilot runs with no one. Against a fixed-objective optimizer, evolving the objectives avoided over-optimizing the primary score (for example, antibiotic candidates with poor drug-likeness). Its nanobody design used 2–5× fewer oracle calls than two baselines while matching or beating them on most metrics. Autopilot looked comparable to the human-guided modes on most tasks, but read that with care: three replicates, a visual comparison with no test, a human role of one or two short remarks per run (fixed per level for nanobodies), and 3 to 10 iterations. In chemical process design, less human input gave noticeably more variance. The paper reports no LLM cost.
+
+Whether the top rung should be the goal at all is argued, not measured. Weston and Foerster ([arXiv:2512.05356](https://arxiv.org/abs/2512.05356) (Weston & Foerster, 2025-12, preprint)), from FAIR at Meta, contrast self-improvement, where humans build a seed and leave the loop, with co-improvement, where humans stay in every later round. They argue that full autonomy is "not the fastest way to achieve superintelligence, nor the safest", because an autonomous system can suffer goal misspecification, while humans in the loop can steer it. It is a position paper with no experiments, so read it as a reason to keep the gates, not as evidence that they pay.
+
+A 2026 survey asks the same question about the improvement process itself. Duan et al. ([arXiv:2609.11873](https://arxiv.org/abs/2609.11873) (Duan et al., 2026-09, preprint)) rank systems by how much of the improvement loop the AI owns: L1 executes a human-set procedure, L2 chooses the intervention, L3 chooses what to learn from, L4 adapts persistent state from deployment feedback, and L5 revises the mechanism that governs later improvement. Humans keep the objective, protected evaluation and release authority at every level. In the survey's own count of 491 papers the evidence thins toward the top: 215 at L1 (43.8%), 155 at L2, 64 at L3, 28 at L4 and 29 at L5 (5.9%). Its caution fits this note: "a higher autonomy level does not by itself imply a better improvement process", and L5 gains such as HyperAgents' 200-iteration transfer experiment were not statistically significant. The level assignments are the authors' mapping, and some industry figures are company-reported.
 
 ### Who chooses the rung
 
@@ -189,6 +208,8 @@ As the agent climbs, the human's job changes, and each new job needs a different
 Roughly, executor is rung 1, reviewer is rungs 2–3 and governor is rung 4. The table shows what the ladder leaves out: **climbing a rung means building the next role's interface.** A rung-4 loop whose owner has no audit log and no policy screen is unattended, not governed.
 
 **Delegate progressively, and plan the way back down.** Albada's examples of progressive delegation: a team agent drafts status reports before it is trusted to send them, and a finance agent starts read-only and later submits transactions under supervision. His trust-repair mechanisms are to reset the behaviour, retrain, or restrict capabilities. That is descending a rung, and it should be a configuration change, not a rebuild.
+
+Tomasev et al. ([arXiv:2602.11865](https://arxiv.org/abs/2602.11865) (Tomasev et al., 2026-02, preprint)) argue the same points as design principles, with no experiments: delegation is "contingent upon the outcome having precise verification", so a sub-task too costly to verify should be decomposed further; autonomy is "not static" and follows a trust-graduated grant, with just-in-time, task-scoped access and human approval for high-stakes steps; and verification requests sent too often push overseers to "default to heuristic approval". Failures that are reversible can be re-delegated, while irreversible high-criticality ones go to a human. These are arguments, not measured results, and much of the machinery they propose (escrow, zero-knowledge proofs) is proposed, not demonstrated.
 
 **Set escalation thresholds as policy, and send context with each escalation.** Thresholds are decision types, risk levels or confidence bounds. His example is a procurement agent that auto-approves purchases under $1,000 and needs multi-party sign-off above that. The person receiving an escalation needs what the agent attempted, why it escalated, and what information it needs to proceed. Their resolutions are training data for the next threshold ([note 08](08-self-improving-loops.md#verify-before-you-learn)).
 

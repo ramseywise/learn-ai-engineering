@@ -4,6 +4,7 @@ sources:
   - https://github.com/davidkimai/Context-Engineering (40_reference/schema_cookbook.md, cognitive-tools/cognitive-schemas/, 00_COURSE/02_context_processing/04_structured_context.md, 00_foundations/05_cognitive_tools.md § Context Schemas — snapshot 2026-08-14)
   - https://openreview.net/forum?id=y1SnRPDWx4
   - https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags
+  - https://arxiv.org/abs/2608.26263
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -103,6 +104,13 @@ State that persists (task progress, decisions, user facts) should be **structure
 ```
 
 This is the compaction target ([05](05-compression-compaction.md)) and the memory format ([06](06-memory.md)). MEM1's finding generalises here: a constant-size, overwritten state beats an ever-growing transcript for long-horizon tasks.
+
+SKILL.state takes this to its limit. On each step the model sees only the task spec, a JSON state and the latest observation, and its reasoning is discarded once a validated patch updates the state ([arXiv:2608.26263](https://arxiv.org/abs/2608.26263) (Badhe et al., Google, Purdue, 2026-08, accepted at EMNLP per its arXiv comment)). On the authors' own 100-step warehouse task with Gemini-3-Flash, **it scored 0.94 on 65K tokens, against 0.91 on 1.06M for a stateful transcript agent**. Given the same budget, a truncated transcript scored 0.18, a capped summary 0.52 and LLMLingua compression 0.22. Caveats:
+- The design assumes the state is a sufficient statistic of the past.
+- It was tested on single agents only.
+- The main benchmark is the authors' own, with one main model.
+- Smaller open models broke it by overwriting state too early (Gemma-4-31B scored 0.42 at 100 steps).
+- Under injected noise, the memory and transcript baselines held up as well as SKILL.state did.
 
 ### 3. Output schemas — what comes back
 

@@ -8,6 +8,7 @@ sources:
   - https://www.aibuilderclub.com/blog/agent-graph-vs-loop-when-to-use
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985
+  - https://arxiv.org/abs/2609.09153
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -163,6 +164,8 @@ This pillar uses the word in two senses. Keep them apart:
 | Runtime concern | Routing, state, cost | Traversal, entity resolution |
 
 They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system the knowledge graph is often the shared state layer the execution graph coordinates through.
+
+A third use sits between them: a graph *of the procedure*, handed to a loop as advice rather than run as control flow. Procedural Graphs (Lu et al., [arXiv:2609.09153](https://arxiv.org/abs/2609.09153), Google, 2026-09, preprint) stores the steps of a task as nodes. Its edges carry a condition, guidance and known pitfalls. At each step it finds the node matching the agent's last action, takes the two-hop neighbourhood around it, and has an LLM turn that into guidance for a free ReAct solver, which may ignore it. Across six benchmarks and four models, with every method trained on the same trajectories, it **came first or joint first against seven baselines (vanilla ReAct plus six memory and guideline methods) in 21 of 24 settings**. On HotpotQA the margins were within ±1.3 points, and several test sets are small (44 GDPval tasks). Two results speak to this note's question. First, passing the whole graph instead of the local neighbourhood dropped ALFWorld success from 81.5% to 54.5% and cost more tokens. Second, on a 56-item MultiChallenge split, **an expert-written graph lowered success from 87.5% to 58.9%**. A gated loop, which kept an edit only if validation did not get worse, recovered it to 92.9%, and the same loop starting from a bare start → end skeleton reached 91.1%. So a hand-drawn procedure can be worse than none, the same risk as a premature execution graph ([06](06-when-not-to-build-a-graph.md#the-cost-of-a-premature-graph)). Every ablation uses one model, the gate accepts ties on a 100-item validation set, and the localized guidance cost more tokens than no graph (+33% on GDPval, +55% on ALFWorld) even when it cut steps.
 
 ---
 

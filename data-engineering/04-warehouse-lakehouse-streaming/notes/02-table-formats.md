@@ -172,7 +172,7 @@ Output:
 fare = 31: 0 of 4 files need opening, decided from the log alone
 ```
 
-Armbrust et al. measured what this does at scale. On a synthetic table of 33 million rows split into 1,000 to 1,000,000 partitions on S3, on 16 `i3.2xlarge` nodes, Hive took over an hour at 10,000 partitions and Presto over an hour at 100,000, while Delta took 108 seconds at one million partitions and 17 with the log cached on SSD. It is a vendor benchmark, but the cause is structural: reading a log with statistics replaces listing a directory and opening footers.
+Armbrust et al. measured what this does at scale. On a synthetic table of 33 million rows split into 1,000 to 1,000,000 partitions on S3, on 16 `i3.2xlarge` nodes, Hive took over an hour at 10,000 partitions and Presto over an hour at 100,000, while Delta took 108 seconds at one million partitions and 17 with the log cached on SSD. It is a vendor benchmark, but the cause is structural: reading a log with statistics replaces listing a directory and opening footers. Two details from the paper's setup: Hive and Presto were an unnamed cloud vendor's hosted services, not stock open source, and the query was a simple sum, so it measures metadata overhead only. The paper says the design gives serializability within a single table only, and that the commit rate is limited to several transactions per second, since each commit is an object-store write taking tens to hundreds of milliseconds.
 
 Scaling needs one more trick. Replaying thousands of JSON files on every read is slow, so formats periodically write a checkpoint that summarises the state so far. Delta writes one in Parquet every 10 transactions by default, and a reader starts at the latest checkpoint and replays only what follows.
 

@@ -1,6 +1,9 @@
 ---
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
+  - https://arxiv.org/abs/2407.02485
+  - "Weaviate, Advanced RAG Techniques (vendor ebook, 2025; date from PDF metadata)"
+  - https://arxiv.org/abs/2306.17563
   - https://arxiv.org/abs/2212.10496
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3 part 2, ungraded lab "Chunking" + Assignment 3 "Building RAG systems with a Vector Database")
@@ -14,6 +17,7 @@ sources:
   - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
+  - https://arxiv.org/abs/2310.04408
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -193,6 +197,8 @@ Three ways to separate what you match on from what you hand the LLM. The general
 | **Hypothetical questions** | Questions an LLM generates for each chunk, at index time | The chunk |
 | **Sentence window** | Single sentences | The sentence plus its neighbours |
 | **Parent document** | Small child chunks | The parent, when more than n of the top-k children come from it |
+
+Weaviate's *Advanced RAG Techniques* ebook describes the same sentence-window move. It also names a fix this note does not cover: instead of a fixed top-k, "Autocut" cuts the result list where the distance scores jump between groups. The ebook is a vendor overview with no measurements, so treat it as a checklist rather than evidence that the technique helps.
 
 Hypothetical questions are HyDE turned around. HyDE generates a fake answer at query time and matches it against chunks. Hypothetical questions are generated once at index time and matched against the user's question, so they add no query latency.
 
@@ -505,6 +511,8 @@ Raieli and Iuculano's fuller list (*Building AI Agents*, ch. 5–6):
 | LLM pointwise, pairwise or listwise | Prompt an LLM to score one doc, compare two, or order a list | Best quality, highest cost |
 | Fine-tuned seq2seq | RankT5 | Between the two |
 
+Two papers show what the LLM row buys. Pairwise Ranking Prompting asks an open FLAN-UL2 (20B) "which of these two passages is more relevant?" and sorts with a sliding window. Reranking BM25's top 100 on TREC-DL, unsupervised, it reached NDCG@10 of 72.65 (2019) and 70.46 (2020), against 75.59 and 70.56 for RankGPT on GPT-4, and 71.83 (2019) for the supervised monoT5-3B. It was far less sensitive to input order: with the BM25 order inverted, GPT-3.5 listwise reranking fell from 65.80 to 32.77 NDCG@10 while the exhaustive pairwise variant moved from 72.42 to 72.40. The price is calls: all-pairs is O(N²), and the paper reports no latency or cost. Only BM25 first stages and 43 and 54 queries ([arXiv:2306.17563](https://arxiv.org/abs/2306.17563), Qin et al., 2023, preprint). RankRAG goes the other way and makes the generator the reranker: one Llama3-8B tuned on about 50k ranking examples scored passages by the probability of "True" and beat dedicated rerankers on recall (NQ R@5 80.3 vs 78.0 for BGE-Rerank-v2-m3 and 77.8 for RankLLaMA-8B, reranking Dragon's top 100), and dropping the rerank step cost about 2.8 average points over nine QA sets (52.6 to 49.8). A generator tuned without ranking data did worse than the retriever it was meant to improve (NQ R@5 68.2 vs 74.9). Wikipedia and one medical corpus, private training blend, no code or model in the text; the reported extra time for N = 20 to 100 was 0.9x to 6.0x, not N-fold ([arXiv:2407.02485](https://arxiv.org/abs/2407.02485), Yu et al., 2024-07, preprint).
+
 ColBERTv2 runs as a reranker in a few lines through RAGatouille: `RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")`, then `.rerank(query, documents, k)`.
 
 Why rerank at all, from the Handbook: the first stage optimises for speed over a whole corpus, a reranker sees query and document together, and fewer, better chunks cut prompt cost and noise (*LLM Engineer's Handbook*, ch. 4). Oshin and Campos add that a low k is not a false economy: more documents make the app slower, and irrelevant ones push the LLM toward hallucination (*Learning LangChain*, ch. 3). Huyen notes two differences from web search. Rank position matters less, because the LLM reads all k chunks; and time is a legitimate reranking signal, for news or changing docs (*AI Engineering*, ch. 6).
@@ -539,6 +547,8 @@ semantic_search_with_reranking("Tell me about the conflicts in Latin America",
 Assignment 3 rebuilds Assignment 1's news RAG on Weaviate: `filter_by_metadata`, `semantic_search_retrieve`, `bm25_retrieve`, `hybrid_retrieve`, `semantic_search_with_reranking`, then a `generate_final_prompt(query, top_k, retrieve_function, rerank_query, rerank_property, use_rerank, use_rag)` that takes any of them as a parameter.
 
 The house version of the reranking stage, with production numbers, is note [08 — PRINCE](08-agentic-rag-prince.md) and [11 — retrieval improvements](11-retrieval-improvements.md).
+
+**Compress after reranking, and let the compressor return nothing.** RECOMP trains a small compressor to turn the retrieved documents into the few tokens the reader needs. With Flan-UL2 20B, a Contriever top 5 of 100-word passages and a 5-shot prompt, a trained abstractive compressor (T5-large, 775M) cut the context to about 5% of the tokens for a 2 EM loss on Natural Questions (37.04 at 36 tokens against 39.39 at 660) and 3.7 on TriviaQA (58.68 against 62.37). It learns to output an empty summary when retrieval would not beat no retrieval, and on language modelling it prepended a summary to only 33% of examples. On multi-hop HotpotQA an extractive compressor did better: 11% of the tokens for 2.4 EM (30.40 against 32.80). A 110M sentence ranker trained on the reader's own likelihood reached 36.57 EM on NQ with one sentence, against 34.32 for off-the-shelf DPR and 30.06 for Contriever. More text is not always better: on WikiText-103 with GPT-2, the top-1 document gave perplexity 32.90 and the top 5 gave 35.53. Limits: each compressor is trained per dataset and reader, transfer to LLaMA-13B was partial (NQ EM 34.38 extractive and 36.32 abstractive, against 37.04 for the full top 5), and the authors' check of 30 summaries per dataset found 40% useful on HotpotQA against 50% for the teacher's. These are 2023 short-context readers ([arXiv:2310.04408](https://arxiv.org/abs/2310.04408), Xu et al., 2023-10, preprint).
 
 ---
 

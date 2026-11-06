@@ -12,6 +12,7 @@ sources:
   - https://arxiv.org/abs/2510.18855
   - https://arxiv.org/abs/2510.13786 (ScaleRL, sigmoidal compute-scaling fits for RL recipes)
   - https://arxiv.org/abs/2510.26788 (Precision-RL, FP16 removes the training-inference mismatch)
+  - https://arxiv.org/abs/2603.24477 (Composer 2 technical report)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -382,6 +383,8 @@ how often the live policy changes
 **Ethical RL.** An engineer who sets a reward holds real power over whoever the system acts on. Keep humans responsible for important decisions, and be able to explain the system to stakeholders. Winder's checklist is short enough to run before launch: bias, personal impact, climate, unintended use, nefarious use, legality, human rights, justification and explainability, and honest claims about performance. Fairness problems may only appear over time: ML-fairness-gym simulates long-term effects, such as what credit decisions do to credit scores across a population.
 
 **Choosing a framework.** The same chapter's checklist still applies: right abstractions, simplicity, observability, scalability, minimal dependencies, documentation, the algorithms you need, ancillary tooling, support and commercial terms. In LLM RL the candidates are newer ([TRL](https://huggingface.co/docs/trl/), veRL, and the tooling in [07](07-reward-design-and-tool-calling.md#judges-as-rewards-ruler-art-and-rllm)), and the questions are the same.
+
+**One production LLM recipe, reported without ablations.** The Composer 2 report ([arXiv:2603.24477](https://arxiv.org/abs/2603.24477) (Cursor Research, 2026-03, preprint)) trains in the same harness and tools as the shipped product, to keep train-test mismatch small. Its policy gradient drops the group-std division and uses the k1 KL estimator (k3 variance blows up when the policies diverge). It keeps asynchronous rollouts near on-policy with mid-rollout weight updates and MoE router replay, and adds a concave length penalty. **On Cursor's internal CursorBench-3 it scored 61.3 against 36.0 for its Kimi K2.5 base**, both in Cursor's harness, and best-of-K rose along with the average. No ablation separates continued pretraining from RL, the benchmark is not released, and the RL compute and group size are not given.
 
 ## What has dated since 2020
 

@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
+  - https://arxiv.org/abs/2402.09906
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3, "Information Retrieval with Vector Databases" part 1 + ungraded lab "Introduction to Weaviate API")
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
@@ -10,6 +11,11 @@ sources:
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2
   - https://arxiv.org/abs/1702.08734
   - https://arxiv.org/abs/1603.09320
+  - https://arxiv.org/abs/2508.21038
+  - https://arxiv.org/abs/2403.05440
+  - https://arxiv.org/abs/2404.10981
+  - https://arxiv.org/abs/2505.05885
+  - https://arxiv.org/abs/2607.01538
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -303,9 +309,21 @@ Post-filtering asked for 3, threw away the two from other areas, and returned 1.
 
 **Do you need a separate vector database at all?** Oshin and Campos argue for pgvector when your data already lives in Postgres. Vectors sit next to the rows they describe, one transaction updates both, and there's one less system to secure and back up (*Learning LangChain*, ch. 2). Raieli and Iuculano's caveat: SQL vector extensions have historically capped dimensions and scaled less far than dedicated stores (*Building AI Agents*, ch. 5). Their selection criteria are licence, language support, maturity, insert and query speed, access control, framework integration, and cost including backups.
 
+Microsoft's Cosmos DB paper is the vendor case for the same argument. It puts a DiskANN graph, the disk-resident index from Subramanya et al. (NeurIPS 2019), inside each partition of the operational database. Each insert updates the index at once, so there are no segment merges or rebuilds. The graph is walked on product-quantised vectors and only the last few candidates are re-scored at full precision: about 3,500 quantised vectors and 50 full ones per top-10 query. On 10M 768-dimension Wiki-Cohere vectors, p50 latency was under 20 ms at recall@10 of 91.83%, and latency grew less than 2× from 100K to 10M vectors. Two results bear on filters and updates. **Filter-aware search gave 10× lower p99 latency than post-filtering at similar recall** (1M YFCC images). On YFCC, one index per shard key (year) reached 98.09% recall at 13.43 ms p99, where one shared index with a filter reached 66.17% at 38.59 ms. The cost claim, 43× cheaper per query than Pinecone, compares public list prices from July 2025, not measured runs. There is no head-to-head latency test against other stores, pgvector is not benchmarked, and recall at a billion vectors stayed under 94% ([arXiv:2505.05885](https://arxiv.org/abs/2505.05885), Upreti et al., PVLDB 2025).
+
 Weaviate is the open-source one the course uses. Note [09](09-vector-database-comparison.md) compares the stores used in production work: pgvector, OpenSearch (Bedrock KB), Elasticsearch, Pinecone, DuckDB, ChromaDB and Vertex AI Search.
 
 ---
+
+**One model as retriever and reader.** GritLM tunes one Mistral-7B to embed and generate, matching both single-purpose models (MTEB 66.8 for both). Storing each document's key-value states in the index cut RAG latency 63% on CPU for 4,000-token documents, at about 30 TB for 2.68M passages; Natural Questions only ([arXiv:2402.09906](https://arxiv.org/abs/2402.09906), Muennighoff et al., 2024-02, preprint).
+
+**A ceiling the index cannot lift.** Approximate search loses recall against exact search, but one embedding per document has a limit even under exact search. Weller et al. prove that for unit vectors scored by dot product, the dimension d must grow with log C(n,k) for every top-k subset of n documents to be retrievable with a score margin of 2γ. At γ = 0.1 the bound for k = 100 is 135 dimensions at n = 1,000 and 905 at n = 10^11. It is a lower bound only. Vectors optimised directly on the test relevance labels (k = 2, full-batch InfoNCE) failed past a critical corpus size that fits a cubic in d. It was measured only for d = 4 to 45 and extrapolated to about 500k documents at d = 512 and 250M at d = 4096. Their LIMIT dataset (50k documents, 1,000 queries of the form "who likes X", two relevant documents each) defeated single-vector embedders: recall@100 was 18.9 for Promptriever, 12.9 for GritLM and 4.8 for Qwen3, against 93.6 for BM25, and a Gemini 2.5 Pro given the 46-document version solved all 1,000 queries in one pass. Fine-tuning on a LIMIT train split lifted recall@10 to at most 2.8, so domain shift does not explain it. Read it as a stress test for combinatorial queries, not a measure of ordinary retrieval: LIMIT is synthetic and English, BEIR and LIMIT scores did not correlate, scoring was exhaustive (no ANN), and the theory does not cover multi-vector models ([arXiv:2508.21038](https://arxiv.org/abs/2508.21038), Weller et al., ICLR 2026).
+
+**Putting the whole corpus in the context does not escape it either.** Lee et al. asked whether long-context models can subsume retrieval (arXiv:2406.13121, 2024). Gollapudi et al. tested it at a million tokens. A Qwen3-0.6B trained to name the relevant document from a context of documents matched a dense retriever on the same backbone at 500 MS MARCO documents (95.8 against 95.5 Recall@1, about 45k tokens). At 10,000 documents (about 0.95M tokens) it fell to 0.2, against 20.2 for the dense retriever, and an untrained Gemini-3-flash fell from 95.0 to 16.2 on the same task. **The cause is attention dilution:** at layer 19 the gold document's share of the attention output dropped from 0.91 to 0.01. Scaling the attention scores by log N and routing attention to a top-256 shortlist of documents brought it back to about 20 (the text says 20.0, the table 20.5). On LIMIT at 10,000 documents that model scored 0.135 Recall@1 against 0.029 for the dense one. The KV cache for 10,000 documents took about 101 GiB against about 20 MB for the dense index, retrieval training cut MMLU from 40.2 to 33.6, and only 0.6B and 0.36B models were tested. Recall was still falling at the largest size, and no hybrid search or reranker was compared ([arXiv:2607.01538](https://arxiv.org/abs/2607.01538), Gollapudi et al., 2026-07, v2 2026-10, preprint; arXiv comments say accepted to NeurIPS 2026).
+
+**Cosine is not automatically similarity.** Steck et al. show analytically that when a linear matrix-factorisation model is trained with a penalty on the product of its two embedding matrices (equivalent to dropout), the embeddings are defined only up to a diagonal rescaling of each latent dimension. Dot-product predictions do not change, but cosine similarities do: one rescaling makes every item's cosine to every other item zero, another keeps structure. A simulation (20,000 users, 1,000 items, rank 50) gave visibly different item-item cosine matrices from the same data, judged by eye with no metric. Penalising the two matrices separately removes the freedom. The suggested remedies (train with cosine, normalise before learning, project back to the original space) were not tested. This is linear recommender models, not text embedders; the authors only expect deep models to have the same problem. So compare cosine and inner product on your own labelled queries rather than assuming cosine is the "semantic" metric ([arXiv:2403.05440](https://arxiv.org/abs/2403.05440), Steck et al., 2024-03, preprint).
+
+**A corpus mismatch can beat any retriever choice.** Huang and Huang's survey, a four-phase taxonomy (pre-retrieval, retrieval, post-retrieval, generation), copies its tables from other papers. In one, on the MIRAGE medical QA benchmark with GPT-3.5, average accuracy was 60.69 with no retrieval, 69.23 with BM25 over PubMed and 57.74 with BM25 over Wikipedia, so the wrong corpus left the system below no retrieval at all ([arXiv:2404.10981](https://arxiv.org/abs/2404.10981), 2024-08, preprint).
 
 ## The Weaviate API, condensed from the lab
 

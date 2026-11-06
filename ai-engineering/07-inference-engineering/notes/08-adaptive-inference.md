@@ -36,6 +36,9 @@ sources:
   - https://arxiv.org/abs/2510.12773
   - https://arxiv.org/abs/2410.20672
   - https://arxiv.org/abs/2503.24377
+  - https://arxiv.org/abs/2411.04330
+  - https://arxiv.org/abs/2307.15337
+  - https://arxiv.org/abs/2504.12285
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -55,6 +58,8 @@ Each decode step reads every weight (and the whole KV cache) to produce one toke
 - **Read fewer bytes.** Quantization shrinks weights and KV entries, so each step moves less data.
 
 A third family adapts *per request or per token*: dynamic precision, early exit and layer skipping. These are less mature (*AISPE*, ch. 19).
+
+The first family also works at the prompt level. Skeleton-of-Thought asks the model for a skeleton of 3 to 5 word points, then expands every point in parallel as one batch, so the expansions share each weight read. Over 12 models on Vicuna-80 (open models' latency estimated from A100 FP16 profiling, API models timed end to end) it gave up to 2.39× speed-up, above 2× on 8 of 12 models. By question type it ranged from 1.34× on math to 2.33× on knowledge questions. GPT-4 judged it not worse than sequential answers in about 60% of cases. It suits answers made of independent points and not step-by-step reasoning, where later steps need earlier ones, so a router falls back to normal decoding. The price is prefill: each point is a separate request that repeats the question, so API models saw 60× to 89× more prefill tokens. The gain holds only when few queries run concurrently, since a saturated server has no idle compute to fill ([arXiv:2307.15337](https://arxiv.org/abs/2307.15337) (Ning et al., ICLR 2024)).
 
 Huyen's caveat applies to the whole note: if your batches already saturate compute (high MFU), the idle FLOPs are gone, and speculative methods help less or hurt (*AI Engineering*, ch. 9). Long contexts are the exception: KV reads keep large batches bandwidth-bound (see [below](#variants)).
 
@@ -168,6 +173,10 @@ Fregly is inconsistent about how ready FP4 is. Ch. 17 says to prefer it where su
 ### Below 2 bits: ternary weights
 
 Going below 4 bits usually means training the model that way, not converting it afterwards. BitNet b1.58 trains every weight as {-1, 0, +1}, passing gradients through the rounding with the straight-through estimator ([arXiv:1308.3432](https://arxiv.org/abs/1308.3432) (Bengio et al., 2013-08, preprint)). It matches an FP16 LLaMA-style model from 3B parameters on the same 100B tokens, with 2.71× lower decode latency and 3.55× less memory; below 3B it still trails ([arXiv:2402.17764](https://arxiv.org/abs/2402.17764) (Ma et al., 2024-02, preprint)). MatMul-free LMs also replace attention with a ternary recurrent token mixer. Up to 2.7B they come within a point of Transformer++ (49.9 vs 50.7 average), and the gap narrows with scale ([arXiv:2406.02528](https://arxiv.org/abs/2406.02528) (Zhu et al., 2024-06, preprint)). Two cautions apply. First, the energy wins in this line of work need hardware that does not exist yet. L-Mul's "95% less energy" for element-wise multiplies is a gate-count estimate, simulated on GPUs ([arXiv:2410.00907](https://arxiv.org/abs/2410.00907) (Luo & Sun, 2024-10, preprint)). Second, smaller weights are not faster on their own. 1.58-bit FLUX quantizes a text-to-image model's weights to ternary for 7.7× less storage and 5.1× less memory, but latency improves only 5% on an A100, because activations stay in 16-bit ([arXiv:2412.18653](https://arxiv.org/abs/2412.18653) (Yang et al., 2024-12, preprint)).
+
+BitNet b1.58 2B4T tested the recipe at a larger scale: 2B parameters trained from scratch on 4T tokens, ternary weights with int8 activations. After instruction tuning its average over 16 benchmarks is 54.19, against 55.23 for Qwen2.5-1.5B, and it trails that model on MMLU (53.17 vs 60.25) and HumanEval+ (38.40 vs 50.60). Non-embedding memory is 0.4 GB against 2.6 GB for Qwen2.5-1.5B. Against that model quantized after training, on three benchmarks (MMLU, GSM8K, IFEval) it averages 55.01 against 52.15 for GPTQ INT4 and 51.17 for AWQ INT4 (both 0.7 GB), and 55.72 for bf16. CPU decoding takes 29 ms per token on a laptop Core i7-13800H, against 41 to 124 ms for the peers. That compares bitnet.cpp with llama.cpp for the others. The 0.028 J per token energy figure is an arithmetic-only estimate at 7 nm, not a measurement. The report gives no GPU latency, and the authors list scaling to 7B and 13B as future work ([arXiv:2504.12285](https://arxiv.org/abs/2504.12285) (Ma et al., 2025-04, preprint)).
+
+How long the model was trained changes what quantization costs. Kumar et al. trained 465 OLMo-style Transformer++ runs on Dolma (30M to 220M non-embedding parameters, up to 26B tokens, 3 to 16 bits) and quantized after training with GPTQ. The loss that post-training quantization adds grows as a power law in tokens per parameter and exponentially as bits fall (fit R² 0.97, INT3 to INT6). Past some data size, extra pretraining makes the quantized model worse, and at equal data larger models lose less. For training precision, fitted on integer-type runs, the compute-optimal value is about 7 to 8 bits, under a cost model that is linear in bits. Real kernels give under 2× for halving the bits. It measures loss only, on small models, and the authors call the fitted constants unlikely to be reusable ([arXiv:2411.04330](https://arxiv.org/abs/2411.04330) (Kumar et al., 2024-11, preprint)).
 
 Quantization changes outputs, unlike exact speculative decoding. Every format change needs an eval run ([the Eval pillar](../../../generative-ai/08-eval/README.md)), not just a perplexity check.
 

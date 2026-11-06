@@ -11,6 +11,7 @@ sources:
   - https://notes.kodekloud.com/docs/Loop-Engineering/Tie-It-All-Together/The-Whole-Loop-in-Motion/page.md
   - https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
   - https://arxiv.org/abs/2602.12670
+  - https://arxiv.org/abs/2604.20987
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -88,6 +89,8 @@ Rules that matter inside a loop:
 Why not one giant prompt? **Consistency**: the same steps every pass, so behavior doesn't drift. **Clarity**: the base prompt stays small and know-how is pulled in only when needed (Anthropic calls this *progressive disclosure*). Osmani's name for the cost of skipping skills is **intent debt**: agents confidently guessing your conventions.
 
 The evidence for short skills is observational but consistent. Across SkillsBench's 87 tasks, compact and standard-length Skills gained 19.0 and 21.5 points of pass rate, against 0.7 for comprehensive documentation, and tasks given four or more Skills gained 10.1 against 18.0 for one ([arXiv:2602.12670](https://arxiv.org/abs/2602.12670) (Li et al., 2026-02, v4 2026-06, preprint); compact 22 tasks, standard 22, comprehensive only 5, and the largest bucket, detailed (38 tasks), gained 14.5; tasks weren't randomised to a length, and baselines differ by bucket). Don't let the agent write its own and assume it helps: self-generated Skills scored 8.1 to 11.5 points below no Skills on the three setups tested, partly because agents often never opened them. Details in [eval 06](../../../generative-ai/08-eval/notes/06-evaluating-agents.md#scoring-tool-calls).
+
+COS-PLAY ([arXiv:2604.20987](https://arxiv.org/abs/2604.20987) (Wu et al., 2026-04, preprint)) treats the skill bank as a library with a lifecycle (refine, merge, split, retire) and trains the policy with it. On four single-player games (Qwen3-8B, GRPO after SFT on 60 GPT-5.4 trajectories per game, 16 evaluation rollouts) it averaged 924.4 reward against 717.4 for GPT-5.4. Pairing the policy with a skill bank from a different training stage often scored below the same policy without one (SFT with the final bank 359.5 vs 409.5; GRPO with the first bank 305.2 vs 359.9), though SFT with the first bank rose to 465.7 vs 409.5. The authors read this as bank and policy needing to be trained together. Games only, no held-out games, and the frontier models had no skill bank.
 
 ---
 

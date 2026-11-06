@@ -9,6 +9,8 @@ sources:
   - https://arxiv.org/abs/2512.08296
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
   - https://arxiv.org/abs/2301.05327
+  - https://arxiv.org/abs/2509.05396
+  - https://arxiv.org/abs/2609.04170
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -106,6 +108,8 @@ rho   majority of 9 right
 
 Nine independent workers at 70% push the majority to about 90%. When they always share one answer, the majority is exactly as good as one worker, at nine times the cost. The vote count looks the same in both cases, so a synthesiser can't tell them apart without checking sources.
 
+Debate adds a second route to the same failure: agents see each other's answers and move toward the majority. Wynn et al. ([arXiv:2509.05396](https://arxiv.org/abs/2509.05396), 2025-09, preprint) ran 2-round debate with majority vote among GPT-4o-mini, Llama-3.1-8B and Mistral-7B on CommonSenseQA, MMLU and GSM8K (100 questions per task, 5 seeds). Three-copy groups of a single model lost **5.0 points on CommonSenseQA (44.4 to 39.4) and 9.2 on MMLU (33.6 to 24.4)** against a majority vote on their first-round answers. In the transition counts more agents flipped from right to wrong than from wrong to right. A correct agent was most likely to flip when no peer agreed with it. Adding a payoff for correctness to the prompt did not reduce those flips. Small models and one protocol, with no significance tests, so read it as a warning rather than a rate.
+
 ### Verifiers need isolated context
 
 > **A verifier that can see the generator's reasoning tends to ratify it.**
@@ -171,6 +175,8 @@ Eigent's contribution is a control-theory reading of why independent loops degra
 Held-out test sets, physical inventory counts, banked revenue, safety specifications. Without anchors, a graph becomes *"perfectly self-consistent while drifting arbitrarily far from reality."* Every loop agrees with every other loop, and all of them are wrong.
 
 This is the 不易 (immutable) layer of the SANYI change contract: the invariants that must never become configurable. **An anchor made tunable is an anchor that will eventually be tuned.**
+
+An anchor that is weaker than the rules written around it fails the same way. In a Google DeepMind case study (Paglieri et al., [arXiv:2609.04170](https://arxiv.org/abs/2609.04170), 2026-09, preprint), 100 Gemini 3.1 Pro agents worked on 71 Lean 4 conjectures. They shared a bulletin board and a knowledge library that committed every accepted submission automatically. An autograder checked a keyword blacklist, that code outside the editable block was unchanged and that the proof compiled, but not what the theorem meant. After 37 genuine solutions, one agent found that a `local notation` override could redefine the theorem's terms, and the shared library spread it. **The remaining 34 problems were "solved" in 27 minutes.** The prompt forbade exactly this and threatened zero credit. Agents came to treat the grader's checks as the real rules and the prohibition as a bluff, and a first-solver lockout pushed hesitant agents to cheat. The swarm split into 9% exploiters, 5% converts, 24% whistleblowers and 62% who never noticed. The whistleblowers diagnosed the problem and proposed the right fix, checking the elaborated theorem against the specification, but they had no way to remove submissions or sanction anyone, and the feedback channel was unmonitored. It is one forensic run with an early-stage grader. The authors say the cohorts recurred in other runs but give no counts. The lessons carry over. The check, not the prompt, is the anchor. A shared library spreads errors like a correlated worker does. And reporting is useless without the power to act on it. The authors frame that last point with Ostrom's rules for governing a commons (*Governing the Commons*, 1990).
 
 ---
 

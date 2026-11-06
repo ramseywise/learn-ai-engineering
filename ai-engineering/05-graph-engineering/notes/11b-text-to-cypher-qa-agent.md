@@ -1,6 +1,7 @@
 ---
 origin: book-condensed
 sources:
+  - https://arxiv.org/abs/2507.21892
   - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 15
 confidence: medium-high
 cleaned: 2026-11-01
@@ -150,6 +151,8 @@ From ch15's closing section:
 - **Learn from use.** Cluster complaint-like questions into a pain-point list; keep the reasoning chain of successful queries as new few-shot examples; find question clusters that deserve a narrower schema slice.
 - **Enrich the schema the way an expert does.** An agent that runs exploratory queries (value distributions, typical paths) and adds what it finds to the annotations. For large graphs, layered schemas: domain-level views for orientation, the full detail for query generation.
 - **Fine-tune.** In-context schemas and examples stop scaling with big graphs. The book cites work finding that in-context learning trails task-specific fine-tuning even with the same examples. Fine-tuned components can replace individual nodes without giving up the observable pipeline.
+
+Training the retrieval loop is also possible. **Graph-R1** (Luo et al., [arXiv:2507.21892](https://arxiv.org/abs/2507.21892), 2025-07, ICML 2026) trains a Qwen2.5 agent with GRPO to think, query and re-query a knowledge hypergraph that GPT-4o-mini extracted from text, with a reward of answer F1 plus a format term. This is not text-to-Cypher: retrieval is by embedding similarity over n-ary facts. Averaged over six QA sets (128 test questions each), it scored **57.82 F1 at 7B vs. 46.19 for Search-R1** (the same RL loop over text chunks), and prompt-only GraphRAG systems on GPT-4o-mini scored 20.02 to 29.40, below plain chunk RAG at 32.05. Removing RL took the 3B model from 57.16 to 10.74 on 2Wiki and HotpotQA (the untrained model). The graph baselines were not RL-trained and used a larger context, so only the Search-R1 gap isolates the graph.
 
 ---
 

@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2503.09516
   - https://arxiv.org/abs/2503.23513
   - https://arxiv.org/abs/2505.04588
+  - https://arxiv.org/abs/2601.07055 (Dr. Zero, data-free self-evolving search agents)
+  - https://arxiv.org/abs/2505.07903 (SEM, learning when not to search)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -214,6 +216,8 @@ hard: [0.21 0.44 0.75] -> rewrite, then retrieve
 
 The bandit learns not to pay for retrieval on easy questions and to pay more on hard ones. Change the cost and you change the behaviour, and so the cost is a product decision.
 
+SEM ([arXiv:2505.07903](https://arxiv.org/abs/2505.07903) (Sha et al., 2025-05, preprint)) trains that decision with a gate instead of a per-call cost. The model answers once before it may search. If that answer is already right (F1 above a threshold) and it searches anyway, the reward is zero. If the answer is wrong, the post-search answer is scored. Trained with GRPO on a mix of MuSiQue (needs search) and MMLU (doesn't), **Qwen2.5-7B-Instruct searched on 1.8% of MMLU questions against 48% for naive RAG, and on 97.5% of HotpotQA questions with 35.8 EM against 18.0**. These are single runs with no ablations. The 7B ReSearch baseline almost never searched (0.08% of HotpotQA questions) while the 14B one searched on all of them, and the prose overstates the tables in places.
+
 ### Pattern 1 — Online RL over retrieval and tool actions
 
 The model interacts with a retrieval or browsing environment via discrete actions,
@@ -242,6 +246,8 @@ returning three passages, trained on NQ plus HotpotQA. It averaged 0.431 exact m
 QA sets, against 0.304 for one-shot RAG and 0.348 for rejection-sampling fine-tuning on the same
 search loop. Without the mask the average fell to 0.343. GRPO converged faster but its reward
 collapsed in some runs, while PPO stayed stable.
+
+**Dr. Zero** ([arXiv:2601.07055](https://arxiv.org/abs/2601.07055) (Yue et al., 2026-07, preprint)) removes the question set too. A proposer and a solver start from the same Qwen2.5 search agent. The proposer reads a seed document and writes a question, and its reward peaks when exactly one of the solver's n attempts is right. Its advantages are standardised within groups of equal hop count, which needs 6 rollouts per prompt against 20 for nested GRPO. **At 3B the seven-benchmark exact-match average was 0.326 against 0.327 for supervised Search-R1; at 7B it was 0.372 against 0.384**, with Search-R1 ahead on MuSiQue and Bamboogle. Table 1 is single greedy runs with an E5 retriever over Wikipedia; the appendix adds multi-run means with standard deviations. Gains stop after two or three iterations (7B fell to 0.360 at the third). The cheaper advantage trails nested GRPO on Bamboogle (0.200 vs 0.272 at 3B) and slightly on HotpotQA and MuSiQue, though its 3B average is higher (0.326 vs 0.320).
 
 ### Pattern 2 — RL module for specific sub-task
 

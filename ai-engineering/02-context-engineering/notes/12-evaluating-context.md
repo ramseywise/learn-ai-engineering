@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2407.01370
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/09_evaluation_methodologies/00–03, 40_reference/eval_checklist.md — snapshot 2026-08-14)
   - https://arxiv.org/abs/2507.13334
   - https://research.trychroma.com/context-rot
@@ -156,6 +157,7 @@ Judged on ratio alone, the summary wins by more than double, yet it lost three o
 Advertised window size is not effective window size. Test your model on your task:
 
 - **Needle-in-a-haystack** is the floor, not the ceiling. Most frontier models pass literal-match needles. Chroma's *Context Rot* shows that degradation appears once the needle needs semantic matching or distractors are present.
+- **Synthesis, not lookup.** SummHay swaps the needle for a task that needs many scattered facts and citations: 10 synthetic Haystacks of about 100 documents (about 93K tokens), each with planted insights repeated across 5+ documents, and the model must write a bullet summary for a query, citing the documents ([arXiv:2407.01370](https://arxiv.org/abs/2407.01370) (Laban et al., 2024-07, preprint)). Coverage scores the insights found, citation scores the cited documents (F1), and the joint score multiplies them. With the whole haystack in the window, GPT-4o scored 11.4 joint and Claude 3 Opus 18.0, while Gemini-1.5-pro reached 37.8, against a human estimate of 56.1 (two annotators, ten summaries, oracle documents). Put the relevant documents at the bottom and GPT-4o rose to 24.1, so position bias shows here too. Coverage was held up without retrieval (Opus 76.2 full context vs 81.4 oracle) but citation was not (22.3 vs 50.7), and a Cohere Rerank 3 retriever with a 15K-token budget lifted joint scores to 30.8 to 36.0 for the top three models. The GPT-4o judge overstates coverage by about 5 points and agrees with humans at 0.716 correlation. The documents are synthetic and independent, models are mid-2024, and only closed models were run.
 - **Length sweep:** run the same task at 10%, 25%, 50% and 75% of the window with realistic filler. Plot score against length. The knee in the curve is the effective budget ([03](03-budgeting-the-window.md)).
 - **Position sweep:** put the key evidence at the start, middle and end. A large middle dip means you should move important content to the edges ([02](02-context-anatomy.md)).
 
