@@ -33,7 +33,7 @@ ch. 8). Each classical method has a direct LLM counterpart:
 | Classical method | What it does | LLM counterpart |
 |---|---|---|
 | **Behavior cloning** | Supervised learning of the expert's action in each demonstrated state | SFT on demonstrations ([02](02-rlhf-pipeline.md), stage 1) |
-| **DQfD, GAIL, SQIL** | RL with a pull toward expert behavior, via a supervised loss, an adversarial discriminator, or replay-buffer reward relabelling | SFT warm start, then RL with a KL anchor |
+| **DQfD, GAIL, SQIL** | RL with a pull toward expert behavior, via a supervised loss, an adversarial discriminator, or replay-buffer reward relabelling | SFT warm start, then RL with a [KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) anchor |
 | **Inverse RL** | Learn a reward that explains the demonstrations, solve the MDP, compare, repeat | A learned reward model ([02](02-rlhf-pipeline.md), stage 2) |
 
 Winder's objection to behavior cloning is the one [05](05-post-training-for-agents.md) makes
@@ -207,7 +207,7 @@ pattern of a GRPO or RLOO group. The paper measured a 6.1–9.8% KV-memory savin
 samples on OPT-13B with short Alpaca prompts, so the saving grows with prompt length. The mechanism
 is covered in
 [inference engineering](../../../ai-engineering/07-inference-engineering/notes/07-prefill-decode-kv-cache.md#pagedattention).
-Because the trainer and the serving engine are separate programs, their log-probs can disagree,
+Because the trainer and the serving engine are separate programs, their log-probs ([defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) can disagree,
 which is the mismatch the reports below correct for.
 
 **Evolution strategies are the extreme of the actor–learner split.** ES perturbs the weights,
@@ -287,7 +287,7 @@ curves are fitted on in-distribution validation, not on downstream benchmarks, a
 runs are one seed each.
 
 **Or remove the mismatch at its source: train and sample in FP16.** BF16 keeps 7 mantissa bits
-and FP16 keeps 10. Under BF16, the two engines' rounding differences add up over a long sequence.
+and FP16 keeps 10 ([bit layouts](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats)). Under BF16, the two engines' rounding differences add up over a long sequence.
 On DeepSeek-R1-Distill-Qwen-1.5B samples, the sequence-level log-ratio between the
 inference engine and the training engine grew with length. Under FP16 it was about 24× smaller
 ([arXiv:2510.26788](https://arxiv.org/abs/2510.26788) (Qi et al., 2025-10, preprint)). The test

@@ -12,7 +12,7 @@ Classical models carry tabular data, but images, sequences and text need a model
 
 ## The story
 
-Logistic regression stops at 0.895 on two interleaved moons, because its boundary is a line, and one hidden layer lifts it to 0.955. Then training becomes the problem: the same network on digits scores 0.102 with zero initial weights and 0.970 with He initialisation, and the same `weight_decay=0.1` gives 0.102 in Adam and 0.972 in AdamW. With the training working, the next question is what to do with a month. A gap analysis says whether more data would help at all, and it warns when it wouldn't, as with the transfer learning that lost to training from scratch on a small digits task. The architecture then has to match the data. Moving a digit one pixel takes an MLP from 0.975 to 0.473 and a CNN only to 0.656. An LSTM stays at chance on a memory task until one bias changes, and attention takes date translation from 3% to 100% of dates correct. A transformer encoder drops the recurrence, and on digits the CNN still beats it at every data size. Finally, on 5,000 real reviews, TF-IDF at 0.886 beats every embedding model trained from scratch. A strong frozen encoder beats it on few labels, a small one never does, and fine-tuning DistilBERT reaches 0.905 once there are thousands of labels, because its representation was learned on far more text.
+Logistic regression stops at 0.895 on two interleaved moons, because its boundary is a line, and one hidden layer lifts it to 0.955. Then training becomes the problem: the same network on digits scores 0.102 with zero initial weights and 0.970 with He initialisation, and the same `weight_decay=0.1` gives 0.102 in Adam and 0.972 in AdamW. With the training working, the next question is what to do with a month. A gap analysis says whether more data would help at all, and it warns when it wouldn't, as with the transfer learning that lost to training from scratch on a small digits task. The architecture then has to match the data. Moving a digit one pixel takes an MLP from 0.975 to 0.473 and a CNN only to 0.656. On images loaded from disk the transfer that failed on digits pays off: with 300 labelled shapes a frozen ImageNet ResNet-18 scores 0.848 and a CNN trained from scratch 0.359, and the scratch model draws level with the frozen one only at 3,000 images, still below fine-tuning at 0.986. An LSTM stays at chance on a memory task until one bias changes, and attention takes date translation from 3% to 100% of dates correct. A transformer encoder drops the recurrence, and on digits the CNN still beats it at every data size. Finally, on 5,000 real reviews, TF-IDF at 0.886 beats every embedding model trained from scratch. A strong frozen encoder beats it on few labels, a small one never does, and fine-tuning DistilBERT reaches 0.905 once there are thousands of labels, because its representation was learned on far more text.
 
 ## Reading order
 
@@ -22,6 +22,7 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 | 2 | [Optimisation and regularisation](notes/02-optimisation-and-regularisation.md) | Why won't it train, and why won't it generalise? | Improving Deep Neural Networks |
 | 3 | [Structuring ML projects](notes/03-structuring-ml-projects.md) | What should you try next? | Structuring Machine Learning Projects |
 | 4 | [Convolutional networks](notes/04-convolutional-networks.md) | Why do images need a different architecture? | Convolutional Neural Networks |
+| 4b | [Vision in practice](notes/04b-vision-in-practice.md) | Should you train an image model, or borrow one trained on ImageNet? | Beyond Ng: Bourke, *Learn PyTorch* ch. 03 to 08 |
 | 5 | [Sequence models](notes/05-sequence-models.md) | How does a network carry memory? | Sequence Models |
 | 5b | [Transformer encoders](notes/05b-transformer-encoders.md) | When is an encoder worth choosing over a CNN, an LSTM or a linear model? | Beyond Ng |
 | 6 | [Neural text models](notes/06-neural-text-models.md) | What does it take for a neural model to beat word counts? | Beyond Ng: Sarkar `Ch10a` notebook, intro-to-nlp |
@@ -49,13 +50,14 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 
 ## Rules of thumb
 
-- Keep a from-scratch or linear control. Transfer, contrastive pretraining and neural text models all lost to one in small runs here.
+- Keep a from-scratch or linear control. Transfer on digits, contrastive pretraining and neural text models all lost to one in small runs here, and ImageNet transfer on images won against one by 0.49 at 300 images.
 - Before tuning, look at the initial activations. A network initialised with weights too small or too large can't start learning.
 - Sweep the learning rate by factors of ten first. It moved test accuracy from 0.100 to 0.961 in a run where the choice of adaptive optimiser moved it by under a point.
 - Use AdamW, and treat `weight_decay` in Adam as a different setting.
 - Switch to `eval()` before scoring. Leaving batch norm in training mode cost 9 points with no error.
 - With noisy labels, keep a clean validation set and stop early.
 - Find the largest gap between human, train, train-dev, dev and test, then fix that one. Count what a fix could win before building it.
+- For images, start from pretrained weights and their own `weights.transforms()`. Freeze the network with a few dozen labels, fine-tune it from a few hundred, and keep a frozen backbone's batch norm in `eval()`: left in train mode it cost 7 points.
 - Use residual connections when going deep. Plain networks of 62 layers train badly on digits, with a training score of 0.379.
 - Measure what an initialisation change did. A forget-gate assignment to a wrong parameter name is silently ignored.
 - Before choosing a transformer encoder, run a learning curve against a CNN or linear model. A CNN won at every size on digits, and an encoder that forgot `batch_first=True` fell from 0.966 to 0.658 on single requests.
@@ -68,9 +70,11 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 | [`practice/ng-deep-learning/`](practice/ng-deep-learning) | Own assignments from the five Ng courses | `uv run --python 3.11 --with "tensorflow<2.16" --with matplotlib --with scipy --with jupyter jupyter lab`, from that folder. These are legacy: TF 1.x through `tf.compat.v1`, two notebooks still need `tf.contrib`, and some need course helper files and weights, so note 01 suggests reproducing them in PyTorch |
 | [`practice/autoencoder.py`](practice/autoencoder.py) | The bottleneck, denoising and reconstruction error as an anomaly score, for [note 05](notes/05-sequence-models.md#autoencoders-the-bottleneck-on-its-own) | `uv run autoencoder.py`, from `practice/`; a few minutes on a laptop CPU |
 | [`practice/transaction_sequence_lab.py`](practice/transaction_sequence_lab.py) | Generated card charges: boosted aggregates against a GRU, a random split against a time split, late chargebacks, a cost threshold and drift, for [note 05](notes/05-sequence-models.md#ordered-events-make-the-sequence-model-earn-its-place) | `uv run transaction_sequence_lab.py`, from `practice/`; 3 to 6 minutes on a laptop CPU, depending on what else is running; less with `--seeds 1` |
+| [`practice/vision_transfer.py`](practice/vision_transfer.py) | Generated shapes from a folder: a scratch CNN against a frozen and a fine-tuned ImageNet ResNet-18 at 1%, 10% and 100% of the data, 3 seeds, with the [`vision_project/`](practice/vision_project) package it imports, for [note 04b](notes/04b-vision-in-practice.md#train-borrow-or-fine-tune) | `uv run vision_transfer.py`, from `practice/`; about 13 minutes on an M4 Pro GPU, `--seeds 1` for about 5. First run downloads about 45 MB of weights |
+| [`practice/vit_from_paper.py`](practice/vit_from_paper.py) | A ViT from the paper's equations, checked against torchvision, then from scratch against a frozen pretrained ViT-B/16, for [note 05b](notes/05b-transformer-encoders.md#a-token-is-a-design-choice) and [04b](notes/04b-vision-in-practice.md#what-a-transformer-would-need) | `uv run vit_from_paper.py`, from `practice/`. First run downloads about 330 MB of weights |
 | [`practice/deep-learning-starter-simple-lstm.ipynb`](practice/deep-learning-starter-simple-lstm.ipynb) | Own Kaggle Ventilator Pressure LSTM, which note 06 reproduces on synthetic data | Needs the [competition data](https://www.kaggle.com/competitions/ventilator-pressure-prediction) and preferably a GPU |
 
-Each chapter's code runs by itself: `uv run --with torch --with scikit-learn --with pandas --with matplotlib python <file>`, on the block copied to a file. Note 06 also needs `transformers`, `sentence-transformers`, `sentencepiece`, `sacremoses` and the IMDb download.
+Each chapter's code runs by itself: `uv run --with torch --with scikit-learn --with pandas --with matplotlib python <file>`, on the block copied to a file. Note 04b also needs `torchvision` and `pillow`, and downloads pretrained weights. Note 06 also needs `transformers`, `sentence-transformers`, `sentencepiece`, `sacremoses` and the IMDb download.
 
 ## Deck
 

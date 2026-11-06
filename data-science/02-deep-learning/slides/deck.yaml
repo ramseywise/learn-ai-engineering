@@ -359,6 +359,37 @@ parts:
           the same loss further. My small version loses to supervised training at each label count here, and that's worth
           saying before quoting the ImageNet results, whose runs used different architectures.
 
+      - layout: image
+        title: With 300 images, borrowing ImageNet features beats training from scratch
+        recall: At what data size did the scratch CNN draw level with the frozen ResNet-18, and which arm stayed ahead?
+        image: ../../sources/images/dl-vision-transfer.png
+        caption: "Generated shapes, 6 classes, 3 seeds, 600 test images. Scratch gets 2,000 steps, ResNet-18 arms 500. Run `practice/vision_transfer.py`."
+        takeaway: Frozen features win with a handful of labels, fine-tuning from a few hundred, and scratch only draws level with plenty of data.
+        source: notes/04b-vision-in-practice.md
+        notes: >-
+          At 300 images: fine-tuned 0.939, frozen 0.848, scratch 0.359. At 3,000 scratch reaches 0.902, level with frozen, and
+          fine-tuning is at 0.986. This is the transfer that lost on digits in chapter 03, now with the conditions met: far more
+          source data, and a CNN whose early features carry over. Budgets are matched on time, not steps.
+
+      - layout: cards
+        title: Three loud errors and one silent one
+        recall: Why does a frozen backbone still change during training, and what fixes it?
+        cards:
+          - title: Shape
+            body: "No batch dimension: `mat1 and mat2 shapes cannot be multiplied (3x4096 and 12288x6)`. Fix with `unsqueeze(0)`."
+            accent: 0EA5C9
+          - title: Dtype and device
+            body: "A raw PNG is `uint8`: scale it to float in [0, 1], don't just cast. Move every batch to the model's device."
+            accent: D4621A
+          - title: Silent BatchNorm
+            body: "`requires_grad=False` doesn't freeze running statistics. Left in train mode, the frozen arm fell from 0.848 to 0.777."
+            accent: 5B21B6
+        takeaway: Predict through the same transform you tested with, and keep a frozen backbone in eval mode.
+        source: notes/04b-vision-in-practice.md
+        notes: >-
+          The three error types are Bourke's grouping, from Learn PyTorch. The messages here are the ones an Apple GPU prints.
+          The BatchNorm one raises nothing, which is why it is on the slide.
+
   - title: How does a network carry memory?
     summary: The recurrent cell · Forget-gate bias · Attention · Autoencoders
     notes: >-

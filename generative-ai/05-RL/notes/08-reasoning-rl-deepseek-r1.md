@@ -102,7 +102,7 @@ Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI,
     puts MCTS back inside RLVR training. Each problem is searched as a tree of 256-token steps.
     Values are backed up to the nodes, and GRPO trains on those node-level advantages. From a
     1.5B model that had already been RL-trained, **50 more steps (~330 GPU hours) raised the
-    six-benchmark math average from 61.7 to 62.95. Extending DAPO + KL for 1,875 steps (1,883 GPU
+    six-benchmark math average from 61.7 to 62.95. Extending DAPO + KL ([KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) for 1,875 steps (1,883 GPU
     hours) reached only 62.0.** In the ablation, vanilla MCTS scored below the start (60.3); the new
     q-value backup gave the biggest step (+1.1), though the paper names frontier selection the
     largest single gain (+0.63). Single runs, one

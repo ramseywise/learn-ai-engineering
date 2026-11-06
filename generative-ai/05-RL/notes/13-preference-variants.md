@@ -146,7 +146,7 @@ ORPO raised it by 1.0–2.2, from a base of about 14%. On GSM8K both helped, by 
 **Paper:** [arXiv:2405.14734](https://arxiv.org/abs/2405.14734) (Meng et al., NeurIPS 2024).
 
 SimPO replaces DPO's implicit reward, the log-ratio against `π_ref`, with the policy's own
-**average** log-probability per token. It adds a target margin γ:
+**average** log-probability ([defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) per token. It adds a target margin γ:
 
 ```
 L_SimPO = -log σ( β/|y_w| · log π_θ(y_w|x) - β/|y_l| · log π_θ(y_l|x) - γ )

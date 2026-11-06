@@ -317,7 +317,7 @@ Clustered errors treat the groups as a nuisance: the coefficient stays where it 
 
 ## Logistic regression
 
-For a yes/no outcome, a straight line can predict probabilities outside 0 and 1. Logistic regression models the log-odds as linear, then squashes the prediction with the logistic function (ISLP §4.3; Bruce & Bruce, 2017, ch. 5). It is fitted by the [maximum likelihood of chapter 4](04-estimation.md).
+For a yes/no outcome, a straight line can predict probabilities outside 0 and 1. Logistic regression models the log-odds as linear, then squashes the prediction with the logistic function (ISLP §4.3; Bruce & Bruce, 2017, ch. 5). It is fitted by the [maximum likelihood of chapter 4](04-estimation.md). The log-odds here is the quantity machine-learning texts call the "logit" in the binary case: the raw score before the sigmoid squashes it into a probability, as in [softmax and temperature for language models](../../../generative-ai/01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding).
 
 ```text
 log( p / (1 - p) ) = b0 + b1 x1 + b2 x2 + ...

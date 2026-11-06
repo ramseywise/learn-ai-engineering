@@ -147,7 +147,7 @@ Reading the numbers: the chosen token usually sits between −2 and 0, single-di
 
     ![Prefix collision: North 55% vs. Europe 44%, then -East 76% vs. America 23%](../sources/images/berryman-prompt-engineering-for-llms-fig7-5.png)
     *Image Source: Berryman & Ziegler (2024), Fig. 7-5*
-  - **Calibration:** the model's 50% isn't your threshold. In the book's example, an app blocks emails the model judges unprofessional, and it blocks too many. Shift per-label logprobs by constants (add 0.3 to "Yes" before comparing with "No", so the model must be clearly surer of "No" to block). Find the constants by experiment or by minimizing cross-entropy on labeled data, as in logistic regression. **Logit bias** applies the same shift at generation time where available.
+  - **Calibration:** the model's 50% isn't your threshold. In the book's example, an app blocks emails the model judges unprofessional, and it blocks too many. Shift per-label logprobs by constants (add 0.3 to "Yes" before comparing with "No", so the model must be clearly surer of "No" to block). Find the constants by experiment or by minimizing [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) on labeled data, as in logistic regression. **Logit bias** applies the same shift at generation time where available.
 - **Prompt debugging.** With `echo=true` (where supported), logprobs on the *prompt* flag surprising tokens, even with zero completion tokens requested. In the book's test, the typo "complution" tokenized as `compl` + `ution` and dipped below −13. The same signal marks passages of high information density, which you can point the app's or the user's attention to.
 
 ---

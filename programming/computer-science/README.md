@@ -30,7 +30,7 @@ The notes follow the [full chapter standard](../../.claude/skills/pillar/referen
 
 | # | Note | You can… |
 |---|---|---|
-| 04 | [Numbers and memory](notes/04-numbers-and-memory.md) | Predict float error, sum accurately, read bits, and explain why data layout changes speed by orders of magnitude |
+| 04 | [Numbers and memory](notes/04-numbers-and-memory.md) | Predict float error, sum accurately, read bits, compare fp32/fp16/bf16/fp8 range and precision, write a stable softmax with log-sum-exp, and explain why data layout changes speed by orders of magnitude |
 | 05 | [Processes, threads and I/O](notes/05-processes-threads-and-io.md) | Price a process, thread and system call, prevent races and deadlocks, keep an event loop moving, and size a queue |
 | 06 | [Networks](notes/06-networks.md) | Frame a TCP stream, count the round trips in a cold request, read a DNS packet, and retry safely |
 

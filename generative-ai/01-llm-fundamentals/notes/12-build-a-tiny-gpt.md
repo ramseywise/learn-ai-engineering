@@ -78,7 +78,7 @@ flowchart TB
 
 ## The whole thing, on a CPU
 
-This is a character-level GPT, trained on a few repeated support replies. A corpus this small can only be memorised, which suits the purpose: you are testing the machine, not teaching it English. The script runs three of the checks from the next section as it goes, on the untrained model where that matters.
+This is a character-level GPT, trained on a few repeated support replies. A corpus this small can only be memorised, which suits the purpose: you are testing the machine, not teaching it English. The attention line `q @ k.transpose(-2, -1)` is the `Q Kᵀ` product explained in [matrix products, transpose and rank](02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank). The script runs three of the checks from the next section as it goes, on the untrained model where that matters.
 
 ```python
 import math

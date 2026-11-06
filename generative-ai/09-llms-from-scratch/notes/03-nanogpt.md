@@ -124,7 +124,7 @@ A uniform guess over 65 characters costs 4.17, and the untrained model starts a 
 
 ## The trick: looking back is a matrix multiply
 
-Tokens now need to talk to earlier tokens, and only earlier ones, since the model must not see the future it is predicting. The simplest conversation is to average everything so far. A loop does that, and so does one matrix multiply by a lower-triangular matrix of weights.
+Tokens now need to talk to earlier tokens, and only earlier ones, since the model must not see the future it is predicting. The simplest conversation is to average everything so far. A loop does that, and so does one matrix multiply ([shapes and transpose](../../01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank)) by a lower-triangular matrix of weights.
 
 ```python
 torch.manual_seed(42)
@@ -528,7 +528,7 @@ Training begins with speed, since the budget is counted in GPU hours. The lectur
 |---|---|---|
 | Baseline, float32 | about 1,000 ms | |
 | `torch.set_float32_matmul_precision("high")` | about 300 ms | TF32 for matmuls, same code |
-| `torch.autocast(dtype=torch.bfloat16)` | about 300 ms, from 333 | Activations in bf16, no gradient scaler needed as its exponent range matches fp32 |
+| `torch.autocast(dtype=torch.bfloat16)` | about 300 ms, from 333 | Activations in bf16, no gradient scaler needed as its exponent range matches fp32 ([why](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats)) |
 | `torch.compile(model)` | about 129 ms | Fewer Python overheads and memory round trips |
 | Flash attention | about 95 ms | No T×T matrix |
 | Vocabulary rounded from 50,257 to 50,304 | about 93 ms, some 4% | More work, but kernels prefer powers of two |

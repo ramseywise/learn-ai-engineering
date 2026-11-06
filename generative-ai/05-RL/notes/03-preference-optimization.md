@@ -115,7 +115,7 @@ and old policy, and `A_t` is the advantage estimate from the value function.
 L_total = L_PPO + β · KL[π_θ || π_SFT] + γ · L_pretrain
 ```
 
-The KL term prevents policy collapse away from the SFT initialization. The pretrain
+The KL term ([defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) prevents policy collapse away from the SFT initialization. The pretrain
 term (optional) preserves general capability.
 
 **What PPO requires:**
@@ -184,7 +184,7 @@ L_DPO(θ) = -E[(x, y_w, y_l) ~ D] [
 ]
 ```
 
-The model is trained to assign higher log-probability to preferred responses relative to
+The model is trained to assign higher log-probability ([what that is](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) to preferred responses relative to
 the reference model, and lower log-probability to rejected responses — without ever
 explicitly scoring either.
 

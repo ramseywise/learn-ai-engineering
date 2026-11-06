@@ -119,7 +119,7 @@ A topic is a distribution over words, and a document is a mixture of topics. All
 
 | Method | Factorisation | Input | Output weights | Library |
 |---|---|---|---|---|
-| LSI / LSA | Truncated SVD | TF-IDF or counts | Signed: hard to read | `TruncatedSVD`, `gensim.LsiModel` |
+| LSI / LSA | [Truncated SVD](../../01-classical-ml/notes/05-unsupervised-learning.md#principal-component-analysis) | TF-IDF or counts | Signed: hard to read | `TruncatedSVD`, `gensim.LsiModel` |
 | LDA | Bayesian generative model with Dirichlet priors, fit by variational Bayes or Gibbs sampling | **Counts** (not TF-IDF) | Probabilities | `LatentDirichletAllocation`, `gensim.LdaModel`, MALLET |
 | NMF | Non-negative factorisation ([unsupervised learning](../../01-classical-ml/notes/05-unsupervised-learning.md#non-negative-matrix-factorisation)) | TF-IDF | Non-negative: readable parts | `sklearn.decomposition.NMF` |
 
@@ -239,7 +239,7 @@ k=20  c_v=0.318  log perplexity bound=-8.44
 k=40  c_v=0.325  log perplexity bound=-8.74
 ```
 
-On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, so there is no clean knee. This seed dips at twenty and recovers at forty, but that wiggle is noise: over three seeds the mean falls from 0.352 to 0.322 and the seeds sit about 0.01 apart. The log perplexity bound falls steadily and would select nothing useful either. That is common on short text, and the answer is to read topics at a couple of settings rather than obey a curve. Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
+On this corpus `c_v` barely moves, from 0.347 at five topics to 0.325 at forty, so there is no clean knee. This seed dips at twenty and recovers at forty, but that wiggle is noise: over three seeds the mean falls from 0.352 to 0.322 and the seeds sit about 0.01 apart. The log perplexity bound falls steadily and would select nothing useful either. (This is the topic model's held-out likelihood bound, a different quantity from a language model's [perplexity](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity), though both come from log-probabilities.) That is common on short text, and the answer is to read topics at a couple of settings rather than obey a curve. Sarkar picks the knee of the coherence curve, around 20 topics on the NIPS papers, and finds MALLET's Gibbs-sampled LDA more coherent than gensim's variational LDA. He then labels each paper with its **dominant topic**, lists the most representative papers per topic, and predicts topics for unseen NIPS 2016 papers with `lda.transform`.
 
 ### Visualising
 

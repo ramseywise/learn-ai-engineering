@@ -198,7 +198,7 @@ The first loss, 27.9, is far above the 3.30 a blank-slate model should report, w
 | Technique introduced | Detail |
 |---|---|
 | Minibatches | The gradient from 32 examples is noisy but cheap; many approximate steps beat few exact ones |
-| `F.cross_entropy` over hand-written softmax | Subtracts the max logit internally; `exp` of large logits would overflow to `inf` |
+| `F.cross_entropy` over hand-written softmax | Subtracts the max logit internally ([log-sum-exp trick](../../../programming/computer-science/notes/04-numbers-and-memory.md#log-sum-exp)); `exp` of large logits would overflow to `inf` |
 | Learning-rate finder | Sweep `lr = 10**linspace(-3, 0)` over 1,000 steps, plot loss against the exponent, and pick the valley (~0.1). You will do this in Try it |
 | Train / dev / test | Tune on dev; touch test once. With 11k params and 228k examples, train ≈ dev means underfitting: scale up |
 | Embeddings | Vowels end up near each other, because the model finds them interchangeable-ish. The lecture's 2-d plot shows this, and the cosines above measure it |

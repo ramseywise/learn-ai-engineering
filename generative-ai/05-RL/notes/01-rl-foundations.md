@@ -289,7 +289,7 @@ the environment:
 ∇_θ J(θ) = E_π[ Ψ_t · ∇_θ log π_θ(a_t | s_t) ]
 ```
 
-`∇ log π` points toward making the action taken more likely; `Ψ_t` says by how much. Winder's
+`∇ log π` (a gradient is just the slope per parameter; [derivatives, numerically](../../09-llms-from-scratch/notes/01-micrograd.md#derivatives-numerically)) points toward making the action taken more likely; `Ψ_t` says by how much. Winder's
 summary of ch. 5 is that the policy gradient algorithms differ *only* in what they use for
 Ψ (*Reinforcement Learning*, ch. 5, Eq. 5-11):
 
@@ -374,11 +374,11 @@ why every practical method clips or constrains them.
 
 **Trust regions.** A policy gradient step that is too large can destroy a good policy, and
 nothing in the gradient tells you how large is too large. TRPO constrains each update to a
-small KL divergence from the previous policy, solved with conjugate gradients. It works, but it
+small KL divergence ([KL, defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity); [worked derivation](../../../data-analytics/04-bayesian-analysis/notes/06-bayesian-machine-learning.md#variational-inference-and-the-vae-week-5)) from the previous policy, solved with conjugate gradients. It works, but it
 is expensive and awkward with shared policy/value networks. A KL *penalty* with coefficient β is
 simpler but β is hard to tune (*Reinforcement Learning*, ch. 6). RLHF keeps that penalty, but
 against the frozen reference model rather than the previous iterate
-([02](02-rlhf-pipeline.md)).
+([02](02-rlhf-pipeline.md); why the penalty is *reverse* KL: [12](12-rlhf-failure-modes.md#overoptimization)).
 
 **The PPO clip** replaces the trust region with a clipped surrogate:
 
@@ -445,7 +445,7 @@ because MADDPG ([11](11-multi-agent-and-rag-rl.md#multi-agent-rl-marl)) is built
 
 ### Entropy and maximum-entropy RL (SAC)
 
-The entropy of a policy, `H[π(·|s)] = −Σ_a π(a|s) log π(a|s)`, measures how spread out its
+The entropy of a policy ([defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)), `H[π(·|s)] = −Σ_a π(a|s) log π(a|s)`, measures how spread out its
 action choices are. **Maximum-entropy RL** adds it to the reward, so the agent is paid to stay
 random wherever randomness costs little:
 

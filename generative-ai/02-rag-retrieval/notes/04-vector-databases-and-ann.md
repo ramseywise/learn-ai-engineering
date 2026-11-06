@@ -29,7 +29,7 @@ Tallybook's 18 help articles search instantly with a NumPy dot product. Add ever
 
 ## Why a linear scan stops working
 
-The note 03 retriever computes a cosine score against every document. That is **k-nearest neighbours (KNN)**:
+The note 03 retriever computes a cosine score ([dot product and cosine](../../01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity)) against every document. That is **k-nearest neighbours (KNN)**:
 
 1. Embed the prompt.
 2. Compute the distance to every document vector.

@@ -221,7 +221,9 @@ optimizer state:
   weights plus 7B × 3 × 2 bytes = 42 GB, so 56 GB *before* activations. Inference alone is
   about params × bytes × 1.2.
 - LLMEH counts everything in FP32: 4 bytes of weights, 4 of gradients and 8 of Adam state,
-  so 16 bytes per parameter and 112 GB for 7B, still before activations.
+  so 16 bytes per parameter and 112 GB for 7B, still before activations. These are two different
+  budgets: about 2 bytes per parameter to *serve* in fp16, 16 to *train* in fp32 with Adam
+  ([float formats](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats)).
 - With LoRA, the same 7B fits in 14–18 GB. QLoRA cut LLMEH's 7B peak from 15.6 GB to 9.3 GB
   (−40%) at about 30% slower training, with minor quality differences. QLoRA's original claim
   was a 65B model on one 48 GB GPU.
@@ -291,7 +293,7 @@ brought it to 8.12.
 **A classification head is SFT too.** Raschka swaps GPT-2 124M's 50,257-way output layer for
 a 768 → 2 linear head and fine-tunes on a balanced SMS-spam set of 747 spam + 747 ham. He
 freezes everything except the last transformer block, the final norm and the new head, and
-reads only the **last token's** logits, because under causal attention it is the only one that
+reads only the **last token's** logits (the raw pre-softmax scores, [see](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)), because under causal attention it is the only one that
 has seen the whole message (*Build an LLM from Scratch*, ch. 6):
 
 ```python
@@ -357,7 +359,7 @@ Given responses y_w (preferred/"winner") and y_l (rejected/"loser") from prompt 
 P(y_w > y_l | x) = σ(r_θ(x, y_w) - r_θ(x, y_l))
 ```
 
-where `r_θ` is the reward model and `σ` is the sigmoid function. This setup predates LLMs.
+where `r_θ` is the reward model and `σ` is the sigmoid function (squashes a score difference into a probability). This setup predates LLMs.
 Christiano et al. ([arXiv:1706.03741](https://arxiv.org/abs/1706.03741), 2017) fit a
 Bradley-Terry reward model to non-expert comparisons of short trajectory clips. They used it to
 train Atari and MuJoCo agents with no access to the true reward, with humans labelling under
@@ -548,7 +550,7 @@ L_PPO(θ) = E[r_θ(x, y)] - β · KL[π_θ(y|x) || π_SFT(y|x)]
 
 where:
 - `r_θ(x, y)` is the reward model score for the generated response
-- `β · KL[...]` is the KL divergence penalty keeping the policy near SFT
+- `β · KL[...]` is the KL divergence penalty ([KL, defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) keeping the policy near SFT
 - `β` is the penalty coefficient (typically 0.02–0.2)
 
 The KL term is essential. Without it, the policy learns to exploit the reward model

@@ -101,11 +101,11 @@ The forest is ahead of a single tree with no tuning, and the out-of-bag score, w
 
 ## Gradient boosting
 
-Friedman framed boosting as gradient descent on a loss ([doi:10.1214/aos/1013203451](https://doi.org/10.1214/aos/1013203451), Annals of Statistics 2001). Fit a shallow tree; compute the residuals (more generally, the negative gradient of the loss with respect to the current predictions); fit the next tree to those; add it scaled by a learning rate; repeat.
+Friedman framed boosting as gradient descent on a loss ([doi:10.1214/aos/1013203451](https://doi.org/10.1214/aos/1013203451), Annals of Statistics 2001). Fit a shallow tree; compute the residuals (more generally, the negative [gradient](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) of the loss with respect to the current predictions); fit the next tree to those; add it scaled by a learning rate; repeat.
 
 $$F_m(x) = F_{m-1}(x) + \eta \, h_m(x), \qquad h_m \approx -\frac{\partial L(y, F_{m-1}(x))}{\partial F_{m-1}(x)}$$
 
-For squared error the negative gradient *is* the residual; for log-loss it is $y - p$. Gradient boosting is gradient descent in function space.
+For squared error the negative gradient *is* the residual; for log-loss it is $y - p$. Gradient boosting is gradient descent in function space. The `learning_rate` here is a shrinkage factor on each tree's contribution, not the step size of [SGD](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) on weights: no weight is being stepped, and a smaller value just means more, smaller corrections.
 
 ```python
 from sklearn.ensemble import GradientBoostingClassifier

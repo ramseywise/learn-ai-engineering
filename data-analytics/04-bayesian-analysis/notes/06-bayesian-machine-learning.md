@@ -45,7 +45,7 @@ Take [chapter 2's mixture](02-mcmc-and-pymc.md#worked-example-a-two-cluster-mixt
 | M-step | parameters given responsibilities | π_c = mean of γ_·c; μ_c = Σ γ_ic x_i / Σ γ_ic; Σ_c the γ-weighted covariance |
 | Loss | lower bound on the log-likelihood | rises monotonically; stop when it plateaus |
 
-The week 2 notebook leaves these as graded functions. Here they are in NumPy, in log space to avoid underflow:
+The week 2 notebook leaves these as graded functions. Here they are in NumPy, in log space to avoid underflow (the [log-sum-exp trick](../../../programming/computer-science/notes/04-numbers-and-memory.md#log-sum-exp) explains `logaddexp`):
 
 ```python
 def log_gauss(X, mu, cov):

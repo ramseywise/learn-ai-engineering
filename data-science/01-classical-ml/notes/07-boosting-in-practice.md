@@ -20,7 +20,7 @@ cleaned: 2026-11-01
 
 **In plain words.** Boosting comes in four popular software packages, rather like four brands of washing machine that get clothes about equally clean. The choice between them comes down to how fast they run, how they cope with text categories and blank cells, and which settings you have to adjust. At work this chapter saves you from arguing over libraries, so you can pick one, tune it in a sensible order and get back to the problem.
 
-[Ensembles](06-ensembles.md) gave the idea: add shallow trees, each fitted to the gradient of the loss. This note is about the engineering that made that idea the default for tables. Blocks run top to bottom from this `notes/` folder with the packages in the command below; the numbers are from running them.
+[Ensembles](06-ensembles.md) gave the idea: add shallow trees, each fitted to the [gradient](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) of the loss. This note is about the engineering that made that idea the default for tables. Blocks run top to bottom from this `notes/` folder with the packages in the command below; the numbers are from running them.
 
 ```bash
 uv run --python 3.12 --with scikit-learn --with xgboost --with lightgbm --with catboost --with pandas python ...

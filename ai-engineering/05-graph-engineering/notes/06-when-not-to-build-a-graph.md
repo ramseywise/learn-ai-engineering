@@ -113,7 +113,7 @@ All of that is pure overhead when the problem had one specialty to begin with.
 **A "multi-agent system" that is a pipeline.** Raieli & Iuculano's travel planner (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 9) has four "agents":
 
 - a random-forest weather model that picks the best month;
-- an embedding search over hotel descriptions (top k = 5 by cosine similarity);
+- an embedding search over hotel descriptions (top k = 5 by [cosine similarity](../../../generative-ai/01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity));
 - a GPT-2 itinerary writer;
 - a GPT-2 email writer.
 

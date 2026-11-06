@@ -168,7 +168,7 @@ When a kernel is memory-bound at near-peak bandwidth, the only fix is to do more
 
 ### Tiling
 
-A naive N × N matrix multiply loads every element of A and B N times from global memory. Tiling loads a block of each into SMEM once, and every thread in the block reuses it.
+A naive N × N [matrix multiply](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) loads every element of A and B N times from global memory. Tiling loads a block of each into SMEM once, and every thread in the block reuses it.
 
 ![Multilevel tiling from global memory through shared memory to registers](../sources/images/ai-systems-performance-engineering-fig9-2.png)
 
@@ -184,7 +184,7 @@ Fusion is also what an automated search finds first. TTT-Discover runs RL on gpt
 
 Related levers from ch. 9: **recompute** cheap values instead of storing them; **2:4 structured sparsity** for up to ~2× on large GEMMs on sparse tensor cores (inference-focused, needs fine-tuning after pruning, and the metadata costs bytes too); and PyTorch's SDPA, which dispatches to FlashAttention or cuDNN attention.
 
-FlashAttention is the canonical case of tiling, fusion and recompute together. It computes exact attention tile by tile in SMEM with an online softmax and never writes the N × N score matrix to HBM, and in the backward pass it recomputes the scores instead of storing them. On GPT-2 medium (sequence 1,024, A100, forward plus backward) it does **more** FLOPs than standard attention (66.6 → 75.2 GFLOPs) but moves **9× fewer HBM bytes** (40.3 → 4.4 GB), so runtime drops from 41.7 to 7.3 ms ([arXiv:2205.14135](https://arxiv.org/abs/2205.14135) (Dao et al., NeurIPS 2022)). The price is a new hand-written CUDA kernel for every attention variant. "Exact" means mathematically equal, not bitwise equal. In BF16 an isolated FlashAttention forward pass deviates about 10× more from an FP64 reference than standard attention does. Measured on the weights over a training run, that deviation is still 2–5× smaller than the effect of training in BF16 instead of FP32 ([arXiv:2405.02803](https://arxiv.org/abs/2405.02803) (Golden et al., 2024-05, preprint)).
+FlashAttention is the canonical case of tiling, fusion and recompute together. It computes exact attention tile by tile in SMEM with an [online softmax](../../../programming/computer-science/notes/04-numbers-and-memory.md#log-sum-exp) and never writes the N × N score matrix to HBM, and in the backward pass it recomputes the scores instead of storing them. On GPT-2 medium (sequence 1,024, A100, forward plus backward) it does **more** FLOPs than standard attention (66.6 → 75.2 GFLOPs) but moves **9× fewer HBM bytes** (40.3 → 4.4 GB), so runtime drops from 41.7 to 7.3 ms ([arXiv:2205.14135](https://arxiv.org/abs/2205.14135) (Dao et al., NeurIPS 2022)). The price is a new hand-written CUDA kernel for every attention variant. "Exact" means mathematically equal, not bitwise equal. In BF16 an isolated FlashAttention forward pass deviates about 10× more from an FP64 reference than standard attention does. Measured on the weights over a training run, that deviation is still 2–5× smaller than the effect of training in BF16 instead of FP32 ([arXiv:2405.02803](https://arxiv.org/abs/2405.02803) (Golden et al., 2024-05, preprint)).
 
 The first version still reached only 25–40% of A100 peak in the forward pass, and FlashAttention-2 showed why. Non-matmul work such as the softmax exponent, rescaling and masking runs on CUDA cores at 19.5 TFLOPs/s against 312 for FP16 matmul, so **each non-matmul FLOP costs about 16× a matmul FLOP**. FA2 cut those FLOPs, parallelized over sequence length to fill the SMs at small batch, and split Q rather than K/V across warps to remove SMEM round trips. That gave about 2× FA1, 50–73% of peak forward and 225 TFLOPs/s per A100 (72% MFU) in GPT training ([arXiv:2307.08691](https://arxiv.org/abs/2307.08691) (Dao, ICLR 2024)). The same cost is why removing the softmax pays. Sigmoid attention needs no row-wise max or sum, and its FlashSigmoid kernel is up to 17% faster than FA2 on H100, or about 8% in end-to-end inference. It matches softmax quality only with a bias of −log n and stabilized initial attention norms ([arXiv:2409.04431](https://arxiv.org/abs/2409.04431) (Ramapuram et al., ICLR 2025)).
 
@@ -196,7 +196,7 @@ Fewer bytes per value raises arithmetic intensity directly, and tensor-core thro
 |---|---|---|
 | TF32 | Ampere+ tensor cores, FP32 inputs | `torch.set_float32_matmul_precision("high")` |
 | BF16 / FP16 | all tensor cores | `torch.autocast(dtype=torch.bfloat16)`; BF16 needs no GradScaler |
-| FP8 (E4M3/E5M2) | Hopper+ | Transformer Engine, TorchAO, serving-engine flags |
+| [FP8](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats) (E4M3/E5M2) | Hopper+ | Transformer Engine, TorchAO, serving-engine flags |
 | MXFP8 / MXFP4 / NVFP4 | Blackwell | NVFP4: FP8 scale per 16-element block plus an FP32 per-tensor scale |
 | INT8 | tensor cores (reduced on Blackwell Ultra), DP4A on CUDA cores | TorchAO |
 

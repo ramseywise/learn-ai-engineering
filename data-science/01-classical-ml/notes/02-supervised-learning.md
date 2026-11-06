@@ -165,6 +165,48 @@ The knob is **`C`, the inverse of regularisation strength**: high `C` fits each 
 | Fails on | Low-dimensional data with non-linear boundaries, unless you add features ([03](03-feature-engineering-and-pipelines.md)) |
 | Caution | Coefficients of correlated features can flip sign; don't over-read them |
 
+### Vectors, matrix products and the gradient
+
+Stack the $n$ rows of features into a matrix $X$ of shape $(n \times d)$ and the weights into a column $w$ of shape $(d \times 1)$. One matrix product gives every prediction at once: $\hat y = Xw$, shape $(n \times 1)$. The inner dimensions must match and vanish; the outer ones remain. The **transpose** $X^\top$ flips rows and columns to $(d \times n)$, so with the residual $r = Xw - y$ (one error per row), $X^\top r$ turns it into one number per feature. That is why $X^\top$ appears in the gradient below and in the normal equation, the closed-form solution in [Ng's exercises](#the-same-models-from-scratch-ngs-exercises).
+
+A **derivative** is a slope: how much the loss $L$ changes per unit nudge of a weight. You can measure it by nudging: $(L(w+\epsilon) - L(w-\epsilon)) / 2\epsilon$. With several weights, a **partial derivative** $\partial L / \partial w_j$ nudges one weight and holds the rest fixed. Collect all $d$ of them and you have the **gradient** $\nabla L$, a vector that points uphill. **Gradient descent** steps the other way, $w \leftarrow w - \eta \nabla L$, where the **learning rate** $\eta$ sets the step length. For mean squared error the slope works out to $\nabla L = \frac{2}{n} X^\top (Xw - y)$. Too small an $\eta$ crawls. Too large overshoots the valley and the loss grows each step, as the second run below shows.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+n, d = 100, 3
+X = rng.normal(size=(n, d))                      # (n, d)
+w_true = np.array([2.0, -1.0, 0.5])
+y = X @ w_true + 0.1 * rng.normal(size=n)        # (n,)
+
+def loss(w):
+    return np.mean((X @ w - y) ** 2)             # (n,d)(d,) -> (n,)
+
+def grad(w):
+    return (2 / n) * X.T @ (X @ w - y)           # (d,n)(n,) -> (d,)
+
+w = np.zeros(d)
+eps, e0 = 1e-6, np.array([1.0, 0, 0])
+print("analytic    dL/dw0:", round(grad(w)[0], 4))
+print("finite-diff dL/dw0:", round((loss(w + eps * e0) - loss(w - eps * e0)) / (2 * eps), 4))
+
+for eta in (0.1, 1.1):
+    w = np.zeros(d)
+    for _ in range(20):
+        w = w - eta * grad(w)
+    print(f"eta={eta}: loss after 20 steps {loss(w):.4g}, w={w.round(2)}")
+```
+
+```text
+analytic    dL/dw0: -4.7218
+finite-diff dL/dw0: -4.7218
+eta=0.1: loss after 20 steps 0.008627, w=[ 1.99 -1.    0.47]
+eta=1.1: loss after 20 steps 1.429e+09, w=[-34085.75  -5248.68  -1718.19]
+```
+
+Setup: seed 0, 100 rows, 3 standard-normal features, true weights $(2, -1, 0.5)$, noise sd 0.1, start at $w = 0$. The analytic and finite-difference slopes agree to four decimals, so the formula is right; use the same check on any gradient you derive by hand. With $\eta = 0.1$ twenty steps recover the weights; with $\eta = 1.1$ the loss explodes. The cutoff depends on the data: for this $X$ any $\eta$ above 0.83 diverges, which is 2 divided by the largest [eigenvalue](05-unsupervised-learning.md#principal-component-analysis) (2.40) of $\frac{2}{n} X^\top X$. When the loss depends on the weights through several layers, the chain rule multiplies the slopes of the stages: see [Backpropagation](../../02-deep-learning/notes/01-neural-networks-fundamentals.md#backpropagation) and, for the numeric version, [Derivatives, numerically](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md#derivatives-numerically). Those notes write `dW` for $\partial L / \partial W$, the same object for a matrix of weights.
+
 ---
 
 ## Naive Bayes

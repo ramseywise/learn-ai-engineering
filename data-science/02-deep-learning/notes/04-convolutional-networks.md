@@ -228,7 +228,7 @@ IoU of boxes 0 and 1: 0.822
 kept: [0, 2]
 ```
 
-Two cars, five boxes, and two survive. `torchvision.ops.nms` does the same at speed.
+Two cars, five boxes, and two survive. `torchvision.ops.nms` does the same at speed. You would rarely train a detector yourself: [Vision in practice](04b-vision-in-practice.md#beyond-classification) points to torchvision's pretrained ones.
 
 YOLOv2 took the idea of anchor boxes from Faster R-CNN's region proposal network (RPN), though it picks its 5 anchor shapes by k-means on training boxes rather than using the RPN's 9 hand-picked ones. The RPN slides a small network over the backbone's last feature map and, at each position, scores 9 anchors (3 sizes times 3 aspect ratios) as object or background and nudges each one's box. Because it reuses the detector's own convolutional features, proposals cost 10 ms per image on a K40 GPU, against about 2 s on a CPU for the hand-built Selective Search before it, and the whole VGG-16 system ran at 5 frames per second. With 300 proposals it matched or beat 2,000 from Selective Search, 69.9 against 66.9 mAP on VOC 2007 (66.9 as Fast R-CNN reported it, 68.1 when re-run). Removing the box adjustment at test time, so the proposals were the raw anchors, cut mAP from 56.8 to 52.1 in a smaller ZF-network ablation. The authors also built a one-stage version that classified dense windows directly, and it scored 4.8 points lower, 53.9 against 58.7 with ZF ([arXiv:1506.01497](https://arxiv.org/abs/1506.01497) (Ren et al., NIPS 2015)).
 
@@ -450,4 +450,4 @@ Every digits number here came from running the code shown. The numbers attribute
 
 ## Next
 
-[Sequence models](05-sequence-models.md): the same digits read one row at a time, and what a recurrent network has to remember.
+[Vision in practice](04b-vision-in-practice.md): images loaded from a folder, and when to borrow an ImageNet network rather than train your own.

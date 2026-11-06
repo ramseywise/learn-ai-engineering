@@ -66,8 +66,8 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 |---|---|
 | [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | Optional background: the word counts that came before embeddings |
 | [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: word2vec and similarity |
-| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Optional background: backprop, which [GA 09/01](../09-llms-from-scratch/notes/01-micrograd.md) also builds from scratch |
-| [DS 02/02 Optimisation and regularisation](../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md) | Optional background: AdamW and the learning-rate sweep, which [pretraining](notes/06-pretraining-data-and-objectives.md) uses |
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Required for chapters 09, 14 and 15, optional before them: backprop, tensors and the PyTorch training loop that those chapters' code assumes. [GA 09/01](../09-llms-from-scratch/notes/01-micrograd.md) also builds backprop from scratch |
+| [DS 02/02 Optimisation and regularisation](../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md) | Required for chapters 09, 14 and 15, optional before them: AdamW, the learning-rate sweep and the optimiser state that [pretraining](notes/06-pretraining-data-and-objectives.md) and the memory arithmetic in chapter 15 use |
 | [DS 02/05 Sequence models](../../data-science/02-deep-learning/notes/05-sequence-models.md) | Optional background: the recurrent networks attention grew out of |
 | [DS 02/05b Transformer encoders](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md) | Optional background: the encoder as a model you choose, with masks and position measured |
 

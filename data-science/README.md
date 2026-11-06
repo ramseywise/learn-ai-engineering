@@ -110,7 +110,7 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 1. Derive a forward pass and backpropagation for a small network, then validate gradients and initial loss ([Goodfellow et al.](https://www.deeplearningbook.org/)).
 2. Diagnose optimisation and generalisation problems using activations, learning curves, learning-rate sweeps, regularisation, and clean validation data.
 3. Use gap analysis to choose the intervention with the largest plausible gain.
-4. Explain why convolutions, residual connections, and data augmentation suit image tasks ([He et al.](https://arxiv.org/abs/1512.03385)).
+4. Explain why convolutions, residual connections, and data augmentation suit image tasks ([He et al.](https://arxiv.org/abs/1512.03385)), and choose between training from scratch, a frozen pretrained backbone and fine-tuning from a measured comparison on your own data size ([note 04b](02-deep-learning/notes/04b-vision-in-practice.md)).
 5. Build and diagnose sequence models, including recurrent networks, attention and [transformer encoders](02-deep-learning/notes/05b-transformer-encoders.md), for ordered inputs ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
 6. Compare TF-IDF, frozen encoders, and fine-tuned text models against the same held-out baseline.
 

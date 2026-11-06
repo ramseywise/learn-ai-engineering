@@ -99,7 +99,7 @@ Retrieval is judged on recall, since anything it drops can never be recovered do
 
 ## The two-tower model
 
-Two networks run side by side. One turns user features into a vector, the other turns item features into a vector, and the score is their dot product. Because the towers never see each other's inputs, you can compute all item vectors once, in batch, put them in an approximate nearest neighbour index, and at request time compute only one user vector and ask for its neighbours. That one structural choice takes serving from "score everything" to "one forward pass and one index lookup". The [vector database chapter](../../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) covers the same index machinery for documents.
+Two networks run side by side. One turns user features into a vector, the other turns item features into a vector, and the score is their [dot product](../../03-nlp/notes/04-embeddings-and-similarity.md#similarity-and-distance). Because the towers never see each other's inputs, you can compute all item vectors once, in batch, put them in an approximate nearest neighbour index, and at request time compute only one user vector and ask for its neighbours. That one structural choice takes serving from "score everything" to "one forward pass and one index lookup". The [vector database chapter](../../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) covers the same index machinery for documents.
 
 Matrix factorisation is the special case where each tower is an embedding lookup on an id. The gain is that a tower can take anything: here genres and release year for a film, age, gender and occupation for a user.
 

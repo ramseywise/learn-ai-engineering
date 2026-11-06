@@ -52,15 +52,57 @@ Take the ticket from the last chapter and add a sentence: `The refund for order 
 
 ## Attention
 
-Self-attention lets every token build its representation from every other token it can see ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), Vaswani et al., 2017). Each token is projected into a **query**, a **key** and a **value**:
+Self-attention lets every token build its representation from every other token it can see ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), Vaswani et al., 2017). Each token is projected into a **query**, a **key** and a **value**.
+
+### Matrix products, transpose and rank
+
+Attention is a few matrix products, so read them by their shapes. A matrix is a grid of numbers with a number of rows and columns. In a **matrix product** `A @ B`, `A` is (m × k) and `B` is (k × n); the inner sizes must match and drop out, and the result is (m × n). Each entry is the dot product ([vectors and dot products](01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity)) of a row of `A` with a column of `B`. That is m·n dot products of k multiplies and k adds each, so the cost is about **2·m·n·k FLOPs** (floating-point operations). This is the number to reach for when estimating the compute of any layer.
+
+The **transpose** `Kᵀ` swaps rows and columns, turning (T × d_k) into (d_k × T). That is why the scores are `Q Kᵀ`: (T × d_k)(d_k × T) gives a (T × T) grid whose entry (i, j) is the dot product of token i's query with token j's key. Without the transpose the inner sizes would not match.
+
+**Broadcasting** is NumPy's and PyTorch's rule for adding or multiplying arrays of different shapes. Line the shapes up from the right; sizes that match, or that are 1 (or missing), are stretched to fit. A (T × T) grid plus a (T,) vector adds the vector to every row. This is how a bias or a scale is applied to a whole batch in one line.
+
+The **rank** of a matrix is how many independent directions it really contains: the most rows you can pick with none of them a weighted sum of the others. A (1000 × 1000) matrix has rank at most 1000. If every row is a mix of just r underlying rows, the rank is at most r. Such a **low-rank** matrix can be written as a product (m × r)(r × n), so it needs r·(m + n) numbers instead of m·n. This is the idea behind LoRA ([chapter 9](09-peft-and-fine-tuning-in-practice.md)) and behind the "low-rank query and key weights" you will meet in the theory papers below.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+Q = rng.normal(size=(5, 8))                    # 5 tokens, 8 numbers each
+K = rng.normal(size=(5, 8))
+scores = Q @ K.T                               # (5x8)(8x5) -> 5x5
+print("Q", Q.shape, " K.T", K.T.shape, " Q @ K.T", scores.shape)
+print("FLOPs for Q @ K.T:", 2 * 5 * 5 * 8)     # 2*m*n*k
+
+bias = np.array([0.0, -1.0, -2.0, -3.0, -4.0])
+print("broadcast (5,5) + (5,):", (scores + bias).shape)
+
+big = rng.normal(size=(1000, 1000))
+low = rng.normal(size=(1000, 4)) @ rng.normal(size=(4, 1000))   # rank 4 by construction
+print("rank of big:", np.linalg.matrix_rank(big), " rank of low:", np.linalg.matrix_rank(low))
+print("numbers stored: full", low.size, " as two factors", 1000 * 4 + 4 * 1000)
+```
+
+```text
+Q (5, 8)  K.T (8, 5)  Q @ K.T (5, 5)
+FLOPs for Q @ K.T: 400
+broadcast (5,5) + (5,): (5, 5)
+rank of big: 1000  rank of low: 4
+numbers stored: full 1000000  as two factors 8000
+```
+
+Run with NumPy, seed 0. The 1,000 × 1,000 matrix built from two thin factors has rank 4 and the same entries stored in 125× fewer numbers (8,000 against 1,000,000).
+
+The formula puts these together:
 
 ```text
 Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) · V
 ```
 
 - `Q Kᵀ` scores how relevant each token is to each other token.
+- **Softmax** exponentiates each score and divides by the total, so the results are positive and sum to 1. Larger scores get disproportionately more weight: scores [2, 1, 0] become weights 0.67, 0.24, 0.09, and [4, 1, 0] become 0.94, 0.05, 0.02. Once one score dominates, the rest get almost nothing; that is **saturation**. [Chapter 4](04-decoding-and-inference-behaviour.md#decoding) shows how a temperature reshapes it.
 - Dividing by `√d_k` keeps the softmax from saturating as dimensions grow. `d_k` is the dimension of each key vector (64 per head in the original transformer), not the sequence length. *Building AI Agents* (ch. 2) says the scores are divided by "the size of the sequence"; Vaswani et al. divide by the square root of the key dimension, and that is what every implementation does.
-- The softmax turns scores into weights; the output is a weighted sum of values.
+- Multiplying the (T × T) weights by `V` mixes the value vectors: each token's output is a weighted sum of every token's value, with the softmax weights as the mix.
 
 Three refinements make it a language-model layer (*LLMs from Scratch*, ch. 3 builds each in turn):
 
@@ -107,7 +149,7 @@ Masking with −∞ *before* the softmax matters. Raschka first zeroes the weigh
 
 In an encoder–decoder model there is a second kind, **cross-attention**: the *queries* come from the decoder and the *keys and values* from the encoder's output, so each target token can look at the whole source sentence. *Building AI Agents* (ch. 2) has this the wrong way round, with queries from the encoder.
 
-Cross-attention is the older of the two. It began in machine translation as a fix for recurrent networks. Sutskever et al.'s sequence-to-sequence model read the source sentence with a 4-layer LSTM into a single fixed vector and decoded the translation from that vector. On WMT'14 English→French, an ensemble of five reached 34.81 BLEU, against 33.30 for a phrase-based system. Simply reversing the source word order raised a single model from 25.9 to 30.6 BLEU ([arXiv:1409.3215](https://arxiv.org/abs/1409.3215) (Sutskever et al., NIPS 2014)). Bahdanau et al. dropped the fixed vector. At every output step, the decoder scores each encoder state with a small network, takes a softmax over the scores, and reads out the weighted sum. That is cross-attention, with additive scores instead of dot products. See [sequence models](../../../data-science/02-deep-learning/notes/05-sequence-models.md#seq2seq-and-attention) in data science for those recurrent networks.
+Cross-attention is the older of the two. It began in machine translation as a fix for recurrent networks. Sutskever et al.'s sequence-to-sequence model read the source sentence with a 4-layer LSTM into a single fixed vector and decoded the translation from that vector. On WMT'14 English→French, an ensemble of five reached 34.81 BLEU, against 33.30 for a phrase-based system. Simply reversing the source word order raised a single model from 25.9 to 30.6 BLEU ([arXiv:1409.3215](https://arxiv.org/abs/1409.3215) (Sutskever et al., NIPS 2014)). Bahdanau et al. dropped the fixed vector. At every output step, the decoder scores each encoder state with a small network, takes a softmax over the scores, and reads out the weighted sum. That is cross-attention, with additive scores instead of [dot products](01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity). See [sequence models](../../../data-science/02-deep-learning/notes/05-sequence-models.md#seq2seq-and-attention) in data science for those recurrent networks.
 
 On the same task their model scored 26.75 BLEU, against 17.82 for a fixed-vector encoder–decoder of the same size, and it did not get worse on sentences of 50 or more words ([arXiv:1409.0473](https://arxiv.org/abs/1409.0473) (Bahdanau et al., ICLR 2015)). That baseline was much smaller than Sutskever's LSTM, which had shown no trouble with long sentences, and Bahdanau's single model still trailed the phrase-based system's 33.30. Both papers point back to Graves's handwriting model, which Sutskever et al. credit with introducing differentiable attention: a soft window, a mixture of Gaussians that moves forward along the text as the pen writes. Bahdanau et al. name that forward-only movement as the limit their model removes, since translation needs reordering ([arXiv:1308.0850](https://arxiv.org/abs/1308.0850) (Graves, 2013, preprint)). The transformer kept the weighted sum and dropped the recurrence.
 
@@ -129,7 +171,7 @@ Language models have their own version of Darcet's outliers. Many heads put most
 
 They argue that it is how a deep stack avoids over-mixing, where tokens blur into one another layer after layer. Gemma 7B, run without its ⟨bos⟩ token, fell from 82.57 to 0.00 on RULER at 4,096 tokens and from 80.61 to 27.35 on HellaSwag ([arXiv:2504.02732](https://arxiv.org/abs/2504.02732) (Barbero et al., COLM 2025)). That drop says more about ⟨bos⟩ than about sinks. In their own 120M-parameter runs, a model trained without a fixed ⟨bos⟩ made whatever token came first the sink (65% sink rate either way), and only a model that always saw ⟨bos⟩ in training lost its sink and broke when it was removed (validation loss 2.69 to 7.56). Sun et al. traced how the sink is built.
 
-One or two early feed-forward blocks (layer 2's in Llama 2 7B) act as a quadratic amplifier and put huge values, in the thousands, into a few channels of the first token, whatever that token is (99.65% of Llama 2's vocabulary). The residual stream carries those values until a late block cancels them. Before attention, RMSNorm turns them into a sparse, near-constant key that every query can find. In 7B models trained from scratch, conditional gating of the attention output cut the share of sink heads from 46.0% to 4.5% at the same perplexity (10.0 against 10.1), and sandwich norm cut the spike from 3,818 to 520 while 44.7% of heads stayed sinks. So the two phenomena co-occur because of pre-norm, but either can be removed without the other.
+One or two early feed-forward blocks (layer 2's in Llama 2 7B) act as a quadratic amplifier and put huge values, in the thousands, into a few channels of the first token, whatever that token is (99.65% of Llama 2's vocabulary). The residual stream carries those values until a late block cancels them. Before attention, RMSNorm turns them into a sparse, near-constant key that every query can find. In 7B models trained from scratch, conditional gating of the attention output cut the share of sink heads from 46.0% to 4.5% at the same [perplexity](06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) (10.0 against 10.1), and sandwich norm cut the spike from 3,818 to 520 while 44.7% of heads stayed sinks. So the two phenomena co-occur because of pre-norm, but either can be removed without the other.
 
 Sun et al. also tie sinks to short contexts rather than long ones: computing the training loss only on positions 2,048–4,096 left 1.2% sink heads ([arXiv:2603.05498](https://arxiv.org/abs/2603.05498) (Sun et al., 2026-03, preprint)). Barbero et al. varied the training context window itself, from 128 to 2,048 tokens with the loss on every position, and saw sinks grow with it (almost none at 128), so the two results are not in direct conflict. Sinks may still be worth keeping. Across 26 OlmPool models of about 7B, extended to 64K, more attention mass on the first 100 tokens went with better long-context scores (R² = 0.38), and models with QK norm had weaker sinks ([arXiv:2608.10296](https://arxiv.org/abs/2608.10296) (Bertsch et al., COLM 2026)).
 
@@ -285,7 +327,7 @@ That quadratic term is what the alternatives surveyed in [chapter 03](03-scale-a
 | Question | Answer |
 |---|---|
 | What do query, key and value do? | A token's query is compared with each key to produce weights, and those weights average the values into the token's new vector |
-| Why divide by √d_k? | Dot products grow with dimension, which would push the softmax towards one-hot and shrink its gradients |
+| Why divide by √d_k? | [Dot products](01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity) grow with dimension, which would push the softmax towards one-hot and shrink its gradients |
 | What does the causal mask do? | It stops each position from seeing later positions, so one forward pass can train every position to predict its next token |
 | Why multiple heads? | Each head has its own projections, so different heads can attend to different relationships at the same total width |
 | What does the residual do, and the LayerNorm? | The residual gives gradients a direct path through deep stacks. LayerNorm keeps each token's activations in a stable range without needing batch statistics |

@@ -99,7 +99,7 @@ The Netflix Prize framed recommendation as predicting the star rating, scored wi
 
 $$\hat r_{ui} = \mu + b_u + b_i$$
 
-Matrix factorisation adds an interaction: each user and each item gets a vector of $k$ latent factors, and their dot product says how well they fit. Koren, Bell and Volinsky ([*IEEE Computer*, 2009](https://doi.org/10.1109/MC.2009.263)) wrote the standard account of why this beat neighbourhood methods in the prize. Their reference points are worth remembering: Netflix's own system scored an RMSE of 0.9514 on the prize data, and the grand prize target was 0.8563.
+Matrix factorisation adds an interaction: each user and each item gets a vector of $k$ latent factors, and their [dot product](../../03-nlp/notes/04-embeddings-and-similarity.md#similarity-and-distance) says how well they fit. Koren, Bell and Volinsky ([*IEEE Computer*, 2009](https://doi.org/10.1109/MC.2009.263)) wrote the standard account of why this beat neighbourhood methods in the prize. Their reference points are worth remembering: Netflix's own system scored an RMSE of 0.9514 on the prize data, and the grand prize target was 0.8563.
 
 $$\hat r_{ui} = \mu + b_u + b_i + p_u^\top q_i$$
 
@@ -115,7 +115,7 @@ $$\hat r_{ui} = \mu + b_u + b_i + p_u^\top q_i$$
  Fit only on the observed cells, with L2 on everything, or the factors memorise them.
 ```
 
-Fit on observed cells only, by stochastic gradient descent. The loop below is the whole algorithm, deliberately in plain NumPy.
+Fit on observed cells only, by stochastic [gradient descent](../../01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient). The loop below is the whole algorithm, deliberately in plain NumPy.
 
 ```python
 def rmse(a, b): return float(np.sqrt(np.mean((np.asarray(a) - np.asarray(b)) ** 2)))

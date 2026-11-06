@@ -33,7 +33,7 @@ own engineering, which no existing pillar could hold.
 
 | In | Out (lives elsewhere) |
 |---|---|
-| Image and document input: vision-language models, OCR vs. VLM, image token cost, resolution and cropping | How ViTs are built and trained: [DS 02/05b](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md). CLIP gets a summary in [chapter 01](notes/01-image-input.md), and no chapter trains it |
+| Image and document input: vision-language models, OCR vs. VLM, image token cost, resolution and cropping | How a ViT cuts an image into patch tokens, measured on 8×8 digits: [DS 02/05b](../../data-science/02-deep-learning/notes/05b-transformer-encoders.md#a-token-is-a-design-choice). [DS 02/04b](../../data-science/02-deep-learning/notes/04b-vision-in-practice.md#what-a-transformer-would-need) builds ViT-B/16 from the paper's equations and sets a small one trained from scratch against the frozen ImageNet weights, on generated 64×64 shapes, not real photos. CLIP gets a summary in [chapter 01](notes/01-image-input.md), and no chapter trains it |
 | Multimodal RAG: page-as-image retrieval (ColPali), captioning vs. embedding figures, tables | Text RAG pipelines: [generative-ai/02](../../generative-ai/02-rag-retrieval/README.md) |
 | Speech: ASR, TTS, cascaded vs. end-to-end voice pipelines, latency budgets | Building a full voice or computer-use agent: [generative-ai/07 note 03](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) |
 | Image and video generation as an API: prompting, editing, cost, provenance | Serving the models on GPUs: [07-inference](../07-inference-engineering/README.md) |
@@ -74,7 +74,9 @@ the checks into one scorecard. Attacks that arrive through an image, a document 
 
 | Chapter | Why |
 |---|---|
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) and [DS 02/02 Optimisation and regularisation](../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md) | Required for chapter 02b: the PyTorch training loop, `DataLoader` and optimiser that 02b scales up to a vision-language model |
 | [DS 02/04 Convolutional networks](../../data-science/02-deep-learning/notes/04-convolutional-networks.md) | Optional background: the vision models before ViT |
+| [DS 02/04b Vision in practice](../../data-science/02-deep-learning/notes/04b-vision-in-practice.md) | Recommended before chapter 02b: an image `Dataset`, torchvision transforms and the weights' preprocessing preset, and freezing a pretrained backbone with BatchNorm kept in eval mode |
 | [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Optional background: comparing vectors in one space |
 | [GA 01/09 PEFT and fine-tuning in practice](../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md) | Parameter-efficient fine-tuning on text models, the method chapter 02b applies to a vision-language model |
 | [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | The pipeline multimodal RAG extends |

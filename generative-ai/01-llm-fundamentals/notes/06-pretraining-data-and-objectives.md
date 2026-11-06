@@ -126,7 +126,7 @@ One forward pass scores every position at once: the causal mask lets the model p
 Things worth knowing about the loss:
 
 - **At initialization** the loss should be about `ln(vocab_size)`, the loss of a uniform guess: ≈ 10.8 for a 50,257-token vocabulary. Raschka's untrained GPT-2 scores 10.7940 on his first batch, a perplexity of about 48,725, close to the vocabulary size (*LLMs from Scratch*, ch. 5). If it starts far higher, the initialization is broken.
-- **Perplexity** = `exp(loss)`: the effective number of tokens the model is choosing between.
+- **Perplexity** = `exp(loss)`: the effective number of tokens the model is choosing between. [Entropy, cross-entropy, KL and perplexity](#entropy-cross-entropy-kl-and-perplexity) below derives it and the nats-versus-bits convention.
 - **Overfitting looks like this.** Raschka trains the 124M model for 10 epochs on one short story (Edith Wharton's "The Verdict", 5,145 tokens, 90/10 train/validation split, context cut to 256). It takes about five minutes on a MacBook Air. Training loss falls from 9.78 to 0.39 while validation loss stalls near 6.4, and the model starts reciting passages of the story verbatim. Real pretraining makes roughly one pass over a far larger corpus, with batch sizes of 1,024 or more. Verbatim recall survives that, though. GPT-2 XL (1.5B) had a training loss only about 10% below its test loss. Even so, Carlini et al. sampled 600,000 generations from it, ranked them with six membership-inference scores (the most precise compared the model's likelihood with zlib compression), and checked the top 1,800 candidates by hand. 604 were memorized training text, including names with phone numbers, 128-bit UUIDs and code. Some strings appeared in a single document of the training set ([arXiv:2012.07805](https://arxiv.org/abs/2012.07805) (Carlini et al., USENIX Security 2021)). The 604 are a lower bound from one model; the authors could not measure recall over the whole training set.
 
 ![Line chart of training and validation loss against epochs (0–10) and tokens seen (0–45,000): both fall from about 10 to 7 in the first epoch, then training loss keeps falling to about 0.4 while validation loss flattens around 6 and creeps up after epoch 7](../sources/images/build-a-large-language-model-from-scratch-fig5-12.png)
@@ -160,6 +160,43 @@ How much can a model hold at all? Morris et al. trained GPT-style models of up t
 At 100 exposures it fell to 1 bit per parameter. Quantizing to int8 kept the full capacity and int4 cut it to 0.7. Mixing in junk data at 7 junk tokens per useful one cut capacity for the useful facts 20-fold. Prepending a domain-style tag to the useful data brought that loss down to 2× ([arXiv:2404.05405](https://arxiv.org/abs/2404.05405) (Allen-Zhu & Li, 2024-04, preprint)). Their fitted law says loss-based membership inference falls to chance at about 100 tokens per parameter, a ratio the authors say contemporary LLMs already exceed. They checked the law only on GPT-2 models up to 1.5B, and it covers a loss-threshold attack only, not extraction of rare strings like Carlini's UUIDs.
 
 ---
+
+### Entropy, cross-entropy, KL and perplexity
+
+The model assigns each possible next token a probability `p`. Its **log-probability** is `ln p`, a number at or below 0 (log 1 = 0; smaller probabilities go further negative). Logs are used because the probability of a whole text is a product of per-token probabilities, and a log turns a product into a sum, which is stable to compute and to average. The course uses the natural log, so losses are in **nats**. Divide by `ln 2 ≈ 0.693` to get **bits**, the unit behind "bits per byte" in the [byte-level tokenizer results](01-tokens-and-embeddings.md#tokens): bits = nats / ln 2.
+
+- **Entropy** `H(p) = −Σ p·ln p` measures how uncertain a distribution is: the average surprise of drawing from it. A fair coin has 0.693 nats (1 bit), a certain outcome has 0.
+- **Cross-entropy** `H(p, q) = −Σ p·ln q` is the average surprise when the truth is `p` but you predict with `q`. In training the truth is one real next token, so this reduces to `−ln q(true token)`, the negative log-likelihood of the token the text actually contained. The loss is that number averaged over all positions.
+- **KL divergence** is the extra cost of using `q` in place of `p`: `KL(p‖q) = H(p, q) − H(p) = Σ p·ln(p/q)`. It is never negative and is 0 only when `q = p`. Because the entropy of the data does not depend on the model, minimising cross-entropy and minimising KL are the same job. The average loss cannot go below `H(p)`, the true uncertainty of the next token given its context. On real text that floor is above 0, because many continuations are plausible.
+- **KL is not symmetric**: `KL(p‖q) ≠ KL(q‖p)`. The forward form `KL(p‖q)` is large when the model gives near-zero probability to a token the data uses, so a model trained on it spreads probability over every plausible token. The reverse form `KL(q‖p)` is large when the model puts probability where the data has almost none, so the model can safely concentrate on one common continuation (one *mode*, a peak of the distribution). Pretraining minimises the forward form. RLHF ([chapter 8](08-preference-optimisation-overview.md)) penalises the reverse form `KL(π‖π_ref)`, where `π` is the model being tuned and `π_ref` its frozen starting copy; [RL 12](../../05-RL/notes/12-rlhf-failure-modes.md#overoptimization) explains why that keeps the tuned model where its reward can be trusted.
+- **Perplexity** is `exp(cross-entropy)`, the effective number of equally likely tokens the model is choosing between. A model that is certain has perplexity 1; a uniform guess over a vocabulary of V tokens has perplexity V.
+
+```python
+import numpy as np
+
+p = np.array([0.5, 0.25, 0.25])    # true next-token distribution over 3 tokens
+q = np.array([0.4, 0.4, 0.2])      # the model's distribution
+
+entropy = -(p * np.log(p)).sum()
+cross_entropy = -(p * np.log(q)).sum()
+print(f"entropy H(p)          {entropy:.4f} nats")
+print(f"cross-entropy H(p,q)  {cross_entropy:.4f} nats = {cross_entropy / np.log(2):.4f} bits")
+print(f"KL(p||q)              {(p * np.log(p / q)).sum():.4f}  (cross-entropy - entropy = {cross_entropy - entropy:.4f})")
+print(f"KL(q||p)              {(q * np.log(q / p)).sum():.4f}  (different)")
+print(f"perplexity exp(H(p,q)) {np.exp(cross_entropy):.3f}   exp(H(p)) {np.exp(entropy):.3f}")
+print(f"if token 0 is the true one: loss {-np.log(q[0]):.4f} = -ln(0.4)")
+```
+
+```text
+entropy H(p)          1.0397 nats
+cross-entropy H(p,q)  1.0896 nats = 1.5719 bits
+KL(p||q)              0.0499  (cross-entropy - entropy = 0.0499)
+KL(q||p)              0.0541  (different)
+perplexity exp(H(p,q)) 2.973   exp(H(p)) 2.828
+if token 0 is the true one: loss 0.9163 = -ln(0.4)
+```
+
+Run with NumPy on a three-token vocabulary. The model pays 0.05 nats more than the best possible 1.04, and its perplexity of 2.97 sits just above the 2.83 that perfect knowledge of `p` would give. The same arithmetic runs in the training loop earlier in this chapter: `F.cross_entropy` returns the average `−ln q(true token)` in nats, and the `ln(vocab)` check is the entropy of a uniform guess.
 
 ### What the data is
 

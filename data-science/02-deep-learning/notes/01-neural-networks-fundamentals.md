@@ -56,6 +56,8 @@ Backpropagation is the chain rule applied from the loss back through each layer,
 
 $$dW^{[l]} = \tfrac{1}{m} dZ^{[l]} A^{[l-1]\top}, \quad db^{[l]} = \tfrac{1}{m}\textstyle\sum dZ^{[l]}, \quad dA^{[l-1]} = W^{[l]\top} dZ^{[l]}, \quad dZ^{[l-1]} = dA^{[l-1]} \odot g'(Z^{[l-1]})$$
 
+Here `dW` is shorthand for $\partial L / \partial W$, the gradient of the loss with respect to that layer's weights; [Vectors, matrix products and the gradient](../../01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient) builds it up for one linear layer.
+
 **Building your Deep Neural Network: Step by Step** (course 1, week 4) structures this as cached forward and backward functions. Here they are, cut down to the three the rest depend on:
 
 ```python

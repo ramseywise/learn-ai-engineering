@@ -38,7 +38,7 @@ One timing mistake to avoid: CUDA calls are asynchronous, so `time.time()` aroun
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 13-2*
 
-The figure shows the expert GEMM moving from under the bandwidth slope toward the compute ceiling after fusion. Table 13-4 gives the numbers: from 50% of peak FLOPS, 70% of peak bandwidth and 60% occupancy, to 85% / 40% / 80%. The figure's legend prints the baseline as "7% memory". The table's 70% is consistent with the text; the legend looks like a typo. Fregly adds a caveat worth keeping: there is **no universal occupancy target**. Many good kernels hide latency at 25–50% occupancy, so read stall reasons before chasing occupancy. Kernel-level tuning is in [04](04-kernels.md).
+The figure shows the expert [GEMM](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) moving from under the bandwidth slope toward the compute ceiling after fusion. Table 13-4 gives the numbers: from 50% of peak FLOPS, 70% of peak bandwidth and 60% occupancy, to 85% / 40% / 80%. The figure's legend prints the baseline as "7% memory". The table's 70% is consistent with the text; the legend looks like a typo. Fregly adds a caveat worth keeping: there is **no universal occupancy target**. Many good kernels hide latency at 25–50% occupancy, so read stall reasons before chasing occupancy. Kernel-level tuning is in [04](04-kernels.md).
 
 ---
 

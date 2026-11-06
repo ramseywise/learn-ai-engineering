@@ -269,7 +269,7 @@ flowchart TD
 | 1 | TF-IDF word 1–3-grams, `sublinear_tf`, `min_df=3` | `LogisticRegression` | First baseline: log-loss 0.626 |
 | 2 | Counts, word 1–3-grams | `LogisticRegression` | Counts beat TF-IDF here |
 | 3 | TF-IDF / counts | `MultinomialNB` | NB on counts is the best of the basic models |
-| 4 | TF-IDF → `TruncatedSVD(120)` → `StandardScaler` | `SVC(probability=True)` | SVMs need dense, scaled, low-dim input; slow |
+| 4 | TF-IDF → `TruncatedSVD(120)` → `StandardScaler` | `SVC(probability=True)` | SVMs need dense, scaled, low-dim input, which [SVD](../../01-classical-ml/notes/05-unsupervised-learning.md#principal-component-analysis) provides; slow |
 | 5 | TF-IDF, counts, SVD | XGBoost | Trees on sparse text are mediocre ([ensembles](../../01-classical-ml/notes/06-ensembles.md)) |
 | 6 | Pipeline SVD + scaler + LR; NB alone | `GridSearchCV` with a log-loss scorer | Tuned NB alpha: 8% better than default |
 | 7 | GloVe 840B averaged sentence vectors | XGBoost | Dense vectors help trees |

@@ -341,7 +341,7 @@ The retrieval score most of these systems descend from is from *Generative Agent
 
 - recency: exponential decay, factor 0.995 per game hour since the memory was last *retrieved*
 - importance: the LLM rates the memory 1–10 when it is stored, e.g. 2 for "cleaning up the room" and 8 for "asking your crush out"
-- relevance: cosine similarity to the current query
+- relevance: cosine similarity to the current query ([dot product and cosine](../../01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity))
 
 The three are summed with equal weight. **Reflection** runs when the importance of recent events adds up past 150, which works out to two or three times a game day. It writes higher-level conclusions back into the stream as memories. In a believability ranking (TrueSkill), the full architecture scored μ = 29.9, without reflection 26.9, and without memory, reflection or planning 21.2. Human crowdworkers role-playing the agents scored 23.0. Memory errors persisted: agents missed facts they had observed, retrieved fragments, and embellished details.
 

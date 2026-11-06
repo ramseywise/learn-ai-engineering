@@ -7,7 +7,7 @@ sources:
   - "CPython 3.14.7, Include/cpython/longintrepr.h and Objects/longobject.c — https://github.com/python/cpython/blob/v3.14.7/Objects/longobject.c"
   - "Python docs: Floating-point arithmetic, math, sys, functions, array, decimal, fractions, mmap — https://docs.python.org/3.14/tutorial/floatingpoint.html"
   - "NumPy docs: numpy.sum — https://numpy.org/doc/stable/reference/generated/numpy.sum.html"
-concepts: [math-strings, floating-point, ieee-754, ulp, cancellation, kahan-summation, big-integers, karatsuba, twos-complement, cache-hierarchy, locality, virtual-memory, page-faults, boxing]
+concepts: [math-strings, floating-point, ieee-754, ulp, cancellation, kahan-summation, fp16, bf16, fp8, mantissa-exponent-split, loss-scaling, log-sum-exp, stable-softmax, big-integers, karatsuba, twos-complement, cache-hierarchy, locality, virtual-memory, page-faults, boxing]
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -351,6 +351,116 @@ theta 1e-04: float32 1-cos = 0.0, float64 = 5.0000e-09
 
 `50,000 × 50,000` as `int32` comes out negative with no warning at all. Check dtypes when counting tokens over a dataset, and prefer `int64`. Accumulating in `float32` loses nearly 1% over a million items, 991 and not 1,000. `v.sum()` gets 1000.0 from the same array since [NumPy uses partial pairwise summation](https://numpy.org/doc/stable/reference/generated/numpy.sum.html) when it can. And `float32` has only 24 bits, so the cosine trap above arrives much sooner, at `θ` of around `1e-4`. If your vector store uses `float32`, distances between near-duplicates are coarser than you'd think.
 
+## Smaller floats
+
+Neural-network weights and activations are stored in formats narrower than `float64`, because half the bits means half the bytes to store and to move. They fail in two ways the code below shows: a value overflows to `inf` or underflows to `0`, and a long sum stops growing. All of them split the bits the same way as the double above: a sign, some exponent bits that set the range, and some mantissa bits that set the precision.
+
+| format | sign | exponent | mantissa | max | smallest normal | eps (2^-mantissa) |
+|---|---|---|---|---|---|---|
+| fp32 | 1 | 8 | 23 | 3.403e+38 | 1.175e-38 | 1.192e-07 |
+| fp16 | 1 | 5 | 10 | 6.55e+04 | 6.104e-05 | 0.0009766 |
+| bf16 | 1 | 8 | 7 | 3.39e+38 | 1.175e-38 | 0.007812 |
+| fp8 E4M3 | 1 | 4 | 3 | 448 | 0.01562 | 0.125 |
+| fp8 E5M2 | 1 | 5 | 2 | 5.734e+04 | 6.104e-05 | 0.25 |
+
+The rule is that exponent bits buy range and mantissa bits buy precision. bf16 keeps fp32's 8 exponent bits and gives up 16 mantissa bits, so its range almost matches fp32's (max 3.39e+38 against 3.40e+38), but its eps is 2^-7 ≈ 0.0078, about 2 decimal digits. fp16 has 5 exponent bits and 10 mantissa bits: finer steps, but a ceiling of 65,504. The two fp8 formats trade the same way. E4M3 (the OCP "FN" variant) uses its top exponent for ordinary numbers and has no infinity, which is how it reaches 448. E5M2 follows the fp16 pattern.
+
+NumPy has `float32` and `float16` but no bf16 or fp8, and neither `ml_dtypes` nor `torch` is installed for this chapter's checks. So the code computes the table from the bit layout, and checks that the formula reproduces `np.finfo` for fp16 and fp32. The bf16 and fp8 rows are therefore derived from the layout and not measured on a library type:
+
+<!-- requires: numpy -->
+```python
+import numpy as np
+
+def limits(e, m, fn=False):
+    """Max, smallest normal and eps from the layout. fn: the top exponent holds numbers (E4M3)."""
+    bias = 2 ** (e - 1) - 1
+    if fn:
+        biggest = (2 - 2 * 2.0 ** -m) * 2.0 ** (2 ** e - 1 - bias)
+    else:
+        biggest = (2 - 2.0 ** -m) * 2.0 ** (2 ** e - 2 - bias)
+    return biggest, 2.0 ** (1 - bias), 2.0 ** -m
+
+for name, e, m, fn in [("fp32", 8, 23, 0), ("fp16", 5, 10, 0), ("bf16", 8, 7, 0), ("fp8 E4M3", 4, 3, 1), ("fp8 E5M2", 5, 2, 0)]:
+    big, tiny, eps = limits(e, m, fn)
+    print(f"{name:9}{big:>12.4g}{tiny:>12.4g}{eps:>11.4g}")
+
+for dt in (np.float32, np.float16):
+    f = np.finfo(dt)
+    print(dt.__name__, "max", f.max, "eps", f.eps, "smallest normal", f.smallest_normal)
+print("layout formula matches finfo, fp16:", limits(5, 10) == (float(np.finfo(np.float16).max), float(np.finfo(np.float16).smallest_normal), float(np.finfo(np.float16).eps)))
+with np.errstate(over="ignore"):
+    print("fp16 65504 + 16 =", np.float16(65504) + np.float16(16), " 70000 ->", np.float16(70000))
+print("1e-8 as fp16:", np.float16(1e-8), " 1e-5 as fp16:", np.float16(1e-5))
+print("fp16 step at 1e-5:", np.spacing(np.float16(1e-5)), " step at 1.0:", np.spacing(np.float16(1.0)))
+v = np.full(10_000, 1e-3, dtype=np.float16)
+print("fp16 running sum:", np.cumsum(v, dtype=np.float16)[-1], " fp32 accumulator:", np.cumsum(v, dtype=np.float32)[-1])
+```
+
+<!-- measured -->
+
+```text
+fp32         3.403e+38   1.175e-38  1.192e-07
+fp16         6.55e+04   6.104e-05  0.0009766
+bf16         3.39e+38   1.175e-38   0.007812
+fp8 E4M3          448     0.01562      0.125
+fp8 E5M2    5.734e+04   6.104e-05       0.25
+float32 max 3.4028235e+38 eps 1.1920929e-07 smallest normal 1.1754944e-38
+float16 max 6.55e+04 eps 0.000977 smallest normal 6.104e-05
+layout formula matches finfo, fp16: True
+fp16 65504 + 16 = inf  70000 -> inf
+1e-8 as fp16: 0.0  1e-5 as fp16: 1e-05
+fp16 step at 1e-5: 6e-08  step at 1.0: 0.000977
+fp16 running sum: 4.0  fp32 accumulator: 10.004044
+```
+
+Past 65,504 an fp16 value becomes `inf`, and anything below about 6e-8 becomes `0.0` (underflow). Values between 6e-8 and the smallest normal, 6.1e-5, survive as **subnormals**: the exponent is pinned at its minimum, so the step between neighbours stays fixed at 6e-8 however small the value gets. `1e-5` prints correctly, but its step is 0.6% of the value, against 0.1% at 1.0. A large activation or a loss of 70,000 therefore breaks fp16 training, while bf16 does not overflow there. That is why bf16 is the usual training format, and why fp16 training adds **loss scaling**: multiply the loss by a large constant before computing gradients, so small gradients land above the underflow line, then divide them back out before the weights are updated.
+
+The last line is the same trap as the `float32` running sum earlier in this chapter, one format down. Adding ten thousand copies of `0.001` in fp16 stalls at 4.0, where the true total is 10: at 4 the step between neighbouring fp16 values is about 0.004, so adding 0.001 rounds back to the same number. The fp32 accumulator gets 10.004, a little off only because `0.001` itself isn't exact in fp16. This is the reason mixed-precision training multiplies in 16 bits (or 8) but keeps three things in fp32: the running sum inside each matrix product, the per-weight running averages the optimiser keeps, and a master copy of the weights that each update is applied to. A sum of many small terms is where narrow floats fail first.
+
+## Log-sum-exp
+
+`exp` grows faster than any format's range. `exp(1000)` is far past the float64 maximum of about 1.8e308, so it comes back as `inf`, and `inf / inf` is `nan`. Softmax turns a list of scores into positive weights that sum to 1: exponentiate each score `z_i` and divide by the total, `exp(z_i) / Σ exp(z_j)` ([more on softmax](../../../generative-ai/01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding)). A naive version breaks on scores that a model produces every day.
+
+The fix is a shift. Softmax is unchanged when you subtract the same number from every score, because the factor `e^(-m)` cancels between numerator and denominator. Choose `m = max(z)`, so the largest exponent is `exp(0) = 1` and nothing can overflow. Terms far below the maximum may underflow to zero, which is harmless since they were negligible.
+
+The same shift gives the log-sum-exp, which turns up wherever probabilities are kept as logs:
+
+```text
+log Σ eʸ = m + log Σ e^(y - m)
+```
+
+`np.logaddexp` does this for two terms and `np.logaddexp.reduce` for many. Log-probabilities such as `-1000` are ordinary numbers, but `exp(-1000)` underflows to exactly `0.0`, and `log(0)` is `-inf`. Multiplying 500 probabilities of 0.01 gives 1e-1000, which is `0.0` in float64, while adding their logs gives -2302.6 with no trouble (last line of the output). Keeping probabilities as logs is how [Bayesian computations](../../../data-analytics/04-bayesian-analysis/notes/06-bayesian-machine-learning.md) avoid that.
+
+<!-- requires: numpy -->
+```python
+import numpy as np
+
+z = np.array([1000.0, 999.0, 990.0])
+with np.errstate(over="ignore", invalid="ignore"):
+    print("exp(1000):", np.exp(1000.0), " naive softmax:", np.exp(z) / np.exp(z).sum())
+m = z.max()
+p = np.exp(z - m) / np.exp(z - m).sum()
+print("stable softmax:", p, " sums to", p.sum())
+print("log-sum-exp:", m + np.log(np.exp(z - m).sum()), " np.logaddexp.reduce:", np.logaddexp.reduce(z))
+
+lp = np.array([-1000.0, -1001.0])
+with np.errstate(divide="ignore"):
+    print("naive log(sum(exp)):", np.log(np.exp(lp).sum()), " stable:", np.logaddexp(lp[0], lp[1]))
+print("0.01**500:", np.prod(np.full(500, 0.01)), " sum of logs:", np.log(np.full(500, 0.01)).sum())
+```
+
+<!-- measured -->
+
+```text
+exp(1000): inf  naive softmax: [nan nan nan]
+stable softmax: [7.31034316e-01 2.68932495e-01 3.31889066e-05]  sums to 1.0
+log-sum-exp: 1000.3132948769755  np.logaddexp.reduce: 1000.3132948769755
+naive log(sum(exp)): -inf  stable: -999.6867383124818
+0.01**500: 0.0  sum of logs: -2302.585092994045
+```
+
+The naive softmax returns `nan` for all three scores, the stable one returns probabilities that sum to 1, and the stable log-sum-exp of two log-probabilities at `-1000` is `-999.69` where the naive one gives `-inf`. Deep-learning libraries do this inside their softmax and cross-entropy functions, which is why you should pass them raw scores (**logits**, the numbers before softmax) and not take `log(softmax(x))` yourself. [Cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity), the loss `-log` of the probability given to the right answer, is then computed with this shift inside.
+
 ## Memory isn't flat
 
 The machine's picture of memory is very different from a list of addresses. Drepper's [What Every Programmer Should Know About Memory](https://www.akkadia.org/drepper/cpumemory.pdf) lays out why: DRAM is far slower than the CPU, so small, fast caches sit between them and hold recently used data. Data moves in whole cache lines, so a read pulls in its neighbours. This is on my machine:
@@ -591,6 +701,7 @@ So the rule of thumb is that speed comes from getting the whole operation out of
 - **`float32` totals.** Symptom: a sum that stops growing, or is 1% off. Sum in `float64`.
 - **`1 - cosine` for near-duplicates.** Symptom: distinct documents at a distance of exactly 0.
 - **Looping in Python over a NumPy array.** Symptom: slower than the list you replaced. Vectorise, or stay with a list.
+- **Naive softmax on large scores.** Symptom: every probability is `nan`. Subtract the max first, or use the library's softmax.
 - **Timing the first pass only.** Symptom: an allocation-heavy benchmark looks slow because of page faults, and the second run looks mysteriously fast.
 
 ## Try it
@@ -599,6 +710,7 @@ So the rule of thumb is that speed comes from getting the whole operation out of
 2. Implement `neumaier_sum` in the [lab](../practice/README.md), and find which test a plain Kahan version fails.
 3. Over how many tokens does a `float32` running count stop rising when you add 1? Predict it from the number of bits and check.
 4. Write a function that computes cosine distance on unit vectors accurately at very small angles, and check it at `θ = 1e-9`.
+5. Write a stable softmax and check it on `[1000, 999, 990]`.
 
 <details>
 <summary>Answers</summary>
@@ -607,6 +719,7 @@ So the rule of thumb is that speed comes from getting the whole operation out of
 2. `test_compensated_sum_handles_an_addend_bigger_than_the_total`. Kahan returns the wrong answer because its correction assumes the total outweighs the item.
 3. At 2^24 = 16,777,216. `float32` has 24 significant bits, so beyond that, adjacent values are 2 apart, and adding 1 rounds back. The float bits block shows `16777217.0` becoming `16777216.0`.
 4. `0.5 * (a - b) @ (a - b)` for unit vectors. At `θ = 1e-9` I got `5e-19`, which is right, and `1 - a @ b` gives `0.0`.
+5. `e = np.exp(z - z.max()); e / e.sum()` gives `[0.731, 0.269, 3.3e-05]`, as in the log-sum-exp block. Without the shift, every entry is `nan`.
 
 </details>
 
