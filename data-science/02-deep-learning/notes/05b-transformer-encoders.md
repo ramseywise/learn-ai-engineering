@@ -81,7 +81,7 @@ d_k   64  std of q.k   7.99  after dividing by sqrt(d_k) 1.00
 d_k 1024  std of q.k  32.09  after dividing by sqrt(d_k) 1.00
 ```
 
-Two things follow. The first is the scaling. Under the Transformer paper's assumption of independent unit-variance components, a dot product has variance $d_k$, and its authors "suspect" large values push the softmax into regions with "extremely small gradients", so they divide by $\sqrt{d_k}$ ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), §3.2.1 (Vaswani et al., NeurIPS 2017)). The standard deviations above confirm the growth. The paper runs no scaled against unscaled experiment, leaning on an outside result for additive attention at large $d_k$.
+Two things follow. The first is the scaling. Under the Transformer paper's assumption of independent unit-variance components, a [dot product](../../01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient) has variance $d_k$, and its authors "suspect" large values push the softmax into regions with "extremely small gradients", so they divide by $\sqrt{d_k}$ ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), §3.2.1 (Vaswani et al., NeurIPS 2017)). The standard deviations above confirm the growth. The paper runs no scaled against unscaled experiment, leaning on an outside result for additive attention at large $d_k$.
 
 The second matters more. Shuffle the input tokens and each output moves with its input, so this layer doesn't know their order. The exact term is *equivariant*: the output permutes as the input does. A mean over tokens is then *invariant*. So self-attention followed by a mean pool sees a set, not a sequence.
 

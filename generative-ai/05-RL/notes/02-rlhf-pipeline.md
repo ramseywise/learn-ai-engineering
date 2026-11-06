@@ -235,7 +235,7 @@ optimizer state:
   more steps and trails full fine-tuning by 10+ points on some tasks (see
   [01 PEFT](../../01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md#parameter-efficient-fine-tuning)).
 
-**LoRA.** Freeze W and learn a low-rank update BA, with rank r ≪ d. Hu et al. matched full
+**LoRA.** Freeze W and learn a [low-rank](../../01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) update BA, with rank r ≪ d. Hu et al. matched full
 fine-tuning of GPT-3 175B on several tasks with about 4.7M trainable parameters (0.0027%). Huyen's
 rules (*AI Engineering*, ch. 7):
 

@@ -97,7 +97,7 @@ Top ten kept is the share of fp32's ten nearest neighbours that each variant sti
 | On the GPU, sorted batches of 32 | Texts per second | Top ten kept, against fp32 |
 |---|---:|---:|
 | fp32 | 3,007 | 1.000 |
-| bf16 autocast | 3,284 | 0.990 |
+| [bf16](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats) autocast | 3,284 | 0.990 |
 | fp16 autocast | 3,234 | 0.998 |
 
 | On the CPU, 600 texts | Texts per second | Top ten kept, against fp32 |
@@ -199,7 +199,7 @@ The API has a trap. In Transformers 5.20 the argument is `mm_encoder_outputs`, a
 
 ## Adapters at serving time
 
-An adapter here is a LoRA: a small low-rank update trained beside frozen weights ([PEFT and fine-tuning in practice](../../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md)), where r is its rank. Attached means it stays separate and runs at every wrapped layer. Merged means it has been added into the weights.
+An adapter here is a LoRA: a small [low-rank](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) update trained beside frozen weights ([PEFT and fine-tuning in practice](../../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md)), where r is its rank. Attached means it stays separate and runs at every wrapped layer. Merged means it has been added into the weights.
 
 | One page, 50 tokens | Milliseconds |
 |---|---:|

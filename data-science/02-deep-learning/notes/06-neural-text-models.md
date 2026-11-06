@@ -325,7 +325,7 @@ What goes wrong, and why it matters for what follows:
 | Huge output layer | Word-level vocabulary | Character or subword tokens ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md), BPE in [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)) |
 | Bidirectional generator | Uses the future at training time but not at sampling | Causal (left-to-right) models only |
 
-This is the same task, next-token prediction trained with cross-entropy, that makemore and nanoGPT solve with better architectures. The notebook's own settings were `Embedding(total_words, 100)`, `Bidirectional(LSTM(150))`, `to_categorical` and 10 epochs, and the translation table above covers those layers.
+This is the same task, next-token prediction trained with [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity), that makemore and nanoGPT solve with better architectures. The notebook's own settings were `Embedding(total_words, 100)`, `Bidirectional(LSTM(150))`, `to_categorical` and 10 epochs, and the translation table above covers those layers.
 
 ## LSTMs beyond text: sequence regression
 

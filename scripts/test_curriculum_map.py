@@ -125,5 +125,44 @@ class CurriculumMap(unittest.TestCase):
         self.assertEqual(cm.main(["--root", str(self.root), "issues", "--kind", "no_inbound", "--strict"]), 0)
 
 
+class ConceptHomes(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name).resolve()
+        self.addCleanup(self.tmp.cleanup)
+        registry = {"concepts": {"softmax": {"pattern": "\\bsoftmax\\b",
+                                             "homes": ["generative-ai/01-a/notes/01-home.md#softmax", "data-science/01-b/notes/09-deep.md"]}}}
+        write(self.root, "scripts/concept_homes.json", json.dumps(registry))
+        write(self.root, "generative-ai/01-a/notes/01-home.md", "# Home\n\n## Softmax\n\nSoftmax is taught here.\n")
+        write(self.root, "generative-ai/01-a/notes/02-linked.md", "# L\n\nA [softmax](01-home.md#softmax) again.\n")
+        write(self.root, "generative-ai/01-a/notes/03-unlinked.md", "---\nstatus: draft\n---\n# U\n\nintro\n\nThe Softmax of the scores.\n")
+        write(self.root, "generative-ai/01-a/notes/04-fenced.md", "# F\n\n```\nsoftmax(x)\n```\n")
+        write(self.root, "generative-ai/01-a/notes/05-deeper.md", "# D\n\nsoftmax, see [deep](../../../data-science/01-b/notes/09-deep.md).\n")
+        write(self.root, "data-science/01-b/notes/09-deep.md", "# Deep\n\nsoftmax in depth\n")
+        self.issues = [i for i in cm.build(self.root)["issues"] if i["kind"] == "concept_unlinked"]
+
+    def test_only_the_unlinked_use_is_reported(self):
+        self.assertEqual([i["path"] for i in self.issues], ["generative-ai/01-a/notes/03-unlinked.md"])
+
+    def test_detail_names_the_line_and_the_canonical_home(self):
+        detail = self.issues[0]["detail"]
+        self.assertIn("line 8", detail)
+        self.assertIn("generative-ai/01-a/notes/01-home.md#softmax", detail)
+
+    def test_information_only(self):
+        self.assertIn("concept_unlinked", cm.INFO_KINDS)
+        self.assertEqual(cm.main(["--root", str(self.root), "issues", "--kind", "concept_unlinked", "--strict"]), 0)
+
+    def test_no_registry_no_reports(self):
+        (self.root / "scripts/concept_homes.json").unlink()
+        self.assertEqual([i for i in cm.build(self.root)["issues"] if i["kind"] == "concept_unlinked"], [])
+
+    def test_ignored_note_is_not_reported(self):
+        registry = json.loads((self.root / "scripts/concept_homes.json").read_text())
+        registry["concepts"]["softmax"]["ignore"] = {"generative-ai/01-a/notes/03-unlinked.md": "names something else"}
+        write(self.root, "scripts/concept_homes.json", json.dumps(registry))
+        self.assertEqual([i for i in cm.build(self.root)["issues"] if i["kind"] == "concept_unlinked"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

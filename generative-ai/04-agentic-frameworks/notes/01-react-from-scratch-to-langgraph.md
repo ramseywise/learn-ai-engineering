@@ -430,7 +430,7 @@ Check the current [LangGraph docs](https://docs.langchain.com/oss/python/langgra
 
 | Pitfall | What you see | Fix |
 |---|---|---|
-| Treating "no tool call" as "done" | The agent stops early with a confident, unsupported answer | Validate the answer before accepting it. See the termination evidence in [note 06](06-framework-selection.md#what-the-evidence-says) |
+| Treating "no tool call" as "done" | The agent stops early with a confident, unsupported answer | Validate the answer before accepting it. See the termination evidence in [note 06](06-framework-selection.md#what-the-research-says-about-how-frameworks-fail) |
 | No loop guard, or one you never test | A stuck run burns tokens until something external kills it | Set `recursion_limit` deliberately and catch `GraphRecursionError`. Test with a stubborn stub, as above |
 | Reading `recursion_limit` as model calls | The limit trips at half the rounds you expected | It counts graph steps. Each round is at least two |
 | A node that returns the whole list with `operator.add` | The transcript doubles each step | Return only the new messages. The reducer merges |

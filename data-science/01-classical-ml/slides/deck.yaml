@@ -221,6 +221,29 @@ parts:
           This is for the audience who want the maths. The data is Ng's first exercise, the profit of a food truck against
           city population. X has a leading column of ones, and the normal equation is the closed form with no learning rate. The libraries hide this loop, and the note has the logistic version next to it.
 
+      - layout: steps
+        beat: fundamentals
+        level: deep
+        title: Derive the gradient, check it, then size the step
+        recall: How do you check a hand-derived gradient before you trust it?
+        lead: "Seed 0, 100 rows, 3 features, true weights (2, -1, 0.5), mean squared error."
+        steps:
+          - {title: Shapes, text: "`X @ w` is (n × d)(d,) → one prediction per row. `X.T @ r` gives one number per feature."}
+          - {title: Gradient, text: "`(2/n) · X.T @ (X @ w - y)`, a vector that points uphill."}
+          - {title: Check it, text: "Analytic **−4.7218** against a central difference of **−4.7218**."}
+          - {title: Step, text: "η = 0.1: 20 steps recover (1.99, −1.00, 0.47), loss 0.0086."}
+          - {title: Too far, n: "!", accent: "D4621A", text: "η = 1.1: loss **1.4 × 10⁹**. Above 2 / 2.40 = **0.83** it diverges."}
+        takeaway: Check a derived gradient against a central difference, and keep the learning rate below 2 over the largest eigenvalue or the loss explodes.
+        source: notes/02-supervised-learning.md
+        notes: >-
+          The same loop as the last slide, written so the shapes show. Stack the rows into X, and one matrix product gives
+          every prediction; the transpose turns the residuals into one number per feature, which is why X transpose appears in
+          the gradient and in the normal equation. A derivative is a slope you can measure by nudging a weight both ways, so
+          compare the formula with that central difference before you trust it: here they agree to four decimals. Then the
+          learning rate. At 0.1 twenty steps recover the true weights. At 1.1 the loss explodes. For this X the cutoff is 2
+          divided by the largest eigenvalue of 2/n X transpose X, which is 2.40, so anything above 0.83 diverges. The cutoff
+          depends on the data, and that is why learning rates get tuned.
+
       - layout: table
         beat: pitfalls
         title: Five ways a first model misleads you

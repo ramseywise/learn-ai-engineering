@@ -169,7 +169,7 @@ flowchart LR
 | [ai-engineering/09-safety-and-security](ai-engineering/09-safety-and-security/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/01-llm-fundamentals](generative-ai/01-llm-fundamentals/README.md) | 0 of 16 | 15 | yes |
 | [generative-ai/02-rag-retrieval](generative-ai/02-rag-retrieval/README.md) | 0 of 13 | 12 | yes |
-| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 8 | 7 | yes |
+| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 12 | 11 | yes |
 | [generative-ai/04-agentic-frameworks](generative-ai/04-agentic-frameworks/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/05-RL](generative-ai/05-RL/README.md) | 0 of 15 | 14 | yes |
 | [generative-ai/06-observability](generative-ai/06-observability/README.md) | 0 of 7 | 6 | yes |
@@ -183,7 +183,7 @@ flowchart LR
 | [data-analytics/05-visualisation-and-storytelling](data-analytics/05-visualisation-and-storytelling/README.md) | 0 of 7 | 6 | yes |
 | [data-analytics/06-applied-analyses](data-analytics/06-applied-analyses/README.md) | 0 of 13 | 12 | yes |
 | [data-science/01-classical-ml](data-science/01-classical-ml/README.md) | 2 of 17 | 16 | yes |
-| [data-science/02-deep-learning](data-science/02-deep-learning/README.md) | 0 of 8 | 7 | yes |
+| [data-science/02-deep-learning](data-science/02-deep-learning/README.md) | 0 of 9 | 8 | yes |
 | [data-science/03-nlp](data-science/03-nlp/README.md) | 0 of 8 | 7 | yes |
 | [data-science/05-time-series-and-recommenders](data-science/05-time-series-and-recommenders/README.md) | 0 of 6 | 5 | yes |
 | [data-engineering/01-storage-and-compute-foundations](data-engineering/01-storage-and-compute-foundations/README.md) | 0 of 11 | 10 | yes |

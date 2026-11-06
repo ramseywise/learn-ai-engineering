@@ -228,7 +228,7 @@ reward model built from human preferences.
 browser through search, click, scroll and quote actions. Humans compared two model-generated
 answers to the same question, both written with browsing, and a reward model learned from about
 16k of those comparisons. The RL loop: generate action sequence → execute in browser → the reward
-model scores the final answer → PPO update, with a per-token KL penalty toward the
+model scores the final answer → PPO update, with a per-token [KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) penalty toward the
 behavior-cloned model. Humans label offline; they are not in the loop. RL was not the best
 optimizer here. Sampling 64 answers and keeping the one the RM scored highest was preferred to
 the BC model 68% of the time, RL only 58%, and RL added nothing on top of best-of-n

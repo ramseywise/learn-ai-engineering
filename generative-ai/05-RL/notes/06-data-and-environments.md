@@ -217,7 +217,7 @@ The limits:
   rather than generating from scratch keeps an anchor. WRAP rewrote C4 with Mistral-7B in
   Wikipedia and Q&A styles. Mixed with real C4, it reached the same zero-shot accuracy about
   3x faster at 1.3B parameters. Dropping the real half cost up to a point of zero-shot accuracy
-  and sharply raised perplexity on messy real text (Gutenberg, PhilPapers), because the rewrites
+  and sharply raised [perplexity](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) on messy real text (Gutenberg, PhilPapers), because the rewrites
   are too clean ([arXiv:2401.16380](https://arxiv.org/abs/2401.16380) (Maini et al., ACL 2024)).
   That evidence is from pretraining, not post-training.
 - **Verification is the bottleneck.** About 20% of Llama 3's generated code solutions were

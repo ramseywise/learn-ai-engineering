@@ -422,7 +422,7 @@ The criteria file can weight several together:
 }
 ```
 
-That second config was not run, because it needs a judge model. The trajectory check is what to reach for first, for the reason the Wang loop study in [note 06](06-framework-selection.md#what-the-evidence-says) makes clear: a looping agent shows up in the trajectory long before it shows up in a score on its final answer. The earlier version of this note also listed Vertex pointwise, pairwise and AutoSxS managed evaluation as reachable through ADK. That could not be confirmed from the 2.13.0 package beyond its Vertex facade for the metrics above, so check [adk.dev](https://adk.dev/evaluate/) before relying on it.
+That second config was not run, because it needs a judge model. The trajectory check is what to reach for first, for the reason the Wang loop study in [note 06](06-framework-selection.md#what-the-research-says-about-how-frameworks-fail) makes clear: a looping agent shows up in the trajectory long before it shows up in a score on its final answer. The earlier version of this note also listed Vertex pointwise, pairwise and AutoSxS managed evaluation as reachable through ADK. That could not be confirmed from the 2.13.0 package beyond its Vertex facade for the metrics above, so check [adk.dev](https://adk.dev/evaluate/) before relying on it.
 
 ---
 

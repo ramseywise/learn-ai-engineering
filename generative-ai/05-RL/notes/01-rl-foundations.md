@@ -455,7 +455,7 @@ J(π) = E_π[ Σ_t r_t + α·H[π(·|s_t)] ]        α = temperature
 ```
 
 **Soft actor-critic (SAC)** learns soft Q-functions off-policy from a replay buffer and fits the
-policy by minimizing the KL divergence to that softmax, using a reparameterized Gaussian for
+policy by minimizing the KL divergence to that [softmax](../../01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding), using a reparameterized Gaussian for
 continuous actions. Most implementations tune α automatically toward a target entropy, commonly
 `−|A|` for an action space with |A| dimensions (*Reinforcement Learning*, ch. 7).
 

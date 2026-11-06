@@ -231,7 +231,7 @@ mismatch is left to correct. The results:
 The head-to-head wins over GRPO are on RWKV models at equal hardware and wall-clock.
 
 Optimizer memory is also what stops gradient-based full-weight RL from fitting, and it can be cut
-without leaving gradients behind. LoGRA keeps each weight's gradient as a low-rank sketch, lets the
+without leaving gradients behind. LoGRA keeps each weight's gradient as a [low-rank](../../01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) sketch, lets the
 optimizer act on the sketch, and sets the step size from a predicted-KL budget
 ([arXiv:2610.06647](https://arxiv.org/abs/2610.06647) (Zhang et al., 2026-10, preprint)). On
 Qwen2.5-Math with PPO on one 8×H100 node, **average training memory fell 21.8% at 1.5B and 45.7% at

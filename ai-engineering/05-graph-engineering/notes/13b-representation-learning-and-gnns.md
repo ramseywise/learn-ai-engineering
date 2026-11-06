@@ -43,7 +43,7 @@ Every graph representation learning method is an **encoder** (structure → vect
 | Part | Takes | Ranges from | Trains on |
 |---|---|---|---|
 | **Encoder** | Adjacency (structure) and, optionally, node features | A lookup table up to a deep GNN | — |
-| **Decoder** | One or two embeddings | Dot product, softmax, a classifier head | The training signal: "are these connected?", neighbourhood overlap, or a node label |
+| **Decoder** | One or two embeddings | [Dot product](../../../generative-ai/01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity), [softmax](../../../generative-ai/01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding), a classifier head | The training signal: "are these connected?", neighbourhood overlap, or a node label |
 
 **Node2Vec in this frame** (ch. 11): the encoder generates biased random walks and gives nodes that co-occur on walks similar vectors; the decoder is a softmax asking "given *i*'s vector, how likely is *j* to appear near it on a walk?". The bias comes from the original paper (Grover & Leskovec, 2016): having just stepped from *t* to *v*, the walk moves to a next node *x* with unnormalised weight 1/*p* if *x* = *t* (go back), 1 if *x* is also a neighbour of *t*, and 1/*q* if *x* is farther from *t*. Low *q* pushes the walk outward (DFS-like, finds communities); high *q* keeps it local (BFS-like, finds structural roles). The book's gloss swaps the labels, calling exploring other circles "going broad" and staying in a tight group "going deep"; in the paper's terms that is the other way round. With *p* = *q* = 1 the walk is unbiased, i.e. DeepWalk, and that is what the book runs: its karate listing sets 16 dimensions, walk length 10, 20 walks per node, window 5, *p* = *q* = 1. The book reports the result only qualitatively: the vectors cluster by faction, members with friends in both camps land in between, and the two leaders get distinct vectors. Similarity to each leader predicts which faction a member joins.
 
@@ -173,7 +173,7 @@ flowchart LR
 | Data | 203,769 Bitcoin transactions, 234,355 payment edges, 166 anonymised features; 77% unlabelled, 2.2% illicit | 610 users, 9,742 movies, 100,836 ratings; movie features = 20 one-hot genres; only "rated or not" is predicted |
 | Graph | Homogeneous (`Data`) | Heterogeneous (`HeteroData`, users and movies; `ToUndirected()` adds reverse `rev_rates` edges so messages flow both ways; `to_hetero()` converts the base GNN) |
 | Input vectors | The 166 features | Users: a learned lookup only (no features). Movies: linear map of genres **plus** a learned lookup. The genre path carries some signal for a new movie, but the lookup is indexed by node ID, so the model is still transductive |
-| Decoder | `log_softmax` + cross-entropy | Dot product + binary cross-entropy on logits |
+| Decoder | `log_softmax` + [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) | Dot product + binary cross-entropy on logits |
 | Splitting | Node masks; most nodes are unlabelled | `RandomLinkSplit`, with **message-passing edges kept apart from supervision edges** to avoid leakage |
 | Result | SAGE caught the most illicit nodes (82.7%) and had the best weighted F1; GCN missed 32% | SAGE fewest false positives; GCN best recall |
 

@@ -75,7 +75,7 @@ Notice what fixed these problems: removing content. Tallybook's stale refund pag
 | Fast | `retrieve()` | 5 | 0.4 (cosine) | No | Agent tool, low latency |
 | Reranking | `retrieve_reranking()` | 15 | 0.05 (reranker) | `amazon.rerank-v1:0` | Eval, complex or multi-concept queries |
 
-**The score scale differs by mode.** Raw cosine similarity (0–1) is calibrated differently from reranker relevance scores (borderline matches 0.05–0.35). Never compare scores across modes.
+**The score scale differs by mode.** Raw [cosine similarity](../../01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity) (0–1) is calibrated differently from reranker relevance scores (borderline matches 0.05–0.35). Never compare scores across modes.
 
 `scoreThreshold` is a client-side setting of the agent, not of the service. The [Retrieve request](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html) has no such field, so the threshold is applied after the response comes back. The two modes differ in one configuration object. This block builds both requests and runs them through the real boto3 client with botocore's `Stubber`, so the parameter names and types are validated against the AWS service model with no network call and no real credentials. Enum values such as `overrideSearchType` are not checked locally, so a wrong value there only fails against the real service.
 

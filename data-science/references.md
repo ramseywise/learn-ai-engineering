@@ -65,7 +65,7 @@ The full per-notebook fix tables live in the notes, and this is the index.
 | TensorFlow 1.x to 2.x | Ng DL notebooks: `tf.compat.v1` bridge done, and Tensorflow Tutorial and Convolution model still need the `tf.contrib` rewrite. Sarkar Ch10a: confusion-matrix cell fixed, but `tf.estimator` (removed in TF 2.16) remains | [TF map](02-deep-learning/notes/01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map), [text notebooks](02-deep-learning/notes/06-neural-text-models.md#tensorflow-status-of-the-text-notebooks) |
 | transformers 4 to 5 | Version 5.22.1 removed the `question-answering`, `summarization` and `translation` pipeline tasks | [Neural text models](02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines) |
 | Standalone Keras, gensim 3, spaCy 2, pyLDAvis, skater | Not fixed, and reported per notebook in the Practice tables: spaCy `'en'` shortcuts, `keras.layers.normalization`, gensim `size=` and `index2word`, `pyLDAvis.sklearn`, `skater` (dead) in Ch09d, Stanford NER paths `E:/stanford/...` in Ch08b | Pillar 03 notes |
-| PyMC3 to PyMC 5 | Bayesian notebooks belong to data analytics | [Migration map](../data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md#pymc3-to-pymc-5-migration-map), status in the data-analytics [PyMC version audit](../data-analytics/references.md#pymc-version-audit) |
+| PyMC3 to PyMC 5 | Bayesian notebooks belong to data analytics | [Migration map](../data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md#pymc3-to-current-pymc), status in the data-analytics [PyMC version audit](../data-analytics/references.md#pymc-version-audit) |
 
 ## Source quality
 

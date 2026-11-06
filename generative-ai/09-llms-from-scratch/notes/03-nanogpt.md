@@ -570,7 +570,7 @@ weight decay on 50 tensors (124,318,464 params), none on 98 (121,344 params)
 
 The schedule's numbers follow from the token counts: 375M tokens at 524,288 a step is 715 steps of warm-up, and 19,073 steps is 10.0B tokens. The rate climbs to 6e-4 at step 714, and the cosine then brings it down to 6e-5 at the last step. The weight-decay split is by tensor rank, and the result is lopsided in a useful way: 98 of the 148 tensors escape decay, yet they hold only 121,344 parameters, about 0.1% of the model. Those are the biases and LayerNorm parameters, which the standard recipe leaves out of decay.
 
-The batch of 0.5M tokens does not fit on one GPU, so gradients accumulate over micro-batches. The subtle line is the division. Cross-entropy already averages over its own batch, so summing gradients from several micro-batches without dividing makes the effective learning rate that many times too large, without a single error.
+The batch of 0.5M tokens does not fit on one GPU, so gradients accumulate over micro-batches. The subtle line is the division. [Cross-entropy](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) already averages over its own batch, so summing gradients from several micro-batches without dividing makes the effective learning rate that many times too large, without a single error.
 
 ```python
 torch.manual_seed(1337)

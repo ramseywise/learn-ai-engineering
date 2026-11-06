@@ -74,6 +74,34 @@ parts:
       Since prices and limits are per token, some languages cost far more: a short sentence took a median of 7 tokens
       in English and 72 in Burmese. And since the letters sit inside a token, a model can read a string correctly
       and still fail to reverse it.'
+  - layout: code
+    level: deep
+    title: A dot product counts length, a cosine only direction
+    recall: When do dot product, cosine and L2 distance rank neighbours the same way?
+    lang: python
+    code: |-
+      q = np.array([3.0, 4.0])
+      docs = {"53 deg away": np.array([1.0, 0.0]),
+              "same way, 10x": np.array([30.0, 40.0]),
+              "right angle": np.array([-4.0, 3.0])}
+      cos = lambda a, b: a @ b / (norm(a) * norm(b))
+      for name, d in docs.items():
+          print(name, q @ d, round(cos(q, d), 2))
+      # 53 deg away      3.0  0.6
+      # same way, 10x  250.0  1.0
+      # right angle      0.0  0.0
+    bullets:
+    - '**Dot product:** multiply entry by entry, then add.'
+    - '**10× longer** gives a 10× larger dot product.'
+    - '**Cosine** divides the lengths out: 1 to −1.'
+    - '**At length 1** dot = cosine, and L2 ranks the same.'
+    takeaway: Scale embeddings to length 1 and dot product, cosine and L2 distance pick the same neighbours.
+    source: notes/01-tokens-and-embeddings.md
+    notes: 'An embedding is a vector, a list of d_model numbers. The dot product multiplies two vectors entry by entry
+      and adds, so it is large when they point the same way and zero at right angles. It also grows with length: the
+      vector pointing the same way but ten times longer scores 250 against 3. Cosine similarity divides the lengths
+      out. Once every vector has length 1, the dot product is the cosine, and since squared L2 distance is 2 minus 2
+      times the dot product, all three rank neighbours the same way. Attention scores, next, are plain dot products.'
   - layout: image
     title: The causal mask is why one pass can train every position
     recall: How do you test that a causal mask works?
@@ -89,6 +117,30 @@ parts:
       right. The upper triangle is gone, so no position can see later ones. That one matrix lets a single forward
       pass train each position to predict the next token. And it gives us a test: change a later token, and nothing
       earlier may move.'
+  - layout: cards
+    level: deep
+    title: Read attention by its shapes
+    recall: What does Q Kᵀ cost, and why is K transposed?
+    cards:
+    - title: Matrix product
+      body: '(m × k)(k × n) gives (m × n). Each entry is one dot product, so the cost is about **2·m·n·k FLOPs**.'
+    - title: Transpose
+      body: 'Kᵀ turns (T × d_k) into (d_k × T), so Q Kᵀ is a **T × T** grid of query-key dot products.'
+    - title: Broadcasting
+      body: Line shapes up from the right. A (T × T) grid plus a (T,) vector adds it to every row.
+    - title: Low rank
+      accent: D4621A
+      body: 'A rank-r matrix is (m × r)(r × n). At 1,000 × 1,000 and rank 4: **8,000** numbers, not 1,000,000.'
+    takeaway: Inner sizes must match and drop out, a product costs 2·m·n·k FLOPs, and a low-rank matrix stores as
+      two thin factors, which is LoRA.
+    source: notes/02-attention-and-the-transformer-block.md
+    notes: 'Before the attention code, the four pieces of matrix arithmetic it uses. In a matrix product the inner
+      sizes must match and drop out, and each entry is a dot product of a row with a column, which gives the 2 m n k
+      FLOP estimate you can use for any layer. The transpose is why the scores are Q times K transpose: without it the
+      shapes would not line up. Broadcasting is how a bias or mask applies to every row in one line. And rank: a
+      matrix built from r underlying rows can be stored as two thin factors. In the note, a random 1,000 by 1,000
+      matrix has rank 1,000, while one built from two rank-4 factors has rank 4 and needs 125 times fewer numbers.
+      That is the idea behind LoRA in chapter 9.'
   - layout: code
     title: Attention is short enough to hold in your head
     recall: Why divide by the square root of d_k?
@@ -330,6 +382,31 @@ parts:
       labels are needed. Each position sees the true previous tokens, which is teacher forcing, and that is why
       training is parallel while generation is not. Before you train, the loss should be about ln of the vocabulary
       size.
+  - layout: table
+    level: deep
+    title: Cross-entropy is the loss, entropy its floor, KL the gap
+    recall: Why does minimising cross-entropy also minimise KL divergence?
+    lead: 'A true next-token distribution p = (0.5, 0.25, 0.25) and a model q = (0.4, 0.4, 0.2), in nats.'
+    header: [Quantity, Formula, Meaning, Value]
+    widths: [2.2, 2.4, 4.2, 1.6]
+    rows:
+    - [Entropy, '`−Σ p ln p`', 'The data''s own uncertainty: the floor', '**1.04**']
+    - [Cross-entropy, '`−Σ p ln q`', 'Surprise predicting p with q: the loss', '**1.09**']
+    - ['KL(p || q)', '`H(p,q) − H(p)`', 'The model''s extra cost, never negative', '**0.05**']
+    - ['KL(q || p)', '`Σ q ln(q/p)`', 'Not symmetric: RLHF''s penalty form', '0.054']
+    - [Perplexity, '`exp(H(p,q))`', 'Effective number of tokens in play', '**2.97** (best 2.83)']
+    highlight: [1]
+    takeaway: The data's entropy does not depend on the model, so minimising cross-entropy minimises KL, and perplexity
+      is exp of the loss.
+    source: notes/06-pretraining-data-and-objectives.md
+    notes: 'The loss on the last slide is a cross-entropy. Logs turn the product of per-token probabilities into a
+      sum, and we use natural logs, so the unit is nats; divide by ln 2 for bits. Entropy is how uncertain the data
+      itself is. Cross-entropy is the average surprise when you predict with q, and with one true token it is just
+      minus ln q of that token. KL is the difference, and since the entropy does not depend on the model, minimising
+      one minimises the other. The loss can never go below the entropy. KL is not symmetric: pretraining uses the
+      forward form, which punishes a model for missing a token the data uses, and RLHF penalises the reverse form
+      against a frozen reference. Perplexity is exp of the cross-entropy, the effective number of tokens the model
+      is choosing between. These numbers come from the three-token example in the note, run with NumPy.'
   - layout: image
     title: A small corpus teaches you to memorise
     recall: What does a widening gap between training and validation loss show?

@@ -109,7 +109,7 @@ For each paper:
 ## Step 3 — references.md
 
 Each pillar has (or gets) `<home folder>/references.md` (see
-`.claude/skills/pillar/references/pillar-layout.md`). If missing, create it in the shape of
+`../librarian/.claude/skills/pillar/references/pillar-layout.md`). If missing, create it in the shape of
 `ai-engineering/02-context-engineering/references.md`: frontmatter
 (`origin: curated`, `sources:`, `confidence:`), `# <Pillar> — Papers and Further
 Reading`, a one-line intro pointing at `sources/` and the README.
@@ -176,4 +176,4 @@ Don't commit — the user reviews the diff.
 
 ## Chapter standard and subject homes
 
-A note you touch must still meet the chapter section of `.claude/skills/pillar/references/pillar-layout.md`. Run `make chapter-check PILLAR=<pillar>` after editing. In the four subject areas, notes live in `<subject>/<NN-pillar>/notes/` and PDFs stay in `<subject>/sources/`. Add the row to the `references.md` of the pillar whose note it maps to.
+A note you touch must still meet the chapter section of `../librarian/.claude/skills/pillar/references/pillar-layout.md`. Run `make chapter-check PILLAR=<pillar>` after editing. In the four subject areas, notes live in `<subject>/<NN-pillar>/notes/` and PDFs stay in `<subject>/sources/`. Add the row to the `references.md` of the pillar whose note it maps to.

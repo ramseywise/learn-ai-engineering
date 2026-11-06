@@ -266,7 +266,7 @@ flowchart TD
 ## Try it
 
 1. Compute the parameters for GPT-2 XL: `d = 1600`, 48 layers, 25 heads, context 1,024, tied head, Q/K/V bias on. How close is it to the 1,558M label?
-2. How much memory would a 355B model need for its weights in bf16? In 4-bit?
+2. How much memory would a 355B model need for its weights in [bf16](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats)? In 4-bit?
 3. A model has 8B parameters and is trained on 2T tokens. Is it above or below the Chinchilla ratio, and by how much?
 
 <details>

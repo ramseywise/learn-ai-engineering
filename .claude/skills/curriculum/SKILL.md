@@ -19,7 +19,7 @@ uncommitted changes that aren't yours, do not edit it: list the edit in your rep
 make curriculum
 ```
 
-Report notes and words per subject, the issues by kind, and the few worth fixing first. `no_inbound` is information.
+Report notes and words per subject, the issues by kind, and the few worth fixing first. `no_inbound` is information. So is `concept_unlinked`: a note uses a maths concept from `scripts/concept_homes.json` without linking its home. Add a link only where the note needs the idea; passing mentions stay as they are. When a concept gets a new home, add it to that file.
 
 ## Place: `place "<topic>"`
 

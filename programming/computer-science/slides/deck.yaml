@@ -252,6 +252,24 @@ parts:
         source: notes/04-numbers-and-memory.md
         notes: "For normal retrieval scores this doesn't matter at all. float32 has only 24 bits, so the same trap arrives around theta of 1e-4. Never compare computed floats with ==. Summing is usually fine: the plain loop was off by 6.4e-10 on a total of $5,998.86 over a million costs."
 
+      - layout: table
+        level: deep
+        title: Why train in bf16 rather than fp16?
+        kicker: Smaller floats
+        lead: "Limits derived from the bit layout. The formula reproduces np.finfo for fp16 and fp32."
+        header: [Format, Exponent bits, Mantissa bits, Max, eps]
+        widths: [2.2, 2, 2, 2, 2]
+        rows:
+          - [fp32, "8", "23", 3.4e38, 1.2e-7]
+          - [fp16, "5", "10", "**65,504**", 0.00098]
+          - [bf16, "8", "7", "**3.4e38**", 0.0078]
+          - [fp8 E4M3, "4", "3", "448", "0.125"]
+          - [fp8 E5M2, "5", "2", "57,344", "0.25"]
+        highlight: [2]
+        takeaway: Exponent bits buy range and mantissa bits buy precision. bf16 keeps fp32's range, fp16 overflows past 65,504, and a long sum needs an fp32 accumulator.
+        source: notes/04-numbers-and-memory.md
+        notes: "Narrow formats halve the bytes to store and move, and they fail in two ways. Range: fp16 turns 65,504 plus 16 into inf, and anything below about 6e-8 into zero, which is why fp16 training adds loss scaling. bf16 keeps fp32's eight exponent bits, so a loss of 70,000 is fine. Precision: ten thousand copies of 0.001 summed in fp16 stall at 4.0, because the step there is about 0.004; an fp32 accumulator gets 10.004. So mixed precision multiplies in 16 or 8 bits but keeps the matmul accumulator, the optimiser state and a master copy of the weights in fp32. NumPy has no bf16 or fp8, so those rows are derived, not measured."
+
       - layout: flow
         title: What does a random read cost as the working set grows?
         kicker: The staircase
@@ -293,6 +311,30 @@ parts:
         takeaway: Iterating boxes each element into a new Python object, so a NumPy loop costs the most. Speed comes from getting the whole operation out of the Python loop, and memory from getting rid of the objects.
         source: notes/04-numbers-and-memory.md
         notes: "Big-O is equal in all of these, and the ratio between best and worst is more than 300. A list of floats is an array of pointers to 24-byte objects; an array holds the raw 8 bytes in a row. The same reasoning explains why column stores are fast."
+
+      - layout: compare
+        level: deep
+        title: Why does a naive softmax return nan?
+        kicker: Log-sum-exp
+        lead: "Scores z = (1000, 999, 990), float64."
+        emphasis: right
+        left:
+          title: Naive
+          bullets:
+            - "`exp(1000)` is past 1.8e308, so `inf`"
+            - "`inf / inf` gives **nan** for all three"
+            - "`0.01 ** 500` is `0.0`, so its log is `-inf`"
+          tag: Overflow, then underflow
+        right:
+          title: Shift by the max
+          bullets:
+            - "`exp(z - max(z))`: the largest term is 1"
+            - "**0.731, 0.269, 3.3e-5**, sum 1.0"
+            - "Sum of 500 logs: **-2302.6**"
+          tag: "m + log Σ exp(y - m)"
+        takeaway: Subtract the max before exp and keep probabilities as logs. Pass raw logits to the library's cross-entropy instead of taking log(softmax(x)) yourself.
+        source: notes/04-numbers-and-memory.md
+        notes: "Softmax is unchanged when you subtract the same number from every score, because e to the minus m cancels top and bottom. Choose the maximum, and nothing can overflow; terms far below it may underflow to zero, which is harmless. The same shift gives log-sum-exp, which np.logaddexp computes. Multiplying 500 probabilities of 0.01 underflows to zero, while adding their logs is an ordinary number. Libraries do this inside softmax and cross-entropy, which is why they take logits."
 
   - title: Waiting
     summary: The price of each boundary · Lost updates · Event loops · Queues · Parallelism · Streams and round trips

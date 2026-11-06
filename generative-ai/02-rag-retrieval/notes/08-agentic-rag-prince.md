@@ -506,7 +506,7 @@ Raieli and Iuculano list five kinds of router (*Building AI Agents*, ch. 6):
 | Keyword | Matching terms to sources | Cheap; misses paraphrase |
 | Zero-shot classifier | A classifier over source labels | No training data; fixed label set |
 | Function calling | The LLM picks a tool or source | Flexible; one LLM call per query |
-| Semantic | Cosine similarity between the query and a description of each route | Fast after setup; needs good route descriptions |
+| Semantic | [Cosine similarity](../../01-llm-fundamentals/notes/01-tokens-and-embeddings.md#vectors-dot-products-and-cosine-similarity) between the query and a description of each route | Fast after setup; needs good route descriptions |
 
 Their banking and insurance example shows routing doing a second job. Sending a customer's question only to the indexes that customer may see is an access-control decision as well as a relevance one.
 

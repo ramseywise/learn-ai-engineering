@@ -28,7 +28,7 @@ SFT can only imitate. To make a model prefer the better of two acceptable answer
 - **DPO** ([arXiv:2305.18290](https://arxiv.org/abs/2305.18290)): skip the reward model; optimize directly on (prompt, chosen, rejected) triples. The reward model's optimal policy has a closed form, so RLHF reduces to a classification loss with no sampling during training. It beat PPO-based RLHF at controlling sentiment and matched or beat it on summarization and single-turn dialogue. Meta used RLHF for Llama 2 and switched to DPO for Llama 3 (*AI Engineering*, ch. 2). *LLM Engineer's Handbook* ch. 6 walks through it.
 - **Constitutional AI / RLAIF** ([arXiv:2212.08073](https://arxiv.org/abs/2212.08073)): a model critiques and ranks outputs against written principles in place of human labelers.
 
-All three are covered in [05-RL notes 02–04](../../05-RL/README.md#syllabus).
+All three are covered in [05-RL notes 02–04](../../05-RL/README.md#reading-order).
 
 ---
 

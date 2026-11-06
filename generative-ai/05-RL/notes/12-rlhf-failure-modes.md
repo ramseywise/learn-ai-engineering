@@ -35,7 +35,7 @@ The pipeline in [02](02-rlhf-pipeline.md) ends with a policy maximizing a reward
 
 ## A small model of the whole problem
 
-Before the evidence, here is the shape of the failure in about twenty lines. An answer has one knob, padding. People like some detail and dislike too much, so human value peaks at 1. Stage 2 fits a straight line on answers with padding between 0 and 1, where more padding does look better. Stage 3 then maximizes that line minus a KL-like penalty pulling back to the SFT model at 0.2.
+Before the evidence, here is the shape of the failure in about twenty lines. An answer has one knob, padding. People like some detail and dislike too much, so human value peaks at 1. Stage 2 fits a straight line on answers with padding between 0 and 1, where more padding does look better. Stage 3 then maximizes that line minus a [KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)-like penalty pulling back to the SFT model at 0.2.
 
 ```python
 import numpy as np

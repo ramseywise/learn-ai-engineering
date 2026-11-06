@@ -8,7 +8,7 @@ chapter earns its place by sharpening, extending or evidencing what the notes al
 say, and by filling sections the notes are missing. It never becomes a note of its own
 called "Chapter 5 summary". A chapter usually spreads across two or three notes.
 
-Read `.claude/skills/pillar/references/pillar-layout.md` first. It defines where things live and the house
+Read `../librarian/.claude/skills/pillar/references/pillar-layout.md` first. It defines where things live and the house
 style for notes, figures and references.
 
 ---
@@ -111,7 +111,7 @@ on later chapters extend its "Folded in as" map:
 ```
 
 Use the column shape the file already has. If the home has no references.md, create it
-from `.claude/skills/pillar/references/pillar-layout.md`.
+from `../librarian/.claude/skills/pillar/references/pillar-layout.md`.
 
 ## Step 6 — Close out
 
@@ -133,4 +133,4 @@ user reviews the diff.
 
 ## Chapter standard and subject homes
 
-A note you touch must still meet the chapter section of `.claude/skills/pillar/references/pillar-layout.md`. Run `make chapter-check PILLAR=<pillar>` after editing. In the four subject areas, notes live in `<subject>/<NN-pillar>/notes/` and PDFs stay in `<subject>/sources/`. Add the row to the `references.md` of the pillar whose note it maps to.
+A note you touch must still meet the chapter section of `../librarian/.claude/skills/pillar/references/pillar-layout.md`. Run `make chapter-check PILLAR=<pillar>` after editing. In the four subject areas, notes live in `<subject>/<NN-pillar>/notes/` and PDFs stay in `<subject>/sources/`. Add the row to the `references.md` of the pillar whose note it maps to.

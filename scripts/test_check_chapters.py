@@ -234,7 +234,10 @@ class LinkCheck(unittest.TestCase):
         self.assertIn("BROKEN: ./note.md -> gone.md", out.stdout)
 
     def test_anchor_checks_the_file(self):
-        self.assertEqual(self.run_check("[a](there.md#section)\n").returncode, 0)
+        self.assertEqual(self.run_check("[a](there.md#there)\n").returncode, 0)
+        out = self.run_check("[a](there.md#section)\n")
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("BROKEN ANCHOR: ./note.md -> there.md#section", out.stdout)
         self.assertEqual(self.run_check("[a](gone.md#section)\n").returncode, 1)
 
     def test_fenced_and_external_links_are_skipped(self):

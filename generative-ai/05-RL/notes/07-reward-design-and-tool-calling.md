@@ -168,7 +168,7 @@ rubric: FactScore's Wikipedia lookup, or running the input against a reference s
 generator scores 1 if the claim survives, and the critic scores 1 if it doesn't; both are trained
 with DPO ([arXiv:2511.01758](https://arxiv.org/abs/2511.01758) (Wu et al., 2025-11, preprint)). On
 8-sentence biographies with Qwen3-8B it reached FactScore 0.889, against 0.867 for exhaustive
-checking (FactTune-FS), with **5.7× fewer validator calls**. An ArmoRM reward raised KL without
+checking (FactTune-FS), with **5.7× fewer validator calls**. An ArmoRM reward raised [KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) without
 gaining factuality. On code, trained on 2k AceCode problems, it beat rule-based and RM rewards on
 average across five benchmarks with 2.5% of the test executions, though by about one point. A
 frozen critic got gamed: its detection rate fell from 42% to 34%, and on biographies the generator
@@ -373,7 +373,7 @@ compiled from workflow specs. The reward is the share of a task's sub-questions 
 stage moved human-labeled production tool-calling success from 0.825 to 0.842 and cost 2.3
 BFCL points (66.6 → 64.3)** ([arXiv:2609.15066](https://arxiv.org/abs/2609.15066) (Chen et al.,
 2026-09, preprint)). Against the starting checkpoint the whole gain was about 3 points (0.819 →
-0.848 after FP8 quantization). On the internal CRMAgentBench it reached 87%, against 79% for the
+0.848 after [FP8](../../../programming/computer-science/notes/04-numbers-and-memory.md#smaller-floats) quantization). On the internal CRMAgentBench it reached 87%, against 79% for the
 base and 82% for GPT-4.1. The base had already been RL-post-trained, every number is one run,
 and the size of the production set is not given.
 
@@ -477,7 +477,7 @@ None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly
 
 **ReOPD** ([arXiv:2607.04763](https://arxiv.org/abs/2607.04763) (Liao et al., 2026-07, preprint)) takes on-policy distillation to multi-turn tool use without calling the environment during student training. It replays a stored teacher trajectory prefix, lets the student act at one sampled step, and minimises per-token KL to the teacher there, sampling early steps more (weight 0.6^t). On math with a Python tool (Qwen3-4B-Instruct-2507 student, 6.4K DAPO prompts, six-benchmark average) **it beat fully online distillation, 57.2 vs 55.1 with a 4B teacher and 53.7 vs 51.0 with an 8B teacher**, at least 4x faster per rollout. On search QA it only tied (40.5 vs 40.6). Prefixes from a generator stronger than the teacher hurt. Single runs, 200 steps, Qwen3 only.
 
-**What on-policy distillation does to the weights.** Shen et al. ([arXiv:2606.07082](https://arxiv.org/abs/2606.07082) (2026-06, preprint)) measure parameter updates, not accuracy. On Qwen3-8B with a Qwen3-32B teacher and math prompts, **SFT left 8.1% of bf16 weights unchanged, on-policy distillation 51.6% and GRPO 77.2%**; the update settles in a low-rank subspace early, and restricting gradients to that early rank-16 subspace left distillation intact while degrading SFT. Distillation-dominant mixtures with the RL advantage kept the distillation-like trajectory and weak ones left it, so the objective mix, not token density alone, sets the geometry. It makes no claim about steps or accuracy, uses one run per method in the controlled Qwen3-8B comparison (distillation also has seed, size, teacher and code variants), from different starting points (SFT from base, the others from the SFT model), and covers Qwen3 math and one code run.
+**What on-policy distillation does to the weights.** Shen et al. ([arXiv:2606.07082](https://arxiv.org/abs/2606.07082) (2026-06, preprint)) measure parameter updates, not accuracy. On Qwen3-8B with a Qwen3-32B teacher and math prompts, **SFT left 8.1% of bf16 weights unchanged, on-policy distillation 51.6% and GRPO 77.2%**; the update settles in a [low-rank](../../01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) subspace early, and restricting gradients to that early rank-16 subspace left distillation intact while degrading SFT. Distillation-dominant mixtures with the RL advantage kept the distillation-like trajectory and weak ones left it, so the objective mix, not token density alone, sets the geometry. It makes no claim about steps or accuracy, uses one run per method in the controlled Qwen3-8B comparison (distillation also has seed, size, teacher and code variants), from different starting points (SFT from base, the others from the SFT model), and covers Qwen3 math and one code run.
 
 ## Pitfalls
 

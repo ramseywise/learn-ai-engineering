@@ -57,7 +57,7 @@ chapter-check:  ## Check notes against the chapter standard: make chapter-check 
 	@test -n "$(PILLAR)" || { echo "usage: make chapter-check PILLAR=<area>/<pillar> [STRICT=1]"; exit 1; }
 	@python3 scripts/check_chapters.py $(PILLAR) $(if $(STRICT),--strict)
 
-link-check:  ## Verify relative links in markdown files exist on disk
+link-check:  ## Verify relative links in markdown files exist on disk, and #anchors into .md files name a heading
 	@python3 scripts/link_check.py
 
 curriculum:  ## Rebuild the curriculum map and print integration issues: make curriculum [PILLAR=data-science/01-classical-ml]

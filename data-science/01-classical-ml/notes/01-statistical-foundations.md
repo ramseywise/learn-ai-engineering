@@ -149,7 +149,7 @@ You need far less probability theory to *use* these models than the textbooks co
 | Idea | Used in | One line |
 |---|---|---|
 | Likelihood | Logistic regression, naive Bayes, language models ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md)) | How probable the observed data is under the model's parameters; training maximises it |
-| Negative log-likelihood | Cross-entropy loss everywhere, from [02](02-supervised-learning.md) to [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) | $-\frac1n \sum \log p_\theta(y_i \mid x_i)$; minimising it is maximum likelihood |
+| Negative log-likelihood | [Cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) loss everywhere, from [02](02-supervised-learning.md) to [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) | $-\frac1n \sum \log p_\theta(y_i \mid x_i)$; minimising it is maximum likelihood |
 | Gaussian | Anomaly detection ([05](05-unsupervised-learning.md)), weight initialisation ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md)) | Mean and variance describe it fully; sums of many small effects tend toward it |
 | Conditional independence | Naive Bayes ([02](02-supervised-learning.md), [NLP text classification](../../03-nlp/notes/02-text-classification.md)) | Assume features are independent given the class; wrong, but the classifier is often still good |
 

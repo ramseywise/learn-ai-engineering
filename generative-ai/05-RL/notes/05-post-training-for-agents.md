@@ -139,7 +139,7 @@ mistake puts the model in states the demonstrations never covered
 | Learns | Fixed input → output mapping | Strategy that produces good outcomes |
 | Under distribution shift | Applies the old answer and degrades | Re-solves and stays stable |
 | Sample efficiency / stability | High / high | Low / low |
-| Distribution shape | **Mass-covering**: spreads probability over every mode in the demos | **Mode-seeking**: reverse KL concentrates on a few high-reward modes, so outputs are more decisive but less diverse |
+| Distribution shape | **Mass-covering**: spreads probability over every mode in the demos | **Mode-seeking**: [reverse KL](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) concentrates on a few high-reward modes, so outputs are more decisive but less diverse |
 
 **Evidence: GeneralPoints and V-IRL** (Chu et al. 2025, "SFT Memorizes, RL Generalizes", arXiv:2501.17161). Same base model and same compute; the only variable is SFT vs. RL (PPO with a value network).
 

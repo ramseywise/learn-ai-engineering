@@ -366,7 +366,7 @@ Each row runs three seeds for 200 steps. The maximum possible loss here is 8, ev
 
 ## From scalars to tensors
 
-micrograd builds one graph node per scalar multiply. That is fine for 41 parameters and hopeless for millions. Real frameworks make each node a tensor op (`matmul`, `softmax`, `layernorm`) whose backward is a few matrix expressions, run on a GPU. The concepts carry over exactly.
+micrograd builds one graph node per scalar multiply. That is fine for 41 parameters and hopeless for millions. Real frameworks make each node a tensor op ([`matmul`](../../01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank), `softmax`, `layernorm`) whose backward is a few matrix expressions, run on a GPU. The concepts carry over exactly.
 
 | micrograd | PyTorch |
 |---|---|
@@ -386,7 +386,7 @@ print("to.grad_fn:", type(to.grad_fn).__name__, "->", [type(f[0]).__name__ for f
 to.grad_fn: TanhBackward0 -> ['AddBackward0']
 ```
 
-[makemore part 4](02-makemore.md#part-4-becoming-a-backprop-ninja) does the tensor version by hand: deriving the backward pass for cross-entropy, batch norm and a linear layer, and checking each against autograd.
+[makemore part 4](02-makemore.md#part-4-becoming-a-backprop-ninja) does the tensor version by hand: deriving the backward pass for [cross-entropy](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity), batch norm and a linear layer, and checking each against autograd.
 
 ## Practice
 

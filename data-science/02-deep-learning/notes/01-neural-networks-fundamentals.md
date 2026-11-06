@@ -48,7 +48,7 @@ The Ng DL convention stores examples as **columns**: $X$ is $(n_x, m)$, $W^{[l]}
 
 Why a non-linear $g$ at all: a stack of linear layers multiplies out to one linear layer, so depth buys nothing without it.
 
-**Logistic regression with a neural-network mindset** (course 1, week 2) is the one-layer case: flatten 64×64×3 cat images into 12,288-vectors, `sigmoid(w.T @ X + b)`, cross-entropy cost, gradient descent. Your notebook reaches about 70% test accuracy, and the point is the structure rather than the score.
+**Logistic regression with a neural-network mindset** (course 1, week 2) is the one-layer case: flatten 64×64×3 cat images into 12,288-vectors, `sigmoid(w.T @ X + b)`, [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) cost, gradient descent. Your notebook reaches about 70% test accuracy, and the point is the structure rather than the score.
 
 ## Backpropagation
 

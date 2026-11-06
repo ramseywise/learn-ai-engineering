@@ -30,7 +30,7 @@ flowchart LR
 
 ## The framework: a language model is a distribution over tokens
 
-A language model assigns a probability to the next token given the previous ones, `P(x_t | x_<t)`. Train it by maximising the likelihood of the data, which is the same as minimising the **average negative log-likelihood** (cross-entropy) of each true next character. Generate by sampling from the distribution one token at a time and feeding the sample back in.
+A language model assigns a probability to the next token given the previous ones, `P(x_t | x_<t)`. Train it by maximising the likelihood of the data, which is the same as minimising the **average negative log-likelihood** ([cross-entropy](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) of each true next character. Generate by sampling from the distribution one token at a time and feeding the sample back in.
 
 Setup used throughout: 26 letters plus `.` as a start and end token (27 classes), `stoi` and `itos` maps, and an 80/10/10 train/dev/test split of the names.
 
