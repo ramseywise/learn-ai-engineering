@@ -1,0 +1,149 @@
+{
+ "schema": 1,
+ "key": "2305.05176",
+ "pdf": "ai-engineering/07-inference-engineering/sources/chen-2023-frugalgpt.pdf",
+ "bib": {
+  "title": "FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance",
+  "authors": ["Lingjiao Chen", "Matei Zaharia", "James Zou"],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.05176",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44585,
+  "chars_total": 44585,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only."
+ },
+ "type": "empirical",
+ "question": "How can users query paid LLM APIs within a budget while keeping or improving accuracy?",
+ "hypothesis": "Cheap LLMs answer many queries correctly, and are sometimes right where expensive ones fail, so a learned cascade can cut cost and match or beat the best single LLM.",
+ "contributions": [
+  "Review of the heterogeneous pricing of 12 commercial LLM APIs (Table 1)",
+  "Three cost-reduction strategies: prompt adaptation, LLM approximation, LLM cascade",
+  "FrugalGPT, an LLM cascade instance, evaluated on HEADLINES, OVERRULING and COQA"
+ ],
+ "method": {
+  "summary": "A cascade of 3 LLM APIs is learned per dataset. A DistilBERT regression scorer rates each answer in [0,1]. An answer is accepted if its score passes a per-stage threshold, otherwise the next API is queried. The list and thresholds are optimised under a cost budget.",
+  "task": "Budget-constrained natural language query answering (classification and reading comprehension) over LLM APIs",
+  "trains": true,
+  "datasets": [
+   {"name": "HEADLINES", "role": "both", "size": "10000 examples", "split": "random train/test split, ratio not stated", "source": "Sinha and Khandait 2021, financial news, gold price trend (up, down, neutral, none)", "preprocessing": "8 examples in the prompt"},
+   {"name": "OVERRULING", "role": "both", "size": "2400 examples", "split": "random train/test split, ratio not stated", "source": "Zheng et al. 2021, legal sentences, overruling or not", "preprocessing": "5 examples in the prompt"},
+   {"name": "COQA", "role": "both", "size": "7982 examples", "split": "random train/test split, ratio not stated", "source": "Reddy et al. 2019, adapted as direct query answering", "preprocessing": "2 examples in the prompt"}
+  ],
+  "models": [
+   {"name": "FrugalGPT cascade (length 3)", "role": "proposed", "params": null, "architecture": "sequential LLM cascade with scorer and router", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"cascade_length": "3", "HEADLINES learned cascade": "GPT-J, J1-L, GPT-4 with thresholds 0.96 and 0.37", "OVERRULING example thresholds": "0.9 (Fig 5)", "COQA example thresholds": "0.2 and 0.3 (Fig 5)"}},
+   {"name": "DistilBERT regression scorer", "role": "base", "params": null, "architecture": "DistilBERT with regression head, predicts whether a generation is correct", "init_from": "DistilBERT (Sanh et al. 2019)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "12 LLM APIs: GPT-Curie 6.7B, ChatGPT, GPT-3 175B, GPT-4, J1-Large 7.5B, J1-Grande 17B, J1-Jumbo 178B, Cohere Xlarge 52B, ForeFrontAI QA 16B, GPT-J 6B, FAIRSEQ 13B, GPT-Neox 20B", "role": "evaluated", "params": "6B to 178B where stated; ChatGPT and GPT-4 NA", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"prices": "Table 1, retrieved March 2023"}}
+  ],
+  "training": {
+   "objective": "Scorer: regression on whether a generation is correct. Cascade: maximise E[r(a, f_Lz(q))] subject to average cost <= b, over list L and thresholds tau.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"router optimiser": "specialised optimiser that prunes lists of LLMs with small answer disagreement and approximates the objective by interpolating within a few samples; details not given"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Few-shot prompts with 8 (HEADLINES), 5 (OVERRULING), 2 (COQA) examples; prompt text not given",
+   "retrieval": null,
+   "parameters": {"cascade length": "3", "budget, HEADLINES case study": "$6.5 (one fifth of GPT-4 cost)", "thresholds, HEADLINES": "0.96 then 0.37"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "fraction correct on the test split", "unit": "fraction", "higher_is_better": true},
+    {"name": "Cost", "definition": "dollar cost of API calls on the dataset, from March 2023 prices (prompt + generation + per-request)", "unit": "$", "higher_is_better": false},
+    {"name": "Cost savings", "definition": "cost to reach the best individual LLM's accuracy, FrugalGPT versus that LLM", "unit": "%", "higher_is_better": true},
+    {"name": "MPI (maximum performance improvement)", "definition": "probability that LLM A is correct while LLM B is wrong", "unit": "% of cases", "higher_is_better": null}
+   ],
+   "baselines": ["each of the 12 individual LLM APIs, best being GPT-4 (HEADLINES, OVERRULING) and GPT-3 (COQA)"],
+   "protocol": "Single random train/test split per dataset; no seeds, repeats or significance tests stated."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics.Cost", "quote": "The cost was retrieved in March 2023.", "where": "Table 1 caption"}
+  ]
+ },
+ "results": [
+  {"claim": "Abstract: FrugalGPT matches the best single LLM with up to 98% cost reduction.", "kind": "measured", "source": null, "metric": "cost reduction at matched accuracy", "value": "98", "unit": "%", "baseline_value": null, "n": null, "setup": "HEADLINES, cascade of length 3, best single LLM GPT-4", "quote": "match the performance of the best individual LLM (e.g. GPT-4) with up to 98% cost reduction", "table": null, "note": "Table 3 gives 98.3% (33.1 to 0.6).", "where": "Abstract"},
+  {"claim": "Abstract: FrugalGPT improves accuracy over GPT-4 by 4% at the same cost.", "kind": "measured", "source": null, "metric": "accuracy gain at equal cost", "value": "4", "unit": "%", "baseline_value": null, "n": null, "setup": "Best case over the three datasets", "quote": "improve the accuracy over GPT-4 by 4% with the same cost", "table": null, "note": "Fig 5 caption says up to 5%; intro says up to 4%.", "where": "Abstract"},
+  {"claim": "Cost to match the best LLM on HEADLINES fell from $33.1 to $0.6.", "kind": "measured", "source": null, "metric": "cost savings", "value": "98.3", "unit": "%", "baseline_value": "33.1", "n": 10000, "setup": "HEADLINES, GPT-4 vs FrugalGPT at equal accuracy", "quote": null, "table": "Table 3, row HEADLINES, column Cost Savings (33.1 to 0.6)", "note": null, "where": "Table 3"},
+  {"claim": "Cost to match the best LLM on OVERRULING fell from $9.7 to $2.6.", "kind": "measured", "source": null, "metric": "cost savings", "value": "73.3", "unit": "%", "baseline_value": "9.7", "n": 2400, "setup": "OVERRULING, GPT-4 vs FrugalGPT at equal accuracy", "quote": null, "table": "Table 3, row OVERULLING, column Cost Savings (9.7 to 2.6)", "note": "Table row is misspelled OVERULLING in the paper.", "where": "Table 3"},
+  {"claim": "Cost to match the best LLM on COQA fell from $72.5 to $29.6.", "kind": "measured", "source": null, "metric": "cost savings", "value": "59.2", "unit": "%", "baseline_value": "72.5", "n": 7982, "setup": "COQA, GPT-3 vs FrugalGPT at equal accuracy", "quote": null, "table": "Table 3, row COQA, column Cost Savings (72.5 to 29.6)", "note": "Text says savings range from 50% to 98%; the table minimum is 59.2%.", "where": "Table 3"},
+  {"claim": "HEADLINES case study: with a $6.5 budget FrugalGPT cuts cost by 80% and raises accuracy by 1.5% over GPT-4.", "kind": "measured", "source": null, "metric": "accuracy", "value": "0.872", "unit": "accuracy", "baseline_value": "0.857", "n": null, "setup": "HEADLINES, budget $6.5 vs GPT-4 at $33.1", "quote": "FrugalGPT reduces the cost by 80%, while improves the accuracy by 1.5%", "table": "Figure 3(c): GPT-4 0.857 at $33.1, FrugalGPT 0.872 at $6.5", "note": null, "where": "Fig 3"},
+  {"claim": "On OVERRULING FrugalGPT gains 1% accuracy over GPT-4.", "kind": "measured", "source": null, "metric": "accuracy gain", "value": "1", "unit": "%", "baseline_value": null, "n": 2400, "setup": "OVERRULING, 73% cost reduction vs GPT-4", "quote": "FrugalGPT achieves a 1% accuracy gain while", "table": null, "note": "Continues 'reducing costs by 73%'.", "where": "Sec 4"},
+  {"claim": "Cheap LLMs are complementary: on COQA GPT-3 is right on 13% of items where GPT-4 is wrong.", "kind": "measured", "source": null, "metric": "MPI", "value": "13", "unit": "%", "baseline_value": null, "n": 7982, "setup": "COQA, GPT-3 vs GPT-4", "quote": "are 13% of data points where GPT-4 makes an error, but GPT-3 provides the correct answer", "table": null, "note": null, "where": "Sec 4, LLM diversity"},
+  {"claim": "Learned HEADLINES cascade: GPT-J accepted if score above 0.96.", "kind": "measured", "source": null, "metric": "threshold", "value": "0.96", "unit": "score", "baseline_value": null, "n": null, "setup": "HEADLINES, budget $6.5, order GPT-J, J1-L (0.37), GPT-4", "quote": "If the score of this answer is greater than 0.96", "table": null, "note": null, "where": "Sec 4 case study"},
+  {"claim": "Prices differ by two orders of magnitude: 10M input tokens cost $30 on GPT-4 but $0.2 on GPT-J.", "kind": "measured", "source": null, "metric": "price", "value": "30", "unit": "$ per 10M input tokens", "baseline_value": "0.2", "n": null, "setup": "March 2023 list prices", "quote": "is $30 for OpenAI’s GPT-4 but", "table": "Table 1, rows GPT-4 and GPT-J", "note": null, "where": "Intro, Table 1"},
+  {"claim": "Worked example: a GPT-4 customer-service bot with 360,000 queries a month costs about $21.2K.", "kind": "worked-example", "source": null, "metric": "monthly cost", "value": "21.2", "unit": "$K", "baseline_value": null, "n": null, "setup": "1800-token prompts, 80-token answers, GPT-4 at $0.03 and $0.06 per 1K tokens", "quote": "≈$21.2K", "table": null, "note": "Intro also quotes ChatGPT at over $700,000 per day (from a semianalysis estimate).", "where": "Sec 2"},
+  {"claim": "ChatGPT operating cost estimate.", "kind": "reported", "source": "Cosa (semianalysis.com)", "metric": "daily cost", "value": "700,000", "unit": "$ per day", "baseline_value": null, "n": null, "setup": "estimate cited from a blog", "quote": "to cost over $700,000 per day to operate", "table": null, "note": null, "where": "Intro"}
+ ],
+ "limits": [
+  "Needs labeled examples to train the cascade, drawn from the same or similar distribution as test queries.",
+  "Learning the cascade costs resources; the authors call it a one-time upfront cost, worthwhile when the query set is larger than the training data.",
+  "Only cascade length 3 and three datasets; prompt adaptation and approximation are described but not evaluated.",
+  "Latency, fairness, privacy and environmental impact are not measured.",
+  "Prices are March 2023 and are dated; train/test split sizes, scorer training details, seeds and optimiser details are not given.",
+  "Cost and accuracy compared against the same test set used to evaluate; no variance reported.",
+  "Cases remain where all APIs agree but the scorer is unsure, so the whole chain is queried."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LLM cascade", "definition": "sends a query to a list of LLM APIs sequentially; returns the first response judged reliable", "where": "Sec 3"},
+  {"term": "Prompt adaptation", "definition": "reducing prompt size to save cost, e.g. prompt selection and query concatenation", "where": "Sec 3"},
+  {"term": "LLM approximation", "definition": "replacing an expensive LLM with a cheaper model or infrastructure, e.g. completion cache and fine-tuning", "where": "Sec 3"},
+  {"term": "MPI", "definition": "the probability that LLM A generates the correct answer while LLM B provides incorrect ones", "where": "Sec 4"}
+ ],
+ "lineage": [
+  {"work": "FrugalML (Chen, Zaharia, Zou 2020)", "year": 2020, "arxiv": null, "relation": "extends", "note": "Same authors' API-selection method for classification with fixed label sets", "quote": null},
+  {"work": "Efficient online ML API selection for multi-label classification (Chen et al. 2022)", "year": 2022, "arxiv": null, "relation": "extends", "note": "Prior work on ML API selection", "quote": null},
+  {"work": "Model cascade (Viola and Jones 2004; Wang et al. 2011)", "year": 2004, "arxiv": null, "relation": "extends", "note": "Cascade concept applied to LLM APIs", "quote": null},
+  {"work": "DistilBERT", "year": 2019, "arxiv": "1910.01108", "relation": "uses-method", "note": "Scoring function", "quote": null},
+  {"work": "HEADLINES (Sinha and Khandait 2021)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "Eval dataset", "quote": null},
+  {"work": "OVERRULING (Zheng et al. 2021)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "Eval dataset", "quote": null},
+  {"work": "CoQA (Reddy et al. 2019)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "Eval dataset", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "evaluates", "note": "Best single LLM on two datasets", "quote": null},
+  {"work": "Language models are few-shot learners", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "GPT-3", "quote": null},
+  {"work": "Ask me anything (Arora et al. 2022)", "year": 2022, "arxiv": "2210.02441", "relation": "related", "note": "Aggregating GPT-J responses matches GPT-3 on simple tasks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Our vision for reducing LLM cost while improving accuracy.", "page": 2, "why": "Shows the three strategies and the HEADLINES cost-accuracy curve."},
+  {"figure": "Fig 2", "caption": "Illustrations of cost-saving strategies.", "page": 4, "why": "Prompt selection, query concatenation, completion cache, fine-tuning, cascade at a glance."},
+  {"figure": "Fig 3", "caption": "A case study of FrugalGPT on the HEADLINES dataset.", "page": 7, "why": "The learned cascade GPT-J, J1-L, GPT-4 with thresholds, and the cost and accuracy against GPT-4."},
+  {"figure": "Fig 5", "caption": "Accuracy and cost tradeoffs achieved by FrugalGPT.", "page": 9, "why": "Cost-accuracy curves for all three datasets with example cascades."},
+  {"figure": "Table 1", "caption": "Summary of commercial LLM APIs.", "page": 7, "why": "Per-token prices for the 12 APIs."}
+ ],
+ "code": [
+  {"where": "p.3", "snippet": "c_i(p) = c~_{i,2}||f_i(p)|| + c~_{i,1}||p|| + c~_{i,0}", "verbatim": false}
+ ],
+ "problems": [
+  "Fig 4 and Fig 5 are text-extracted as number lists; values read only from captions and text.",
+  "Abstract and intro say up to 4% accuracy gain; Fig 5 caption says up to 5%.",
+  "Text says savings range from 50% to 98%; Table 3 shows 59.2% to 98.3%."
+ ]
+}

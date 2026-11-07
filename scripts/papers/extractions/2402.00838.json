@@ -1,0 +1,595 @@
+{
+ "schema": 1,
+ "key": "2402.00838",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/groeneveld-2024-olmo.pdf",
+ "bib": {
+  "title": "OLMo: Accelerating the Science of Language Models",
+  "authors": [
+   "Dirk Groeneveld",
+   "Iz Beltagy",
+   "Pete Walsh",
+   "Akshita Bhagia",
+   "Rodney Kinney",
+   "Oyvind Tafjord",
+   "Ananya Harsh Jha",
+   "Hamish Ivison",
+   "Ian Magnusson",
+   "Yizhong Wang",
+   "Shane Arora",
+   "David Atkinson",
+   "Russell Authur",
+   "Khyathi Raghavi Chandu",
+   "Arman Cohan",
+   "Jennifer Dumas",
+   "Yanai Elazar",
+   "Yuling Gu",
+   "Jack Hessel",
+   "Tushar Khot",
+   "William Merrill",
+   "Jacob Morrison",
+   "Niklas Muennighoff",
+   "Aakanksha Naik",
+   "Crystal Nam",
+   "Matthew E. Peters",
+   "Valentina Pyatkin",
+   "Abhilasha Ravichander",
+   "Dustin Schwenk",
+   "Saurabh Shah",
+   "Will Smith",
+   "Emma Strubell",
+   "Nishant Subramani",
+   "Mitchell Wortsman",
+   "Pradeep Dasigi",
+   "Nathan Lambert",
+   "Kyle Richardson",
+   "Luke Zettlemoyer",
+   "Jesse Dodge",
+   "Kyle Lo",
+   "Luca Soldaini",
+   "Noah A. Smith",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Groeneveld",
+  "year": 2024,
+  "venue": "preprint (arXiv:2402.00838v4, 7 Jun 2024)",
+  "arxiv": "2402.00838",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 83030,
+  "chars_total": 83030,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a competitive language model be released together with its training data, code, checkpoints and logs so the research community can study LMs scientifically?",
+ "hypothesis": "Full openness (data, code, checkpoints, logs) is essential for scientific study of LMs and can be achieved without a large capability gap to Llama 2.",
+ "contributions": [
+  "OLMo 1B and 7B models (four 7B variants) trained to at least 2T tokens, Apache 2.0",
+  "Open pretraining data Dolma and tools for reproducing data order",
+  "Training and evaluation code, 500+ intermediate checkpoints, W&B logs",
+  "Adapted models OLMo+SFT and OLMo+SFT+DPO with code and data",
+  "Carbon footprint accounting"
+ ],
+ "method": {
+  "summary": "Decoder-only transformers (1B, 7B) pretrained on a 2T-token sample of Dolma with AdamW, FSDP/ZeRO, bf16 mixed precision, on LUMI (AMD) and MosaicML (NVIDIA) clusters. Evaluated zero-shot on 8 core tasks and Paloma perplexity, then adapted with Tulu-style SFT and DPO.",
+  "task": "next-token pretraining; instruction tuning and DPO",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Dolma",
+    "role": "pretrain",
+    "size": "2,668B tokens, 4,367M docs, 11,519 GB total; 2T-token sample used",
+    "split": "single epoch to 2T; some models continue into a second epoch with different shuffle",
+    "source": "Common Crawl 2,180B tok, GitHub 342B, Reddit 80B, Semantic Scholar 57B, Gutenberg 5.2B, Wikipedia 3.7B",
+    "preprocessing": "language, quality, content filtering, dedup, mixing, tokenization; EOS appended per document, concatenated, chunked to 2048 tokens; Paloma-leaking documents removed"
+   },
+   {
+    "name": "Tulu V2 SFT mix (OLMo resplit)",
+    "role": "train",
+    "size": null,
+    "split": "long conversations split into 2048-token chunks",
+    "source": "allenai/tulu-v2-sft-mixture-olmo-2048",
+    "preprocessing": "hardcoded split replaced with data about OLMo"
+   },
+   {
+    "name": "UltraFeedback (Argilla cleaned binarized)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "argilla/ultrafeedback-binarized-preferences-cleaned",
+    "preprocessing": "TruthfulQA prompts removed; average of GPT aspect scores picks chosen/rejected"
+   },
+   {
+    "name": "Paloma",
+    "role": "eval",
+    "size": "585 domains, 18 sources; 11 used for aggregate",
+    "split": "test sets",
+    "source": "Magnusson et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "8 core tasks (arc_easy, arc_challenge, boolq, openbookqa, sciq, hellaswag, piqa, winogrande)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OLMo-1B",
+    "role": "proposed",
+    "params": "1B",
+    "architecture": "decoder-only transformer, no biases, non-parametric LN, SwiGLU, RoPE, weight tying",
+    "init_from": null,
+    "tokenizer": "modified GPT-NeoX-20B BPE with PII mask tokens",
+    "vocab": "50,280 (embedding matrix 50,304)",
+    "layers": "16",
+    "hidden": "2048",
+    "heads": "16",
+    "context": "inferred: 2048 from training sequence length",
+    "other": {
+     "tokens": "2T",
+     "peak_lr": "4.0E-4",
+     "warmup_table1": "2000 steps",
+     "weight_tying": "yes"
+    }
+   },
+   {
+    "name": "OLMo-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "as 1B, no weight tying, MLP hidden 11,008 (22,016 into SwiGLU)",
+    "init_from": null,
+    "tokenizer": "as 1B",
+    "vocab": "50,280 (50,304 embedding)",
+    "layers": "32",
+    "hidden": "4086 in Table 1; 4096 in Table 5",
+    "heads": "32",
+    "context": "inferred: 2048 from training sequence length",
+    "other": {
+     "tokens": "2.46T",
+     "peak_lr": "3.0E-4",
+     "warmup_table1": "5000 steps"
+    }
+   },
+   {
+    "name": "OLMo+SFT / OLMo+SFT+DPO",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "OLMo-7B adapted",
+    "init_from": "OLMo-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Falcon-7B, LLaMA 7B, Llama 2 7B, MPT-7B, Pythia 6.9B, RPJ-INCITE-7B, StableLM 1.6B, Pythia 1B, TinyLlama 1.1B",
+    "role": "baseline",
+    "params": "1B-7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (inferred: causal LM); SFT; DPO",
+   "optimizer": "AdamW, betas 0.9/0.95, eps 1.0E-5",
+   "lr": "peak 3.0E-4 (7B), 4.0E-4 (1B)",
+   "lr_schedule": "linear decay to a tenth of peak (min 3.0E-05 for 7B); final 1000 steps decayed linearly to 0 for the evaluated 7B checkpoint",
+   "warmup": "5000 steps (~21B tokens) per Sec 3.2 for all sizes; Table 1 says 2000 steps for 1B",
+   "batch_size": "~4M tokens (2048 instances x 2048 tokens); Table 5 lists 2160 instances for OLMo-7B",
+   "steps": null,
+   "epochs": "1 over 2T tokens; some models continue into a second epoch",
+   "tokens": "2.46T (7B), 2T (1B)",
+   "seq_len": "2048",
+   "precision": "bf16 mixed precision via FSDP/amp; softmax in full precision; master weights, optimizer state and gradient reduce in FP32",
+   "weight_decay": "0.1 (Table 5)",
+   "dropout": null,
+   "regularisation": "gradient clipping global l2 norm 1.0 after warmup",
+   "hardware": "LUMI up to 256 nodes x 4 AMD MI250X (128GB); MosaicML 27 nodes x 8 NVIDIA A100 40GB; 800Gbps interconnect",
+   "compute": "energy 239 MWh for 7B models (135 MWh MI250X, 104 MWh A100)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "distributed": "ZeRO via PyTorch FSDP, micro-batch 4096 tokens per GPU at 7B",
+    "SFT": "LR 2e-6, 3 epochs, linear warmup 3% then linear cooldown to 0, WD 0, no grad clipping, max seq 2048",
+    "DPO": "LR 5e-7, beta 0.1, 3 epochs, warmup 10% then linear to 0, WD 0, no grad clipping, max seq 2048",
+    "in_loop_eval": "every 1000 steps (~4B tokens)",
+    "layer_norm": "non-parametric",
+    "released_variants": "7B, 7B-twin-2T, 1B, plus two other 7B variants with different arch/optimizer/hardware (not detailed)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for ToxiGen and TruthfulQA",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "ToxiGen 512; AlpacaEval 2048",
+   "samples": "single run; no seeds reported",
+   "prompting": "zero-shot rank classification for core tasks; TruthfulQA default QA prompt with 6 in-context examples; MMLU 0-shot; chat template where available",
+   "retrieval": null,
+   "parameters": {
+    "likelihood_normalization": "unconditional for arc and openbookqa; per-token for hellaswag, piqa, winogrande; none for boolq and sciq"
+   },
+   "other": {
+    "toxigen": "500 hateful prompts per group, roberta-large classifier",
+    "alpacaeval": "805 prompts, alpaca_eval_gpt4 annotator vs Davinci-003",
+    "truthfulqa": "818 questions, two LLaMA 2 based judges"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot accuracy (8 core tasks)",
+     "definition": "rank classification of candidate completions by (normalized) likelihood",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "bits per byte",
+     "definition": "Paloma, per Gao et al. 2020, over 11 sources",
+     "unit": "bits/byte",
+     "higher_is_better": false
+    },
+    {
+     "name": "MMLU 0-shot",
+     "definition": "average accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval win",
+     "definition": "GPT-4 preference over Davinci-003",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ToxiGen",
+     "definition": "share of generations flagged toxic",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "TruthfulQA %Info+True",
+     "definition": "informative and truthful by LLaMA 2 judges",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Falcon-7B",
+    "LLaMA 7B",
+    "Llama 2 7B",
+    "MPT-7B",
+    "Pythia 6.9B",
+    "RPJ-INCITE-7B",
+    "StableLM 1.6B",
+    "TinyLlama 1.1B",
+    "Pythia 1B",
+    "MPT Chat",
+    "Falcon Instruct",
+    "RPJ-INCITE Chat",
+    "Llama-2-Chat",
+    "TULU 2",
+    "TULU 2+DPO"
+   ],
+   "protocol": "single run per model; no significance tests; Tulu 2 TruthfulQA not reported for contamination"
+  },
+  "availability": {
+   "code": "released, Apache 2.0 (allenai.org/olmo)",
+   "weights": "released with 500+ intermediate checkpoints at 1000-step intervals",
+   "data": "Dolma released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "For all model sizes, we warm up the learning\nrate over 5000 steps",
+    "where": "Sec 3.2; Table 1 lists 2000 steps for 1B"
+   },
+   {
+    "field": "models.hidden",
+    "quote": "4086",
+    "where": "Table 1 (Table 5 lists 4096)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OLMo-7B (2.46T-token checkpoint) averages 69.3 on 8 zero-shot core tasks, near Llama 2 7B (70.5) and MPT-7B (69.8), above Pythia 6.9B (63.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy over 8 core tasks",
+   "value": "69.3",
+   "unit": "%",
+   "baseline_value": "Llama 2 7B 70.5",
+   "n": null,
+   "setup": "Zero-shot rank classification, Catwalk, OLMo-7B 2.46T checkpoint",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row OLMo-7B, column avg."
+  },
+  {
+   "claim": "OLMo-1B averages 60.4 on the same 8 tasks, vs TinyLlama 1.1B 59.4 and Pythia 1B 54.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "60.4",
+   "unit": "%",
+   "baseline_value": "TinyLlama 1.1B 59.4",
+   "n": null,
+   "setup": "Zero-shot, 8 core tasks",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row OLMo-1B, column avg."
+  },
+  {
+   "claim": "Pretraining the 7B models consumed 239 MWh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy",
+   "value": "239",
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Both 7B runs combined, power measured per node every 25ms, PUE 1.1",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "We es-\ntimate that pretraining our 7B models consumed 239\nMWh of energy."
+  },
+  {
+   "claim": "OLMo-7B on A100-40GB (Australia) emitted about 70 tCO2eq from 104 MWh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon emissions",
+   "value": "70",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Carbon intensity 0.610 kg CO2e/kWh, PUE 1.1",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row OLMo-7B A100-40GB, column Carbon Emissions (tCO2eq)"
+  },
+  {
+   "claim": "Total pretraining emissions estimated at 69.78 tCO2eq; the LUMI run counted as 0 (3.54 tCO2eq at hydro intensity 0.024).",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon emissions",
+   "value": "69.78",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Official LUMI data used (intensity 0)",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "we estimate total pretrain-\ning emissions of 69.78 tCO2eq."
+  },
+  {
+   "claim": "LUMI MI250X run used 135 MWh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy",
+   "value": "135",
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OLMo-7B on MI250X",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row OLMo-7B MI250X, column GPU Power Consumption (MWh)"
+  },
+  {
+   "claim": "Linearly decaying LR to 0 over 1000 more steps on Dolma boosts perplexity and end-task results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OLMo-7B checkpoint at 2.46T tokens",
+   "note": "No ablation number given in text; Fig 1 shows the late jump.",
+   "where": "Sec 4",
+   "quote": "tuning this checkpoint further\non the Dolma dataset for 1000 steps with the learning rate linearly decayed to 0 boosts model perfor-\nmance"
+  },
+  {
+   "claim": "Dolma totals 2,668B tokens (GPT-NeoX tokenizer); Common Crawl 2,180B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "2,668",
+   "unit": "billions of tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 composition",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Total, column Tokens (billions)"
+  },
+  {
+   "claim": "OLMo-7B has 88.8% Common Crawl in pretraining data and overtakes all models on C4 bits per byte.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of pretraining data",
+   "value": "88.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Paloma C4, bits per byte",
+   "note": "Section 4.2 says non-CC data is 11.2%, consistent.",
+   "where": "Fig 2 caption",
+   "quote": "having 88.8% Common Crawl pretraining data"
+  },
+  {
+   "claim": "OLMo+SFT+DPO scores 46.2 MMLU 0-shot, 69.3 AlpacaEval win%, 1.7% toxic, 52.0 %Info+True.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "28.3",
+   "n": null,
+   "setup": "7B, Tulu v2 SFT mix then DPO on UltraFeedback; base OLMo MMLU 28.3",
+   "note": "Table 8 prints MMLU 46.1 for the same model.",
+   "where": "Table 4",
+   "table": "Table 4, row OLMo+SFT+DPO, column MMLU 0-shot"
+  },
+  {
+   "claim": "Base OLMo-7B is 81.4% toxic on ToxiGen; SFT lowers it to 14.4 and DPO to 1.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ToxiGen % toxic",
+   "value": "81.4",
+   "unit": "%",
+   "baseline_value": "OLMo+SFT+DPO 1.7",
+   "n": null,
+   "setup": "500 hateful prompts per group, greedy, up to 512 tokens, roberta-large classifier",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row OLMo (base), column ToxiGen"
+  },
+  {
+   "claim": "Authors say later data and training improvements raised MMLU by 24 points to 52%.",
+   "kind": "claim",
+   "source": null,
+   "metric": "MMLU",
+   "value": "52",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Later OLMo version, not the paper's model; link only",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "MMLU scores have improved by\n24 points to 52%."
+  }
+ ],
+ "limits": [
+  "English-only pretraining data; may contain toxic, personal and copyrighted text",
+  "No training logs of diverged or failed runs given",
+  "Adaptation reuses a Tulu mix designed for Llama; gap to Tulu 2 remains",
+  "Downstream tasks do not represent chatbot use; evaluations noisy",
+  "Carbon figures are lower bounds (exclude debugging, tuning, embodied emissions)",
+  "Authors say later releases improved results substantially",
+  "Perplexity on code may be underestimated by contamination"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Dolma",
+   "year": 2024,
+   "arxiv": "2402.00159",
+   "relation": "uses-data",
+   "note": "pretraining corpus (Soldaini et al.)",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "baseline",
+   "note": "architecture comparison and eval baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "baseline",
+   "note": "design choices followed (no bias, SwiGLU, RoPE)",
+   "quote": null
+  },
+  {
+   "work": "Pythia",
+   "year": 2023,
+   "arxiv": "2304.01373",
+   "relation": "baseline",
+   "note": "open suite with checkpoints",
+   "quote": null
+  },
+  {
+   "work": "Paloma",
+   "year": 2023,
+   "arxiv": "2312.10523",
+   "relation": "uses-data",
+   "note": "perplexity benchmark and decontamination",
+   "quote": null
+  },
+  {
+   "work": "Tulu 2 / Camels in a Changing Climate",
+   "year": 2023,
+   "arxiv": "2311.10702",
+   "relation": "uses-method",
+   "note": "SFT and DPO adaptation recipe",
+   "quote": null
+  },
+  {
+   "work": "DPO",
+   "year": 2023,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "preference alignment",
+   "quote": null
+  },
+  {
+   "work": "LLM360",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar openness goals (Liu et al. 2023)",
+   "quote": null
+  },
+  {
+   "work": "Catwalk",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluation framework (Groeneveld et al. 2023)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5",
+   "caption": "LM architecture and optimizer comparison at the 7-8B scale",
+   "page": null,
+   "why": "one-glance comparison of OLMo-7B, Llama 2, OpenLM, Falcon and PaLM-8B settings"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Accuracy score progression of OLMo-7B on 8 core end-tasks",
+   "page": null,
+   "why": "shows the jump from decaying LR to 0 in final 1000 steps"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "CO2 emissions during pretraining",
+   "page": null,
+   "why": "energy and carbon by model and grid"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 prints hidden dimension 4086 (Table 5 says 4096) and 1B warmup 2000 steps while Sec 3.2 says 5000 steps for all sizes",
+  "Batch size: text says 2048 instances, Table 5 says 2160 for OLMo-7B",
+  "Table 4 OLMo+SFT+DPO MMLU 46.2 vs Table 8 46.1",
+  "Table 5 numeric columns flattened by extraction; row alignment inferred, one model column (PaLM) lacks warmup value",
+  "Table 4 Tulu 2+DPO TruthfulQA shown as -7 (footnote marker)",
+  "Table 1 caption mentions WD but has no WD column"
+ ]
+}

@@ -1,9 +1,13 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2012.04584",
  "pdf": "generative-ai/02-rag-retrieval/sources/izacard-2020-distilling-knowledge-reader-retriever-question.pdf",
  "bib": {
   "title": "Distilling Knowledge from Reader to Retriever for Question Answering",
+  "authors": [
+   "Gautier Izacard",
+   "Edouard Grave"
+  ],
   "first_author": "Izacard",
   "year": 2020,
   "venue": "ICLR 2021",
@@ -12,8 +16,488 @@
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 44150,
+  "chars_total": 44150,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Distilling Knowledge from Reader to Retriever for Question Answering\", Gautier Izacard and Edouard Grave (Facebook AI Research / ENS / Inria). ICLR 2021 conference paper, arXiv 2012.04584v2 (4 Aug 2022).\n\nCOVERAGE: Read all 44,518 of 44,518 chars across 13 pages: body, Tables 1-8, Appendix A (A.1-A.3, Tables 7-8). References skimmed for origins only. File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/izacard-2020-distilling-knowledge-reader-retriever-question.pdf\n\nCLAIMS\n- claim: The retriever learns from the reader's decoder cross-attention, used as synthetic relevance labels. The reader is Fusion-in-Decoder (FiD) on T5. No query-document labels are needed, only question-answer pairs.\n  number: none\n  setup: FiD reader, BERT-base bi-encoder retriever with shared question and passage encoder\n  quote: \"we use the attention activations over the input documents as synthetic labels to train the retriever ... we assume that attention activations are a good proxy for the relevance of documents\"\n  where: p.1-2\n- claim: The best aggregation took the first output token's pre-softmax attention score and averaged it over the passage's input tokens, all decoder layers and all heads. Results were fairly stable across aggregation choices. Max over input tokens did worst, and averaging over all output tokens also did worse.\n  number: 64.7 R@5 / 46.8 EM (mean) vs 61.2 / 46.0 (max over tokens) vs 63.5 / 45.8 (mean over output tokens)\n  setup: one iteration on NQ starting from BM25, validation set (Table 6)\n  quote: \"(0) meanj,k,h α0,j,k,h 64.7 76.4 84.3 46.8 (1) meank,h maxj α0,j,k,h 61.2 72.5 81.0 46.0 (2) meani,j,k,h αi,j,k,h 63.5 75.3 83.1 45.8\"; \"the best result is obtained by averaging, except over the output tokens where it is best to only consider the first token\"\n  where: p.9 (Table 6)\n- claim: The loss is KL divergence between the softmax-normalised reader scores and the softmax-normalised retriever scores over the retrieved passages. It beats max-margin and MSE.\n  number: KL 76.4 R@20 / 46.8 EM; max-margin best 45.8 EM; MSE 61.2 R@20 / 40.6 EM\n  setup: one iteration, NQ, BM25 start, validation set (Table 5)\n  quote: \"Mean Squared Error 46.5 61.2 73.9 40.6 Max-margin loss, γ = 0.2 60.3 73.5 82.6 45.8 ... KL-divergence 64.7 76.4 84.3 46.8\"\n  where: p.8 (Table 5)\n- claim: Starting from BM25 with no retrieval labels, the retriever beats supervised DPR on test-set retrieval on both datasets.\n  number: NQ R@20 80.0 vs 79.4, R@100 87.7 vs 86.0; TriviaQA R@20 81.4 vs 79.4, R@100 86.5 vs 85.0\n  setup: test sets (Table 3)\n  quote: \"DPR (Karpukhin et al., 2020) 79.4 86.0 79.4 85.0 ... Starting from BM25 80.0 87.7 81.4 86.5\"\n  where: p.8 (Table 3)\n- claim: End to end, the BM25-started system with a T5-base reader beats DPR, RAG and FiD-base in test EM.\n  number: NQ 48.9, TriviaQA 67.7 (DPR 41.5 / 57.9; FiD base 48.2 / 65.0)\n  setup: test sets (Table 2)\n  quote: \"Ours (starting from BM25, T5 base) 47.9 48.9 67.7 67.7\"; \"DPR (Karpukhin et al., 2020) - 41.5 - 57.9\"\n  where: p.7 (Table 2)\n- claim: Starting from untuned BERT, with near-zero initial retrieval, the method still climbs to competitive scores. It still falls below DPR, much more so on NQ than on TriviaQA.\n  number: NQ R@20 4.8 -> 67.8 over 3 iterations; TriviaQA 4.6 -> 76.4 over 4; test NQ R@20 68.8 vs DPR 79.4\n  setup: validation set (Table 1); test set (Table 3)\n  quote: \"0 4.8 12.0 9.8 ... 3 67.8 76.8 39.3\"; \"4 76.4 84.6 62.3\"; \"Starting from BERT 68.8 79.5 78.4 84.4\"\n  where: p.6 (Table 1), p.8 (Table 3)\n- claim: Iterations: 2-3 rounds from BM25 are enough. NQ peaks at iteration 2 and slips at iteration 3. The reader is re-initialised from T5 base each round, while the retriever keeps training.\n  number: NQ BM25 Dev EM 41.2 -> 46.8 -> 47.9 -> 46.2; TriviaQA 65.3 -> 66.7 -> 67.5 -> 67.7\n  setup: validation set, T5-base reader, 100 passages\n  quote: \"0 4.8 12.0 9.8 59.3 74.0 41.2 1 32.2 45.8 16.9 76.4 84.3 46.8 2 51.1 62.6 28.6 80.4 86.7 47.9 3 67.8 76.8 39.3 80.0 86.3 46.2\"; \"At each new training iteration the reader is reinitialized from T5 base, while we pursue the training of the retriever\"\n  where: p.6-7\n- claim: As an early check, reader attention picks a better top 10 from DPR's 100 passages than DPR's own ranking does.\n  number: 48.2 EM (100 passages), 42.9 (DPR top 10), 46.8 (attention top 10)\n  setup: the reader's EM; dataset not stated at that point\n  quote: \"the performance of our reader drops from 48.2 EM to 42.9 EM. On the other hand, if we select the top 10 documents according to the attention scores, the performance only drops to 46.8 EM.\"\n  where: p.4 (Sec 3.2)\n- claim: Starting from DPR passages gives the best results. Note that this start is not label-free, because DPR was trained on gold pairs.\n  number: T5 large: NQ test 54.4, TriviaQA test 72.5; R@20 84.3 / 83.6\n  setup: Tables 2-3, test\n  quote: \"Ours (starting from DPR, T5 large) 52.7 54.4 72.5 72.5\"; \"Starting from DPR 84.3 89.3 83.6 87.7\"\n  where: p.7-8\n- claim: On NarrativeQA, where answers are often not spans, one iteration from BM25 improves over DPR+FiD.\n  number: ROUGE-L test 32.0 vs 30.8\n  setup: full-story setting, 20 reader passages, 100-word chunks\n  quote: \"DPR + FiD - 29.7 30.8 ... Ours starting from BM25 1 31.6 32.0\"\n  where: p.8 (Table 4)\n\nLIMITS:\n- The method still needs question-answer pairs. It removes only the query-document labels: \"does not require additional supervision besides pairs of question and answer\".\n- The authors doubt their own R@k metric: \"It is unclear how well this metric evaluates the retriever performance, since the answer can be contained in a passage without being related to the question.\"\n- Attention-as-relevance is an assumption (\"we implicitly make the assumption\"). The paper offers one 10-of-100 selection check as evidence, not a validation.\n- All ablations use a single iteration on NQ with a BM25 start. There are no seeds and no variance.\n- The quality of the starting passages matters a lot (\"the quality of the initial document sets plays an important role\"). From BERT, the method stays below DPR.\n- They did not try re-initialising the retriever between iterations. Table 8 (DPR start) did not re-initialise the reader, so it differs from Table 1.\n- The method is tied to an encoder-decoder (FiD) reader's cross-attention. Readers of other kinds are not tested.\n- Future work they name: better retriever pre-training (e.g. inverse cloze) and better scoring functions.\n\nBUILDS ON:\n- Hinton et al., 2015: knowledge distillation\n- Izacard & Grave, 2020: Fusion-in-Decoder\n- Karpukhin et al., 2020: DPR, for the bi-encoder design and setup\n- Khattab et al., 2020: iterative training, ColBERT-QA\n- Dehghani et al., 2017: MSE and max-margin losses with BM25 as teacher\n- Lee et al., 2019: open-QA setting, ICT\n- Chen et al., 2017: retriever-reader pipeline\n- Concurrent work: Yang & Seo, 2020. They distil the DPR reader's passage classifier, a cross-encoder, instead of attention.\n\nCODE: None in the paper. It points to \"github.com/facebookresearch/FiD\" (p.2). The loss is given only as an equation: KL(G̃ || S̃), with softmax over the passages in D_q and S_θ(q,p)=E(q)ᵀE(p)/√d (p.4-5).\n\nFIGURES: The paper has no figures. The captions script returned nothing. For teaching, Table 1 (iterations, p.6) and Table 6 (aggregation, p.9) are the most useful.\n\nPROBLEMS:\n- pypdf printed fontTools warnings, but the text came through intact. Spacing breaks some words (\"ret riever\"), and math subscripts are flattened (α0,j,k,h).\n- The text and the tables disagree in two places.\n  - The text claims \"+4.5 EM improvement on TriviaQA and +2.3 EM improvement on NaturalQuestions\" (p.7) for the DPR start with a large reader. Table 2 gives 72.5 vs FiD-large 67.6 (+4.9) and 54.4 vs 51.4 (+3.0). The paper does not say what the stated gains were measured against.\n  - Table 2's BERT-start TriviaQA dev is 62.5, while Table 1's best is 62.3.\n- No embedded instructions were found."
+ "type": "empirical",
+ "question": "Can a retriever for open-domain QA be trained without query-document labels, using a reader's attention as synthetic relevance labels?",
+ "hypothesis": "Reader cross-attention scores over passages are a good proxy for passage relevance.",
+ "contributions": [
+  "Show that attention scores from a seq2seq reader are a good measure of document relevance (Sec 3.2)",
+  "Iteratively train the retriever from these activations, inspired by knowledge distillation, and compare loss functions (Sec 3.4)",
+  "Evaluate on three QA benchmarks with state-of-the-art results (Sec 4)"
+ ],
+ "method": {
+  "summary": "A Fusion-in-Decoder (T5) reader is trained on retrieved passages; its first-output-token cross-attention, averaged over passage tokens, layers and heads, gives per-passage scores. A shared-encoder BERT bi-encoder retriever is trained to match these scores with a KL loss, then retrieves new passages and the loop repeats.",
+  "task": "open-domain question answering (retriever training)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NaturalQuestions",
+    "role": "both",
+    "size": null,
+    "split": "original dev set used as test; 10% of train held out for validation",
+    "source": "Kwiatkowski et al. 2019; Wikipedia dump of Dec. 20, 2018, 100-token non-overlapping passages",
+    "preprocessing": "Questions with answers longer than five tokens discarded; preprocessing as Chen et al. 2017"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": null,
+    "split": "original dev set used as test; 10% of train held out for validation",
+    "source": "Joshi et al. 2017; same Wikipedia dump",
+    "preprocessing": "Uppercase answers normalised with Python str.title"
+   },
+   {
+    "name": "NarrativeQA",
+    "role": "both",
+    "size": null,
+    "split": "dev and test reported",
+    "source": "Kocisky et al. 2018, public preprocessed version; stories average 60k words, chunked into 100 words",
+    "preprocessing": "Uppercase questions and answers lowercased; full-story setting, no summary"
+   }
+  ],
+  "models": [
+   {
+    "name": "Reader: Fusion-in-Decoder base",
+    "role": "proposed",
+    "params": "220M",
+    "architecture": "T5 encoder-decoder, passages encoded separately, fused in decoder",
+    "init_from": "T5 base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "768",
+    "heads": "12",
+    "context": "each encoder input at most 250 tokens",
+    "other": {
+     "dropout": "0.1"
+    }
+   },
+   {
+    "name": "Reader: Fusion-in-Decoder large",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "T5 large FiD",
+    "init_from": "T5 large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "each encoder input at most 250 tokens",
+    "other": {}
+   },
+   {
+    "name": "Retriever",
+    "role": "retriever",
+    "params": "110M",
+    "architecture": "BERT bi-encoder, shared encoder for question and passage, CLS representation, score E(q)^T E(p)/sqrt(d)",
+    "init_from": "BERT base uncased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "index": "FAISS"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Retriever: KL divergence between softmax of reader attention scores G and softmax of retriever scores S over the retrieved passages (MSE and max-margin compared). Reader: answer generation (standard FiD).",
+   "optimizer": "Adam (base reader, retriever); AdamW (large reader)",
+   "lr": "1e-4 base reader (constant); 5e-5 retriever (constant); 5e-5 peak large reader",
+   "lr_schedule": "constant for base reader and retriever; linear warmup then linear decrease for large reader",
+   "warmup": "600 gradient steps (large reader)",
+   "batch_size": "64",
+   "steps": "base reader 10k gradient steps; large reader 600 warmup + 14.4k decrease; retriever until performance saturates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "250 tokens per encoder input",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "iterations": "reader reinitialised from T5 base each iteration (except Table 8); retriever training continues, never reinitialised",
+    "passages": "100 for retriever training; reader 100 (NQ, TriviaQA), 20 (NarrativeQA)",
+    "model_selection": "best reader chosen on validation performance",
+    "monitoring": "ranking similarity between reader and retriever (inversions, top-k overlap)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for TriviaQA and NaturalQuestions; beam search with 3 beams for NarrativeQA",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single run per setting, no seeds or repeats reported",
+   "prompting": "encoder input: question: <q> title: <t> context: <passage>",
+   "retrieval": "100 passages via FAISS; initial passages BM25 (Lucene defaults, SpaCy tokenisation), non-finetuned BERT, or DPR",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "R@k",
+     "definition": "percentage of questions where at least one of top-k retrieved passages contains the gold answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM",
+     "definition": "standard exact match (Rajpurkar 2016)",
+     "unit": "EM",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rouge-L, BLEU-1, BLEU-4, METEOR",
+     "definition": "metrics from the NarrativeQA paper",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DPR",
+    "RAG",
+    "ColBERT-QA",
+    "Fusion-in-Decoder (T5 base, large)",
+    "ANCE",
+    "Best from Kocisky et al. 2018",
+    "DPR + FiD"
+   ],
+   "protocol": "Single runs; no significance test or seeds reported. Ablations use one iteration on NQ from BM25, validation set."
+  },
+  "availability": {
+   "code": "github.com/facebookresearch/FiD",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Retriever trained from reader attention, starting from BM25 passages, beats supervised DPR on NQ test top-20 recall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@20",
+   "value": "80.0",
+   "unit": "%",
+   "baseline_value": "79.4",
+   "n": null,
+   "setup": "NaturalQuestions test, BERT-base bi-encoder retriever trained from FiD (T5 base) reader attention, initial passages BM25; baseline DPR as printed in Table 3",
+   "quote": null,
+   "table": "Table 3, row Starting from BM25, column NaturalQuestions R@20 (DPR row 79.4)",
+   "note": "Table 3 does not say which iteration is reported.",
+   "where": "Table 3, p.8"
+  },
+  {
+   "claim": "Same setting on TriviaQA test top-20 recall beats DPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@20",
+   "value": "81.4",
+   "unit": "%",
+   "baseline_value": "79.4",
+   "n": null,
+   "setup": "TriviaQA test, BM25 start, T5 base reader",
+   "quote": null,
+   "table": "Table 3, row Starting from BM25, column TriviaQA R@20 (DPR row 79.4)",
+   "note": null,
+   "where": "Table 3, p.8"
+  },
+  {
+   "claim": "Starting from non-finetuned BERT retrieval, NQ test R@20 stays well below DPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@20",
+   "value": "68.8",
+   "unit": "%",
+   "baseline_value": "79.4",
+   "n": null,
+   "setup": "NaturalQuestions test, BERT start (Table 1 shows initial BERT R@20 4.8 on dev)",
+   "quote": null,
+   "table": "Table 3, row Starting from BERT, column NaturalQuestions R@20",
+   "note": null,
+   "where": "Table 3, p.8"
+  },
+  {
+   "claim": "Selecting the top 10 of 100 DPR passages by reader attention loses little EM, versus the DPR top 10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "46.8",
+   "unit": "EM",
+   "baseline_value": "42.9",
+   "n": null,
+   "setup": "Question with 100 DPR-retrieved passages, goal select 10; all 100 passages gives 48.2 EM; NQ reader (validation not stated)",
+   "quote": "only drops to 46.8 EM.",
+   "table": null,
+   "note": "Dataset and split for this experiment are not named in the text.",
+   "where": "Sec 3.2, p.4"
+  },
+  {
+   "claim": "With a T5 large reader started from DPR passages, NQ test EM is 54.4 vs FiD-large 51.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "54.4",
+   "unit": "EM",
+   "baseline_value": "51.4",
+   "n": null,
+   "setup": "NaturalQuestions test, T5 large reader, DPR start",
+   "quote": null,
+   "table": "Table 2, row Ours (starting from DPR, T5 large), column NQ test (FiD T5 large 51.4)",
+   "note": "Text says +2.3 EM on NaturalQuestions and +4.5 on TriviaQA, but Table 2 differences are 3.0 (54.4 vs 51.4) and 4.9 (72.5 vs 67.6).",
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "The text states the improvement over FiD for the large reader.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gain",
+   "value": "4.5",
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TriviaQA, large reader, DPR start, as stated in text",
+   "quote": "+4.5 EM improvement on TriviaQA and +2.3 EM improvement on NaturalQuestions when the",
+   "table": null,
+   "note": "Does not match Table 2 differences (4.9 and 3.0).",
+   "where": "Sec 4.3, p.7"
+  },
+  {
+   "claim": "KL-divergence objective beats MSE and max-margin after one iteration.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dev EM",
+   "value": "46.8",
+   "unit": "EM",
+   "baseline_value": "45.8",
+   "n": null,
+   "setup": "NQ validation, one iteration, BM25 start; MSE 40.6, best max-margin (gamma 0.2) 45.8",
+   "quote": null,
+   "table": "Table 5, row KL-divergence, column Dev EM",
+   "note": null,
+   "where": "Table 5, p.8"
+  },
+  {
+   "claim": "Mean-over-input-tokens aggregation gives best R@5; max over input tokens is worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@5",
+   "value": "64.7",
+   "unit": "%",
+   "baseline_value": "61.2",
+   "n": null,
+   "setup": "NQ validation, one iteration, BM25 start; baseline is max over tokens (row 1)",
+   "quote": null,
+   "table": "Table 6, row (0) mean_j,k,h alpha_0,j,k,h, column R@5 (row (1) 61.2)",
+   "note": null,
+   "where": "Table 6, p.9"
+  },
+  {
+   "claim": "Iterating from BM25 on NQ: dev EM peaks at iteration 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dev EM",
+   "value": "47.9",
+   "unit": "EM",
+   "baseline_value": "41.2",
+   "n": null,
+   "setup": "NQ validation, BM25 start, reader reinitialised from T5 base each iteration; iter 3 is 46.2, iter 0 41.2",
+   "quote": null,
+   "table": "Table 1, row NaturalQuestions BM25 Iter 2, column Dev EM",
+   "note": null,
+   "where": "Table 1, p.6"
+  },
+  {
+   "claim": "Starting from BERT passages, NQ dev EM climbs with iterations but remains below BM25 start.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dev EM",
+   "value": "39.3",
+   "unit": "EM",
+   "baseline_value": "9.8",
+   "n": null,
+   "setup": "NQ validation, BERT start, iteration 3 vs iteration 0",
+   "quote": null,
+   "table": "Table 1, row NaturalQuestions BERT Iter 3, column Dev EM",
+   "note": null,
+   "where": "Table 1, p.6"
+  },
+  {
+   "claim": "NarrativeQA test Rouge-L improves after one iteration over DPR+FiD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rouge-L",
+   "value": "32.0",
+   "unit": "Rouge-L",
+   "baseline_value": "30.8",
+   "n": null,
+   "setup": "NarrativeQA full-story setting, BM25 start, 20 passages for reader, beam search 3",
+   "quote": null,
+   "table": "Table 4, row Ours starting from BM25 Iter 1, column Rouge-L test (DPR + FiD 30.8)",
+   "note": null,
+   "where": "Table 4, p.8"
+  },
+  {
+   "claim": "Starting from DPR passages, NQ dev EM after 2 iterations without reader reinitialisation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dev EM",
+   "value": "48.2",
+   "unit": "EM",
+   "baseline_value": "46.4",
+   "n": null,
+   "setup": "NQ validation, DPR start, reader not reinitialised between iterations",
+   "quote": null,
+   "table": "Table 8, row NaturalQuestions Iter 2, column Dev EM (iter 0: 46.4)",
+   "note": null,
+   "where": "Table 8, p.13"
+  }
+ ],
+ "limits": [
+  "Authors note R@k is a doubtful retriever metric since the answer can appear in an unrelated passage.",
+  "Initial passage quality matters: BERT start performs far worse.",
+  "Attention-as-relevance is an assumption tested mainly by the top-10 selection experiment.",
+  "No seeds, variance, hardware or compute reported.",
+  "Model sizes are T5 base and large only; the Table 3 iteration is unspecified."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Leveraging passage retrieval with generative models (Fusion-in-Decoder)",
+   "year": 2020,
+   "arxiv": "2007.01282",
+   "relation": "extends",
+   "note": "reader architecture",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval (DPR)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": "bi-encoder design, DPR start passages and baseline",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspiration for student-teacher training",
+   "quote": null
+  },
+  {
+   "work": "Relevance-guided supervision for OpenQA with ColBERT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "iterative training similar; baseline",
+   "quote": null
+  },
+  {
+   "work": "Is retriever merely an approximator of reader?",
+   "year": 2020,
+   "arxiv": "2010.10999",
+   "relation": "related",
+   "note": "concurrent distillation using DPR reader",
+   "quote": null
+  },
+  {
+   "work": "RAG (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "baseline",
+   "note": "compared in Table 2",
+   "quote": null
+  },
+  {
+   "work": "ANCE",
+   "year": 2020,
+   "arxiv": "2007.00808",
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "NarrativeQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "uses-method",
+   "note": "reader init",
+   "quote": null
+  },
+  {
+   "work": "Neural ranking models with weak supervision (Dehghani et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MSE and max-margin objectives",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Iterative training starting with documents retrieved with BERT and BM25.",
+   "page": 6,
+   "why": "Shows gains per iteration and dependence on initial passages"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Comparison of attention aggregation schemes on NaturalQuestions after one iteration.",
+   "page": 9,
+   "why": "Defines the score aggregation by notation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.4",
+   "snippet": "L_KL = sum_{q,p} G~(log G~ - log S~)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text says +4.5 EM TriviaQA and +2.3 EM NQ for the large reader, but Table 2 differences are 4.9 and 3.0.",
+  "Sec 5.1 refers to objectives in Sec. 3.3 but they are in Sec. 3.4.",
+  "No embedded instructions found."
+ ]
 }

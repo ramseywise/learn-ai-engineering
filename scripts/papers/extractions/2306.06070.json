@@ -1,19 +1,625 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.06070",
  "pdf": "generative-ai/08-eval/sources/deng-2023-mind2web.pdf",
  "bib": {
-  "title": "Mind2Web: Towards a Generalist Agent for the Web",
-  "first_author": "Xiang Deng",
-  "year": "2023",
-  "venue": "NeurIPS 2023",
+  "title": "MIND2WEB: Towards a Generalist Agent for the Web",
+  "authors": [
+   "Xiang Deng",
+   "Yu Gu",
+   "Boyuan Zheng",
+   "Shijie Chen",
+   "Samuel Stevens",
+   "Boshi Wang",
+   "Huan Sun",
+   "Yu Su"
+  ],
+  "first_author": "Deng",
+  "year": 2023,
+  "venue": "NeurIPS 2023 Track on Datasets and Benchmarks",
   "arxiv": "2306.06070",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "9e9cf84a-1741-4fc0-8279-05c7ba18c984"
+  "at": "2026-11-07",
+  "chars_read": 80699,
+  "chars_total": 80699,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (lineage); figure images not viewed"
  },
- "legacy_report": "SOURCE: \"MIND2WEB: Towards a Generalist Agent for the Web\", Xiang Deng, Yu Gu, Boyuan Zheng, Shijie Chen, Samuel Stevens, Boshi Wang, Huan Sun, Yu Su (The Ohio State University). Venue as printed (p1): \"37th Conference on Neural Information Processing Systems (NeurIPS 2023) Track on Datasets and Benchmarks.\" Copy read: arXiv:2306.06070v3, 9 Dec 2023.\n\nCOVERAGE: 81,353 of 81,353 chars, all 24 pages, including references and appendices A-D. Figures were checked by caption and surrounding text only; I did not view the images.\n\nCLAIMS\n- claim: Whole-task success stays low even when step success is moderate. The best model per split reaches 7.1 / 5.1 / 2.9% task SR. Flan-T5XL gets 52.0 / 38.9 / 39.6% step SR.\n  number: Flan-T5XL Step SR 52.0 / 38.9 / 39.6, SR 5.2 / 5.1 / 2.9; Flan-T5L cross-task SR 7.1\n  setup: MindAct (DeBERTa top-50, then fine-tuned multi-choice Flan-T5). Cross-Task 252 tasks, Cross-Website 177, Cross-Domain 912. Offline snapshots, macro average, no CI.\n  quote: \"w/ Flan-T5XL 55.1 75 .7 52 .0 5.2 42.0 65.2 38.9 5 .1 42 .1 66.5 39.6 2 .9\"; \"w/ Flan-T5L 53.4 75.7 50.3 7.1 39.2 67 .1 35 .3 1 .1 39 .7 67 .2 37 .3 2 .7\"; \"the overall task success rate remains low for all models, as the agent often commits at least one error step in most cases.\"\n  where: p7 Table 2; p8\n- claim: Scoring is open-loop. Each step is graded on its own with the true history supplied, so a task \"succeeds\" if every step matches. The agent never lives with its own earlier errors.\n  number: none\n  setup: all Table 2 metrics\n  quote: none needed for a number. Text: \"Each step of the task is evaluated independently with the ground truth action history provided.\" \"A task is regarded successful only if all steps have succeeded. It is therefore a stringent metric.\"\n  where: p7\n- claim: Replay against cached snapshots causes false negatives, because a valid path that was not cached fails at once. The authors concede this.\n  number: none\n  setup: offline evaluation\n  quote: \"the task will fail immediately if an action was not cached during data collection, potentially leading to false negatives due to the existence of multiple paths for completing the same task.\"\n  where: p10\n- claim: Equivalent elements on the same page are accepted through a heuristic, which was hand-checked on 100 instances. No error rate is given.\n  number: 100\n  setup: nearest clickable ancestor plus visible descendants; used in training and evaluation\n  quote: \"Manual checking on 100 instances where the heuristic identifies a top-level element other than the ground truth confirms the validity of the approach.\"\n  where: p20\n- claim: GPT-4 was scored on only 50 tasks per split and with top-10 candidates, a different setup from the other models.\n  number: GPT-4 Step SR 36.2 / 30.1 / 26.4; SR 2.0 in each split\n  setup: temperature 0, 3 demonstrations, text HTML. My arithmetic, not the paper's: 2.0% of 50 is one task.\n  quote: \"For GPT-4 we use 50 tasks for each setting with top-10 candidates due to limited budget.\"; \"w/ GPT-4∗ 41.6 60 .6 36 .2 2 .0 35 .8 51 .1 30 .1 2 .0 37 .1 46 .5 26 .4 2 .0\"\n  where: p7 Table 2\n- claim: On GPT-4's own 50-task subsets, Flan-T5XL still beats GPT-4 on step SR. The \"on par\" claim in the text is about element selection only.\n  number: Flan-T5XL 47.9 / 33.3 / 34.6 vs GPT-4 36.2 / 30.1 / 26.4 (parentheses are full-set values)\n  setup: 50-task subsets\n  quote: \"Flan-T5XL 47.9 (52.0) 33.3 (38.9) 34.6 (39.6)\"; \"GPT-4 36.2 30 .1 26 .4\"; \"The performance is on par with the tuned Flan-T5 models under Cross-Website and Cross-Domain settings for element selection\"\n  where: p22 Table 7; p8\n- claim: The first big drop comes from reaching unseen websites. Unseen domains add almost nothing further, which the authors attribute to website design and interaction logic rather than domain.\n  number: over 10% average step SR gap\n  setup: Cross-Task vs Cross-Website and Cross-Domain\n  quote: \"All models perform best on the Cross-Task setting, with over 10% absolute gap (step SR) on average compared with Cross-Website and Cross-Domain settings\"\n  where: p8 (see PROBLEMS: GPT-3.5 is an exception)\n- claim: The multi-choice formulation beats direct generation of the element by a wide margin, and generation gets near-zero task success.\n  number: Generation Step SR 17.5 / 11.0 / 11.9, SR 0.0 / 0.0 / 0.4; DeBERTa classification Ele. Acc 26.8 / 21.6 / 24.5\n  setup: generation baseline is Flan-T5B (220M); classification is DeBERTaB (86M, element only)\n  quote: \"Generation 20.2 52 .0 17 .5 0 .0 13 .9 44 .7 11 .0 0 .0 14 .2 44 .7 11 .9 0 .4\"; \"Classification 26.8 − − − 21.6 − − − 24.5 − − −\"\n  where: p7 Table 2\n- claim: GPT-3.5 is weak with three demonstrations, partly because it tends to pick \"None of the above\". The authors say the comparison with fine-tuned models is unfair.\n  number: Ele. Acc 20.3 / 19.3 / 21.6; Step SR 17.4 / 16.2 / 18.6; SR 0.8 / 0.6 / 1.0\n  setup: gpt-3.5-turbo, temperature 0, 3 demonstrations, same multi-choice format\n  quote: \"w/ GPT-3.5 20.3 56 .6 17 .4 0 .8 19 .3 48 .8 16 .2 0 .6 21 .6 52 .8 18 .6 1 .0\"; \"Note that this is not a fair comparison with the Flan-T5 models, which are fine-tuned on the full training data.\"\n  where: p7 Table 2; p8\n- claim: The candidate filter sets a ceiling, because any target missed before the LLM stage cannot be selected.\n  number: Recall@50 88.9 / 85.3 / 85.7; heuristic cleaning 1,135 to 580 elements at 94.7% recall\n  setup: DeBERTa-v3-base; the 94.7% is on training data\n  quote: \"it achieves 88.9% / 85.3% / 85.7% Recall@50\"; \"reduces the average number of elements from 1,135 to 580, while still maintaining an overall recall of 94.7% for the target element in the training data.\"\n  where: p7\n- claim: The dataset covers real sites with high-level goals only, and its pages are far larger than in earlier benchmarks.\n  number: 2,350 tasks, 137 websites, 31 domains, 1,135 elements per page, 7.3 actions per task\n  setup: compared with WebShop's 38 elements and 11.3 actions\n  quote: \"MIND 2WEB 5 / 31 137 Real-worldwebsites 1,135 2,350 High-level 7.3\"; \"WebShop [40] 1 1 Simplifiedshopping websites 38 12,000 products High-level 11.3\"\n  where: p5 Table 1\n- claim: The splits hold out progressively more, and training data is small.\n  number: 912 / 177 / 252 test tasks; 1,009 train\n  setup: Cross-Domain holds out Information and Service (73 sites); Cross-Website holds out 10 sites per remaining top-level domain; Cross-Task is a random 20% (69 sites)\n  quote: \"with 912 tasks from 73 websites\"; \"containing 177 tasks\"; \"resulting in 252 tasks from 69 websites\"; \"contains 1,009 tasks from 73 websites.\"\n  where: p7\n- claim: Author verification removed few tasks but changed many descriptions, which shows how much crowd labels needed fixing.\n  number: 61 of 2,411 discarded; 390 descriptions refined; extraneous steps cut in 187\n  setup: Mechanical Turk annotators, verified by the authors\n  quote: \"we discarded 61 out of the total 2,411 tasks. Among the 2,350 retained tasks, the task description was refined in 390 instances to better correspond with the demonstrated actions, while some extraneous steps were discarded in 187 instances.\"\n  where: p5\n- claim: Reshuffling the option groups changes scores little. This is the paper's only variance figure.\n  number: Flan-T5XL 51.9±0.8 / 39.5±0.2 / 39.6±0.2; \"standard deviation less than 1\"\n  setup: 5 seeds, Flan-T5 only; covers random grouping of options\n  quote: \"Flan-T5XL 51.9±0.8 39 .5±0.2 39 .6±0.2\"; \"with standard deviation less than 1 for all runs.\"\n  where: p21 Table 5, D.1\n- claim: Without fine-tuning, Flan-T5XL largely fails at selection.\n  number: zero-shot 10.8 / 7.8 / 11.7 vs fine-tuned 52.0 / 38.9 / 39.6\n  setup: Flan-T5XL\n  quote: \"Flan-T5XL Zero-Shot 10.8 7 .8 11 .7\"; \"Flan-T5XL Fine-Tuned 52.0 38 .9 39 .6\"\n  where: p21 Table 6\n- claim: State-changing actions are recorded but never executed, using a \"Click (Fake)\" operation. Such outcomes therefore cannot be verified by state.\n  number: none\n  setup: annotation; e.g. posting a comment or scheduling an appointment\n  quote: \"It will be recorded the same as a normal Click but will not get executed in the browser.\"\n  where: p19\n\nLIMITS\n- No end-state check. Success means matching one crowd demonstration, element by element and with token-level F1 on the operation, so this is golden-path grading. Equivalence is handled only within a page (C.1), not across alternative paths.\n- No closed-loop or live run. The authors call live evaluation \"a very promising direction\" (p10), so \"readily transferable to live websites\" (p10) is not demonstrated.\n- No repeated trials, pass@k or pass^k, and no CIs on Table 2. GPT runs are temperature 0 (Table 4). There are no token, latency or cost numbers, only \"high operational cost\" (p8).\n- Authors' concessions (pp9-10): sites are predominantly English and US-used; MTurk annotators may skew web-proficient; MindAct is text only with no visual input; each page is encoded independently, so page dynamics are not modelled; single up-front goal with no conversation; safety covered only as discussion.\n- Pop-ups and CAPTCHAs are deliberately removed from the action sequences (p19), and sites were chosen to have no access issues. Real-web noise is therefore partly filtered, despite the \"real-world\" framing.\n- No inter-annotator agreement is reported. Verification is by one author, with uncertain cases going to the first author (p17).\n- Not stated: whether Table 7's non-GPT-4 rows also use top-10 candidates, which matters for comparing them with GPT-4.\n- Dated: 2023 models (GPT-3.5, GPT-4, Flan-T5), 3 demonstrations, top-5 options per prompt. The 2023 scores say nothing about later models.\n\nBUILDS ON\n- Multi-choice over generation: \"Recent studies [10, 13]\", Chung et al. 2022 and Gu, Deng, Su 2022 (p6).\n- Cross-encoder: Reimers and Gurevych 2019. DeBERTa: He et al. 2021. Flan-T5: Chung et al. 2022.\n- Offline cached evaluation: \"Following recent works [5, 35]\", Burns et al. 2022 and Sun et al. 2022 (p10).\n- Prior web datasets: MiniWoB++ (Liu et al. 2018), World of Bits (Shi et al. 2017), WebShop (Yao et al. 2022), RUSS (Xu et al. 2021).\n- Mobile: PixelHelp (Li et al. 2020), META-GUI (Sun et al. 2022), MoTIF (Burns et al. 2022).\n- Generalization-level framing: Gu et al. 2021 is in the references (\"Beyond I.I.D.\"), but I found no explicit credit in the text for the three levels.\n- Already in the target note's sources: Yao 2022 (2207.01206), Ahn 2022 (2204.01691), Qin 2023 (2304.08354), all listed here as refs [40], [2], [27].\n\nCODE\nAction-prediction prompt tail (p23 Table 8):\n\"What should be the next action? Please select from the following choices (If the correct action is not in the page above, please select A. 'None of the above'):\"\nAnswer format (p23): \"Answer: C. / Action: SELECT / Value: Pickup\"\nHyperparameters (p21 Table 4): \"temperature:0, # demonstrations: 3\"; \"batch_size: 32, epoch: 5, learning_rate:3e−5\" (DeBERTa)\n\nFIGURES (not viewed; judged from captions and text)\n- Fig 6, p8: \"Step success rate per website grouped by the three splits: TestCross-Task, TestCross-Website and TestCross-Domain from left to right. Here we only show websites with more than three test tasks.\" Shows per-website spread and that the last two splits look alike, which a table average hides. Top candidate.\n- Fig 2, p4: \"A sample data instance of our dataset with the three components. Actions marked in red will result in a transition to a new webpage.\" Shows what a reference trajectory is: 10 (element, operation) pairs.\n- Fig 3, p6: \"The overall pipeline for MINDACT with a small ranking LM for candidate generation, and a large prediction LM for action prediction.\" Shows the two-stage filter.\n- Fig 5, p6: \"Illustration of action prediction with LLMs.\" Contrasts multi-choice with direct generation.\n- Fig 1, p2: \"Sample tasks and all domains featured in MIND2WEB.\" Shows domain breakdown and generalization pairs.\n- Table 2 (p7) is the main result, but it is a table, not a figure.\n\nPROBLEMS\n- Extraction: Table 2 and other tables have split decimals (\"52 .0\"), and bold marks are lost. Quotes are verbatim. I mapped Table 2 columns from the header order, so confirm against the PDF before quoting a cell. Text inside Figs 1, 3, 4, 5 extracts as fragments, and Figs 3-4 interleave.\n- Pages: printed page numbers match PDF pages.\n- Internal inconsistencies (mine, from the paper's own numbers):\n  (a) \"All models perform best on the Cross-Task setting\" (p8), but GPT-3.5 scores 18.6 Cross-Domain vs 17.4 Cross-Task on step SR (Table 2).\n  (b) D.3 says \"the relative performance across methods and splits remains the same\" (p22), but Table 7 reverses order on the subsets: Flan-T5L 48.1 > Flan-T5XL 47.9 Cross-Task, and Flan-T5B 28.1 > Flan-T5L 27.6 Cross-Domain. The full-set order is XL > L > B in each.\n  (c) Table 6 is captioned \"element selection results\", but its fine-tuned row (52.0 / 38.9 / 39.6) equals Step SR in Table 2, not Ele. Acc (55.1 / 42.0 / 42.1).\n  (d) p4 cites \"Figure 2\" for the demonstration tool; the tool is shown in Figure 7.\n- Embedded instructions: none aimed at a reader. Tables 3 and 8 contain the paper's own prompts for ChatGPT/GPT models. I treated them as data and did not follow them.\n- Files: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/deng-2023-mind2web.pdf; target note read: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/notes/06-evaluating-agents.md"
+ "type": "benchmark",
+ "question": "How can we build and evaluate a generalist agent that follows language instructions to complete tasks on any real-world website?",
+ "hypothesis": "Filtering raw HTML with a small LM before an LLM predicts the action makes LLMs effective on real websites, including unseen websites and domains.",
+ "contributions": [
+  "MIND2WEB, the first dataset for generalist web agents: over 2,000 tasks, 137 websites, 31 domains, real-world websites with crowdsourced action sequences",
+  "MINDACT, a two-stage small-LM ranker plus LLM multi-choice action predictor",
+  "Initial exploration of LLMs on the dataset, with three generalization levels (Cross-Task, Cross-Website, Cross-Domain)"
+ ],
+ "method": {
+  "summary": "Crowdsourced (MTurk) demonstrations on real websites with cached snapshots; MindAct fine-tunes DeBERTa-v3-base to rank DOM elements (top-50), then Flan-T5 (fine-tuned) or GPT-3.5/GPT-4 (3-shot) pick the element via multi-choice QA in groups of five plus None and generate the operation. Evaluation is offline, each step scored independently with ground-truth history.",
+  "task": "web navigation / element grounding and action prediction from HTML",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Mind2Web",
+    "role": "both",
+    "size": "2,350 tasks (of 2,411 collected), 137 websites, 31 domains, 5 top-level domains, avg 7.3 actions, avg 1,135 elements per page",
+    "split": "Train 1,009 tasks from 73 websites; Test Cross-Task 252 tasks from 69 websites (random 20% of remaining data); Test Cross-Website 177 tasks (10 websites from each remaining top-level domain); Test Cross-Domain 912 tasks from 73 websites (Information and Service held out)",
+    "source": "MTurk annotators (>=1,000 approved HITs, >98% approval), Playwright tool; websites chosen by similarweb US popularity; train data CC BY 4.0, code MIT",
+    "preprocessing": "Heuristics keep visible, semantically meaningful elements: avg elements 1,135 -> 580, target recall 94.7% in training data. Click/Hover/Press Enter mapped to Click. Equivalent-element heuristic (nearest clickable ancestor plus visible descendants in bounding box) makes all such elements positive in training and evaluation."
+   }
+  ],
+  "models": [
+   {
+    "name": "DeBERTa-v3-base (ranker)",
+    "role": "proposed",
+    "params": "86M",
+    "architecture": "encoder-only cross-encoder (Sentence-Transformers), sigmoid score, BCE",
+    "init_from": "microsoft/deberta-v3-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-T5 base/large/XL (action predictor)",
+    "role": "proposed",
+    "params": "220M (base); large and XL sizes not stated in text",
+    "architecture": "encoder-decoder, Transformers Seq2Seq",
+    "init_from": "google/flan-t5-base, -large, -xl",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Ranker: binary cross entropy on sigmoid matching score, target element positive and randomly sampled negatives. Predictor: left-to-right LM objective on target sequence (choice letter, action, value)",
+   "optimizer": null,
+   "lr": "3e-5 (DeBERTa); 5e-5 (Flan-T5 generation and MindAct)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "flan-t5-xl and flan-t5-large: 4*A100 80GB (Ohio Supercomputer Center); all other models: single A6000 48GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 random seeds only for the option-grouping analysis (Table 5); main table seed count not stated",
+   "other": {
+    "negatives_sampling": "random negatives from the page, count not stated",
+    "options_per_prompt": "up to 5 candidates plus None"
+   }
+  },
+  "inference": {
+   "decoding": "Flan-T5: not stated; GPT: temperature 0",
+   "temperature": "0 (GPT models)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per item for the main results; Table 5 averages 5 seeds of random grouping",
+   "prompting": "GPT models: system message plus 3 demonstrations in multi-choice format (Table 8); task, previous actions, options A None of the above, B..., answer then Action and Value",
+   "retrieval": "DeBERTa top-50 candidates for all models except GPT-4 which uses top-10; candidates split into groups of five; if several options are chosen, new groups of the selected ones are formed until one remains or all groups choose None",
+   "parameters": {
+    "k_candidates": "50 (GPT-4: 10)",
+    "group_size": "5",
+    "n_demonstrations": "3"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Element Accuracy",
+     "definition": "selected element compared with all acceptable elements",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Operation F1",
+     "definition": "token-level F1 of predicted operation (with value for Type and Select Option); equals accuracy for Click",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Step Success Rate",
+     "definition": "step succeeds only if both element and operation are correct; macro average across tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Success Rate",
+     "definition": "task succeeds only if all steps succeed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@50",
+     "definition": "target element within top-50 ranked candidates",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DeBERTa-B classification (element selection only)",
+    "Flan-T5B direct generation of target element",
+    "GPT-3.5-turbo and GPT-4 3-shot",
+    "Flan-T5XL zero-shot"
+   ],
+   "protocol": "Offline cached snapshots; each step evaluated independently with ground-truth action history; GPT-4 run on 50 tasks per split only (budget); no confidence intervals in Table 2; 5-seed std only in Table 5"
+  },
+  "availability": {
+   "code": "https://github.com/OSU-NLP-Group/Mind2Web (MIT)",
+   "weights": "trained models open-sourced per abstract",
+   "data": "https://huggingface.co/datasets/osunlp/Mind2Web (CC BY 4.0); test data on a password-protected link"
+  },
+  "prompts": [
+   {
+    "purpose": "ChatGPT seed task generation for annotators",
+    "text": "We are testing the website ... We want to test practical daily tasks that a user would do on the website. Come up with a list of 5 example tasks and try to cover different cases. Requirements: - Each example should be a single sentence and not just click one of the elements. - Don't give step-by-step instructions or directly mention the element to interact. - Describe the goal of the task and provide concrete information or constraints. Use mock-up information (identifier, number, personal information, name, date, attributes, constraints, etc.) to make the task more specific and realistic.",
+    "where": "Table 3"
+   },
+   {
+    "purpose": "GPT action prediction system message",
+    "text": "You are a helpful assistant that is great at website design, navigation, and executing tasks for the user",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "GPT action prediction user turn template",
+    "text": "Based on the HTML webpage above, try to complete the following task: Task: ... Previous actions: ... What should be the next action? Please select from the following choices (If the correct action is not in the page above, please select A. 'None of the above'): A. None of the above B. ...",
+    "where": "Table 8 (three full demonstrations)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.k_candidates",
+    "quote": "For GPT-4 we use 50 tasks for each setting with top-10 candidates due to limited budget.",
+    "where": "Table 2 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best MindAct model (Flan-T5XL) reaches 52.0% step success rate under Cross-Task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "52.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MindAct, DeBERTa-B top-50 candidates, fine-tuned Flan-T5XL multi-choice, Cross-Task 252 tasks, offline snapshots, ground-truth history per step",
+   "note": null,
+   "where": "p7-8, Table 2",
+   "quote": "The best model achieves 52.0% step success rate under Cross-Task setting, and 38.9% / 39.6% when generalizing to unseen websites and domains."
+  },
+  {
+   "claim": "Flan-T5XL step SR on unseen websites.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "38.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cross-Website 177 tasks, same setup",
+   "note": null,
+   "where": "p8",
+   "quote": "38.9% / 39.6% when generalizing to unseen websites and domains"
+  },
+  {
+   "claim": "Flan-T5XL step SR on unseen domains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "39.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cross-Domain 912 tasks, same setup",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ Flan-T5XL, column Cross-Domain Step SR"
+  },
+  {
+   "claim": "Whole-task success rate stays very low: best is 7.1% (Flan-T5L, Cross-Task).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Task SR",
+   "value": "7.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cross-Task, Flan-T5L, all steps must be correct, steps scored independently with ground-truth history",
+   "note": "Flan-T5XL gets 5.2 Cross-Task, 5.1 Cross-Website, 2.9 Cross-Domain; Flan-T5L Cross-Website 1.1, Cross-Domain 2.7",
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ Flan-T5L, column Cross-Task SR"
+  },
+  {
+   "claim": "Overall task success rate remains low for all models because the agent commits at least one error step in most tasks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all models, Table 2",
+   "note": null,
+   "where": "p8",
+   "quote": "the overall task success rate remains low for all models, as the agent often commits at least one error step in most cases."
+  },
+  {
+   "claim": "Flan-T5XL task SR Cross-Website.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Task SR",
+   "value": "5.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cross-Website, Flan-T5XL",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ Flan-T5XL, column Cross-Website SR"
+  },
+  {
+   "claim": "Multi-choice formulation beats direct generation: Flan-T5B generation step SR 17.5 vs MindAct Flan-T5B 41.0 on Cross-Task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "41.0",
+   "unit": "%",
+   "baseline_value": "17.5",
+   "n": null,
+   "setup": "Flan-T5B, Cross-Task",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ Flan-T5B, column Cross-Task Step SR"
+  },
+  {
+   "claim": "DeBERTa-B classification baseline element accuracy is 26.8% Cross-Task, above the Flan-T5B generation baseline's 20.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ele. Acc",
+   "value": "26.8",
+   "unit": "%",
+   "baseline_value": "20.2",
+   "n": null,
+   "setup": "DeBERTa-B with classification head, Cross-Task",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Classification, column Cross-Task Ele. Acc"
+  },
+  {
+   "claim": "Candidate generation Recall@50 on Cross-Task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@50",
+   "value": "88.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeBERTa-v3-base 86M, top-50 of ranked elements",
+   "note": null,
+   "where": "p7",
+   "quote": "it achieves 88.9% / 85.3% / 85.7% Recall@50 on TestCross-Task, TestCross-Website and TestCross-Domain, respectively"
+  },
+  {
+   "claim": "HTML cleaning heuristics cut average elements per page from 1,135 to 580 while keeping 94.7% recall of the target element in training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "target recall after cleaning",
+   "value": "94.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "training data",
+   "note": null,
+   "where": "p7",
+   "quote": "This effectively reduces the average number of elements from 1,135 to 580, while still maintaining an overall recall of 94.7% for the target element in the training data."
+  },
+  {
+   "claim": "GPT-3.5 (3-shot) reaches Cross-Task step SR 17.4 and element accuracy 20.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "17.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 3 in-context demonstrations, temperature 0, top-50 candidates",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ GPT-3.5, column Cross-Task Step SR"
+  },
+  {
+   "claim": "GPT-4 (3-shot) Cross-Task step SR 36.2, task SR 2.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "36.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "50 tasks per split",
+   "setup": "gpt-4, 3 demonstrations, top-10 candidates, only 50 tasks per split due to budget",
+   "note": "GPT-4 SR is 2.0 on all three splits, i.e. 1 of 50 tasks",
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ GPT-4, column Cross-Task Step SR"
+  },
+  {
+   "claim": "On the same 50-task subsets Flan-T5XL gets 47.9 / 33.3 / 34.6 step SR vs full test 52.0 / 38.9 / 39.6, so the GPT-4 comparison is on a subset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR",
+   "value": "47.9",
+   "unit": "%",
+   "baseline_value": "52.0",
+   "n": "50",
+   "setup": "50-task subsets, Cross-Task",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Flan-T5XL, column Cross-Task"
+  },
+  {
+   "claim": "Zero-shot Flan-T5XL element selection is far lower than fine-tuned: 10.8 vs 52.0 Cross-Task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "element selection (labelled step SR in Table 5 context)",
+   "value": "10.8",
+   "unit": "%",
+   "baseline_value": "52.0",
+   "n": null,
+   "setup": "Flan-T5XL zero-shot, multi-choice",
+   "note": "Text calls it element selection results; fine-tuned 52.0/38.9/39.6 equals the Step SR figures in Table 2, so the metric label is ambiguous",
+   "where": "Table 6",
+   "table": "Table 6, row Flan-T5XL Zero-Shot, column Cross-Task"
+  },
+  {
+   "claim": "Random grouping of options changes Flan-T5XL Cross-Task step SR by under 1 point (51.9 +- 0.8) over 5 seeds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step SR mean",
+   "value": "51.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "5 seeds",
+   "setup": "Flan-T5XL, 5 random seeds for grouping/shuffling",
+   "note": "Mean over 5 seeds 51.9 vs Table 2 single run 52.0",
+   "where": "Table 5",
+   "table": "Table 5, row Flan-T5XL, column Cross-Task"
+  },
+  {
+   "claim": "Cross-Task step SR is over 10 points higher than Cross-Website and Cross-Domain; the latter two are similar.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all models, Table 2",
+   "note": null,
+   "where": "p8",
+   "quote": "All models perform best on the Cross-Task setting, with over 10% absolute gap (step SR) on average compared with Cross-Website and Cross-Domain settings"
+  },
+  {
+   "claim": "GPT-3.5 tends to pick the None option, giving about 20% element accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Ele. Acc",
+   "value": "20.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo 3-shot, Cross-Task",
+   "note": "Text says 'around 20%'",
+   "where": "Table 2",
+   "table": "Table 2, row MindAct w/ GPT-3.5, column Cross-Task Ele. Acc"
+  },
+  {
+   "claim": "Dataset size after verification: 2,350 tasks retained of 2,411; 61 discarded.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2350",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "verification by authors",
+   "note": null,
+   "where": "p5",
+   "quote": "After verification, we discarded 61 out of the total 2,411 tasks. Among the 2,350 retained tasks, the task description was refined in 390 instances"
+  },
+  {
+   "claim": "Average actions per task is 7.3 and average elements per page 1,135 across 137 websites and 5/31 domains.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.3",
+   "unit": "actions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MIND2WEB, column Avg. # Actions"
+  },
+  {
+   "claim": "Equivalent-element heuristic was manually checked on 100 instances; no error rate is reported.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "nearest clickable ancestor plus visible descendants in bounding box",
+   "note": null,
+   "where": "App C.1",
+   "quote": "Manual checking on 100 instances where the heuristic identifies a top-level element other than the ground truth confirms the validity of the approach."
+  }
+ ],
+ "limits": [
+  "Open-loop offline evaluation: each step is scored with ground-truth history, and a valid path not cached during collection fails, giving false negatives (authors concede)",
+  "Text-only HTML; no screenshots used",
+  "Mostly English US websites; MTurk annotators may be biased toward proficient web users",
+  "Pages encoded independently each step; no modelling of interaction dynamics",
+  "Single-turn task goal; no human-agent interaction",
+  "GPT-4 only evaluated on 50 tasks per split, top-10 candidates, so not comparable to full-test Flan-T5 numbers (Table 7 shows subset numbers lower)",
+  "Task SR from stepwise independent scoring does not reflect compounding of errors in live execution",
+  "No confidence intervals on main table; weights and sizes of large/XL not given in text",
+  "Pop-ups and CAPTCHAs deliberately excluded",
+  "Live end-to-end evaluation is left to future work"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Don't generate, discriminate (Gu, Deng, Su)",
+   "year": 2022,
+   "arxiv": "2212.09736",
+   "relation": "uses-method",
+   "note": "inspiration for multi-choice element selection instead of generation",
+   "quote": null
+  },
+  {
+   "work": "Flan-T5 / Scaling instruction-finetuned language models",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "backbone of action predictor",
+   "quote": null
+  },
+  {
+   "work": "DeBERTa",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ranker backbone (He et al., ICLR 2021)",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT cross-encoder",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "uses-method",
+   "note": "cross-encoder architecture for ranking",
+   "quote": null
+  },
+  {
+   "work": "WebShop",
+   "year": 2022,
+   "arxiv": "2207.01206",
+   "relation": "baseline",
+   "note": "compared in Table 1 (simplified shopping environment)",
+   "quote": null
+  },
+  {
+   "work": "MiniWoB++ (Liu et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "simulated web tasks compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "World of Bits (Shi et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "simulated web platform",
+   "quote": null
+  },
+  {
+   "work": "RUSS, PixelHelp, META-GUI, MoTIF",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "web/mobile datasets compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Understanding HTML with large language models (Gur et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "classification-head encoder design similar to the DeBERTa baseline",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "gpt-4 and gpt-3.5-turbo in-context",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3",
+   "caption": "The overall pipeline for MINDACT with a small ranking LM for candidate generation, and a large prediction LM for action prediction.",
+   "page": 6,
+   "why": "Shows the two-stage design in one picture"
+  },
+  {
+   "figure": "Figure 5",
+   "caption": "Illustration of action prediction with LLMs.",
+   "page": 6,
+   "why": "Contrasts multichoice with direct generation"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Main results. The classification baseline uses DeBERTaB and the generation baseline uses Flan-T5B.",
+   "page": 7,
+   "why": "Step SR vs task SR gap across three splits"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 caption sections wrap oddly in text extraction; Table 2 read from cell order",
+  "Table 6 metric not labelled in text beyond 'element selection results'; fine-tuned row equals Step SR values in Table 2, not Ele. Acc",
+  "No embedded instructions found"
+ ]
 }

@@ -1,0 +1,555 @@
+{
+ "schema": 1,
+ "key": "2203.14465",
+ "pdf": "generative-ai/05-RL/sources/zelikman-2022-star.pdf",
+ "bib": {
+  "title": "STaR: Self-Taught Reasoner. Bootstrapping Reasoning With Reasoning",
+  "authors": [
+   "Eric Zelikman",
+   "Yuhuai Wu",
+   "Jesse Mu",
+   "Noah D. Goodman"
+  ],
+  "first_author": "Zelikman",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2203.14465",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100741,
+  "chars_total": 100741,
+  "engine": "pymupdf",
+  "skipped": "Appendix C human-eval example lists and Appendix D/A examples were skimmed (illustrative rationales only)."
+ },
+ "type": "empirical",
+ "question": "Can a pretrained LLM bootstrap its own rationale-generation ability from a few rationale examples plus a large dataset of question-answer pairs without rationales?",
+ "hypothesis": "Fine-tuning on self-generated rationales that reach the correct answer, plus rationalization of failed problems with the answer as hint, iteratively improves reasoning.",
+ "contributions": [
+  "A bootstrapping mechanism to iteratively generate a rationale dataset from a few initial examples, without checking rationale correctness.",
+  "Rationalization: justify a given answer, then fine-tune as if no hint was given; it accelerates and improves bootstrapping.",
+  "Evaluation with ablations on mathematical and commonsense reasoning.",
+  "First technique to let a pretrained LLM iteratively use its language modeling capacity to improve itself (authors' claim)."
+ ],
+ "method": {
+  "summary": "Few-shot prompt GPT-J to generate rationale+answer for each training question, keep rationales whose answer matches ground truth, rationalize failures by giving the answer as a hint, then fine-tune the original pretrained model on the union and repeat for N outer iterations.",
+  "task": "rationale-augmented reasoning: n-digit addition with scratchpads, CommonsenseQA, GSM8K",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Arithmetic (n-digit addition, 1-5 digits, Nye et al. scratchpad format)",
+    "role": "train",
+    "size": "50,000 generated questions; 10,000 sampled per outer iteration",
+    "split": "uniform over digit lengths",
+    "source": "generated following Nye et al. 2021",
+    "preprocessing": "10 random few-shot rationale examples per digit length"
+   },
+   {
+    "name": "CommonsenseQA (CQA)",
+    "role": "both",
+    "size": "12,247 questions, 5 choices each: 9,741 train, 1,221 dev, 1,285 test (withheld)",
+    "split": "train for STaR, dev accuracy reported",
+    "source": "Talmor et al. 2019, built from ConceptNet",
+    "preprocessing": "10 few-shot prompts from Wei et al. with rationales modified to fix an incorrect answer and reference knowledge more explicitly"
+   },
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "7,473 train, 1,319 test",
+    "split": "test accuracy",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "few-shot prompt of 6 examples in Appendix I"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-J",
+    "role": "base",
+    "params": "6B",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained on the Pile; each outer iteration fine-tunes from the original pretrained model, not the previous iteration",
+    "tokenizer": null,
+    "vocab": "50.4K",
+    "layers": "28",
+    "hidden": "embedding size 1024 (as printed); FFN hidden 16384",
+    "heads": "16 of dimension 256",
+    "context": "1024 (training sequence length)",
+    "other": {}
+   },
+   {
+    "name": "GPT-3 fine-tuned directly (Xu et al. 2021)",
+    "role": "baseline",
+    "params": "30x larger than GPT-J (as stated)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LaMDA 137B few-shot CoT",
+    "role": "baseline",
+    "params": "137B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning (next-token) on filtered self-generated rationales; framed as approximate policy gradient with indicator reward 1(y_hat = y)",
+   "optimizer": "Adam",
+   "lr": "1e-6 (best of search from 1e-7 to 1e-4)",
+   "lr_schedule": "100-step warmup then constant",
+   "warmup": "100 steps",
+   "batch_size": "8 sequences of length 1024, with packing",
+   "steps": "40 at first outer loop, +20% per outer loop (arithmetic with rationalization: 300 initial, +20 per iteration; GSM8K capped at 7912 steps from 30th iteration)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": "none",
+   "dropout": null,
+   "regularisation": "retrain from the original pretrained model each iteration to avoid overfitting",
+   "hardware": "single TPU-v3 node (training and sampling)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "outer_iterations": "arithmetic 16 (Fig 4 text); GSM8K 36 iterations without rationalization plus 10 with; run until performance saturates, best reported",
+    "few_shot_in_finetuning": "few-shot prompts included during fine-tuning in the main setup"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding of rationale and answer (Sec 3.1); outputs from a 'low sampling temperature' (Sec 5)",
+   "temperature": "low/greedy; 0.5 and 0.7 tried as an alternative to rationalization and were worse",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one sample per question per iteration",
+   "prompting": "few-shot (10 rationale examples for CQA and per arithmetic digit length; 6 for GSM8K); rationalization adds the correct answer as a hint, removed from the training prompt",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of correct final answers (CQA dev, GSM8K test, n-digit arithmetic)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Few-shot direct GPT-J",
+    "Few-shot CoT GPT-J",
+    "Few-shot CoT LaMDA 137B",
+    "GPT-J direct fine-tuned on answers",
+    "GPT-3 direct fine-tuned (Xu et al.)"
+   ],
+   "protocol": "single reported run, best iteration reported; no seeds or confidence intervals; human ranking study: 20 Prolific crowdworkers, 10 questions each from 50 questions"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "CQA rationalization hint example (Fig 2)",
+    "text": "Q: Where do you put your grapes just before checking out?\nAnswer Choices:\n(a) mouth\n(b) grocery cart (CORRECT)\n(c) super market\n(d) fruit basket\n(e) fruit market\nA: The answer should be the place where grocery items are placed before checking out. Of the above choices, grocery cart makes the most sense for holding grocery items. Therefore, the answer is grocery cart (b).",
+    "where": "Fig 2; full 7 few-shot CQA prompts in Appendix B, GSM8K prompts in Appendix I"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models[0].hidden",
+    "quote": "GPT-J is a 28-layer decoder-only transformer, with an embedding size of 1024",
+    "where": "Appendix H (GPT-J's published embedding size is larger; recorded as printed)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "STaR with rationalization on GPT-J reaches 72.5% on CQA dev, near fine-tuned GPT-3 at 73.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CQA dev accuracy",
+   "value": 72.5,
+   "unit": "%",
+   "baseline_value": 73.0,
+   "n": null,
+   "setup": "GPT-J 6B, STaR with rationalization, CommonsenseQA dev, trained on 86.7% of train set with rationales",
+   "quote": "performs comparably to a ﬁne-tuned model that is 30× larger (72.5% vs. 73.0%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 1; Table 1"
+  },
+  {
+   "claim": "STaR without rationalization reaches 68.8% on CQA dev vs 60.0% for GPT-J fine-tuned directly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CQA dev accuracy",
+   "value": 68.8,
+   "unit": "%",
+   "baseline_value": 60.0,
+   "n": null,
+   "setup": "GPT-J 6B, no rationalization, 69.7% of train data used",
+   "quote": null,
+   "table": "Table 1, row STaR without rationalization, column CQA Dev Set Accuracy (%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Few-shot CoT GPT-J scores 36.6% on CQA dev; few-shot direct 20.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CQA dev accuracy",
+   "value": 36.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-J few-shot CoT",
+   "quote": null,
+   "table": "Table 1, row Few-shot CoT GPT-J, column CQA Dev Set Accuracy (%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Few-shot CoT LaMDA 137B scores 55.6% on CQA dev, below STaR GPT-J.",
+   "kind": "reported",
+   "source": null,
+   "metric": "CQA dev accuracy",
+   "value": 55.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA 137B few-shot CoT from Wei et al.",
+   "quote": null,
+   "table": "Table 1, row Few-shot CoT LaMDA 137B [6], column CQA Dev Set Accuracy (%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Final CQA STaR model trained on 78.2% of the train set via rationale generation plus 8.5% from rationalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train data fraction",
+   "value": 86.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CQA, STaR with rationalization",
+   "quote": "trained on 78.2% of the training dataset with rationale generation, and an additional 8.5% from rationalization",
+   "table": null,
+   "note": "Table 1 lists 86.7 total",
+   "where": "Table 1 caption"
+  },
+  {
+   "claim": "STaR with 16 iterations reaches 89.5% overall on n-digit addition vs 76.3% for a no-rationale baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "arithmetic accuracy",
+   "value": 89.5,
+   "unit": "%",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "GPT-J, 1-5 digits, 16 iterations; baseline trained on 10,000 examples without rationales for 5,000 steps",
+   "quote": "After running STaR for 16 iterations, the overall accuracy is 89.5%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Few-shot accuracy on 2-digit addition is under 1% even with rationales.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2-digit accuracy",
+   "value": "<1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-J few-shot with scratchpad",
+   "quote": "accuracy on 2-digit addition is less than 1%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "With rationalization, 2-digit addition rises to 32% after one fine-tuning iteration.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2-digit accuracy",
+   "value": 32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic, STaR with rationalization, after the first iteration",
+   "quote": "2-digit addition improves to 32% from less than 1%",
+   "table": null,
+   "note": null,
+   "where": "Fig 5 discussion"
+  },
+  {
+   "claim": "STaR with rationalization gets 10.7% on GSM8K test vs 5.8% for direct fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": 10.7,
+   "unit": "%",
+   "baseline_value": 5.8,
+   "n": null,
+   "setup": "GPT-J 6B, trained on 28.7% of train data (0.5% from rationalization)",
+   "quote": null,
+   "table": "Table 2, row STaR with rationalization, column GSM8K Test Accuracy (%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "STaR without rationalization gets 10.1% on GSM8K test, on 25.0% of train data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": 10.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-J 6B",
+   "quote": null,
+   "table": "Table 2, row STaR without rationalization, column GSM8K Test Accuracy (%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Few-shot CoT GPT-J gets only 3.1% on GSM8K (direct 3.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": 3.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-J few-shot",
+   "quote": null,
+   "table": "Table 2, row Few-shot CoT GPT-J, column GSM8K Test Accuracy (%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Including few-shot prompts during fine-tuning lifts CQA accuracy from 60.9% to 68.8% without rationalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CQA dev accuracy",
+   "value": 68.8,
+   "unit": "%",
+   "baseline_value": 60.9,
+   "n": null,
+   "setup": "GPT-J, STaR without rationalization, with vs without few-shot prompts in fine-tuning",
+   "quote": "60.9% to 68.8% without rationalization, 69.9% to 72.5% with",
+   "table": null,
+   "note": "with rationalization 69.9% to 72.5%",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Crowdworkers were 30% more likely to rank STaR rationales above few-shot rationales.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 30,
+   "unit": "% more likely",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 rationales on questions both answered correctly, 20 Prolific workers, 10 questions each",
+   "quote": "30% more likely to rank the STaR-generated rationales higher than the few-shot rationales",
+   "table": null,
+   "note": "p = .039; preliminary",
+   "where": "Sec 4.4 Human Evaluation"
+  },
+  {
+   "claim": "Workers were 74% more likely to prefer STaR rationales over human-written ones from Rajani et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 74,
+   "unit": "% more likely",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same study",
+   "quote": "74% more likely to prefer the STaR-generated rationales",
+   "table": null,
+   "note": "p < .001; authors do not claim human-level rationale generation",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Higher-temperature sampling (0.5 or 0.7) as an alternative to rationalization gave worse models than reasoning alone.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "arithmetic and CQA, no numbers given",
+   "quote": "higher temperatures as an alternative to rationalization (e.g. 0.5 or 0.7) consistently led to models worse than models with reasoning alone",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "GPT-2 could not bootstrap from few-shot reasoning even on arithmetic.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2, arithmetic; no numbers given",
+   "quote": "GPT-2 was not able to bootstrap from few-shot reasoning in even the arithmetic domain",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Initial few-shot performance must be above chance; GPT-2 failed to bootstrap on arithmetic.",
+  "Tasks with high chance performance (binary decisions) yield many poor rationales; filtering them is open.",
+  "Single base model (GPT-J 6B); no seeds or variance; hyperparameter search was limited by compute.",
+  "Rationale quality on CQA judged qualitatively and by a small preliminary human study.",
+  "Rationalization needs a hint that may not follow from question and answer in other domains.",
+  "Amplifies dataset biases and does not ensure rationale faithfulness (Appendix G).",
+  "Rationalization gave little gain on GSM8K (10.1 to 10.7)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "rationalization",
+   "definition": "for each problem the model fails, generate a rationale given the correct answer as a hint, then train on it without the hint",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Expert Iteration (Anthony et al., Thinking fast and slow)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration; STaR has a fixed expert and no value function",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "few-shot CQA rationales and LaMDA baseline",
+   "quote": null
+  },
+  {
+   "work": "Show your work: Scratchpads (Nye et al.)",
+   "year": 2021,
+   "arxiv": "2112.00114",
+   "relation": "uses-data",
+   "note": "arithmetic scratchpad format",
+   "quote": null
+  },
+  {
+   "work": "Explain yourself! (Rajani et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "origin of rationalization idea; human rationale baseline",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K",
+   "quote": null
+  },
+  {
+   "work": "CommonsenseQA (Talmor et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CQA",
+   "quote": null
+  },
+  {
+   "work": "Formal mathematics statement curriculum learning (Polu et al.)",
+   "year": 2022,
+   "arxiv": "2202.01344",
+   "relation": "related",
+   "note": "expert iteration for formal math",
+   "quote": null
+  },
+  {
+   "work": "GPT-J (Wang, Mesh-Transformer-JAX)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model and fine-tuning script",
+   "quote": null
+  },
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "multiple gradient steps on the same batch",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "proposed to use majority vote for question-only data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of STaR and a STaR-generated rationale on CommonsenseQA.",
+   "page": 2,
+   "why": "shows the generate, rationalize, filter, fine-tune loop"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Accuracy of n-digit summation with each STaR iteration with and without rationalization.",
+   "page": 6,
+   "why": "rationalization removes stagewise digit learning"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "CQA baselines vs STaR with and without rationalization.",
+   "page": 7,
+   "why": "headline results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "Mn <- train(M, Dn U Drat_n)  # Finetune the original model on correct solutions",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix H prints GPT-J embedding size as 1024, which looks like a typo for the real model width; recorded as printed.",
+  "Venue given as NeurIPS 2022 by the repo; the arXiv v2 PDF names none."
+ ]
+}

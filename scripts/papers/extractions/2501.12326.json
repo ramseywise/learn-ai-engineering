@@ -1,0 +1,173 @@
+{
+ "schema": 1,
+ "key": "2501.12326",
+ "pdf": "generative-ai/07-agentic-applications/sources/qin-2025-ui-tars.pdf",
+ "bib": {
+  "title": "UI-TARS: Pioneering Automated GUI Interaction with Native Agents",
+  "authors": ["Yujia Qin", "Yining Ye", "Junjie Fang", "Haoming Wang", "Shihao Liang", "Shizuo Tian", "Junda Zhang", "Jiahao Li", "Yunxin Li", "Shijue Huang", "Wanjun Zhong", "Kuanye Li", "Jiale Yang", "Yu Miao", "Woyu Lin", "Longxiang Liu", "Xu Jiang", "Qianli Ma", "Jingyu Li", "Xiaojun Xiao", "Kai Cai", "Chuang Li", "Yaowei Zheng", "Chaolin Jin", "Chen Li", "Xiao Zhou", "Minchao Wang", "Haoli Chen", "Zhaojian Li", "Haihua Yang", "Haifeng Liu", "Feng Lin", "Tao Peng", "Xin Liu", "Guang Shi"],
+  "first_author": "Qin",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2501.12326",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 151806,
+  "chars_total": 151806,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; Fig 8 values are in a figure image, not text."
+ },
+ "type": "system",
+ "question": "Can a single end-to-end vision-language model that sees only screenshots and outputs keyboard/mouse actions beat prompted commercial-model agent frameworks on GUI perception, grounding and task execution?",
+ "hypothesis": "A native agent model trained on large GUI data with system-2 reasoning and iterative reflective online traces outperforms modular agent frameworks built on GPT-4o or Claude.",
+ "contributions": [
+  "Enhanced perception for GUI screenshots from a large-scale screenshot dataset with five task types",
+  "Unified action modeling across platforms with large-scale action traces and grounding data",
+  "System-2 reasoning: thoughts before each action, built from ~6M GUI tutorials and thought augmentation",
+  "Iterative refinement with reflective online traces: online bootstrapping on hundreds of virtual machines, reflection tuning and DPO",
+  "A review of the evolution path of GUI agents and an analysis of core capabilities"
+ ],
+ "method": {
+  "summary": "Qwen-2-VL 2B/7B/72B are continually trained on about 50B tokens of GUI perception, grounding, action-trace and reasoning data in three phases (continual pre-training, annealing giving UI-TARS-SFT, DPO on reflective pairs from online bootstrapping giving UI-TARS-DPO). The agent takes screenshots, the last N=5 observations plus full thought/action history, and emits a thought then an action from a unified action space.",
+  "task": "GUI agent: perception, grounding and multi-step task execution from screenshots",
+  "trains": true,
+  "datasets": [
+   {"name": "Screenshot perception data (element description, dense captioning, state transition captioning, QA, set-of-mark)", "role": "train", "size": null, "split": null, "source": "Own crawled and human-assisted collection of screenshots with parsed metadata (element type, depth, bounding box, text) from websites, apps and operating systems; descriptions synthesized by a VLM", "preprocessing": "Bottom-up construction from elements to whole interface"},
+   {"name": "Grounding data, open source (Web / Mobile / Desktop)", "role": "train", "size": "Web 14.8M elements (6.7 ele./image), Mobile 2.5M (4.6), Desktop 1.1M (6.2)", "split": null, "source": "SeeClick, GUIAct, MultiUI, Rico-SCA, WidgetCaption, MUG, Rico Icon, CLAY, UIBERT, OmniACT, AutoGUI, OS-ATLAS", "preprocessing": "Bounding-box centre taken as point; coordinates normalized to screen size; standardized to unified action format"},
+   {"name": "Multi-step action traces, open source", "role": "train", "size": "Web 6.4k traces (7.1 avg steps), Mobile 145k (9.6), Desktop 0", "split": null, "source": "MM-Mind2Web, GUIAct, AITW, AITZ, AndroidControl, GUI-Odyssey, AMEX", "preprocessing": "Reconciled into unified action space"},
+   {"name": "Multi-step action traces, own annotated", "role": "train", "size": "avg steps 14.9 per trace; trace count not stated (Table 2 shows '*'); own grounding avg 7.5 ele./image", "split": null, "source": "Annotation tool over PC software and websites; instructions reviewed by annotators; quality filtering", "preprocessing": "Thoughts added via ActRe and thought bootstrapping; Chinese and English; vanilla traces without thought also used"},
+   {"name": "GUI tutorials", "role": "train", "size": "~6M tutorials, avg 510 text tokens and 3.3 images", "split": null, "source": "Filtered from MINT and OmniCorpus", "preprocessing": "fastText classifier, LLM filtering iterated, URL and LSH dedup, LLM rephrase"},
+   {"name": "Online bootstrapped traces and reflection pairs", "role": "train", "size": null, "split": null, "source": "Model rollouts on hundreds of virtual PCs, filtered by rule-based reward, VLM scoring (threshold unstated) and human review; annotators label error corrections and post-reflection steps", "preprocessing": "Positive samples used for SFT with loss only on corrected steps; (corrected, erroneous) pairs used for DPO"},
+   {"name": "VisualWebBench, WebSRC, ScreenQA-short", "role": "eval", "size": null, "split": null, "source": "Public benchmarks", "preprocessing": null},
+   {"name": "ScreenSpot-Pro, ScreenSpot, ScreenSpot-V2", "role": "eval", "size": null, "split": null, "source": "Public benchmarks; ScreenSpot-Pro covers 23 applications in five industries and three operating systems", "preprocessing": null},
+   {"name": "Multimodal Mind2Web, AndroidControl, GUI Odyssey", "role": "eval", "size": "1,000 randomly sampled examples each for AndroidControl and GUI Odyssey in the section 5.5 system-1/2 ablation", "split": null, "source": "Public benchmarks; also in training data (in-domain)", "preprocessing": null},
+   {"name": "OSWorld, AndroidWorld", "role": "eval", "size": "OSWorld 369 tasks (Ubuntu, Windows, macOS); AndroidWorld 116 tasks across 20 apps", "split": null, "source": "Public online environments; AndroidWorld has no training data in UI-TARS (out-of-domain)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "UI-TARS-2B / 7B / 72B", "role": "proposed", "params": "2B, 7B, 72B", "architecture": "Qwen-2-VL vision-language model", "init_from": "Qwen-2-VL (Wang et al., 2024c)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "inferred: 32k sequence length mentioned as typical constrained token budget", "other": {"history_window_N": "5 last observations (Eq. 3), full thought/action history retained", "variants": "UI-TARS-SFT (after annealing), UI-TARS-DPO (after DPO)"}},
+   {"name": "UI-TARS-early", "role": "base", "params": null, "architecture": "early UI-TARS checkpoint", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "samples thought-action pairs for thought bootstrapping (max-try count unstated)"}},
+   {"name": "GPT-4o, Claude-3.5-Sonnet / Claude Computer Use, Gemini-1.5-Pro, Gemini-2.0 (Project Mariner), CogAgent, OmniParser, InternVL, Aria-UI, Aguvis, OS-Atlas, UGround, ShowUI, SeeClick, Qwen-VL, Qwen2-VL, UIX-Qwen2-7B, Qwen-VL-Max", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "SFT (next-token on thoughts and actions, plus perception and grounding tasks) then DPO: L_DPO = -E log sigma(beta log(pi_theta(a'|s)/pi_SFT(a'|s)) - beta log(pi_theta(a|s)/pi_SFT(a|s))) over error-correction pairs",
+   "optimizer": null,
+   "lr": "constant during continual pre-training (value not stated)",
+   "lr_schedule": "constant in phase 1; annealing in phase 2",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "~50B tokens total",
+   "seq_len": "inferred: 32k mentioned as typical token budget",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "phase_1": "Continual pre-training on all data except reflection tuning data, constant learning rate",
+    "phase_2": "Annealing on high-quality subsets of perception, grounding, action trace and reflection tuning data; result is UI-TARS-SFT",
+    "phase_3": "DPO on annotated reflective pairs from online bootstrapping; result is UI-TARS-DPO",
+    "dpo_beta": "not stated",
+    "reflection_tuning_loss": "SFT loss only on corrected steps (t*_tau,a*_tau) and (t*_tau+1,a*_tau+1), not on error steps",
+    "online_bootstrapping": "Iterated on hundreds of virtual PCs for multiple rounds; M_{n+1}=FineTune(M_n,T_filtered,n); rounds count unstated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Section 5.5: Best-of-N with N = 1, 16, 64 (step success rate); out-of-domain AndroidWorld at Bo1. OSWorld score averaged over 3 runs.",
+   "prompting": "System-1 vs system-2 chosen at inference by prompt engineering (prompt text not given). Input: instruction, history of last N=5 observations plus all prior thoughts/actions, current screenshot. Output: thought then action.",
+   "retrieval": null,
+   "parameters": {"history_N": "5", "osworld_step_budget": "15 and 50 steps", "action_space": "Click, Drag, Scroll, Type, Wait, Finished, CallUser (shared); Hotkey, LeftDouble, RightSingle (desktop); LongPress, PressBack, PressHome, PressEnter (mobile)"},
+   "other": {"osworld_scoring": "Runs where the model decides CallUser or fails to output Finish are counted as infeasible; screenshot-only mode"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy / ROUGE-L", "definition": "VisualWebBench, WebSRC, ScreenQA-short scores (accuracy for MCQ; ROUGE-L for captioning/OCR per section 3.2)", "unit": "score", "higher_is_better": true},
+    {"name": "Grounding accuracy", "definition": "Predicted location lies inside the target element bounding box", "unit": "%", "higher_is_better": true},
+    {"name": "Ele.Acc / Op.F1 / Step SR", "definition": "Multimodal Mind2Web element accuracy, operation F1, step success rate", "unit": "%", "higher_is_better": true},
+    {"name": "Type / Grounding / SR", "definition": "AndroidControl and GUI Odyssey following OS-Atlas settings; action-matching requires correct type and arguments", "unit": "%", "higher_is_better": true},
+    {"name": "Task success", "definition": "OSWorld and AndroidWorld goal-state success", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-4o", "Claude Computer Use", "Claude-3.5-Sonnet", "Gemini-1.5-Pro", "Gemini-2.0 (Project Mariner)", "Aguvis-7B/72B", "OS-Atlas-4B/7B", "UGround", "Aria-UI", "CogAgent", "OmniParser", "SeeClick", "ShowUI", "Qwen2-VL"],
+   "protocol": "Single reported number per cell; OSWorld averaged over 3 runs; no confidence intervals or significance tests stated; baseline numbers appear taken from other papers (not stated explicitly)."
+  },
+  "availability": {"code": "https://github.com/bytedance/UI-TARS", "weights": "open sourced per abstract (link above)", "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.tokens", "quote": "utilizing a total data size of approximately 50B tokens", "where": "4.6"},
+   {"field": "inference.parameters.history_N", "quote": "We set the N in Eq. 3 to 5 throughout this section.", "where": "5"}
+  ]
+ },
+ "results": [
+  {"claim": "UI-TARS-72B-DPO scores 24.6 on OSWorld with a 50-step budget, above Claude Computer Use at 22.0 (50 steps).", "kind": "measured", "source": null, "metric": "OSWorld success", "value": "24.6", "unit": "%", "baseline_value": "22.0", "n": "369 tasks, averaged over 3 runs", "setup": "OSWorld screenshot-only, 50 steps, UI-TARS-72B-DPO vs Claude Computer Use", "quote": "UI-TARS-72B-DPO achieves a new SOTA result 24.6 on OSWorld with a budget of 50 steps", "table": null, "note": "Table 9 caption says the maximum number of steps is limited to 15, but rows also report 50 steps.", "where": "5.4, Table 9"},
+  {"claim": "UI-TARS-72B-DPO scores 22.7 on OSWorld at 15 steps versus Claude at 14.9.", "kind": "measured", "source": null, "metric": "OSWorld success", "value": "22.7", "unit": "%", "baseline_value": "14.9", "n": "369 tasks, averaged over 3 runs", "setup": "OSWorld screenshot-only, 15-step budget", "quote": "UI-TARS-72B-DPO with a 15-step budget (22.7) is comparable to Claude when the latter is given 50-step budget (22.0)", "table": null, "note": null, "where": "5.4, Table 9"},
+  {"claim": "UI-TARS-7B-DPO scores 18.7 on OSWorld at 15 steps; 7B-SFT 17.7; 72B-SFT 18.8.", "kind": "measured", "source": null, "metric": "OSWorld success", "value": "18.7", "unit": "%", "baseline_value": "14.9", "n": "369 tasks", "setup": "OSWorld 15 steps, UI-TARS-7B-DPO", "quote": "UI-TARS-7B-DPO (18.7)", "table": "Table 9, rows UI-TARS-7B-SFT (17.7), UI-TARS-7B-DPO (18.7), UI-TARS-72B-SFT (18.8)", "note": null, "where": "5.4"},
+  {"claim": "UI-TARS-72B-SFT scores 46.6 on AndroidWorld, above GPT-4o with Aria-UI (44.8).", "kind": "measured", "source": null, "metric": "AndroidWorld success", "value": "46.6", "unit": "%", "baseline_value": "44.8", "n": "116 tasks, 20 apps", "setup": "AndroidWorld live emulator, UI-TARS-72B-SFT", "quote": "UI-TARS-72B-SFT achieving a 46.6 performance, outperforming the best previous agent framework (GPT-4o with Aria-UI, 44.8)", "table": null, "note": "UI-TARS-7B-SFT gets 33.0 (Table 9); abstract compares 46.6 with GPT-4o 34.5 (SoM).", "where": "5.4, Table 9"},
+  {"claim": "DPO improves OSWorld over the SFT model (7B 17.7 to 18.7; 72B 18.8 to 22.7 at 15 steps); no AndroidWorld DPO number reported.", "kind": "measured", "source": null, "metric": "OSWorld success", "value": "22.7", "unit": "%", "baseline_value": "18.8", "n": null, "setup": "72B, 15 steps, DPO vs SFT", "quote": null, "table": "Table 9, rows UI-TARS-72B-SFT (18.8 at 15 steps) and UI-TARS-72B-DPO (22.7 at 15 steps)", "note": null, "where": "5.4"},
+  {"claim": "UI-TARS-72B reaches 38.1 average on ScreenSpot-Pro.", "kind": "measured", "source": null, "metric": "ScreenSpot-Pro avg", "value": "38.1", "unit": "%", "baseline_value": "31.1", "n": null, "setup": "UI-TARS-72B vs UGround-V1-7B (31.1) and OS-Atlas-7B (18.9); GPT-4o scores 0.8", "quote": "UI-TARS-72B achieves a score of 38.1 on ScreenSpot Pro, significantly exceeding the performance of UGround-V1-7B (31.1) and OS-Atlas-7B (18.9)", "table": null, "note": null, "where": "5.2, Table 4"},
+  {"claim": "UI-TARS-7B averages 89.5 on ScreenSpot, 72B 88.4, 2B 82.3.", "kind": "measured", "source": null, "metric": "ScreenSpot avg", "value": "89.5", "unit": "%", "baseline_value": "89.2", "n": null, "setup": "ScreenSpot; baseline Aguvis-72B 89.2", "quote": "UI-TARS-7B attains a leading score of 89.5 on ScreenSpot in Table 5", "table": null, "note": "7B beats 72B; authors say v1/v2 may not be robust enough to separate larger models.", "where": "5.2, Table 5"},
+  {"claim": "UI-TARS-7B averages 91.6 on ScreenSpot-V2, 72B 90.3, versus OS-Atlas-7B 87.1.", "kind": "measured", "source": null, "metric": "ScreenSpot-V2 avg", "value": "91.6", "unit": "%", "baseline_value": "87.1", "n": null, "setup": "ScreenSpot-V2", "quote": "both UI-TARS-7B (91.6) and UI-TARS-72B (90.3) outperform existing baselines, such as OS-Atlas-7B (87.1)", "table": null, "note": null, "where": "5.2, Table 6"},
+  {"claim": "UI-TARS-72B scores 82.8 on VisualWebBench versus GPT-4o 78.5 and Claude-3.5-Sonnet 78.2.", "kind": "measured", "source": null, "metric": "VisualWebBench", "value": "82.8", "unit": "score", "baseline_value": "78.5", "n": null, "setup": "Perception benchmark", "quote": "UI-TARS-72B scored 82.8 in Visual-WebBench (Liu et al., 2024c), higher than GPT-4o (78.5)", "table": null, "note": null, "where": "1, 5.1, Table 3"},
+  {"claim": "UI-TARS-7B scores 93.6 on WebSRC and 72B scores 88.6 on ScreenQA-short.", "kind": "measured", "source": null, "metric": "WebSRC / ScreenQA-short", "value": "93.6", "unit": "score", "baseline_value": "91.1", "n": null, "setup": "WebSRC baseline Qwen-VL-Max 91.1", "quote": "UI-TARS-7B achieves a leading score of 93.6 on WebSRC", "table": null, "note": null, "where": "5.1, Table 3"},
+  {"claim": "On Multimodal Mind2Web cross-task, UI-TARS-72B gets Ele.Acc 74.7, Op.F1 92.5, Step SR 68.6.", "kind": "measured", "source": null, "metric": "Step SR cross-task", "value": "68.6", "unit": "%", "baseline_value": "64.0", "n": null, "setup": "Aguvis-72B step SR 64.0", "quote": null, "table": "Table 7, row UI-TARS-72B, column Cross-Task Step SR", "note": null, "where": "5.3"},
+  {"claim": "On AndroidControl-High UI-TARS-72B SR is 74.7 and on GUI Odyssey SR 88.6, above OS-Atlas-7B 71.2 and 62.0.", "kind": "measured", "source": null, "metric": "SR", "value": "88.6", "unit": "%", "baseline_value": "62.0", "n": null, "setup": "GUI Odyssey, OS-Atlas settings", "quote": null, "table": "Table 8, row UI-TARS-72B, column GUI Odyssey SR; AndroidControl-High SR 74.7", "note": "Text says 'absolute performance increase of 25' and cites Table 7 where Table 8 is meant.", "where": "5.3"},
+  {"claim": "System-2 reasoning is slightly worse than system-1 at N=1 on in-domain benchmarks but better at N=16 and 64; on out-of-domain AndroidWorld system-2 wins at Bo1.", "kind": "measured", "source": null, "metric": "step success rate by N", "value": null, "unit": null, "baseline_value": null, "n": "1,000 sampled examples for AndroidControl and GUI Odyssey", "setup": "UI-TARS-7B, Best-of-N with N=1,16,64; system-1 vs system-2 chosen by prompt; values only in Fig 8", "quote": null, "table": null, "note": "Numbers are in Fig 8 and not in the text.", "where": "5.5"},
+  {"claim": "Training data: about 50B tokens, Qwen-2-VL base, 6M GUI tutorials.", "kind": "measured", "source": null, "metric": "tokens", "value": "50B", "unit": "tokens", "baseline_value": null, "n": null, "setup": "Total training data for all three UI-TARS sizes", "quote": "We continually train Qwen-2-VL 7B and 72B (Wang et al., 2024c) on approximately 50 billion tokens to develop UI-TARS-7B and UI-TARS-72B.", "table": null, "note": "Section 5 also lists a 2B variant, which section 1 omits.", "where": "1, 4.6, 5"}
+ ],
+ "limits": [
+  "No hyperparameters (learning rate, batch size, optimizer, DPO beta, hardware, compute) are given, so the training is not reproducible from the paper.",
+  "Own annotated trace count, perception data size and online-bootstrap rounds are not stated.",
+  "Only OSWorld uses UI-TARS-DPO; other benchmarks use the SFT model.",
+  "System-2 reasoning is worse than system-1 at a single sample in-domain; authors name reinforced fine-tuning as future work.",
+  "ScreenSpot v1/v2 do not separate 7B from 72B; the authors suggest those benchmarks are not robust at higher scale.",
+  "Offline benchmarks may not reflect online capability (72B vs 7B gap is larger online).",
+  "Baseline figures appear copied from other papers; protocol parity is not discussed. Benchmarks AndroidControl, Mind2Web and GUI Odyssey are in the training mix, so they are in-domain.",
+  "Dated: OSWorld numbers are from Jan 2025; later releases (UI-TARS-1.5/2) supersede them."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Native agent model", "definition": "Workflow knowledge is embedded directly within the agent's model, with perception, reasoning, memory and action unified in a single end-to-end model rather than a framework of prompted modules.", "where": "2.2"},
+  {"term": "System-2 reasoning", "definition": "Deliberate, structured, analytical thinking that explicitly generates intermediate thoughts (task decomposition, long-term consistency, milestone recognition, trial and error, reflection).", "where": "3.1"},
+  {"term": "Reflection tuning", "definition": "Training on the model's own online errors with annotator-labelled corrections and post-reflection steps, SFT on corrected steps only.", "where": "4.5"}
+ ],
+ "lineage": [
+  {"work": "Qwen2-VL", "year": 2024, "arxiv": null, "relation": "extends", "note": "Base VLM for all UI-TARS sizes", "quote": "we use the same VLM backbone, Qwen-2-VL (Wang et al., 2024c)"},
+  {"work": "Direct Preference Optimization", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Agent DPO on corrected vs erroneous actions", "quote": null},
+  {"work": "ReAct", "year": 2023, "arxiv": null, "relation": "extends", "note": "Thought-before-action format inspiration", "quote": "This approach is inspired by the ReAct framework (Yao et al., 2023)"},
+  {"work": "ActRe (ReAct meets ActRe)", "year": 2024, "arxiv": "2403.14589", "relation": "uses-method", "note": "Thought annotation conditioned on the action", "quote": null},
+  {"work": "Aguvis", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Same backbone and three-phase training for fair comparison", "quote": null},
+  {"work": "OS-Atlas", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Grounding data source and baseline; evaluation settings followed", "quote": null},
+  {"work": "Claude Computer Use", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Main commercial baseline", "quote": null},
+  {"work": "OSWorld", "year": 2024, "arxiv": null, "relation": "evaluates", "note": "Online desktop benchmark", "quote": null},
+  {"work": "AndroidWorld", "year": 2024, "arxiv": null, "relation": "evaluates", "note": "Online mobile benchmark", "quote": null},
+  {"work": "ScreenSpot-Pro", "year": 2025, "arxiv": null, "relation": "evaluates", "note": "Grounding benchmark", "quote": null},
+  {"work": "ScreenSpot / ScreenSpot-V2 / SeeClick", "year": 2024, "arxiv": "2401.10935", "relation": "evaluates", "note": "Grounding benchmarks and data", "quote": null},
+  {"work": "Mind2Web / AndroidControl / GUI Odyssey", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Offline benchmarks and training data", "quote": null},
+  {"work": "MINT-1T and OmniCorpus", "year": 2024, "arxiv": "2406.11271", "relation": "uses-data", "note": "Source of GUI tutorials", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 4", "caption": "Overview of UI-TARS. We illustrate the architecture of the model and its core capabilities.", "page": 14, "why": "Shows the observation, thought, action loop."},
+  {"figure": "Fig 7", "caption": "Overview of the online bootstrapping process.", "page": 20, "why": "Shows the filter, fine-tune, refine-instructions iteration."},
+  {"figure": "Fig 8", "caption": "Performance of system-1 (no-thought) and system-2 (with thought) in in-domain and out-of-domain benchmarks.", "page": 27, "why": "Best-of-N crossover between system-1 and system-2; values only in the plot."},
+  {"figure": "Table 9", "caption": "Results on online benchmarks (OSWorld, AndroidWorld).", "page": 26, "why": "Headline SFT vs DPO and step-budget comparison."}
+ ],
+ "code": [
+  {"where": "Eq. 3", "snippet": "P(t_n, a_n | instruction, t_1, a_1, ..., (o_{n-i}, t_{n-i}, a_{n-i})_{i=1}^N, o_n)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text refers to Table 7 for AndroidControl/GUI Odyssey where Table 8 is meant.",
+  "Table 9 caption says max 15 steps but 50-step rows are reported.",
+  "Section 1 mentions only 7B and 72B; section 5 adds UI-TARS-2B.",
+  "Fig 8 numbers are not extractable from text."
+ ]
+}

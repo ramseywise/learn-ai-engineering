@@ -1,0 +1,450 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.naacl-main.201",
+ "pdf": "generative-ai/05-RL/sources/min-2022-metaicl.pdf",
+ "bib": {
+  "title": "MetaICL: Learning to Learn In Context",
+  "authors": [
+   "Sewon Min",
+   "Mike Lewis",
+   "Luke Zettlemoyer",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Min",
+  "year": 2022,
+  "venue": "NAACL-HLT 2022 (pages 2791-2809)",
+  "arxiv": "2110.15943",
+  "doi": "10.18653/v1/2022.naacl-main.201"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87429,
+  "chars_total": 87429,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can meta-training a pretrained LM on many tasks with an in-context-learning objective improve few-shot learning on unseen tasks without templates or parameter updates?",
+ "hypothesis": "Training on k+1 examples per task in the same format as test-time in-context learning teaches the model to recover task semantics from examples, beating in-context learning without meta-training and multi-task zero-shot transfer.",
+ "contributions": [
+  "MetaICL meta-training framework and a noisy-channel variant",
+  "Large-scale evaluation: 142 datasets, seven meta-train/target splits, 52 unique target tasks",
+  "Ablations on number and diversity of meta-training tasks, k, model size, and instructions",
+  "Code and data released at github.com/facebookresearch/MetaICL"
+ ],
+ "method": {
+  "summary": "Meta-train GPT-2 Large by sampling a task, sampling k+1 examples, concatenating x1,y1..xk,yk,xk+1 and maximising log P(y_{k+1}). At test time condition on k examples and pick the candidate with highest conditional probability; a channel variant models P(x|y).",
+  "task": "few-shot classification and multiple-choice QA/NLI/paraphrase via in-context learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "142 tasks from CrossFit and UnifiedQA (English)",
+    "role": "both",
+    "size": "142 datasets; meta-train 61 tasks / 819,200 examples in HR; up to 16,384 training examples per task",
+    "split": "7 settings: HR->LR (61 train/26 target), Class->Class (43/20), non-Class->Class (37/20), QA->QA (37/22), non-QA->QA (33/22), non-NLI->NLI (55/8), non-Para->Para (59/4); no task overlap",
+    "source": "CrossFit (Ye et al. 2021), UnifiedQA (Khashabi et al. 2020); references in Table 15",
+    "preprocessing": "No templates; inputs concatenated, label words from original dataset; one newline between input and output, three newlines between examples (spaces for raw GPT-2); examples truncated to 256 tokens and earlier tokens of concatenation dropped; extractive QA passages truncated keeping the answer for meta-training only"
+   },
+   {
+    "name": "k target training examples",
+    "role": "eval",
+    "size": "k=16, 5 random sets per target task",
+    "split": "sampled uniformly at random, label balance not enforced",
+    "source": "target task training split",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 Large (MetaICL base)",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "causal decoder-only LM",
+    "init_from": "pretrained GPT-2 Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "sequence length 1024 at meta-training",
+    "other": {
+     "ablation sizes": "small 124M, medium 355M, large 774M, XL 1.5B (XL not meta-trained, memory)"
+    }
+   },
+   {
+    "name": "GPT-J",
+    "role": "baseline",
+    "params": "6B",
+    "architecture": "causal LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log likelihood of y_{k+1} given k preceding examples (channel: generate x_{k+1} given y's)",
+   "optimizer": "Adam, 8-bit approximation (Dettmers et al. 2022)",
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8",
+   "steps": "30,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024 (256 for multi-task 0-shot baselines)",
+   "precision": "mixed precision",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "eight 32GB GPUs",
+   "compute": "4.5 hours (3 hours for multi-task 0-shot baselines)",
+   "wall_clock": "4.5 hours",
+   "seeds": null,
+   "other": {
+    "max examples per task": "16,384",
+    "longer training": "explored, did not improve"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over candidate set of conditional probability (no generation)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 different sets of k=16 training examples per target task; average and worst-case reported, macro-averaged over tasks",
+   "prompting": "k=16 examples concatenated, no templates or instructions",
+   "retrieval": null,
+   "parameters": {
+    "channel prior": "P(y)=1/|C|"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Macro-F1",
+     "definition": "classification tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "non-classification tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "0-shot",
+    "PMI 0-shot",
+    "Channel 0-shot",
+    "In-context",
+    "PMI In-context",
+    "Channel In-context",
+    "Multi-task 0-shot",
+    "Channel Multi-task 0-shot",
+    "Fine-tune",
+    "Fine-tune w/ meta-train",
+    "GPT-J raw LM baselines"
+   ],
+   "protocol": "Per target task average and worst-case over 5 seeds, then macro-average over target tasks; reported on all targets and on targets with no domain overlap with meta-training. No significance test stated."
+  },
+  "availability": {
+   "code": "github.com/facebookresearch/MetaICL",
+   "weights": null,
+   "data": "github.com/facebookresearch/MetaICL (data and splits)"
+  },
+  "prompts": [
+   {
+    "purpose": "NLI input/output format, no template",
+    "text": "Input: [P] [H]; Output {entailment, not_entailment}",
+    "where": "Table 4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Channel MetaICL (GPT-2 Large) beats the best raw-LM baseline, Channel In-context, in HR->LR, all target tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "Macro-F1/Accuracy avg over 5 seeds",
+   "value": "49.1",
+   "unit": "%",
+   "baseline_value": "43.1",
+   "n": null,
+   "setup": "GPT-2 Large 770M, k=16, HR->LR, 26 target tasks, average over 5 k-example sets",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Channel MetaICL, column HR->LR (All target tasks)"
+  },
+  {
+   "claim": "Channel MetaICL gets best performance in 6 of 7 settings",
+   "kind": "measured",
+   "source": null,
+   "metric": "settings won",
+   "value": "6 out of 7",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Large, seven meta-train/target settings, k=16",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Channel MetaICL achieves the best performance in 6 out of 7 set-"
+  },
+  {
+   "claim": "Multi-task 0-shot (no in-context objective) does not beat the best raw LM baseline in most settings at 770M",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Large; contradicts Wei 2022 / Sanh 2022 at this size",
+   "note": "Quote spans a line break in the cache; check uses normalised text",
+   "where": "Sec 5.1",
+   "quote": "Multi-task 0- shot baselines do not outperform the best raw LM"
+  },
+  {
+   "claim": "MetaICL based on GPT-2 Large (770M) outperforms or matches GPT-J (6B) raw-LM baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6, Channel In-context GPT-J vs MetaICL GPT-2 Large; not uniform: e.g. non-QA->QA unseen domains GPT-J 55.7/54.4 vs Channel MetaICL 47.2/45.0",
+   "note": null,
+   "where": "Sec 5.1, Table 6",
+   "table": "Table 6, rows GPT-J Channel In-context vs Channel MetaICL"
+  },
+  {
+   "claim": "Channel MetaICL gains over Channel In-context in HR->LR, non-NLI->NLI, non-Para->Para are 6-15% absolute",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute gain",
+   "value": "6-15",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Large, those three settings",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "(6\u201315% absolute)"
+  },
+  {
+   "claim": "MetaICL meta-trained on diverse tasks beats non-diverse set (13 meta-train tasks each)",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy/F1",
+   "value": "45.6",
+   "unit": "%",
+   "baseline_value": "38.8",
+   "n": null,
+   "setup": "GPT-2 Large, HR->LR, 13 meta-training tasks, 26 targets; non-diverse MetaICL 38.8; Channel 47.2 vs 45.3",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row MetaICL, column Diverse"
+  },
+  {
+   "claim": "Channel MetaICL based on GPT-2 Small (124M) outperforms GPT-2 XL Channel In-context baseline (12x bigger)",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "43.5",
+   "n": null,
+   "setup": "HR->LR all target tasks, Channel MetaICL Small vs Channel In-context XL 43.5",
+   "note": null,
+   "where": "App C.2",
+   "quote": "(46.2 vs. 43.5)"
+  },
+  {
+   "claim": "Meta-training time with 8 x 32GB GPUs",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "4.5",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 Large, 30,000 steps",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Training was done for 4.5 hours with eight 32GB GPUs."
+  },
+  {
+   "claim": "Channel MetaICL with instructions (all, 8.3/task) vs without on 32 meta-train / 12 target tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg",
+   "value": "46.9",
+   "unit": "%",
+   "baseline_value": "42.2",
+   "n": null,
+   "setup": "Table 8 setting; no-instruction 42.2; instructions improve MetaICL more than Multi-task 0-shot",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Channel MetaICL, column w/ Instruct 8.3"
+  },
+  {
+   "claim": "MetaICL on random-word label replacement improves from 30.1% to 43.5% when meta-trained with replaced labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy/F1",
+   "value": "43.5",
+   "unit": "%",
+   "baseline_value": "30.1",
+   "n": null,
+   "setup": "class->class setting, label words replaced by random English words, 5 seeds",
+   "note": null,
+   "where": "App C.4",
+   "quote": "improving performance from 30.1% to 43.5%"
+  },
+  {
+   "claim": "Performance saturates near k=16 as k varies 0,4,8,16,32",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HR->LR, read from Fig 1",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the performance tends to saturate when k is closer to 16"
+  }
+ ],
+ "limits": [
+  "In-context approaches need much longer context at meta-training and inference",
+  "Only a causal LM of modest size (GPT-2 Large, 770M) tried; masked LMs and larger models left to future work",
+  "Only classification and multiple-choice tasks with a candidate set; free-form generation not covered",
+  "Fine-tuning with meta-training still beats MetaICL",
+  "Direct comparison with Wei 2022 and Sanh 2022 is hard: model size, LM type, and splits differ",
+  "Variance across choices of meta-training tasks is non-negligible",
+  "Performance with random label words is relatively poor"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MetaICL",
+   "definition": "Meta-training for In-Context Learning: a pretrained LM is tuned on a large set of training tasks to do in-context learning",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "extends",
+   "note": "in-context learning basis",
+   "quote": null
+  },
+  {
+   "work": "Noisy channel language model prompting (Min et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "channel variant",
+   "quote": null
+  },
+  {
+   "work": "CrossFit (Ye et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "task collection and ontology",
+   "quote": null
+  },
+  {
+   "work": "UnifiedQA (Khashabi et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "QA datasets",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "multi-task 0-shot does not beat raw LMs at 770M",
+   "quote": null
+  },
+  {
+   "work": "T0 (Sanh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "same",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2022 (concurrent meta-training for ICL)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent, uses templates",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base LM",
+   "quote": null
+  },
+  {
+   "work": "GPT-J (Wang and Komatsuzaki)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "6B raw LM baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Overview of MetaICL",
+   "page": 2,
+   "why": "shows meta-train vs inference objective"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Main results, using GPT-2 Large",
+   "page": 5,
+   "why": "all methods across seven settings"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Ablation on the number of training examples (k) in the HR->LR setting",
+   "page": 6,
+   "why": "saturation near k=16"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Ablation on the number of meta-training tasks",
+   "page": 6,
+   "why": "more tasks helps; variance"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 5 and Table 6 print different values for Channel MetaICL in the non-QA->QA column (41.9/40.5 vs 42.1/40.8); Table 5 'All target tasks' columns for non-Class->Class repeat Class->Class values for some rows",
+  "Table 5 text-extracted cells are flattened, column assignment inferred from row order",
+  "Metric text says Macro-F1 and Accuracy but Table 10 caption says accuracy; no instructions found in the PDF"
+ ]
+}

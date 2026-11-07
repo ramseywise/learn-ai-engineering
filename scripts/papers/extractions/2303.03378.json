@@ -1,0 +1,683 @@
+{
+ "schema": 1,
+ "key": "2303.03378",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/driess-2023-palm-e.pdf",
+ "bib": {
+  "title": "PaLM-E: An Embodied Multimodal Language Model",
+  "authors": [
+   "Danny Driess",
+   "Fei Xia",
+   "Mehdi S. M. Sajjadi",
+   "Corey Lynch",
+   "Aakanksha Chowdhery",
+   "Brian Ichter",
+   "Ayzaan Wahid",
+   "Jonathan Tompson",
+   "Quan Vuong",
+   "Tianhe Yu",
+   "Wenlong Huang",
+   "Yevgen Chebotar",
+   "Pierre Sermanet",
+   "Daniel Duckworth",
+   "Sergey Levine",
+   "Vincent Vanhoucke",
+   "Karol Hausman",
+   "Marc Toussaint",
+   "Klaus Greff",
+   "Andy Zeng",
+   "Igor Mordatch",
+   "Pete Florence"
+  ],
+  "first_author": "Driess",
+  "year": 2023,
+  "venue": "preprint (arXiv:2303.03378v1 [cs.LG])",
+  "arxiv": "2303.03378",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 74059,
+  "chars_total": 74059,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can continuous sensor inputs be injected into a pretrained LLM's embedding space so one model handles embodied reasoning, vision-language and language tasks with positive transfer?",
+ "hypothesis": "Joint training on diverse internet-scale and embodied data transfers across tasks and embodiments, and larger LLMs forget less when trained multimodally.",
+ "contributions": [
+  "Generalist, transfer-learned, multi-embodiment decision-making agent trained by mixing embodied data into multimodal LLM training",
+  "Show off-the-shelf VLMs do not solve embodied reasoning zero-shot but a general VLM can also be an efficient embodied reasoner",
+  "Novel architectural ideas: neural scene representations (OSRT) and entity-labeling multimodal tokens",
+  "PaLM-E is a quantitatively competent vision and language generalist",
+  "Scaling the LLM gives less catastrophic forgetting in multimodal finetuning"
+ ],
+ "method": {
+  "summary": "Encoders (state MLP, ViT, ViT+TokenLearner, OSRT) map observations to sequences of vectors in the PaLM token embedding space, interleaved with text embeddings as multimodal sentences; the decoder-only LLM is trained with cross-entropy on text targets, with the LLM frozen or unfrozen. Evaluated on TAMP, Language-Table and mobile manipulation plus VQA, captioning and language tasks.",
+  "task": "embodied planning / multimodal next-token prediction (VQA, captioning, planning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Full mixture (Table 6)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "WebLI 52.4%, VQ2A 13.1%, VQG 5.2%, CC3M 13.1%, Object Aware 5.2%, OKVQA 0.5%, VQAv2 0.5%, COCO 0.5%, Wikipedia text 0.5%, mobile manipulator (real) 3.1%, Language Table sim and real 4.2%, TAMP sim 1.6%",
+    "preprocessing": "sampling frequencies 100/25/10/25/10/1/1/1/1/6/8/3; 8.9% embodied"
+   },
+   {
+    "name": "TAMP (simulated)",
+    "role": "both",
+    "size": "96,000 training scenes (3-5 objects); 1% = 320 examples per planning task",
+    "split": "test also 6 and 8 objects and OOD tasks",
+    "source": "planner from Driess et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Language-Table (Lynch et al. 2022)",
+    "role": "both",
+    "size": "10 to 80 demos per task in few-shot sweeps",
+    "split": "Task 1 test set accuracy; Tasks 2,3 80 rollouts each",
+    "source": "public",
+    "preprocessing": "labeler enters a short-horizon command every 4 s; policy executes 40 steps (10Hz)"
+   },
+   {
+    "name": "Mobile manipulation (SayCan runs)",
+    "role": "train",
+    "size": "2912 sequences",
+    "split": null,
+    "source": "Ahn et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "OK-VQA, VQAv2, COCO (Karpathy)",
+    "role": "eval",
+    "size": null,
+    "split": "OK-VQA val; VQAv2 test-dev/test-std; COCO Karpathy test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "21 language benchmarks (NLU and NLG, 1-shot)",
+    "role": "eval",
+    "size": "21",
+    "split": null,
+    "source": "Table 8",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM-E-12B",
+    "role": "proposed",
+    "params": "12B (8B PaLM + 4B ViT)",
+    "architecture": "decoder-only LLM with ViT-4B encoder",
+    "init_from": "PaLM 8B, ViT-4B pretrained on image classification",
+    "tokenizer": null,
+    "vocab": "256 000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM-E-84B",
+    "role": "proposed",
+    "params": "84B (62B PaLM + 22B ViT)",
+    "architecture": "decoder-only",
+    "init_from": "PaLM 62B, ViT-22B",
+    "tokenizer": null,
+    "vocab": "256 000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 5 also lists PaLM-E-66B"
+    }
+   },
+   {
+    "name": "PaLM-E-562B",
+    "role": "proposed",
+    "params": "562B (540B PaLM + 22B ViT)",
+    "architecture": "decoder-only",
+    "init_from": "PaLM 540B, ViT-22B",
+    "tokenizer": null,
+    "vocab": "256 000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLI",
+    "role": "baseline",
+    "params": null,
+    "architecture": "vision-language model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "zero-shot, not trained on robot data"
+    }
+   },
+   {
+    "name": "SayCan with oracle affordances",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RT-1 low-level policies",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over the non-prefix text tokens of multimodal sentences",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "Language-Table finetuned variants: pretrained PaLM-E trained 9,000 additional steps; otherwise None",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "freezing": "LLM frozen (only encoder/projector trained) or whole model trained; for OSRT only projector psi trained",
+    "encoders": "ViT-4B, ViT-22B pretrained; ViT+TokenLearner and state MLP trained from scratch; OSRT trained on novel-view synthesis"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Language-Table sim Tasks 2,3: 80 rollouts per task; other runs and seeds not stated",
+   "prompting": "Multimodal sentences such as 'Given <img>. Q: ... A:'; mobile manipulation 'Human: <instruction> Robot: <step history>. I see <img>.'; object-centric prefix 'Obj 1 is <obj1>. ...'",
+   "retrieval": null,
+   "parameters": {
+    "control_loop": "PaLM-E outputs language subgoals at 1 Hz; Language-Table policies output actions at 5 Hz (main text); appendix says policy executes 40 steps (10Hz for 4 seconds)",
+    "replan_interval": "new instruction every 4 s in Language-Table"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate",
+     "definition": "fraction of tasks successful (TAMP, Language-Table)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "failure detection and affordance prediction",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQAv2/OK-VQA accuracy, COCO captioning",
+     "definition": "standard",
+     "unit": "% / CIDEr",
+     "higher_is_better": true
+    },
+    {
+     "name": "relative drop in NLG/NLU average vs PaLM",
+     "definition": "PaLM-E unfrozen vs corresponding PaLM, 1-shot",
+     "unit": "% relative",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PaLI zero-shot",
+    "SayCan oracle affordances",
+    "CLIP-FT, CLIP-FT-hindsight (Xiao et al. 2022)",
+    "QT-OPT value-function thresholding",
+    "Flamingo",
+    "Frozen (Tsimpoukelli 2021)"
+   ],
+   "protocol": "No seeds, confidence intervals or significance tests reported; real-robot results qualitative"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "project page https://palm-e.github.io (videos)"
+  },
+  "prompts": [
+   {
+    "purpose": "Language-Table Task 2",
+    "text": "Q: How to sort the blocks by colors into corners?",
+    "where": "Table 3"
+   },
+   {
+    "purpose": "affordance prediction",
+    "text": "Given <img>. Q: Is it possible to <skill> here?",
+    "where": "Sec 6.4"
+   },
+   {
+    "purpose": "failure detection",
+    "text": "Given <img>. Q: Was <skill> successful?",
+    "where": "Sec 6.4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Fraction of NLG performance lost by unfrozen PaLM-E-12B relative to PaLM-8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative NLG drop",
+   "value": "87.3",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Unfrozen LLM, full mixture; average over NLG tasks (TriviaQA, NQ, WebQuestions, Lambada), 1-shot, vs inherited PaLM-8B",
+   "note": "Table 8 prints -87.3%",
+   "where": "Sec 6.6, Fig 6",
+   "quote": "87.3% of its NLG performance (relative) has"
+  },
+  {
+   "claim": "Fraction of NLG performance lost by unfrozen PaLM-E-562B relative to PaLM-540B (scale reduces forgetting).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative NLG drop",
+   "value": "3.9",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Unfrozen LLM, full mixture; NLG average, 1-shot, vs PaLM-540B",
+   "note": "Table 8 prints -3.8% for the same quantity; Fig 6 and text print 3.9%",
+   "where": "Sec 6.6, Fig 6",
+   "quote": "merely 3.9% have"
+  },
+  {
+   "claim": "PaLM-E-84B NLG drop relative to PaLM-62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NLG delta (relative)",
+   "value": "-61.6",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Unfrozen, NLG avg 18.4 vs 47.8",
+   "note": "Text-extracted Table 8 prints -61.6%",
+   "where": "Table 8",
+   "table": "Table 8, row NLG delta (%, relative), column PaLM-E-84B"
+  },
+  {
+   "claim": "Generalist PaLM-E-562B sets the highest reported OK-VQA score, above task-finetuned models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OK-VQA val accuracy",
+   "value": "66.1",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "One generalist checkpoint, no task-specific finetuning; PaLI finetuned 64.5, Flamingo 57.8 (32-shot)",
+   "note": null,
+   "where": "Table 5",
+   "quote": "PaLM-E-562B model achieves the highest reported number",
+   "table": "Table 5, row PaLM-E-562B, column OK-VQA val"
+  },
+  {
+   "claim": "PaLM-E-562B VQAv2 test-dev (generalist).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 test-dev",
+   "value": "80.0",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Generalist single checkpoint",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM-E-562B, column VQAv2 test-dev"
+  },
+  {
+   "claim": "PaLM-E-562B COCO Karpathy test (generalist).",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO CIDEr (Karpathy test)",
+   "value": "138.7",
+   "unit": "CIDEr",
+   "base": null,
+   "n": null,
+   "setup": "Generalist; PaLI finetuned 149.1",
+   "note": "Metric name (CIDEr) is not printed in the extracted text; inferred",
+   "where": "Table 5",
+   "table": "Table 5, row PaLM-E-562B, column COCO Karpathy test"
+  },
+  {
+   "claim": "PaLM-E-12B with frozen LLM gets 70.3 on VQAv2 test-dev vs 48.4 for Frozen (Tsimpoukelli).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 test-dev",
+   "value": "70.3",
+   "unit": "%",
+   "base": "48.4",
+   "n": null,
+   "setup": "Generalist, frozen LLM",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM-E-12B frozen, column VQAv2 test-dev"
+  },
+  {
+   "claim": "TAMP planning success with 1% data: PaLM-E-12B full mixture, pretrained, LLM unfrozen vs single robot frozen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean planning success p1,p2",
+   "value": "94.9",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "TAMP 3-5 objects, 1% of data (320 examples per planning task), PaLM-E-12B, ViT-4B; mean of p1,p2",
+   "note": "Fig 4 values 94.9, 48.6, 42.9, 74.3, 31.8; label assignment to bars not recoverable from text; the 94.9 bar is not labelled in text",
+   "where": "Fig 4",
+   "quote": "94.9%"
+  },
+  {
+   "claim": "OSRT input gives best TAMP planning with 1% data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p1 success",
+   "value": "82.5",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "TAMP 3-5 objects, 1% data (320 samples per planning task), LLM frozen",
+   "note": "p2 = 76.2",
+   "where": "Table 1",
+   "table": "Table 1, row OSRT, column p1"
+  },
+  {
+   "claim": "ViT-4B co-trained on full mixture more than doubles planning success over single robot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p1 success",
+   "value": "74.1",
+   "unit": "%",
+   "base": "30.6",
+   "n": null,
+   "setup": "TAMP 1% data, ViT-4B, LLM frozen",
+   "note": "p2: 74.6 vs 32.9",
+   "where": "Table 1",
+   "table": "Table 1, row ViT-4B full mixture, column p1"
+  },
+  {
+   "claim": "SayCan with oracle affordances solves few TAMP planning tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p1 success",
+   "value": "38.7",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "TAMP",
+   "note": "p2 33.3",
+   "where": "Table 1",
+   "table": "Table 1, row SayCan (oracle afford.), column p1"
+  },
+  {
+   "claim": "PaLI zero-shot scores 0.0 on TAMP q2 and q3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "0.0",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "TAMP embodied VQA q2,q3 only",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row PaLI (zero-shot), column q2"
+  },
+  {
+   "claim": "Zero-shot SayCan and PaLI score 0.0 on Language-Table Task 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": "0.0",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Zero-shot baselines",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SayCan (oracle afford.), column Task 1"
+  },
+  {
+   "claim": "Mobile manipulation failure detection F1: PaLM-E-12B 0.91 vs PaLI zero-shot 0.73 and CLIP-FT-hindsight 0.89.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "0.91",
+   "unit": "F1",
+   "base": "0.73",
+   "n": null,
+   "setup": "Mobile manipulation failure detection, PaLM-E-12B, single robot pretrained or full mixture",
+   "note": "Table 9 gives precision 0.89 recall 0.93 for the full mixture 0.91 row; the 4th row (full mixture, LLM frozen) scores 0.77",
+   "where": "Table 4",
+   "table": "Table 4, row Full mixture, column Failure det."
+  },
+  {
+   "claim": "Affordance prediction F1 PaLM-E-12B full mixture 0.91 vs PaLI 0.62 and QT-OPT 0.63.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "0.91",
+   "unit": "F1",
+   "base": "0.62",
+   "n": null,
+   "setup": "Mobile manipulation affordance prediction",
+   "note": "Which row (frozen vs unfrozen) gets 0.91 is lost in extraction; Table 10 and Table 4 list 0.91 for the last row and 0.87 for the third row",
+   "where": "Table 4",
+   "table": "Table 4, row Full mixture, column Affordance"
+  },
+  {
+   "claim": "Real-robot long-horizon planning evaluated qualitatively; trained on 2912 sequences from SayCan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training sequences",
+   "value": "2912",
+   "unit": "sequences",
+   "base": null,
+   "n": null,
+   "setup": "Mobile manipulation planning data from Ahn et al. 2022",
+   "note": null,
+   "where": "Sec 6.4",
+   "quote": "which contains 2912 sequences"
+  },
+  {
+   "claim": "Full mixture is 8.9% embodied data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "embodied share",
+   "value": "8.9",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Co-training mixture",
+   "note": "Table 6 robot rows sum 3.1+4.2+1.6=8.9",
+   "where": "Sec 5",
+   "quote": "only 8.9% of the full mixture is embodied data"
+  },
+  {
+   "claim": "TAMP training set size used for the input-representation comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scenes",
+   "value": "96,000",
+   "unit": "scenes",
+   "base": null,
+   "n": null,
+   "setup": "TAMP only, no other data in mixture",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "96,000 training scenes"
+  },
+  {
+   "claim": "PaLM-E outperforms Frozen on VQAv2 by more than 45%.",
+   "kind": "claim",
+   "source": null,
+   "metric": "VQAv2 gain over Frozen",
+   "value": "45",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "Claimed in related work",
+   "note": "Table 5: 70.3 vs 48.4 is a 21.9 point or 45% relative gain",
+   "where": "Sec 2",
+   "quote": "outperforms Frozen by more than 45% on the VQAv2 benchmark"
+  }
+ ],
+ "limits": [
+  "No training hyperparameters (optimizer, lr, batch size, steps, hardware) are given for the main models",
+  "Real-robot results are qualitative only; no seeds or variance",
+  "Frozen LLM struggled on some robotics tasks (Tab 2)",
+  "Generalist numbers trail PaLI finetuned on COCO (138.7 vs 149.1) and VQAv2 (80.0 vs 84.3)",
+  "Language-Table Task 1 uses a test set, Tasks 2-3 use 80 rollouts"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "multi-modal sentence",
+   "definition": "sequences of tokens where inputs from arbitrary modalities are inserted alongside text tokens as input to an LLM",
+   "where": "Fig 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "extends",
+   "note": "pretrained LLM base",
+   "quote": null
+  },
+  {
+   "work": "SayCan (Do as I can, not as I say)",
+   "year": 2022,
+   "arxiv": "2204.01691",
+   "relation": "baseline",
+   "note": "oracle affordances baseline and data source",
+   "quote": null
+  },
+  {
+   "work": "PaLI",
+   "year": 2022,
+   "arxiv": "2209.06794",
+   "relation": "baseline",
+   "note": "zero-shot VLM baseline",
+   "quote": null
+  },
+  {
+   "work": "Frozen (Tsimpoukelli et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "encoder trained through frozen LLM",
+   "quote": null
+  },
+  {
+   "work": "Scaling vision transformers to 22 billion parameters",
+   "year": 2023,
+   "arxiv": "2302.05442",
+   "relation": "uses-method",
+   "note": "ViT-22B",
+   "quote": null
+  },
+  {
+   "work": "Object Scene Representation Transformer",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OSRT (Sajjadi et al. 2022a)",
+   "quote": null
+  },
+  {
+   "work": "RT-1",
+   "year": 2022,
+   "arxiv": "2212.06817",
+   "relation": "uses-method",
+   "note": "low-level policies",
+   "quote": null
+  },
+  {
+   "work": "Interactive Language / Language-Table (Lynch et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "tabletop environment",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "task-finetuned comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "PaLM-E is a single general-purpose multimodal language model for embodied reasoning tasks, visual-language tasks, and language tasks.",
+   "page": 1,
+   "why": "architecture overview"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of transfer learning demonstrated by PaLM-E",
+   "page": 4,
+   "why": "summary of transfer across three domains"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Results on general language tasks: increasing scale leads to less catastrophic forgetting",
+   "page": 7,
+   "why": "forgetting vs scale"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Checkmark symbols in Tables 1, 2, 4, 9, 10 are lost in text extraction, so which rows are frozen vs unfrozen/pretrained is not recoverable; row assignments inferred",
+  "Fig 4 bar labels not mapped to values",
+  "Table 8 prints -3.8% NLG delta for 562B while text and Fig 6 print 3.9%",
+  "Table 2 per-demo columns are garbled in extraction; Language-Table few-shot cells deliberately not recorded as results"
+ ]
+}

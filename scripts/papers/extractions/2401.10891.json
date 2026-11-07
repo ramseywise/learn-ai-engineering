@@ -1,19 +1,804 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2401.10891",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/yang-2024-depth-anything-2401.10891.pdf",
  "bib": {
   "title": "Depth Anything: Unleashing the Power of Large-Scale Unlabeled Data",
-  "first_author": "Lihe Yang",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Lihe Yang",
+   "Bingyi Kang",
+   "Zilong Huang",
+   "Xiaogang Xu",
+   "Jiashi Feng",
+   "Hengshuang Zhao"
+  ],
+  "first_author": "Yang",
+  "year": 2024,
+  "venue": "preprint (arXiv:2401.10891v2, cs.CV)",
   "arxiv": "2401.10891",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "48bfcc0e-dc05-4524-ab72-2f936bf0cbf0"
+  "at": "2026-11-07",
+  "chars_read": 59518,
+  "chars_total": 59518,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: \"Depth Anything: Unleashing the Power of Large-Scale Unlabeled Data\", Lihe Yang, Bingyi Kang, Zilong Huang, Xiaogang Xu, Jiashi Feng, Hengshuang Zhao (HKU, TikTok, CUHK, ZJU). The PDF states no venue, only the stamp \"arXiv:2401.10891v2 [cs.CV] 7 Apr 2024\", so cite it as a preprint unless the venue is confirmed elsewhere.\n\nCOVERAGE: 18 of 18 pages; 59,451 of 59,451 chars (count includes my page markers). This covers the main paper (pp.1-8), the supplement (pp.9-15) and the references (pp.16-18). Nothing was skipped. Figures were identified from captions only and I did not view the images.\n\nQuotes are verbatim, except that I joined line wraps and end-of-line hyphens. Table rows are copied as extracted.\n\nCLAIMS\n\n- claim: Training uses far more pseudo-labeled than labeled data, with eight unlabeled sets and six labeled sets.\n  number: 1.5M labeled, 62M unlabeled\n  setup: Labeled sets are BlendedMVS, DIML, HRWSI, IRS, MegaDepth, TartanAir. Unlabeled sets are BDD100K, Google Landmarks, ImageNet-21K, LSUN, Objects365, Open Images V7, Places365, SA-1B. NYUv2 and KITTI are excluded so they stay zero-shot.\n  quote: \"In total, our Depth Anything is trained on 1.5M labeled images and 62M unlabeled images jointly.\"\n  where: p3, Table 1\n\n- claim: Adding pseudo-labeled images alone gives no consistent gain; strong perturbations and then feature alignment produce the gain.\n  number: AbsRel on KITTI/NYU/Sintel/DDAD/ETH3D/DIODE, from baseline to full method\n  setup: ViT-L, zero-shot. Rows are cumulative: Ll; +Lu; +S; +Lfeat. Only AbsRel is reported. Column ticks collapsed in extraction, so the row order is inferred from the caption and prose.\n  quote: \"0.085 0.053 0.492 0.245 0.134 0.070\" / \"0.085 0.054 0.481 0.242 0.138 0.073\" / \"0.081 0.048 0.469 0.235 0.134 0.068\" / \"0.076 0.043 0.458 0.230 0.127 0.066\"\n  where: p8, Table 9\n\n- claim: With the same mechanism, plain self-training failed in pilot studies, and the authors conjecture why.\n  number: none\n  setup: Teacher and student share pre-training and architecture, and labeled data is already sufficient.\n  quote: \"they tend to make similar correct or false predictions on the unlabeled set\"\n  where: p4\n\n- claim: The ViT-L model beats the best MiDaS on all six unseen datasets, on both metrics, in zero-shot relative depth.\n  number: e.g. KITTI AbsRel 0.127 to 0.076, δ1 0.850 to 0.947; DDAD AbsRel 0.251 to 0.230, δ1 0.766 to 0.789\n  setup: Baseline is MiDaS v3.1 DPT-BEiTL-512. MiDaS trained on KITTI and NYUv2 images; Depth Anything did not. Scale and shift of predictions are manually aligned to ground truth (p9), and evaluation is at original resolution.\n  quote: \"MiDaS v3.1 [5] ViT-L 0.127 0.850 0.048 0.980 0.587 0.699 0.251 0.766 0.139 0.867 0.075 0.942\" / \"ViT-L 0.076 0.947 0.043 0.981 0.458 0.760 0.230 0.789 0.127 0.882 0.066 0.952\"\n  where: p5, Table 2\n\n- claim: Smaller encoders stay competitive, and ViT-S is under a tenth of the MiDaS model's size.\n  number: ViT-S 24.8M, ViT-B 97.5M, ViT-L 335.3M\n  setup: Same zero-shot table. The student sizes all learn from pseudo-labels made by the ViT-L teacher (p5).\n  quote: \"ViT-S (24.8M), ViT-B (97.5M), and ViT-L (335.3M)\"; \"ViT-S 0.080 0.936 0.053 0.972 0.464 0.739 0.247 0.768 0.127 0.885 0.076 0.939\"; \"ViT-B 0.080 0.939 0.046 0.979 0.432 0.756 0.232 0.786 0.126 0.884 0.069 0.946\"\n  where: p5, Table 2\n\n- claim: Among single training sets, the smallest one (HRWSI) generalizes best on the mean, which the authors read as diversity mattering.\n  number: HRWSI mean AbsRel 0.200, δ1 0.846 from 20K images; all labeled data 0.180, 0.874\n  setup: ViT-L, relative depth, trained on one set and tested on the six unseen sets.\n  quote: \"HRWSI [68] 0.095 0.917 0.062 0.966 0.502 0.731 0.270 0.750 0.186 0.775 0.087 0.935 0.200 0.846\"; \"All labeled data 0.085 0.934 0.053 0.971 0.492 0.748 0.245 0.771 0.134 0.874 0.070 0.945 0.180 0.874\"; \"even though it only contains 20K images\"\n  where: p7, Table 6\n\n- claim: In-domain metric depth on NYUv2 beats the previous best.\n  number: δ1 0.964 to 0.984; AbsRel 0.069 to 0.056\n  setup: ViT-L encoder fine-tuned inside the ZoeDepth framework, decoder randomly initialized, 392×518, batch 16, 5 epochs, encoder LR 1/50 of decoder LR. Baseline is VPD; the ZoeDepth row is reproduced by the authors, and other rows are not stated to be.\n  quote: \"Ours 0.984 0.998 1.000 0.056 0.206 0.024\"; \"VPD [87] 0.964 0.995 0.999 0.069 0.254 0.030\"\n  where: p6, Table 3; p9 for setup\n\n- claim: In-domain metric depth on KITTI also leads, by a smaller margin.\n  number: δ1 0.978 to 0.982; AbsRel 0.046; RMSE 1.896\n  setup: As above at 384×768. Best prior δ1 is NDDepth.\n  quote: \"Ours 0.982 0.998 1.000 0.046 1.896 0.069\"; \"NDDepth [54] 0.978 0.998 0.999 0.050 2.025 0.075\"\n  where: p6, Table 4\n\n- claim: Swapping the encoder inside ZoeDepth improves zero-shot metric depth, but absolute errors stay large on some sets.\n  number: order is SUN RGB-D, iBims-1, HyperSim, Virtual KITTI 2, DIODE Outdoor (AbsRel, δ1)\n  setup: NYUv2-trained model for the indoor sets, KITTI-trained for the outdoor sets. ZoeDepth was reproduced in the authors' environment.\n  quote: \"ZoeDepth [4] 0.520 0.545 0.169 0.656 0.407 0.302 0.106 0.844 0.814 0.237\"; \"Depth Anything 0.500 0.660 0.150 0.714 0.363 0.361 0.085 0.913 0.794 0.288\"\n  where: p7, Table 5\n\n- claim: The depth-trained encoder transfers to semantic segmentation better than the compared encoders.\n  number: Cityscapes 84.8 single-scale, 86.2 multi-scale (prior best 83.6 / 84.6); ADE20K 59.4 (prior best 58.3)\n  setup: ViT-L with Mask2Former, 896×896, encoder LR 3e-6, batch 16, 80K iterations on Cityscapes and 160K on ADE20K, no COCO or Mapillary pre-training.\n  quote: \"Ours ViT-L [16] 84.8 86.2\"; \"OneFormer [24] ConvNeXt-XL [41] 83.6 84.6\"; \"Ours ViT-L [16] 59.4\"; \"ViT-Adapter [11] BEiT-L [2] 58.3\"\n  where: p7, Tables 7-8; p9 for setup\n\n- claim: The encoder beats both the MiDaS encoder and the original DINOv2 encoder when fine-tuned downstream.\n  number: vs DINOv2, NYUv2 AbsRel 0.066 to 0.056; ADE20K mIoU 58.8 to 59.4. vs MiDaS, ADE20K 52.4 to 59.4\n  setup: Columns are NYUv2 AbsRel/δ1, KITTI AbsRel/δ1, then mIoU. The MiDaS depth values in Table 10 equal the ZoeDepth* rows of Tables 3-4.\n  quote: \"MiDaS 0.077 0.951 0.054 0.971 82.1 52.4\"; \"Ours 0.056 0.984 0.046 0.982 84.8 59.4\"; \"DINOv2 0.066 0.973 0.058 0.971 58.8\"\n  where: p8, Tables 10-11\n\n- claim: Feature alignment needs a tolerance margin, because forcing full alignment hurts part-level depth discrimination.\n  number: mean AbsRel 0.188 (α=1.00), 0.175 (α=0.85), 0.178 (α=0.70)\n  setup: ViT-S, six unseen sets. Pixels with cosine similarity above α are dropped from Lfeat.\n  quote: \"1.00 0.085 0.055 0.523 0.250 0.134 0.079 0.188\"; \"0.85 0.080 0.053 0.464 0.247 0.127 0.076 0.175\"; \"0.70 0.079 0.054 0.482 0.248 0.127 0.077 0.178\"\n  where: p9, Table 12\n\n- claim: Applying feature alignment to labeled data gives no benefit; it helps on unlabeled data.\n  number: mean AbsRel 0.180 none, 0.175 unlabeled, 0.179 labeled\n  setup: ViT-S. The authors conjecture that it interferes with informative manual labels but combats noise in pseudo-labels.\n  quote: \"their mean AbsRel values are almost the same: 0.180 vs. 0.179\"\n  where: p9, Table 13\n\n- claim: An auxiliary discrete segmentation task did not improve depth, which motivated aligning to continuous DINOv2 features instead.\n  number: 4K classes\n  setup: Labels came from RAM + GroundingDINO + HQ-SAM, with a shared encoder and two decoders. No metric table is given for this failed attempt.\n  quote: \"this yields a class space containing 4K classes\"\n  where: p4\n\n- claim: The training recipe is a two-stage teacher then student, with a fresh student rather than fine-tuning from the teacher.\n  number: 20 teacher epochs; one sweep of unlabeled data; labeled:unlabeled 1:2 per batch; encoder LR 5e-6, decoder 10× larger; α 0.85; CutMix 50%\n  setup: AdamW with linear decay. DINOv2 encoder and DPT decoder. Labeled images get horizontal flip only. Unlabeled images get color jitter, Gaussian blur and CutMix; the teacher sees clean images. Overall loss is the average of Ll, Lu, Lfeat. Sky disparity is set to 0 using a segmentation model.\n  quote: \"we train a teacher model on labeled images for 20 epochs\"; \"The ratio of labeled and unlabeled images is set as 1:2 in each batch\"; \"the base learning rate of the pre-trained encoder is set as 5e-6\"; \"The tolerance margin α for feature alignment loss is set as 0.85\"; \"We use CutMix with 50% probability\"\n  where: p5; p4 for CutMix\n\n- claim: Image handling depends on DINOv2's patch size.\n  number: 518 training crop; patch size 14\n  setup: At inference, images are not cropped but both sides must be multiples of 14.\n  quote: \"All images are cropped to 518 ×518 during training.\"; \"the pre-defined patch size of DINOv2 encoders [43] is 14\"\n  where: p9\n\n- claim: The metrics are defined explicitly.\n  number: δ1 threshold 1.25\n  setup: Applies to all depth tables.\n  quote: \"AbsRel (absolute relative error: |d∗ − d|/d) and δ1 (percentage of max(d∗/d, d/d∗) < 1.25)\"\n  where: p5\n\nLIMITS\n\nConceded by the authors (p9, section 8):\n- The largest model is ViT-L, and ViT-Giant is planned.\n- Quote: \"the widely adopted 512×512 training resolution is not enough\". They plan 700+ or 1000+.\n- In-domain metric results use \"a relatively basic depth model\" (p6).\n\nNot shown in the source:\n- No latency, FPS or memory figures. Model parameter counts are the only size evidence, so the \"computationally-constrained\" claim (p5) is not measured.\n- No seeds, confidence intervals or significance tests. Many gains are in the second or third decimal.\n- Pseudo-label quality is never measured directly.\n- There is no scaling curve of accuracy against the number of unlabeled images, and no per-dataset unlabeled ablation.\n- The ControlNet and video editing claims are qualitative only (Figure 4, p8; project page).\n- Zero-shot relative results are aligned to ground truth for scale and shift, so they do not show metric accuracy.\n- Failed attempts (naive self-training, discrete segmentation) are described without numbers beyond Table 9.\n- Reasons are stated as conjecture or speculation (\"We conjecture\", \"We speculate\"). They are not tested.\n\nComparability:\n- Table 3 and Table 4 baselines other than ZoeDepth are not marked as reproduced, so they are not confirmed to come from one environment.\n- The Cityscapes prose compares multi-scale figures (86.2, 84.3, 84.6), but Table 10 uses single-scale 84.8.\n\nProse stronger than its tables (my reading of the tables):\n- \"ViT-B ... clearly superior\" to MiDaS: on NYUv2 δ1 ViT-B is 0.979 against MiDaS 0.980.\n- ViT-S loses to MiDaS on NYUv2 (both metrics) and on DIODE (both metrics).\n- ViT-L is not the best size everywhere. Sintel AbsRel is best at ViT-B (0.432), ETH3D AbsRel at ViT-B (0.126), ETH3D δ1 at ViT-S (0.885).\n- Table 9 row 2 is worse than baseline on NYU, ETH3D and DIODE, better on Sintel and DDAD, and tied on KITTI.\n- Across Tables 12-13, α=1.00 (0.188) is worse than no alignment at all (0.180). The paper compares only 1.00 with 0.85 and 0.70.\n\nPossibly dated: comparisons are to baselines as of the arXiv date, and section 8 plans a later higher-resolution, larger model. The PDF contains no information on later versions.\n\nBUILDS ON (as printed)\n- Affine-invariant loss and multi-dataset training: MiDaS, Ranftl et al., TPAMI 2020 [46]; MiDaS v3.1, Birkl et al., arXiv 2023 [5].\n- Encoder: DINOv2, Oquab et al., TMLR 2023 [43]; ViT, Dosovitskiy et al., ICLR 2021 [16].\n- Decoder: DPT, Ranftl et al., ICCV 2021 [47].\n- Metric fine-tuning codebase: ZoeDepth, Bhat et al., arXiv 2023 [4].\n- Self-training: Pseudo-label, Lee, ICMLW 2013 [31]; re-initializing the student, ST++, Yang et al., CVPR 2022 [74]; few-label contrast, FixMatch, Sohn et al., NeurIPS 2020 [56]; Yalniz et al., arXiv 2019 [73]; Zoph et al., NeurIPS 2020 [90].\n- Perturbation: CutMix, Yun et al., ICCV 2019 [84].\n- Semantic auxiliary line: Chen et al., CVPR 2019 [9]; Guizilini et al., ICLR 2020 [21]; Klingner et al., ECCV 2020 [28]; Xu et al., ECCV 2022 [72].\n- Projector design it declines to follow: BYOL, Grill et al., NeurIPS 2020 [19].\n- Naming and data: Segment Anything, Kirillov et al., ICCV 2023 [27].\n- Foundation models framing: Bommasani et al., arXiv 2021 [6].\n- Early deep MDE: Eigen et al., NeurIPS 2014 [17].\n- Sky mask: SegFormer, Xie et al., NeurIPS 2021 [70].\n- Conditioning demo: ControlNet, Zhang et al., ICCV 2023 [85].\n- Segmentation head and codebase: Mask2Former, Cheng et al., CVPR 2022 [12]; MMSegmentation 2020 [14].\n\nCODE: None in the PDF, and no repository URL beyond https://depth-anything.github.io (p1). The key equations are on p3 (Eq. 1-3 affine-invariant loss), p4 (Eq. 5-8 CutMix loss) and p5 (Eq. 9 Lfeat). Their extraction is garbled, so transcribe them from the PDF rather than from this text. One equation fragment extracted cleanly: \"uab = ua ⊙ M + ub ⊙ (1 − M ),\" (p4, Eq. 5).\n\nFIGURES\n- Figure 2, p4: \"Our pipeline. Solid line: flow of labeled images, dotted line: unlabeled images.\" The best candidate. It shows teacher, pseudo-labels, strong perturbation and frozen-encoder alignment in one diagram.\n- Figure 1, p1: predictions across COCO, SA-1B and the authors' own photos, in low light, fog and at long distance. Useful for showing what generalization looks like.\n- Figure 4, p8: depth compared with MiDaS, plus ControlNet synthesis from each depth map. Shows depth as a conditioning signal for generation.\n- Figure 3, p8: \"Qualitative results on six unseen datasets.\" A compact overview.\n- Figures 5-10, pp.10-15: input, ours and MiDaS v3.1 side by side, on KITTI, NYUv2, Sintel, DDAD, ETH3D and DIODE. Figure 5 explains that sparse KITTI ground truth is hard to visualize; brighter means closer. Figure 6 notes MiDaS used NYUv2 training data.\n\nPROBLEMS\n- No embedded instructions were found.\n- Extraction faults: equations are garbled, table highlighting (best and second best) is lost, and tick marks in Tables 9 and 13 have lost their columns. Table 13's row meaning is confirmed by the prose. Table 9's is inferred.\n- Table 1 does not sum to the headline for labeled data: its rows total 1,599K (about 1.6M), while the text says 1.5M. Unlabeled rows total 62.3M, consistent with \"more than 62M\" (my arithmetic).\n- Table 2 labels the MiDaS row \"ViT-L\" while the text calls it \"DPT-BEiTL-512\" (p5). Figure 1 calls SA-1B \"a hold-out unseen set\" although Table 1 lists SA-1B as an 11.1M training source. The PDF does not explain how the split works.\n- The spellings \"Ablation\", \"fine-tuning\" and \"zero-shot\" are as extracted. Check them against the PDF if quoting in a note.\n\nFile read: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/yang-2024-depth-anything-2401.10891.pdf"
+ "type": "empirical",
+ "question": "Can a monocular depth foundation model be built by scaling up with large unlabeled image sets and pseudo labels, even when labeled data is already sufficient?",
+ "hypothesis": "Unlabeled images, if the student is given a harder target and semantic priors from DINOv2, improve zero-shot generalisation beyond labeled data alone.",
+ "contributions": [
+  "Highlight the value of massive, cheap, diverse unlabeled images for MDE.",
+  "Challenge the student with strong perturbations (colour distortion, CutMix) when learning pseudo labels.",
+  "Inherit semantic priors from a frozen pre-trained encoder via feature alignment instead of an auxiliary segmentation task.",
+  "Stronger zero-shot than MiDaS-BEiT-L-512; fine-tuned with metric depth it outperforms ZoeDepth."
+ ],
+ "method": {
+  "summary": "Teacher trained on 1.5M labeled images annotates 62M unlabeled images; a re-initialised student trains on both, with CutMix and colour perturbation on unlabeled images and a cosine feature-alignment loss to a frozen DINOv2 encoder. Encoder is then fine-tuned for metric depth and segmentation.",
+  "task": "monocular relative depth estimation (zero-shot), plus metric depth and semantic segmentation transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BlendedMVS",
+    "role": "train",
+    "size": "115K images",
+    "split": "all",
+    "source": "public labeled (Stereo depth)",
+    "preprocessing": "Depth converted to disparity d=1/t, normalised to 0-1 per map; sky region (from segmentation model) set to disparity 0"
+   },
+   {
+    "name": "DIML",
+    "role": "train",
+    "size": "927K images",
+    "split": "all",
+    "source": "public labeled (Stereo depth)",
+    "preprocessing": null
+   },
+   {
+    "name": "HRWSI",
+    "role": "train",
+    "size": "20K images",
+    "split": "all",
+    "source": "public labeled (Stereo depth)",
+    "preprocessing": null
+   },
+   {
+    "name": "IRS",
+    "role": "train",
+    "size": "103K images",
+    "split": "all",
+    "source": "public labeled (Stereo depth)",
+    "preprocessing": null
+   },
+   {
+    "name": "MegaDepth",
+    "role": "train",
+    "size": "128K images",
+    "split": "all",
+    "source": "public labeled (SfM depth)",
+    "preprocessing": null
+   },
+   {
+    "name": "TartanAir",
+    "role": "train",
+    "size": "306K images",
+    "split": "all",
+    "source": "public labeled (Stereo depth)",
+    "preprocessing": null
+   },
+   {
+    "name": "BDD100K",
+    "role": "train",
+    "size": "8.2M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "Google Landmarks",
+    "role": "train",
+    "size": "4.1M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-21K",
+    "role": "train",
+    "size": "13.1M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "LSUN",
+    "role": "train",
+    "size": "9.8M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "Objects365",
+    "role": "train",
+    "size": "1.7M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "Open Images V7",
+    "role": "train",
+    "size": "7.8M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "Places365",
+    "role": "train",
+    "size": "6.5M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "SA-1B",
+    "role": "train",
+    "size": "11.1M images (no labels used)",
+    "split": "all",
+    "source": "public, raw images only, pseudo-labelled by teacher",
+    "preprocessing": null
+   },
+   {
+    "name": "KITTI",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "NYUv2",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Sintel",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "DDAD",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "ETH3D",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "DIODE",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "SUN RGB-D",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot metric",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "iBims-1",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot metric",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "HyperSim",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot metric",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Virtual KITTI 2",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot metric",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "DIODE Outdoor",
+    "role": "eval",
+    "size": "",
+    "split": "zero-shot metric",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "NYUv2 / KITTI (metric fine-tune)",
+    "role": "both",
+    "size": "",
+    "split": "train+eval in-domain",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Cityscapes",
+    "role": "both",
+    "size": "",
+    "split": "segmentation fine-tune",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K",
+    "role": "both",
+    "size": "",
+    "split": "segmentation fine-tune",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Depth Anything ViT-S",
+    "role": "proposed",
+    "params": "24.8M",
+    "architecture": "DINOv2 ViT-S encoder + DPT decoder",
+    "init_from": "DINOv2 pre-trained weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "patch_size": "14"
+    }
+   },
+   {
+    "name": "Depth Anything ViT-B",
+    "role": "proposed",
+    "params": "97.5M",
+    "architecture": "DINOv2 ViT-B encoder + DPT decoder",
+    "init_from": "DINOv2 pre-trained weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Depth Anything ViT-L",
+    "role": "proposed",
+    "params": "335.3M",
+    "architecture": "DINOv2 ViT-L encoder + DPT decoder",
+    "init_from": "DINOv2 pre-trained weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "teacher": "best ViT-L teacher annotates unlabeled set"
+    }
+   },
+   {
+    "name": "MiDaS v3.1 DPT-BEiT-L-512",
+    "role": "baseline",
+    "params": null,
+    "architecture": "DPT with BEiT-L",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training_sets": "12 labeled sets, including NYUv2 and KITTI"
+    }
+   },
+   {
+    "name": "ZoeDepth",
+    "role": "baseline",
+    "params": null,
+    "architecture": "MiDaS encoder + metric head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "reproduced by authors"
+    }
+   },
+   {
+    "name": "Frozen DINOv2 encoder",
+    "role": "teacher",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "target of feature alignment loss"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Affine-invariant MAE loss Ll on labeled, same on pseudo labels with CutMix Lu (weighted by mask area), plus Lfeat = 1 - mean cos(f, f'), skipping pixels with cos > alpha; overall loss is average of Ll, Lu, Lfeat",
+   "optimizer": "AdamW",
+   "lr": "5e-6 encoder, decoder 10x larger",
+   "lr_schedule": "linear decay",
+   "warmup": null,
+   "batch_size": "labeled:unlabeled = 1:2 per batch; total size not stated for pretraining",
+   "steps": null,
+   "epochs": "teacher 20 epochs; student sweeps all unlabeled images once",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "strong colour jitter + Gaussian blur and CutMix (50% probability) on unlabeled images; horizontal flip on labeled; student re-initialised not fine-tuned from teacher",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "alpha": "0.85",
+    "resolution": "shorter side resized to 518, crop 518x518",
+    "metric_finetune": "ZoeDepth codebase; 392x518 NYUv2, 384x768 KITTI; encoder lr 1/50 of decoder; batch 16; 5 epochs",
+    "segmentation_finetune": "MMSegmentation, Mask2Former, 896x896, encoder lr 3e-6, decoder 10x; 160K iters ADE20K, 80K Cityscapes, batch 16, no COCO/Mapillary pretraining",
+    "labeled_sampling": "datasets combined without re-sampling",
+    "sky": "sky set to disparity 0 using segmentation model [70]",
+    "failed_aux_segmentation": "4K-class pseudo masks (RAM + GroundingDINO + HQ-SAM) did not help"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single prediction per image",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "test_resolution": "no crop; sides multiples of 14; prediction interpolated to original resolution",
+    "zero_shot_eval": "scale and shift of prediction manually aligned with ground truth"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AbsRel",
+     "definition": "|d*-d|/d",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "δ1",
+     "definition": "percentage of max(d*/d, d/d*) < 1.25",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "mean intersection over union",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MiDaS v3.1 DPT-BEiT-L-512",
+    "ZoeDepth",
+    "AdaBins",
+    "DPT",
+    "VPD",
+    "NeWCRFs",
+    "SwinV2-L",
+    "Mask2Former",
+    "OneFormer",
+    "DINOv2 encoder"
+   ],
+   "protocol": "Zero-shot on six unseen sets; no seeds or significance reported"
+  },
+  "availability": {
+   "code": "released (depth-anything.github.io)",
+   "weights": "released",
+   "data": "unlabeled/labeled sets are public; pseudo labels not stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "the base\nlearning rate of the pre-trained encoder is set as 5e-6, while\nthe randomly initialized decoder uses a 10× larger learning\nrate",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Depth Anything ViT-L beats MiDaS v3.1 ViT-L on KITTI zero-shot relative depth (AbsRel).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel",
+   "value": "0.076",
+   "unit": null,
+   "baseline_value": "0.127",
+   "n": null,
+   "setup": "Zero-shot relative depth, scale and shift aligned to ground truth; MiDaS trained on KITTI/NYUv2 images, Depth Anything did not",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "e.g., 0.127 vs. 0.076 in AbsRel and 0.850 vs. 0.947 in δ1 on KITTI"
+  },
+  {
+   "claim": "On DDAD, ViT-L improves AbsRel over MiDaS v3.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel",
+   "value": "0.230",
+   "unit": null,
+   "baseline_value": "0.251",
+   "n": null,
+   "setup": "Zero-shot relative depth, ViT-L both",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "we improve the Ab-\nsRel (↓) from 0.251 →0.230 and improve the δ1 (↑) from\n0.766 →0.789"
+  },
+  {
+   "claim": "ViT-L beats MiDaS v3.1 AbsRel on all six unseen sets (NYUv2 0.043 vs 0.048, Sintel 0.458 vs 0.587, ETH3D 0.127 vs 0.139, DIODE 0.066 vs 0.075).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel NYUv2",
+   "value": "0.043",
+   "unit": null,
+   "baseline_value": "0.048",
+   "n": null,
+   "setup": "Table 2 zero-shot, ViT-L",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows MiDaS v3.1 and Depth Anything ViT-L, column AbsRel (NYUv2 0.043/0.048, Sintel 0.458/0.587, ETH3D 0.127/0.139, DIODE 0.066/0.075)"
+  },
+  {
+   "claim": "ViT-S (24.8M) loses to MiDaS on NYUv2 AbsRel (0.053 vs 0.048) and DIODE (0.076 vs 0.075) but wins on KITTI, Sintel, DDAD, ETH3D.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel NYUv2",
+   "value": "0.053",
+   "unit": null,
+   "baseline_value": "0.048",
+   "n": null,
+   "setup": "Table 2, ViT-S vs MiDaS v3.1 ViT-L",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Depth Anything ViT-S, columns NYUv2 AbsRel 0.053 and DIODE AbsRel 0.076; MiDaS 0.048 and 0.075"
+  },
+  {
+   "claim": "Naive pseudo-labelled unlabeled data gives no gain: adding Lu without perturbation leaves KITTI AbsRel at 0.085 and NYUv2 0.053 to 0.054.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel NYUv2",
+   "value": "0.054",
+   "unit": null,
+   "baseline_value": "0.053",
+   "n": null,
+   "setup": "Table 9 ablation, ViT-L, AbsRel, six unseen sets",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Ll+Lu (no S), columns KI 0.085 NY 0.054; row Ll only 0.085 0.053"
+  },
+  {
+   "claim": "Strong perturbation (S) plus Lfeat reaches KITTI 0.076 and NYUv2 0.043 AbsRel, vs 0.085/0.053 labeled-only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel KITTI",
+   "value": "0.076",
+   "unit": null,
+   "baseline_value": "0.085",
+   "n": null,
+   "setup": "Table 9 ablation, ViT-L",
+   "note": "With S but no Lfeat: KITTI 0.081, NYUv2 0.048.",
+   "where": "Table 9",
+   "table": "Table 9, row Ll Lu S Lfeat, columns KI 0.076 NY 0.043"
+  },
+  {
+   "claim": "Fine-tuned on NYUv2 metric depth, Depth Anything beats VPD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel NYUv2",
+   "value": "0.056",
+   "unit": null,
+   "baseline_value": "0.069",
+   "n": null,
+   "setup": "In-domain, ZoeDepth framework, ViT-L encoder",
+   "note": null,
+   "where": "Sec 4.3.1",
+   "quote": "improving\nthe δ1 (↑) from 0.964 →0.984 and AbsRel (↓) from 0.069\nto 0.056"
+  },
+  {
+   "claim": "Fine-tuned on KITTI, delta1 rises from 0.978 to 0.982.",
+   "kind": "measured",
+   "source": null,
+   "metric": "δ1 KITTI",
+   "value": "0.982",
+   "unit": null,
+   "baseline_value": "0.978",
+   "n": null,
+   "setup": "In-domain KITTI metric depth",
+   "note": null,
+   "where": "Sec 4.3.1",
+   "quote": "We improve the δ1 (↑) on KITTI\nfrom 0.978 →0.982"
+  },
+  {
+   "claim": "Zero-shot metric depth: swapping the encoder in ZoeDepth improves most cells (Virtual KITTI 2 AbsRel 0.085 vs 0.106) but DIODE Outdoor is mixed (AbsRel 0.794 vs 0.814 better, delta1 0.288 vs 0.237 as printed).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel Virtual KITTI 2",
+   "value": "0.085",
+   "unit": null,
+   "baseline_value": "0.106",
+   "n": null,
+   "setup": "ZoeDepth reproduced by authors; NYUv2-trained model for indoor, KITTI-trained for outdoor",
+   "note": "DIODE Outdoor columns as printed: ZoeDepth 0.814 / 0.237, Depth Anything 0.794 / 0.288.",
+   "where": "Table 5",
+   "table": "Table 5, Depth Anything vs ZoeDepth, Virtual KITTI 2 AbsRel 0.085 vs 0.106"
+  },
+  {
+   "claim": "Encoder fine-tuned on Cityscapes semantic segmentation reaches 86.2 mIoU (multi-scale).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU m.s.",
+   "value": "86.2",
+   "unit": "mIoU",
+   "baseline_value": "84.6",
+   "n": null,
+   "setup": "Mask2Former, ViT-L, no COCO/Mapillary pretraining",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "our encoder from large-scale MDE training\n(86.2 mIoU) is superior to existing encoders from large-scale\nImageNet-21K pre-training, e.g., Swin-L [39] (84.3) and\nConvNeXt-XL [41] (84.6)"
+  },
+  {
+   "claim": "On ADE20K the encoder reaches 59.4 mIoU vs previous best 58.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "59.4",
+   "unit": "mIoU",
+   "baseline_value": "58.3",
+   "n": null,
+   "setup": "Mask2Former segmentation model",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "We improve the previous\nbest result from 58.3 →59.4"
+  },
+  {
+   "claim": "Depth Anything encoder beats MiDaS encoder downstream: ADE20K 59.4 vs 52.4 mIoU, NYUv2 delta1 0.984 vs 0.951.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU ADE20K",
+   "value": "59.4",
+   "unit": null,
+   "baseline_value": "52.4",
+   "n": null,
+   "setup": "Downstream fine-tuning",
+   "note": null,
+   "where": "Sec 4.5, Table 10",
+   "quote": "e.g., 0.951 vs. 0.984 in the δ1 metric on NYUv2, and 52.4\nvs. 59.4 in the mIoU metric on ADE20K"
+  },
+  {
+   "claim": "Depth Anything encoder beats original DINOv2 encoder downstream: NYUv2 AbsRel 0.056 vs 0.066, ADE20K 59.4 vs 58.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AbsRel NYUv2",
+   "value": "0.056",
+   "unit": null,
+   "baseline_value": "0.066",
+   "n": null,
+   "setup": "Table 11 fine-tuning",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, rows DINOv2 and Ours, columns NYUv2 AbsRel 0.066/0.056, ADE20K mIoU 58.8/59.4"
+  },
+  {
+   "claim": "Tolerance margin alpha: 0.85 gives mean AbsRel 0.175 vs 0.188 with alpha 1.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean AbsRel",
+   "value": "0.175",
+   "unit": null,
+   "baseline_value": "0.188",
+   "n": null,
+   "setup": "ViT-S ablation",
+   "note": null,
+   "where": "Sec 7, Table 12",
+   "quote": "(mean AbsRel: 0.188 vs. 0.175)"
+  },
+  {
+   "claim": "Applying Lfeat to labeled data gives no benefit (mean AbsRel 0.179 vs 0.180 baseline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean AbsRel",
+   "value": "0.179",
+   "unit": null,
+   "baseline_value": "0.180",
+   "n": null,
+   "setup": "ViT-S ablation",
+   "note": null,
+   "where": "Sec 7, Table 13",
+   "quote": "0.180 vs. 0.179"
+  },
+  {
+   "claim": "HRWSI with only 20K images generalises best among labeled sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-dataset zero-shot transfer, ViT-L relative model",
+   "note": null,
+   "where": "Sec 4.5, Table 6",
+   "quote": "HRWSI [68] fuels our model with the strongest\ngeneralization ability, even though it only contains 20K im-\nages"
+  },
+  {
+   "claim": "Better depth-conditioned ControlNet is claimed from a qualitative figure only.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4 side-by-side with MiDaS; no metric",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "Our model produces more accurate depth estimation than\nMiDaS, as well as better synthesis results."
+  }
+ ],
+ "limits": [
+  "Largest model is ViT-L; ViT-G and resolutions of 700+ left to future work (Sec 8).",
+  "Training resolution 518 judged insufficient for real applications.",
+  "MiDaS used NYUv2/KITTI training images so those two comparisons are not like for like.",
+  "Compute, hardware, batch size of main run, seeds and warmup are not stated; no latency figures; ControlNet benefit shown qualitatively only.",
+  "Zero-shot relative evaluation aligns scale and shift to ground truth, so it does not measure metric distance."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "MiDaS (Ranftl et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "affine-invariant multi-dataset loss, reproduced",
+   "quote": null
+  },
+  {
+   "work": "MiDaS v3.1",
+   "year": 2023,
+   "arxiv": "2307.14460",
+   "relation": "baseline",
+   "note": "best DPT-BEiT-L-512 model",
+   "quote": null
+  },
+  {
+   "work": "ZoeDepth",
+   "year": 2023,
+   "arxiv": "2302.12288",
+   "relation": "extends",
+   "note": "metric fine-tuning framework",
+   "quote": null
+  },
+  {
+   "work": "DINOv2 (Oquab et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "encoder init and frozen alignment target",
+   "quote": null
+  },
+  {
+   "work": "DPT (Ranftl et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "decoder",
+   "quote": null
+  },
+  {
+   "work": "Pseudo-label (Lee 2013)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "self-training",
+   "quote": null
+  },
+  {
+   "work": "CutMix (Yun et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "spatial perturbation",
+   "quote": null
+  },
+  {
+   "work": "ControlNet (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "depth-conditioned synthesis retrained on Depth Anything",
+   "quote": null
+  },
+  {
+   "work": "FixMatch (Sohn et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "semi-supervised strong augmentation; paper says its self-training pilot contradicts observations with few labels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our pipeline. Solid line: flow of labeled images, dotted line: unlabeled images.",
+   "page": 4,
+   "why": "Shows teacher, pseudo labels, perturbed student and frozen-encoder alignment."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "We compare our depth prediction with MiDaS. Meantime, we use ControlNet to synthesize new images from the depth map.",
+   "page": 8,
+   "why": "Only evidence for the ControlNet claim."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9",
+   "snippet": "L_feat = 1 - (1/HW) sum_i cos(f_i, f'_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Equation text garbled in extraction; Eq 6 label missing."
+ ]
 }

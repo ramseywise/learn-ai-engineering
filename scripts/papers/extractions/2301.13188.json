@@ -1,0 +1,608 @@
+{
+ "schema": 1,
+ "key": "2301.13188",
+ "pdf": "ai-engineering/09-safety-and-security/sources/carlini-2023-extracting-training-data-diffusion-models.pdf",
+ "bib": {
+  "title": "Extracting Training Data from Diffusion Models",
+  "authors": [
+   "Nicholas Carlini",
+   "Jamie Hayes",
+   "Milad Nasr",
+   "Matthew Jagielski",
+   "Vikash Sehwag",
+   "Florian Tramèr",
+   "Borja Balle",
+   "Daphne Ippolito",
+   "Eric Wallace"
+  ],
+  "first_author": "Carlini",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.13188",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 95925,
+  "chars_total": 95925,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Do image diffusion models memorize and regenerate individual training images, and how do modeling and data choices affect this privacy leakage?",
+ "hypothesis": "Diffusion models do not merely generate novel images: they memorize and emit training examples, and are less private than GANs.",
+ "contributions": [
+  "Definitions of approximate image extraction (l,delta) and eidetic memorization (k,l,delta)",
+  "A generate-and-filter black-box extraction attack on Stable Diffusion and Imagen",
+  "Controlled study of hundreds of CIFAR-10 diffusion models: membership inference, inpainting, deduplication, DP-SGD, canaries",
+  "Comparison of diffusion models and GANs on membership inference and extraction"
+ ],
+ "method": {
+  "summary": "Black-box generate-and-filter attack: pick near-duplicated training captions (CLIP embedding similarity), generate 500 images per prompt, flag cliques of >=10 near-identical generations (tile-wise l2) as memorized, then verify against training set. On CIFAR-10, train 16 diffusion models on random halves and run untargeted extraction, loss-threshold and LiRA membership inference, inpainting attacks, and compare to GANs.",
+  "task": "training data extraction / membership inference against image generative models",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION subset used by Stable Diffusion",
+    "role": "eval",
+    "size": "160 million images (350,000 most-duplicated prompts attacked)",
+    "split": null,
+    "source": "public web images",
+    "preprocessing": "near-duplicates found via 512-d CLIP embeddings and cosine similarity; captions of near-duplicated images used as prompts"
+   },
+   {
+    "name": "Imagen training set (non-public)",
+    "role": "eval",
+    "size": null,
+    "split": "top-1000 most duplicated prompts; 500 most outlier images",
+    "source": "non-public",
+    "preprocessing": "outlierness = mean CLIP distance to 1,000 nearest neighbours"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "train",
+    "size": "50,000 training images",
+    "split": "each model trained on a random 50% partition",
+    "source": "public",
+    "preprocessing": "dedup experiment: imagededup similarity >0.85 removes 5,275 of 50,000"
+   }
+  ],
+  "models": [
+   {
+    "name": "Stable Diffusion v1.4",
+    "role": "evaluated",
+    "params": "890 million",
+    "architecture": "text-conditioned diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sampling": "PLMS default, 512x512; timestep-resampled generation (~10x faster) for attack"
+    }
+   },
+   {
+    "name": "Imagen",
+    "role": "evaluated",
+    "params": "2 billion",
+    "architecture": "text-to-image diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CIFAR-10 diffusion models (16 shadow/target)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "OpenAI Improved Diffusion or own re-implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "T": "1,000 timesteps",
+     "FID": "class-conditional <3.5 (avg 3.5 with early stopping); unconditional <4"
+    }
+   },
+   {
+    "name": "GANs trained: StyleGAN, MHGAN, BigGAN (StudioGAN)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "256 models per architecture, each on random 50% of CIFAR-10"
+    }
+   },
+   {
+    "name": "Off-the-shelf GANs and DDPMs (WGAN-ALP, E2GAN, NDA, DiffBigGAN, StyleGAN-ADA, DDPM, OpenAI-DDPM)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard diffusion noise-prediction loss (Eq. 1) for CIFAR-10 models",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "GAN steps": "BigGAN raised to 200,000 steps; StyleGAN and MHGAN StudioGAN defaults",
+    "DP-SGD": "diverged on CIFAR-10 even at epsilon around 50",
+    "reference": "OpenAI CIFAR-10 model: 500,000 steps at batch 128 = 64M examples (Appendix C.1)"
+   }
+  },
+  "inference": {
+   "decoding": "PLMS (Stable Diffusion); DDIM (CIFAR-10 per Table 3); inpainting per Lugmayr et al.",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "500 images per prompt for 350,000 prompts (175 million) on SD; 500 per prompt for 1,000 prompts on Imagen; 2^16 images from each of 16 CIFAR-10 models (2^20 total); 2^20 per GAN; 5,000 inpaintings per target, top 10 scored kept, 100 images",
+   "prompting": "captions of near-duplicated training images",
+   "retrieval": null,
+   "parameters": {
+    "clique_threshold": "largest clique >=10 of 500 generations",
+    "distance": "max l2 over 16 non-overlapping 128x128 tiles",
+    "extraction_def": "(l2, 0.15)",
+    "eidetic_delta": "0.1",
+    "CIFAR adaptive threshold": "alpha=0.5, n=50 nearest neighbours",
+    "MIA timestep": "t=100 (best range t in [50,300])",
+    "strong LiRA": "20 Monte Carlo noise samples plus horizontal flip augmentation",
+    "inpainting": "mask left half; 60% central pixels in Appendix D"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "extracted images",
+     "definition": "generation with l2 <= delta to a training image (Definition 1); CIFAR uses adaptive per-image threshold",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "TPR at fixed FPR",
+     "definition": "membership inference true positive rate at 1% or 0.1% FPR",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance of generated vs real",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "loss threshold attack (Yeom et al.)",
+    "LiRA (Carlini et al. 2022)",
+    "GANs",
+    "classifiers (<20% TPR at 1% FPR, from Carlini et al. 2022)"
+   ],
+   "protocol": "Single run counts; manual visual inspection of top-1000 SD generations; no seeds or significance tests stated except a p<1e-261 overlap argument"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "LAION and CIFAR-10 public; Imagen data non-public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Black-box attack on Stable Diffusion finds 94 (l2,0.15)-extracted images among 350,000 most-duplicated prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "extracted images",
+   "value": "94",
+   "unit": "images",
+   "baseline_value": null,
+   "n": "175 million generations",
+   "setup": "Stable Diffusion v1.4, 350,000 most-duplicated prompts, 500 generations each",
+   "quote": "We ﬁnd 94 images are (ℓ2,0.15)-",
+   "table": null,
+   "note": "109 total after manual inspection of top-1000 adds 13",
+   "where": "4.2.2"
+  },
+  {
+   "claim": "Manual inspection raises Stable Diffusion extracted count to 109 near-copies",
+   "kind": "measured",
+   "source": null,
+   "metric": "near-copies",
+   "value": "109",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above; top-1000 generated images manually annotated",
+   "quote": "a further 13 (for a total of 109 images) are near-copies of training",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "Attack identifies 50 memorized images with zero false positives out of 175 million",
+   "kind": "measured",
+   "source": null,
+   "metric": "memorized at 0 FP",
+   "value": "50",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Diffusion, same attack",
+   "quote": "we can identify 50 memorized images with 0",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "Imagen: 23 of 1,000 most-duplicated prompts yield memorized images",
+   "kind": "measured",
+   "source": null,
+   "metric": "memorized",
+   "value": "23",
+   "unit": "of 1,000",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Imagen 2B, 500 generations per prompt",
+   "quote": "we identify 23 of these 1,000 images as mem-",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Outlier attack: Imagen memorizes 3 of 500 top out-of-distribution images; Stable Diffusion none in 10,000",
+   "kind": "measured",
+   "source": null,
+   "metric": "memorized outliers",
+   "value": "3",
+   "unit": "images",
+   "baseline_value": "0",
+   "n": 500,
+   "setup": "Imagen top-500 outliers by CLIP kNN distance",
+   "quote": "Imagen memorized and regurgitated\n3 of these images",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Extraction rate depends on duplication; little eidetic memorization below k=100 duplicates, and duplicated images make up one in a million of training examples",
+   "kind": "measured",
+   "source": null,
+   "metric": "k",
+   "value": "100",
+   "unit": "duplicates",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Diffusion, delta=0.1; upper bound because prompts are chosen from duplicated images",
+   "quote": "most often when they have been duplicated at least\nk = 100 times",
+   "table": null,
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "58% of extracted SD images are photos of a recognizable person; 35% carry explicit non-permissive copyright notice",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "58",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Diffusion extracted images",
+   "quote": "(58%) are photographs with a recognizable",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "1,280 unique CIFAR-10 training images (2.5%) extracted from 1 million generations of 16 diffusion models",
+   "kind": "measured",
+   "source": null,
+   "metric": "extracted",
+   "value": "1,280",
+   "unit": "images",
+   "baseline_value": null,
+   "n": "2^20 generations",
+   "setup": "16 unconditional CIFAR-10 models, adaptive l2 threshold alpha=0.5, n=50",
+   "quote": "1,280 unique extracted images from the CIFAR-10",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "LiRA on CIFAR-10 diffusion gets >70% TPR at 1% FPR; classifiers <20%",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@1%FPR",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": "<20% (classifiers, reported from Carlini et al. 2022)",
+   "n": null,
+   "setup": "16 shadow models on random halves, loss at t=100",
+   "quote": "achieves a true positive rate of over 70% at a false posi-",
+   "table": null,
+   "note": "t=100 TPR printed as 71%",
+   "where": "5.2.1"
+  },
+  {
+   "claim": "Strong LiRA (20 noise samples + flip augmentation) raises TPR at 0.1% FPR from 7% to 44%",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@0.1%FPR",
+   "value": "44",
+   "unit": "%",
+   "baseline_value": "7",
+   "n": null,
+   "setup": "CIFAR-10 diffusion, LiRA",
+   "quote": "from 7% to 44%",
+   "table": null,
+   "note": null,
+   "where": "5.2.2"
+  },
+  {
+   "claim": "Better diffusion models (lower FID) leak more: MIA success grows from 7% to nearly 100%",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@1%FPR",
+   "value": "nearly 100",
+   "unit": "%",
+   "baseline_value": "7",
+   "n": null,
+   "setup": "CIFAR-10 over training",
+   "quote": "success rate grows from 7% to nearly 100%",
+   "table": null,
+   "note": null,
+   "where": "Fig 11"
+  },
+  {
+   "claim": "Best DDPM extracts 301 images vs 150 for StyleGAN-ADA out of 1 million generations at similar FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "extracted images",
+   "value": "301",
+   "unit": "images",
+   "baseline_value": "150",
+   "n": "1M generations",
+   "setup": "off-the-shelf CIFAR-10 models; OpenAI-DDPM FID 2.9, StyleGAN-ADA FID 2.9",
+   "quote": null,
+   "table": "Table 1, row OpenAI-DDPM, column Images Extracted",
+   "note": "Table also: DDPM 232 (FID 3.2); GANs 57, 95, 70, 49",
+   "where": "6"
+  },
+  {
+   "claim": "Diffusion MIA gets 50% TPR at 0.1% FPR vs <30% for GANs",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@0.1%FPR",
+   "value": "50",
+   "unit": "%",
+   "baseline_value": "<30",
+   "n": null,
+   "setup": "CIFAR-10, GAN attack uses discriminator loss",
+   "quote": "diffusion models had 50% TPR at a FPR of 0.1% as compared\nto < 30% TPR for GANs",
+   "table": null,
+   "note": null,
+   "where": "6"
+  },
+  {
+   "claim": "244 images memorized by both the diffusion model (1280) and a StyleGAN (361), vs ~10 expected by chance",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlap",
+   "value": "244",
+   "unit": "images",
+   "baseline_value": "10",
+   "n": null,
+   "setup": "CIFAR-10",
+   "quote": "244 unique\nimages are memorized in common",
+   "table": null,
+   "note": null,
+   "where": "6"
+  },
+  {
+   "claim": "Deduplicating CIFAR-10 (5,275 removed) only reduces regenerated examples from 1280 to 986",
+   "kind": "measured",
+   "source": null,
+   "metric": "regenerated",
+   "value": "986",
+   "unit": "images",
+   "baseline_value": "1280",
+   "n": null,
+   "setup": "imagededup similarity >0.85",
+   "quote": "regenerates 986 examples, as compared to\n1280 for the original model",
+   "table": null,
+   "note": null,
+   "where": "7.1"
+  },
+  {
+   "claim": "DP-SGD made CIFAR-10 diffusion training diverge even at epsilon around 50",
+   "kind": "measured",
+   "source": null,
+   "metric": "epsilon",
+   "value": "50",
+   "unit": "epsilon",
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' codebase",
+   "quote": "even at high values for\nε (the privacy budget, around 50)",
+   "table": null,
+   "note": null,
+   "where": "7.2"
+  },
+  {
+   "claim": "Canaries inserted twice reach maximum exposure of 10",
+   "kind": "measured",
+   "source": null,
+   "metric": "max exposure",
+   "value": "10",
+   "unit": "exposure",
+   "baseline_value": null,
+   "n": null,
+   "setup": "uniform noise canaries in CIFAR-10 diffusion training",
+   "quote": "the maximum exposure is 10, and some canaries reach this exposure after being\ninserted only twice",
+   "table": null,
+   "note": null,
+   "where": "7.3"
+  },
+  {
+   "claim": "Membership attack TPR at 1% FPR goes from 5% (5M examples processed) to 99% (102M)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@1%FPR",
+   "value": "99",
+   "unit": "%",
+   "baseline_value": "5",
+   "n": null,
+   "setup": "CIFAR-10 diffusion",
+   "quote": "increases to 99% after 102M examples are processed",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  }
+ ],
+ "limits": [
+  "Extraction definition is deliberately narrow (l2-based); recognizable but non-identical generations (e.g. Obama) not counted",
+  "SD and Imagen results target heavily duplicated images and are an upper bound; no low-duplication extraction found on SD",
+  "Imagen training data non-public, so no visual examples",
+  "No hyperparameters (optimizer, lr, batch, hardware) given for CIFAR-10 models; no seeds or confidence intervals",
+  "DP-SGD failure not investigated",
+  "Authors concede question of whether models copy vs generalize remains open"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "(l,delta)-Diffusion Extraction",
+   "definition": "x is extractable if an efficient algorithm A not given x outputs x_hat = A(f) with l(x, x_hat) <= delta",
+   "where": "4.1"
+  },
+  {
+   "term": "(k,l,delta)-Eidetic Memorization",
+   "definition": "x is extractable and at most k training examples are within delta of x",
+   "where": "4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Extracting training data from large language models",
+   "year": 2021,
+   "arxiv": "2012.07805",
+   "relation": "extends",
+   "note": "two-step generate-and-filter attack and eidetic memorization adapted to images",
+   "quote": null
+  },
+  {
+   "work": "Membership inference attacks from first principles (LiRA)",
+   "year": 2022,
+   "arxiv": "2112.03570",
+   "relation": "uses-method",
+   "note": "LiRA and TPR-at-low-FPR evaluation",
+   "quote": null
+  },
+  {
+   "work": "Somepalli et al., Diffusion art or digital forgery?",
+   "year": 2022,
+   "arxiv": "2212.03860",
+   "relation": "related",
+   "note": "concurrent work on replication in diffusion models",
+   "quote": null
+  },
+  {
+   "work": "Stable Diffusion (Rombach et al.)",
+   "year": 2022,
+   "arxiv": "2112.10752",
+   "relation": "evaluates",
+   "note": "main target",
+   "quote": null
+  },
+  {
+   "work": "Imagen (Saharia et al.)",
+   "year": 2022,
+   "arxiv": "2205.11487",
+   "relation": "evaluates",
+   "note": "second target",
+   "quote": null
+  },
+  {
+   "work": "LAION / CIFAR-10",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training data of targets",
+   "quote": null
+  },
+  {
+   "work": "Balle et al., Reconstructing training data with informed adversaries",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "l2 distance normalisation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Diffusion models memorize individual training examples and generate them at test time.",
+   "page": 1,
+   "why": "One image pair shows the attack outcome."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Number of training images extracted from off-the-shelf generative models out of 1 million unconditional generations.",
+   "page": 12,
+   "why": "Diffusion vs GAN extraction counts with FID."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Extraction most often when duplicated at least k=100 times.",
+   "page": 6,
+   "why": "Duplication drives extraction."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Abstract says over a thousand training examples extracted from state-of-the-art models; body counts are 109 (SD) and 23+3 (Imagen), while the 1,280 figure is from CIFAR-10 models the authors trained. Intro says over a hundred.",
+  "Text contains no embedded instructions."
+ ]
+}

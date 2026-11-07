@@ -1,0 +1,482 @@
+{
+ "schema": 1,
+ "key": "1902.10186",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/jain-2019-attention-not-explanation.pdf",
+ "bib": {
+  "title": "Attention is not Explanation",
+  "authors": [
+   "Sarthak Jain",
+   "Byron C. Wallace"
+  ],
+  "first_author": "Jain",
+  "year": 2019,
+  "venue": "preprint (arXiv v3, 8 May 2019)",
+  "arxiv": "1902.10186",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59451,
+  "chars_total": 59451,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do learned attention weights in NLP models provide faithful, meaningful explanations of the model's predictions?",
+ "hypothesis": "If attention were a faithful explanation, it would correlate with gradient/leave-one-out importance and alternative attention weights would change the prediction.",
+ "contributions": [
+  "Correlation of attention with gradient and leave-one-out feature importance across tasks and encoders",
+  "Counterfactual attention: random permutation and an adversarial-attention optimisation that finds very different weights giving the same output"
+ ],
+ "method": {
+  "summary": "Train BiLSTM, CNN and average-embedding encoders with additive or scaled dot-product attention on classification, QA and NLI datasets. On test sets, compute Kendall tau between attention and gradient/LOO importance, permute attention 100 times, and optimise adversarial attention distributions within a TVD epsilon of the original output.",
+  "task": "text classification, question answering, natural language inference (analysis of attention explanations)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SST",
+    "role": "both",
+    "size": "10,662 sentences; train 3034/3321, test 863/862 (neg/pos)",
+    "split": "as in Table 1",
+    "source": "Socher et al., 2013",
+    "preprocessing": "neutral removed, labels 1-2 negative, 4-5 positive"
+   },
+   {
+    "name": "IMDB",
+    "role": "both",
+    "size": "50,000 reviews; train 12500/12500, test 2184/2172",
+    "split": "half train, half test",
+    "source": "Maas et al., 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "ADR Tweets",
+    "role": "both",
+    "size": "train 14446/1939, test 3636/487",
+    "split": "Table 1",
+    "source": "Nikfarjam et al., 2015 (a superset used)",
+    "preprocessing": null
+   },
+   {
+    "name": "20 Newsgroups (Hockey vs Baseball)",
+    "role": "both",
+    "size": "train 716/710, test 151/183",
+    "split": "Table 1",
+    "source": "20 Newsgroups",
+    "preprocessing": "baseball=0, hockey=1"
+   },
+   {
+    "name": "AG News (Business vs World)",
+    "role": "both",
+    "size": "train 30000/30000, test 1900/1900",
+    "split": "Table 1",
+    "source": "AG corpus",
+    "preprocessing": "top 4 categories then world vs business"
+   },
+   {
+    "name": "MIMIC ICD9 Diabetes",
+    "role": "both",
+    "size": "train 6381/1353, test 1295/319",
+    "split": "Table 1",
+    "source": "MIMIC III (Johnson et al., 2016)",
+    "preprocessing": null
+   },
+   {
+    "name": "MIMIC ICD9 Anemia (chronic vs acute)",
+    "role": "both",
+    "size": "train 1847/3251, test 460/802",
+    "split": "Table 1",
+    "source": "MIMIC III",
+    "preprocessing": null
+   },
+   {
+    "name": "CNN News",
+    "role": "both",
+    "size": "train 380298, test 3198",
+    "split": "Table 1",
+    "source": "Hermann et al., 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "bAbI tasks 1/2/3",
+    "role": "both",
+    "size": "train 10000, test 1000 each",
+    "split": "Table 1",
+    "source": "Weston et al., 2015",
+    "preprocessing": "separate model per task"
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "train 182764/183187/183416, test 3219/3237/3368",
+    "split": "Table 1",
+    "source": "Bowman et al., 2015",
+    "preprocessing": "attention over premise conditioned on hypothesis"
+   }
+  ],
+  "models": [
+   {
+    "name": "BiLSTM + attention",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BiLSTM encoder, additive or scaled dot-product attention, dense decoder",
+    "init_from": "pretrained embeddings (FastText on Simple English Wikipedia for SST, IMDB, 20News, CNN; GloVe 840B for AG News, SNLI; Gensim-trained for MIMIC)",
+    "tokenizer": "spaCy; OOV to <unk>, numeric words to qqq",
+    "vocab": "see Table 1 per dataset",
+    "layers": null,
+    "hidden": "128 (30 for bAbI)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_size": "300 (50 for bAbI)"
+    }
+   },
+   {
+    "name": "CNN + attention",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "4 kernels sizes [1,3,5,7], 64 filters each, ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "256 (8 for bAbI)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_size": "300 (50 for bAbI)"
+    }
+   },
+   {
+    "name": "Average + attention",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "linear projection 256 + ReLU per token, no ordering",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_size": "300"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximum likelihood loss; sigmoid for binary, softmax otherwise",
+   "optimizer": "Adam, default PyTorch parameters",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "l2, lambda = 10^-5 on all parameters",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "100 random permutations per instance, median taken; k adversarial distributions per instance (k not stated)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "epsilon_text_classification": "0.01",
+    "epsilon_QA": "0.05",
+    "lambda_relaxation": "500",
+    "adversarial_optimizer": "Adam",
+    "k": null
+   },
+   "other": {
+    "all results on test sets; Additive attention reported, Scaled Dot Product 'generally comparable'": true
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Kendall tau, attention vs gradient (tau_g)",
+     "definition": "rank correlation of attention with absolute input gradient per token, gradient not flowing through attention",
+     "unit": "tau (-1 to 1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kendall tau, attention vs leave-one-out (tau_loo)",
+     "definition": "rank correlation of attention with TVD change in output when a token is removed",
+     "unit": "tau",
+     "higher_is_better": true
+    },
+    {
+     "name": "Median output change under permutation",
+     "definition": "median over 100 permutations of TVD(y_perm, y)",
+     "unit": "TVD",
+     "higher_is_better": false
+    },
+    {
+     "name": "epsilon-max JSD",
+     "definition": "max JS divergence between original and adversarial attention with TVD of outputs <= epsilon; upper bound 0.69",
+     "unit": "nats",
+     "higher_is_better": null
+    },
+    {
+     "name": "Test performance",
+     "definition": "F1 (classification), accuracy (QA), micro-F1 (NLI)",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Average (feed-forward projection) encoder vs BiLSTM; CNN encoder in supplement"
+   ],
+   "protocol": "Test sets only; per-instance statistics shown as histograms by predicted class; Sig. Frac. is fraction of instances where tau is statistically significant (test not named); single trained model per configuration, no seeds stated."
+  },
+  "availability": {
+   "code": "https://github.com/successar/AttentionExplanation",
+   "weights": null,
+   "data": "public datasets; plots at https://successar.github.io/AttentionExplanation/docs/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.epsilon",
+    "quote": "In practice we simply set this to 0.01 for text classiﬁcation and 0.05 for QA datasets.",
+    "where": "Sec 4.2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Mean tau_g between BiLSTM attention and gradients is low on SST class 0",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau_g",
+   "value": "0.40",
+   "unit": "tau",
+   "baseline_value": "0.69 (Average encoder)",
+   "n": null,
+   "setup": "SST test, BiLSTM + additive attention, class 0, mean of per-instance tau",
+   "quote": null,
+   "table": "Table 2, row SST class 0, column Gradient (BiLSTM) 0.40 ± 0.21 vs Gradient (Average) 0.69 ± 0.15",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Lowest mean tau_g is on 20 Newsgroups class 0, highest on Diabetes class 0, for BiLSTM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau_g",
+   "value": "0.08",
+   "unit": "tau",
+   "baseline_value": "0.65 (Average encoder)",
+   "n": null,
+   "setup": "20 Newsgroups (Hockey vs Baseball) class 0, BiLSTM; Diabetes class 0 is 0.47",
+   "quote": null,
+   "table": "Table 2, row 20News class 0, column Gradient (BiLSTM) 0.08 ± 0.15; row Diabetes class 0, 0.47 ± 0.06",
+   "note": "values are per-class means, not dataset averages",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Average-encoder attention correlates much more with gradients than BiLSTM attention",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau_g range, Average encoder",
+   "value": "0.48 to 0.84",
+   "unit": "tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 Gradient (Average) column, minimum CNN 0.48, maximum bAbI 2 0.84",
+   "quote": null,
+   "table": "Table 2, column Gradient (Average), rows CNN Overall 0.48 ± 0.11 and bAbI 2 Overall 0.84 ± 0.09",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LOO and gradient importance agree with each other more than attention agrees with either",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean correlation difference",
+   "value": "~0.25",
+   "unit": "tau_g",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BiLSTM + tanh attention, 12 dataset tasks, Fig 4; Fig 3 gives >0.2 for tau_loo; exception SNLI",
+   "quote": "On average the former is more correlated than the latter by ∼0.25 τg.",
+   "table": null,
+   "note": "read from Fig 3/4 captions",
+   "where": "Fig 3, Fig 4"
+  },
+  {
+   "claim": "Attention over Average encoder correlates with LOO about 0.375 higher than over BiLSTM",
+   "kind": "measured",
+   "source": null,
+   "metric": "difference in mean tau_loo",
+   "value": "~0.375",
+   "unit": "tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tanh attention, Average vs BiLSTM encoder, all datasets",
+   "quote": "is on average ∼0.375 points higher for the simple feedforward encoder",
+   "table": null,
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Randomly permuting attention gives a median output difference of only 0.006 on the Fig 1 example",
+   "kind": "measured",
+   "source": null,
+   "metric": "median TVD under permutation",
+   "value": "0.006",
+   "unit": "TVD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single negative movie review, attentive BiLSTM sentiment model",
+   "quote": "arbitrarily per-\nmuting the entries in α yields a median output dif-\nference of 0.006 with the original prediction",
+   "table": null,
+   "note": "illustrative single instance",
+   "where": "Introduction"
+  },
+  {
+   "claim": "Adversarial attention far from the original gives equivalent predictions for many instances",
+   "kind": "measured",
+   "source": null,
+   "metric": "epsilon-max JSD",
+   "value": "0.69",
+   "unit": "JSD upper bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "epsilon 0.01 classification, 0.05 QA; mass near 0.69 in Fig 7 for many instances",
+   "quote": "Note that the JS Divergence between any two\ncategorical distributions (irrespective of length) is\nbounded from above by 0.69.",
+   "table": null,
+   "note": "the qualitative claim 'frequently able to identify maximally different attention weights that hardly budge model output' is from Fig 7; no summary number is given",
+   "where": "Sec 4.2.2, Fig 7"
+  },
+  {
+   "claim": "Diabetes positive class is an exception: perturbing attention changes the output",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MIMIC Diabetes, BiLSTM; few high-precision tokens indicate positive class",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.1, 4.2.2"
+  },
+  {
+   "claim": "Max attention weight is only weakly negatively related to how different an equivalent adversarial attention can be",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8, BiLSTM and CNN",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 8"
+  }
+ ],
+ "limits": [
+  "Kendall tau over all tokens may be depressed by irrelevant features; agreement on top-k features is untested",
+  "Gradients and LOO are not ground truth",
+  "Adversarial attention shows existence of alternative heatmaps, not that the model would produce them; they may be unlikely under the attention module's parameters",
+  "Multiple plausible explanations may exist; the authors say a 'sufficient' explanation may be reasonable",
+  "Only a few attention variants (additive, scaled dot-product) with BiLSTM, CNN, average encoders; no transformers or seq2seq",
+  "No seeds, learning rate, batch size or epochs stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "faithful explanation",
+   "definition": "whether attention weights indicate why a model made the prediction that it did",
+   "where": "Introduction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural machine translation by jointly learning to align and translate",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "evaluates",
+   "note": "additive attention studied",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "evaluates",
+   "note": "scaled dot-product similarity studied",
+   "quote": null
+  },
+  {
+   "work": "Understanding neural networks through representation erasure",
+   "year": 2016,
+   "arxiv": "1612.08220",
+   "relation": "uses-method",
+   "note": "leave-one-out erasure",
+   "quote": null
+  },
+  {
+   "work": "Right for the right reasons",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gradient-based feature importance",
+   "quote": null
+  },
+  {
+   "work": "Rationalizing neural predictions (Lei et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hard attention designed for interpretability",
+   "quote": null
+  },
+  {
+   "work": "Pappas and Popescu-Belis",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "human vs machine attention",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Heatmap of attention weights induced over a negative movie review. We show observed model attention (left) and an adversarially constructed set of attention weights (right).",
+   "page": 1,
+   "why": "two dissimilar attentions give the same prediction (0.01)"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Mean and std. dev. of correlations between gradient/leave-one-out importance measures and attention weights.",
+   "page": 4,
+   "why": "main correlation numbers per dataset and encoder"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure data (histograms) not recoverable from text; Fig 3/4/5 values come from captions.",
+  "No instructions embedded in the PDF."
+ ]
+}

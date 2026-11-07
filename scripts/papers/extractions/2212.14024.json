@@ -1,19 +1,460 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2212.14024",
  "pdf": "generative-ai/02-rag-retrieval/sources/khattab-2022-demonstrate-search-predict.pdf",
  "bib": {
-  "title": "Demonstrate-Search-Predict: Composing retrieval and language models for knowledge-intensive NLP",
+  "title": "DEMONSTRATE-SEARCH-PREDICT: Composing retrieval and language models for knowledge-intensive NLP",
+  "authors": [
+   "Omar Khattab",
+   "Keshav Santhanam",
+   "Xiang Lisa Li",
+   "David Hall",
+   "Percy Liang",
+   "Christopher Potts",
+   "Matei Zaharia"
+  ],
   "first_author": "Khattab",
   "year": 2022,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2212.14024",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 72940,
+  "chars_total": 72940,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Demonstrate–Search–Predict: Composing retrieval and language models for knowledge-intensive NLP\", Omar Khattab, Keshav Santhanam, Xiang Lisa Li, David Hall, Percy Liang, Christopher Potts, Matei Zaharia (Stanford). Preprint: the PDF says \"Preprint.\" and is stamped \"arXiv:2212.14024v2 [cs.CL] 23 Jan 2023\". The PDF names no venue. File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/khattab-2022-demonstrate-search-predict.pdf\n\nCOVERAGE: Read all 73,876 of 73,876 chars (15 pages) with pypdf: body, Table 1, footnotes, conclusion and every reference. There are no appendices. Page numbers below are pypdf pages, counting from 1.\n\nCLAIMS\n- claim: Headline result. DSP programs beat the vanilla LM, retrieve-then-read and self-ask by large relative margins.\n  number: 37–120% / 8–39% / 80–290%\n  setup: Frozen GPT-3.5 text-davinci-002 and frozen ColBERTv2, no fine-tuning. Validation (dev) sets of Open-SQuAD, HotPotQA and QReCC.\n  quote: \"delivering 37–120%, 8–39%, and 80–290% relative gains against the vanilla LM (GPT-3.5), a standard retrieve-then-read pipeline, and a contemporaneous self-ask pipeline, respectively.\"\n  where: p1 abstract, repeated on p2\n  caveat: the 37–120% range does not match the paper's own reported 126% on Open-SQuAD EM (see the next claim and PROBLEMS).\n- claim: Table 1 dev results.\n  number: Open-SQuAD EM/F1: vanilla 16.2/25.6, retrieve-then-read 33.8/46.1, self-ask 9.3/17.2, DSP 36.6/49.0. HotPotQA EM/F1: vanilla 28.3/36.4, retrieve-then-read 36.9/46.1, self-ask 25.2/33.2 (28.6/37.3 with the refined prompt), DSP 51.4/62.9. QReCC F1/nF1: vanilla 29.8/18.4, retrieve-then-read 31.6/22.2, DSP 35.0/25.3.\n  setup: Validation sets subsampled to 1000 questions (400 conversations for QReCC). Average over 5 seeds, each seed with its own 16-shot training set. Each seed covers one fifth of the eval set \"To control the language model API spending budget\".\n  quote: \"Retrieve-then-Read 33.8 46.1 36.9 46.1 31.6 22.2\" / \"Task-aware DSP Program 36.6 49.0 51.4 62.9 35.0 25.3\"\n  where: p10, Table 1\n- claim: On multi-hop HotPotQA, DSP beats the vanilla LM, retrieve-then-read and self-ask by 82%, 39% and 80% relative EM. This is the largest gain over retrieve-then-read, and the authors credit the SEARCH step.\n  number: 82% / 39% / 80% EM; 51.4% EM\n  setup: HotPotQA fullwiki over the Wikipedia 2017 abstracts corpus. \"Hard\" examples only. Official validation set used as test. Fixed 2 hops, fusion over n=10 queries per hop, k=5 passages in total.\n  quote: \"exceeding the vanilla LM, the retrieve-then-read baseline, and the self-ask pipeline by 82%, 39%, and 80%, respectively, in EM. This highlights the effectiveness of building up more sophisticated programs that coordinate the LM and RM for the SEARCH step.\"\n  where: p11\n- claim: On single-hop Open-SQuAD the gain over retrieve-then-read is small. The authors credit aggregation across several passages through self-consistency, not multi-hop search.\n  number: 126% EM over vanilla; 8% EM and 6% F1 over retrieve-then-read\n  setup: Wikipedia Dec 2016. Retrieves k=7 passages with the raw question, then CoT with n=20 reasoning chains and self-consistency.\n  quote: \"outperforming the vanilla LM baseline by 126% EM relative gains\" ... \"relative gains of 8% in EM and 6% in F1 over the retrieve-then-read pipeline, highlighting that non-trivial gains are possible by aggregating information across several retrieved passages as we do with self-consistency.\"\n  where: p11\n- claim: Self-ask collapses on single-hop questions because of \"self-distraction\": it decomposes the question tangentially and answers the wrong sub-question.\n  number: 9.3% EM\n  setup: Self-ask control flow pointed at the same ColBERTv2 index instead of Google Search, Open-SQuAD.\n  quote: \"the self-ask pipeline, which achieves 9.3% EM, suggesting that its fixed pipeline is ineffective outside its default multi-hop setting... We refer to this behavior of the LM as 'self-distraction'\"\n  where: p11\n- claim: Design argument. The control flow sits in an explicit program, not in the LM's completions. Self-ask \"delegates the control flow to the LM completions, maintaining state within the prompt itself\".\n  number: none\n  setup: conceptual argument, §2.4\n  quote: \"DSP assigns the control flow to an explicit program and facilitates design patterns that invoke the LM (or RM) to conduct small transformations.\"\n  where: p6\n- claim: DEMONSTRATE bootstraps demonstrations for the intermediate steps (hop queries, passages) from end-task labels alone. It runs the pipeline zero-shot on training examples and keeps the traces whose answer is correct.\n  number: none\n  setup: requires the LM and RM to solve at least one or two examples zero-shot\n  quote: \"If LM and RM can accurately process such transformations 'zero-shot' (i.e., without demonstrations) on at least one or two examples, these examples can be discovered with end-task labels and used as demonstrations.\"\n  where: p4\n- claim: The DSP result on Open-SQuAD is comparable to fine-tuned Fusion-in-Decoder base reading 5 passages. FiD reaches 48% when it reads 100 passages.\n  number: DPR 29.8% EM (test); FiD about 36% (5 passages) and 48% EM (100 passages)\n  setup: Open-SQuAD dev, except DPR, which is a test-set figure\n  quote: \"on the Open-SQuAD test set, DPR achieves 29.8% EM, well below our 16-shot DSP program... with the default setting of reading 100 passages, their system reaches 48% EM\"\n  where: p11\n- claim: Prior HotPotQA in-context results, including ReAct, trail DSP. These are not apples-to-apples comparisons.\n  number: ReAct 35.1% EM; PaLM-540B self-consistency 33.8 EM / 44.6 F1\n  setup: different evaluation settings, as the authors concede\n  quote: \"Yao et al. (2022) achieve 35.1% EM using a system capable of searching using a Wikipedia API. All of these approaches trail our task-aware DSP program, which achieves 51.4% EM\"\n  where: p11\n- claim: The context window limits how many demonstrations fit.\n  number: 4097 tokens; 3–5 demos\n  setup: text-davinci-002\n  quote: \"GPT-3.5 text-davinci-002 has a context window of 4097 tokens, which we find to be reasonably large for accommodating several (e.g., 3–5) demonstrations\"\n  where: p8\n\nCOST: The paper reports no LM-call counts, token counts, latency or dollar cost for any system. The only cost statement is the per-seed subsampling \"To control the language model API spending budget\" (p9). You can infer from the stated configurations that DSP is far more expensive than retrieve-then-read: n=20 sampled chains for Open-SQuAD, n=10 generated queries per hop over 2 hops plus a QA call for HotPotQA, n=10 rewrites for QReCC, and bootstrapping runs in DEMONSTRATE. That is an inference from the configurations. The paper never states it, so do not cite it as a measured number.\n\nLIMITS:\n- Results are on dev sets only. Held-out test sets (Open-NQ, FEVER) are promised \"in a future version of this report\" (p9). \"Future versions of this report will include additional test tasks and LM choices.\" (p2)\n- One LM (text-davinci-002, now deprecated) and one retriever. Results are dated.\n- There are no ablations. The gain is never broken down into multi-hop search, fusion, self-consistency and bootstrapped demos. The Open-SQuAD gain is attributed to self-consistency without isolating it.\n- Five seeds are run, but no variance or confidence intervals are reported.\n- Baselines are uneven. Retrieve-then-read uses k=1 passage (2 for multi-hop) and no CoT or self-consistency, while DSP uses k=7 with 20 chains. Self-ask was not evaluated on QReCC.\n- The ¶ rows in Table 1 \"are not generally apples-to-apples comparisons\" (p10).\n- The `branch`, `knn` and `crossval` primitives \"are currently work-in-progress\" (footnote, p8). So the pipelines-of-transformations and adaptive-selection ideas in §2 were not evaluated.\n- QReCC was filtered heuristically (conversations containing \"other interesting\" or \"else\" were removed) and the authors used it \"for developing the DSP abstractions\" (p9). Dev-set tuning on the same data the abstractions were built against is a risk.\n\nBUILDS ON: retrieve-then-read: Lee et al. 2019, Khattab et al. 2021b, Lazaridou et al. 2022, Izacard et al. 2022. Multi-hop retrieval: Baleen (Khattab et al. 2021a), IRRR (Qi et al. 2020), Xiong et al. 2020. Self-ask: Press et al. 2022. ColBERT/ColBERTv2: Khattab & Zaharia 2020, Santhanam et al. 2022b. Self-generated rationales: STaR (Zelikman et al. 2022), Wei et al. 2022, Auto-CoT (Zhang et al. 2022), Huang et al. 2022. Self-consistency: Wang et al. 2022c. CombSUM fusion: Fox & Shaw 1994. Gao et al. 2022 (RARR). LM cascades: Dohan et al. 2022. kNN demos: Liu et al. 2021. Cross-validation: Perez et al. 2021. ReAct: Yao et al. 2022. Query rewriting: Anantha et al. 2020.\n\nCODE: the multi-hop SEARCH loop (p6, §2.4), verbatim apart from extraction spacing. Line 10 compares against the string 'N/A'; the extraction garbles the quote marks.\n```python\ndef multihop_search_v2(x, max_hops=3):\n    x.hops = []\n    for hop in range(max_hops):\n        summary, query = generate(hop_template)(x)\n        x.hops.append((summary, query))\n        if query == 'N/A': break\n        passages = retrieve(query, k=5)\n        x.context = [summary] + passages\n    return x\n```\nThe retrieve-then-read baseline (p9):\n```python\ndef retrieve_then_read_QA(question: str) -> str:\n    demos = sample(train, k=16)\n    passages = retrieve(question, k=1)\n    x = Example(question=question, passages=passages, demos=demos)\n    return generate(qa_template)(x).pred\n```\n\nFIGURES:\n- Figure 1, p1: \"A comparison between three systems based on GPT-3.5 (text-davinci-002). On its own, the LM often makes false assertions. An increasingly popular retrieve-then-read pipeline fails when simple search can't find an answer. In contrast, a task-aware DSP program successfully decomposes the problem and produces a correct response.\" This is the best candidate for the Agentic RAG section. One question (\"How many storeys are in the castle David Gregory inherited?\") goes through the vanilla LM (invents a castle), retrieve-then-read (retrieves the St. Gregory Hotel) and two-hop search (Kinnairdy Castle, five storeys). It shows the multi-hop failure mode in one picture.\n- Figure 2, p2: the three stages of a toy DSP program for multi-hop QA, shown as code with the traces it produces. It is useful for showing how demonstrations are bootstrapped, but it is denser than Figure 1.\n\nPROBLEMS:\n- The abstract's \"37–120%\" gain over the vanilla LM conflicts with the body's \"126% EM\" on Open-SQuAD. 36.6/16.2 works out to +126%, so the abstract range appears to be stale or computed on a different metric. Quote the per-dataset numbers rather than the range.\n- The other headline ranges are consistent with Table 1: HotPotQA 51.4/36.9 is +39%, and Open-SQuAD 36.6/9.3 is about +294%.\n- Code listings come out with broken spacing and garbled quote glyphs (\"/quotesingle.Var\"). They are reconstructed above.\n- The PDF contains no embedded instructions."
+ "type": "system",
+ "question": "Can frozen LMs and retrievers be composed in programs that pass text between them, beating plain retrieve-then-read on knowledge-intensive QA?",
+ "hypothesis": "Deliberate, task-aware programs (bootstrapped demonstrations, multi-hop search, self-consistency) outperform task-agnostic retrieve-then-read and self-ask pipelines.",
+ "contributions": [
+  "Argue that simple task-agnostic in-context pipelines should give way to deliberate, task-aware strategies.",
+  "Show such strategies can be expressed as short programs of composable operators.",
+  "Composability enables automatic annotation of demonstrations for complex pipelines from end-task labels.",
+  "Programs for three knowledge-intensive tasks establish state-of-the-art in-context learning results."
+ ],
+ "method": {
+  "summary": "DSP is a Python framework with three stages: DEMONSTRATE bootstraps pipeline-aware demonstrations from labelled QA pairs by running the program zero-shot and keeping correct runs; SEARCH lets the LM write queries (multi-hop, rewrites) answered by ColBERTv2, with fusion; PREDICT uses CoT with self-consistency. Programs were written for Open-SQuAD, HotPotQA and QReCC and compared with vanilla few-shot, retrieve-then-read and self-ask.",
+  "task": "open-domain QA, multi-hop QA, conversational QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Open-SQuAD",
+    "role": "dev",
+    "size": "validation subsampled to 1000 questions",
+    "split": "same train/val/test splits as Karpukhin et al. 2020 and Khattab et al. 2021b; validation reported",
+    "source": "Wikipedia Dec 2016 dump (Chen et al. 2017) as processed by Khattab et al. 2021b",
+    "preprocessing": null
+   },
+   {
+    "name": "HotPotQA (fullwiki)",
+    "role": "both",
+    "size": "1000 questions subsampled",
+    "split": "train split divided 90%/10% train/val, only 'hard' examples kept; official validation set reserved as test",
+    "source": "official Wikipedia 2017 abstracts corpus",
+    "preprocessing": "keep only examples marked hard"
+   },
+   {
+    "name": "QReCC",
+    "role": "dev",
+    "size": "400 conversations subsampled",
+    "split": "train divided 90%/10% train/val (no official dev)",
+    "source": "Wikipedia 2018 (Dec 2018 dump of Karpukhin et al. 2020)",
+    "preprocessing": "first question replaced by rewritten question; removed conversations with empty ground-truth answers, with only one or two questions, or containing 'other interesting' or 'else'"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5 text-davinci-002",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4097 tokens",
+    "other": {
+     "frozen": true
+    }
+   },
+   {
+    "name": "ColBERTv2",
+    "role": "retriever",
+    "params": null,
+    "architecture": "late-interaction retriever",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": true
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy when n=1; sampling when n>1",
+   "temperature": "0.7 when n>1",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 seeds, each fixing one 16-shot training set and covering a different fifth of the 1000 eval questions (200 per seed); results averaged",
+   "prompting": "16-shot training pool; DEMONSTRATE annotates k=3 demonstrations for open-domain QA; QReCC samples four conversations; CoT 'Let's think step by step' rationale then answer",
+   "retrieval": "ColBERTv2; open-domain QA: k=7 passages, 20 CoT chains with self-consistency; multi-hop: two hops, n=10 queries per hop with fusion (CombSUM variant), summary with largest average log-probability, k=5 passages in total; conversational: 10 rewritten queries fused, 5 passages, greedy answer; retrieve-then-read: k=1 passage (multi-hop: 2 passages concatenated); DEMONSTRATE search uses k=2",
+   "parameters": {
+    "annotate k": "3 (open-domain QA), 4 sampled conversations (QReCC)",
+    "convqa_attempt filters": "passage precision >= .8, answer F1 >= .75 among n=20",
+    "max_hops": "3 in the s2.4 snippet; fixed 2 for HotPotQA"
+   },
+   "other": {
+    "self-ask": "modified to query the same ColBERTv2 index; second config adds ColBERTv2-style passages, 16-shot prefix, short intermediate answer, explicit search query"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "exact match of answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token F1 overlap",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "nF1",
+     "definition": "novel-F1 (Paranjape et al. 2022): F1 vs ground truth discounting common stopwords and terms in the question or earlier questions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Vanilla LM (16-shot, no retrieval)",
+    "Retrieve-then-Read",
+    "Self-ask with ColBERTv2 (original and refined prompt)",
+    "reported SoTA rows from Si et al. 2022 and others (not apples-to-apples)"
+   ],
+   "protocol": "Dev/validation sets, mean over 5 seeds; no significance test or variance reported; no ablation of individual DSP components; no cost reported."
+  },
+  "availability": {
+   "code": "https://github.com/stanfordnlp/dsp",
+   "weights": "not applicable",
+   "data": "public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "multi-hop query generation (hop_template)",
+    "text": "My task is to write a simple query that gathers information for answering a complex question. I write N/A if the context contains all information required.",
+    "where": "s2.4"
+   },
+   {
+    "purpose": "grounded QA with CoT",
+    "text": "My task is to answer questions using Web documents.",
+    "where": "s2.5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "DSP multi-hop program gets 51.4 EM on HotPotQA fullwiki, vs 36.9 for retrieve-then-read",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 51.4,
+   "unit": "EM %",
+   "baseline_value": 36.9,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed); HotPotQA fullwiki, Wikipedia 2017 abstracts, hard examples, official validation set used as test",
+   "note": null,
+   "where": "Table 1, s3.5",
+   "table": "Table 1, row Task-aware DSP Program, column HotPotQA EM (retrieve-then-read 36.9)"
+  },
+  {
+   "claim": "DSP HotPotQA F1 62.9 vs retrieve-then-read 46.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 62.9,
+   "unit": "F1 %",
+   "baseline_value": 46.1,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Task-aware DSP Program, column HotPotQA F1"
+  },
+  {
+   "claim": "On HotPotQA DSP exceeds vanilla LM, retrieve-then-read and self-ask by 82%, 39%, 80% relative EM",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": null,
+   "where": "s3.5 HotPotQA",
+   "quote": "exceed- ing the vanilla LM, the retrieve-then-read baseline, and the self-ask pipeline by 82%, 39%, and 80%, respectively, in EM."
+  },
+  {
+   "claim": "DSP gets 36.6 EM on Open-SQuAD vs 33.8 for retrieve-then-read",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 36.6,
+   "unit": "EM %",
+   "baseline_value": 33.8,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed); Open-SQuAD over Wikipedia 2016; 7 passages per query, CoT, 20 chains with self-consistency",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Task-aware DSP Program, column Open-SQuAD EM (retrieve-then-read 33.8)"
+  },
+  {
+   "claim": "Open-SQuAD: DSP 126% relative EM gain over vanilla LM, 8% EM and 6% F1 over retrieve-then-read",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": "Abstract says 37-120% relative gains over the vanilla LM, which does not contain the 126% reported here; 36.6/16.2 = 2.26 so 126% is consistent with Table 1.",
+   "where": "s3.5 Open-SQuAD",
+   "quote": "outperforming the vanilla LM baseline by 126% EM relative gains."
+  },
+  {
+   "claim": "Self-ask with ColBERTv2 gets only 9.3 EM on Open-SQuAD, below vanilla LM 16.2; authors call the failure self-distraction",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 9.3,
+   "unit": "EM %",
+   "baseline_value": 16.2,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": null,
+   "where": "Table 1, s3.5",
+   "table": "Table 1, row Self-ask w/ ColBERTv2 Search, column Open-SQuAD EM"
+  },
+  {
+   "claim": "Vanilla 16-shot LM baseline: 16.2 EM Open-SQuAD, 28.3 EM HotPotQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 16.2,
+   "unit": "EM %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Vanilla LM, column Open-SQuAD EM (HotPotQA EM 28.3)"
+  },
+  {
+   "claim": "QReCC: DSP 35.0 F1 and 25.3 nF1 vs retrieve-then-read 31.6 and 22.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "nF1",
+   "value": 25.3,
+   "unit": "nF1 %",
+   "baseline_value": 22.2,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 400 conversations, mean over 5 seeds (200 questions per seed); QReCC open-domain over Wikipedia 2018, autoregressive conversation (system sees its own earlier answers)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Task-aware DSP Program, column QReCC nF1 (F1 35.0; retrieve-then-read 31.6/22.2)"
+  },
+  {
+   "claim": "Refined self-ask prompt reaches 28.6 EM / 37.3 F1 on HotPotQA, still below vanilla-plus-retrieval baselines and DSP",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 28.6,
+   "unit": "EM %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen GPT-3.5 text-davinci-002 + frozen ColBERTv2, no fine-tuning; 16-shot; dev/validation set subsampled to 1000 questions, mean over 5 seeds (200 questions per seed)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row + Refined Prompt, column HotPotQA EM (F1 37.3)"
+  },
+  {
+   "claim": "Fusion-in-Decoder base reads 5 passages for about 36% EM on Open-SQuAD dev, and 48% EM with 100 passages",
+   "kind": "reported",
+   "source": "Izacard & Grave, 2020",
+   "metric": null,
+   "value": 48,
+   "unit": "EM %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FiD as reported by the authors for comparison, Open-SQuAD dev",
+   "note": null,
+   "where": "s3.5",
+   "quote": "their system reaches 48% EM in this evaluation"
+  },
+  {
+   "claim": "DPR gets 29.8% EM on the Open-SQuAD test set, below the 16-shot DSP program",
+   "kind": "reported",
+   "source": "Karpukhin et al., 2020",
+   "metric": null,
+   "value": 29.8,
+   "unit": "EM %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-SQuAD test, fine-tuned DPR",
+   "note": null,
+   "where": "s3.5",
+   "quote": "on the Open-SQuAD test set, DPR achieves 29.8% EM, well"
+  }
+ ],
+ "limits": [
+  "Preliminary results: authors say future versions will add test tasks (Open-NQ, FEVER) and LM choices; only one LM (text-davinci-002) and one retriever tested.",
+  "Primitives branch, knn and crossval were work-in-progress, so reported programs do not use them.",
+  "Comparisons with other published numbers (marked in Table 1) span different evaluation settings, not apples-to-apples.",
+  "Each seed sees only one fifth of the eval questions to limit API cost; no variance reported; no ablations or cost/latency numbers.",
+  "Programs were developed on the same dev sets reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-distraction",
+   "definition": "the LM decomposes questions in tangential ways and answers those instead",
+   "where": "s3.5"
+  },
+  {
+   "term": "pipelines of transformations (PoT)",
+   "definition": "sampling multiple whole program paths rather than chains of thought within one transformation",
+   "where": "s2.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-ask (Press et al. 2022)",
+   "year": 2022,
+   "arxiv": "2210.03350",
+   "relation": "baseline",
+   "note": "contemporaneous multi-hop prompting, run against ColBERTv2",
+   "quote": null
+  },
+  {
+   "work": "ColBERTv2",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen retriever",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al. 2022c)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "majority over 20 CoT chains",
+   "quote": null
+  },
+  {
+   "work": "Baleen (Khattab et al. 2021a)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "summarising multi-hop retrieval simulated in-context",
+   "quote": null
+  },
+  {
+   "work": "IRRR (Qi et al. 2020)",
+   "year": 2020,
+   "arxiv": "2010.12527",
+   "relation": "extends",
+   "note": "iterative retrieval simulated",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "rationales in PREDICT",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 few-shot (Brown et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "vanilla LM few-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "Fusion-in-Decoder (Izacard & Grave 2020)",
+   "year": 2020,
+   "arxiv": "2007.01282",
+   "relation": "related",
+   "note": "fine-tuned comparator on Open-SQuAD",
+   "quote": null
+  },
+  {
+   "work": "Open-SQuAD",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Rajpurkar 2016; Lee 2019",
+   "quote": null
+  },
+  {
+   "work": "HotPotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Yang et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "QReCC",
+   "year": 2020,
+   "arxiv": "2010.04898",
+   "relation": "uses-data",
+   "note": "Anantha et al. 2020",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 2",
+   "caption": "A toy example of a DSP program for multi-hop question answering.",
+   "page": 3,
+   "why": "Shows the three stages and the weak-supervision annotation in one diagram."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Development results comparing a task-aware DSP program against baseline vanilla LM and retrieve-then-read LM.",
+   "page": 10,
+   "why": "All headline numbers and baselines."
+  }
+ ],
+ "code": [
+  {
+   "where": "s2.3",
+   "snippet": "x.demos = annotate(demos, openqa_attempt, k=3)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Abstract range 37-120% over vanilla LM disagrees with the text's 126% Open-SQuAD EM gain.",
+  "No appendices; the PDF is a preprint with no venue."
+ ]
 }

@@ -1,0 +1,585 @@
+{
+ "schema": 1,
+ "key": "2502.11089",
+ "pdf": "ai-engineering/07-inference-engineering/sources/yuan-2025-native-sparse-attention.pdf",
+ "bib": {
+  "title": "Native Sparse Attention: Hardware-Aligned and Natively Trainable Sparse Attention",
+  "authors": [
+   "Jingyang Yuan",
+   "Huazuo Gao",
+   "Damai Dai",
+   "Junyu Luo",
+   "Liang Zhao",
+   "Zhengyan Zhang",
+   "Zhenda Xie",
+   "Y. X. Wei",
+   "Lean Wang",
+   "Zhiping Xiao",
+   "Yuqing Wang",
+   "Chong Ruan",
+   "Ming Zhang",
+   "Wenfeng Liang",
+   "Wangding Zeng"
+  ],
+  "first_author": "Yuan",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2502.11089",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 62733,
+  "chars_total": 62733,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a sparse attention mechanism be both hardware-efficient across training, prefill and decode and natively trainable, without losing quality against full attention?",
+ "hypothesis": "Pretraining with hierarchical sparse attention from the start keeps or improves full-attention quality while giving real speedups.",
+ "contributions": [
+  "Hardware-aligned, arithmetic-intensity-balanced blockwise sparse attention kernels (Triton) for speedups.",
+  "End-to-end trainable sparse attention with efficient backward operators, reducing pretraining computation without sacrificing performance."
+ ],
+ "method": {
+  "summary": "NSA replaces full attention with three gated branches (compressed blocks, top-n selected blocks, sliding window) with separate K/V per branch, shared block selection across a GQA group, and Triton kernels. A 27B-total/3B-active GQA+MoE model is pretrained with it and compared with a full-attention twin and inference-time sparse baselines.",
+  "task": "long-context language modeling with sparse attention (pretraining, LongBench, AIME after SFT, kernel speed)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pretraining text (unnamed corpus)",
+    "role": "pretrain",
+    "size": "270B tokens of 8k-length texts (Sec 4.1); intro says 260B",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Long-context continued training and SFT texts",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "32k-length texts with YaRN"
+   },
+   {
+    "name": "DeepSeek-R1 math reasoning traces",
+    "role": "train",
+    "size": "10B tokens of 32k-length traces",
+    "split": null,
+    "source": "distilled from DeepSeek-R1",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU, MMLU-PRO, CMMLU, BBH, GSM8K, MATH, DROP, MBPP, HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LongBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "some subsets excluded for low scores across all models"
+   },
+   {
+    "name": "Needle-in-a-Haystack",
+    "role": "eval",
+    "size": "64k context",
+    "split": null,
+    "source": "Kamradt 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME 24",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "NSA 27B",
+    "role": "proposed",
+    "params": "27B total, 3B active",
+    "architecture": "GQA + DeepSeekMoE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "30",
+    "hidden": "2560",
+    "heads": "64 (GQA 4 groups, 16 heads/group)",
+    "context": "8k pretrain, 32k with YaRN",
+    "other": {
+     "d_q=d_k": "192",
+     "d_v": "128",
+     "experts": "72 routed, 2 shared, top-k 6; first-layer MoE replaced by SwiGLU MLP",
+     "NSA": "compression block l=32, stride d=16, selection block l'=64, n=16 selected blocks (incl. 1 initial + 2 local forced), window w=512"
+    }
+   },
+   {
+    "name": "Full Attention 27B",
+    "role": "baseline",
+    "params": "27B total, 3B active",
+    "architecture": "same backbone, full attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "30",
+    "hidden": "2560",
+    "heads": "64",
+    "context": "8k pretrain, 32k with YaRN",
+    "other": {}
+   },
+   {
+    "name": "H2O, InfLLM, Quest, Exact-Top",
+    "role": "baseline",
+    "params": null,
+    "architecture": "inference-time sparse attention on the full-attention model",
+    "init_from": "inferred: the Full Attention model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "3B model for selection-strategy ablation",
+    "role": "evaluated",
+    "params": "3B",
+    "architecture": "similar architecture",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (loss curves shown, objective not stated); SFT on R1 traces for reasoning",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "inferred: Fig 4 x-axis runs to about 60000 steps",
+   "epochs": null,
+   "tokens": "270B pretrain (Sec 4.1); intro says 260B; 10B SFT",
+   "seq_len": "8k pretrain, then 32k",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8-GPU A100 system (efficiency tests; training hardware not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "convergence": "both models trained to full convergence",
+    "gating": "gate g in [0,1] from MLP with sigmoid",
+    "compression": "learnable MLP phi with intra-block position encoding"
+   }
+  },
+  "inference": {
+   "decoding": "sampling for AIME",
+   "temperature": "0.7",
+   "top_p": "0.95",
+   "max_tokens": "8192 or 16384 generation limit",
+   "samples": "16 responses per AIME question, averaged",
+   "prompting": "few-shot k per Table 1 header (MMLU 5, MMLU-PRO 5, CMMLU 5, BBH 3, GSM8K 8, MATH 4, DROP 1, MBPP 3, HumanEval 0)",
+   "retrieval": null,
+   "parameters": {
+    "sparse baseline budget": "2560 tokens activated per query (incl. leading 128 and 512 local), matched to NSA at 32k",
+    "Fig 7 cold start": "full attention for first 1000 steps then heuristic selection"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy / F1 / Pass@1 on general benchmarks",
+     "definition": "as Table 1 header",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "LongBench subset scores",
+     "definition": "not defined in text",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "AIME 24 average score",
+     "definition": "mean over 16 samples",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Speedup ratio",
+     "definition": "latency vs Triton FlashAttention-2 (forward, backward); decode is expected speedup from KV tokens loaded",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full Attention",
+    "H2O",
+    "InfLLM",
+    "Quest",
+    "Exact-Top",
+    "Triton FlashAttention-2 (speed)"
+   ],
+   "protocol": "Single run each; no seeds or significance tests stated. General eval compares only NSA vs Full Attention since baselines equal full attention at short lengths."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "AIME example prompt format",
+    "text": "Please reason step by step, and put your final answer within",
+    "where": "Appendix A (boxed wrapper garbled in extraction)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.NSA.other",
+    "quote": "we set compression block size l = 32, sliding stride d = 16, selected block size l′ = 64, selected block count n = 16 (including fixed activating the 1 initial block and 2 local blocks), and sliding window size w = 512",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At 64k context NSA forward pass is 9.0x faster than Triton FlashAttention-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "forward speedup",
+   "value": "9.0",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-GPU A100, GQA g=4, h=16, dk=192, dv=128, Triton kernels, 64k tokens",
+   "quote": "up to 9.0× forward and 6.0× backward speedup at 64k context-length",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 6"
+  },
+  {
+   "claim": "At 64k context NSA backward pass is 6.0x faster than Triton FlashAttention-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "backward speedup",
+   "value": "6.0",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as forward",
+   "quote": "up to 9.0× forward and 6.0× backward speedup at 64k context-length",
+   "table": null,
+   "note": "Fig 6 axis labels also print 9.0x for backward at an unclear position; text says 6.0x.",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Decoding speedup at 64k is an expected figure from KV memory access volume (5632 vs 65536 tokens), not a timed run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected decode speedup",
+   "value": "11.6",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Decode memory-bound; NSA loads compressed + selected + window tokens",
+   "quote": "achieving up to 11.6× speedup at 64k context-length",
+   "table": "Table 4, row Expected Speedup, column 65536",
+   "note": "Table 4 caption says expected speedup is approximately linear with memory access volume.",
+   "where": "Sec 5.2, Table 4"
+  },
+  {
+   "claim": "NSA average LongBench score exceeds Full Attention and all sparse baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LongBench avg",
+   "value": "0.469",
+   "unit": "score",
+   "baseline_value": "0.437 (Full Attn)",
+   "n": null,
+   "setup": "27B NSA vs Full Attn; baselines at 2560 tokens/query; selected LongBench subsets",
+   "quote": "NSA achieves the highest average score 0.469, outperforming all baselines (+0.032 over Full Attention and +0.046 over Exact-Top)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 2"
+  },
+  {
+   "claim": "NSA general-benchmark average vs Full Attention.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average of 9 benchmarks",
+   "value": "0.456",
+   "unit": "score",
+   "baseline_value": "0.443 (Full Attn)",
+   "n": null,
+   "setup": "27B pretrain, 270B tokens, Table 1 few-shot settings",
+   "quote": null,
+   "table": "Table 1, row NSA, column Avg.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "NSA beats Full Attention on 7 of 9 general metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "quote": "outperforming all baselines including Full Attention on 7 out of 9 metrics",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "AIME 24 after R1-distillation SFT, 8k generation limit: NSA-R vs Full Attention-R.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 24 avg score",
+   "value": "0.121",
+   "unit": "score",
+   "baseline_value": "0.046",
+   "n": null,
+   "setup": "27B, 10B tokens SFT of 32k traces, T=0.7, top-p 0.95, 16 samples",
+   "quote": null,
+   "table": "Table 3, row NSA-R, column 8192",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "AIME 24 at 16k generation limit: NSA-R vs Full Attention-R.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 24 avg score",
+   "value": "0.146",
+   "unit": "score",
+   "baseline_value": "0.092",
+   "n": null,
+   "setup": "same",
+   "quote": null,
+   "table": "Table 3, row NSA-R, column 16384",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "NSA reaches perfect retrieval in 64k needle-in-a-haystack.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "27B NSA, 64k context",
+   "quote": "NSA achieves perfect retrieval accuracy across all positions in 64k-context needle-in-a-haystack",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Fig 5"
+  },
+  {
+   "claim": "Theoretical estimate: softmax attention is 70-80% of decode latency at 64k.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "theoretical estimate, no setup given",
+   "quote": "accounts for 70–80% of total latency when decoding 64k-length contexts",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Auxiliary-loss and heuristic parameter-free block selection give worse loss than NSA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "3B model, loss curves Fig 7",
+   "quote": "As shown in Figure 7, both methods exhibited inferior loss.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  }
+ ],
+ "limits": [
+  "Pretraining corpus, optimizer, learning rate, batch size, hardware for training and seeds are not stated.",
+  "Token count printed as 260B in intro and 270B in Sec 4.1.",
+  "Decode speedup is an expected value from memory volume, not measured latency.",
+  "Single run per model, no variance or significance reported; baselines trained from one full-attention model.",
+  "Sparse baselines were inference-only, applied to a full-attention model, so the comparison mixes native training with method.",
+  "Efficiency measured only on A100 with Triton kernels against Triton FlashAttention-2.",
+  "Reasoning eval via SFT distillation only; no RL, and AIME 24 is small."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Arithmetic intensity",
+   "definition": "the ratio of compute operations to memory accesses",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FlashAttention / FlashAttention-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Triton FlashAttention-2 is the speed baseline; compression and window branches reuse its kernels",
+   "quote": null
+  },
+  {
+   "work": "H2O (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "KV eviction baseline",
+   "quote": null
+  },
+  {
+   "work": "Quest (Tang et al.)",
+   "year": 2024,
+   "arxiv": "2406.10774",
+   "relation": "baseline",
+   "note": "blockwise query-aware selection baseline",
+   "quote": null
+  },
+  {
+   "work": "InfLLM (Xiao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "MInference (Jiang et al.)",
+   "year": 2024,
+   "arxiv": "2407.02490",
+   "relation": "related",
+   "note": "prefill-only sparsity",
+   "quote": null
+  },
+  {
+   "work": "SeerAttention (Gao et al.)",
+   "year": 2024,
+   "arxiv": "2410.13276",
+   "relation": "related",
+   "note": "auxiliary-loss selection similar to an ablation",
+   "quote": null
+  },
+  {
+   "work": "GQA (Ainslie et al.)",
+   "year": 2023,
+   "arxiv": "2305.13245",
+   "relation": "uses-method",
+   "note": "backbone and kernel design",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMoE (Dai et al.)",
+   "year": 2024,
+   "arxiv": "2401.06066",
+   "relation": "uses-method",
+   "note": "MoE backbone",
+   "quote": null
+  },
+  {
+   "work": "YaRN (Peng et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "32k adaptation",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "uses-data",
+   "note": "source of distilled reasoning traces",
+   "quote": null
+  },
+  {
+   "work": "LongBench (Bai et al.)",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "uses-data",
+   "note": "long-context eval",
+   "quote": null
+  },
+  {
+   "work": "StreamingLLM (Xiao et al.)",
+   "year": 2023,
+   "arxiv": "2309.17453",
+   "relation": "related",
+   "note": "token budget convention with leading and local tokens",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of NSA's architecture.",
+   "page": 3,
+   "why": "Shows the three branches and gating."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Kernel design for NSA.",
+   "page": 9,
+   "why": "Group-centric query loading."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Memory access volume per attention operation during decoding.",
+   "page": 14,
+   "why": "Basis of the 11.6x expected figure."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Comparison of Triton-based NSA kernel with Triton-based FlashAttention-2 kernel.",
+   "page": 13,
+   "why": "Speedup by length."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5",
+   "snippet": "o*_t = sum_{c in {cmp, slc, win}} g^c_t * Attn(q_t, K~^c_t, V~^c_t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 6 text layout is ambiguous for backward speedup labels.",
+  "Appendix prompt boxed{} wrapper lost in extraction."
+ ]
+}

@@ -1,0 +1,602 @@
+{
+ "schema": 1,
+ "key": "sha1:a781e9665ae6",
+ "pdf": "generative-ai/02-rag-retrieval/sources/2023.emnlp-main.495.pdf",
+ "bib": {
+  "title": "Active Retrieval Augmented Generation",
+  "authors": [
+   "Zhengbao Jiang",
+   "Frank F. Xu",
+   "Luyu Gao",
+   "Zhiqing Sun",
+   "Qian Liu",
+   "Jane Dwivedi-Yu",
+   "Yiming Yang",
+   "Jamie Callan",
+   "Graham Neubig"
+  ],
+  "first_author": "Jiang",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 7969-7992",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92099,
+  "chars_total": 92099,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a simple, generic retrieval-augmented LM decide actively when and what to retrieve during long-form generation?",
+ "hypothesis": "LMs should retrieve only when they lack knowledge (low-probability tokens), and queries should reflect the intent of future generation (a drafted next sentence).",
+ "contributions": [
+  "A generalized framework of active retrieval augmented generation (when and what to retrieve)",
+  "FLARE, a forward-looking method using the drafted next sentence as query when it has low-confidence tokens, applicable to existing LMs without training",
+  "Evaluation over 4 long-form knowledge-intensive tasks against single-time and multi-time retrieval baselines"
+ ],
+ "method": {
+  "summary": "FLARE iteratively drafts the next sentence without retrieval; if any token has probability below theta, it forms a query from the draft (masking tokens below beta, or generating questions for low-confidence spans with gpt-3.5-turbo), retrieves, and regenerates the sentence. Applied to text-davinci-003 via API, no training; compared with no-retrieval, single-time, previous-window, previous-sentence and question-decomposition baselines.",
+  "task": "long-form knowledge-intensive generation (multihop QA, commonsense QA, long-form QA, open-domain summarization)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "2WikiMultihopQA",
+    "role": "eval",
+    "size": "500 examples",
+    "split": "sub-sampled at most 500; hyperparameters chosen on dev set",
+    "source": "Ho et al., 2020; Wikipedia dump of Karpukhin et al. (2020)",
+    "preprocessing": "retrieved docs added for the 8 exemplars"
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "229 examples",
+    "split": null,
+    "source": "Geva et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ASQA / ASQA-hint",
+    "role": "eval",
+    "size": "500 examples",
+    "split": null,
+    "source": "Stelmakh et al., 2022",
+    "preprocessing": "ASQA-hint adds a hint on which aspect is ambiguous"
+   },
+   {
+    "name": "WikiAsp",
+    "role": "eval",
+    "size": "500 examples",
+    "split": null,
+    "source": "Hayashi et al., 2021",
+    "preprocessing": "converted to open-domain by removing references; Bing retrieval with wikipedia.org, wikiwand.com, wiki2.org, wikimedia.org excluded"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT-3.5 completion API (April 23 2023)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "input length limit limits 2WikiMultihopQA to 2 retrieved docs"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "zero-shot question generation for explicit queries"
+    }
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "Robertson and Zaragoza, 2009",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "corpus": "Wikipedia dump of Karpukhin et al. (2020)"
+    }
+   },
+   {
+    "name": "Bing search API",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "WikiAsp"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "each step generates 64 tokens, NLTK sentence tokenizer keeps first sentence; first sentence uses user input as query",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "64 per step",
+   "samples": "inferred: one run per item; no seeds or repeats stated",
+   "prompting": "few-shot in-context learning: 8 exemplars (2Wiki), 6 (StrategyQA), 8 (ASQA, ASQA-hint), 4 (WikiAsp); retrieved docs prepended to input; only current-step docs kept",
+   "retrieval": "BM25 top-2 (2Wiki), top-3 (StrategyQA, ASQA), Bing top-5 (WikiAsp); previous docs discarded each step",
+   "parameters": {
+    "theta (retrieval trigger)": "0.8 2Wiki; 0.4 StrategyQA; 0.8 ASQA/ASQA-hint; 0.8 WikiAsp",
+    "beta (masking)": "0.4 all datasets",
+    "query formulation": "implicit (2Wiki, StrategyQA); explicit (ASQA, ASQA-hint, WikiAsp)",
+    "combine single- and multi-time retrieval": "no for 2Wiki, StrategyQA; yes for ASQA, ASQA-hint, WikiAsp",
+    "previous-window size l": "16 tokens",
+    "FLAREinstruct logit tweak": "+2.0 on token '[' to encourage search; large negative on '[' for the next few tokens after a query"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "exact match of regex-extracted final answer (2Wiki, StrategyQA); ASQA per Stelmakh et al.",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1/Prec./Rec.",
+     "definition": "token-level, 2WikiMultihopQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Disambig-F1 (D-F1)",
+     "definition": "RoBERTa-based QA score",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L (R-L)",
+     "definition": "Lin 2004",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "DR",
+     "definition": "overall score combining Disambig-F1 and ROUGE",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "UniEval",
+     "definition": "factual consistency (Zhong et al., 2022)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "E-F1",
+     "definition": "named entity-based F1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "No retrieval",
+    "Single-time retrieval",
+    "Previous-window (RETRO / IC-RALM style, l=16)",
+    "Previous-sentence (IRCoT style)",
+    "Question decomposition (self-ask, 2Wiki only)",
+    "FLAREinstruct"
+   ],
+   "protocol": "Single run on at most 500 sub-sampled examples per dataset; no significance tests or seeds reported; baselines are reimplemented with the same settings, not exact reproductions"
+  },
+  "availability": {
+   "code": "https://github.com/jzbjyb/FLARE",
+   "weights": null,
+   "data": "https://github.com/jzbjyb/FLARE"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot question generation for explicit queries",
+    "text": "User input x.\nGenerated output so far y≤t.\nGiven the above passage, ask a question to which the answer is the term/entity/phrase “z”.",
+    "where": "Prompt 3.2, Section 3.2.2"
+   },
+   {
+    "purpose": "document formatting",
+    "text": "Search results:\n[1] Document 1\n[2] Document 2\n...\nThe user input x",
+    "where": "Prompt D.1"
+   },
+   {
+    "purpose": "FLAREinstruct skill combination (2Wiki)",
+    "text": "Now, combine the aforementioned two skills.\nFirst, write out the reasoning steps, then draw the conclusion,\nwhere the reasoning steps should also utilize the Search API “[Search(term)]” whenever possible.",
+    "where": "Prompt D.3 (full exemplars in appendix D.3-D.10)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "FLAREdirect reaches 51.0 EM on 2WikiMultihopQA vs 39.4 for single-time retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "51.0",
+   "unit": "%",
+   "baseline_value": "39.4",
+   "n": null,
+   "setup": "2WikiMultihopQA, text-davinci-003, 500 sub-sampled examples, BM25 over Wikipedia, top-2 docs, 8 exemplars; FLARE = FLAREdirect, theta=0.8, beta=0.4, implicit queries",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FLAREdirect (ours), column EM"
+  },
+  {
+   "claim": "Best baseline, question decomposition (self-ask), scores 47.8 EM, below FLAREdirect.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "47.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2WikiMultihopQA, text-davinci-003, 500 sub-sampled examples, BM25 over Wikipedia, top-2 docs, 8 exemplars; reimplemented baseline with manually annotated sub-question exemplars",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Question decomposition, column EM"
+  },
+  {
+   "claim": "Without retrieval the same model scores 28.2 EM on 2WikiMultihopQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "28.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2WikiMultihopQA, text-davinci-003, 500 sub-sampled examples, BM25 over Wikipedia, top-2 docs, 8 exemplars",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row No retrieval, column EM"
+  },
+  {
+   "claim": "FLAREinstruct (retrieval-instruction prompting) reaches only 42.4 EM, well below FLAREdirect and question decomposition.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "42.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2WikiMultihopQA, text-davinci-003, 500 sub-sampled examples, BM25 over Wikipedia, top-2 docs, 8 exemplars",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FLAREinstruct (ours), column EM"
+  },
+  {
+   "claim": "Previous-window retrieval (16 tokens) gets 43.2 EM and previous-sentence 39.0 EM, about the level of single-time retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "43.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2WikiMultihopQA, text-davinci-003, 500 sub-sampled examples, BM25 over Wikipedia, top-2 docs, 8 exemplars; window l=16",
+   "note": "Previous-sentence row is 39.0 EM; single-time is 39.4",
+   "where": "Table 1",
+   "table": "Table 1, row Previous-window, column EM"
+  },
+  {
+   "claim": "StrategyQA: FLARE 77.3 EM vs 72.9 with no retrieval; single-time retrieval (68.6) falls below no retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "77.3",
+   "unit": "%",
+   "baseline_value": "72.9",
+   "n": null,
+   "setup": "StrategyQA, 229 examples, text-davinci-003, BM25 Wikipedia, top-3, 6 exemplars, theta=0.4, beta=0.4",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLARE (ours), column StrategyQA EM"
+  },
+  {
+   "claim": "ASQA: FLARE EM 41.3 vs 40.0 single-time retrieval and 33.8 no retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "41.3",
+   "unit": "%",
+   "baseline_value": "40.0",
+   "n": null,
+   "setup": "ASQA, 500 examples, BM25 Wikipedia, top-3, 8 exemplars, theta=0.8, beta=0.4, explicit queries, combined single- and multi-time retrieval",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLARE (ours), column ASQA EM"
+  },
+  {
+   "claim": "ASQA-hint: FLARE EM 46.2 vs 43.2 single-time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "43.2",
+   "n": null,
+   "setup": "ASQA-hint, same settings as ASQA with a hint",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLARE (ours), column ASQA-hint EM"
+  },
+  {
+   "claim": "WikiAsp: FLARE UniEval 53.4 vs 52.4 single-time retrieval (small gain).",
+   "kind": "measured",
+   "source": null,
+   "metric": "UniEval",
+   "value": "53.4",
+   "unit": "points",
+   "baseline_value": "52.4",
+   "n": null,
+   "setup": "WikiAsp, 500 examples, Bing top-5, 4 exemplars, Wikipedia domains excluded, explicit queries",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row FLARE (ours), column WikiAsp UniEval"
+  },
+  {
+   "claim": "Retrieving with the next sentence beats the previous sentence on 2WikiMultihopQA (48.8 vs 39.0 EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "48.8",
+   "unit": "%",
+   "baseline_value": "39.0",
+   "n": null,
+   "setup": "Ablation, every-sentence retrieval using full sentence as query",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Next, column 2WikiMultihopQA EM"
+  },
+  {
+   "claim": "Previous-window queries longer than 32 tokens hurt: 16 tokens 43.2 EM, 48 tokens 40.0, all 39.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "40.0",
+   "unit": "%",
+   "baseline_value": "43.2",
+   "n": null,
+   "setup": "2WikiMultihopQA previous-window baseline, query = last N tokens",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 48, column EM"
+  },
+  {
+   "claim": "Masking low-confidence tokens helps: beta=0.4 gives 0.510 EM vs 0.488 with the full sentence (beta=0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.510",
+   "unit": "fraction",
+   "baseline_value": "0.488",
+   "n": null,
+   "setup": "2WikiMultihopQA, FLARE, masking threshold sweep",
+   "note": "Table 5 prints fractions, Table 1 prints percent (51.0 at beta=0.4)",
+   "where": "Table 5",
+   "table": "Table 5, row 0.4, column EM"
+  },
+  {
+   "claim": "Implicit (masking) and explicit (question generation) query formulation perform similarly on ASQA-hint (45.7 vs 46.2 EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "45.7",
+   "unit": "%",
+   "baseline_value": "46.2",
+   "n": null,
+   "setup": "ASQA-hint, FLARE",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Implicit, column ASQA-hint EM"
+  },
+  {
+   "claim": "Retrieval is triggered for 30%-60% of sentences depending on task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retrieval rate",
+   "value": "30%-60%",
+   "unit": "% of sentences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLARE across tasks",
+   "note": null,
+   "where": "Appendix A, Efficiency",
+   "quote": "on average retrieval is triggered for 30% ∼60% of sentences depending on downstream tasks"
+  },
+  {
+   "claim": "Triggering retrieval for 40%-80% of sentences usually gives good performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retrieval rate",
+   "value": "40%-80%",
+   "unit": "% of sentences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "theta sweep, Fig 5 on 2WikiMultihopQA and StrategyQA",
+   "note": "Quote spans a line break in the text cache",
+   "where": "Section 6.2",
+   "quote": "We found triggering retrieval for 40%-80% of sentences usually leads to a good per-formance across tasks/datasets."
+  }
+ ],
+ "limits": [
+  "No significant gains on Wizard of Wikipedia (short outputs, ~20 tokens) or ELI5 (grounding/evaluation issues, Krishna et al., 2021)",
+  "Interleaving retrieval and generation increases overhead and cost; LM is called once per retrieval and activations are recomputed without caching",
+  "Only text-davinci-003 tested; single run on at most 500 examples; no seeds or significance tests",
+  "Baselines are reimplementations, not exact reproductions; thetas tuned per dataset on dev",
+  "Headline Figure 4 values are in a chart only; gains on ASQA and WikiAsp are small",
+  "text-davinci-003 API is deprecated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Active retrieval augmented generation",
+   "definition": "a framework that actively decides when and what to retrieve through the generation process, interleaving retrieval and generation",
+   "where": "Section 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Toolformer (Schick et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires FLAREinstruct [Search(query)] format",
+   "quote": null
+  },
+  {
+   "work": "RETRO (Borgeaud et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous-window retrieval",
+   "quote": null
+  },
+  {
+   "work": "IC-RALM (Ram et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous-window, l=16",
+   "quote": null
+  },
+  {
+   "work": "IRCoT (Trivedi et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous-sentence; source of 2Wiki exemplars",
+   "quote": null
+  },
+  {
+   "work": "Self-ask (Press et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "question decomposition",
+   "quote": null
+  },
+  {
+   "work": "KNN-LM (Khandelwal et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "retrieves every token",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know (Kadavath et al.)",
+   "year": 2022,
+   "arxiv": "2207.05221",
+   "relation": "related",
+   "note": "calibration justifies confidence as a retrieval trigger",
+   "quote": null
+  },
+  {
+   "work": "Precise zero-shot dense retrieval without relevance labels (HyDE; Gao et al.)",
+   "year": 2022,
+   "arxiv": "2212.10496",
+   "relation": "related",
+   "note": "generated hypothetical text as query",
+   "quote": null
+  },
+  {
+   "work": "2WikiMultihopQA (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "StrategyQA (Geva et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ASQA (Stelmakh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "WikiAsp (Hayashi et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Wikipedia dump",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An illustration of forward-looking active retrieval augmented generation (FLARE).",
+   "page": 2,
+   "why": "shows the draft-check-retrieve-regenerate loop"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Implicit and explicit query formulation.",
+   "page": 4,
+   "why": "masking vs generated question"
+  },
+  {
+   "figure": "Figure 5",
+   "caption": "Performance (EM) of FLARE with respect to the percentage of steps/sentences with retrieval.",
+   "page": 7,
+   "why": "theta sweep; plateau at 60% / drop above 50%"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "arXiv id and DOI are not printed in the PDF text; left null (2305.06983 is in the repo ledger)",
+  "Figure 4 values appear only in a chart",
+  "Quotes of the form of table cells located by number"
+ ]
+}

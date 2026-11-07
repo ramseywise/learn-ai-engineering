@@ -1,0 +1,756 @@
+{
+ "schema": 1,
+ "key": "2208.03188",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shuster-2022-blenderbot-3.pdf",
+ "bib": {
+  "title": "BlenderBot 3: a deployed conversational agent that continually learns to responsibly engage",
+  "authors": [
+   "Kurt Shuster",
+   "Jing Xu",
+   "Mojtaba Komeili",
+   "Da Ju",
+   "Eric Michael Smith",
+   "Stephen Roller",
+   "Megan Ung",
+   "Moya Chen",
+   "Kushal Arora",
+   "Joshua Lane",
+   "Morteza Behrooz",
+   "William Ngan",
+   "Spencer Poff",
+   "Naman Goyal",
+   "Arthur Szlam",
+   "Y-Lan Boureau",
+   "Melanie Kambadur",
+   "Jason Weston"
+  ],
+  "first_author": "Shuster",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2208.03188",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 122590,
+  "chars_total": 122590,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; appendix F figures are images (example dialogues) not readable as text."
+ },
+ "type": "system",
+ "question": "How can an open-domain dialogue agent with internet search and long-term memory be built at 175B scale, deployed publicly, and prepared for continual learning from organic user feedback while staying safe?",
+ "hypothesis": "Deploying a modular, internet-augmented agent to organic users and learning from their feedback (robust to trolls) will yield ever-improving, more responsible dialogue models.",
+ "contributions": [
+  "BB3 model: 175B transformer initialised from OPT-175B, fine-tuned on modular tasks (search decision, query, knowledge, entity, memory, dialogue)",
+  "Study of training on human feedback (companion paper Xu et al. 2022b) used to fine-tune on many user-defined tasks",
+  "Deployment design incl. UI and initial organic-user experiments",
+  "Techniques for robust learning against adversarial users (companion paper Ju et al. 2022)",
+  "Overall results: outperforms openly available chatbots incl. predecessors",
+  "Release of weights, code, model card, datasets, publications; plan for releasing deployment data"
+ ],
+ "method": {
+  "summary": "A single transformer (3B R2C2 encoder-decoder; 30B and 175B OPT decoder-only) is fine-tuned to execute ten modules selected by control tokens (search decision, query generation, knowledge response, entity extraction, memory generation/access decision/access, dialogue response); modules run in sequence with Mojeek as external search. Models are fine-tuned one epoch on ~4M examples (1.13B tokens) plus pretraining LM data, deployed at blenderbot.ai with a separate safety classifier and canned responses, and evaluated by crowdworkers, organic-user feedback and Safety Bench.",
+  "task": "open-domain, internet-augmented, memory-grounded dialogue",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Fine-tuning mix (Table 2: MS MARCO, SQuAD, TriviaQA, NQ, NQ Open, NQ Open Dialogues, WizInt, WoW, Funpedia, PersonaChat, Empathetic Dialogues, BST, MSC, LIGHT+WILD, SaFeRDialogues, FITS, Google SGD, Taskmaster 1-3)",
+    "role": "train",
+    "size": "roughly 4 million source/target examples; around 1.13B training tokens",
+    "split": "per-module breakdown in Tables 16 and 17",
+    "source": "public datasets in ParlAI; FITS new (Xu et al. 2022b)",
+    "preprocessing": "MS MARCO NLGen v2.1: target replaced with highest-overlap input sentence; examples with F1 overlap < 0.5 dropped, leaving 281,658 of 808,731. Search decision labels derived by heuristics (entity in context => do search / access memory). Entity targets from nltk noun phrases."
+   },
+   {
+    "name": "Pre-training data included in fine-tune (LM task)",
+    "role": "train",
+    "size": "600k examples (170m tokens)",
+    "split": null,
+    "source": "original pre-train tasks",
+    "preprocessing": "added to help with training stability (Appendix B.1)"
+   },
+   {
+    "name": "R2C2 pre-training: RoBERTa+cc100en and Pushshift.io Reddit",
+    "role": "pretrain",
+    "size": "approximately 100B tokens",
+    "split": null,
+    "source": "RoBERTa corpora, CC100 English, Pushshift.io Reddit",
+    "preprocessing": null
+   },
+   {
+    "name": "OPT pre-training corpus (RoBERTa, Pushshift.io Reddit, The Pile)",
+    "role": "pretrain",
+    "size": "roughly 180B tokens",
+    "split": null,
+    "source": "Zhang et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Safety classifier data: WTC, BBF, BAD",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Wikipedia Toxic Comments, Build-It Break-It Fix-It, Bot Adversarial Dialogue",
+    "preprocessing": null
+   },
+   {
+    "name": "FITS open-domain task eval (about 1000 tasks)",
+    "role": "eval",
+    "size": "roughly 1000 tasks",
+    "split": null,
+    "source": "Xu et al. 2022b",
+    "preprocessing": null
+   },
+   {
+    "name": "Short-conversation eval (WizInt role setup)",
+    "role": "eval",
+    "size": "100 dialogues, roughly 800 annotations per model; 15 messages each (7 human, 8 bot)",
+    "split": null,
+    "source": "Komeili et al. 2022 setup",
+    "preprocessing": null
+   },
+   {
+    "name": "Current events questions",
+    "role": "eval",
+    "size": "300 entities from Wikipedia current events July 2022",
+    "split": null,
+    "source": "Wikipedia",
+    "preprocessing": "questions 'What's the latest news you've heard about {entity}?'"
+   }
+  ],
+  "models": [
+   {
+    "name": "BB3-3B",
+    "role": "proposed",
+    "params": "3B",
+    "architecture": "encoder-decoder (R2C2)",
+    "init_from": "R2C2 (Shuster et al. 2022)",
+    "tokenizer": "GPT2 dictionary",
+    "vocab": "51200",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 context tokens",
+    "other": {}
+   },
+   {
+    "name": "BB3-30B",
+    "role": "proposed",
+    "params": "30B",
+    "architecture": "decoder-only transformer",
+    "init_from": "OPT-30B",
+    "tokenizer": "GPT2 dictionary",
+    "vocab": "51200",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 token context (inferred from memory sampling to fit 2048 token context for OPT-based models)",
+    "other": {}
+   },
+   {
+    "name": "BB3-175B",
+    "role": "proposed",
+    "params": "175B",
+    "architecture": "decoder-only transformer",
+    "init_from": "OPT-175B",
+    "tokenizer": "GPT2 dictionary",
+    "vocab": "51200",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 token context",
+    "other": {}
+   },
+   {
+    "name": "OPT-175B zero/few-shot",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BB1, BB2, SeeKeR 3B",
+    "role": "baseline",
+    "params": "BB1 9B per related work; SeeKeR 3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT text-davinci-002",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised sequence-to-sequence fine-tuning on module tasks with control tokens, multitasked with original pre-train LM task and SaFeRDialogues",
+   "optimizer": "Adam with weight decay",
+   "lr": "BB3-3B 1e-6 (after warmup); BB3-30B/175B maximum 6e-6 (the LR at end of pre-training)",
+   "lr_schedule": "3B: linear warmup; 30B/175B: linear warmup then polynomial decay (printed 'polynomial weight decay', decay factor 0.1)",
+   "warmup": "3B: 100 updates; 30B/175B: 10% of total train updates",
+   "batch_size": "3B: 64; 175B: 218 (printed; presumably 2^18); 30B: 219 (printed; presumably 2^19)",
+   "steps": "3B: 27k updates; 175B: roughly 5600 updates; 30B: roughly 2800 updates",
+   "epochs": "1 epoch for 30B and 175B (overfit significantly with more)",
+   "tokens": "1.13B fine-tune tokens plus 170m LM tokens",
+   "seq_len": "3B: 1024 context tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "multitasking with pretrain LM task; single epoch; early stopping on validation subset for 3B",
+   "hardware": "3B: 64 x 32gb V100; 30B: 64 x 40gb A100; 175B: 128 x 40gb A100",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "codebase": "3B in ParlAI; 30B/175B in Metaseq",
+    "note_batch": "Printed '218' and '219' in extracted text, superscripts lost; 2^18 tokens x 5600 updates ~1.5B tokens is consistent with 1.13B+170m only roughly, and 2^19 x 2800 ~1.5B too. Treat as inferred."
+   }
+  },
+  "inference": {
+   "decoding": "Per module. Decision, query: greedy. BB3-175B dialogue response: factual nucleus sampling; other 175B modules greedy with repetition penalties. BB3-3B: beam search with n-gram blocking.",
+   "temperature": null,
+   "top_p": "0.9 (dialogue response, BB3-175B factual nucleus)",
+   "max_tokens": null,
+   "samples": "one generation per item (175B avoids multi-candidate decoding for latency)",
+   "prompting": "OPT-175B baselines prompted zero-shot and few-shot with in-context examples per module (Table 18)",
+   "retrieval": "Mojeek search engine returns N documents (N not stated); 'news july 2022' appended to query in current-events eval; memory sampled to fit 2048 tokens for OPT models, Fusion-in-Decoder for 3B",
+   "parameters": {
+    "factual_nucleus": "top_p 0.9, lambda-decay 0.9, omega-bound 0.3, p-reset after each full stop",
+    "rep_penalties_175B": "alpha_pres = alpha_freq = 0.5 for entity, memory access, knowledge; dialogue also alpha_pres_src = alpha_freq_src = 0.5",
+    "3B_memory_gen": "beam 3, min beam length 10, trigram blocking",
+    "3B_entity": "beam 3, trigram blocking on output and context",
+    "3B_access_memory": "beam 3, min length 5, trigram blocking",
+    "3B_knowledge": "beam 3, min length 10, trigram blocking on output and context",
+    "3B_dialogue": "beam 10, min length 20, trigram blocking on output and context",
+    "3B_query": "greedy, minimum generation length 2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Per-turn consistent / knowledgeable / factually incorrect / engaging",
+     "definition": "binary crowdworker labels per turn averaged over turns and conversations (Komeili et al. 2022 definitions)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Final rating",
+     "definition": "end-of-conversation score",
+     "unit": "1-5 scale (inferred)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Good response %",
+     "definition": "fraction of turns marked good in FITS setup",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Safety Bench unsafe generation",
+     "definition": "% of responses flagged unsafe by >=1 of safety classifier, string matcher, Perspective API",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "SaFeRDialogues perplexity",
+     "definition": "perplexity on validation set",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "HolisticBias Likelihood Bias",
+     "definition": "how often identity term pairs have significantly different perplexity distributions in templates",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BB1",
+    "BB2",
+    "SeeKeR 3B",
+    "OPT-175B zero-shot",
+    "OPT-175B few-shot",
+    "InstructGPT text-davinci-002"
+   ],
+   "protocol": "Crowdworkers on Amazon Mechanical Turk; independent two-sample t-test p<0.05 for Tables 5/6; pairwise comparison p<0.01 for current events; three crowdworkers per example in deployment agreement check; no seeds reported"
+  },
+  "availability": {
+   "code": "Open sourced (ParlAI for 3B, Metaseq for 30B/175B); logbook released",
+   "weights": "3B and 30B openly available; 175B by request to academic researchers and others",
+   "data": "FITS, SafetyMix, SaFeRDialogues released; deployment data promised later"
+  },
+  "prompts": [
+   {
+    "purpose": "OPT-175B baseline module prompts (Table 18), e.g. Search Decision",
+    "text": "Person 2 must decide whether to search the internet.\nPerson 1:...\nSearch Decision:",
+    "where": "Appendix D, Table 18 (few-shot: 9 examples from WizInt, QA data)"
+   },
+   {
+    "purpose": "OPT-175B Query Generation prompt",
+    "text": "Person 2 must write a search query for a search engine.\nPerson 1:...\nPerson 2:...\nPerson 1:...\nQuery:...",
+    "where": "Table 18 (5 examples WizInt)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The 175B model was trained with a batch size of 218 and the 30B model was trained with a batch size of 219",
+    "where": "Appendix B.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BB3-175B gets highest final rating among models in short crowdworker conversations",
+   "kind": "measured",
+   "source": null,
+   "metric": "final rating",
+   "value": 4.45,
+   "unit": "rating",
+   "baseline_value": "SeeKeR 4.34; BB1 4.32",
+   "n": null,
+   "setup": "Short WizInt-style conversations, 100 dialogues per model, MTurk",
+   "quote": "",
+   "table": "Table 5, row BB3-175B, column Final Rating",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "BB3-175B has lowest factual incorrectness",
+   "kind": "measured",
+   "source": null,
+   "metric": "factually incorrect",
+   "value": 2.1,
+   "unit": "%",
+   "baseline_value": "BB2 3.1%",
+   "n": null,
+   "setup": "Short conversations, MTurk",
+   "quote": "",
+   "table": "Table 5, row BB3-175B, column Factually Incorrect",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "BB3-175B knowledgeable & engaging turns",
+   "kind": "measured",
+   "source": null,
+   "metric": "knowl. and engaging",
+   "value": 39.0,
+   "unit": "%",
+   "baseline_value": "SeeKeR 30.7%",
+   "n": null,
+   "setup": "Short conversations, MTurk",
+   "quote": "",
+   "table": "Table 5, row BB3-175B, column Knowl. & Eng.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "BB3-175B good response rate on FITS open-domain task",
+   "kind": "measured",
+   "source": null,
+   "metric": "good response %",
+   "value": 64.8,
+   "unit": "%",
+   "baseline_value": "OPT-175B few-shot 43.0%; SeeKeR 49.3%",
+   "n": null,
+   "setup": "FITS setup, crowdworkers, 175B with modular supervision",
+   "quote": "",
+   "table": "Table 6, row BB3-175B, column Good response %",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "BB3-175B rating on FITS task",
+   "kind": "measured",
+   "source": null,
+   "metric": "rating",
+   "value": 4.08,
+   "unit": "rating",
+   "baseline_value": "OPT-175B few-shot 3.19",
+   "n": null,
+   "setup": "FITS setup",
+   "quote": "",
+   "table": "Table 6, row BB3-175B, column Rating",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "BB3-175B vs InstructGPT: more current",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 82,
+   "unit": "%",
+   "baseline_value": "InstructGPT 18%",
+   "n": null,
+   "setup": "300 current-events questions, pairwise, expert evaluators with search",
+   "quote": "BB3-175B is more current and specific by a large margin (82% and 76%, respectively)",
+   "table": null,
+   "note": null,
+   "where": "Fig 9, Sec 6.1"
+  },
+  {
+   "claim": "BB3-175B vs InstructGPT: more specific",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 76,
+   "unit": "%",
+   "baseline_value": "InstructGPT 24%",
+   "n": null,
+   "setup": "as above",
+   "quote": "BB3-175B is more current and specific by a large margin (82% and 76%, respectively)",
+   "table": null,
+   "note": null,
+   "where": "Fig 9"
+  },
+  {
+   "claim": "InstructGPT slightly more sensible",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above, crowdworkers",
+   "quote": "InstructGPT is slightly more sensible (57%)",
+   "table": null,
+   "note": null,
+   "where": "Fig 9"
+  },
+  {
+   "claim": "Organic users liked 4% of BB3-175B messages",
+   "kind": "measured",
+   "source": null,
+   "metric": "liked",
+   "value": 4.0,
+   "unit": "%",
+   "baseline_value": "BB3-3B 3.41%",
+   "n": 9197,
+   "setup": "Deployment, 9197 bot messages for 175B; 3B 15088 messages collected at different times",
+   "quote": "Messages are liked 4% of the time for BB-175B, in comparison to BB-3B's 3.41% of the time",
+   "table": null,
+   "note": null,
+   "where": "Table 7, Sec 6.2"
+  },
+  {
+   "claim": "Crowdworkers agree with user dislikes 79% of time",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 79,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 crowdworkers per example, dislike if any labels dislike",
+   "quote": "crowdworkers agree with users a majority of the time on both user likes (70% of the time) and dislikes (79%)",
+   "table": null,
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "42% of bad human utterances in deployment are rude/inappropriate",
+   "kind": "measured",
+   "source": null,
+   "metric": "rude share",
+   "value": 42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Crowdworker majority vote of 3; 31% of human utterances deemed bad",
+   "quote": "many (42%) of these utterances are deemed rude or inappropriate by crowdworkers",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2, Table 9"
+  },
+  {
+   "claim": "Share of rude/inappropriate bot utterances in deployment, BB3-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "rude",
+   "value": 0.16,
+   "unit": "%",
+   "baseline_value": "BB3-3B 0.04%",
+   "n": null,
+   "setup": "Deployment",
+   "quote": "0.04% and 0.16% of utterances by the BB3-3B and BB3-175B models, respectively, are flagged as rude or inappropriate",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3.2"
+  },
+  {
+   "claim": "Unsafe generation test: BB3-175B in safe setting",
+   "kind": "measured",
+   "source": null,
+   "metric": "flagged by >=1 tool",
+   "value": 1.1,
+   "unit": "%",
+   "baseline_value": "BB1 2.8",
+   "n": null,
+   "setup": "Safety Bench, raw model before mitigations",
+   "quote": "",
+   "table": "Table 10, row BB3-175B, column Safe",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "BB3-175B worst in adversarial unsafe setting vs BB1",
+   "kind": "measured",
+   "source": null,
+   "metric": "flagged",
+   "value": 27.8,
+   "unit": "%",
+   "baseline_value": "BB1 16.1",
+   "n": null,
+   "setup": "Safety Bench adversarial unsafe",
+   "quote": "",
+   "table": "Table 10, row BB3-175B, column Adversarial Unsafe",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "SaFeRDialogues perplexity BB3-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 6.2,
+   "unit": "ppl",
+   "baseline_value": "OPT-175B few-shot 10.7",
+   "n": null,
+   "setup": "validation set",
+   "quote": "",
+   "table": "Table 12, row BB3-175B",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Best troll-robust method reduces error rate from 31% to 12%",
+   "kind": "reported",
+   "source": "Ju et al. 2022",
+   "metric": "error rate",
+   "value": 12,
+   "unit": "%",
+   "baseline_value": "Standard training 31%",
+   "n": null,
+   "setup": "SAFETYMIX, 50% trolls, Per-User+Example Removal; reported from companion paper Ju et al. 2022",
+   "quote": "a reduction in error rate from 31% to 12% at best",
+   "table": null,
+   "note": null,
+   "where": "Table 4, Sec 5.2"
+  },
+  {
+   "claim": "DIRECTOR module+binary feedback best for SeeKeR 3B",
+   "kind": "reported",
+   "source": "Xu et al. 2022b",
+   "metric": "good response %",
+   "value": 59.1,
+   "unit": "%",
+   "baseline_value": "SeeKeR 3B 49.3%",
+   "n": null,
+   "setup": "Human eval of feedback methods, from companion paper Xu et al. 2022b",
+   "quote": "",
+   "table": "Table 3, row SeeKeR +DIRECTOR module+binary, column Good resp.%",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Fine-tune data size",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 4000000,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BB3 fine-tuning",
+   "quote": "The ﬁne-tuning data for BB3 comprises roughly 4 million source/target examples spread across the various training modules. This corresponds to around 1.13B training tokens.",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.1"
+  }
+ ],
+ "limits": [
+  "Mistakes include off-topic, nonsensical, incorrect, rude; mitigations trade off with engagingness",
+  "Continual learning is in its infancy; the paper does not retrain on deployment data; studies in Sec 5 mostly use crowdworker data",
+  "Safety benchmarks are static and crowd-sourced; BB3-175B still toxic in adversarial context (27.8% flagged, higher than BB1 16.1%)",
+  "English only",
+  "BB3-3B and 175B deployment stats collected at different times, may not be comparable",
+  "Prompts for OPT baselines not tuned",
+  "Current release uses modular supervision but not DIRECTOR",
+  "Nothing on ablation of the modular design vs single-pass; 175B overfit if more than one epoch"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "continual learning (as used here)",
+   "definition": "learning that continues over time using data from the model's interactions, but training itself will actually be performed in successive large batches; the model is not updated online",
+   "where": "Intro footnote"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OPT: Open Pre-trained Transformer Language Models",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "extends",
+   "note": "30B and 175B BB3 initialised from OPT",
+   "quote": null
+  },
+  {
+   "work": "SeeKeR (Shuster et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.13224",
+   "relation": "extends",
+   "note": "modular search/knowledge/response design; R2C2 base; baseline",
+   "quote": null
+  },
+  {
+   "work": "Reason first, then respond (K2R, Adolphs et al.)",
+   "year": 2021,
+   "arxiv": "2111.05204",
+   "relation": "extends",
+   "note": "knowledge response module",
+   "quote": null
+  },
+  {
+   "work": "BlenderBot 1 (Roller et al.)",
+   "year": 2021,
+   "arxiv": "2004.13637",
+   "relation": "baseline",
+   "note": "predecessor",
+   "quote": null
+  },
+  {
+   "work": "BlenderBot 2 (Chen et al. 2021; Komeili et al. 2022)",
+   "year": 2021,
+   "arxiv": "2107.07566",
+   "relation": "baseline",
+   "note": "predecessor with internet search and LTM",
+   "quote": null
+  },
+  {
+   "work": "Beyond goldfish memory: MSC (Xu et al. 2022a)",
+   "year": 2022,
+   "arxiv": "2107.07567",
+   "relation": "uses-data",
+   "note": "long-term memory data",
+   "quote": null
+  },
+  {
+   "work": "FITS / Xu et al. 2022b (companion)",
+   "year": 2022,
+   "arxiv": "2208.03270",
+   "relation": "extends",
+   "note": "feedback learning study and dataset",
+   "quote": null
+  },
+  {
+   "work": "Ju et al. 2022 (companion, trolls)",
+   "year": 2022,
+   "arxiv": "2208.03295",
+   "relation": "extends",
+   "note": "robust learning from adversarial users, SafetyMix",
+   "quote": null
+  },
+  {
+   "work": "DIRECTOR (Arora et al. 2022)",
+   "year": 2022,
+   "arxiv": "2206.07694",
+   "relation": "uses-method",
+   "note": "generator-classifier decoding, not yet in release",
+   "quote": null
+  },
+  {
+   "work": "Factual nucleus sampling (Lee et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "decoding for 175B dialogue",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "baseline",
+   "note": "text-davinci-002 compared; repetition penalties and LM multitask borrowed",
+   "quote": null
+  },
+  {
+   "work": "Build-it Break-it Fix-it; BAD (Xu et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "safety classifier and nonsequitur recovery",
+   "quote": null
+  },
+  {
+   "work": "HolisticBias (Smith et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "bias metric",
+   "quote": null
+  },
+  {
+   "work": "SaFeRDialogues (Ung et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "safety recovery",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "BlenderBot 3 module execution flow.",
+   "page": 3,
+   "why": "Shows decision and generation module ordering"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Details of all the training datasets used for fine-tuning the modular tasks.",
+   "page": 5,
+   "why": "Dataset-to-module matrix"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Human Evaluation results comparing BB3 with various baselines on FITS.",
+   "page": 9,
+   "why": "Error breakdown per module"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Superscripts lost in text extraction: batch sizes printed '218'/'219' (likely 2^18/2^19) and significance marks fused to numbers (e.g. 46.3%12S).",
+  "Table 3/5/10 cell values are printed as flat lists in the text; row alignment checked by order.",
+  "Appendix F figures are images; not read."
+ ]
+}

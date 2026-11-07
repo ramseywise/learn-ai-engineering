@@ -1,0 +1,573 @@
+{
+ "schema": 1,
+ "key": "2301.10226",
+ "pdf": "ai-engineering/09-safety-and-security/sources/kirchenbauer-2023-watermark-large-language-models-2301.10226.pdf",
+ "bib": {
+  "title": "A Watermark for Large Language Models",
+  "authors": [
+   "John Kirchenbauer",
+   "Jonas Geiping",
+   "Yuxin Wen",
+   "Jonathan Katz",
+   "Ian Miers",
+   "Tom Goldstein"
+  ],
+  "first_author": "Kirchenbauer",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, 1 May 2024)",
+  "arxiv": "2301.10226",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 118430,
+  "chars_total": 118430,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can LLM output be watermarked at generation time, without retraining, so that a short span is detectable with a rigorous p-value and without access to the model?",
+ "hypothesis": "Softly boosting a pseudo-random green list of tokens yields a detectable watermark with negligible quality cost, and detection sensitivity depends on the entropy of the text.",
+ "contributions": [
+  "Hard and soft green/red list watermark with a z-test detector",
+  "Spike-entropy based sensitivity analysis (Theorem 4.2) and perplexity bound (Theorem 4.3)",
+  "Private watermarking (Algorithm 3) and multi-key variant",
+  "Experiments with OPT-1.3B and an attack study"
+ ],
+ "method": {
+  "summary": "At each step a hash of the previous token seeds a PRNG that splits the vocabulary into a green list (fraction gamma) and a red list; delta is added to green logits before sampling. Detection counts green tokens and applies a one-proportion z-test, needing no model access. Tested on OPT-1.3B with C4 realnewslike prompts.",
+  "task": "watermarking and detecting LLM-generated text",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "C4 realnewslike",
+    "role": "eval",
+    "size": "at least 500 generations with T=200+-5 tokens per setting (500+-10 sequences)",
+    "split": "random selection of texts; fixed number of tokens trimmed from the end as human baseline completion, rest is prompt",
+    "source": "Raffel et al., 2019",
+    "preprocessing": "EOS suppressed for greedy and beam search, sequences truncated to T=200"
+   },
+   {
+    "name": "TriviaQA validation (unfiltered)",
+    "role": "eval",
+    "size": "50,000 samples",
+    "split": "validation",
+    "source": "Joshi et al., 2017",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT-1.3B",
+    "role": "evaluated",
+    "params": "1.3B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT-2.7B",
+    "role": "judge",
+    "params": "2.7B",
+    "architecture": "oracle LM for perplexity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT-6.7B",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Figure 1 example only"
+    }
+   },
+   {
+    "name": "T5-Large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "attacker span replacement model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "google/flan-ul2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "TriviaQA, Table 9"
+    }
+   },
+   {
+    "name": "bigscience/bloomz",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "TriviaQA, Table 9"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "multinomial sampling, greedy decoding, and beam search (4 and 8 beams, greedy over beams)",
+   "temperature": "0.7 for multinomial sampling (Appendix C: 'temp=0.7')",
+   "top_p": null,
+   "max_tokens": "T=200+-5 generated tokens",
+   "samples": "about 500 generations per parameter setting; single run, no seeds stated",
+   "prompting": "prompt = C4 text with trailing tokens removed; TriviaQA zero-shot template (see prompts)",
+   "retrieval": null,
+   "parameters": {
+    "gamma": "green list fraction, swept 0.1, 0.25, 0.5, 0.75, 0.9",
+    "delta": "green logit bias, swept 0.0, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0",
+    "hash": "one previous token (h=1) seeds torch RNG in experiments",
+    "z_threshold": "4.0 (one-sided p about 3e-5) and 5.0",
+    "private mode window h": "2 or 3 suggested for naive rule",
+    "T5 attack": "k=20 candidates via 50-way beam search, replacement budget eps in 0.1, 0.3, 0.5, 0.7"
+   },
+   "other": {
+    "implementation": "PyTorch backend of Huggingface generate API with logit warping"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "z-score",
+     "definition": "z=(|s|_G - gamma T)/sqrt(T gamma (1-gamma)), Eq 3",
+     "unit": "standard deviations",
+     "higher_is_better": true
+    },
+    {
+     "name": "type-I/II error (FPR/FNR, TPR, TNR)",
+     "definition": "at z thresholds 4 and 5 over about 500 generations",
+     "unit": "fraction",
+     "higher_is_better": null
+    },
+    {
+     "name": "AUC",
+     "definition": "ROC area of z-score detector",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity (PPL)",
+     "definition": "exp of mean token loss of OPT-2.7B on generated tokens given the prompt",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Exact Match / F1",
+     "definition": "TriviaQA vs answer alias list",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unwatermarked generation (delta=0)",
+    "human C4 completions (for type-I)"
+   ],
+   "protocol": "Each setting about 500 sequences of T=200+-5; no repeated seeds or confidence intervals reported."
+  },
+  "availability": {
+   "code": "github.com/jwkirchenbauer/lm-watermarking",
+   "weights": null,
+   "data": "C4 public"
+  },
+  "prompts": [
+   {
+    "purpose": "TriviaQA zero-shot",
+    "text": "The following is a trivia question with a single correct factual answer. Please provide the answer to the question.\\n\\nQuestion {q}\\n\\nAnswer:",
+    "where": "Table 9 caption, Appendix G"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Soft watermark detects 98.4% of OPT-1.3B generations at z=4 with multinomial sampling and 99.6% with 4-way beam search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@z=4",
+   "value": 98.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, C4 realnewslike, T=200, gamma=0.5, delta=2.0, about 500 generations",
+   "quote": "Empirically, 98.4% of generations\nare detected at the z = 4 (128 token) threshold when multi-\nnomial sampling is used.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "At z=4 the false positive rate is 3e-5 by theory and no false positives were observed in any run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR",
+   "value": 3e-05,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gamma, delta grid in Table 2, about 500 generations per row",
+   "quote": "type-I error (false positive) rate of 3 × 10−5",
+   "table": null,
+   "note": "Table 2 caption: a maximum of one type-I error was observed for any given run; text near Table 2 says none were observed.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Table 2: delta=2.0, gamma=0.5 multinomial gives TPR 0.984 at z=4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@z=4",
+   "value": 0.984,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, 507 generations",
+   "quote": "",
+   "table": "Table 2, row m-nom. delta 2.0 gamma 0.50, column z=4.0 TPR (0.984)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Table 2: delta=1.0, gamma=0.5 multinomial gives TPR only 0.767 at z=4 and 0.504 at z=5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@z=4",
+   "value": 0.767,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, 506 generations",
+   "quote": "",
+   "table": "Table 2, row m-nom. delta 1.0 gamma 0.50, column z=4.0 TPR (0.767)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Theorem 4.2 lower bound on expected green tokens was 142.2 and the empirical mean was 159.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean green tokens",
+   "value": 159.5,
+   "unit": "green tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, 200 tokens, gamma=0.5, delta=2, mean spike entropy S=0.807",
+   "quote": "Theorem 4.2 says that the expected number of green list\ntokens per generation is at least 142.2. Indeed, the empiri-\ncal average is 159.5.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "A small green list gamma=0.1 is pareto-optimal for z-score vs perplexity under multinomial sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, T=200+-5, 500+-10 sequences per setting",
+   "quote": "Interestingly, we see that a small green list, γ = .1 is pareto-optimal.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 2 left"
+  },
+  {
+   "claim": "With 8-way beam search a watermark of delta=2 reaches average z>5 within 35 tokens, at very low PPL cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens to z>5",
+   "value": 35,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-1.3B, gamma=0.25, 8 beams",
+   "quote": "an average\nz-score greater than 5 is achieved for as few as 35 tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 3c"
+  },
+  {
+   "claim": "A T5-Large span replacement attack with budget 0.1 cuts AUC by 0.01 but at 0.3 budget it triples PPL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": 0.01,
+   "unit": "AUC drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gamma=0.5, delta=2.0 multinomial, 500 sequences T=200",
+   "quote": "we only measure a decrease\nin watermark strength of 0.01 AUC when ε = 0.1",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1, Fig 6"
+  },
+  {
+   "claim": "Table 8: after T5 attack with eps=0.3 multinomial TPR@4 falls from 0.984 to 0.353 (FNR 0.647).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@z=4 under attack",
+   "value": 0.353,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "delta=2.0, gamma=0.5, 487 generations",
+   "quote": "",
+   "table": "Table 8, row m-nom. eps 0.3, column w/attck TPR@4.0 (0.353)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Table 8: at eps=0.7 multinomial TPR@4 under attack is 0.039; beam search holds 0.299.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@z=4 under attack",
+   "value": 0.039,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "delta=2.0, gamma=0.5",
+   "quote": "",
+   "table": "Table 8, row m-nom. eps 0.7, column w/attck TPR@4.0 (0.039)",
+   "note": "Attack effect is larger than the 'degrades gracefully' framing in the Conclusion suggests at high budgets, though PPL rises to 33.9 (Fig 6).",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Removing the watermark from a long hard-watermarked sequence requires modifying roughly one quarter of tokens or more.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "analysis, T=1000, adversary modifies 200 tokens, hard red list",
+   "quote": "In general, removing the watermark of a\nlong sequence requires modifying roughly one quarter of\nthe tokens or more.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "z=4 threshold gives one-sided p about 3e-5 and a hard watermark is detectable from 16 tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "min T",
+   "value": 16,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hard red list, gamma=0.5",
+   "quote": "we will detect\nany watermarked sequence with 16 or more tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "On TriviaQA, soft watermark (gamma 0.5, delta 2) lowers flan-ul2 EM from 0.374 to 0.336.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Match",
+   "value": 0.336,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "greedy decoding, zero-shot, 50,000 validation questions",
+   "quote": "",
+   "table": "Table 9, row google/flan-ul2, column EM (W) (0.336 vs EM 0.374)",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "TriviaQA drop in EM under watermark was under 4 points for both models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM drop",
+   "value": 4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN-UL2 and BLOOMZ, gamma,delta = 0.5,2",
+   "quote": "We observe less than a 4 point drop in Exact Match performance",
+   "table": null,
+   "note": null,
+   "where": "App G"
+  },
+  {
+   "claim": "Authors state detection is unreliable on low entropy text such as memorized or templated content.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative, Table 1 failure cases",
+   "quote": "Anecdotally, failure cases typically seem to involve data memorization",
+   "table": null,
+   "note": null,
+   "where": "Table 1 caption"
+  }
+ ],
+ "limits": [
+  "Evaluated mainly on OPT-1.3B (and one OPT-6.7B figure); no large instruction-tuned chat model for the main results",
+  "Single run per setting, about 500 samples, no confidence intervals",
+  "Only text form is watermarked: a new essay written from an LM outline is not detectable (Appendix B)",
+  "Low entropy and memorized text cannot be watermarked and is the main source of false negatives",
+  "Strong attacks (emoji, generative, paraphrase at high budget) can defeat it; authors suggest instruction tuning against them",
+  "TriviaQA factuality test is acknowledged as a worst case and not a deployment setting",
+  "Theory assumes uniformly random red list, not the seeded PRNG used in practice",
+  "Aaronson/OpenAI scheme not compared because details were unavailable"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "spike entropy",
+   "definition": "S(p,z)=sum_k p_k/(1+z p_k)",
+   "where": "Def 4.1"
+  },
+  {
+   "term": "attack amplification",
+   "definition": "downstream impact of one token change on the red lists of h later tokens",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Atallah et al. natural language watermarking",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "rule-based text watermarking",
+   "quote": null
+  },
+  {
+   "work": "Fang et al. neural steganography",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hard vocabulary partition",
+   "quote": null
+  },
+  {
+   "work": "OPT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "evaluates",
+   "note": "main test model",
+   "quote": null
+  },
+  {
+   "work": "C4 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "realnewslike prompts",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "related",
+   "note": "T5-Large attacker",
+   "quote": null
+  },
+  {
+   "work": "Aaronson watermark lecture",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent unpublished OpenAI approach",
+   "quote": null
+  },
+  {
+   "work": "Goodside emoji attack",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "generative attack",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA (Joshi et al.)",
+   "year": 2017,
+   "arxiv": "1705.03551",
+   "relation": "uses-data",
+   "note": "factuality check",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Tradeoff between average z-score and perplexity for T=200+-5",
+   "page": 8,
+   "why": "shows gamma/delta tradeoff and beam search benefit"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "ROC under T5 attack for budgets eps",
+   "page": 11,
+   "why": "shows robustness cost to attacker"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Empirical error rates by sampling, delta, gamma",
+   "page": 9,
+   "why": "core detection numbers"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "z = (|s|_G - gamma T)/sqrt(T gamma (1-gamma))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text states no type-I errors observed while Table 2 caption says a maximum of one was observed in any run",
+  "Table 1 and example tables are garbled by extraction"
+ ]
+}

@@ -1,0 +1,656 @@
+{
+ "schema": 1,
+ "key": "2405.15793",
+ "pdf": "ai-engineering/03-harness-engineering/sources/yang-2024-swe-agent.pdf",
+ "bib": {
+  "title": "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering",
+  "authors": [
+   "John Yang",
+   "Carlos E. Jimenez",
+   "Alexander Wettig",
+   "Kilian Lieret",
+   "Shunyu Yao",
+   "Karthik Narasimhan",
+   "Ofir Press"
+  ],
+  "first_author": "Yang",
+  "year": 2024,
+  "venue": "NeurIPS 2024 (38th Conference on Neural Information Processing Systems); arXiv:2405.15793v3",
+  "arxiv": "2405.15793",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 158497,
+  "chars_total": 291497,
+  "engine": "pymupdf",
+  "skipped": "Appendix D qualitative case-study trajectories (about chars 150450-283500: four worked instances with long code dumps) skimmed only for headings; heatmap number blocks (Figs 21-24) not transcribed."
+ },
+ "type": "system",
+ "question": "How does the design of the interface between an LM agent and the computer (commands, feedback, guardrails, context management) affect the agent's ability to solve software engineering tasks?",
+ "hypothesis": "LM agents are a new kind of end user; an interface built for their limits (simple compact actions, concise feedback, guardrails) will outperform human-oriented interfaces such as the raw Linux shell.",
+ "contributions": [
+  "Introduce the agent-computer interface (ACI) concept and show that careful ACI design substantially improves LM agent performance without modifying model weights.",
+  "Build, evaluate and open-source SWE-agent, a system giving LMs an ACI for real-world software engineering tasks."
+ ],
+ "method": {
+  "summary": "SWE-agent wraps an LM (ReAct-style thought plus one command per turn) in a custom ACI on top of a Linux shell in Docker: a 100-line file viewer, line-range edit command with flake8 linting guardrail, capped search commands, and history processing that collapses observations older than the last 5. The ACI was designed by manual inspection of trajectories on a few dev instances and a small sweep over window, history and temperature, then evaluated on SWE-bench and HumanEvalFix with ablations.",
+  "task": "repository-level software engineering: resolving GitHub issues (SWE-bench), code debugging (HumanEvalFix)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SWE-bench",
+    "role": "eval",
+    "size": "2,294 test instances, 12 Python repos; dev split 225",
+    "split": "full test for main results",
+    "source": "Jimenez et al. 2024, MIT licence",
+    "preprocessing": null
+   },
+   {
+    "name": "SWE-bench Lite",
+    "role": "eval",
+    "size": "300 instances",
+    "split": "test subset; used for ablations and analysis",
+    "source": "canonical subset of SWE-bench focused on self-contained functional bug fixes",
+    "preprocessing": null
+   },
+   {
+    "name": "SWE-bench dev subset",
+    "role": "dev",
+    "size": "37 instances sampled randomly",
+    "split": "hyperparameter sweep (App B.1)",
+    "source": "SWE-bench dev split",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEvalFix",
+    "role": "eval",
+    "size": "164 problems per language (Python, JS, Java reported)",
+    "split": "test",
+    "source": "Muennighoff et al. 2024 (OctoPack), MIT licence",
+    "preprocessing": "agent starts in a directory with one buggy file and example tests if available; same config as SWE-bench except language-specific demonstration"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 Turbo (gpt-4-1106-preview)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k tokens",
+    "other": {
+     "note": "ACI developed against this model"
+    }
+   },
+   {
+    "name": "Claude 3 Opus (claude-3-opus-20240229)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "200k tokens",
+    "other": {}
+   },
+   {
+    "name": "gpt-4o-2024-05-13",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "labels failure modes of unresolved trajectories"
+    }
+   },
+   {
+    "name": "Llama 3 / DeepSeek Coder",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Llama 3: 8k",
+    "other": {
+     "note": "tried and dropped as subpar in agent setting; no numbers given"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.0 for reported runs (selected by sweep over 0.0 and 0.2)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "pass@1 from a single run per configuration for main results; 6 runs for GPT-4 Turbo on Lite in Table 10; sweep used mean of 5 samples",
+   "prompting": "System prompt (setting, command docs, response format, one command per turn), optional single demonstration trajectory from dev set, instance prompt with issue text and 6 tips; response is DISCUSSION plus one bash command in a code block (JSON and XML formats also tried); malformed output gets an error message, 3 consecutive malformed responses end the episode",
+   "retrieval": null,
+   "parameters": {
+    "file_viewer_window": "100 lines",
+    "history": "observations before the last 5 collapsed to one line ('Old output omitted (N lines)')",
+    "search_result_cap": "at most 50 results; over cap, no results shown and agent asked to refine",
+    "per_instance_budget": "$4; on exceeding, existing edits auto-submitted",
+    "linter": "flake8 --isolated --select=F821,F822,F831,E111,E112,E113,E999,E902 on the open file; failing edits reverted",
+    "commands": "open, goto, scroll_down, scroll_up, search_file, search_dir, find_file, edit n:m ... end_of_edit, create, submit, plus bash"
+   },
+   "other": {
+    "harness": "InterCode-derived Docker environment; configuration via YAML (prompt templates, command files, history_processor, parse_function, env variables)",
+    "stop": "submit, cost limit, or 3 consecutive format errors (Fig 26; Sec 3 text says all past error messages except the first are omitted)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "% Resolved (pass@1)",
+     "definition": "proportion of instances for which all tests pass after the model-generated patch is applied",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "$ Avg. Cost",
+     "definition": "API inference cost averaged over all successfully resolved instances",
+     "unit": "$",
+     "higher_is_better": false
+    },
+    {
+     "name": "pass@k",
+     "definition": "instance solved in any of k runs (k up to 6)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RAG (BM25 retrieval, direct patch generation) from Jimenez et al. 2024 with GPT-4 Turbo and Claude 3 Opus",
+    "Shell-only agent adapted from InterCode (Yang et al. 2023)",
+    "HumanEvalFix scores from Yu et al. 2023 (WaveCoder), CodeLLaMa-instruct-13B, GPT-4, DeepseekCoder-CodeAlpaca-6.7B"
+   ],
+   "protocol": "Main results on full SWE-bench; ablations on Lite with single runs; failure categories labelled by gpt-4o with 87% agreement against authors on 15 hand-labelled instances"
+  },
+  "availability": {
+   "code": "swe-agent.com (GitHub)",
+   "weights": null,
+   "data": "trajectories, generations and evaluation artifacts open-sourced (App E.2)"
+  },
+  "prompts": [
+   {
+    "purpose": "system prompt",
+    "text": "SETTING: You are an autonomous programmer, and you’re working directly in the command line with a special interface.\nThe special interface consists of a file editor that shows you 100 lines of a file at a time. In addition to typical bash commands, you can also use the following commands to help you navigate and edit files.\nCOMMANDS: {documentation}\nPlease note that THE EDIT COMMAND REQUIRES PROPER INDENTATION.",
+    "where": "Fig 27 (truncated here; full text in the paper)"
+   },
+   {
+    "purpose": "instance prompt tips",
+    "text": "2. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!",
+    "where": "Fig 29, tip 2 only (six tips in the full prompt)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We elect to run inference of both models on the SWE-bench test sets (both full and Lite splits) using the 0.0/100/Last-5 configuration.",
+    "where": "App B.1"
+   },
+   {
+    "field": "inference.parameters.per_instance_budget",
+    "quote": "we set the per-instance budget to $4",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SWE-agent w/ GPT-4 Turbo resolves 12.47% of the full SWE-bench test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "12.47",
+   "unit": "% Resolved",
+   "baseline_value": "RAG w/ Claude 3 Opus 3.79 (best prior)",
+   "n": null,
+   "setup": "Full SWE-bench test, 2,294 instances, GPT-4 Turbo (gpt-4-1106-preview), $4 per-instance budget, pass@1",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "successfully solving 12.47% (286/2,294) of the full SWE-bench test set"
+  },
+  {
+   "claim": "SWE-agent w/ GPT-4 Turbo resolves 18.00% of SWE-bench Lite",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "18.00",
+   "unit": "% Resolved",
+   "baseline_value": "Shell-only 11.00; RAG 2.67",
+   "n": null,
+   "setup": "SWE-bench Lite, 300 instances, GPT-4 Turbo, pass@1",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "18.00% (54/300) of the Lite split"
+  },
+  {
+   "claim": "SWE-agent w/ Claude 3 Opus resolves 10.46% of full SWE-bench and 13.00% of Lite",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "10.46",
+   "unit": "% Resolved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full SWE-bench test, Claude 3 Opus (claude-3-opus-20240229), ACI developed for GPT-4 Turbo, not re-tuned",
+   "note": "Intro rounds to 10.5% and Lite value is 13.00 (Table 1)",
+   "where": "Table 1",
+   "table": "Table 1, row SWE-agent w/ Claude 3 Opus, column SWE-bench % Resolved"
+  },
+  {
+   "claim": "Shell-only agent (no ACI) with GPT-4 Turbo resolves 11.00% on Lite; without demonstration 7.33%",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "11.00",
+   "unit": "% Resolved",
+   "baseline_value": "SWE-agent 18.00",
+   "n": null,
+   "setup": "SWE-bench Lite, GPT-4 Turbo, InterCode-style Linux shell only",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Shell-only agent w/ GPT-4 Turbo, column SWE-bench Lite % Resolved"
+  },
+  {
+   "claim": "The ACI gives a 64% relative increase over Shell-only, both GPT-4 Turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite, GPT-4 Turbo",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "SWE-agent’s 64% relative increase compared to Shell-only, both with GPT-4 Turbo"
+  },
+  {
+   "claim": "Non-interactive RAG baseline with GPT-4 Turbo resolves 1.31% on full SWE-bench, 2.67% on Lite; SWE-agent costs 8-13x more per Lite instance",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "1.31",
+   "unit": "% Resolved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BM25-retrieved files, model writes patch directly, GPT-4 Turbo, full SWE-bench",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RAG w/ GPT-4 Turbo, column SWE-bench % Resolved"
+  },
+  {
+   "claim": "Cost per resolved instance (average) for SWE-agent w/ GPT-4 Turbo is $1.59 on full SWE-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "$ Avg. Cost",
+   "value": "1.59",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full SWE-bench; $ Avg. Cost defined over successfully resolved instances",
+   "note": "Metrics paragraph says averaged over all successfully resolved instances; Appendix B.3.2 text implies per-run $4 cap",
+   "where": "Table 1",
+   "table": "Table 1, row SWE-agent w/ GPT-4 Turbo, column SWE-bench $ Avg. Cost"
+  },
+  {
+   "claim": "Removing the edit command (No edit, bash-only editing) drops Lite from 18.0 to 10.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "10.3",
+   "unit": "% Resolved",
+   "baseline_value": "18.0",
+   "n": null,
+   "setup": "SWE-bench Lite (300 test instances), SWE-agent w/ GPT-4 Turbo, ablating one ACI component at a time, single run, pass@1 % Resolved; No edit",
+   "note": null,
+   "where": "Sec 5.1, Table 3",
+   "quote": "Without SWE-agent’s file editor interface,\nperformance drops to (10.3% ↓7.7)"
+  },
+  {
+   "claim": "Edit without linting guardrail scores 15.0 vs 18.0 with linting",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "15.0",
+   "unit": "% Resolved",
+   "baseline_value": "18.0",
+   "n": null,
+   "setup": "SWE-bench Lite (300 test instances), SWE-agent w/ GPT-4 Turbo, ablating one ACI component at a time, single run, pass@1 % Resolved; edit action without linter",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Editor edit action"
+  },
+  {
+   "claim": "Iterative (next/prev) search scores 12.0, worse than no search tool (15.7); summarized search is 18.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "12.0",
+   "unit": "% Resolved",
+   "baseline_value": "No search 15.7; Summarized 18.0",
+   "n": null,
+   "setup": "SWE-bench Lite (300 test instances), SWE-agent w/ GPT-4 Turbo, ablating one ACI component at a time, single run, pass@1 % Resolved; Iterative search",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "(15.7%↓2.3 for\nNo search vs. 12.0%↓6.0 with Iterative search)"
+  },
+  {
+   "claim": "File viewer window of 30 lines scores 14.3, full file 12.7, 100 lines 18.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "14.3",
+   "unit": "% Resolved",
+   "baseline_value": "100 lines 18.0",
+   "n": null,
+   "setup": "SWE-bench Lite (300 test instances), SWE-agent w/ GPT-4 Turbo, ablating one ACI component at a time, single run, pass@1 % Resolved; 30-line window",
+   "note": null,
+   "where": "Sec 5.1, Table 3",
+   "quote": "Either too little content (30 lines, 14.3% ↓3.7) or too much (entire file, 12.7%\n↓5.3) lowers performance."
+  },
+  {
+   "claim": "Context management: full history scores 15.0 and no demonstration 16.3 vs 18.0 with last-5-observation collapsing plus demo",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "15.0",
+   "unit": "% Resolved",
+   "baseline_value": "18.0",
+   "n": null,
+   "setup": "SWE-bench Lite (300 test instances), SWE-agent w/ GPT-4 Turbo, ablating one ACI component at a time, single run, pass@1 % Resolved; Full history",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Context Full history"
+  },
+  {
+   "claim": "SWE-agent w/ GPT-4 Turbo reaches 87.7% pass@1 on HumanEvalFix Python (JS 89.7, Java 87.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "87.7",
+   "unit": "% pass@1",
+   "baseline_value": "WaveCoder-DS-6.7B 57.9",
+   "n": null,
+   "setup": "HumanEvalFix, 164 problems per language, same config as SWE-bench plus language-specific demonstration; baselines' scores from Yu et al. (WaveCoder)",
+   "note": "Section 5 text says 88.3% pass@1; abstract and Table 2 say 87.7 (Python)",
+   "where": "Table 2",
+   "table": "Table 2, row SWE-agent w/ GPT-4 Turbo, column Python"
+  },
+  {
+   "claim": "Failed edits are common: 51.7% of GPT-4 Turbo trajectories have at least one linter-rejected edit",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "51.7",
+   "unit": "% of trajectories",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full SWE-bench, 2,294 instances (1,185), SWE-agent w/ GPT-4 Turbo",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "1,185 (51.7%) of SWE-agent w/ GPT-4 Turbo trajectories have 1+ failed\nedits"
+  },
+  {
+   "claim": "Chance an edit ultimately succeeds is 90.5%, falling to 57.2% after one failed edit",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "57.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full SWE-bench, GPT-4 Turbo trajectories",
+   "note": null,
+   "where": "Sec 5.2, App B.3.3",
+   "quote": "This probability drops off to 57.2% after a single failed edit."
+  },
+  {
+   "claim": "Resolved runs finish earlier and cheaper: median $1.21 and 12 steps vs mean $2.52 and 21 steps for unresolved",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.21",
+   "unit": "USD (median cost, resolved)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-agent w/ GPT-4, SWE-bench, instances not exhausting budget",
+   "note": "Compares a median to a mean",
+   "where": "Sec 5.2",
+   "quote": "median cost of $1.21 and 12 steps compared to a mean of $2.52 and 21 steps"
+  },
+  {
+   "claim": "93.0% of resolved instances submit before exhausting the cost budget vs 69.0% of all instances",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "93.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-agent w/ GPT-4",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "93.0% of resolved instances are submitted before exhausting their cost\nbudget, compared to 69.0% of instances overall"
+  },
+  {
+   "claim": "Most failures are incorrect or overly specific implementations (52.0%); failed edit recovery 23.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "52.0",
+   "unit": "% of unresolved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "248 unresolved Lite trajectories, SWE-agent w/ GPT-4 Turbo, labelled by gpt-4o-2024-05-13; 87% agreement with authors on 15 hand-labelled instances",
+   "note": null,
+   "where": "Sec 5.2, Fig 8",
+   "quote": "about half (52.0%) of unresolved instances\nfall into the Incorrect Implementation or Overly Specific Implementation categories"
+  },
+  {
+   "claim": "Average pass@1 over 6 runs on Lite is 17.94 (std 0.49); pass@6 is 32.67",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "17.94",
+   "unit": "% Resolved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-agent w/ GPT-4 Turbo, SWE-bench Lite, 6 runs",
+   "note": "Pass@k rises 17.94, 23.89, 27.35, 29.67, 31.33, 32.67 for k=1..6",
+   "where": "Table 10",
+   "table": "Table 10, column Avg. / Pass@1"
+  },
+  {
+   "claim": "Hyperparameter sweep best for GPT-4 Turbo: temperature 0.0, window 100, last 5 observations = 15.1%",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "15.1",
+   "unit": "% Resolved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "37 random dev-split SWE-bench instances, mean of 5 samples",
+   "note": null,
+   "where": "App B.1",
+   "table": "Table 5, row GPT-4 Turbo 0.0 100 Last 5 Obs."
+  },
+  {
+   "claim": "Agent localises files better than BM25: file-level F1 59.05 vs 45.47",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59.05",
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Edited/removed file set vs gold patch; SWE-agent w/ GPT-4 Turbo vs BM25 w/ Claude 3 Opus",
+   "note": null,
+   "where": "App B.9",
+   "quote": "achieves an F1 score of 59.05%, while\nBM25 w/ Claude 3 Opus produces an F1 score of just 45.47%"
+  },
+  {
+   "claim": "Runs ending in submit resolve 14.3% vs 3.1% for those ending on exit_cost",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full SWE-bench, SWE-agent w/ GPT-4 Turbo",
+   "note": null,
+   "where": "App B.9",
+   "quote": "14.3% of task instances that end with a submit are resolved, which is\nmuch higher than 3.1% for those finishing on exit_cost"
+  }
+ ],
+ "limits": [
+  "ACI was designed manually on a few hand-picked dev trajectories for GPT-4 Turbo; the authors say automating ACI design is future work (App E.3).",
+  "Ablations are single runs on Lite (300 instances); the paper's own 6-run std is 0.49 points on Lite, similar in size to some ablation gaps (e.g. 16.3 vs 18.0) while per-instance resolution varies greatly.",
+  "Only two LMs (GPT-4 Turbo, Claude 3 Opus) work in the setting; Llama 3 and DeepSeek Coder were dropped (small context) with no numbers shown.",
+  "Cost: SWE-agent is 8-13x more costly than RAG on Lite; $4 cap truncates runs and the paper suspects raising it will not help much.",
+  "Scope limited to Python/software engineering; transfer of ACI principles to other domains is untested.",
+  "Unsure whether demonstrations teach domain problem solving or only command format (App C).",
+  "Results are from 2024 models and SWE-bench numbers have since been far exceeded; the paper's SOTA claims are dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "agent-computer interface (ACI)",
+   "definition": "the interface LM agents use to interact with computers; specifies the commands available and how environment state is communicated back, tracks history and formats it into model input",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SWE-bench",
+   "year": 2024,
+   "arxiv": "2310.06770",
+   "relation": "uses-data",
+   "note": "Main benchmark and RAG baseline (Jimenez et al.)",
+   "quote": null
+  },
+  {
+   "work": "InterCode",
+   "year": 2023,
+   "arxiv": "2306.14898",
+   "relation": "extends",
+   "note": "Environment and Shell-only baseline adopted from InterCode",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "thought plus action per step",
+   "quote": null
+  },
+  {
+   "work": "OctoPack / HumanEvalFix",
+   "year": 2024,
+   "arxiv": "2308.07124",
+   "relation": "uses-data",
+   "note": "HumanEvalFix evaluation",
+   "quote": null
+  },
+  {
+   "work": "WaveCoder",
+   "year": 2023,
+   "arxiv": "2312.14187",
+   "relation": "baseline",
+   "note": "HumanEvalFix scores taken from Yu et al.",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle",
+   "year": 2023,
+   "arxiv": "2307.03172",
+   "relation": "related",
+   "note": "cited for distracting context harming performance",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 Turbo, Claude 3 Opus",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "two LMs used",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SWE-agent is an LM interacting with a computer through an agent-computer interface (ACI), which includes the commands the agent uses and the format of the feedback from the computer.",
+   "page": 1,
+   "why": "the architecture in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The file viewer and edit command are integrated.",
+   "page": 4,
+   "why": "shows view-then-edit loop with line numbers"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Three different Search interfaces for task instance pvlib__pvlib-python-1224.",
+   "page": 7,
+   "why": "contrasts Shell-only, iterative and summarized search"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Three different Edit interfaces for task instance sympy__sympy-24102.",
+   "page": 7,
+   "why": "shows no-edit, edit without linting and edit with linting"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "SWE-bench Lite performance under ablations to the SWE-agent interface.",
+   "page": 6,
+   "why": "all ablation deltas in one table"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Specialised commands with the documentation shown to the LM.",
+   "page": 17,
+   "why": "the full tool set and its docstrings"
+  }
+ ],
+ "code": [
+  {
+   "where": "App A.1 (p19)",
+   "snippet": "flake8 --isolated --select=F821,F822,F831,E111,E112,E113,E999,E902 \"$CURRENT_FILE\" 2>&1",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 4 prints scroll_down as 'Moves the window up 100 lines' and scroll_up as 'down' (swapped in the paper's doc text).",
+  "Section 5 text gives HumanEvalFix pass@1 as 88.3% while abstract and Table 2 give 87.7 (Python).",
+  "Section 3 says 'all past error messages except the first are omitted' while App C says malformed responses followed by valid ones are removed from history; Fig 26 / App C say 2+ vs 3 consecutive format errors terminate (App C text: 3).",
+  "Text-layer extraction scrambles Fig 3 and Fig 6 code listings; no embedded instructions found.",
+  "Training: none (prompting/system work)."
+ ]
+}

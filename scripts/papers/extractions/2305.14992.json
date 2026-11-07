@@ -1,0 +1,145 @@
+{
+ "schema": 1,
+ "key": "2305.14992",
+ "pdf": "generative-ai/03-agentic-foundations/sources/hao-2023-reasoning-language-model-planning-world.pdf",
+ "bib": {
+  "title": "Reasoning with Language Model is Planning with World Model",
+  "authors": ["Shibo Hao", "Yi Gu", "Haodi Ma", "Joshua Jiahua Hong", "Zhen Wang", "Daisy Zhe Wang", "Zhiting Hu"],
+  "first_author": "Hao",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 8154-8173",
+  "arxiv": "2305.14992",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 75159,
+  "chars_total": 75159,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can an LLM reason better if it is repurposed as both a reasoning agent and a world model and searched with Monte Carlo Tree Search, instead of generating one autoregressive chain?",
+ "hypothesis": "LLMs fail at planning and multi-step reasoning because they lack an internal world model and a reward signal; adding both plus MCTS should improve plan generation, math and logical reasoning.",
+ "contributions": [
+  "RAP framework: the same LLM acts as reasoning agent and world model (state transitions via prompting)",
+  "Reward designs (action likelihood, state confidence, self-evaluation, task-specific heuristics) and MCTS planning over reasoning traces",
+  "RAP-Aggregation for answer-only tasks",
+  "Experiments on Blocksworld, GSM8K and PrOntoQA, with LLaMA-33B beating GPT-4 CoT on Blocksworld"
+ ],
+ "method": {
+  "summary": "A frozen LLM proposes d candidate actions per node and, with a different prompt, predicts the next state; MCTS (selection by UCT, expansion, simulation with a greedy local-reward roll-out, back-propagation) builds a reasoning tree under task-specific rewards. The best-reward path is chosen; for GSM8K multiple paths are aggregated.",
+  "task": "plan generation (Blocksworld), math word problems (GSM8K), logical reasoning (PrOntoQA)",
+  "trains": false,
+  "datasets": [
+   {"name": "Blocksworld (Valmeekam et al. 2023), subset", "role": "eval", "size": "30 cases (2-step) + 57 (4-step) + 114 (6-step); at most 5 blocks", "split": "test cases grouped by minimum number of actions", "source": "Valmeekam et al. 2023", "preprocessing": null},
+   {"name": "Full Blocksworld", "role": "eval", "size": "602 test cases", "split": "Easy: 10 demo cases per step-group, rest test; Hard: 10 random demo cases from the full set excluded from test", "source": "Valmeekam et al. 2023", "preprocessing": null},
+   {"name": "GSM8K", "role": "eval", "size": null, "split": "main table: not stated; Table 6 ablation uses first 300 examples", "source": "Cobbe et al. 2021", "preprocessing": null},
+   {"name": "PrOntoQA", "role": "eval", "size": "500 examples", "split": "sampled from the generation script of Saparov and He (2022); true ontology, random rule ordering, 3/4/5 hops mixed", "source": "Saparov and He 2022", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA-33B", "role": "base", "params": "33B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "default base LLM for RAP and baselines; frozen"}},
+   {"name": "Llama-2 70B", "role": "base", "params": "70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "full Blocksworld analysis, Section 5.1"}},
+   {"name": "GPT-4", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "CoT on Blocksworld only"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "random sampling, generation cut off at max length 2048 or a newline token",
+   "temperature": "0.8",
+   "top_p": null,
+   "max_tokens": "2048 (or newline)",
+   "samples": "Blocksworld: RAP evaluates a single plan; CoT pass@10 uses 10 plans. GSM8K: SC(10) and RAP(10) (10 samples/iterations); PrOntoQA: 20 MCTS iterations vs 20 SC samples. Number of runs/seeds not stated.",
+   "prompting": "Blocksworld: 4 in-context test cases with solutions (same prompt for CoT and for RAP action likelihood); GSM8K: same 4-shot demos for all methods; Easy/Hard Blocksworld: 4-shot sampled from a 10-case pool; Appendix E adaptive prompting truncates demonstration traces as tree deepens",
+   "retrieval": null,
+   "parameters": {
+    "mcts_iterations": "RAP(10), RAP(20) on Blocksworld; RAP(10) on GSM8K and full Blocksworld; 20 on PrOntoQA",
+    "d_actions_per_node": null,
+    "depth_limit_L": null,
+    "exploration_weight_w": null,
+    "gsm8k_reward": "r = r1^alpha * r2^(1-alpha) (weighted geometric mean of self-evaluation helpfulness and state confidence); alpha value not stated",
+    "state_confidence": "multiple sampled answers, proportion of the most frequent answer; number of samples not stated",
+    "q_update_gsm8k_prontoqa": "max over future steps of average reward (Eq 2)",
+    "final_path_selection": "path from iterations that yielded the highest reward (observed best)",
+    "blocksworld_rewards": "r1 action log-likelihood, r2 goal-conditions-met heuristic with a very large reward on full goal",
+    "prontoqa_reward": "self-evaluation"
+   },
+   "other": {"compute": "4 x NVIDIA A5000 24GB GPUs", "simulation": "roll-out picks the best local-reward action of d candidates, dropping costly reward parts"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Success rate (Blocksworld)", "definition": "fraction of test cases with a correct plan; pass@10 solved if any of 10 plans correct", "unit": "fraction (0-1)", "higher_is_better": true},
+    {"name": "Accuracy (GSM8K)", "definition": "final answer correct", "unit": "%", "higher_is_better": true},
+    {"name": "Pred Acc / Proof Acc (PrOntoQA)", "definition": "accuracy of the final true/false answer / of the entire proof", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Chain-of-Thought", "CoT + self-consistency", "Least-to-Most (+SC)", "CoT pass@10", "GPT-4 CoT"],
+   "protocol": "single run per configuration as printed; no seeds, variance or significance tests reported"
+  },
+  "availability": {"code": "https://github.com/Ber666/llm-reasoners", "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "Blocksworld action likelihood (also CoT baseline)", "text": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do ... [STATEMENT] As initial conditions I have that, <initial_state> My goal is to have that <goals>. My plan is as follows: [PLAN]", "where": "Appendix C.1 (abridged here; full text with 4 demos in paper)"},
+   {"purpose": "Blocksworld world-model state update (per action type)", "text": "After being given an initial state and an action, give the new state after performing the action. [SCENARIO 1] [STATE 0] ... [ACTION] ... [CHANGE] ... [STATE 1] ... [SCENARIO 3] [STATE 0] <state> [ACTION] <action> [CHANGE]", "where": "Appendix C.1"},
+   {"purpose": "GSM8K action proposal and next state", "text": "Given a question, please decompose it into sub-questions. For each sub-question, please answer it in a complete sentence, ending with \"The answer is\". When the original question is answerable, please start the subquestion with \"Now we can answer the question: \".", "where": "Appendix C.2"},
+   {"purpose": "PrOntoQA action proposal", "text": "Given a list of facts, and a current claim, output one possible fact as the next step. Be sure to copy the exact sentences in the facts. Do not change any wording. Do not create your own words.", "where": "Appendix C.3"}
+  ],
+  "evidence": [
+   {"field": "inference.temperature", "quote": "We use random sampling with a temperature of 0.8. The generation is cut off at the maximum length of 2048 or a newline token.", "where": "Appendix B.1"}
+  ]
+ },
+ "results": [
+  {"claim": "RAP with 20 iterations on LLaMA-33B solves 42% of 6-step Blocksworld problems where CoT with LLaMA-33B solves none.", "kind": "measured", "source": null, "metric": "success rate", "value": "0.42", "unit": "fraction", "baseline_value": "0.00", "n": 114, "setup": "Blocksworld 6-step cases, LLaMA-33B, single plan, temperature 0.8, 4-shot", "quote": null, "table": "Table 1, row RAP(20), column 6-step (CoT 0.00)", "note": null, "where": "Table 1"},
+  {"claim": "RAP(20) solves all 2-step and 88% of 4-step Blocksworld cases.", "kind": "measured", "source": null, "metric": "success rate", "value": "0.88", "unit": "fraction", "baseline_value": "0.02", "n": 57, "setup": "Blocksworld 4-step, LLaMA-33B, RAP(20); CoT 0.02", "quote": null, "table": "Table 1, row RAP(20), column 4-step", "note": null, "where": "Table 1"},
+  {"claim": "GPT-4 with CoT scores 0.50/0.63/0.40 on 2/4/6-step Blocksworld; RAP(20) on LLaMA-33B gives 1.00/0.88/0.42.", "kind": "measured", "source": null, "metric": "success rate (6-step)", "value": "0.40", "unit": "fraction", "baseline_value": "0.42", "n": 114, "setup": "Blocksworld 6-step, GPT-4 CoT", "quote": null, "table": "Table 1, row CoT (GPT-4), column 6-step", "note": "Text claims 33% relative gain over GPT-4 in the abstract and Section 4.1; RAP(20) is ahead of GPT-4 CoT in every column of Table 1", "where": "Table 1, Section 4.1"},
+  {"claim": "RAP averages 64% over 2/4/6-step Blocksworld.", "kind": "measured", "source": null, "metric": "average success rate", "value": "64%", "unit": "%", "baseline_value": null, "n": 201, "setup": "Blocksworld 2/4/6-step, LLaMA-33B", "quote": "achieving an average success rate of 64%", "table": null, "note": null, "where": "Section 4.1"},
+  {"claim": "CoT pass@10 on LLaMA-33B still fails 6-step Blocksworld.", "kind": "measured", "source": null, "metric": "pass@10", "value": "0.07", "unit": "fraction", "baseline_value": null, "n": 57, "setup": "Blocksworld 4-step, 10 sampled plans", "quote": null, "table": "Table 1, row CoT - pass@10, column 4-step", "note": null, "where": "Table 1"},
+  {"claim": "On GSM8K RAP(10) reaches 48.6% against 46.8% for CoT with 10-sample self-consistency.", "kind": "measured", "source": null, "metric": "accuracy", "value": "48.6", "unit": "%", "baseline_value": "46.8", "n": null, "setup": "GSM8K, LLaMA-33B, 4-shot, RAP selects one trace by reward", "quote": null, "table": "Table 2, row RAP(10), column Accuracy (%)", "note": "Text in Section 4.2 prints 48.8%, Table 2 prints 48.6", "where": "Table 2"},
+  {"claim": "RAP-Aggregation lifts GSM8K accuracy to 51.6%.", "kind": "measured", "source": null, "metric": "accuracy", "value": "51.6", "unit": "%", "baseline_value": "46.8", "n": null, "setup": "GSM8K, LLaMA-33B, RAP(10) + aggr vs CoT+SC(10)", "quote": null, "table": "Table 2, row + aggr, column Accuracy (%)", "note": null, "where": "Table 2"},
+  {"claim": "Single-iteration RAP(1) already beats single-sample CoT on GSM8K (40.0 vs 29.4).", "kind": "measured", "source": null, "metric": "accuracy", "value": "40.0", "unit": "%", "baseline_value": "29.4", "n": null, "setup": "GSM8K, LLaMA-33B", "quote": null, "table": "Table 2, row RAP(1) vs Chain-of-Thought", "note": null, "where": "Table 2"},
+  {"claim": "PrOntoQA: RAP gets 94.2% prediction accuracy and 78.8% proof accuracy vs CoT 87.8 / 64.8 and CoT+SC 89.8.", "kind": "measured", "source": null, "metric": "Pred Acc / Proof Acc", "value": "78.8", "unit": "%", "baseline_value": "64.8", "n": 500, "setup": "PrOntoQA, true ontology, random order, 3-5 hops, 20 iterations vs 20 samples", "quote": "our framework achieves a correct answer rate of 94.2% and a proof accuracy of 78.8%", "table": null, "note": null, "where": "Section 4.3, Table 3"},
+  {"claim": "With Llama-2 70B on full Blocksworld (Easy), RAP(10) reaches 0.65 overall vs CoT 0.08.", "kind": "measured", "source": null, "metric": "success rate (All)", "value": "0.65", "unit": "fraction", "baseline_value": "0.08", "n": 602, "setup": "Full Blocksworld, Llama-2 70B, Easy setting, RAP(10)", "quote": null, "table": "Table 4, setting Easy, row RAP(10), column All", "note": null, "where": "Table 4"},
+  {"claim": "In the Hard setting RAP(10) reaches 0.51 overall vs CoT 0.05, and falls to 0.09 at 12 steps.", "kind": "measured", "source": null, "metric": "success rate (All)", "value": "0.51", "unit": "fraction", "baseline_value": "0.05", "n": 602, "setup": "Full Blocksworld, Llama-2 70B, Hard setting", "quote": null, "table": "Table 4, setting Hard, row RAP(10), column All", "note": null, "where": "Table 4"},
+  {"claim": "Blocksworld ablation: action likelihood + task heuristic gives 0.88; adding self-evaluation 0.91; no reward 0.02.", "kind": "measured", "source": null, "metric": "success", "value": "0.91", "unit": "fraction", "baseline_value": "0.88", "n": null, "setup": "Blocksworld, all three rewards", "quote": null, "table": "Table 5, row R1+R2+R3, column Success", "note": null, "where": "Table 5"},
+  {"claim": "GSM8K ablation (first 300): confidence + self-evaluation is best, with +aggr 0.503.", "kind": "measured", "source": null, "metric": "accuracy", "value": "0.503", "unit": "fraction", "baseline_value": null, "n": 300, "setup": "GSM8K first 300 examples, R1 confidence + R3 self-evaluation", "quote": null, "table": "Table 6, row R1 R3, column +aggr", "note": null, "where": "Table 6"}
+ ],
+ "limits": [
+  "Authors: only frozen LLMs, abilities bounded by pretraining; fine-tuning as world model and tool use left to future work.",
+  "No variance, seeds or significance reported; compute cost (model calls, tokens per question) of MCTS not reported.",
+  "Only three task families; hyperparameters d, L, w, alpha not stated in the text.",
+  "Reward combination chosen by heuristics and exploratory experiments; effect of rewards depends on the task (action likelihood hurts GSM8K with more iterations).",
+  "GSM8K size and split for the main table are not stated; GPT-4 compared only on Blocksworld."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "RAP", "definition": "Reasoning via Planning: LLM as both world model and reasoning agent with MCTS planning", "where": "Abstract"},
+  {"term": "RAP-Aggregation", "definition": "aggregating answers from multiple MCTS traces for answer-only problems", "where": "Section 3.4"}
+ ],
+ "lineage": [
+  {"work": "Chain-of-Thought prompting (Wei et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "main baseline", "quote": null},
+  {"work": "Least-to-most prompting (Zhou et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "decomposition baseline", "quote": null},
+  {"work": "Self-Consistency (Wang et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "ensemble baseline", "quote": null},
+  {"work": "Tree of Thoughts (Yao et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "concurrent heuristic search (DFS/BFS) without a world model", "quote": "Concurrently to our work, Yao et al. (2023) apply heuristic-based"},
+  {"work": "Kocsis and Szepesvari UCT; Coulom MCTS", "year": 2006, "arxiv": null, "relation": "uses-method", "note": "UCT selection rule", "quote": null},
+  {"work": "CoRe (Zhu et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "fine-tuned generator/verifier with MCTS decoding", "quote": null},
+  {"work": "Blocksworld / PlanBench (Valmeekam et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "plan generation benchmark", "quote": null},
+  {"work": "GSM8K (Cobbe et al.)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "PrOntoQA (Saparov and He)", "year": 2022, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "LLaMA (Touvron et al.)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "33B base model", "quote": null},
+  {"work": "Llama 2 (Touvron et al.)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "70B in Section 5.1", "quote": null},
+  {"work": "GPT-4 (OpenAI)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "CoT on Blocksworld", "quote": null},
+  {"work": "LLM+P (Liu et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "translates to PDDL and runs a classical planner", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An overview of Reasoning via Planning (RAP). Compared with previous LLM reasoning methods like Chain-of-Thought (Wei et al., 2022), we explicitly model the world state from a world model (repurposed from the language model), and leverage advanced planning algorithms to solve the reasoning problems.", "page": 2, "why": "Shows the agent/world-model loop versus a plain chain."},
+  {"figure": "Fig 3", "caption": "An illustration of the four phases in an iteration in MCTS planning (Section 3.3).", "page": 4, "why": "Selection, expansion, simulation, back-propagation in one picture."},
+  {"figure": "Fig 4", "caption": "Comparing reasoning traces in Blocksworld from CoT (left) and RAP (right).", "page": 6, "why": "Shows RAP tracking state and recovering from a wrong first plan."}
+ ],
+ "code": [
+  {"where": "Eq 1, Section 3.3", "snippet": "a* = argmax_{a in A(s)} [ Q(s,a) + w * sqrt( ln N(s) / N(c(s,a)) ) ]", "verbatim": false},
+  {"where": "Eq 2, Section 4.2", "snippet": "Q*(s_t,a_t) = max over (s_t,a_t,r_t,...,s_l,a_l,r_l,s_{l+1}) of avg(r_t,...,r_l)", "verbatim": false}
+ ],
+ "problems": [
+  "Text of Section 4.2 prints RAP accuracy 48.8% while Table 2 prints 48.6.",
+  "Table cells extracted as separate lines; Table 1/4/5/6 values read from column order.",
+  "Figure 5 values (accuracy by number of samples/iterations) not extractable as numbers."
+ ]
+}

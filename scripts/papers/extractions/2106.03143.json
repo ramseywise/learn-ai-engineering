@@ -1,0 +1,558 @@
+{
+ "schema": 1,
+ "key": "2106.03143",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/likhomanenko-2021-cape.pdf",
+ "bib": {
+  "title": "CAPE: Encoding Relative Positions with Continuous Augmented Positional Embeddings",
+  "authors": [
+   "Tatiana Likhomanenko",
+   "Qiantong Xu",
+   "Gabriel Synnaeve",
+   "Ronan Collobert",
+   "Alex Rogozhnikov"
+  ],
+  "first_author": "Likhomanenko",
+  "year": 2021,
+  "venue": "NeurIPS 2021 (35th Conference on Neural Information Processing Systems)",
+  "arxiv": "2106.03143",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 89804,
+  "chars_total": 89804,
+  "engine": "pymupdf",
+  "skipped": "Numeric cells of Tables 3-4 and plot axis labels (Figures 2-8, 15-23) were skimmed, not read cell by cell; WER results exist only in figures."
+ },
+ "type": "empirical",
+ "question": "Can absolute sinusoidal positional embeddings be made to generalize to unseen input lengths and sizes like relative ones, without changing the attention mechanism?",
+ "hypothesis": "Augmenting continuous absolute positions with random global shift, local shift and global scaling during training keeps relative-position information and gives better generalization than abspos, sinpos and (at lower cost) relpos.",
+ "contributions": [
+  "new augmented continuous positional embedding (CAPE), which encodes some relative position information in a computationally efficient way, and improves generalization performance compared to other positional embeddings across a variety of domains: machine translation, image and speech recognition",
+  "a single vision Transformer (UniViT) trained with CAPE on the mix of different resolutions",
+  "new CAPE-based adaptive training scheme for ASR that eliminates need for padding"
+ ],
+ "method": {
+  "summary": "CAPE uses continuous sinusoidal positions (tokens index for text, scaled [-1,1] coordinates for images, seconds for audio) and at training time applies mean-normalisation, a random global shift, per-token local shift and a global scale; at inference only mean-normalisation. It is compared with nopos, sinpos, learnable abspos and learnable relpos in ViT/DeiT-B image classification, CTC speech recognition and ADMIN WMT'14 translation.",
+  "task": "image classification (ImageNet), CTC ASR (WSJ, TED-LIUM v3), machine translation (WMT'14 En-De, En-Fr)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (+ ImageNet-v2 a,b,c test sets)",
+    "role": "both",
+    "size": null,
+    "split": "train on ImageNet; top-1/top-5 on validation and ImageNet-v2-{a,b,c}",
+    "source": "Deng 2009; Russakovsky 2015; Recht 2019",
+    "preprocessing": "eval images resized to 160, 224, 384, 672 px; ViT training follows DeiT (Touvron 2020): Rand-Augment, Mixup, Cutmix, random erasing, repeated augmentation"
+   },
+   {
+    "name": "WSJ",
+    "role": "train",
+    "size": "81.5h",
+    "split": "si284 train, nov93dev valid, nov92 test",
+    "source": "LDC",
+    "preprocessing": "punctuation tokens removed from si284 transcripts; Kaldi recipe"
+   },
+   {
+    "name": "TED-LIUM v3",
+    "role": "train",
+    "size": "452h",
+    "split": "v3 train; valid/test consistent with earlier releases",
+    "source": "Hernandez 2018",
+    "preprocessing": "Kaldi recipe"
+   },
+   {
+    "name": "LibriSpeech test-clean/test-other",
+    "role": "eval",
+    "size": null,
+    "split": "test only",
+    "source": "Panayotov 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Robust Video (RV)",
+    "role": "eval",
+    "size": null,
+    "split": "clean and noisy test sets; also 8 re-segmented sets of 10-45s",
+    "source": "in-house English video dataset from public social media videos, de-identified",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT'14 En-De",
+    "role": "both",
+    "size": null,
+    "split": "newstest2013 valid, newstest2014 test; 32K subword vocab",
+    "source": "WMT'14",
+    "preprocessing": "ADMIN recipe; for long-sentence eval, test sentences stacked to 300+ target tokens (3k pairs -> 270 pairs)"
+   },
+   {
+    "name": "WMT'14 En-Fr",
+    "role": "both",
+    "size": null,
+    "split": "provided valid file; newstest14 test; 40k subword vocab",
+    "source": "WMT'14",
+    "preprocessing": "ADMIN recipe"
+   }
+  ],
+  "models": [
+   {
+    "name": "ViT-B / DeiT-B (convolution-free)",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT-B, 768-dim embeddings",
+    "init_from": "truncated normal",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": 768,
+    "heads": null,
+    "context": "224^2 images, 16^2 patches",
+    "other": {
+     "positional variants": "nopos, abspos (learnable), sinpos (Eq 3-4), CAPE (Delta_max=0.5, eps_max=1/N, lambda_max=1.4)"
+    }
+   },
+   {
+    "name": "UniViT (ViT-B; also -S, -Ti sizes for throughput)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT with CAPE trained on mixed resolutions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "batch resized to random size in [128,320]^2 step 32",
+    "other": {
+     "CAPE": "lambda=1 in main comparison"
+    }
+   },
+   {
+    "name": "CTC acoustic model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1D conv (kernel 7, stride 3) + GLU + 36 Transformer layers, 4 heads, then linear; letters (26) + apostrophe + word boundary tokens",
+    "init_from": null,
+    "tokenizer": "letters",
+    "vocab": "28 tokens",
+    "layers": 36,
+    "hidden": 768,
+    "heads": 4,
+    "context": null,
+    "other": {
+     "FFN dim": 3072,
+     "abspos span": "13.8s in Sec 5.2 (12.6s in figure legend)",
+     "relpos context": "26.8s left/right in Sec 5.2 (27.6s in figure legend and Appendix C.4)",
+     "CAPE global shift": "60s",
+     "CAPE local shift": "maximum (preserve frame order)",
+     "lambda_max": "1.1 WSJ, 2 TL",
+     "features": "80 log-mel, 25ms window, 10ms stride"
+    }
+   },
+   {
+    "name": "ADMIN Transformer encoder-decoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "6L-6L (DE, FR) and 18L-18L (DE)",
+    "init_from": null,
+    "tokenizer": "subword",
+    "vocab": "32K DE, 40k FR",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "abspos": "covers 1k tokens",
+     "relpos": "learnable, 150 left/right tokens",
+     "CAPE": "global shift 5/10/50, local shift 0.5, no global scaling, no mean-normalisation, BOS prepended to source, source positions scaled by alpha=1.0337 DE / 1.1632 FR"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy (ViT); CTC (ASR; seq2seq cross-entropy in an ablation); ADMIN MT recipe",
+   "optimizer": "AdamW (ViT); Adagrad (ASR); MT: ADMIN/fairseq recipe, not restated",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "ViT 64 per GPU on 16 GPUs (384^2: 32 per GPU on 32 GPUs); ASR dynamic batching, average 240s/GPU",
+   "steps": null,
+   "epochs": "ViT 300; MT DE 150, FR 75",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "mixed-precision",
+   "weight_decay": null,
+   "dropout": "ASR conv dropout 0.3; Transformer dropout and layer drop 0.4 WSJ, 0.1 TED-LIUM v3",
+   "regularisation": "ViT: Rand-Augment, Mixup, Cutmix, random erasing, repeated augmentation; ASR: SpecAugment (2 freq masks, 10 time masks, p=0.1, max 30 freq bands, max 50 frames, no time warping), layer drop",
+   "hardware": "ViT/UniViT 16x V100 32GB (32 GPUs at 384^2); ASR 16x V100 32GB; MT DE 4x V100 16GB, FR 8x V100 16GB",
+   "compute": null,
+   "wall_clock": "ViT 19-56h, UniViT 37h; ASR 1 day WSJ, 3-4 days TED-LIUM v3; MT DE 30h (6L-6L) / 70h (18L-18L), FR 60h",
+   "seeds": "MT: 3 random seeds per configuration (3 runs avg.)",
+   "other": {
+    "framework": "Flashlight (ViT, ASR); Fairseq via ADMIN code (MT)",
+    "UniViT train time": "1.1x ViT at 224^2",
+    "no model averaging in MT": true
+   }
+  },
+  "inference": {
+   "decoding": "ASR: greedy acoustic model, no language model; MT: beam 4 DE, 5 FR",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MT 3 runs averaged; ViT/ASR single run (not stated)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "CAPE Delta_max (ViT)": 0.5,
+    "CAPE eps_max (ViT)": "1/N",
+    "CAPE lambda_max (ViT)": 1.4,
+    "TTA resolutions": "r, r-32, r+32 with logits averaged, r=224 or 384"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 / Top-5 accuracy",
+     "definition": "ImageNet val and ImageNet-v2-a/b/c at 160/224/384/672 px",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "WER",
+     "definition": "no LM; by duration bin <10, 10-15, 15-20, >=20s and total; RV re-segmented to 10-45s",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "multi-bleu.perl, standardized tokenization",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "per-position log loss",
+     "definition": "negative log loss across positions on stacked-sentence test sets",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "images/s on a single 16GB V100, largest batch, average over 30 runs",
+     "unit": "images/s",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "nopos",
+    "sinpos",
+    "abspos (learnable)",
+    "relpos (Shaw 2018, learnable)",
+    "ViT-B/DeiT-B at each single resolution"
+   ],
+   "protocol": "MT mean +- std over 3 runs; best checkpoint by valid BLEU; ASR and ViT results shown in figures with no stated seeds or confidence intervals."
+  },
+  "availability": {
+   "code": "Appendix A gives a Python reference implementation; Fairseq/ADMIN and Flashlight code used; no CAPE repo link in text",
+   "weights": null,
+   "data": "ImageNet, WSJ, TED-LIUM, LibriSpeech, WMT'14 public; RV in-house"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models[ViT].other",
+    "quote": "CAPE (∆max = 0.5, ϵmax = 1/N and λmax = 1.4)",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ViT-B trained at 224^2 with CAPE keeps higher ImageNet top-1 at 672^2 than abspos or sinpos.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "73.43",
+   "unit": "%",
+   "baseline_value": "abspos 72.21, sinpos 70.71",
+   "n": null,
+   "setup": "ViT-B/DeiT-B, ImageNet validation, trained 224^2, evaluated at 672^2 (bicubic-interpolated abspos)",
+   "quote": null,
+   "table": "Table 3, rows CAPE / abspos / sinpos (train 224^2), column ImageNet 672^2",
+   "note": "Pdf text order of the CAPE row is hard to verify; 73.43, 72.21, 70.71 occur in Table 3 text.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "At 672^2 and 160^2 CAPE outperforms abspos by up to 25% and 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gain",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT trained at 224^2",
+   "quote": "CAPE performs best, notably outperforming abspos on high (6722) and low (1602) resolutions up to 25% and 2%, respectively",
+   "table": null,
+   "note": "Unit (relative or points) not stated; for the 224^2-trained model Table 3 gap at 672^2 is 1.2 points.",
+   "where": "Sec 5.1.1"
+  },
+  {
+   "claim": "UniViT with CAPE plus per-bin optimal resizing reaches 82.92% top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "82.92",
+   "unit": "%",
+   "baseline_value": "81.26 at 224^2, 82.55 at 384^2",
+   "n": null,
+   "setup": "UniViT CAPE, ImageNet val split into 8 size bins, best resize strategy chosen per bin (selected on the validation set itself)",
+   "quote": "By selecting an optimal resizing strategy in each bin we are able to improve top-1 accuracy to 82.92% (in comparison, the model has 81.26% on 2242 and 82.55% on 3842).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.2"
+  },
+  {
+   "claim": "Resizing test-time augmentation gives a 0.2-0.5% top-1 boost for sinpos and CAPE models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gain",
+   "value": "0.2-0.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "logits averaged over r, r-32, r+32, r=224 or 384",
+   "quote": "get 0.2%-0.5% top-1 accuracy boost with this test time augmentation",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.3 / Table 1"
+  },
+  {
+   "claim": "UniViT training takes only 1.1x the time of ViT at 224^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time ratio",
+   "value": "1.1",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "mixed-resolution training, sizes 128-320 step 32",
+   "quote": "UniViT training time is only 1.1x longer than ViT",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.2"
+  },
+  {
+   "claim": "WMT'14 En-De 6L-6L: CAPE (Delta=5) test BLEU is within noise of relpos and above abspos and sinpos.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test BLEU",
+   "value": "27.89",
+   "unit": "BLEU",
+   "baseline_value": "relpos 27.92, sinpos 27.66, abspos 27.36",
+   "n": 3,
+   "setup": "ADMIN 6L-6L, newstest2014, 3-run mean",
+   "quote": null,
+   "table": "Table 2, rows 6L-6L DE CAPE Delta=5 / relpos / sinpos / abspos, column Test BLEU",
+   "note": "std 0.07 for CAPE and relpos",
+   "where": "Table 2"
+  },
+  {
+   "claim": "WMT'14 En-Fr 6L-6L: CAPE (Delta=5) beats relpos on test BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test BLEU",
+   "value": "41.59",
+   "unit": "BLEU",
+   "baseline_value": "relpos 41.33, sinpos 41.13, abspos 41.21",
+   "n": 3,
+   "setup": "ADMIN 6L-6L, newstest14, 3-run mean",
+   "quote": null,
+   "table": "Table 2, FR 6L-6L, CAPE Delta=5 vs relpos, column Test BLEU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On stacked long test sentences, relpos beats absolute embeddings beyond training lengths; CAPE generalizes better than abspos and sinpos, and similar to relpos on FR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-position log loss",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "6L-6L DE and FR, stacked test sets of 300+ target tokens (Fig 8)",
+   "quote": "for positions not seen during training (>200) relpos outperforms others. However, CAPE generalizes better than abspos and sinpos and, moreover, is able to generalize similar to relpos with more data (FR).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "A nopos TED-LIUM model is competitive with positional models on public data, but needs CTC loss, capacity and enough data; nopos WSJ model gets 45-50% WER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "45-50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CTC AM trained on WSJ (81.5h) with nopos, in-domain data",
+   "quote": "performs poorly having 45-50% WER even on in-domain data",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.5"
+  },
+  {
+   "claim": "On TED-LIUM, CAPE or SpecAugment each cut WER by 4-5% vs. no augmentation; combined a further 2.5-3.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER reduction",
+   "value": "4-5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sinpos baseline, TL, with/without SpecAugment (Fig 7)",
+   "quote": "Including either CAPE or SpecAugment decreases the WER signiﬁcantly by 4-5%",
+   "table": null,
+   "note": "relative vs absolute not stated",
+   "where": "Sec 5.2.1"
+  },
+  {
+   "claim": "Learnable relative positional embeddings cost 1.1-3.3x forward/backward time in a Transformer layer vs none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "slowdown",
+   "value": "3.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "V100 32GB, batch 50, emb 768, 8 heads, relpos context 1000 left/right, FP16, length 100 (max in table)",
+   "quote": null,
+   "table": "Table 9, top block, row Transformer layer, column FP16 Len-100",
+   "note": "mean of 100 updates after 10 warmup",
+   "where": "Table 9"
+  }
+ ],
+ "limits": [
+  "CAPE applies only to attention-based models, and no testing was performed outside described modalities (Limitations).",
+  "A model must learn relative positioning; relative embeddings should help with small data (Limitations).",
+  "UniViT tested only for image recognition (Limitations).",
+  "No language-model pretraining tested; text experiments are only MT with ADMIN.",
+  "ASR and ViT results are mostly plots with no stated seeds or intervals; the best-resolution bin selection for 82.92% was chosen on validation data.",
+  "CAPE for MT needs source/target position scaling and a BOS token, with no mean-normalisation.",
+  "Relpos is better beyond training lengths on MT (DE)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CAPE",
+   "definition": "continuous augmented positional embedding: continuous sinusoidal absolute positions with random global shift, local shift and global scaling at training time",
+   "where": "Sec 4"
+  },
+  {
+   "term": "UniViT",
+   "definition": "a single vision Transformer trained with CAPE on a mix of image resolutions",
+   "where": "Sec 5.1.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "improves absolute sinusoidal embedding (Vaswani et al.)",
+   "quote": null
+  },
+  {
+   "work": "Self-attention with relative position representations",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "learnable relpos baseline (Shaw et al.)",
+   "quote": null
+  },
+  {
+   "work": "Universal Transformers",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closest idea: discrete global position shifts; CAPE uses continuous shifts, scaling, local shifts",
+   "quote": null
+  },
+  {
+   "work": "Training data-efficient image transformers (DeiT)",
+   "year": 2020,
+   "arxiv": "2012.12877",
+   "relation": "uses-method",
+   "note": "ViT-B training recipe",
+   "quote": null
+  },
+  {
+   "work": "An image is worth 16x16 words (ViT)",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "uses-method",
+   "note": "ViT architecture",
+   "quote": null
+  },
+  {
+   "work": "Very deep transformers for neural machine translation (ADMIN)",
+   "year": 2020,
+   "arxiv": "2008.07772",
+   "relation": "uses-method",
+   "note": "MT recipe",
+   "quote": null
+  },
+  {
+   "work": "Rethinking evaluation in ASR: are our models robust enough?",
+   "year": 2020,
+   "arxiv": "2010.11745",
+   "relation": "uses-method",
+   "note": "ASR architecture and relpos baseline",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "relative positions; CAPE can combine with it",
+   "quote": null
+  },
+  {
+   "work": "RoFormer",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "related",
+   "note": "CAPE can be combined with rotary embeddings",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example of CAPE's transformations for an image: patches positions are scaled to [-1,1]x[-1,1]; random global shift, local shift, and global scaling are then applied to the grid of positions.",
+   "page": 4,
+   "why": "shows the three augmentations"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Top-1 accuracy on ImageNet and ImageNet-v2 for ViT models trained with different positional embeddings on 224^2 and further fine-tuned on 384^2.",
+   "page": 5,
+   "why": "resolution generalization of nopos, sinpos, abspos, CAPE"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A",
+   "snippet": "new_positions = (positions_1d + delta + delta_local) * np.exp(log_lambdas)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Paper gives 13.8s (abspos) and 26.8s (relpos) in Sec 5.2 but 12.6s and 27.6s in figure legends/Appendix C.4.",
+  "WER results exist only in figures; none extracted as numbers."
+ ]
+}

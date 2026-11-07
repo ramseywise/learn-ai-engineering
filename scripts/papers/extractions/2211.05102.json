@@ -1,0 +1,630 @@
+{
+ "schema": 1,
+ "key": "2211.05102",
+ "pdf": "ai-engineering/07-inference-engineering/sources/pope-2022-efficiently-scaling-transformer-inference.pdf",
+ "bib": {
+  "title": "Efficiently Scaling Transformer Inference",
+  "authors": [
+   "Reiner Pope",
+   "Sholto Douglas",
+   "Aakanksha Chowdhery",
+   "Jacob Devlin",
+   "James Bradbury",
+   "Anselm Levskaya",
+   "Jonathan Heek",
+   "Kefan Xiao",
+   "Shivani Agrawal",
+   "Jeff Dean"
+  ],
+  "first_author": "Pope",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2211.05102",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 80782,
+  "chars_total": 80782,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "system",
+ "question": "How should large Transformers be partitioned across chips to serve generative inference at tight latency and long context efficiently?",
+ "hypothesis": "An analytical model of communication cost can pick the best multi-axis partitioning per workload (batch, context, latency target), and multiquery attention sharded over batch removes the KV-cache bottleneck.",
+ "contributions": [
+  "Analytical model of inference cost used to select partitioning layouts (1D/2D weight-stationary, weight-gathered)",
+  "Multiquery attention partitioned over batch, enabling up to 32x longer context",
+  "Low-level optimizations (Looped CollectiveEinsum, int8 weights) giving a new Pareto frontier of latency vs MFU vs FasterTransformer",
+  "29 ms/token decode and 76% MFU prefill on PaLM 540B"
+ ],
+ "method": {
+  "summary": "Inference framework in JAX/XLA on TPU v4 with an analytical communication-cost model to choose between weight-stationary and weight-gathered feedforward layouts and head- or batch-sharded attention. Evaluated on PaLM 8B/62B/540B and a Megatron-Turing 530B variant, sweeping batch size and chip count, and compared by MFU with FasterTransformer.",
+  "task": "autoregressive Transformer inference serving (prefill and decode)",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "PaLM 540B",
+    "role": "evaluated",
+    "params": "540B",
+    "architecture": "decoder-only, multiquery attention, parallel attention/FFN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 118,
+    "hidden": 18432,
+    "heads": 48,
+    "context": "2048 (main benchmarks)",
+    "other": {
+     "d_ff": 73728,
+     "d_head": 256,
+     "heads_padded": "48 padded to 64 (adds 18B params, 3% MFU cost)"
+    }
+   },
+   {
+    "name": "PaLM 62B",
+    "role": "evaluated",
+    "params": "62B",
+    "architecture": "as PaLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "PaLM 8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "as PaLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "Megatron-Turing NLG 530B (own implementation)",
+    "role": "evaluated",
+    "params": "530B",
+    "architecture": "multihead attention, serial attention/FFN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 105,
+    "hidden": 20480,
+    "heads": 128,
+    "context": null,
+    "other": {
+     "d_ff": 81920,
+     "d_head": 160
+    }
+   },
+   {
+    "name": "FasterTransformer MT-NLG 530B (TP16, TP32, PP3/TP8)",
+    "role": "baseline",
+    "params": "530B",
+    "architecture": "multihead",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hardware": "16-32 NVIDIA A100 80GiB"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "not specified beyond sampling a token per step; faster top-k/top-p implementations mentioned",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "64 generated tokens in Fig 1/Tables 2-3; 8/20 output tokens in FasterTransformer benchmarks",
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "hardware": "up to 256 TPU v4 chips; 275 TFLOPS bf16, 32 GiB HBM at 1200 GB/s, 270 GB/s interconnect, 3D torus",
+    "software": "JAX, XLA, originally T5X",
+    "quantization": "int8 weights via AQT library; matmuls still bf16; activations not quantized",
+    "kv_memory_reserve": "30% of total memory for KV cache in Table 1",
+    "decode_batch": "512 used to balance latency and MFU in Sec 4.1",
+    "prefill_sweep": "2048 tokens to 1M tokens (512 x 2048)",
+    "ft_benchmarks": "20-in/8-out, 60-in/20-out, 128-in/8-out; batch 4..1024"
+   },
+   "other": {
+    "collective_einsum": "Looped CollectiveEinsum (Wang et al. 2023) gives about 1.4x over compiler-partitioned baseline"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "latency",
+     "definition": "prefill time for 2048 tokens; decode time per generated token or for 64 tokens",
+     "unit": "ms or s",
+     "higher_is_better": false
+    },
+    {
+     "name": "MFU",
+     "definition": "observed throughput divided by theoretical max throughput at peak FLOPS with no memory/communication overhead",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "cost",
+     "definition": "n_chips x time / (B x L)",
+     "unit": "chip-seconds per token",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "FasterTransformer MT-NLG 530B, TP16/TP32/PP3-TP8",
+    "1D weight-stationary",
+    "multihead attention and baseline multiquery sharding",
+    "serial (non-parallel) block"
+   ],
+   "protocol": "Pareto frontier over batch size, chip count and layout; single reported numbers, no seeds or variance; FasterTransformer compared via MFU because chips differ"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.kv_memory_reserve",
+    "quote": "We reserve 30% of the total memory for KV cache.",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PaLM 540B decode latency with int8 weights on 64 chips at low batch size",
+   "kind": "measured",
+   "source": null,
+   "metric": "decode latency",
+   "value": 29,
+   "unit": "ms/token",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), int8 weights, batch 64",
+   "quote": "we achieve a low-batch-size latency of 29ms per token during generation (using int8 weight quantization)",
+   "table": null,
+   "note": "Abstract prints 29ms; Sec 4.4 prints 28.5ms/token.",
+   "where": "Abstract; Sec 4.4 gives 28.5 ms"
+  },
+  {
+   "claim": "int8 weights vs bfloat16 decode latency at batch 64",
+   "kind": "measured",
+   "source": null,
+   "metric": "decode latency",
+   "value": 28.5,
+   "unit": "ms/token",
+   "baseline_value": 36.9,
+   "n": null,
+   "setup": "PaLM 540B, 64 chips, batch 64, context 2048",
+   "quote": "we achieve 28.5ms/token with int8 weights at batch size 64 on PaLM 540B, while we achieve 36.9ms/token with bﬂoat16 weights",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Prefill MFU at large batch",
+   "kind": "measured",
+   "source": null,
+   "metric": "prefill MFU",
+   "value": 76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), batch 512, bfloat16, WG XYZ",
+   "quote": "a 76% MFU during large-batch-size processing of input tokens",
+   "table": "Table 2, High-throughput Prefill, MFU 76%",
+   "note": null,
+   "where": "Abstract; Table 2"
+  },
+  {
+   "claim": "Prefill MFU at batch 1, low-latency config",
+   "kind": "measured",
+   "source": null,
+   "metric": "prefill MFU",
+   "value": 43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), batch 1, int8, WS 2D, head-sharded attention",
+   "quote": null,
+   "table": "Table 2, Low-latency Prefill, MFU 43%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Decode MFU low-latency",
+   "kind": "measured",
+   "source": null,
+   "metric": "decode MFU",
+   "value": 14,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), batch 64, int8, WS 2D, batch-sharded attention",
+   "quote": null,
+   "table": "Table 2, Low-latency Decode, MFU 14%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Decode MFU high-throughput",
+   "kind": "measured",
+   "source": null,
+   "metric": "decode MFU",
+   "value": 33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), batch 512, bfloat16, WS 2D",
+   "quote": null,
+   "table": "Table 2, High-throughput Decode, MFU 33%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Decode latency for 64 tokens in low-latency chatbot config",
+   "kind": "measured",
+   "source": null,
+   "metric": "decode latency",
+   "value": 1.82,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 64 TPU v4 chips, context 2048 (prefill 2048 tokens, decode 64 tokens), batch 64, int8",
+   "quote": null,
+   "table": "Table 2, Low-latency Decode, Latency 1.82s",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Chatbot example total time",
+   "kind": "measured",
+   "source": null,
+   "metric": "end-to-end latency",
+   "value": 1.9,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B int8, 64 chips: 64 user tokens, 1920 cached history tokens, 64 generated tokens",
+   "quote": "in a total of 1.9 seconds",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Optimized multiquery layout allows up to 32x longer context than multihead",
+   "kind": "measured",
+   "source": null,
+   "metric": "max context length ratio",
+   "value": 32,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B on 64 chips; 30% of memory reserved for KV cache; multihead variant has d_head 128 to keep parameters constant",
+   "quote": "Optimized multiquery attention enables up to 32x larger context lengths.",
+   "table": "Table 1: multihead 1320 (batch 128) vs optimized multiquery 43,000",
+   "note": "Text in Sec 4.2 says 32-64 times, the 64x being versus baseline multiquery (660).",
+   "where": "Table 1"
+  },
+  {
+   "claim": "KV cache size for multihead 500B+ model",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV cache size",
+   "value": 3,
+   "unit": "TB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500B+ multihead model, batch 512, context 2048",
+   "quote": "for batch size 512 and context length 2048, the KV cache totals 3TB, which is 3 times the size of the model’s parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Serial vs parallel block decode latency",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency increase",
+   "value": 14,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B variant, 2D weight-stationary, 64 chips, batch 512",
+   "quote": "The serial formulation incurs 14% higher inference latency per step than the parallel version",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "2D weight-stationary beats 1D when chips exceed 16",
+   "kind": "claim",
+   "source": null,
+   "metric": "crossover",
+   "value": 16,
+   "unit": "chips",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dff = 4 dmodel",
+   "quote": "Since typically dff = 4dmodel, this occurs when nchips > 16.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.2"
+  },
+  {
+   "claim": "FasterTransformer 32-way TP peak MFU",
+   "kind": "reported",
+   "source": "FasterTransformer benchmarks",
+   "metric": "MFU",
+   "value": 33,
+   "unit": "%",
+   "baseline_value": 46,
+   "n": null,
+   "setup": "FasterTransformer TP32, as reported in its benchmarks",
+   "quote": "Their 32-way tensor parallelism achieves a maximum of 33% MFU across all reported benchmarks, compared to 46% MFU in their 16-way tensor parallel conﬁguration.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Own implementation retains MFU at 64-way tensor parallelism",
+   "kind": "measured",
+   "source": null,
+   "metric": "MFU",
+   "value": 44,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Megatron/PaLM 530-540B on 64 TPU v4, FasterTransformer benchmark settings",
+   "quote": "our implementation is able to scale up to 64-way tensor parallelism while still achieving 44% MFU",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Batch-512 prefill cost is half of batch-512 decode cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost ratio",
+   "value": 2,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM, context 2048, Pareto frontier",
+   "quote": "the cost of batch-512 preﬁll is 2 times lower than batch-512 generate",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Low-batch latency scales about as square root of model size",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 8B/62B/540B Pareto frontier, read from Fig 1",
+   "quote": "We estimate an approximately square-root relationship between model size and latency based on Figure 1 (left).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Looped CollectiveEinsum speedup over compiler partitioning",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 1.4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, TPU v4",
+   "quote": "we achieved about 1.4 times better performance than the simpler compiler-partitioned-and-scheduled implementation",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Attention share of runtime at long context with multiquery",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, sequence 8192 (batch 512) to 32,768 (batch 128)",
+   "quote": "with attention taking only 8–31% of total runtime",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Padding heads 48 to 64 costs MFU but is recovered",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost of padding",
+   "value": 3,
+   "unit": "% MFU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B on 64+ chips",
+   "quote": "This adds 18B parameters to the model, which comes at a 3% MFU cost",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "No variance or repeated runs; Pareto points are single measurements.",
+  "Activation quantization not implemented; int8 large-batch path lacks optimizations, so high-throughput configs use bfloat16.",
+  "Hardware is TPU v4 3D torus; GPU generalization is asserted, not measured; FasterTransformer comparison uses different chips and is by MFU only.",
+  "FLOPs and communication volume fundamentally limit dense models (conclusion); sparsity/MoE and adaptive compute suggested as future work.",
+  "PaLM 540B may be improvable in the high-throughput regime by reducing model parallelism (Appendix C).",
+  "No batch sizes below 4 reported for batch-sharded multiquery attention."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prefill",
+   "definition": "the time to process the input tokens present at the start of the inference",
+   "where": "Sec 2"
+  },
+  {
+   "term": "decode",
+   "definition": "the time to autoregressively generate output tokens",
+   "where": "Sec 2"
+  },
+  {
+   "term": "MFU",
+   "definition": "the ratio of the observed throughput to the theoretical maximum throughput if the benchmarked hardware setup were operating at peak FLOPS with no memory or communication overhead",
+   "where": "Sec 2"
+  },
+  {
+   "term": "KV cache",
+   "definition": "the attention key and value tensors of each layer, stored in memory for the duration of decoding",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM: Scaling language modeling with Pathways (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "Main model family; multiquery and parallel blocks",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "1D weight-stationary baseline layout",
+   "quote": null
+  },
+  {
+   "work": "Multi-query attention (Shazeer)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Basis for batch-sharded KV cache",
+   "quote": null
+  },
+  {
+   "work": "GSPMD (Xu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Partitioning notation",
+   "quote": null
+  },
+  {
+   "work": "Looped CollectiveEinsum (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Overlaps communication with compute",
+   "quote": null
+  },
+  {
+   "work": "AQT library (Lew et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "int8 weight quantization",
+   "quote": null
+  },
+  {
+   "work": "FasterTransformer benchmarks",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GPU multi-node inference suite",
+   "quote": null
+  },
+  {
+   "work": "DeepSpeed Inference (Aminabadi et al.)",
+   "year": 2022,
+   "arxiv": "2207.00032",
+   "relation": "related",
+   "note": "ZeRO offload for inference",
+   "quote": null
+  },
+  {
+   "work": "Alpa (Zheng et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ILP search over strategies, contrasted with analytical approach",
+   "quote": null
+  },
+  {
+   "work": "Megatron-Turing NLG 530B (Smith et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Second model benchmarked",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Cost vs. latency for PaLM models, context 2048, Pareto frontier",
+   "page": 2,
+   "why": "Shows latency/cost tradeoff by model size and int8"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Multiquery attention has lower memory cost to load the KV cache when sharded over batch.",
+   "page": 4,
+   "why": "Explains why batch sharding saves KV memory traffic"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Example configurations for PaLM 540B",
+   "page": 8,
+   "why": "Concrete MFU and latency per phase and config"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.4",
+   "snippet": "cost (chip-seconds per token) = nchips × time / BL",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 3.2.2",
+   "snippet": "Tcomm = 8BLE / (√nchips × network bandwidth)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations extracted as fragmented text; figure data not readable from text.",
+  "Reference list skimmed only.",
+  "Table D.2-D.4 MFU/latency columns are flattened; not recorded as results."
+ ]
+}

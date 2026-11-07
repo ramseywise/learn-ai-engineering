@@ -1,0 +1,661 @@
+{
+ "schema": 1,
+ "key": "2406.18665",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ong-2024-routellm.pdf",
+ "bib": {
+  "title": "RouteLLM: Learning to Route LLMs with Preference Data",
+  "authors": [
+   "Isaac Ong",
+   "Amjad Almahairi",
+   "Vincent Wu",
+   "Wei-Lin Chiang",
+   "Tianhao Wu",
+   "Joseph E. Gonzalez",
+   "M Waleed Kadous",
+   "Ion Stoica"
+  ],
+  "first_author": "Ong",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2406.18665",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 49137,
+  "chars_total": 49137,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a router learned from human preference data choose between a strong and a weak LLM per query to cut cost while keeping response quality?",
+ "hypothesis": "Routers trained on Chatbot Arena preference data, augmented with golden-label or LLM-judge data, can route queries and generalise to unseen benchmarks and model pairs.",
+ "contributions": [
+  "A learning framework for routers using human preference data and data augmentation, over 2x cost savings with minimal quality loss",
+  "Routers generalise to unseen data and to multiple LLM pairs",
+  "Open-source framework for training, serving and evaluating routers"
+ ],
+ "method": {
+  "summary": "Binary router predicts P(strong wins | query) from preference data with four parameterisations (similarity-weighted BT ranking, matrix factorisation, BERT, Llama 3 8B) and thresholds it at alpha. Trained on Chatbot Arena tiers, optionally augmented with MMLU-validation golden labels or GPT-4-judged Nectar queries; evaluated on MT Bench, MMLU, GSM8K against a random router.",
+  "task": "binary LLM routing (strong vs weak) by predicted win probability",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Chatbot Arena battles (D_arena)",
+    "role": "train",
+    "size": "80k battles; 5k held out for validation; after pruning prompts under 16 characters, 65k pairwise comparisons between 64 models",
+    "split": "5k validation held out",
+    "source": "Chiang et al. 2024",
+    "preprocessing": "Models clustered into 10 tiers by leaderboard score (dynamic programming); top two tiers = strong, tier three = weak; responses dropped, only winner identity kept. 81% English, 3.1% Chinese, 2.2% Russian."
+   },
+   {
+    "name": "MMLU validation (D_gold)",
+    "role": "train",
+    "size": "approximately 1500 questions (<2% of training data)",
+    "split": "validation split",
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": "labels from comparing Ms and Mw answers to the golden label"
+   },
+   {
+    "name": "Nectar GPT-4-judged (D_judge)",
+    "role": "train",
+    "size": "approximately 120K samples, about $700 USD",
+    "split": null,
+    "source": "Nectar (Zhu et al. 2023) queries with GPT-4 responses as Ms; Mixtral-8x7B responses as Mw; GPT-4 judge",
+    "preprocessing": "judge de-biased following Zheng et al. 2023"
+   },
+   {
+    "name": "MT Bench",
+    "role": "eval",
+    "size": "160 open-ended questions",
+    "split": null,
+    "source": "Zheng et al. 2023",
+    "preprocessing": "embedding-similarity decontamination at 0.95 threshold, contaminated eval examples discarded"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "14,042 questions, 57 subjects",
+    "split": "5-shot",
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": "same decontamination"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "over 1,000 grade school math problems",
+    "split": "8-shot",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "same decontamination"
+   }
+  ],
+  "models": [
+   {
+    "name": "Similarity-weighted ranking router",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Bradley-Terry with similarity weights gamma^(1+S), gamma=10, text-embedding-3-small embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "none, solved at inference time"
+    }
+   },
+   {
+    "name": "Matrix factorization router",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bilinear delta(M,q)=w2^T(v_m ⊙ (W1^T v_q + b)), text-embedding-3-small query embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dm, dq": "not stated"
+    }
+   },
+   {
+    "name": "BERT classifier router",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-base with logistic head on CLS",
+    "init_from": "BERT-base (Devlin et al. 2018)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 max sequence length",
+    "other": {}
+   },
+   {
+    "name": "Causal LLM router",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "Llama 3 8B, label tokens added to vocabulary, softmax over win/tie/lose labels",
+    "init_from": "Llama 3 8B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 max sequence length",
+    "other": {}
+   },
+   {
+    "name": "gpt-4-1106-preview",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "strong"
+    }
+   },
+   {
+    "name": "Mixtral 8x7B",
+    "role": "evaluated",
+    "params": "8x7B",
+    "architecture": "MoE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "weak"
+    }
+   },
+   {
+    "name": "Claude 3 Opus / Claude 3 Sonnet; Llama 3.1 70B / 8B",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "unseen strong/weak pairs, routers not retrained"
+    }
+   },
+   {
+    "name": "Random router",
+    "role": "baseline",
+    "params": null,
+    "architecture": "routes randomly under cost constraint",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise sum log P_theta(l_sw | q) over preference data (Eq 1); BT uses weighted binary cross-entropy",
+   "optimizer": "Adam (matrix factorization); others not stated",
+   "lr": "matrix factorization 3e-4; BERT 1e-5; Llama 3 8B 1e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "matrix factorization 64; BERT 16; Llama 3 8B 8",
+   "steps": "BERT ~2000 steps; Llama 3 8B ~2000 steps",
+   "epochs": "matrix factorization ~10 epochs",
+   "tokens": null,
+   "seq_len": "BERT 512; Llama 3 8B 2048",
+   "precision": null,
+   "weight_decay": "matrix factorization 1e-5; BERT 0.01; Llama 3 8B not stated",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "matrix factorization 8GB GPU; BERT 2xL4 24GB; Llama 3 8B 8xA100 80GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "model selection": "validation set (5k held out Arena)",
+    "tiers": "10 tiers, Appendix A"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; random baseline reported with 95% CI",
+   "prompting": "MMLU 5-shot, GSM8K 8-shot; Llama 3 router uses an instruction prompt containing the query (text not given)",
+   "retrieval": null,
+   "parameters": {
+    "threshold alpha": "swept to hit cost constraints c_i, 10 discretisation points over the call-percentage interval",
+    "gamma": "10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "PGR",
+     "definition": "(r(router)-r(weak))/(r(strong)-r(weak))",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "APGR",
+     "definition": "average PGR over 10 call-percentage points",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "CPT(x%)",
+     "definition": "minimum percentage of calls to the strong model to reach PGR x%",
+     "unit": "% calls",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Random router",
+    "Unify AI and Martian commercial routers (Appendix E, Fig 2, with gpt-4-turbo-2024-04-09 as strong)"
+   ],
+   "protocol": "Evaluated on decontaminated MT Bench (GPT-4 judge), MMLU, GSM8K; no seeds stated"
+  },
+  "availability": {
+   "code": "open sourced framework (no URL in text)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Matrix factorization trained on Arena+judge data needs 13.40% strong-model calls for CPT(50%) on MT Bench versus 49.03% for random",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "13.40",
+   "unit": "% calls",
+   "baseline_value": "49.03",
+   "n": null,
+   "setup": "MT Bench; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 1, row Darena + Djudge Matrix Factorization, column CPT(50%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Best MT Bench APGR is 0.802 (matrix factorization, Arena+judge) versus 0.500 random",
+   "kind": "measured",
+   "source": null,
+   "metric": "APGR",
+   "value": "0.802",
+   "unit": "fraction",
+   "baseline_value": "0.500",
+   "n": null,
+   "setup": "MT Bench; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 1, row Darena + Djudge Matrix Factorization, column APGR",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Routers trained on Arena alone are near or below random on MMLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "49.43",
+   "unit": "% calls",
+   "baseline_value": "50.07",
+   "n": null,
+   "setup": "MMLU 5-shot; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 2, row Darena BERT, column CPT(50%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding about 1500 MMLU-validation golden labels cuts MMLU CPT(50%) to about 35% for causal LLM, matrix factorization and SW ranking",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "35.40",
+   "unit": "% calls",
+   "baseline_value": "50.07",
+   "n": null,
+   "setup": "MMLU 5-shot; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 2, row Darena + Dgold SW Ranking, column CPT(50%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Causal LLM router with judge augmentation is best on GSM8K, CPT(50%) 33.64%",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "33.64",
+   "unit": "% calls",
+   "baseline_value": "50.00",
+   "n": null,
+   "setup": "GSM8K 8-shot; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 3, row Darena + Djudge Causal LLM, column CPT(50%)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Arena-only routers have APGR below random on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "APGR",
+   "value": "0.438",
+   "unit": "fraction",
+   "baseline_value": "0.497",
+   "n": null,
+   "setup": "GSM8K; Strong gpt-4-1106-preview, weak Mixtral 8x7B, routers trained on Arena (+augmentation)",
+   "quote": null,
+   "table": "Table 3, row Darena BERT, column APGR",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Routers transfer to Claude 3 Opus/Sonnet without retraining; SW ranking CPT(50%) 23.27%",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "23.27",
+   "unit": "% calls",
+   "baseline_value": "49.89",
+   "n": null,
+   "setup": "MT Bench; same routers trained on Darena+Djudge; Ms Claude 3 Opus, Mw Claude 3 Sonnet",
+   "quote": null,
+   "table": "Table 4, row Claude 3 Opus / Claude 3 Sonnet SW Ranking, column CPT(50%)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Routers transfer to Llama 3.1 70B/8B; SW ranking CPT(50%) 21.18%",
+   "kind": "measured",
+   "source": null,
+   "metric": "CPT(50%)",
+   "value": "21.18",
+   "unit": "% calls",
+   "baseline_value": "47.52",
+   "n": null,
+   "setup": "MT Bench; same routers; Ms Llama 3.1 70B, Mw Llama 3.1 8B",
+   "quote": null,
+   "table": "Table 4, row Llama 3.1 70B / Llama 3.1 8B SW Ranking, column CPT(50%)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Best cost saving ratio over GPT-4 is 3.66x at CPT(50%) on MT Bench, retaining 95% of GPT-4 quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost saving ratio",
+   "value": "3.66",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT Bench; best router; cost GPT-4 $24.7/M tokens, Mixtral $0.24/M tokens",
+   "quote": "our routers achieve cost savings of up to 3.66x",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, Table 6"
+  },
+  {
+   "claim": "MMLU saving 1.41x at CPT(50%), 92% of GPT-4 quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost saving ratio",
+   "value": "1.41",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU 5-shot; best router",
+   "quote": null,
+   "table": "Table 6, row MMLU, column CPT(50%)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "GSM8K saving 1.49x at CPT(50%), 87% of GPT-4 quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost saving ratio",
+   "value": "1.49",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K 8-shot; best router",
+   "quote": null,
+   "table": "Table 6, row GSM8K, column CPT(50%)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Router overhead is small: SW ranking, the most expensive, adds no more than 0.4% over GPT-4 generation",
+   "kind": "measured",
+   "source": null,
+   "metric": "overhead",
+   "value": "0.4",
+   "unit": "% of GPT-4 cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cost per million requests: SW ranking $39.26 (CPU n2-standard-8, 2.9 req/s)",
+   "quote": "our most expensive router, SW ranking, currently adds an extra cost of no more than 0.4% as compared to GPT-4 generation",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Matrix factorization router handles 155.16 requests/s at $3.32 per million requests",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "155.16",
+   "unit": "requests/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single L4 GPU g2-standard-4 VM, $0.8/hour",
+   "quote": null,
+   "table": "Table 7, row Matrix Factorization, column Requests / second",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Benchmark-dataset similarity rises with augmentation (MT Bench 0.6078 to 0.6525) and correlates with router performance",
+   "kind": "measured",
+   "source": null,
+   "metric": "similarity",
+   "value": "0.6525",
+   "unit": "score",
+   "baseline_value": "0.6078",
+   "n": null,
+   "setup": "embedding max-similarity, Appendix C",
+   "quote": null,
+   "table": "Table 5, row MT Bench, column Arena augmented with Djudge",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Matrix factorization and causal LLM routers match commercial routers with up to 40% fewer GPT-4 calls on MT Bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "fewer GPT-4 calls",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT Bench; gpt-4-turbo-2024-04-09 strong; vs Unify AI and Martian; routers on Darena+Djudge",
+   "quote": "outperforming the commercial routing systems by achieving the same performance with up to 40% fewer calls routed to GPT-4",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  }
+ ],
+ "limits": [
+  "Real-world query distributions may differ substantially from these benchmarks (authors concede)",
+  "Only two-model routing; multi-model extension left to future work",
+  "Performance across routers trained on the same data varies widely on one benchmark without clear explanation (authors concede)",
+  "High-capacity routers (BERT, causal LLM) near random on Arena alone, low-data regime",
+  "Hyperparameters like optimizer for BERT/Llama, seeds, schedules, warmup and matrix-factorization dimensions not stated; no code URL in text",
+  "Quality scores for MT Bench use GPT-4 judge; MMLU/GSM8K evaluated on the Ms/Mw pair gpt-4-1106 / Mixtral; prices dated 2024"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PGR",
+   "definition": "performance gap recovered: how much of the performance difference between the weak and strong models is recovered by the router",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "CPT",
+   "definition": "call-performance threshold: minimum percentage of calls to the strong model needed to reach a desired PGR",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Hybrid LLM (Ding et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "similar framework but synthetic BARTScore labels, single BERT router",
+   "quote": null
+  },
+  {
+   "work": "FrugalGPT (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2305.05176",
+   "relation": "related",
+   "note": "cascading approach",
+   "quote": null
+  },
+  {
+   "work": "AutoMix (Aggarwal et al.)",
+   "year": 2024,
+   "arxiv": "2310.12963",
+   "relation": "related",
+   "note": "self-verification then route",
+   "quote": null
+  },
+  {
+   "work": "LLM-Blender (Jiang et al.)",
+   "year": 2023,
+   "arxiv": "2306.02561",
+   "relation": "related",
+   "note": "ensemble",
+   "quote": null
+  },
+  {
+   "work": "Zooter (Lu et al.)",
+   "year": 2023,
+   "arxiv": "2311.08692",
+   "relation": "related",
+   "note": "reward-model routing labels",
+   "quote": null
+  },
+  {
+   "work": "Chatbot Arena (Chiang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "preference data; BT model",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-bench (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPT-4 judge, MT Bench",
+   "quote": null
+  },
+  {
+   "work": "Nectar / Starling (Zhu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "queries for D_judge",
+   "quote": null
+  },
+  {
+   "work": "RouterBench (Hu et al.)",
+   "year": 2024,
+   "arxiv": "2403.12031",
+   "relation": "related",
+   "note": "cited for LLM routing",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval and D_gold",
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "Unify AI and Martian routers",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "commercial routers, Appendix E",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Routing performance/cost trade-off between GPT-4 and Mixtral-8x7B; CPT and APGR metrics",
+   "page": 2,
+   "why": "shows what CPT and APGR measure"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance of our routers as compared to other routing systems on MT Bench",
+   "page": 15,
+   "why": "commercial router comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "R_alpha(q) = M_weak if P(win_s | q) < alpha; M_strong if P(win_s | q) >= alpha",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text states 'a higher value of alpha enforces stricter cost constraints by favoring weak models more often' consistent with Eq 2; no embedded instructions found",
+  "Table 2 caption says MMLU at CPT(50%) 75 is 92% of GPT-4 (81); Sec 5.4 Table 6 repeats it"
+ ]
+}

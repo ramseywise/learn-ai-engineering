@@ -1,0 +1,527 @@
+{
+ "schema": 1,
+ "key": "2303.01469",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/song-2023-consistency-models.pdf",
+ "bib": {
+  "title": "Consistency Models",
+  "authors": [
+   "Yang Song",
+   "Prafulla Dhariwal",
+   "Mark Chen",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Song",
+  "year": 2023,
+  "venue": "Proceedings of the 40th International Conference on Machine Learning (ICML), PMLR 202",
+  "arxiv": "2303.01469",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97295,
+  "chars_total": 97295,
+  "engine": "pymupdf",
+  "skipped": "Proof appendices A and B skimmed (theory); reference list skimmed for lineage."
+ },
+ "type": "empirical",
+ "question": "Can a generative model map noise to data in one step while keeping diffusion's compute-quality trade-off and zero-shot editing?",
+ "hypothesis": "Enforcing self-consistency along probability-flow ODE trajectories yields good one-step and few-step generators, via distillation or standalone training.",
+ "contributions": [
+  "Consistency models: a network f(x_t,t) mapping any point on a PF ODE trajectory to its origin",
+  "Consistency distillation (CD) from a pretrained diffusion model",
+  "Consistency training (CT) in isolation, no diffusion model",
+  "Zero-shot editing (inpainting, colorization, super-resolution, SDEdit) via multistep sampling",
+  "New SOTA one-step FID for distillation on CIFAR-10 (3.55) and ImageNet 64 (6.20)"
+ ],
+ "method": {
+  "summary": "Parameterise f_theta(x,t)=c_skip(t)x+c_out(t)F_theta(x,t) with boundary condition f(x,eps)=x. CD minimises d(f_theta(x_{t_{n+1}}),f_theta-(xhat_{t_n})) where xhat comes from one Heun step of a pretrained EDM score model and theta- is an EMA target network. CT replaces the ODE step with x+t z noise pairs and grows N and mu on a schedule.",
+  "task": "one-step/few-step image generation; zero-shot image editing",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky et al. 2009",
+    "preprocessing": "pixels rescaled to [-1,1]; horizontal flips"
+   },
+   {
+    "name": "ImageNet 64x64",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Deng et al. 2009",
+    "preprocessing": "pixels rescaled to [-1,1]; horizontal flips"
+   },
+   {
+    "name": "LSUN Bedroom 256x256",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "horizontal flips"
+   },
+   {
+    "name": "LSUN Cat 256x256",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "horizontal flips"
+   }
+  ],
+  "models": [
+   {
+    "name": "Consistency model (CD/CT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "NCSN++ (CIFAR-10); ADM architectures of Dhariwal & Nichol 2021 (ImageNet 64, LSUN 256); same as EDM with modified skip connections",
+    "init_from": "CD: pretrained EDM weights; CT: random init",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sigma_data": 0.5,
+     "T": 80,
+     "epsilon": 0.002,
+     "rho": 7,
+     "c_skip": "sigma_data^2/((t-eps)^2+sigma_data^2)"
+    }
+   },
+   {
+    "name": "EDM (teacher)",
+    "role": "teacher",
+    "params": null,
+    "architecture": "Karras et al. 2022",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "trained in-house; LSUN Bedroom 600k iters, LSUN Cat 300k iters, batch 2048 (reduced from 4096)"
+    }
+   },
+   {
+    "name": "Progressive distillation (PD)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Salimans & Ho 2022",
+    "init_from": "same EDM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "LPIPS used in PD curves of Fig 4; Tables report l2 PD"
+    }
+   }
+  ],
+  "training": {
+   "objective": "CD loss with LPIPS metric, lambda=1, EMA target network; CT loss with LPIPS, schedules N(k), mu(k)",
+   "optimizer": "Rectified Adam",
+   "lr": "CIFAR-10 4e-4 (CD,CT); ImageNet 64 8e-6; LSUN 256 1e-5",
+   "lr_schedule": "none (no decay)",
+   "warmup": "none",
+   "batch_size": "CIFAR-10 512; ImageNet 64 and LSUN 256 2048",
+   "steps": "CIFAR-10 800k; ImageNet 64 CD 600k, CT 800k; LSUN 256 CD 600k, CT 1000k iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "FP16 mixed precision on ImageNet 64 and LSUN 256; not on CIFAR-10",
+   "weight_decay": "0",
+   "dropout": "0.0",
+   "regularisation": "EMA decay 0.9999 (CIFAR-10), 0.999943 (ImageNet 64, LSUN); zero EMA for CD on LSUN Bedroom",
+   "hardware": "Nvidia A100 GPUs: 8 (CIFAR-10), 64 (ImageNet 64, LSUN 256)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "CD N": "18 (CIFAR-10), 40 (ImageNet 64), 40 (LSUN 256), assignment inferred from Table 3 column order",
+    "ODE solver": "Heun",
+    "CT mu0": "0.9 (CIFAR-10), 0.95 (others)",
+    "CT s0": 2,
+    "CT s1": "150 CIFAR-10, 200 ImageNet 64, 150 LSUN 256",
+    "LPIPS": "images upsampled bilinearly to 224x224 for CIFAR-10 and ImageNet 64; no rescaling for LSUN 256",
+    "Table 3 column parse": "Table 3 text extraction is flattened; per-column N and s1 assignment is partly inferred from column order"
+   }
+  },
+  "inference": {
+   "decoding": "Algorithm 1 multistep consistency sampling; time points found by greedy ternary search optimising FID",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "NFE": "1 or 2 in tables",
+    "T": 80,
+    "eps": 0.002
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception Score",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall",
+     "definition": "Kynkaanniemi et al. 2019",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PD",
+    "Knowledge Distillation",
+    "DFNO",
+    "Rectified Flow",
+    "DDIM",
+    "DPM-solver",
+    "DEIS",
+    "BigGAN",
+    "StyleGAN2/XL",
+    "DDPM",
+    "ADM",
+    "EDM",
+    "flows and VAEs"
+   ],
+   "protocol": "FID/IS/Prec/Rec; number of FID samples, seeds and error bars not stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "We trained all consistency models with the Rectified Adam optimizer (Liu et al., 2019), with no learning rate decay or warm-up, and no weight decay.",
+    "where": "Appendix C Training Details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CD reaches FID 3.55 on CIFAR-10 with one network evaluation",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.55,
+   "unit": "FID (lower better)",
+   "baseline_value": "8.34 (PD, NFE 1)",
+   "n": null,
+   "setup": "CIFAR-10 unconditional 32x32, CD distilled from in-house EDM, LPIPS, Heun, N=18",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CD, NFE 1, column FID"
+  },
+  {
+   "claim": "CD reaches FID 2.93 on CIFAR-10 with two evaluations",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.93,
+   "unit": "FID",
+   "baseline_value": "5.58 (PD, NFE 2)",
+   "n": null,
+   "setup": "CIFAR-10 unconditional 32x32, CD distilled from in-house EDM, LPIPS, Heun, N=18",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CD, NFE 2, column FID"
+  },
+  {
+   "claim": "CD reaches FID 6.20 on ImageNet 64x64 in one step",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 6.2,
+   "unit": "FID",
+   "baseline_value": "15.39 (PD, NFE 1)",
+   "n": null,
+   "setup": "ImageNet 64x64, CD from in-house EDM",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, ImageNet 64x64, row CD, NFE 1, column FID"
+  },
+  {
+   "claim": "CD reaches FID 4.70 on ImageNet 64x64 in two steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.7,
+   "unit": "FID",
+   "baseline_value": "8.95 (PD, NFE 2)",
+   "n": null,
+   "setup": "ImageNet 64x64, CD from in-house EDM",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, ImageNet 64x64, row CD, NFE 2, column FID"
+  },
+  {
+   "claim": "CT (no pretrained diffusion model) reaches FID 8.70 on CIFAR-10 one-step",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 8.7,
+   "unit": "FID",
+   "baseline_value": "8.34 (PD, NFE 1)",
+   "n": null,
+   "setup": "CIFAR-10, consistency training from random init, LPIPS",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CT, NFE 1, column FID"
+  },
+  {
+   "claim": "CT reaches FID 5.83 on CIFAR-10 two-step",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 5.83,
+   "unit": "FID",
+   "baseline_value": "5.58 (PD, NFE 2)",
+   "n": null,
+   "setup": "CIFAR-10, consistency training",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CT, NFE 2, column FID"
+  },
+  {
+   "claim": "CT on ImageNet 64x64 one-step FID 13.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 13.0,
+   "unit": "FID",
+   "baseline_value": "15.39 (PD)",
+   "n": null,
+   "setup": "ImageNet 64x64, CT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, ImageNet 64x64, row CT, NFE 1, column FID"
+  },
+  {
+   "claim": "CD on LSUN Bedroom 256 one-step FID 7.80",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 7.8,
+   "unit": "FID",
+   "baseline_value": "16.92 (PD, NFE 1)",
+   "n": null,
+   "setup": "LSUN Bedroom 256x256, CD",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, LSUN Bedroom, row CD, NFE 1, column FID"
+  },
+  {
+   "claim": "CD on LSUN Cat 256 one-step FID 11.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 11.0,
+   "unit": "FID",
+   "baseline_value": "29.6 (PD, NFE 1)",
+   "n": null,
+   "setup": "LSUN Cat 256x256, CD",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, LSUN Cat, row CD, NFE 1, column FID"
+  },
+  {
+   "claim": "DDIM with 50 evaluations on CIFAR-10 has FID 4.67 (comparison point)",
+   "kind": "reported",
+   "source": "Song et al., 2020 (DDIM)",
+   "metric": "FID",
+   "value": 4.67,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, DDIM as printed in the paper's Table 1 (copied from Song et al. 2020)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row DDIM NFE 50, column FID"
+  },
+  {
+   "claim": "Best CD config on CIFAR-10 is LPIPS metric, Heun solver, N=18",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 ablations, Fig 3",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "The best configuration for CD is LPIPS, Heun ODE solver, and N “ 18."
+  },
+  {
+   "claim": "CD beats PD across datasets and steps except one-step LSUN Bedroom with l2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, ImageNet 64, LSUN 256; Fig 4",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "except for single-step generation on Bedroom 256 ˆ 256, where CD with ℓ2 slightly underperforms PD"
+  },
+  {
+   "claim": "StyleGAN-XL one-step FID 1.85 on CIFAR-10 beats all consistency models here",
+   "kind": "reported",
+   "source": "Sauer et al., 2022 (StyleGAN-XL)",
+   "metric": "FID",
+   "value": 1.85,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10",
+   "where": "Table 1",
+   "table": "Table 1, row StyleGAN-XL, NFE 1, column FID",
+   "note": null
+  }
+ ],
+ "limits": [
+  "Number of samples for FID, seeds and variance not stated.",
+  "Evaluated only on images; unconditional or class-conditional small datasets.",
+  "Continuous-time CT needs forward-mode autodiff and EDM initialisation due to variance; left to future work.",
+  "Only one-step ODE solvers considered; multistep solvers left as future work.",
+  "Time-point selection assumes FID is unimodal in next time point; better strategies left as future work.",
+  "GANs (StyleGAN-XL, StyleGAN2-ADA, BigGAN-deep) still beat CT/CD on some datasets (Table 1, 2)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "consistency function",
+   "definition": "f: (x_t,t) -> x_eps, with f(x_t,t)=f(x_t',t') for points on the same PF ODE trajectory",
+   "where": "Sec 3"
+  },
+  {
+   "term": "boundary condition",
+   "definition": "f(x,eps)=x",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Score SDE / probability flow ODE",
+   "year": 2021,
+   "arxiv": "2011.13456",
+   "relation": "extends",
+   "note": "PF ODE trajectories are what consistency models map to origin",
+   "quote": null
+  },
+  {
+   "work": "Elucidating the Design Space of Diffusion Models (EDM)",
+   "year": 2022,
+   "arxiv": "2206.00364",
+   "relation": "uses-method",
+   "note": "Teacher model, parameterisation, Heun solver, T=80, eps=0.002",
+   "quote": null
+  },
+  {
+   "work": "Progressive Distillation",
+   "year": 2022,
+   "arxiv": "2202.00512",
+   "relation": "baseline",
+   "note": "Main comparison; Salimans & Ho",
+   "quote": null
+  },
+  {
+   "work": "DDIM",
+   "year": 2020,
+   "arxiv": "2010.02502",
+   "relation": "baseline",
+   "note": "Sampler baseline",
+   "quote": null
+  },
+  {
+   "work": "Diffusion models beat GANs",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "uses-method",
+   "note": "ADM architectures; ADM baseline",
+   "quote": null
+  },
+  {
+   "work": "SDEdit",
+   "year": 2021,
+   "arxiv": "2108.01073",
+   "relation": "uses-method",
+   "note": "Stroke-guided editing",
+   "quote": null
+  },
+  {
+   "work": "LPIPS",
+   "year": 2018,
+   "arxiv": "1801.03924",
+   "relation": "uses-method",
+   "note": "Distance metric",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10, ImageNet, LSUN",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Training and evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Given a PF ODE that smoothly converts data to noise, we learn to map any point on the trajectory to its origin.",
+   "page": 1,
+   "why": "Core idea of self-consistency"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Factors that affect CD and CT on CIFAR-10; best CD config is LPIPS, Heun, N=18.",
+   "page": 7,
+   "why": "Ablations on metric, solver and N"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Multistep image generation with CD; CD outperforms PD across all datasets and sampling steps.",
+   "page": 7,
+   "why": "FID vs steps for CD vs PD"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "x <- f(xhat_T, T); for n=1..N-1: z~N(0,I); xhat_tau_n <- x + sqrt(tau_n^2 - eps^2) z; x <- f(xhat_tau_n, tau_n)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 flattened by extraction; empty cells (CD mu, s0, s1, N entries for CT) make per-column assignment uncertain.",
+  "No embedded instructions found."
+ ]
+}

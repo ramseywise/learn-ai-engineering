@@ -1,0 +1,157 @@
+{
+ "schema": 1,
+ "key": "2402.14740",
+ "pdf": "generative-ai/05-RL/sources/ahmadian-2024-back-basics.pdf",
+ "bib": {
+  "title": "Back to Basics: Revisiting REINFORCE Style Optimization for Learning from Human Feedback in LLMs",
+  "authors": ["Arash Ahmadian", "Chris Cremer", "Matthias Gallé", "Marzieh Fadaee", "Julia Kreutzer", "Olivier Pietquin", "Ahmet Üstün", "Sara Hooker"],
+  "first_author": "Ahmadian",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.14740",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 75635,
+  "chars_total": 75635,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can the computational and optimization complexity of PPO be avoided in RLHF for LLMs while preserving performance?",
+ "hypothesis": "Because the policy starts from a strong pretrained/SFT model, high variance and large off-policy updates are rare, so PPO's variance reduction, clipping and per-token modelling are unnecessary and REINFORCE-style methods suffice.",
+ "contributions": [
+  "PPO is not the right tool: Vanilla PG REINFORCE outperforms PPO by 3.2% to 20.3% win-rate.",
+  "RLOO outperforms PPO, DPO and RAFT across datasets and models and uses online samples better than RAFT.",
+  "Modeling partial completions is not necessary; modeling the full generation preserves performance with less complexity.",
+  "RLOO is relatively robust to noise and KL penalty compared with RAFT."
+ ],
+ "method": {
+  "summary": "Ablates PPO on RLHF (GAE lambda, clipping, ratio) and compares full-generation-as-one-action REINFORCE (moving-average baseline) and RLOO (k=2, 4) against PPO, Vanilla PG, RAFT and DPO on TL;DR and Anthropic-HH with Pythia-6.9B and Llama-7B. Evaluates reward-model reward, GPT-4 simulated win-rates, fluency/diversity and robustness to KL weight and reward noise.",
+  "task": "preference optimization / RLHF policy optimization",
+  "trains": true,
+  "datasets": [
+   {"name": "TL;DR Summarize (Stiennon et al., 2020)", "role": "both", "size": "116k human-written instructions and 93k human-annotated preference pairs (training split)", "split": "dedicated SFT split for SFT; 1000 test samples for evaluation", "source": "openai/summarize-from-feedback", "preprocessing": "prompts longer than 448 tokens filtered"},
+   {"name": "Anthropic Helpful and Harmless (Bai et al., 2022a)", "role": "both", "size": "112k training preference pairs (preprocessed)", "split": "no SFT split: prompts and preferred responses from the comparisons used for SFT; 1000 test samples for evaluation", "source": "Dahoas/full-hh-rlhf on Hugging Face", "preprocessing": "prompts longer than 348 tokens filtered"}
+  ],
+  "models": [
+   {"name": "Pythia-6.9B", "role": "base", "params": "6.9B", "architecture": "decoder-only", "init_from": "pretrained, then SFT; reward model and policy both initialised from the SFT checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "512 tokens (SFT and RM training)", "other": {"used_on": "TL;DR and Anthropic-HH"}},
+   {"name": "Llama-7B", "role": "base", "params": "7B", "architecture": "decoder-only", "init_from": "pretrained, then SFT; reward model and policy both initialised from the SFT checkpoint", "tokenizer": null, "vocab": "32k (Fig 7 caption)", "layers": null, "hidden": null, "heads": null, "context": "512 tokens (SFT and RM training)", "other": {"used_on": "Anthropic-HH only"}},
+   {"name": "GPT-4", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"framework": "AlpacaFarm"}}
+  ],
+  "training": {
+   "objective": "SFT cross-entropy; reward model binary classifier on preference pairs; RL stage maximises reward minus beta*KL to reference with PPO, Vanilla PG, REINFORCE (moving-average baseline), RLOO (k=2,4), RAFT (best of k) or DPO",
+   "optimizer": null,
+   "lr": "SFT Pythia 2e-5; RM 1e-5; preference training constant 1e-6",
+   "lr_schedule": "SFT and RM: cosine decay; preference training: constant after linear warm-up",
+   "warmup": "SFT/RM 0.03 ratio; preference training 3% of total steps",
+   "batch_size": "TL;DR and HH-Pythia: rollout batch 512, step batch 256; HH-Llama: 2048 rollout and step batch",
+   "steps": "TL;DR 600 steps; HH Pythia 393 steps; HH Llama 2 epochs",
+   "epochs": "SFT Pythia 2, SFT Llama 1; RM 1; HH Llama preference training 2",
+   "tokens": null,
+   "seq_len": "512 tokens (SFT and RM)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty beta = 0.03 for TL;DR, beta = 0.10 for all Anthropic-HH unless noted; 2 gradient steps per batch",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"lr_sweep": "{1e-6, 1e-5, 2e-5} for RAFT and RLOO; {1e-6, 1e-5} for PPO and Vanilla PG", "gamma": "1 for PPO", "clip_epsilon": null, "gae_lambda_ablation": "1.0, 0.95, 0.5, 0.0 (Fig 1, Llama-7B HH)", "KL_sensitivity_beta": "0.1, 0.25, 0.5, 1.0 (Pythia HH, k=2)", "reward_noise_sigma": "1.0, 3.0, 5.0 added to RM logits"}
+  },
+  "inference": {
+   "decoding": "greedy sampling at evaluation unless noted",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 test prompts per evaluation; k online samples per prompt in training (k=2 or 4 for RLOO and RAFT)",
+   "prompting": "TL;DR: 'Below is a reddit POST and the corresponding SUBREDDIT and TITLE. Write a both precise and concise summary of the contents of the post.'; HH: 'Human: ... Assistant:'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Average test reward", "definition": "mean reward from the training RM on 1000 test samples", "unit": "RM score", "higher_is_better": true},
+    {"name": "Simulated win-rate", "definition": "GPT-4 (AlpacaFarm) preference vs reference SFT completions (TL;DR) or preferred completions (HH); checkpoint with highest test reward", "unit": "%", "higher_is_better": true},
+    {"name": "Perplexity", "definition": "perplexity on preferred completions of the test set", "unit": "PPL", "higher_is_better": false},
+    {"name": "Diversity-1/2", "definition": "average n-gram diversity (Li et al., 2016)", "unit": "ratio", "higher_is_better": true},
+    {"name": "Length", "definition": "average completion length", "unit": "tokens", "higher_is_better": null},
+    {"name": "Reward variance", "definition": "variance of rewards among generations", "unit": "RM score variance", "higher_is_better": false}
+   ],
+   "baselines": ["PPO", "Vanilla PG", "REINFORCE with moving-average baseline", "RAFT (k=2,4)", "DPO"],
+   "protocol": "Single reported run per cell; no seeds, confidence intervals or significance tests stated; GPT-4 as proxy for human evaluation."
+  },
+  "availability": {"code": null, "weights": null, "data": "public datasets (TL;DR, Anthropic-HH)"},
+  "prompts": [
+   {"purpose": "GPT-4 judge, TL;DR", "text": "Which of the following summaries does a better job of summarizing the most important points in the given forum post, without including unimportant or irrelevant details? A good summary is both precise and concise. Post: {instruction} Summary (A): {output_1} Summary (B): {output_2} FIRST provide a one-sentence comparison of the two summaries, explaining which you prefer and why. SECOND, on a new line, state only \"Summary (A)\" or \" Summary (B)\" to indicate your choice.", "where": "Appendix D"},
+   {"purpose": "GPT-4 judge, Anthropic-HH", "text": "For the following query to a chatbot assistant, which response is more helpful? Query: instruction Response (A): {output_1} Response (B): {output_2} FIRST provide a one-sentence comparison of the two responses and explain which you feel is more helpful. SECOND, on a new line, state only \"Response (A)\" or \"Response (B)\" to indicate which response is more helpful. If they are equally good or bad, state \"Neither\".", "where": "Appendix D"}
+  ],
+  "evidence": [
+   {"field": "training.other.gae_lambda_ablation", "quote": "Training reward curves for PPO on Llama-7B based models with the HH dataset.", "where": "Figure 1 caption"},
+   {"field": "eval.metrics.Simulated win-rate", "quote": "Metrics are reported for the checkpoint with the highest test reward.", "where": "Table 1 caption"}
+  ]
+ },
+ "results": [
+  {"claim": "RLOO (k=4) beats PPO on TL;DR by 10.3 win-rate points.", "kind": "measured", "source": null, "metric": "win-rate gap vs PPO", "value": "10.3", "unit": "points", "baseline_value": "67.6", "n": "1000 test prompts", "setup": "TL;DR, Pythia-6.9B, GPT-4 judge vs reference SFT completions, checkpoint with highest test reward", "quote": "RLOO with k = 4 achieves the highest win-rates, outperforming PPO by 10.3, 14.5, and 32.1 for TL;DR, HH (Pythia) and HH (Llama), respectively.", "table": null, "note": "Table 1: RLOO k=4 77.9 vs PPO 67.6.", "where": "Section 5.2"},
+  {"claim": "RLOO (k=4) beats PPO on HH (Pythia) by 14.5 points.", "kind": "measured", "source": null, "metric": "win-rate gap vs PPO", "value": "14.5", "unit": "points", "baseline_value": "29.2", "n": "1000 test prompts", "setup": "Anthropic-HH, Pythia-6.9B, GPT-4 judge vs preferred completions", "quote": "outperforming PPO by 10.3, 14.5, and 32.1 for TL;DR, HH (Pythia) and HH (Llama), respectively", "table": null, "note": "Table 1: RLOO k=4 43.7 vs PPO 29.2.", "where": "Section 5.2"},
+  {"claim": "RLOO (k=4) beats PPO on HH (Llama) by 32.1 points; PPO win-rate is only 32.0.", "kind": "measured", "source": null, "metric": "win-rate gap vs PPO", "value": "32.1", "unit": "points", "baseline_value": "32.0", "n": "1000 test prompts", "setup": "Anthropic-HH, Llama-7B, GPT-4 judge vs preferred completions", "quote": "outperforming PPO by 10.3, 14.5, and 32.1 for TL;DR, HH (Pythia) and HH (Llama), respectively", "table": null, "note": "Table 1: RLOO k=4 64.1 vs PPO 32.0.", "where": "Section 5.2"},
+  {"claim": "Win-rate table: RLOO (k=4) 77.9 on TL;DR vs DPO 66.6 and RAFT (k=4) 73.2.", "kind": "measured", "source": null, "metric": "win-rate", "value": "77.9", "unit": "%", "baseline_value": "66.6", "n": "1000 test prompts", "setup": "TL;DR, Pythia-6.9B; DPO is baseline_value", "quote": null, "table": "Table 1, row RLOO (k=4), column TL;DR", "note": "Other cells: RLOO k=2 74.2, RAFT k=2 72.1, REINFORCE w/ baseline 70.7, Vanilla PG 70.4, PPO 67.6.", "where": "Table 1"},
+  {"claim": "REINFORCE with moving-average baseline matches or beats Vanilla PG, so partial completions need not be modelled.", "kind": "measured", "source": null, "metric": "win-rate", "value": "70.7", "unit": "%", "baseline_value": "70.4", "n": "1000 test prompts", "setup": "TL;DR, Pythia-6.9B; Vanilla PG 70.4; HH Pythia 37.9 vs 36.4; HH Llama 55.3 vs 52.3", "quote": "REINFORCE with baseline is on par with Vanilla PG on both TL;DR (70.7 vs 70.4) and HH (37.9 vs 36.4) datasets when using Pythia-based models.", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "PPO loss is clipped on average less than 5% of the time per batch, so learning is near on-policy.", "kind": "measured", "source": null, "metric": "clip fraction", "value": "<5", "unit": "% of the time per batch", "baseline_value": null, "n": null, "setup": "all dataset and base-model pairings (stated); the clip ablation curves in Fig 1 are Llama-7B on HH", "quote": "We empirically found in our RLHF setting that the loss is actually clipped on average < 5% of the time per batch, throughout training across all dataset and base-model pairings", "table": null, "note": null, "where": "Section 3.2"},
+  {"claim": "Reward falls monotonically as GAE lambda decreases; lambda=1.0 (vanilla PG) is best.", "kind": "measured", "source": null, "metric": "training reward vs lambda", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "PPO, Llama-7B based model, HH dataset (Fig 1); lambda in {1.0, 0.95, 0.5, 0.0}", "quote": "We observe a monotonically decreasing reward with decreasing λ.", "table": null, "note": null, "where": "Section 3.1, Fig 1"},
+  {"claim": "RLOO with k=2 matches or beats RAFT with k=4, using half the online samples.", "kind": "measured", "source": null, "metric": "test reward / win-rate", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "all datasets and models; Pythia base noted in Fig 3 caption", "quote": "Noticeably, despite a smaller sampling budget, RLOOk=2 either closely matches or outperforms RAFTk=4, across all datasets and models.", "table": null, "note": null, "where": "Section 5.1, Fig 3"},
+  {"claim": "Averaged over three dataset-model pairs, RLOO win-rate is 61.3 (k=2) and 61.9 (k=4) vs RAFT 56.1 and 59.5.", "kind": "measured", "source": null, "metric": "mean win-rate", "value": "61.9", "unit": "%", "baseline_value": "59.5", "n": "3 pairings", "setup": "k=4; k=2 is 61.3 vs 56.1", "quote": "RLOO achieves win-rates of 61.3 and 61.9 for k = 2 and k = 4, respectively, while RAFT scores 56.1 and 59.5, respectively.", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "On HH with Llama, DPO produces the longest generations and PPO the shortest.", "kind": "measured", "source": null, "metric": "average length", "value": "104.4", "unit": "tokens", "baseline_value": "16.5", "n": null, "setup": "Anthropic-HH, Llama; DPO 104.4 vs PPO 16.5 (baseline_value)", "quote": null, "table": "Table 2, row DPO, column Length", "note": "Text says 104 and 16 tokens; Table 2 caption says 'Anthropic-HH dataset' and text says Llama-based models.", "where": "Table 2, Section 5.2.1"},
+  {"claim": "REINFORCE with baseline gives 27% less reward variance than Vanilla PG.", "kind": "measured", "source": null, "metric": "reward variance reduction", "value": "27", "unit": "%", "baseline_value": null, "n": null, "setup": "Anthropic-HH, Table 2 (Llama); Reward-Var 2.7 vs 3.7", "quote": "however, empirically results in 27% less variance", "table": null, "note": null, "where": "Section 5.2.1"},
+  {"claim": "RAFT is more sensitive than RLOO to higher KL weight (beta 0.25 to 1.0): lower reward and larger KL from reference.", "kind": "measured", "source": null, "metric": "reward and KL curves", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "HH, Pythia, k=2, beta in {0.1,0.25,0.5,1.0}", "quote": "However increased regularization with β = {0.25, 0.5, 1.0}, not only RAFT is worse at optimizing the reward, but also deviates more from the reference policy.", "table": null, "note": null, "where": "Section 5.2.2, Fig 5"},
+  {"claim": "RAFT reward drops far more than RLOO under added reward noise sigma 3.0 and 5.0.", "kind": "measured", "source": null, "metric": "training reward drop", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Gaussian noise added to RM logits, sigma in {1.0,3.0,5.0}", "quote": "However, the drop is far more pronounced for RAFT with σ = {3.0, 5.0}", "table": null, "note": null, "where": "Section 5.2.2, Fig 6"},
+  {"claim": "In the SFT Llama model about 60% of probability mass sits on the single top token, and over 90% on the top 16.", "kind": "measured", "source": null, "metric": "top-token probability mass", "value": "60", "unit": "% (approx)", "baseline_value": null, "n": null, "setup": "Llama SFT model used for HH, after the first generated token", "quote": "a significant (∼60%) portion of probability mass is put on only the single most probable token at each step", "table": null, "note": null, "where": "Appendix A, Fig 7"}
+ ],
+ "limits": [
+  "Does not study reward model over-optimization (Gao et al., 2022).",
+  "Does not explore the LOO baseline in a per-token action framework with intermediary rewards.",
+  "Only simulated GPT-4 win-rates; no correlation with human evaluation measured.",
+  "No other rewards (ROUGE, BLEU) explored.",
+  "No seeds, error bars or significance tests reported; single run per cell.",
+  "Only 6.9B and 7B models; PPO ablations in Fig 1 on Llama-7B HH only; code, hardware and compute not stated.",
+  "PPO win-rate on HH Llama (32.0) is very low, so the large gap may partly reflect PPO tuning (LR sweep only {1e-6, 1e-5})."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Vanilla PG", "definition": "REINFORCE estimator applied to the trajectory return starting from each partial completion, with a learned baseline; equals PPO with lambda=1, no clipping, no ratio.", "where": "Section 3.1"},
+  {"term": "REINFORCE (this work)", "definition": "REINFORCE estimator applied to the full-trajectory return, treating the whole generation as a single action.", "where": "Section 2.2, 3.1"},
+  {"term": "RLOO", "definition": "REINFORCE Leave-One-Out: k i.i.d. samples per prompt, each sample's baseline is the mean reward of the other k-1 samples.", "where": "Section 2.3"}
+ ],
+ "lineage": [
+  {"work": "Proximal Policy Optimization (Schulman et al., 2017)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "Canonical RLHF algorithm whose components are ablated.", "quote": null},
+  {"work": "Buy 4 REINFORCE samples, get a baseline for free (Kool et al., 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Source of the RLOO estimator.", "quote": null},
+  {"work": "Williams, 1992 (REINFORCE)", "year": 1992, "arxiv": null, "relation": "uses-method", "note": "REINFORCE estimator and moving-average baseline.", "quote": null},
+  {"work": "Direct Preference Optimization (Rafailov et al., 2023)", "year": 2023, "arxiv": "2305.18290", "relation": "baseline", "note": "RL-free baseline.", "quote": null},
+  {"work": "RAFT (Dong et al., 2023)", "year": 2023, "arxiv": "2304.06767", "relation": "baseline", "note": "Iterative fine-tuning baseline; Llama setup follows it.", "quote": null},
+  {"work": "Generalized Advantage Estimation (Schulman et al., 2018)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "GAE lambda ablated.", "quote": null},
+  {"work": "AlpacaFarm (Dubois et al., 2024)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "GPT-4 simulated win-rate framework.", "quote": null},
+  {"work": "Learning to summarize from human feedback (Stiennon et al., 2020)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "TL;DR Summarize data.", "quote": null},
+  {"work": "Anthropic HH (Bai et al., 2022a)", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "Helpful and Harmless dialogue data.", "quote": null},
+  {"work": "Pythia (Biderman et al., 2023)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "Pythia-6.9B base model.", "quote": null},
+  {"work": "Llama (Touvron et al., 2023a)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "Llama-7B base model.", "quote": null},
+  {"work": "Engstrom et al., 2020 (Implementation matters in deep policy gradients)", "year": 2020, "arxiv": null, "relation": "related", "note": "PPO implementation sensitivity.", "quote": null},
+  {"work": "Li et al., 2023 (ReMax)", "year": 2023, "arxiv": null, "relation": "related", "note": "Concurrent work generating extra samples for variance reduction.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Training reward curves for PPO on Llama-7B based models with the HH dataset. Left: lambda ablation. Right: removing clipping and ratio does not degrade performance.", "page": 3, "why": "Shows the PPO-to-Vanilla-PG ablation in two panels."},
+  {"figure": "Table 1", "caption": "Final win-rates on generations for held-out test prompts in the Anthropic-HH and TL;DR Summarize datasets. Metrics are reported for the checkpoint with the highest test reward.", "page": 12, "why": "Main comparison across all methods."},
+  {"figure": "Fig 3", "caption": "Comparing Sample Efficiency RLOO vs RAFT plot of test reward throughout training with k = {2, 4}.", "page": 10, "why": "Shows RLOO k=2 matching RAFT k=4."}
+ ],
+ "code": [
+  {"where": "Section 2.3", "snippet": "(1/k) sum_{i=1..k} [R(y(i), x) - (1/(k-1)) sum_{j!=i} R(y(j), x)] grad log pi(y(i)|x), for y(1..k) i.i.d. ~ pi_theta(.|x)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Eq. 1 as extracted contains a stray log inside sigma (log(r(y+) - r(y-))); equation text garbled by extraction.",
+  "Section 'Table 2' text says Llama-based models while caption says Anthropic-HH dataset only."
+ ]
+}

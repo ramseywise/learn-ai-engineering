@@ -1,19 +1,629 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2305.14387",
  "pdf": "ai-engineering/01-prompt-engineering/sources/dubois-2023-alpacafarm.pdf",
  "bib": {
   "title": "AlpacaFarm: A Simulation Framework for Methods that Learn from Human Feedback",
+  "authors": [
+   "Yann Dubois",
+   "Xuechen Li",
+   "Rohan Taori",
+   "Tianyi Zhang",
+   "Ishaan Gulrajani",
+   "Jimmy Ba",
+   "Carlos Guestrin",
+   "Percy Liang",
+   "Tatsunori B. Hashimoto"
+  ],
   "first_author": "Dubois",
   "year": 2023,
-  "venue": "NeurIPS 2023",
+  "venue": "preprint",
   "arxiv": "2305.14387",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 104846,
+  "chars_total": 104846,
+  "engine": "pymupdf",
+  "skipped": "references skimmed only"
  },
- "legacy_report": "SOURCE: \"AlpacaFarm: A Simulation Framework for Methods that Learn from Human Feedback\". Yann Dubois, Xuechen Li, Rohan Taori, Tianyi Zhang (equal contribution), Ishaan Gulrajani, Jimmy Ba, Carlos Guestrin, Percy Liang, Tatsunori B. Hashimoto. The PDF is arXiv 2305.14387v4, dated 8 Jan 2024. The extracted text never names NeurIPS, so the venue comes from the caller, not the PDF. Year 2023.\n\nCOVERAGE: I read all 105,304 of 105,304 chars across 31 pages: main text, limitations, Appendices A–F, Tables 2–7, and the annotation guideline and interface. I skimmed the references for origins.\n\nCLAIMS (ranked for the LLM-as-judge section)\n- claim: Method rankings from the simulated judge pool match rankings from training and judging with humans.\n  number: Spearman 0.98 (0.94 and R² 0.83 when the 5 API models the authors did not train are excluded)\n  setup: 11 systems (6 LPF methods on LLaMA 7B plus GPT-4, ChatGPT, Davinci001, LLaMA 7B, Alpaca 7B). Win-rate vs Davinci003 on 805 eval instructions. Simulated methods were trained on p_ann_sim and judged by p_eval_sim. Human methods were trained on human prefs and judged by humans.\n  quote: \"the rankings have a Spearman correlation of 0.98, which suggests that AlpacaFarm faithfully captures the rankings among different LPF methods\" / \"Without those points, we have R2 = 0.83 and a Spearman Correlation of 0.94.\"\n  where: p7 §4.2; Fig 3 caption p6\n- claim: The pool of 13 simulated judges agrees with the human majority about as well as a held-out human does, at a fraction of the cost.\n  number: 65% vs 66%; 25x cheaper ($300 → $12 per 1000)\n  setup: Agreement with the majority vote of 3 crowdworkers on pairwise preferences over AlpacaFarm outputs\n  quote: \"our evaluator pevalsim (green) has a 65% agreement rate with the human majority vote, which is similar to the held-out human agreement rate at 66% (blue). At the same time, pevalsim is 25× cheaper ($300 → $12 per 1000 examples).\"\n  where: p7 §4.3\n- claim: A single GPT-4 prompt can beat the pool on agreement, but the authors reject it because it lacks human-like variability.\n  number: 68%\n  setup: The best single GPT-4 prompt among the candidates in Fig 4\n  quote: \"one of the GPT-4 prompts achieving 68% agreement. While this high agreement level is impressive, we do not use single prompts directly for AlpacaFarm, as single prompts do not replicate the inter-annotator variability important for a simulator.\"\n  where: p8\n- claim: A low-variance single judge gives qualitatively wrong conclusions when used to train. With it, reward over-optimization disappears and best-of-1024 looks much better than PPO, which contradicts the human data.\n  number: none\n  setup: PPO, best-of-n and expert iteration with reward models trained on human, AlpacaFarm, and single-prompt GPT-4 (temperature 0) preferences\n  quote: \"simple GPT-4 feedback shows no overoptimization, leading to the false conclusion that the LPF methods can be optimized for much longer than is actually the case. For example, Figure 5 right shows best-of-1024 to be much better than PPO, which strongly disagrees with the results on human data.\"\n  where: p8 §4.3\n- claim: Annotator variance: the AlpacaFarm pools sit close to humans, and single GPT-4 sits far below them.\n  number: 0.26 (eval pool), 0.43 (train pool), 0.35 (human), 0.1 (GPT-4)\n  setup: Variance is the average error of a held-out annotation against the majority vote over 3 random draws\n  quote: \"At 0.26 for pevalsim and 0.43 for pannsim, AlpacaFarm is close to the human variance of 0.35; in contrast, the GPT-4 annotator has a much lower variance at 0.1.\"\n  where: p8\n- claim: Injected label noise is what drives over-optimization. Training labels are flipped 25% of the time, and 25% was the smallest flip rate tested that induced over-optimization.\n  number: 25% flips; tested 0, 17(.5)%, 25%, 35%\n  setup: Ablation with best-of-n over reward models trained on GPT-4, GPT-4 plus flips, the eval pool, and the eval pool plus flips\n  quote: \"we emulate intra-annotator variability by flipping the simulated preference 25% of the time, i.e., we inject random noise.\" / \"added label noise provides the majority of the overoptimization effect\" / \"The exact ratio of 25% label noise was chosen to be the smallest considered ratio that induced overoptimization out of the ones we considered (0,17%,25%,35%)\"\n  where: p4 §3.2; p26 App E.1\n- claim: Noise is used only during training. It is left out of evaluation because uniform noise does not change model rankings.\n  number: none\n  setup: Construction of the p_eval_sim judge\n  quote: \"We use the 13 simulated annotators described in Section 3.2 without injecting the additional noise (as adding uniform noise does not change model rankings)\"\n  where: p5 §3.3\n- claim: Simulated judges share the human biases toward long answers and lists.\n  number: length: humans 62%, sim 64%; lists: humans 69%, sim 63%\n  setup: Pairwise preference rates\n  quote: \"humans prefer longer outputs 62% of the time, while our simulated annotators prefer those 64% of the time. Similarly, humans prefer outputs with lists 69% of the time, while our simulated annotators prefer those 63% of the time.\"\n  where: p21 App C.2\n- claim: Simulated judges also have biases humans do not: they favour the output shown first and outputs from their own model. The authors randomized order to control for this.\n  number: none\n  setup: Limitations section and App C.1\n  quote: \"we found that simulated annotators prefer the first outputs shown in the prompt and outputs that come from the same model as the simulator.\" / \"We found randomization to be important given that the first output is often preferred by simulated annotators.\"\n  where: p12 §7; p20 App C.1\n- claim: Bias (error vs the human majority) is low for the pools and on par with the best GPT-4 judge. Single evaluators have less variance than humans.\n  number: bias 0.38 (eval), 0.35 (train), 0.33 (GPT-4); single-evaluator variance <0.2 vs human 0.34\n  setup: Fig 7. Bias is the majority of 4 simulated annotators vs the majority of 4 humans.\n  quote: \"single evaluators have a smaller variance (less than 0.2) than humans (blue line, 0.34)\" / \"both have low bias values (0.38 and 0.35) on par with one of our best GPT-4 annotators (0.33).\"\n  where: p21. Note: this gives human variance as 0.34, while the same paragraph and §4.3 give 0.35.\n- claim: Most disagreement inside the judge pool comes from the underlying model, not from the prompt.\n  number: none\n  setup: Fig 8 pairwise-agreement heatmap; the pool has 5 GPT-4, 4 ChatGPT and 4 Davinci003 judges\n  quote: \"the largest source of variability between annotators comes from the underlying model, as illustrated by the clusters that arise from GPT4, ChatGPT and Davinci003 annotators.\"\n  where: p21\n- claim: Win-rates on the composite eval set track win-rates on real Alpaca Demo instructions.\n  number: R² 0.97, Spearman 0.90\n  setup: 11 systems judged by p_eval_sim on 200 filtered demo instructions vs the 805-instruction set\n  quote: \"R2 = 0.97 Spearman Correlation: 0.90\"\n  where: p9 Fig 6\n- claim: There were two rank flips between simulated and human judging.\n  number: SFT10k vs SFT52k human 44.3 vs 40.7, sim 36.7 vs 39.2; PPO vs ChatGPT human 55.1 vs 52.9, sim 46.8 vs 61.4\n  setup: Table 2\n  quote: \"human annotators preferred SFT10k (44.3% vs 40.7%) while the simulator had the opposite preference (36.7% vs 39.2%, Table 2)\"\n  where: p7\n- claim: The cost headline varies by passage: 50x, 45x and 25x. The overall experiment is $70 vs $3,150.\n  number: $6 per 1000 (train annotator, 50x); 45x; Fig 1: $70/hours vs $3,150/days\n  setup: The train annotator labels only half the outputs because of the Bernoulli mixture\n  quote: \"annotating 1000 outputs using simulated preference only costs $6, which is 50x cheaper than human annotation\" / \"at a cost that is 45x cheaper than crowdworkers\"\n  where: p4–5; p1\n- claim: The human baseline was a qualified MTurk pool.\n  number: 16 of 34 kept (>70% agreement with the authors); $21/hr median; $3000 for PREF; $242 per model eval\n  quote: \"we selected the 16 whose agreement rate was higher than 70% with the authors' annotations... a one-time $3000 cost of annotating our PREF split and a recurring $242 cost for evaluating a single model on the 805 evaluation instructions.\"\n  where: p7 §4.1\n- claim: There is a faithfulness-performance tradeoff. A noisy, faithful simulator is good for choosing a method, but a consistent single judge trains a better model for direct deployment.\n  number: PPO on GPT-4 judge 50% vs PPO on AlpacaFarm 43% (human win-rate); PPO human 55%\n  quote: \"more faithful simulators, which display greater over-optimization, train objectively worse models.\"\n  where: p11 Table 4\n\nLIMITS: The tasks are simple and single-turn, and every fine-tuned model starts from LLaMA 7B. Human validation rests on a small crowd pool: §7 says \"13 crowdworkers\", while §4.1 says 16 were selected and App D says one outlier was removed. The crowd itself prefers long outputs. The method assumes an oracle LLM stronger than the models being trained. Hyperparameters do not transfer: the KL coefficient was 0.02 for human PPO and 0.002 for simulated PPO. There may be other judge biases the authors did not find. Pairwise win-rate \"does not provide a deep understanding of the differences between two models\". ChatGPT and GPT-4 were length-capped, which skews their win-rates. Length gains may hide hallucination. The judges are 2023 models (GPT-4-0314, ChatGPT, Davinci003), and the authors point to AlpacaEval for better automatic annotators.\n\nBUILDS ON: The paper credits Chiang & Lee 2023 and G-Eval (Liu et al. 2023) for using LLMs as annotator proxies. It also cites Peng et al. 2023, Perez et al. 2022, and Zheng et al. 2023 (MT-Bench/Chatbot Arena). Constitutional AI (Bai et al. 2022) is the contrast case, because it adds no noise. Gao, Schulman & Hilton 2022 is cited for over-optimization. Methods: InstructGPT (Ouyang et al. 2022), PPO (Schulman et al. 2017), Christiano et al. 2017, DPO (Rafailov et al. 2023), Quark (Lu et al. 2022), Bradley & Terry 1952, Stiennon et al. 2020 for best-of-n, and the Alpaca data (Taori et al. 2023). It also cites AlpacaEval (Li et al. 2023).\n\nCODE: No code listings. The prompts are only at github.com/tatsu-lab/alpaca_farm. Practical judge tricks from App C.1 (p20):\n- Randomize the order of the two outputs.\n- Batch up to 5 items per GPT-4 call (\"could fit batch size up to 20 ... without significantly decreasing performance\").\n- For ChatGPT, apply a negative logit bias to \"Neither\" and \"Both\", or ask for JSON with a short explanation and a boolean.\n- Sample judges at temperature 1.0. The single GPT-4 judge uses temperature 0.\n\nFIGURES:\n- Fig 4 (p7), price vs human-mode agreement for every judge. It shows the cost and agreement claim in one picture.\n- Fig 3 (p6), sim vs human win-rate scatter. It is the ranking-agreement claim in one picture.\n- Fig 5 (p8), over-optimization appears for human and AlpacaFarm judges and not for single GPT-4. It shows why a deterministic judge misleads.\n- Fig 7 (p21), bias vs variance of the judges.\n- Fig 12/13 (p26), the label-noise ablation and flip-rate sweep.\n\nPROBLEMS: There are no embedded instructions. The extraction is clean apart from figure-axis debris and split numbers in Table 2 (\"69 .8\"). Fig 4's caption refers to a colour symbol that did not extract. The figure data and the Fig 13 curves are images, so I read only their captions. The paper is internally inconsistent on the cost multiple (45x, 50x, 25x), on human variance (0.34 vs 0.35) and on the crowdworker count (13 vs 16)."
+ "type": "benchmark",
+ "question": "Can LLM-simulated human pairwise feedback, an automatic win-rate evaluation and reference implementations let researchers develop methods that learn from human feedback cheaply and have the insights transfer to real human feedback?",
+ "hypothesis": "Method rankings obtained in simulation (simulated feedback and simulated evaluation) will match rankings obtained with real human feedback and human evaluation.",
+ "contributions": [
+  "LLM prompts simulating human pairwise feedback, cheaper than crowdworkers with high agreement",
+  "An automatic evaluation validated against real-world (Alpaca Demo) instructions",
+  "Reference implementations of PPO, best-of-n, expert iteration, DPO, Quark, binary FeedME and reward conditioning",
+  "End-to-end validation: eleven systems trained/evaluated in simulation vs on 10k real human preference pairs"
+ ],
+ "method": {
+  "summary": "Simulator that replaces crowdworker pairwise labels with a pool of 13 prompted OpenAI-model annotators (plus 25% label flips for training), evaluates by win-rate against Davinci003 on 805 instructions, and implements six learning-from-pairwise-feedback methods on a LLaMA 7B SFT model. Validated by training the same methods on 10k human-labelled pairs and comparing method rankings.",
+  "task": "instruction following; learning from pairwise feedback (RLHF-style) and pairwise LLM-judge evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Alpaca data (AlpacaFarm splits)",
+    "role": "train",
+    "size": "52k (x,y) examples; 42k used: SFT 10k, PREF 10k, unlabeled 20k, validation 2k (10k left unused)",
+    "split": "SFT 10k / PREF 10k / unlabeled 20k / val 2k",
+    "source": "Alpaca (Taori et al.)",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaFarm evaluation set",
+    "role": "eval",
+    "size": "805 instructions: 252 self-instruct, 188 OASST, 129 Anthropic helpful, 80 Vicuna, 156 Koala",
+    "split": null,
+    "source": "public test sets combined to mimic Alpaca Demo",
+    "preprocessing": null
+   },
+   {
+    "name": "Alpaca Demo instructions",
+    "role": "eval",
+    "size": "200 instructions hand-filtered (no PII, toxic, or chatbot-referring)",
+    "split": null,
+    "source": "real user interactions with Alpaca Demo; not released",
+    "preprocessing": "manual filtering"
+   },
+   {
+    "name": "Human pairwise preferences on PREF split",
+    "role": "train",
+    "size": "10k pairs; approx 20K pairs planned in guideline",
+    "split": null,
+    "source": "Amazon Mechanical Turk, 16 selected of 34 annotators",
+    "preprocessing": "4-way rating binarized; about 18% were 'slightly better' and treated as normal labels"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA 7B fine-tuned SFT 10k",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLaMA 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca 7B (SFT 52k)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLaMA 7B finetuned on all splits",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (gpt-4-0314), ChatGPT (gpt-3.5-turbo-0301), Davinci001 (text-davinci-001), Davinci003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Davinci003 is the reference model; GPT-4/ChatGPT/Davinci003 also power the simulated annotators"
+    }
+   },
+   {
+    "name": "Surrogate reward model",
+    "role": "reward",
+    "params": null,
+    "architecture": "classifier fine-tuned from SFT base, Bradley-Terry loss",
+    "init_from": "SFT 10k",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT; Bradley-Terry reward model (Eq 2); PPO KL-regularised reward (Eq 3); DPO (Eq 1); best-of-n SFT for expert iteration; top-quantile Quark",
+   "optimizer": null,
+   "lr": "PPO peak 1e-5 decayed to 0; Quark peak 3e-6 decayed to 0; DPO peak 1e-5",
+   "lr_schedule": "PPO and Quark decay to 0; DPO linear warmup then linear decay to 0",
+   "warmup": "DPO: 3% of training",
+   "batch_size": "PPO/Quark: 512 rollouts per step, 2 epochs of gradient updates with batch 256; DPO: 64",
+   "steps": "PPO: 10 passes over unlabeled set = 390 steps (peak at 40-80 steps); Quark 390 steps",
+   "epochs": "DPO: 1 epoch",
+   "tokens": null,
+   "seq_len": "outputs under 300 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "PPO KL coefficient 0.02 (human), 0.002 (simulated); Quark KL 0.05; DPO beta 0.1; gradient clip Euclidean norm 1",
+   "hardware": "single 8xA100 machine (DPO on 4xA100)",
+   "compute": "most methods under 2 hrs; best-of-16 sampling for expert iteration about 4 h on 20k unlabeled then under 1 h fine-tune; DPO 1 epoch under 3 h",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ppo": "advantage normalised across whole rollout batch; value model initialised from reward model; GAE lambda=gamma=1; fixed KL coef",
+    "sft_reward_hparams": "SFT and reward-model hyperparameters not stated in text",
+    "best_of_n": "n=1024 in main experiments; optimal n about 16",
+    "expert_iteration": "single round, trained on best-of-16 outputs"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.7 for all systems except best-of-n (SFT 10k reranked at 1.0); API models at 0.7",
+   "top_p": "1.0 for API models",
+   "max_tokens": "300",
+   "samples": "best-of-n: n=1024 (Table 2); no repeat runs or seeds stated",
+   "prompting": "ChatGPT/GPT-4 system prompt asks for response under 1000 / 500 characters (text says ChatGPT and Davinci003 in one sentence and ChatGPT and GPT-4 in the next)",
+   "retrieval": null,
+   "parameters": {
+    "annotator_pool": "13 annotators: 5 GPT-4, 4 ChatGPT, 4 Davinci003; sampling temp 1.0, top-p 1.0",
+    "label_flip_train": "0.25",
+    "gpt4_single_annotator": "temperature 0, batch size 5",
+    "gpt4_batch_size_max": "5 (up to 20 fit)",
+    "order": "output order randomised"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "win-rate vs Davinci003",
+     "definition": "percentage of 805 instructions where the model output is preferred to Davinci003's by simulated (p_eval_sim, no noise) or human annotators",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "agreement with human majority",
+     "definition": "agreement of an annotator with majority vote of 3 human annotations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "annotator variance/bias",
+     "definition": "variance = error of a held-out annotation vs majority of 3 draws; bias = error between majority of 4 simulated and 4 human annotators",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "Spearman correlation of method rankings",
+     "definition": "simulated vs human win-rates over 11 systems",
+     "unit": "rho",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SFT 10k",
+    "SFT 52k",
+    "GPT-4",
+    "ChatGPT",
+    "Davinci001",
+    "LLaMA 7B"
+   ],
+   "protocol": "Each method M is trained and tuned in simulation, and some are retrained on human preferences with hyperparameter ranges from simulation; both are judged against Davinci003 by simulated and human annotators respectively. Win-rates reported with standard errors. Quark and reward conditioning not run with humans. Single run per method stated."
+  },
+  "availability": {
+   "code": "https://github.com/tatsu-lab/alpaca_farm",
+   "weights": null,
+   "data": "released with the repo (simulator, human preference data); Alpaca Demo data not released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Method rankings in simulation match rankings with human feedback across 11 systems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman",
+   "value": 0.98,
+   "unit": "rho",
+   "baseline_value": null,
+   "n": null,
+   "setup": "11 systems (6 LPF methods plus GPT-4, ChatGPT, Davinci001, LLaMA 7B, Alpaca 7B); win-rate vs Davinci003 on 805 instructions; 5 of the 11 are untrained API/base models whose x and y differ only in the evaluator",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "the rankings have a Spearman correlation of 0.98, which suggests that AlpacaFarm faithfully captures the rankings among different LPF methods"
+  },
+  {
+   "claim": "Excluding the untrained systems, rank correlation is lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman",
+   "value": 0.94,
+   "unit": "rho",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 caption: only models the authors trained",
+   "note": null,
+   "where": "Fig 3 caption",
+   "quote": "Without those points, we have R2 = 0.83 and a Spearman Correlation of 0.94."
+  },
+  {
+   "claim": "Simulated annotator pool agrees with the human majority as well as a held-out human does.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 65,
+   "unit": "%",
+   "baseline_value": 66,
+   "n": null,
+   "setup": "p_eval_sim vs majority of 3 human annotations",
+   "note": "Sec 3.2 attributes 65% vs 66% to the single-prompt p_GPT-4_sim instead; Sec 4.3 attributes it to p_eval_sim",
+   "where": "Sec 4.3",
+   "quote": "our evaluator pevalsim (green) has a 65% agreement rate with the human majority vote"
+  },
+  {
+   "claim": "Simulated evaluator is 25x cheaper than human.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per 1000 examples",
+   "value": 12,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "p_eval_sim vs humans at $300",
+   "note": "Elsewhere 50x ($6 per 1000, training annotator) and 45x are quoted",
+   "where": "Sec 4.3",
+   "quote": "pevalsim is 25× cheaper ($300 →$12 per 1000 examples)"
+  },
+  {
+   "claim": "Best single GPT-4 prompt exceeds the pool's agreement but is not used because it lacks variability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single GPT-4 prompt, Fig 4",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "one of the GPT-4 prompts achieving 68% agreement"
+  },
+  {
+   "claim": "Single GPT-4 annotator has far lower variance than humans, so no over-optimization appears.",
+   "kind": "measured",
+   "source": null,
+   "metric": "variance",
+   "value": 0.1,
+   "unit": "error",
+   "baseline_value": 0.35,
+   "n": null,
+   "setup": "held-out annotation vs majority of 3 draws",
+   "note": "App C.2 gives human variance as 0.34 in one place and 0.35 in another",
+   "where": "Sec 4.3",
+   "quote": "the GPT-4 annotator has a much lower variance at 0.1"
+  },
+  {
+   "claim": "Evaluation pool variance is close to human.",
+   "kind": "measured",
+   "source": null,
+   "metric": "variance",
+   "value": 0.26,
+   "unit": "error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "p_eval_sim",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "At 0.26 for pevalsim and 0.43"
+  },
+  {
+   "claim": "PPO is the best LPF method, human win-rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 55.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B SFT 10k + PPO on human feedback vs Davinci003; 805 instr",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PPO, column Human Win-rate (%)"
+  },
+  {
+   "claim": "PPO simulated win-rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 46.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PPO trained and evaluated in simulation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PPO, column Simulated Win-rate (%)"
+  },
+  {
+   "claim": "GPT-4 human win-rate vs Davinci003.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 69.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 prompted for under 500 chars",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4*†, column Human Win-rate (%)"
+  },
+  {
+   "claim": "SFT 10k human win-rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 44.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B-based system vs Davinci003 on 805 AlpacaFarm instructions, human annotators (Table 2)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SFT 10k, column Human Win-rate (%)"
+  },
+  {
+   "claim": "Best-of-1024 human win-rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 50.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B-based system vs Davinci003 on 805 AlpacaFarm instructions, human annotators (Table 2)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Best-of-1024, column Human Win-rate (%)"
+  },
+  {
+   "claim": "Expert iteration human win-rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": 45.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B-based system vs Davinci003 on 805 AlpacaFarm instructions, human annotators (Table 2)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Expert Iteration, column Human Win-rate (%)"
+  },
+  {
+   "claim": "Win-rates on the composite eval set track those on real Alpaca Demo instructions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2",
+   "value": 0.97,
+   "unit": "R2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "11 systems judged by p_eval_sim, 200 demo instructions",
+   "note": "Spearman 0.90 in Fig 6",
+   "where": "Fig 6",
+   "quote": "R2 = 0.97"
+  },
+  {
+   "claim": "PPO improves over SFT 10k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate gain",
+   "value": 10,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "simulated; abstract",
+   "note": "Intro says 44% to 55%",
+   "where": "Abstract",
+   "quote": "our reference PPO implementation leads to a +10% improvement in win-rate against Davinci003"
+  },
+  {
+   "claim": "PPO trained on a single GPT-4 annotator transfers better to humans than PPO trained on the AlpacaFarm annotators.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human win-rate",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": 43,
+   "n": null,
+   "setup": "PPO step 30 on GPT-4 annotator",
+   "note": "PPO_ann_sim 43%; PPO_human 55%",
+   "where": "Table 4",
+   "table": "Table 4, row PPO_GPT-4_sim, column Human Win-rate (%)"
+  },
+  {
+   "claim": "Label noise of 25% is the smallest tested ratio that induces over-optimization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "label flip ratio",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tested 0, 17.5, 25, 35%",
+   "note": null,
+   "where": "App E.1",
+   "quote": "The exact ratio of 25% label noise was chosen to be the smallest considered ratio that induced overoptimization"
+  },
+  {
+   "claim": "Humans and simulated annotators both prefer longer outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference for longer",
+   "value": 64,
+   "unit": "%",
+   "baseline_value": 62,
+   "n": null,
+   "setup": "simulated annotators",
+   "note": null,
+   "where": "App C.2",
+   "quote": "humans prefer longer outputs 62% of the time, while our simulated annotators prefer those 64% of the time"
+  },
+  {
+   "claim": "Human crowdworker cost for evaluating one model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": 242,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "805 instructions, MTurk median hourly rate $21",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "a recurring $242 cost for evaluating a single model on the 805 evaluation instructions"
+  },
+  {
+   "claim": "Average output length grows after PPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "chars",
+   "value": 637.7,
+   "unit": "characters",
+   "baseline_value": 277.5,
+   "n": null,
+   "setup": "PPO 20 steps on simulated preferences; SFT 10K 277.5",
+   "note": "Sec 5.2 text says 637 tokens, tables report characters",
+   "where": "Table 7",
+   "table": "Table 7, row PPO 20 steps"
+  }
+ ],
+ "limits": [
+  "Instructions are simple and single-turn, even the Demo ones",
+  "All fine-tuned models start from LLaMA 7B",
+  "Human validation from a small crowd (text says 13 crowdworkers; 16 selected, one outlier removed)",
+  "Assumes an oracle LLM much stronger than the models studied",
+  "Hyperparameters (e.g. KL coefficient) differ between simulated and human feedback",
+  "Simulated annotators prefer the first output and outputs from the same model",
+  "Rank mismatches: SFT10k vs SFT52k and ChatGPT vs PPO",
+  "Judges use 2023 OpenAI models; length bias: ChatGPT shortened prompt makes PPO beat it"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LPF",
+   "definition": "learning from pairwise feedback",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "RLHF pipeline replicated in simulation",
+   "quote": null
+  },
+  {
+   "work": "Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "52k instructions and Alpaca 7B",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model 7B",
+   "quote": null
+  },
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DPO reference method",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PPO",
+   "quote": null
+  },
+  {
+   "work": "Quark",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "top-quantile variant",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "related",
+   "note": "AI feedback without injected noise",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for reward model overoptimization (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2210.10760",
+   "relation": "related",
+   "note": "over-optimization",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "successor evaluator",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The ranking of methods trained and evaluated in AlpacaFarm matches that of methods trained and evaluated in the human-based pipeline.",
+   "page": 6,
+   "why": "main validation scatter"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Simulated annotators are cheap and have a high agreement with human annotators.",
+   "page": 7,
+   "why": "price vs agreement"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The added variability in AlpacaFarm annotators is needed to reproduce reward model over-optimization seen in human data.",
+   "page": 8,
+   "why": "shows single GPT-4 judge misses over-optimization"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not printed in PDF text (arXiv v4, 8 Jan 2024); venue set to preprint",
+  "SFT and reward-model training hyperparameters not given in text",
+  "Sec 5.2 says 637 tokens where Table 7 reports characters",
+  "Sec 3.2 vs 4.3 attribute 65% vs 66% to different annotators",
+  "Annotator prompt texts are not in the PDF; they live in the GitHub repo"
+ ]
 }

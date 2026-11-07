@@ -1,0 +1,604 @@
+{
+ "schema": 1,
+ "key": "2307.02485",
+ "pdf": "generative-ai/03-agentic-foundations/sources/zhang-2023-building-cooperative-embodied-agents-modularly.pdf",
+ "bib": {
+  "title": "Building Cooperative Embodied Agents Modularly with Large Language Models",
+  "authors": [
+   "Hongxin Zhang",
+   "Weihua Du",
+   "Jiaming Shan",
+   "Qinhong Zhou",
+   "Yilun Du",
+   "Joshua B. Tenenbaum",
+   "Tianmin Shu",
+   "Chuang Gan"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v2, 17 Feb 2024)",
+  "arxiv": "2307.02485",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 94334,
+  "chars_total": 94334,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can LLMs be used to build embodied agents that plan, communicate and cooperate with other agents and humans under decentralized control, partial observation and costly communication?",
+ "hypothesis": "LLMs' commonsense, reasoning and language generation, inside a cognitive-inspired modular framework, can yield efficient cooperative embodied agents that beat planning-based baselines.",
+ "contributions": [
+  "Formalized a multi-agent embodied cooperation problem with decentralized control, complex partial observation, costly communication and long-horizon multi-objective tasks, instantiated in C-WAH and TDW-MAT.",
+  "Presented CoELA, a cognitive-inspired modular framework (Perception, Memory, Communication, Planning, Execution) that uses LLMs for planning and communication.",
+  "Ran a user study of human-AI cooperation with LLM agents."
+ ],
+ "method": {
+  "summary": "CoELA has five modules; an LLM drives the Communication module (message generation) and the Planning module (zero-shot CoT choice from a multiple-choice Action List); perception uses a fine-tuned Mask-RCNN and execution uses A*-based procedures. Evaluated on TDW-MAT and C-WAH with GPT-4, LLAMA-2-13b-chat and a LoRA-fine-tuned CoLLAMA, plus an 8-subject human study.",
+  "task": "decentralized two-agent embodied cooperative rearrangement/transport with natural language communication",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TDW-MAT",
+    "role": "eval",
+    "size": "24 test episodes (6 scenes from TDW-House x 2 task types, food and stuff)",
+    "split": "4 floorplans x 3 layouts; two floorplans train, two test; horizon 3000 frames",
+    "source": "extended from ThreeDWorld Transport Challenge (Gan et al., 2022); 10 target objects and 2 to 5 containers per task",
+    "preprocessing": null
+   },
+   {
+    "name": "C-WAH",
+    "role": "eval",
+    "size": "10 test episodes (2 tasks x 5 activity types)",
+    "split": "horizon 250 steps; 3 to 5 subgoals per task",
+    "source": "extended from Watch-And-Help (Puig et al., 2021) on VirtualHome-Social; symbolic and visual observation",
+    "preprocessing": null
+   },
+   {
+    "name": "Mask-RCNN fine-tuning images (TDW)",
+    "role": "train",
+    "size": "53K 512x512 RGB images",
+    "split": "train scenes",
+    "source": "randomly sampled in TDW training environments, ground-truth masks from the environment",
+    "preprocessing": "Mask-RCNN pre-trained on MS COCO"
+   },
+   {
+    "name": "CoLLAMA trajectories",
+    "role": "train",
+    "size": "2k trajectories from 10 TDW-MAT training episodes, 572 manually filtered",
+    "split": "train",
+    "source": "collected with GPT-4 driven CoELA",
+    "preprocessing": "manual filter for effective communication and good reasoning trace"
+   }
+  ],
+  "models": [
+   {
+    "name": "CoELA (GPT-4)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM-driven modular agent",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLAMA-2-13b-chat",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CoLLAMA",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": null,
+    "init_from": "LLAMA-2-13b-chat",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max sequence length 2048 in fine-tuning",
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ablation, Fig 4c"
+    }
+   },
+   {
+    "name": "Mask-RCNN",
+    "role": "base",
+    "params": null,
+    "architecture": "instance segmentation",
+    "init_from": "MS COCO pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "test mAP@50": "81.4%"
+    }
+   },
+   {
+    "name": "Multi-Agent Transformer (MAT)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "centralized decision transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "hidden layer dim 64",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "CoLLAMA: LoRA fine-tuning of LLAMA-2-13b-chat on filtered CoELA trajectories (objective not spelled out); MAT: MARL (PPO)",
+   "optimizer": null,
+   "lr": "CoLLAMA max 4e-4; MAT 7e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "384 (CoLLAMA)",
+   "steps": "approximately 60 steps (CoLLAMA); MAT 2e5 frames",
+   "epochs": "30 (CoLLAMA); ppo epoch 10 (MAT)",
+   "tokens": null,
+   "seq_len": "2048 max (CoLLAMA)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "LoRA rank/alpha": null,
+    "MAT input": "top-down semantic map (12,24), 9 channels, plus agent info; actions explore/nearest target/nearest container/goal, each up to 50 frames"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7",
+   "top_p": "1",
+   "max_tokens": "256",
+   "samples": "TDW-MAT: 5 runs for RHP, 1 run for CoELA; C-WAH: 5 runs for MHP, 1 run for CoELA (cost)",
+   "prompting": "zero-shot chain-of-thought ('Answer: Let's think step by step.') over a multiple-choice Action List; no few-shot demonstrations; Communication prompt = Instruction Head, Goal Description, State Description, Action History, Dialogue History, a closing note, and two seed messages",
+   "retrieval": "memory retrieval by templates; Episodic memory keeps last K actions and D dialogues (values not stated)",
+   "parameters": {
+    "K": null,
+    "D": null,
+    "message length limit": "500 characters"
+   },
+   "other": {
+    "api dates": "main experiments 2023.9.1-2023.9.28 and 2023.5.1-2023.5.16 (footnote)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Transport Rate (TR)",
+     "definition": "fraction of sub-goals satisfied on TDW-MAT",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average Steps L",
+     "definition": "steps taken to finish the task on C-WAH",
+     "unit": "steps",
+     "higher_is_better": false
+    },
+    {
+     "name": "Efficiency Improvement (EI)",
+     "definition": "dM/M0, M the main efficiency metric difference when cooperating vs alone, M0 the larger of the two",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Likert rating",
+     "definition": "human 7-point rating of communication effectiveness, helpfulness, trust",
+     "unit": "1-7",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RHP (rule-based hierarchical planner)",
+    "MHP (MCTS-based hierarchical planner)",
+    "MAT (multi-agent transformer, oracle map, central observation)"
+   ],
+   "protocol": "Human study: 8 subjects, 10 tasks, each task done by at least 2 subjects, 80 trials, four scenarios (MHP, CoELA, CoELA w/o communication, alone); t-test for trust."
+  },
+  "availability": {
+   "code": "project website https://vis-www.cs.umass.edu/Co-LLM-Agents/ (videos)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Communication note",
+    "text": "Note: The generated message should be accurate, helpful, and brief. Do not generate repetitive messages.",
+    "where": "A.3"
+   },
+   {
+    "purpose": "Seed dialogue messages",
+    "text": "Alice: \"Hi, I'll let you know if I find any goal objects, finish any subgoals, and ask for your help when necessary.\" Bob: \"Thanks! I'll let you know if I find any goal objects, finish any subgoals, and ask for your help when necessary.\"",
+    "where": "A.3"
+   },
+   {
+    "purpose": "Planning prompt, C-WAH (opening instruction)",
+    "text": "I'm Alice. I'm in a hurry to finish the housework with my friend Bob together. Given our shared goal, dialogue history, and my progress and previous actions, please help me choose the best available action to achieve the goal as soon as possible. Note that I can hold two objects at a time and there are no costs for holding objects. All objects are denoted as <name> (id), such as <table> (712).",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "Planning prompt, TDW-MAT (opening instruction)",
+    "text": "I'm Alice. My friend Bob and I want to transport as many target objects as possible to the bed with the help of containers within 3000 steps. I can hold two things at a time, and they can be objects or containers. I can grasp containers and put objects into them to hold more objects at a time.",
+    "where": "Table 6 (full prompt there; ends with 'Answer: Let's think step by step.')"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.metrics Efficiency Improvement",
+    "quote": "calculate Efficiency Improvement (EI) of cooperating with other agents as ∆M/M0",
+    "where": "5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CoELA with GPT-4 paired with RHP beats two RHP on TDW-MAT total transport rate (EI in parentheses).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transport Rate",
+   "value": "0.69 (36%)",
+   "unit": "TR (EI)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDW-MAT, RHP + CoELA vs RHP + RHP 0.61(29%); 1 run CoELA, 5 runs RHP",
+   "quote": "0.69(36%) v.s. 0.61(29%)",
+   "table": null,
+   "note": null,
+   "where": "5.3.1, Table 1"
+  },
+  {
+   "claim": "Two GPT-4 CoELA agents reach TR 0.71 without and 0.85 with oracle perception on TDW-MAT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transport Rate",
+   "value": "0.71",
+   "unit": "TR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDW-MAT total, CoELA+CoELA GPT-4, no oracle perception; 1 run",
+   "quote": "boost the TR to 0.71 and 0.85",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "On C-WAH symbolic observation, MHP + CoELA needs 59 steps against 75 for MHP + MHP (alone 111).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average steps",
+   "value": "59",
+   "unit": "steps",
+   "baseline_value": "75",
+   "n": null,
+   "setup": "C-WAH symbolic obs, 10 episodes; 5 runs MHP, 1 run CoELA",
+   "quote": null,
+   "table": "Table 2, row MHP + CoELA, column Symbolic Obs",
+   "note": "Text gives EI 45% vs 33%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "CoELA + CoELA reaches 57 steps (49% EI) on C-WAH symbolic observation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average steps",
+   "value": "57",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "C-WAH symbolic obs, 1 run",
+   "quote": null,
+   "table": "Table 2, row CoELA + CoELA, column Symbolic Obs",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Fine-tuned CoLLAMA reaches 0.70 total TR on TDW-MAT, against 0.53 for un-tuned LLAMA-2 and 0.71 for GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transport Rate",
+   "value": "0.70",
+   "unit": "TR",
+   "baseline_value": "0.53",
+   "n": null,
+   "setup": "TDW-MAT, CoELA+CoELA with each LLM, no oracle perception; LoRA on 572 filtered trajectories",
+   "quote": "competitive performance of 0.70 TR",
+   "table": null,
+   "note": "Table 1 gives 0.53 for LLAMA-2 and 0.70 for CoLLAMA-2 (Total); LLAMA-2 and CoLLAMA column assignment inferred from the extracted table order.",
+   "where": "5.3.1, Table 1"
+  },
+  {
+   "claim": "With oracle perception, LLAMA-2 scores 0.62 and CoLLAMA 0.80 total TR; MAT scores 0.15.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transport Rate",
+   "value": "0.80",
+   "unit": "TR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDW-MAT w/ oracle perception, total",
+   "quote": null,
+   "table": "Table 1, row TDW-MAT w/ Oracle Perception Total, CoLLAMA-2 column",
+   "note": "Column order inferred from the extracted text: GPT-4 0.85, LLAMA-2 0.62, CoLLAMA 0.80, MAT 0.15.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Humans gave CoELA with natural-language communication a trust score of 6.3 against 4.7 for CoELA without communication.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trust rating",
+   "value": "6.3",
+   "unit": "7-point Likert",
+   "baseline_value": "4.7",
+   "n": null,
+   "setup": "C-WAH human study, 8 subjects, 80 trials, t-test p=0.0003",
+   "quote": "trust score of 6.3 v.s. 4.7",
+   "table": null,
+   "note": null,
+   "where": "5.3.2"
+  },
+  {
+   "claim": "Disabling communication between two AI agents caused no significant performance drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "C-WAH ablation, Fig 4c (values only in the figure)",
+   "quote": "We did not observe a significant performance drop when disabling communication among AI agents",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Removing the Memory Module nearly doubles the steps needed to finish the task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "C-WAH ablation, Fig 4c",
+   "quote": "the steps needed to finish the task for the agent with no Memory Module nearly double",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Replacing GPT-4 with GPT-3.5 makes CoELA need more steps; GPT-3.5 makes more reasoning errors and more unuseful messages.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "C-WAH ablation, Fig 4c",
+   "quote": "the agents would need more steps to finish the task",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Removing the Execution Module so the LLM issues low-level control made all trials perform poorly; none finished any task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative; no numbers",
+   "quote": "all our trials perform poorly and struggle to finish any task",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Fine-tuned Mask-RCNN reaches 81.4% mAP@50 on the TDW test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP@50",
+   "value": "81.4",
+   "unit": "% mAP@50",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDW-MAT, 53K training images",
+   "quote": "81.4% mAP@50",
+   "table": null,
+   "note": null,
+   "where": "A.1"
+  },
+  {
+   "claim": "TDW-MAT RHP alone total TR is 0.43 (oracle perception 0.50).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transport Rate",
+   "value": "0.43",
+   "unit": "TR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDW-MAT total, 5 runs",
+   "quote": null,
+   "table": "Table 1, row Total, column RHP",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "CoELA runs are 1 run per setting because of cost, so no variance is reported for CoELA (Table 1, Table 2).",
+  "Test sets are small: 24 episodes on TDW-MAT, 10 on C-WAH.",
+  "The authors concede limited use of 3D spatial information, no reasoning over low-level actions, and unstable complex reasoning (counting remaining goals).",
+  "Communication between AI agents gave no significant gain; the authors attribute this to the cost of communication and LLM limits.",
+  "Ablation values (Fig 4a-c) appear only in figures.",
+  "MAT baseline given oracle semantic map and central observation, so not a like-for-like comparison.",
+  "Models are 2023-era (GPT-4 API Sept 2023 or May 2023, LLAMA-2-13b-chat)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Efficiency Improvement (EI)",
+   "definition": "∆M/M0, difference of the main efficiency metric with a partner against alone, over the larger of the two",
+   "where": "5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Cognitive architectures (Laird, 2019; Langley et al., 2009)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "module design is inspired by cognitive architectures",
+   "quote": null
+  },
+  {
+   "work": "Watch-And-Help (Puig et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "C-WAH extends it; MHP baseline",
+   "quote": null
+  },
+  {
+   "work": "ThreeDWorld Transport Challenge (Gan et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "TDW-MAT extends it; RHP baseline",
+   "quote": null
+  },
+  {
+   "work": "Multi-Agent Transformer (Wen et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MARL baseline",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "planning prompt",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al., 2021)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "fine-tune CoLLAMA",
+   "quote": null
+  },
+  {
+   "work": "LLAMA-2 (Touvron et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "13b-chat",
+   "quote": null
+  },
+  {
+   "work": "Mask R-CNN (He et al., 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "perception",
+   "quote": null
+  },
+  {
+   "work": "Generative agents (Park et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM agents with memory",
+   "quote": null
+  },
+  {
+   "work": "Multiagent debate (Du et al., 2023)",
+   "year": 2023,
+   "arxiv": "2305.14325",
+   "relation": "related",
+   "note": "free self-talk, unlike costly communication here",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of CoELA. There are five key modules in our framework",
+   "page": 4,
+   "why": "shows the module and memory data flow"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Human experiments results (a) average steps (b) subjective rating; (c) ablation",
+   "page": 8,
+   "why": "holds the ablation numbers not in text"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Quantitative results on TDW-MAT",
+   "page": 7,
+   "why": "main TR and EI results"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Quantitative results on C-WAH",
+   "page": 6,
+   "why": "main step results"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 extracted as a flat column list; column assignment (GPT-4, LLAMA-2, CoLLAMA, MAT) inferred from order and text.",
+  "Fig 4 values are not in the text."
+ ]
+}

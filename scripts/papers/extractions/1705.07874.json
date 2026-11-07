@@ -1,19 +1,408 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1705.07874",
  "pdf": "data-science/sources/lundberg-2017-unified-approach-interpreting-model-predictions.pdf",
  "bib": {
   "title": "A Unified Approach to Interpreting Model Predictions",
-  "first_author": null,
-  "year": null,
-  "venue": null,
+  "authors": [
+   "Scott M. Lundberg",
+   "Su-In Lee"
+  ],
+  "first_author": "Lundberg",
+  "year": 2017,
+  "venue": "31st Conference on Neural Information Processing Systems (NIPS 2017)",
   "arxiv": "1705.07874",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 32135,
+  "chars_total": 32135,
+  "engine": "pymupdf",
+  "skipped": "Supplementary Material (proofs, Max SHAP algorithm, Supp. Fig 1) is not in the PDF"
  },
- "legacy_report": "SOURCE: A Unified Approach to Interpreting Model Predictions, Scott M. Lundberg and Su-In Lee, NIPS 2017 (arXiv:1705.07874v2, 25 Nov 2017)\n\nCOVERAGE: 31,941 of 31,941 chars, all 10 pages, references included. Pages 6-9 were also rendered and viewed to check flattened maths and read figures. The Supplementary Material (proofs, Max SHAP algorithm, Supp. Figure 1) is not in this PDF.\n\nCLAIMS\n- claim: Only one explanation model in the additive class satisfies local accuracy, missingness and consistency: the Shapley values. It is unique for a given input mapping.\n  number: 3 properties\n  setup: Theoretical. Holds for a fixed simplified-input mapping h_x, so a different mapping gives a different \"unique\" answer.\n  quote: \"Under Properties 1-3, for a given simpliﬁed input mappinghx, Theorem 1 shows that there is only one possible additive feature attribution method.\"\n  where: p4\n- claim: Methods not based on Shapley values break local accuracy and/or consistency.\n  number: none\n  setup: Follows from Theorem 1; the Section 2 methods already respect missingness.\n  quote: \"This result implies that methods not based on Shapley values violate local accuracy and/or consistency (methods in Section 2 already respect missingness).\"\n  where: p4\n- claim: Six existing methods share one explanation model: LIME, DeepLIFT, layer-wise relevance propagation, Shapley regression values, Shapley sampling values, Quantitative Input Influence.\n  number: 6\n  setup: Definition 1, a linear function of binary simplified inputs.\n  quote: \"The new class uniﬁes six existing methods, notable because several recent methods in the class lack the proposed desirable properties.\"\n  where: p1\n- claim: SHAP values are Shapley values of a conditional expectation of the model, so the definition has a fourth ingredient beyond the three properties.\n  number: 3 properties\n  setup: Definition; f(z_S) is approximated by E[f(z)|z_S] because most models cannot take arbitrary missing patterns.\n  quote: \"SHAP values provide the unique additive feature importance measure that adheres to Properties 1-3 and uses conditional expectations to deﬁne simpliﬁed inputs.\"\n  where: p5\n- claim: Feature independence and model linearity are optional simplifying assumptions in the estimators, not part of the definition.\n  number: none\n  setup: Eq. 9-12. Exact computation is called challenging, so the methods approximate.\n  quote: \"When using these methods, feature independence and model linearity are two optional assumptions simplifying the computation of the expected values\"\n  where: p5\n- claim: Kernel SHAP's regression route uses LIME's mapping, equivalent to Eq. 12, which assumes model linearity as well as independence.\n  number: none\n  setup: Model-agnostic Kernel SHAP.\n  quote: \"Since LIME uses a simpliﬁed input mapping that is equivalent to the approximation of the SHAP mapping given in Equation 12, this enables regression-based, model-agnostic estimation of SHAP values.\"\n  where: p6\n- claim: Kernel regression is exponential in features; the paper calls it efficient only for small M.\n  number: O(2^M + M^3) (the extraction loses the superscripts; checked on the rendered page)\n  setup: Linear regression using Theorem 2, under the Eq. 11 or 12 approximation.\n  quote: \"Since linear regression using Theorem 2 has complexityO(2M +M3), it is efﬁcient for small values ofM if we choose an approximation of the conditional expectations (Equation 11 or 12).\"\n  where: p6\n- claim: LIME's kernel, loss and regulariser are heuristic and do not recover Shapley values.\n  number: none\n  setup: Default LIME choices in Eq. 2. Theorem 2 gives the choices that do recover them.\n  quote: \"The LIME choices for these parameters are made heuristically; using these choices, Equation 2 does not recover the Shapley values.\"\n  where: p5\n- claim: Faster model-specific approximations exist; Max SHAP is one.\n  number: O(M^2) against O(M 2^M) (superscripts checked on the rendered page)\n  setup: A max function with M inputs.\n  quote: \"lets us compute the Shapley values of a max function with M inputs in O(M2) time instead of O(M2M).\"\n  where: p7\n- claim: Linear SHAP reads values from coefficients.\n  number: none\n  setup: Linear model, assuming input feature independence. Already noted by Štrumbelj and Kononenko.\n  quote: \"φi(f,x ) =wj(xj−E[xj])\"\n  where: p6\n- claim: Mechanical Turk participants' most common explanation agreed much more with SHAP than with other methods.\n  number: 30 and 52 people\n  setup: Two toy settings: a sickness score (A) and a three-man max allocation (B). Each human value is the modal answer. Assumes humans who understand the model are the right yardstick. No significance test or response distribution appears.\n  quote: \"Human feature impact estimates are shown as the most common explanation given among 30 (A) and 52 (B) random individuals, respectively.\"\n  where: p9, Fig 4; \"much stronger agreement\" on p8\n- claim: Kernel SHAP gave more accurate estimates in fewer model evaluations than Shapley sampling, and LIME's values differed from SHAP's.\n  number: 200 replicates; 10 features, and 3 of 100 used\n  setup: Two decision trees, one feature, a single input, 10th-90th percentile bands. The SHAP estimator used a debiased lasso. The accuracy claim is made \"particularly when regularization is added\", and the paper gives no numeric error.\n  quote: \"The 10th and 90th percentiles are shown for 200 replicate estimates at each sample size. (A) A decision tree model using all 10 input features is explained for a single input. (B) A decision tree using only 3 of 100 input features is explained for a single input.\"\n  where: p8, Fig 3\n- claim: On MNIST, estimates closer to SHAP gave a larger log-odds change when masking pixels to turn 8 into 3.\n  number: 20 random images, 20% of pixels masked, 50k samples\n  setup: Pre-trained CNN with 2 convolution and 2 dense layers. DeepLIFT explains a normalised linear layer while SHAP and LIME explain the output, so the targets differ. LIME was modified to single-pixel segmentation.\n  quote: \"SHAP and LIME were both run with 50k samples (Supplementary Figure 1); to improve performance, LIME was modiﬁed to use single pixel segmentation over the digit pixels. To match [7], we masked 20% of the pixels chosen to switch the predicted class from 8 to 3\"\n  where: p9\n\nLIMITS\n- There is no tree-specific method here. TreeExplainer comes from the later paper the note cites.\n- Empirical support is small: two toy user studies, two synthetic-scale decision trees on one input, one MNIST class pair on 20 images. No real-world dataset or decision-maker study.\n- The user study measures agreement with modal human answers, not whether explanations help anyone. Its yardstick is stated as an assumption (p8).\n- DeepLIFT appears only in Fig 4B, not 4A, although the text says all three methods were compared in two settings.\n- Correlated features are not studied. Fig 1's caption only says order matters when the model is non-linear or features are dependent. Causality is not discussed.\n- The authors name as next steps \"faster model-type-speciﬁc estimation methods that make fewer assumptions\" and interaction effects (p9).\n\nBUILDS ON: Shapley 1953 (value); Young 1985 (uniqueness axioms); Charnes et al. 1988 (equivalent quadratic formulation, found during preparation); Lipovetsky and Conklin 2001 (Shapley regression); Štrumbelj and Kononenko 2014 (sampling); Bach et al. 2015 (LRP); Ribeiro et al. 2016 (LIME); Datta, Sen and Zick 2016 (QII); Shrikumar et al. 2016 and 2017 (DeepLIFT).\n\nCODE: none in the paper. It links https://github.com/slundberg/shap (p1, footnote 1).\n\nFIGURES (read off the images, approximate, so not listed as quoted claims)\n- Fig 4, p9, human/SHAP/LIME/DeepLIFT bars: the best candidate, since one glance shows the disagreement. In A, Human and SHAP are about 1.0 for fever and cough while LIME is about -1.15. In B, Human and SHAP are 3, 2, 0, LIME about 2, 1, 0, Orig. DeepLIFT 5, 0, 0.\n- Fig 2A, p7, Shapley kernel vs LIME kernels over 2^15 subsets: shows weight concentrating on very small and very large subsets.\n- Fig 1, p5, base value to f(x) by conditioning: explains baseline and additivity faster than prose, and notes that order matters. Not viewed; caption only.\n- Fig 3, p8, estimates vs model evaluations: shows LIME converging to a different value (about 0.13 against about 0.33 in the dense panel).\n- Fig 5, p9, MNIST masking: median log-odds change about 32, 42, 47, 41 (Orig. DeepLIFT, New DeepLIFT, SHAP, LIME). LIME and New DeepLIFT overlap SHAP's range, so it is weaker evidence.\n\nPROBLEMS\n- Extraction flattens maths. Examples are \"O(2M +M3)\", \"215 vectors\" (2^15), \"O(M2M)\" and the Shapley kernel fraction. Do not copy formulas from the text layer; use the rendered pages (p6, p7).\n- Paper typos, as printed on the rendered pages: \"Kernal SHAP\" (p8), \"menthod\" (p3). Corollary 1 mixes indices (φ_i with w_j, x_j).\n- No embedded instructions.\n- The temporary PNGs are in /var/folders/f9/kl6j_lwx5p73h75kz13k6www0000gn/T/tmp.GzqAMVWsJy. No repo files were changed.\n\nCOMPARISON WITH THE NOTES\n\nPath correction: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/notes/05b-transformer-encoders.md does not cite this paper. It has no Lundberg, SHAP, Shapley, LIME or 1705 match, and line 399 is a `Conv1` class. The citation at line 399 is in /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/01-classical-ml/notes/05b-clustering-categorical-and-mixed-data.md, which I checked instead.\n\n/Users/ramsey-wise/workspace/learn-ai-engineering/data-science/01-classical-ml/notes/05b-clustering-categorical-and-mixed-data.md:399\n- \"SHAP assigns each feature an importance for a prediction\" matches the abstract. It is used only to define SHAP. No mismatch.\n- The paper does not test CatBoost or cluster-label surrogates, and the note does not say it does.\n\n/Users/ramsey-wise/workspace/learn-ai-engineering/data-science/01-classical-ml/notes/08-model-interpretability.md\n\nCorrect: the six methods (3 + 3 Shapley-based); the three properties; 30 and 52 people; two small problems; NIPS 2017; Kernel SHAP's independence assumption.\n\nMismatches:\n1. Line 211, \"Other model types use the slower Kernel SHAP.\" This conflicts with the paper's Section 4.2, which gives Linear, Low-Order, Max and Deep SHAP as faster options. Kernel SHAP is the model-agnostic option, and Shapley sampling is another. \"Slower\" is not sourced here, and the sentence carries no citation.\n2. Line 209, \"than LIME and DeepLIFT did.\" DeepLIFT is plotted only in the second problem (Fig 4B). LIME is in both. The paper's prose does say all three were compared, so this is a mismatch with the figure rather than the sentence.\n3. Line 209, local accuracy as \"the numbers sum to the prediction.\" The paper's Eq. 5 includes the base φ0. This also sits awkwardly with the note's own line 325 (\"sum to the prediction minus the baseline\") and the line 255 output, where 2.559 alone is not 0.172.\n\nUnder-qualified:\n4. Line 209, \"the unique solution.\" It omits \"for a given simplified input mapping\". Uniqueness does not choose the mapping or background, and line 296 only partly covers this as a pitfall.\n5. Line 326, \"What three properties define SHAP?\" The paper's definition adds conditional expectations for simplified inputs (p5).\n6. Line 267, Kernel SHAP \"assumes feature independence.\" This is true but incomplete: the regression route ties to Eq. 12, which also assumes model linearity (p5-6). The paper also calls these assumptions optional simplifications, so they belong to the estimator and not to SHAP itself.\n7. Line 209, missingness as \"an absent feature gets zero.\" In the paper this means x'_i = 0 in the simplified input, meaning not present. A learner could read it as value zero, yet the same note shows `capital-gain 0` at -0.253 (deck line ~419 too). Worth a clause.\n8. Line 209, consistency gloss. The paper compares two models and requires the contribution not to fall for all inputs z' (\"regardless of the other inputs\"). The note's \"matters more to the model\" drops both conditions.\n9. Line 328, \"SHAP's weights come from the Shapley axioms.\" That applies to Kernel SHAP's regression kernel (Theorem 2), not to SHAP generally.\n\nMissing setup:\n10. Line 209, the human study. Missing: the human value is the modal answer, the agreement yardstick is an assumption the authors state, and no significance test is reported. \"With 30 and 52 people\" reads as more evidence than that.\n11. Missing from the note entirely, available if wanted: Kernel SHAP's O(2^M + M^3) and the paper's \"efficient for small values of M\". That would give line 211's cost claim a sourced setup.\n\nNot from this source: line 267's correlated-features sentence and all causal claims. The paper supports only Fig 1's order-dependence remark and says nothing on causality. The note does not attribute them to it, so this is not a mismatch, but they need their own support.\n\nRelated items outside the requested scope:\n- /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/01-classical-ml/slides/deck.yaml:425 repeats item 4, the uniqueness claim without the mapping qualifier.\n- /Users/ramsey-wise/workspace/learn-ai-engineering/scripts/papers/ledger.jsonl:439 still shows this paper as `\"status\": \"queued\"`, and `\"area\": \"ai-engineering\"` although `\"topic\"` is classical-ml, while the notes and references row already cite it."
+ "type": "empirical",
+ "question": "How are existing methods for explaining individual model predictions related, and is there a unique feature-attribution measure with desirable properties?",
+ "hypothesis": "Shapley values of a conditional expectation function are the unique additive attribution satisfying local accuracy, missingness and consistency, and estimators built on this are more efficient and closer to human intuition than LIME and DeepLIFT.",
+ "contributions": [
+  "Define the class of additive feature attribution methods, unifying six methods",
+  "Show Shapley values are the unique solution in the class with three properties, and propose SHAP values",
+  "Propose Kernel SHAP, Deep SHAP (and Max SHAP, Linear SHAP, Low-Order SHAP) and show better efficiency and agreement with human intuition"
+ ],
+ "method": {
+  "summary": "Theory unifying LIME, DeepLIFT, LRP and Shapley-based methods as additive feature attribution; derives the Shapley kernel so weighted linear regression recovers Shapley values (Kernel SHAP) and adapts DeepLIFT to Deep SHAP. Evaluated on decision-tree sample efficiency, two MTurk studies and an MNIST convnet.",
+  "task": "local explanation of model predictions (feature attribution)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Simulated decision tree inputs (10 features; 3 of 100 features used)",
+    "role": "eval",
+    "size": "single explained input each",
+    "split": null,
+    "source": "not stated",
+    "preprocessing": null
+   },
+   {
+    "name": "MNIST",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "pre-trained model and example from Shrikumar et al. 2017",
+    "preprocessing": "inputs normalized between 0 and 1"
+   },
+   {
+    "name": "Amazon Mechanical Turk explanations of two toy problems",
+    "role": "eval",
+    "size": "30 and 52 participants",
+    "split": null,
+    "source": "MTurk",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Decision tree (dense, all 10 features; sparse, 3 of 100 features)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decision tree",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MNIST convolutional network",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "two convolution layers and 2 dense layers followed by a 10-way softmax output layer",
+    "init_from": "pre-trained model from Shrikumar et al. 2017",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 conv + 2 dense + softmax",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 3: 200 replicate estimates per sample size; MNIST: SHAP and LIME 50k samples; masking over 20 random images",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "kernel_shap_regression": "debiased lasso in Fig 3",
+    "shapley_kernel": "pi(z')=(M-1)/(C(M,|z'|)|z'|(M-|z'|)), Omega=0, squared loss",
+    "lime_mnist": "single pixel segmentation over the digit pixels",
+    "mnist_masking": "20% of pixels masked to switch predicted class 8 to 3",
+    "mnist_explained_output": "DeepLIFT versions explain a normalized version of the linear layer; SHAP and LIME explain the model output"
+   },
+   "other": {
+    "user_study_protocol": "participants assign credit among inputs; the most common explanation is plotted; number of items per participant, pay and exclusions not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Estimate convergence vs number of model evaluations",
+     "definition": "Feature importance estimate for one feature as evaluations increase, 10th and 90th percentiles over 200 replicates vs true Shapley value",
+     "unit": "feature importance",
+     "higher_is_better": null
+    },
+    {
+     "name": "Agreement with human explanations",
+     "definition": "Qualitative comparison with the most common human attribution",
+     "unit": "qualitative",
+     "higher_is_better": true
+    },
+    {
+     "name": "Change in log-odds after masking",
+     "definition": "Change in log-odds of switching 8 to 3 after masking 20% of pixels ranked by each method, over 20 random images",
+     "unit": "log-odds",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LIME (open-source implementation)",
+    "Shapley sampling values",
+    "original DeepLIFT",
+    "new DeepLIFT"
+   ],
+   "protocol": "No significance test reported; results shown in figures only (read-offs not given in text)."
+  },
+  "availability": {
+   "code": "https://github.com/slundberg/shap",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Only one additive feature attribution explanation model satisfies local accuracy, missingness and consistency: the Shapley values.",
+   "kind": "measured",
+   "metric": "properties",
+   "value": "3",
+   "unit": "properties",
+   "setup": "Theoretical; holds for a fixed simplified-input mapping h_x",
+   "quote": "Under Properties 1-3, for a given simpliﬁed input mapping hx, Theorem 1 shows that there is only one possible additive feature attribution method.",
+   "where": "Section 3"
+  },
+  {
+   "claim": "The class of additive feature attribution methods unifies six existing methods.",
+   "kind": "claim",
+   "metric": "methods unified",
+   "value": "six",
+   "unit": "methods",
+   "setup": "LIME, DeepLIFT, layer-wise relevance propagation, Shapley regression values, Shapley sampling values, Quantitative Input Influence",
+   "quote": "The new class uniﬁes six existing methods",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Methods not based on Shapley values violate local accuracy and/or consistency.",
+   "kind": "claim",
+   "setup": "Follows from Theorem 1; all Section 2 methods already satisfy missingness",
+   "quote": "This result implies that methods not based on Shapley values violate local accuracy and/or consistency (methods in Section 2 already respect missingness).",
+   "where": "Section 3"
+  },
+  {
+   "claim": "LIME's heuristic loss, kernel and regularizer do not recover Shapley values, so local accuracy and/or consistency are violated.",
+   "kind": "claim",
+   "setup": "Linear LIME with LIME's default choices",
+   "quote": "using these choices, Equation 2 does not recover the Shapley values.",
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Kernel SHAP gives more accurate estimates with fewer evaluations of the model than Shapley sampling and LIME, especially with regularization.",
+   "kind": "measured",
+   "setup": "One input each, decision tree using all 10 features (A) and 3 of 100 features (B); Kernel SHAP with debiased lasso; 10th and 90th percentiles over 200 replicates per sample size; no numeric values given (Fig 3)",
+   "quote": "This leads to more accurate estimates with fewer evaluations of the original model than previous sampling-based estimates of Equation 8, particularly when regularization is added to the linear model (Figure 3).",
+   "where": "Section 5.1, Fig 3"
+  },
+  {
+   "claim": "Human explanations in an MTurk study agreed much more with SHAP than with LIME or original DeepLIFT; the sickness-score setting had 30 participants.",
+   "kind": "measured",
+   "metric": "participants",
+   "value": "30",
+   "unit": "people",
+   "setup": "Sickness score: output 2 when fever and cough both present, 5 when only one, 0 otherwise; most common explanation shown; no significance test or agreement metric reported",
+   "quote": "Human feature impact estimates are shown as the most common explanation given among 30 (A) and 52 (B) random individuals, respectively.",
+   "note": "52 participants in the max-allocation setting (B)",
+   "where": "Fig 4, Section 5.2"
+  },
+  {
+   "claim": "The max-allocation human study had 52 participants.",
+   "kind": "measured",
+   "metric": "participants",
+   "value": "52",
+   "unit": "people",
+   "setup": "Three men, profit equals the maximum questions answered correctly (5, 4, 0 correct, so $5); compared LIME, original DeepLIFT, SHAP",
+   "quote": "Human feature impact estimates are shown as the most common explanation given among 30 (A) and 52 (B) random individuals, respectively.",
+   "where": "Fig 4"
+  },
+  {
+   "claim": "On MNIST, SHAP and LIME were each run with 50k samples; 20% of pixels were masked to switch the predicted class from 8 to 3, with change in log-odds over 20 random images favouring better Shapley approximations.",
+   "kind": "measured",
+   "metric": "samples",
+   "value": "50k",
+   "unit": "samples",
+   "setup": "Pre-trained convnet from Shrikumar et al. 2017 (2 conv + 2 dense + 10-way softmax); inputs in [0,1]; Kernel SHAP; LIME with single-pixel segmentation; log-odds values only in a figure",
+   "quote": "SHAP and LIME were both run with 50k samples (Supplementary Figure 1)",
+   "where": "Section 5.3, Fig 5"
+  },
+  {
+   "claim": "Linear regression with the Shapley kernel costs O(2^M + M^3), efficient for small M.",
+   "kind": "claim",
+   "metric": "complexity",
+   "setup": "With approximate conditional expectations (Eq 11 or 12)",
+   "quote": "Since linear regression using Theorem 2 has complexity O(2M + M 3), it is efﬁcient for small values of M",
+   "note": "Text extraction flattens the superscripts: 2^M and M^3",
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Max SHAP computes Shapley values of a max over M inputs in O(M^2) instead of O(M 2^M).",
+   "kind": "claim",
+   "metric": "complexity",
+   "setup": "Sorted-input permutation formulation; algorithm is in Supplementary Material, not in this PDF",
+   "quote": "lets us compute the Shapley values of a max function with M inputs in O(M 2) time instead of",
+   "note": "Superscripts flattened by extraction",
+   "where": "Section 4.2"
+  }
+ ],
+ "limits": [
+  "Uniqueness holds only for a given simplified-input mapping h_x.",
+  "Estimators assume feature independence and optionally model linearity (Eq 11, 12); the conditional expectation is approximated.",
+  "Evaluation is qualitative: figures only, no numeric accuracy, no significance test, user studies with 30 and 52 people on toy problems; the authors assume human agreement is the right yardstick.",
+  "Proofs, Max SHAP algorithm and Supp. Fig 1 are in a supplement not in this PDF.",
+  "Authors name faster model-type-specific methods with fewer assumptions and interaction effects as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "explanation model",
+   "definition": "any interpretable approximation of the original model",
+   "where": "Section 2"
+  },
+  {
+   "term": "additive feature attribution methods",
+   "definition": "have an explanation model that is a linear function of binary variables",
+   "where": "Definition 1"
+  },
+  {
+   "term": "local accuracy",
+   "definition": "the explanation model matches the output of f for the simplified input x' corresponding to x",
+   "where": "Property 1"
+  },
+  {
+   "term": "missingness",
+   "definition": "features missing in the original input have no impact (x'_i = 0 implies phi_i = 0)",
+   "where": "Property 2"
+  },
+  {
+   "term": "consistency",
+   "definition": "if a model changes so that some simplified input's contribution increases or stays the same regardless of the other inputs, that input's attribution should not decrease",
+   "where": "Property 3"
+  },
+  {
+   "term": "SHAP values",
+   "definition": "the Shapley values of a conditional expectation function of the original model",
+   "where": "Section 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Why should I trust you? (LIME), Ribeiro et al.",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Kernel SHAP is linear LIME with the Shapley kernel; compared as baseline",
+   "quote": null
+  },
+  {
+   "work": "Learning Important Features Through Propagating Activation Differences (DeepLIFT), Shrikumar et al.",
+   "year": 2017,
+   "arxiv": "1704.02685",
+   "relation": "extends",
+   "note": "Deep SHAP adapts DeepLIFT; MNIST model and example taken from it",
+   "quote": null
+  },
+  {
+   "work": "Not Just a Black Box, Shrikumar et al.",
+   "year": 2016,
+   "arxiv": "1605.01713",
+   "relation": "related",
+   "note": "earlier DeepLIFT",
+   "quote": null
+  },
+  {
+   "work": "Strumbelj and Kononenko, Explaining prediction models and individual predictions with feature contributions",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Shapley sampling values",
+   "quote": null
+  },
+  {
+   "work": "Datta, Sen, Zick, Quantitative input influence",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sampling approximation of Shapley values",
+   "quote": null
+  },
+  {
+   "work": "Lipovetsky and Conklin, Analysis of regression in game theory approach",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Shapley regression values",
+   "quote": null
+  },
+  {
+   "work": "Bach et al., layer-wise relevance propagation",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "unified as additive method",
+   "quote": null
+  },
+  {
+   "work": "Shapley, A value for n-person games",
+   "year": 1953,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Shapley values",
+   "quote": null
+  },
+  {
+   "work": "Young, Monotonic solutions of cooperative games",
+   "year": 1985,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "axioms for uniqueness",
+   "quote": null
+  },
+  {
+   "work": "Charnes et al., Extremal principle solutions of games",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "related",
+   "note": "equivalent constrained quadratic formulation found in econometrics",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "digit classification experiment",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SHAP values attribute to each feature the change in the expected model prediction when conditioning on that feature.",
+   "page": 4,
+   "why": "Shows the path from base value E[f(z)] to f(x) for one ordering"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of Kernel SHAP, Shapley sampling values and LIME as evaluations of the original model increase.",
+   "page": 8,
+   "why": "Sample efficiency at a glance"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Human feature impact estimates among 30 (A) and 52 (B) individuals.",
+   "page": 9,
+   "why": "Shows the human-agreement evidence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "g(z') = phi_0 + sum_{i=1}^{M} phi_i z'_i",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 8",
+   "snippet": "phi_i(f,x) = sum_{z' subset x'} |z'|!(M-|z'|-1)!/M! [f_x(z') - f_x(z' \\ i)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts in complexity expressions are flattened in the text layer.",
+  "Supplementary Material not included in the PDF."
+ ]
 }

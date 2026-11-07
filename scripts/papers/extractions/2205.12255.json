@@ -1,0 +1,98 @@
+{
+ "schema": 1,
+ "key": "2205.12255",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/parisi-2022-talm.pdf",
+ "bib": {"title": "TALM: Tool Augmented Language Models", "authors": ["Aaron Parisi", "Yao Zhao", "Noah Fiedel"], "first_author": "Parisi", "year": 2022, "venue": "preprint", "arxiv": "2205.12255", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 21738, "chars_total": 21738, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a text-to-text tool interface plus iterative self-play let small language models use non-differentiable tools and beat larger non-augmented LMs, starting from few tool demonstrations?",
+ "hypothesis": "Tool augmentation with self-play bootstrapping lets smaller models outperform larger non-augmented LMs, with less dependence on scale.",
+ "contributions": ["Demonstrating that language models can be augmented with tools via a text-to-text API.", "Demonstrating an iterative self-play technique to bootstrap tool-augmented datasets and subsequent tool-augmented model performance, from few labeled examples."],
+ "method": {
+  "summary": "T5 models are fine-tuned on sequences 'input |tool-call tool input |result tool output |output answer'; when the model generates the delimiter '|result' the tool is called and its output appended. Iterative self-play samples tool calls on the task set, keeps those whose answer matches the target within a threshold, and adds them to the tool-use set for the next fine-tuning round.",
+  "task": "tool-augmented QA (Natural Questions short answer, BM25 retrieval tool) and math word problems (MathQA, formula solver tool)",
+  "trains": true,
+  "datasets": [
+   {"name": "Natural Questions (short answer)", "role": "both", "size": "approx 300k training examples", "split": null, "source": "Kwiatkowski et al., 2019", "preprocessing": "Boolean questions removed. Oracle contexts not fed to the model; used to populate a BM25 index over the union of all NQ oracle contexts, which is the retrieval tool. Bootstrap: 150 tool demonstrations (Fig 5 caption)."},
+   {"name": "MathQA", "role": "both", "size": "approx 30k training examples", "split": null, "source": "Amini et al., 2019", "preprocessing": "Solver tool executes formulas and checks against text-form answers; approx 70% of formulas match their answers. Bootstrap set: random 10% of training examples with valid formula (approx 2k examples)."}
+  ],
+  "models": [
+   {"name": "T5 base / TALM (base)", "role": "proposed", "params": "220M", "architecture": "Seq2Seq (T5)", "init_from": "pretrained T5 (Raffel et al., 2019; t5x, Roberts et al., 2022)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "T5 large / TALM (large)", "role": "proposed", "params": "770M", "architecture": "Seq2Seq (T5)", "init_from": "pretrained T5", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "T5 XL / TALM (xl)", "role": "proposed", "params": "3B", "architecture": "Seq2Seq (T5)", "init_from": "pretrained T5", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Axis labels give 220M, 770M, 3000M; text says 220M base and 3B XL"}},
+   {"name": "LM (non-augmented T5, base/large/xl)", "role": "baseline", "params": "220M, 770M, 3B", "architecture": "Seq2Seq (T5)", "init_from": "pretrained T5", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Closed-book on NQ; how the baseline is trained is not described"}}
+  ],
+  "training": {
+   "objective": "Maximise product over D of P(y|x,t,r) P(t|x) (fine-tune on tool-use set; Algorithm 1)",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null,
+   "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null,
+   "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null,
+   "compute": null, "wall_clock": null, "seeds": null,
+   "other": {"self_play_rounds": "Fig 1 shows rounds 0 to 3; Fig 5 uses two rounds", "filter": "keep sample if |y_n - y_i| < th; threshold th value not stated", "bootstrap_nq": "150 tool demonstrations"}
+  },
+  "inference": {
+   "decoding": "Self-play: random sampling. Evaluation: beam search with 4 beams, single output.",
+   "temperature": "1.0 (self-play sampling)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Self-play: up to N=600 tool-use sequences per task example. Evaluation: 1 output per item; number of runs/seeds not stated.",
+   "prompting": "Fine-tuned text format with delimiters |question/|search or |formula/|result/|output",
+   "retrieval": "BM25 index over union of NQ oracle contexts; for OOD demo replaced by a public search engine (unnamed)",
+   "parameters": {"top_k": "40", "N": "600"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Natural Questions F1", "definition": "F1 on short answers; exact definition not given", "unit": "F1", "higher_is_better": true},
+    {"name": "MathQA solver-match", "definition": "Generated formula result matched by the solver tool against the answer; exact definition not given", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Closed-book non-augmented T5 LM at base, large, XL"],
+   "protocol": "Single runs; no seeds, variance or significance tests reported. All results are in figures; no tables."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "On NQ, the 220M base TALM outperforms the 3B XL non-augmented LM.", "kind": "measured", "source": null, "metric": "NQ F1", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "T5 base TALM vs T5 XL LM; bootstrapped from 150 tool demonstrations, two self-play rounds, BM25 over NQ oracle contexts; exact F1 values only in Fig 5", "quote": "In Fig. 5, even the 220M base TALM outperforms 3B XL LM.", "table": null, "note": "Numbers only in figure, y-axis spans roughly 32 to 42 F1", "where": "Sec 3.1, Fig 5"},
+  {"claim": "The gap between base and XL TALMs is smaller than between TALM and LM, suggesting smaller models benefit more from retrieval tools.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "NQ, same as Fig 5", "quote": "smaller models benefit more from retrieval tools", "table": null, "note": null, "where": "Sec 3.1"},
+  {"claim": "TALM significantly outperforms a non-augmented LM on MathQA at all sizes.", "kind": "measured", "source": null, "metric": "MathQA solver-match", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Bootstrap set approx 2k examples (10% of valid-formula training data)", "quote": "The TALM significantly outperforms a non-augmented LM as shown in Fig. 7.", "table": null, "note": "No numbers in text", "where": "Sec 3.2, Fig 7"},
+  {"claim": "Performance is significantly better after one self-play round than from bootstrap examples alone and keeps rising over three rounds, at 220M to 3B.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "NQ and MathQA, all three sizes, Fig 1", "quote": "Their performance continues to increase over three rounds of self-play.", "table": null, "note": null, "where": "Sec 3.3, Fig 1"},
+  {"claim": "About 70% of MathQA formulas produce results matching their answers under the authors' solver.", "kind": "measured", "source": null, "metric": "formula-answer match", "value": "approximately 70%", "unit": "%", "baseline_value": null, "n": null, "setup": "MathQA training data, simple solver tool", "quote": "approximately 70% of the formulas in MathQA produce results that match their corresponding answers", "table": null, "note": null, "where": "Sec 3.2"},
+  {"claim": "With a public search engine swapped in for BM25, TALM handles changing knowledge (single qualitative example).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 1, "setup": "Question 'What is wordle?'; anecdote, not a benchmark", "quote": "we replace the BM-25 Wiki retriever with a public search engine, and show that TALM handles changing world knowledge well", "table": null, "note": null, "where": "Sec 3.4, Fig 8"},
+  {"claim": "On a large-number example TALM answers 4.58 where the LM answers 8.5 (single example).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 1, "setup": "'A car is driving 535 mph, how many hours for 2450 miles?'", "quote": "LM: 8.5", "table": null, "note": "Anecdote; 2450/535 is about 4.58", "where": "Fig 9"}
+ ],
+ "limits": [
+  "All benchmark results are in figures; the text gives no F1 or solver-match numbers.",
+  "No hyperparameters (optimizer, lr, batch size, steps), hardware, seeds or variance reported; filter threshold th not given.",
+  "Authors attribute noise in the performance-scale curves to fine-tuning in a low-data regime.",
+  "Tasks are single-hop; multi-hop tool use as MDPs/RL is only suggested as future work.",
+  "Out-of-distribution evidence is one anecdote each (wordle, large numbers).",
+  "Baseline LM training is not described; only two tools (BM25, formula solver) tested; state-modifying APIs motivated but not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "TALM", "definition": "Tool Augmented Language Model: text-to-text tool interface combined with iterative self-play bootstrapping", "where": "Abstract"},
+  {"term": "self-play", "definition": "a model interacting with a tool API, rather than adversarial play among models", "where": "Sec 2.2"}
+ ],
+ "lineage": [
+  {"work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)", "year": 2019, "arxiv": "1910.10683", "relation": "uses-method", "note": "base model family", "quote": null},
+  {"work": "Scaling up models and data with t5x and seqio", "year": 2022, "arxiv": "2203.17189", "relation": "uses-method", "note": "training framework", "quote": null},
+  {"work": "Decision Transformer", "year": 2021, "arxiv": "2106.01345", "relation": "extends", "note": "inspiration for self-play bootstrapping", "quote": "Inspired by Decision Transformer [Chen et al., 2021]"},
+  {"work": "Thinking fast and slow with deep learning and tree search (expert iteration)", "year": 2017, "arxiv": "1705.08439", "relation": "related", "note": "self-play compared to expert iteration", "quote": null},
+  {"work": "Natural Questions", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "knowledge task", "quote": null},
+  {"work": "MathQA", "year": 2019, "arxiv": "1905.13319", "relation": "uses-data", "note": "reasoning task", "quote": null},
+  {"work": "REALM / RETRO / RAG", "year": 2020, "arxiv": "2005.11401", "relation": "related", "note": "retrieval-based alternatives", "quote": null},
+  {"work": "SayCan (Ahn et al.)", "year": 2022, "arxiv": "2204.01691", "relation": "related", "note": "model is a recipient of queries, unlike TALM", "quote": null},
+  {"work": "Giving BERT a calculator (Andor et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "calculator for math reasoning", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Baseline LM and TALM performance on two tasks, with increasing rounds of self-play.", "page": 1, "why": "Shows gains per self-play round at three sizes"},
+  {"figure": "Fig 3", "caption": "TALM text-to-text interface example.", "page": 2, "why": "Shows the delimiter format |tool-call ... |result ... |output"},
+  {"figure": "Fig 5", "caption": "Performance of TALM compared with TALM of different model sizes on Natural Questions.", "page": 3, "why": "Base TALM beats XL LM"}
+ ],
+ "code": [
+  {"where": "Sec 2.1, Fig 3", "snippet": "task input text |tool-call tool input text |result tool output text |output task output text", "verbatim": true}
+ ],
+ "problems": ["Algorithm 1 text extraction is partly garbled (line 6 argmax, footnote marker after line 13).", "Fig 5 caption reads 'compared with TALM of different model sizes' (probably meant LM); recorded as printed."]
+}

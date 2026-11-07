@@ -1,19 +1,603 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.05736",
  "pdf": "generative-ai/02-rag-retrieval/sources/jiang-2023-llmlingua.pdf",
  "bib": {
   "title": "LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models",
+  "authors": [
+   "Huiqiang Jiang",
+   "Qianhui Wu",
+   "Chin-Yew Lin",
+   "Yuqing Yang",
+   "Lili Qiu"
+  ],
   "first_author": "Jiang",
   "year": 2023,
-  "venue": "EMNLP 2023",
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 13358-13376",
   "arxiv": "2310.05736",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "b1513713-815e-49d2-b7fd-869d099bfec9"
+  "at": "2026-11-07",
+  "chars_read": 70500,
+  "chars_total": 70500,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
  },
- "legacy_report": "SOURCE: LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models. Huiqiang Jiang, Qianhui Wu, Chin-Yew Lin, Yuqing Yang, Lili Qiu (Microsoft). EMNLP 2023, pp. 13358–13376 (arXiv 2310.05736).\n\nCOVERAGE: Read all 70,575 of 70,575 chars across 19 PDF pages: body, limitations, Appendix A–E and every case-study figure. References were skimmed. Page numbers below are PDF pages (proceedings page minus 13357).\n\nCLAIMS (ranked)\n- claim: On GSM8K, 20x compression costs about 1.5 EM.\n  number: 77.33 vs 78.85 EM (117 vs 2,366 tokens)\n  setup: Target model GPT-3.5-Turbo-0301 with greedy decoding, temperature 0. The small model is Alpaca-7B. The original prompt is Fu et al.'s 8-shot complex CoT. \"Quarter-shot constraint\".\n  quote: \"Ours 77.33 117 20x\" / \"Full-shot 78.85 2,366 -\" / \"up to 20x compression with only a 1.5 point performance drop\"\n  where: Table 2, p6; Conclusion, p9\n- claim: At lower compression it matches or slightly beats the full prompt.\n  number: GSM8K 79.08 at 5x; BBH 70.11 vs 70.07 at 3x; 14x costs 1.44\n  setup: 1-shot constraint; half-shot for the 14x figure\n  quote: \"Ours 79.08 446 5x\" / \"Ours 70.11 288 3x\" / \"the EM scores will decrease by 1.44 and 1.52, respectively, despite compression ratios as high as 14x and 20x\"\n  where: Table 2, p6\n- claim: BBH degrades much more than GSM8K.\n  number: -8.5 EM at 5x, -13.2 EM at 7x\n  setup: BBH 3-shot CoT, GPT-3.5-Turbo\n  quote: \"On BBH, our approach achieves compression ratios of 5x and 7x with the EM score decreasing by 8.5 and 13.2 points\"\n  where: p6\n- claim: The baselines collapse at high compression.\n  number: Selective-Context 44.20 at 15x; GPT-4 compression 56.33 at 20x\n  setup: GSM8K quarter-shot. Selective-Context used the same Alpaca-7B.\n  quote: \"Selective-Context 44.20 157 15x\" / \"GPT4 Generation 56.33 188 20x\" / \"lower than ours by 33.10 points at a compression ratio of 20x\"\n  where: Table 2, p6; p7\n- claim: End-to-end latency falls, and the compressor itself is cheap.\n  number: 8.6 s to 4.9/2.3/1.3 s at 2x/5x/10x (1.7x to 5.7x faster); compression alone takes 0.8/0.3/0.2 s\n  setup: GSM8K on one V100-32G\n  quote: \"End-to-End w/o LLMLingua 8.6\" / \"2.3(3.3x) 1.3(5.7x)\" / \"can achieve a speedup ranging from 1.7x to 5.7x\"\n  where: Table 6, p8\n- claim: Conversation and summarisation tasks compress less while BERTScore F1 stays high.\n  number: ShareGPT 3.3x, BS-F1 87.70; Arxiv 9x, BS-F1 89.03\n  setup: BLEU, ROUGE and BERTScore measured against GPT-3.5-Turbo's own outputs as references. 575 ShareGPT samples; 500 arXiv papers (first five sections, each cut to 10k chars).\n  quote: \"Ours 19.55 40.81 22.68 30.98 87.70 177 3.3x 13.45 44.36 24.86 34.94 89.03 176 9x\"\n  where: Table 1, p6; App. A.1, p12\n- claim: Iterative token-level compression and the budget controller do most of the work. Distribution alignment adds little.\n  number: Without ITPC 72.93; without budget controller 73.62; without alignment 78.62 (vs 79.08); stop-word removal reaches only 1.3x\n  setup: GSM8K, 1-shot\n  quote: \"- w/o Iterative Token-level Prompt Compression 72.93 453 5x\" / \"- w/o Distribution Alignment 78.62 452 5x\" / \"- w/ Remove Stop Words 76.27 1,882 1.3x\"\n  where: Table 3, p7\n- claim: Using GPT2-small as the compressor costs about 1–2 EM.\n  number: 77.02 / 76.42 / 76.27 at 5x / 14x / 18x\n  quote: \"a performance drop of 2.06, 0.99, and 1.06 EM points\"\n  where: Table 5, p8\n- claim: The method transfers to Claude-v1.3, tested in only two settings.\n  number: 83.51 at 5x, 82.61 at 14x, vs Simple Prompt 81.8\n  quote: \"Ours in half-shot constraint 82.61 171 14x\"\n  where: Table 4, p8\n- claim: Estimated compute saving of about 4x at 5x compression. This is analytical, not measured.\n  number: c ≈ 0.264·L·c_LLMs\n  setup: Assumes the small model gets the same serving optimisations as the LLM, and a 7B/175B parameter ratio.\n  quote: \"we can achieve nearly 4x savings in computational resources when using the smaller LM with a prompt compression rate of 5x\"\n  where: p8\n- claim: Compressed prompts are hard for humans to read, but GPT-4 can reconstruct them (GPT-3.5 cannot).\n  number: none\n  quote: \"LLMs can effectively comprehend the semantic information in the compressed prompts, even if it might be challenging for humans\"\n  where: p9, footnote 9\n- claim: Compression also shortens the outputs.\n  number: none\n  where: Fig. 2, p8\n- claim: Dollar savings.\n  number: GSM8K $5.2 to $0.5\n  quote: \"cost reductions of $4.7, $8.0, $0.4, and $0.8\"\n  where: Table 7, p12\n- claim: Hyperparameters.\n  number: k=2, τ_ins=0.85, τ_que=0.9, segment size 100\n  where: p5\n\nLIMITS: Performance drops sharply at 25x–30x on GSM8K (Fig. 3). The authors say the upper limit varies with prompt length, task type and number of sentences. The small model's tokenizer can differ from the target LLM's, which leads to underestimating token length (p10). The paper has no retrieval or RAG evaluation and no long-context QA. The target models are 2023 API models (GPT-3.5-Turbo-0301, Claude-v1.3). Claude was tested in only two settings \"Due to the limitation of API cost\". ShareGPT and Arxiv are scored against GPT-3.5's own generations. The compressor is not question-aware. Latency comes from one GPU and one dataset.\n\nBUILDS ON: Selective-Context (Li, 2023) is the direct predecessor. Also credited: Shannon (1951) on redundancy; Gilbert et al. (2023); gist tokens (Mu et al., 2023); AutoCompressors (Chevalier et al., 2023); ICAE (Ge et al., 2023); perplexity-based OoD detection (Wu et al., 2023); Alpaca (Taori et al., 2023); CoT prompts from Fu et al. (2023b).\n\nCODE: None worth keeping. Algorithms 1–2 are pseudocode (p4). Code is at https://aka.ms/LLMLingua.\n\nFIGURES: Fig. 1 (p3) shows the framework: a 2,366-token prompt becomes 117 tokens, which is the pipeline at a glance. Fig. 3 (p9) plots EM against compression ratio for every method, and shows the cliff and how far each method holds up faster than Table 2. Fig. 4 (p14) shows a compressed prompt next to GPT-4's reconstruction, which makes \"unreadable to humans\" concrete.\n\nPROBLEMS: Equations 4–5 came out of extraction garbled; the prose around them was readable. The PDF contains no embedded instructions. The repo has no source PDF for LongLLMLingua or LLMLingua-2, so I could not check anything against those papers.\n\n---\nAUDIT OF REPO CITATIONS\n\n1. generative-ai/02-rag-retrieval/notes/06-generation-for-rag.md:234 (LLMLingua row)\n- \"A small LM (Alpaca-7B)\": CORRECT. Quote: \"Selective-Context ... We use the same small LM, i.e., Alpaca-7B\" (p6). The paper also uses GPT2-Alpaca.\n- \"drops low-perplexity tokens, segment by segment, under a per-section budget\": CORRECT, but it leaves out the coarse step. The budget controller first keeps whole demonstrations in descending order of perplexity (Alg. 1, p4).\n- \"On GSM8K chain-of-thought prompts for GPT-3.5-Turbo, 20× compression cost 1.5 EM points (77.3 vs 78.9)\": CORRECT (Table 2, p6). The setup would be clearer with \"an 8-shot, 2,366-token prompt cut to 117 tokens\".\n- \"end-to-end latency fell from 8.6 s to 2.3 s at 5× on one V100\": CORRECT (Table 6, p8).\n- \"Selective context scored 44.2 at 15×\": CORRECT (\"Selective-Context 44.20 157 15x\", Table 2).\n- \"Tested on prompts and conversations, not retrieved passages\": SETUP MISSING. It omits BBH and the arXiv long-document summarisation task. The \"not retrieved passages\" part is right.\n- Omitted: the BBH loss (-13.2 at 7x), which would stop readers generalising from GSM8K; and the cliff at 25–30x.\n- Replacement: \"| LLMLingua | A small LM (Alpaca-7B) first drops whole low-perplexity demonstrations, then drops low-perplexity tokens segment by segment under a per-section budget. On an 8-shot GSM8K chain-of-thought prompt for GPT-3.5-Turbo, 20× compression (2,366 → 117 tokens) cost 1.5 EM points (77.3 vs 78.9), where Selective Context scored 44.2 at 15×. On BBH, 7× cost 13.2 points, and every method collapses at 25–30×. End-to-end latency fell from 8.6 s to 2.3 s at 5× on one V100. Tested on reasoning prompts, conversations and arXiv summaries, not retrieved passages ([arXiv:2310.05736](https://arxiv.org/abs/2310.05736), Jiang et al., EMNLP 2023) |\"\n\n2. Same file :235 (LongLLMLingua row: \"Question-aware version: compresses and reorders documents using both context and query\"): NOT IN PAPER. 2310.05736 never mentions LongLLMLingua, reordering or question-aware compression. The row has no citation, and no source for it is in the repo. Nothing in it is misattributed to 2310.05736 because it carries no numbers. It needs its own source, read and cited, or the label \"(*Building AI Agents*, ch. 6)\" only.\n\n3. Same file :233 (Selective context row): uncited. The description is consistent with how LLMLingua describes it (\"self-information of each lexical unit (such as sentences, phrases, or tokens)\", p1). \"Keep the top percentile\" is not in this paper.\n\n4. generative-ai/02-rag-retrieval/references.md:66: CORRECT on every number: 20×/1.5 EM/GPT-3.5-Turbo, 8.6 → 2.3 s at 5×, \"not tested on retrieved passages\", EMNLP 2023. You could add \"BBH loses 13.2 EM at 7×\".\n\n5. ai-engineering/02-context-engineering/notes/05-compression-compaction.md:227 (\"Token pruning (LLMLingua-style) | ... | 2–5× with modest loss on many tasks; output is unreadable to humans\"): UNCITED / NOT IN PAPER for the range.\n- LLMLingua reports 3x–20x, not 2–5×.\n- \"Modest loss on many tasks\" is overstated for BBH (-8.5 at 5x) and understated for GSM8K (-1.5 at 20x).\n- \"Unreadable to humans\" is supported (p9).\n- Suspicion, unverified: the 2–5× range looks like LLMLingua-2's headline (arXiv 2403.12968, which reports 2x–5x as I remember). No PDF of that paper is in the repo, so check it before you keep the range.\n- Replacement: \"| **Token pruning** (LLMLingua) | A small LM drops low-perplexity tokens under a per-section budget | On GSM8K chain-of-thought prompts for GPT-3.5-Turbo, 20× cost 1.5 EM, but on BBH 7× cost 13.2. Output is hard for humans to read, though GPT-4 can mostly reconstruct it ([arXiv:2310.05736](https://arxiv.org/abs/2310.05736), Jiang et al., EMNLP 2023) |\"\n- Under the sharpens rule, adding this citation also needs a references row in ai-engineering/02-context-engineering/references.md, which has no LLMLingua row now. That file's existing PDF links point across pillars (e.g. ../../generative-ai/...), so the row can link to generative-ai/02-rag-retrieval/sources/jiang-2023-llmlingua.pdf.\n\n6. There are no LLMLingua mentions in any deck.yaml. scripts/papers/ledger.jsonl:668 holds the entry for this paper.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/jiang-2023-llmlingua.pdf, /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/06-generation-for-rag.md, /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/references.md, /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/02-context-engineering/notes/05-compression-compaction.md, /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/02-context-engineering/references.md. I edited nothing."
+ "type": "empirical",
+ "question": "Can a long prompt be compressed by a small language model, without gradients through the target LLM, to cut cost and latency at little loss in task performance?",
+ "hypothesis": "Tokens with lower perplexity contribute less information, so dropping them (with a budget controller, iterative conditioning and distribution alignment) preserves the target LLM's behaviour at high compression ratios.",
+ "contributions": [
+  "Coarse-to-fine prompt compression with a budget controller for demonstration/sentence-level selection",
+  "Iterative token-level compression (ITPC) modelling conditional dependence between compressed tokens",
+  "Instruction-tuning based distribution alignment between small LM and black-box LLM",
+  "Evaluation on GSM8K, BBH, ShareGPT and Arxiv-March23, claimed first to evaluate reasoning and ICL in efficient-LLM work"
+ ],
+ "method": {
+  "summary": "A small LM (Alpaca-7B or GPT2-Alpaca) scores perplexity. A budget controller keeps high-perplexity demonstrations up to k*tau_dems*L_dems tokens and gives instruction and question a lighter ratio. ITPC then drops low-perplexity tokens segment by segment (segment size 100), conditioning on already compressed segments. The compressed prompt goes to a black-box LLM.",
+  "task": "prompt compression for in-context learning, reasoning, conversation and summarisation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "8,000 problems; 1,300-problem test set",
+    "split": "test",
+    "source": "Cobbe et al. 2021; original prompt is the complex multi-step CoT prompt of Fu et al. 2023b (8-shot, 2,366 tokens)",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH",
+    "role": "eval",
+    "size": "6,500 problems across 23 subsets",
+    "split": "all",
+    "source": "Suzgun et al. 2022; 3-shot CoT prompt (774 tokens)",
+    "preprocessing": null
+   },
+   {
+    "name": "ShareGPT",
+    "role": "eval",
+    "size": "575 samples",
+    "split": "test set from Li (2023)",
+    "source": "sharegpt.com",
+    "preprocessing": "All dialogue except the final round is the prompt; reference is GPT-3.5-Turbo output"
+   },
+   {
+    "name": "Arxiv-March23",
+    "role": "eval",
+    "size": "500 items",
+    "split": "test set from Li (2023)",
+    "source": "arXiv papers from March 2023",
+    "preprocessing": "First five sections, each truncated to 10,000 characters, concatenated; reference is GPT-3.5-Turbo summary"
+   },
+   {
+    "name": "Alpaca dataset",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Taori et al. 2023",
+    "preprocessing": "Used only to align small LMs; not used in evaluation"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo-0301",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "tiktoken",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "target black-box LLM"
+    }
+   },
+   {
+    "name": "Claude-v1.3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "second target LLM, 1-shot and half-shot only (API cost)"
+    }
+   },
+   {
+    "name": "Alpaca-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "small LM for compression"
+    }
+   },
+   {
+    "name": "GPT2-Alpaca",
+    "role": "proposed",
+    "params": "GPT-2 small",
+    "architecture": null,
+    "init_from": "GPT2-small fine-tuned on Alpaca dataset",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "GPT4-Generation baseline compressor, and prompt restorer in Appendix D"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Instruction tuning of the small LM on LLM-generated text (Eq 8); only GPT2-Alpaca training details are given",
+   "optimizer": "AdamW",
+   "lr": "1e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "eight epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Tesla V100 (32GB)",
+   "compute": null,
+   "wall_clock": "approximately 150 minutes",
+   "seeds": null,
+   "other": {
+    "note": "Alpaca-7B alignment settings are not stated; paper says alignment data was hard to collect for Claude so Alpaca-7B was reused"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per setting; no seeds or repeats stated",
+   "prompting": "Original prompts: GSM8K 8-shot complex CoT; BBH 3-shot CoT. Constraints: 1-shot, half-shot, quarter-shot (token budgets), 2x / 3x or 350 / 175 tokens for ShareGPT and Arxiv",
+   "retrieval": null,
+   "parameters": {
+    "k_granular_control_coefficient": "2",
+    "tau_ins": "0.85",
+    "tau_que": "0.9",
+    "segment_size": "100",
+    "framework": "PyTorch 1.12.0, Huggingface Transformers",
+    "token_counting": "tiktoken with GPT-3.5-Turbo"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match",
+     "definition": "GSM8K and BBH answer match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU/ROUGE/BERTScore F1",
+     "definition": "against GPT-3.5-Turbo reference output on ShareGPT and Arxiv-March23",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "compression ratio 1/tau",
+     "definition": "original tokens / compressed tokens",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "latency",
+     "definition": "end-to-end on one V100-32G",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Selective-Context (Li 2023), same Alpaca-7B",
+    "GPT4-Generation (best of ten instructions)",
+    "Sentence Selection",
+    "Random Selection",
+    "Full-shot",
+    "zero-shot",
+    "Simple Prompt"
+   ],
+   "protocol": "Single run per cell, no significance test or variance reported."
+  },
+  "availability": {
+   "code": "https://aka.ms/LLMLingua",
+   "weights": null,
+   "data": "public datasets; ShareGPT and Arxiv subsets from Li (2023)"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT4-Generation baseline compression instruction (1 of 10)",
+    "text": "Could you please rephrase the paragraph to make it short, and keep 5% tokens?",
+    "where": "Appendix C"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On GSM8K, 20x compression (quarter-shot) costs about 1.5 EM versus the full prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 77.33,
+   "unit": "EM %",
+   "baseline_value": 78.85,
+   "n": null,
+   "setup": "GSM8K, target GPT-3.5-Turbo-0301, greedy decoding temperature 0, Alpaca-7B as small LM, 8-shot complex CoT original prompt (2,366 tokens); quarter-shot constraint",
+   "note": null,
+   "where": "Table 2; Conclusion",
+   "table": "Table 2, row quarter-shot Ours, column GSM8K EM (77.33, 117 tokens, 20x); row Full-shot 78.85, 2,366 tokens"
+  },
+  {
+   "claim": "Paper's headline: up to 20x compression with only 1.5 point drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, as above",
+   "note": null,
+   "where": "Conclusion",
+   "quote": "up to 20x compression with only a 1.5 point perfor-"
+  },
+  {
+   "claim": "At 1-shot constraint (5x) the compressed prompt matches or slightly beats the full prompt on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 79.08,
+   "unit": "EM %",
+   "baseline_value": 78.85,
+   "n": null,
+   "setup": "GSM8K, target GPT-3.5-Turbo-0301, greedy decoding temperature 0, Alpaca-7B as small LM, 8-shot complex CoT original prompt (2,366 tokens); 1-shot constraint, 446 tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1-shot constraint Ours, column GSM8K EM"
+  },
+  {
+   "claim": "On BBH at 3x (1-shot constraint) it matches the full prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 70.11,
+   "unit": "EM %",
+   "baseline_value": 70.07,
+   "n": null,
+   "setup": "BBH, GPT-3.5-Turbo-0301, 3-shot CoT original prompt (774 tokens), Alpaca-7B small LM; 1-shot constraint, 288 tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1-shot constraint Ours, column BBH EM"
+  },
+  {
+   "claim": "BBH degrades much more at high compression: EM falls 8.5 points at 5x and 13.2 at 7x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM drop",
+   "value": 13.2,
+   "unit": "EM points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH, GPT-3.5-Turbo, half-shot (5x, 61.60) and quarter-shot (7x, 56.85) constraints",
+   "note": "Table 2 values 61.60 and 56.85 vs full-shot 70.07 give 8.47 and 13.22.",
+   "where": "5.2",
+   "quote": "by 8.5 and 13.2 points, respectively"
+  },
+  {
+   "claim": "Selective-Context collapses at 15x on GSM8K quarter-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 44.2,
+   "unit": "EM %",
+   "baseline_value": 78.85,
+   "n": null,
+   "setup": "GSM8K quarter-shot, same Alpaca-7B small LM, 157 tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row quarter-shot Selective-Context, column GSM8K EM"
+  },
+  {
+   "claim": "Ours beats Selective-Context by 33.10 points at 20x on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gap",
+   "value": 33.1,
+   "unit": "EM points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K quarter-shot",
+   "note": null,
+   "where": "5.3",
+   "quote": "lower than ours by 33.10 points at a com-"
+  },
+  {
+   "claim": "GPT-4 generation as compressor reaches only 56.33 EM at 20x on GSM8K (best of ten instructions).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 56.33,
+   "unit": "EM %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K quarter-shot, 188 tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row quarter-shot GPT4 Generation, column GSM8K EM"
+  },
+  {
+   "claim": "End-to-end latency on GSM8K falls from 8.6 s to 2.3 s at 5x; compression itself adds 0.3 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": 2.3,
+   "unit": "s",
+   "baseline_value": 8.6,
+   "n": null,
+   "setup": "GSM8K, one V100-32G, compression rate 1x to 10x",
+   "note": "speedup range 1.7x to 5.7x across 2x-10x",
+   "where": "Table 6",
+   "table": "Table 6, row End-to-End w/ LLMLingua, column 5x (2.3, 3.3x); row End-to-End w/o LLMLingua 8.6"
+  },
+  {
+   "claim": "Ablation: removing iterative token-level compression drops GSM8K EM from 79.08 to 72.93.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 72.93,
+   "unit": "EM %",
+   "baseline_value": 79.08,
+   "n": null,
+   "setup": "GSM8K 1-shot constraint, ~5x",
+   "note": "Table 3 prints Ours at 439 tokens; Table 2 prints 446 tokens for the same 79.08.",
+   "where": "Table 3",
+   "table": "Table 3, row w/o Iterative Token-level Prompt Compression"
+  },
+  {
+   "claim": "Ablation: random demonstration selection in the budget controller gives 72.78 EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 72.78,
+   "unit": "EM %",
+   "baseline_value": 79.08,
+   "n": null,
+   "setup": "GSM8K 1-shot constraint",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/ Random Selection in Budget Controller"
+  },
+  {
+   "claim": "Ablation: distribution alignment adds 0.56 EM on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gain",
+   "value": 0.56,
+   "unit": "EM points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K 1-shot constraint; 78.62 without alignment (LLaMA-7B directly)",
+   "note": null,
+   "where": "5.4",
+   "quote": "improvement of 0.56 on GSM8K"
+  },
+  {
+   "claim": "With Claude-v1.3 as target, ours beats the simple prompt on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 83.51,
+   "unit": "EM %",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "GSM8K, Claude-v1.3, Alpaca-7B small LM, 1-shot constraint (5x); half-shot 82.61 at 14x",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Ours in 1-shot constraint"
+  },
+  {
+   "claim": "GPT2-Alpaca as small LM is weaker than Alpaca-7B by 2.06, 0.99, 1.06 EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 77.02,
+   "unit": "EM %",
+   "baseline_value": 79.08,
+   "n": null,
+   "setup": "GSM8K GPT-3.5-Turbo, 1-shot constraint with GPT2-Alpaca (quarter-shot 76.27 at 18x)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Ours with GPT2 in 1-shot constraint"
+  },
+  {
+   "claim": "ShareGPT and Arxiv-March23: 3.3x and 9x compression at high BERTScore F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERTScore F1",
+   "value": 89.03,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arxiv-March23, constraint II (175 tokens), 9x; ShareGPT 3x constraint gives 87.70 at 3.3x; references are GPT-3.5-Turbo outputs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Constraint II Ours, column Arxiv-March23 BS F1"
+  },
+  {
+   "claim": "Inference cost on GSM8K drops from $5.2 to $0.5 with GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": 0.5,
+   "unit": "$",
+   "baseline_value": 5.2,
+   "n": null,
+   "setup": "GPT-3.5-Turbo pricing, estimated per dataset",
+   "note": null,
+   "where": "Appendix B",
+   "table": "Table 7, row Ours, column GSM8K"
+  },
+  {
+   "claim": "Compute estimate: nearly 4x savings at 5x compression using a 7B small LM against a 175B LLM.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "compute",
+   "value": 0.264,
+   "unit": "x L*c_LLMs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "c_small ~ 1/25 c_LLMs, tau=5 in Eq 9",
+   "note": null,
+   "where": "5.5",
+   "quote": "𝑐≈0.264 · 𝐿𝑐LLMs ≈1/4 · 𝐿𝑐LLMs"
+  }
+ ],
+ "limits": [
+  "Notable performance drop at excessively high compression ratios such as 25x-30x on GSM8K (Fig 3); the limit varies with prompt length, task type and sentence count.",
+  "Tokenizer differences between the small LM and the black-box LLM may underestimate token length.",
+  "Claude-v1.3 tested only at 1-shot and half-shot because of API cost.",
+  "GPT-3.5-Turbo could not restore compressed prompts; GPT-4 could (footnote 9, emergent-ability conjecture).",
+  "Tested on reasoning prompts, conversation and long-document summaries, not retrieved RAG passages.",
+  "No variance, seeds or significance tests; GPT-4 baseline reports the best of ten instructions.",
+  "Compressed prompts are hard for humans to read."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compression rate tau",
+   "definition": "tau = L~/L, the compressed length over the original length",
+   "where": "Section 3"
+  },
+  {
+   "term": "compression ratio",
+   "definition": "1/tau",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Selective-Context (Li 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Most similar work; self-information token dropping; also source of ShareGPT and Arxiv test sets",
+   "quote": null
+  },
+  {
+   "work": "Alpaca (Taori et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Instruction data for alignment; Alpaca-7B as small LM",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al. 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "Math reasoning evaluation",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought hub / complexity-based prompting (Fu et al. 2023)",
+   "year": 2023,
+   "arxiv": "2305.17306",
+   "relation": "uses-data",
+   "note": "Source of the 8-shot complex CoT prompt",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench Hard (Suzgun et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "BBH evaluation, 3-shot CoT",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5-Turbo and Claude-v1.3",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Target LLMs",
+   "quote": null
+  },
+  {
+   "work": "Gisting / ICAE / AutoCompressors (Mu; Ge 2023; Chevalier 2023)",
+   "year": 2023,
+   "arxiv": "2305.14788",
+   "relation": "related",
+   "note": "Learned soft-token prompt compression that needs fine-tuning; contrasted",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Framework of the proposed approach LLMLingua.",
+   "page": 3,
+   "why": "Shows budget controller, iterative token-level compression and alignment on one example, 2366 to 117 tokens."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The performance of various prompt compression methods at different compression ratios (1/tau) on GSM8K.",
+   "page": 9,
+   "why": "Shows where each method collapses (25x-30x)."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Performance of different methods under different target compression ratios on GSM8K and BBH.",
+   "page": 6,
+   "why": "Main comparison table."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 prints 439 tokens for Ours; Table 2 prints 446 tokens for the same 79.08 EM (1-shot GSM8K).",
+  "Text says BBH drops of 8.5 and 13.2 at 5x and 7x; Table 2 gives 61.60 and 56.85 against 70.07.",
+  "Hyperparameters for Alpaca-7B alignment are not given; no seeds or variance reported.",
+  "No embedded instructions found in the PDF text."
+ ]
 }

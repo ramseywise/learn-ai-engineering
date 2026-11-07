@@ -1,0 +1,780 @@
+{
+ "schema": 1,
+ "key": "2504.13837",
+ "pdf": "generative-ai/05-RL/sources/yue-2025-does-reinforcement-learning-really-incentivize.pdf",
+ "bib": {
+  "title": "Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?",
+  "authors": [
+   "Yang Yue",
+   "Zhiqi Chen",
+   "Rui Lu",
+   "Andrew Zhao",
+   "Zhaokai Wang",
+   "Yang Yue",
+   "Shiji Song",
+   "Gao Huang"
+  ],
+  "first_author": "Yue",
+  "year": 2025,
+  "venue": "preprint (arXiv v5, 24 Nov 2025)",
+  "arxiv": "2504.13837",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 95813,
+  "chars_total": 95813,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does RLVR give LLMs reasoning abilities beyond the base model, or does it only make the base model's existing reasoning paths more likely to be sampled?",
+ "hypothesis": "RLVR improves sampling efficiency but the reasoning capacity of RL-trained models remains bounded by the base model, so base models should match or beat them at large pass@k.",
+ "contributions": [
+  "Systematic pass@k study of base vs RLVR models across math, code and visual reasoning, several model families and RL algorithms",
+  "Accuracy-distribution, solvable-set coverage and perplexity analyses showing RLVR paths already lie in the base distribution",
+  "Sampling Efficiency Gap (delta SE) comparing six RL algorithms against the base model's pass@256",
+  "Comparison showing distillation expands the reasoning boundary while RLVR does not"
+ ],
+ "method": {
+  "summary": "Compares pass@k (k up to 1024) of base models against released RLVR checkpoints (SimpleRLZoo, Oat-Zero, DAPO, Code-R1, DeepCoder, EasyR1) on math, code and visual benchmarks, plus own VeRL runs of six RL algorithms on Qwen2.5-7B. Adds accuracy histograms, solvable-set overlap, perplexity of RL responses under the base model, and a distilled-model comparison.",
+  "task": "RLVR for math, code generation and visual math reasoning; evaluation of reasoning boundary with pass@k",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GSM8K + MATH train (SimpleRLZoo training)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "released SimpleRLZoo models",
+    "preprocessing": "correctness reward only, no format reward"
+   },
+   {
+    "name": "Omni-MATH-Rule (subset of Omni-MATH, verifiable problems)",
+    "role": "both",
+    "size": "2,000 train + 821 in-domain test",
+    "split": "2,000 train / 821 test",
+    "source": "Gao et al. 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500",
+    "role": "eval",
+    "size": "500 problems",
+    "split": "out-of-domain test in own runs; also eval for released models, n=128",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME24",
+    "role": "eval",
+    "size": "30 questions",
+    "split": "n=1024",
+    "source": null,
+    "preprocessing": "a heuristic-filtered subset of 18 questions used for CoT check"
+   },
+   {
+    "name": "AMC23, GSM8K, Minerva, Olympiad",
+    "role": "eval",
+    "size": null,
+    "split": "n=1024 for AMC23; n=128 for GSM8K, Minerva; Olympiad n=128 Qwen, 1024 LLaMA",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LiveCodeBench v5",
+    "role": "eval",
+    "size": "279 problems, Aug 2024 to Jan 2025",
+    "split": null,
+    "source": "Jain et al. 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval+, MBPP+",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Liu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Code-R1 training data (LeetCode + TACO)",
+    "role": "train",
+    "size": "12K samples",
+    "split": "832 steps",
+    "source": "Liu & Zhang 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "Geometry3K",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Lu et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MathVista-TestMini, MathVision-TestMini",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lu et al. 2024; Wang et al. 2024",
+    "preprocessing": "multiple-choice questions removed"
+   },
+   {
+    "name": "AIME25",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "Magistral test"
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-7B/14B/32B base",
+    "role": "base",
+    "params": "7B, 14B, 32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-3.1-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SimpleRLZoo zero-RL models (GRPO)",
+    "role": "evaluated",
+    "params": "7B-32B",
+    "architecture": null,
+    "init_from": "base models, no SFT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Math-7B-Oat-Zero; DAPO-32B",
+    "role": "evaluated",
+    "params": "7B; 32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-7B-Instruct-1M and Code-R1-Zero-Qwen2.5-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Qwen2.5-7B-Instruct-1M",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k response length",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-14B and DeepCoder-14B-Preview",
+    "role": "evaluated",
+    "params": "14B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k response length",
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-VL-7B (EasyR1)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Qwen2.5-Math-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-Medium-3 vs Magistral-Medium-2506",
+    "role": "evaluated",
+    "params": "not disclosed",
+    "architecture": null,
+    "init_from": "Mistral-Medium-3-2505",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "40k max context",
+    "other": {}
+   },
+   {
+    "name": "OpenAI-o1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generated 8 responses per problem as YGT in perplexity analysis"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Own VeRL runs on Qwen2.5-7B with PPO, GRPO, Reinforce++, RLOO, ReMax, DAPO; binary verifiable reward; KL term removed",
+   "optimizer": "AdamW",
+   "lr": "1e-6",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "prompt batch size 256, 8 responses per prompt, PPO mini-batch size 256",
+   "steps": "GRPO checkpoints at 150, 300, 450 (n=8); n=32 run 220 steps; KL run 450 steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max rollout length 8,192 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL coefficient 0.001 in one ablation only; main runs have no KL",
+   "hardware": null,
+   "compute": "DAPO needs about 3 to 6x more samples per batch than other algorithms",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rollout_temperature": "1.0",
+    "n_rollouts_ablation": "n increased from 8 to 32 at unchanged prompt batch size",
+    "note": "Released-checkpoint models (SimpleRLZoo, Oat-Zero, DAPO, Code-R1, DeepCoder, EasyR1, Magistral) were not trained by the authors"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.6 (main); 1.0 and 1.2 in Fig 17; matched-entropy RL temps 0.85 to 1.5 in Fig 18",
+   "top_p": "0.95",
+   "max_tokens": "16,384",
+   "samples": "n = largest k on each curve (128, 256 or 1024) per problem; unbiased pass@k estimator for all k<=n",
+   "prompting": "zero-shot, no few-shot for base models; base uses the same prompt as the RL model (or benchmark default)",
+   "retrieval": null,
+   "parameters": {
+    "n per benchmark": "n=128 MATH500, Minerva, GSM8K; n=1024 AMC23, AIME24; Olympiad n=128 Qwen, 1024 LLaMA",
+    "delta_SE": "RL pass@1 minus base pass@k with k=256"
+   },
+   "other": {
+    "CoT validity check": "manual inspection of correct CoTs on problems with average accuracy below 5%",
+    "AIME24 guess filter": "drop problems the base answers correctly without CoT with probability below 5% but non-zero; leaves 18 of 30"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "1 - C(n-c,k)/C(n,k) averaged over problems; a problem counts solved if any of k samples passes the verifier",
+     "unit": "fraction (0 to 1) or %",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sampling efficiency gap (delta SE)",
+     "definition": "RL model pass@1 minus base model pass@256",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Perplexity",
+     "definition": "exp of mean negative log-likelihood of response Y given prompt x under model m",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Base model of each RLVR checkpoint",
+    "Instruct model (Qwen2.5-Math-7B-Instruct)",
+    "Distilled model DeepSeek-R1-Distill-Qwen-7B"
+   ],
+   "protocol": "Single sampling run per model, n samples per problem; no seeds, confidence intervals or significance tests reported; manual CoT validity checks on small subsets"
+  },
+  "availability": {
+   "code": "Project page https://limit-of-RLVR.github.io (no repo URL stated in text)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "SimpleRL training and evaluation (base uses same)",
+    "text": "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{question}\nPlease reason step by step, and put your final answer within\\\\boxed{{}}.<|im_end|>\n<|im_start|>assistant",
+    "where": "Fig 22"
+   },
+   {
+    "purpose": "VeRL training and evaluation prompt (Omni-MATH, MATH500)",
+    "text": "A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think> <answer> answer here </answer>. User: {}\nAssistant:",
+    "where": "Fig 28"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we use a temperature of 0.6 and a top-p value of 0.95, allowing a maximum generation of 16,384 tokens",
+    "where": "Section 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Base models overtake RLVR models as k grows: on Minerva with a 32B model the base solves about 9% more problems at k=128.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@128 gap (base minus RL)",
+   "value": 9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base vs SimpleRLZoo GRPO model, Minerva, k=128, temperature 0.6",
+   "quote": "For example, on the Minerva benchmark with a 32B-sized model, the base model outperforms the RL-trained model by approximately 9% at k = 128, implying that it can solve around 9% more problems in the validation set.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "On AIME24 at k=1024 with SimpleRLZoo Qwen2.5-7B, 13.3% of problems are solved only by the base model and 0.0% only by the RL model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of problems solved only by base",
+   "value": 13.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AIME24, k=1024, base vs SimpleRLZoo",
+   "quote": null,
+   "table": "Table 2, row base check / RL cross, column AIME24: 63.3%, 13.3%, 0.0%, 23.3%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On MATH500 at k=128, 3.6% of problems are solved only by the base model and 1.0% only by the RL model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share solved only by base",
+   "value": 3.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH500, k=128, base vs SimpleRLZoo",
+   "quote": "",
+   "table": "Table 2, column MATH500: 92.4%, 3.6%, 1.0%, 3.0%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training-set pass@1 under GRPO on Omni-MATH rises from 26.1 to 42.5 over training while pass@256 falls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 at step 450",
+   "value": 42.5,
+   "unit": "%",
+   "baseline_value": 26.1,
+   "n": null,
+   "setup": "Qwen2.5-7B, VeRL GRPO, Omni-MATH-Train, steps 150 to 450",
+   "quote": "pass@1 on the training set consistently improves from 26.1 to 42.5.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.4"
+  },
+  {
+   "claim": "Omni-MATH-Train pass@256 falls from 67.2 (base) to 64.3 at GRPO step 450.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@256",
+   "value": 64.3,
+   "unit": "%",
+   "baseline_value": 67.2,
+   "n": null,
+   "setup": "Qwen2.5-7B base vs GRPO-step450",
+   "quote": "",
+   "table": "Table 4, row GRPO-step450, column Omni-MATH-Train pass@256; base row 67.2",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Omni-MATH-Test (in-domain) pass@256 falls from 69.1 to 63.9 by step 450 while pass@1 rises from 10.2 to 28.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@256",
+   "value": 63.9,
+   "unit": "%",
+   "baseline_value": 69.1,
+   "n": null,
+   "setup": "same",
+   "quote": "",
+   "table": "Table 4, row GRPO-step450, column Omni-MATH-Test pass@256; base row 69.1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Sampling efficiency gap stays above 40 points for all six RL algorithms on the in-domain test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta SE lower bound",
+   "value": 40,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-7B, VeRL, Omni-MATH-Test, delta SE = RL pass@1 minus base pass@256",
+   "quote": "Furthermore, we observe that ∆SE remains consistently above 40 points across different algorithms",
+   "table": null,
+   "note": "Text says 'ranging from GRPO's 43.9 to RLOO's best 42.6'; Fig 8 labels SE = 0.410 and 0.408, so the in-text range is not obviously consistent with the figure",
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Distilled DeepSeek-R1-Distill-Qwen-7B has a pass@k curve consistently above its base Qwen2.5-Math-7B, unlike the RL model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minerva, Qwen2.5-Math-7B family, k up to 128",
+   "quote": "the pass@k curve of the distilled model is consistently and significantly above that of the base model.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Fig 7"
+  },
+  {
+   "claim": "A larger rollout number n=32 improves pass@k slightly over n=8 but the RL model is still eventually outperformed by the base.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GRPO, Qwen2.5-7B, 220 steps for n=32",
+   "quote": "As shown in Figure 16, pass@k improves slightly over n = 8, but the RL-trained model is still eventually outperformed by the base model.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.4"
+  },
+  {
+   "claim": "A KL term (0.001) gives similar pass@1 to GRPO but much lower pass@128.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GRPO with KL 0.001, 450 steps",
+   "quote": "the KL-regularized model achieves similar pass@1 to GRPO without KL, but with a much lower pass@128.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.4"
+  },
+  {
+   "claim": "Raising the RL model's temperature to match the base's entropy narrows but does not close the gap.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SimpleRLZoo Qwen2.5-7B, Fig 18",
+   "quote": "it still underperforms the base model across pass@k.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.5"
+  },
+  {
+   "claim": "Manual CoT check on GSM8K: base answered 25 hard problems, 24 with at least one correct CoT; RL model 25 with 23.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems with a valid CoT",
+   "value": 24,
+   "unit": "count",
+   "baseline_value": 25,
+   "n": null,
+   "setup": "GSM8K problems with average accuracy above 0% and below 5%",
+   "quote": "The base model answered 25 such questions, with 24 containing at least one correct CoT.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "Code and visual-reasoning results follow the math pattern; DeepCoder-14B tested only on LiveCodeBench.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code-R1-Zero 7B on LiveCodeBench, HumanEval+, MBPP+; Qwen2.5-VL-7B on MathVista, MathVision",
+   "quote": "the effects of RLVR on three code generation benchmarks exhibit trends that are highly consistent with those observed in mathematical benchmarks.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Magistral-Medium (RLVR) solves about 7 more AIME24 and 8 more AIME25 problems at k=1, with the gap narrowing as k grows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra AIME24 problems solved at k=1",
+   "value": 7,
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-Medium-3 vs Magistral-Medium-2506 via API, 40k context, k up to 1024",
+   "quote": "at k = 1, the RLVR-enhanced model solves approximately 7 more problems on AIME24 and 8 more on AIME25 compared to its base version.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.6"
+  },
+  {
+   "claim": "DAPO needs about 3 to 6x more samples per batch than other algorithms and drops significantly at k=256.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "VeRL on Qwen2.5-7B",
+   "quote": "its dynamic sampling strategy requires approximately 3 ∼6× more samples per batch during training compared to other algorithms.",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.5"
+  },
+  {
+   "claim": "Code-R1 evaluation reproduction: pass@1 28.6 vs reported 29.7 on LiveCodeBench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 28.6,
+   "unit": "%",
+   "baseline_value": 29.7,
+   "n": null,
+   "setup": "Code-R1 prompt with python appended",
+   "quote": "Using this setup, we reproduce a pass@1 score of 28.6, which is close to the reported 29.7.",
+   "table": null,
+   "note": null,
+   "where": "Fig 25 caption"
+  }
+ ],
+ "limits": [
+  "Only open-source pure-RLVR models were testable; many strong models and pipelines are proprietary (Section 7).",
+  "RL for LLMs evolves quickly and newer techniques may mitigate the findings (Section 7).",
+  "Whether scaling RLVR compute to pretraining scale changes the result is left open (Sections 4.4, 4.6).",
+  "Most evidence compares released checkpoints whose training recipes the authors did not control; own controlled runs are on Qwen2.5-7B with Omni-MATH only.",
+  "Single sampling run per model; no confidence intervals or seeds reported.",
+  "Math pass@k can be inflated by lucky guesses; validity was checked manually only on small subsets (25 GSM8K, 7 AIME24 problems, 8 visual problems).",
+  "DeepSeek-R1-Zero could not be evaluated for throughput reasons (Section 4.6).",
+  "Code and vision tasks start from instruction-tuned models, not true zero-RL."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RLVR",
+   "definition": "Reinforcement Learning with Verifiable Rewards: a deterministic verifier returns a binary reward r = V(x, y)",
+   "where": "Section 2.1"
+  },
+  {
+   "term": "pass@k (coverage)",
+   "definition": "1 for a problem if at least one of k samples passes verification; averaged over the dataset it is the proportion of problems solvable in k trials",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "Sampling Efficiency Gap (delta SE)",
+   "definition": "difference between the RL-trained model's pass@1 and the base model's pass@k (k = 256)",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "Zero RL",
+   "definition": "RL applied directly to the base model without any SFT",
+   "where": "Section 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "evaluates",
+   "note": "challenges the belief that zero-RL yields new reasoning beyond base",
+   "quote": null
+  },
+  {
+   "work": "SimpleRL-Zoo",
+   "year": 2025,
+   "arxiv": "2503.18892",
+   "relation": "evaluates",
+   "note": "released zero-RL checkpoints used for math",
+   "quote": null
+  },
+  {
+   "work": "Understanding R1-Zero-like training (Oat-Zero)",
+   "year": 2025,
+   "arxiv": "2503.20783",
+   "relation": "evaluates",
+   "note": "Oat-Zero-7B checkpoint",
+   "quote": null
+  },
+  {
+   "work": "DAPO",
+   "year": 2025,
+   "arxiv": "2503.14476",
+   "relation": "evaluates",
+   "note": "DAPO-32B checkpoint and algorithm re-implemented",
+   "quote": null
+  },
+  {
+   "work": "Large Language Monkeys",
+   "year": 2024,
+   "arxiv": "2407.21787",
+   "relation": "uses-method",
+   "note": "repeated sampling and manual CoT validity checking",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "unbiased pass@k estimator",
+   "quote": null
+  },
+  {
+   "work": "Assessing diversity collapse in reasoning (Dang et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "observed pass@k decline after RL in a limited Qwen-2.5-0.5B/GSM8K setup",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "related",
+   "note": "observed a similar trend with one instruction-tuned model and two math benchmarks",
+   "quote": null
+  },
+  {
+   "work": "Echo chamber: RL post-training amplifies behaviors learned in pretraining",
+   "year": 2025,
+   "arxiv": "2504.07912",
+   "relation": "related",
+   "note": "reflective behaviours originate in base models",
+   "quote": null
+  },
+  {
+   "work": "VeRL / HybridFlow",
+   "year": 2024,
+   "arxiv": "2409.19256",
+   "relation": "uses-method",
+   "note": "framework for own RL runs",
+   "quote": null
+  },
+  {
+   "work": "Omni-MATH",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Omni-MATH-Rule subset",
+   "quote": null
+  },
+  {
+   "work": "Magistral",
+   "year": 2025,
+   "arxiv": "2506.10910",
+   "relation": "evaluates",
+   "note": "Magistral-Medium-2506 via API",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(Left) The effect of current RLVR on LLM's reasoning ability. (Right) As RLVR training progresses, pass@1 improves but pass@256 decreases.",
+   "page": 2,
+   "why": "Shows sharpening vs lost coverage in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Pass@k curves of base models and their RLVR-trained counterparts across multiple mathematical benchmarks.",
+   "page": 4,
+   "why": "The crossover of base and RL curves as k grows"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "AIME24 (k=1024) and MATH500 (k=128): solvable/unsolvable fraction in four categories.",
+   "page": 8,
+   "why": "Shows RL-solvable set is nearly a subset of the base-solvable set"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.2, Eq 2",
+   "snippet": "pass@k := E_{x_i~D}[ 1 - C(n-c_i, k) / C(n, k) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Eq. 2 and prompt templates extracted with line breaks; prompt text rebuilt from layout.",
+  "Table 2 cell values are in a flattened column list; row assignment inferred from the caption.",
+  "First-author affiliation line reads Yang Yue twice (two different people, footnote explains).",
+  "Text range 'GRPO's 43.9 to RLOO's best 42.6' for delta SE versus Fig 8 labels (0.410, 0.408) not reconciled in the paper.",
+  "No embedded instructions found."
+ ]
+}

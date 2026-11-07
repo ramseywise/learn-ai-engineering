@@ -1,0 +1,666 @@
+{
+ "schema": 1,
+ "key": "2507.19457",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/agrawal-2025-gepa.pdf",
+ "bib": {
+  "title": "GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning",
+  "authors": [
+   "Lakshya A Agrawal",
+   "Shangyin Tan",
+   "Dilara Soylu",
+   "Noah Ziems",
+   "Rishi Khare",
+   "Krista Opsahl-Ong",
+   "Arnav Singhvi",
+   "Herumb Shandilya",
+   "Michael J Ryan",
+   "Meng Jiang",
+   "Christopher Potts",
+   "Koushik Sen",
+   "Alexandros G. Dimakis",
+   "Ion Stoica",
+   "Dan Klein",
+   "Matei Zaharia",
+   "Omar Khattab"
+  ],
+  "first_author": "Agrawal",
+  "year": 2025,
+  "venue": "ICLR 2026 (Oral)",
+  "arxiv": "2507.19457",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 275321,
+  "chars_total": 275321,
+  "engine": "pymupdf",
+  "skipped": "Appendix L/M prompt listings (about line 3800 to 6700 of the cached text) and search-tree figure labels were skimmed, not read in full; they hold optimised prompt text and node scores only."
+ },
+ "type": "empirical",
+ "question": "Can reflective natural-language prompt evolution adapt LLM systems to new tasks with far fewer rollouts than weight-space RL such as GRPO?",
+ "hypothesis": "Language is a richer learning medium than sparse scalar rewards, so reflecting on trajectories in natural language yields larger gains per rollout than policy gradients.",
+ "contributions": [
+  "GEPA, a reflective Pareto-based prompt optimizer for compound AI systems",
+  "Evaluation on six tasks with Qwen3 8B and GPT-4.1 Mini against GRPO, MIPROv2, TextGrad, Trace",
+  "System-aware Merge crossover",
+  "Preliminary use as inference-time search for kernel code and for adversarial prompt search"
+ ],
+ "method": {
+  "summary": "GEPA keeps a pool of prompt candidates for a multi-module LLM system. Each iteration it picks a candidate by sampling from the per-instance Pareto frontier, runs it on a minibatch of 3, has a reflection LM read traces plus textual feedback and rewrite one module's prompt (round-robin), keeps the child if the minibatch score improves, then scores it on the Pareto validation set. Optional Merge combines modules from two lineages.",
+  "task": "prompt optimisation for compound AI systems (multi-hop QA, instruction following, privacy delegation, math)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": "150 train, 300 val, 300 test",
+    "split": "train=Dfeedback, val=Dpareto",
+    "source": "Yang et al. 2018",
+    "preprocessing": "last hop of HoVerMultiHop program changed to answer the question"
+   },
+   {
+    "name": "IFBench",
+    "role": "both",
+    "size": "150 train, 300 val, 294 test",
+    "split": "IF-RLVR Train split into train/val; IFBench as test",
+    "source": "Pyatkin et al. 2025a,b",
+    "preprocessing": "2-stage system: answer, then rewrite under constraints"
+   },
+   {
+    "name": "HoVer",
+    "role": "both",
+    "size": "150 train, 300 val, 300 test",
+    "split": "train/val/test",
+    "source": "Jiang et al. 2020",
+    "preprocessing": "HoverMultiHop from Tan et al. 2025, up to 3 hops, 2 query writers and 2 summarisers"
+   },
+   {
+    "name": "PUPA",
+    "role": "both",
+    "size": "111 train, 111 val, 221 test",
+    "split": "train/val/test",
+    "source": "Li et al. 2025a (PAPILLON)",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME-2025",
+    "role": "eval",
+    "size": "30 problems, each repeated 5 times as test; AIME 2022-2024 (90 questions) split equally into train and val",
+    "split": "train/val from 2022-2024, test = 2025",
+    "source": "MathArena (Balunovic et al. 2025)",
+    "preprocessing": "single-step ChainOfThought"
+   },
+   {
+    "name": "LiveBench-Math",
+    "role": "both",
+    "size": "368 questions retrieved 30 July 2025",
+    "split": "shuffled with python random seed 0, split equally into train/val/test",
+    "source": "White et al. 2025",
+    "preprocessing": "single-step ChainOfThought"
+   },
+   {
+    "name": "NPUEval (early version)",
+    "role": "eval",
+    "size": null,
+    "split": "train and Dpareto both the full task set",
+    "source": "Kalade & Schelle 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "KernelBench representative subset",
+    "role": "eval",
+    "size": "35 tasks across three difficulty levels",
+    "split": "train and Dpareto both the full set",
+    "source": "Ouyang et al. 2025",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen3 8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16384 tokens allowed for inference",
+    "other": {}
+   },
+   {
+    "name": "GPT-4.1 Mini (gpt-4.1-mini-2025-04-14)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16384 tokens allowed for inference",
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "kernel inference-time search"
+    }
+   },
+   {
+    "name": "GPT-5 Mini",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "adversarial prompt search"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Qwen3 8B: temperature 0.6, top-p 0.95, top-k 20; GPT-4.1 Mini: temperature 1.0",
+   "temperature": "0.6 (Qwen3 8B), 1.0 (GPT-4.1 Mini)",
+   "top_p": "0.95 (Qwen3 8B)",
+   "max_tokens": null,
+   "samples": "AIME-2025 test repeats each question 5 times; adversarial search 5 runs per problem; number of optimisation seeds not stated",
+   "prompting": "All modules in a system use the same model; seed prompts are simple signatures; the reflection LM model is not named in the text read",
+   "retrieval": "HoVer/HotpotQA retrieval over Wikipedia; NPUEval variants add RAG over technical manuals",
+   "parameters": {
+    "minibatch_size": "3",
+    "merge_max_invocations": "5",
+    "pareto_set": "validation set used as Dpareto, training set as Dfeedback",
+    "module_selection": "round-robin",
+    "candidate_selection": "Pareto frontier, sample proportional to number of instances led",
+    "budget_matching": "GEPA capped to MIPROv2's rollouts per benchmark, within 10.15%",
+    "MIPROv2": "auto=heavy, 18 instruction candidates, 18 bootstrapped few-shot sets, 2270 (PUPA) to 6926 (HoVer) rollouts",
+    "BeamSearch_N": "4",
+    "GRPO": "500 steps, 24,000 rollouts, group size 12, 4 instances/step (batch 48), LoRA rank 16 alpha 64 dropout 0.05 bf16, lr 1e-5, beta 0.01, grad clip 0.1, 20 grad-accum steps, val every 20 steps, 1xH100/A100 80GB plus separate inference GPUs",
+    "GRPO_full_finetune_single_module": "group 16, global batch 32, 8 GPUs, FSDP2, lr 1e-6, KL regularisation, sampling temp 1.0, val every 5 steps"
+   },
+   "other": {
+    "cost": "under $500 for Table 2; GEPA $86, GEPA-Merge $67, MIPROv2 $76, Trace+TextGrad $172",
+    "reflection_calls": "Table 4: Qwen3-8B 90 (AIME), 38 (LiveBench), 64 (HotpotQA), 17 (IFBench), 50 (HoVer), 38 (PUPA)",
+    "GEPA_rollouts_Qwen3": "6871, 3593, 7051, 2426, 1839, 1839 (HotpotQA, IFBench, HoVer, PUPA, AIME, LiveBench per Table 1 order)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "task score",
+     "definition": "per-benchmark metric mu in [0,1] (exact match, F1, pass rate, etc.), reported as percent on held-out test",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "aggregate improvement",
+     "definition": "mean over benchmarks of test score minus baseline",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "fast_p",
+     "definition": "fraction of tasks with a kernel faster than p times PyTorch-eager",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unoptimised program",
+    "GRPO (LoRA, 24,000 rollouts)",
+    "MIPROv2 (with and without demos)",
+    "TextGrad",
+    "Trace (OptoPrime)",
+    "SelectBestCandidate",
+    "BeamSearch N=4"
+   ],
+   "protocol": "Validation scores used for candidate selection, test set held out; optimisers see train text and labels but not validation content. Single run per cell appears to be reported; no seeds, variance or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/gepa-ai/gepa",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "GEPA reflection / prompt-update meta prompt",
+    "text": "I provided an assistant with the following instructions to perform a task for me:\n```\n<current instruction>\n```\nThe following are examples of different task inputs provided to the assistant along with the assistant's response for each of them, and some feedback on how the assistant's response could be better:\n```\n<Inputs, Outputs and Feedback for minibatch of examples>\n```\nYour task is to write a new instruction for the assistant.\nRead the inputs carefully and identify the input format and infer detailed task description about the task I wish to solve with the assistant.\nRead all the assistant responses and the corresponding feedback. Identify all niche and domain specific factual information about the task and include it in the instruction, as a lot of it may not be available to the assistant in the future. The assistant may have utilized a generalizable strategy to solve the task, if so, include that in the instruction as well.\nProvide the new instructions within ``` blocks.",
+    "where": "Appendix C"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.minibatch_size",
+    "quote": "All GEPA optimization runs use a minibatch size of 3",
+    "where": "App E.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GEPA beats GRPO (24,000 rollouts) by 6% on average and up to 20%, with up to 35x fewer rollouts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3 8B, six benchmarks (HotpotQA, IFBench, HoVer, PUPA, AIME-2025, LiveBench-Math), GEPA vs GRPO with LoRA at 24,000 rollouts",
+   "note": null,
+   "where": "Abstract",
+   "quote": "GEPA outperforms GRPO by 6% on average and by up to 20%, while using up to 35x fewer rollouts"
+  },
+  {
+   "claim": "Aggregate test score of GEPA on Qwen3 8B across six tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aggregate test score",
+   "value": "54.85",
+   "unit": "points",
+   "baseline_value": "45.23",
+   "n": null,
+   "setup": "Qwen3 8B, six benchmarks (HotpotQA, IFBench, HoVer, PUPA, AIME-2025, LiveBench-Math), GEPA vs GRPO with LoRA at 24,000 rollouts; baseline 45.23, GRPO 48.91, MIPROv2 47.84",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GEPA, column Aggregate"
+  },
+  {
+   "claim": "GEPA aggregate improvement over baseline on Qwen3 8B (GRPO +3.68, MIPROv2 +2.61).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+9.62",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3 8B, six benchmarks",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GEPA, column Improvement"
+  },
+  {
+   "claim": "On IFBench GEPA reached 38.61 after 678 rollouts versus GRPO's 35.88 at 24,000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IFBench test score",
+   "value": "38.61",
+   "unit": "%",
+   "baseline_value": "35.88",
+   "n": null,
+   "setup": "Qwen3 8B, IFBench test set",
+   "note": null,
+   "where": "Table 1 caption",
+   "quote": "GEPA found optimal prompts after just 678 rollouts achieving 38.61%, outperforming GRPO's test set score"
+  },
+  {
+   "claim": "GRPO beats GEPA on AIME-2025 with Qwen3 8B (38.00 vs 32.00); GEPA wins the other five tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME-2025 score (GRPO)",
+   "value": "38.00",
+   "unit": "%",
+   "baseline_value": "32.00",
+   "n": null,
+   "setup": "Qwen3 8B, AIME-2025, test = 30 problems x5 repeats",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows GRPO and GEPA, column AIME-2025"
+  },
+  {
+   "claim": "GEPA+Merge hurts on Qwen3 8B IFBench (28.23 vs 38.61 for GEPA) and aggregate (52.40 vs 54.85).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "28.23",
+   "unit": "%",
+   "baseline_value": "38.61",
+   "n": null,
+   "setup": "Qwen3 8B; same merge hyperparameters used for both models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GEPA+Merge, column IFBench"
+  },
+  {
+   "claim": "GEPA aggregate improvement on GPT-4.1 Mini over baseline; MIPROv2 +5.64, TextGrad +6.11, Trace +3.27.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+12.19",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4.1 Mini, six benchmarks, optimizers on equal rollout budget",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GEPA, column Improvement"
+  },
+  {
+   "claim": "GEPA+Merge aggregate improvement on GPT-4.1 Mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+13.33",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4.1 Mini, six benchmarks",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GEPA+Merge, column Improvement"
+  },
+  {
+   "claim": "GEPA prompts optimised on Qwen3-8B transfer to GPT-4.1-Mini and beat baselines optimised directly on GPT-4.1-Mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+9.00",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Optimised with Qwen3-8B, evaluated unchanged on GPT-4.1-Mini",
+   "note": null,
+   "where": "Observation 6",
+   "quote": "achieving a +9.00% aggregate improvement across 6 benchmarks"
+  },
+  {
+   "claim": "Pareto-based candidate selection gives +12.44 aggregate improvement versus +6.05 for SelectBestCandidate and +5.11 for BeamSearch(N=4).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+12.44",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3 8B, four tasks (HotpotQA, IFBench, HoVer, PUPA), evolution harness fixed",
+   "note": "Text says aggregate margins of +7.33% and +6.4% over beam search and SelectBest; text also says up to 11.33% and 8.17%.",
+   "where": "Table 3",
+   "table": "Table 3, row GEPA, column Improvement"
+  },
+  {
+   "claim": "GEPA/GEPA+Merge prompts are up to 9.2x shorter than MIPROv2's.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9.2",
+   "unit": "x shorter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Optimised prompt token counts across benchmarks",
+   "note": null,
+   "where": "Observation 4",
+   "quote": "up to 9.2× shorter than those from MIPROv2"
+  },
+  {
+   "claim": "GEPA matches GRPO's best validation after 243, 402, 330, 1143, 1179, and 306 rollouts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3 8B, six tasks (order as printed)",
+   "note": "Observation 1 also says 'up to 35x fewer rollouts' and 'beating GRPO by up to 19%' while abstract says up to 20%; text lists gains of 19.0, 2.73, 13.66, 5.19, 0.7 on 5 of 6 tasks. Most of GEPA's budget goes to validation scoring.",
+   "where": "Observation 1",
+   "quote": "GEPA matches GRPO's best validation after only 243, 402, 330, 1143, 1179, and 306 rollouts"
+  },
+  {
+   "claim": "Most GEPA rollouts are validation; counting train rollouts only, GEPA needs 79 to 737 to reach optimal performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3 8B",
+   "note": null,
+   "where": "Observation 1",
+   "quote": "GEPA requires only 79 to 737 rollouts to reach optimal performance"
+  },
+  {
+   "claim": "Adversarial prompt search with GEPA cut GPT-5 Mini pass@1 on AIME-2025 from 76% to 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-5 Mini, 5 runs per problem (150 generations), prompt evolved on AIME 2022-2024",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "reduced pass@1 on AIME-2025 from 76% (clean prompt) to 10% (adversarial prompt)"
+  },
+  {
+   "claim": "Inference-time search: GEPA lifts GPT-4o mean NPU vector utilisation from 4.25% (Sequential10) to 30.52%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30.52",
+   "unit": "% vector utilization",
+   "baseline_value": "4.25",
+   "n": null,
+   "setup": "NPUEval early version, GPT-4o, Sequential10 agent without RAG; Sequential10+RAG 16.33%, +MIPROv2 19.03%, single GEPA prompt 26.85%",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "a mean of 30.52%"
+  },
+  {
+   "claim": "On KernelBench (35 tasks), GEPA lifts GPT-4o fast_1 from near 0% to above 20% with increasing budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "KernelBench representative subset, GPT-4o, Sequential5 agent, V100",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "GEPA boosts GPT-4o's close-to-0% fast1 score to above 20%"
+  },
+  {
+   "claim": "Total cost of all Table 2 GPT-4.1 mini experiments is under $500; GEPA $86, GEPA-Merge $67, MIPROv2 $76, Trace and TextGrad $172 total.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4.1 mini API",
+   "note": null,
+   "where": "App E.3",
+   "quote": "It costs under $500 to run all experiments in Table 2 with GPT-4.1 mini."
+  },
+  {
+   "claim": "Reflective instruction optimisation shows a lower generalisation gap than the exemplar-based finding of Wan et al. (2024).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figure 16, val-vs-test gap, both models",
+   "note": null,
+   "where": "Fig 16 caption",
+   "quote": "our results suggest that instructions generated by reflective prompt evolution can achieve stronger generalization"
+  }
+ ],
+ "limits": [
+  "No seeds, variance or significance tests reported; single numbers per cell.",
+  "GRPO beats GEPA on AIME-2025 (38.00 vs 32.00) with Qwen3 8B.",
+  "GEPA+Merge hurts Qwen3 8B; authors say hyperparameters were fixed across models and merge timing needs study.",
+  "Most GEPA rollouts are spent on validation scoring; authors propose smaller or dynamic validation sets as future work.",
+  "GRPO hyperparameters were explored manually (LR, beta, clipping) and the GRPO budget is a fixed 24,000 rollouts with LoRA for the main results.",
+  "Inference-time search (NPUEval, KernelBench) and adversarial search are preliminary.",
+  "Reflection LM identity is not given in the sections read.",
+  "GEPA needs a feedback function with textual traces; gains rely on it."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compound AI system",
+   "definition": "any modular system composed of one or more language model invocations, potentially interleaved with external tool calls, orchestrated through arbitrary control flow",
+   "where": "Sec 2"
+  },
+  {
+   "term": "feedback function mu_f",
+   "definition": "extends the metric to return textual evaluation traces with the score",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MIPROv2 (Opsahl-Ong et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Leading prompt optimizer; GEPA beats it on all benchmarks",
+   "quote": null
+  },
+  {
+   "work": "GRPO (Shao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RL baseline, LoRA and full finetune",
+   "quote": null
+  },
+  {
+   "work": "TextGrad (Yuksekgonul et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "greedy best-candidate analogue",
+   "quote": null
+  },
+  {
+   "work": "Trace / OptoPrime (Cheng et al.)",
+   "year": 2024,
+   "arxiv": "2406.16218",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "APO (Pryzant et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "beam search analogue",
+   "quote": null
+  },
+  {
+   "work": "DSPy (Khattab et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "systems implemented in DSPy",
+   "quote": null
+  },
+  {
+   "work": "Illuminating search spaces by mapping elites (Mouret & Clune)",
+   "year": 2015,
+   "arxiv": "1504.04909",
+   "relation": "uses-method",
+   "note": "Pareto illumination strategy",
+   "quote": null
+  },
+  {
+   "work": "Wan et al. generalization gap study",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "GEPA instructions generalise better than exemplars, contrary to prior finding",
+   "quote": null
+  },
+  {
+   "work": "Tan et al. benchmark suite",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks and systems mostly from this work",
+   "quote": null
+  },
+  {
+   "work": "EvoPrompt, Promptbreeder, AlphaEvolve",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "evolutionary prompt/code search",
+   "quote": null
+  },
+  {
+   "work": "NPUEval (Kalade & Schelle)",
+   "year": 2025,
+   "arxiv": "2507.14403",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "KernelBench (Ouyang et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Learning behavior of GEPA vs MIPROv2 and GRPO (24,000 rollouts) on HotpotQA and IFBench, Qwen3 8B",
+   "page": 1,
+   "why": "Shows rollout-efficiency gap at a glance"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "GEPA core algorithm and Pareto candidate selection",
+   "page": 6,
+   "why": "Pseudocode for the loop"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Search trees under SelectBestCandidate vs Pareto sampling",
+   "page": 10,
+   "why": "Shows greedy stalling"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 / Fig 4",
+   "snippet": "Split Dtrain into Dfeedback, Dpareto; loop: k<-SELECTCANDIDATE(P,S); j<-SELECTMODULE; minibatch b from Dfeedback; pi_j'<-UPDATEPROMPT; if minibatch score improved, add to P and score on Dpareto; return best on Dpareto",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix prompt listings (Appendix L, M) not read in full.",
+  "Text states the reflection LM only indirectly; not recorded."
+ ]
+}

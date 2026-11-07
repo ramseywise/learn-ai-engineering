@@ -1,0 +1,463 @@
+{
+ "schema": 1,
+ "key": "2307.04725",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/guo-2023-animatediff.pdf",
+ "bib": {
+  "title": "AnimateDiff: Animate Your Personalized Text-to-Image Diffusion Models without Specific Tuning",
+  "authors": [
+   "Yuwei Guo",
+   "Ceyuan Yang",
+   "Anyi Rao",
+   "Zhengyang Liang",
+   "Yaohui Wang",
+   "Yu Qiao",
+   "Maneesh Agrawala",
+   "Dahua Lin",
+   "Bo Dai"
+  ],
+  "first_author": "Guo",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2307.04725",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48072,
+  "chars_total": 48072,
+  "engine": "pymupdf",
+  "skipped": "Supplementary materials (training and inference configs, user-study details) are not in this PDF."
+ },
+ "type": "empirical",
+ "question": "How can existing personalized text-to-image diffusion models be turned into animation generators without model-specific tuning?",
+ "hypothesis": "A motion module trained once on video, with a domain adapter absorbing the video-quality gap, transfers to any personalized checkpoint sharing the same base T2I.",
+ "contributions": [
+  "A pipeline that animates any personalized T2I without specific fine-tuning",
+  "Verification that a Transformer along the temporal axis is adequate for motion priors",
+  "MotionLoRA, a lightweight fine-tune adapting the motion module to new motion patterns",
+  "Evaluation on community models against academic baselines and commercial tools (Gen-2, Pika Labs), plus compatibility with controllable generation"
+ ],
+ "method": {
+  "summary": "A temporal-Transformer motion module is inserted into an inflated Stable Diffusion v1.5 and trained on WebVid-10M with the image layers frozen, after a LoRA domain adapter is fitted to video frames to absorb the video-quality gap and then dropped (or scaled by alpha) at inference. MotionLoRA fine-tunes LoRA layers in the motion module's self-attention on 20-50 rule-augmented reference videos.",
+  "task": "personalized text-to-image animation (text-to-video via module insertion)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebVid-10M",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Bain et al., 2021",
+    "preprocessing": "Domain adapter trained on static frames randomly sampled from the videos"
+   },
+   {
+    "name": "MotionLoRA reference videos",
+    "role": "train",
+    "size": "20-50 videos per motion pattern",
+    "split": null,
+    "source": "rule-based augmentation (zoom-in/out by shrinking/enlarging crop area over time)",
+    "preprocessing": null
+   },
+   {
+    "name": "Personalized T2I checkpoints from Civitai",
+    "role": "eval",
+    "size": "8 shown in Fig 4",
+    "split": null,
+    "source": "Civitai (2022)",
+    "preprocessing": "Prompts built from each model's homepage trigger words"
+   }
+  ],
+  "models": [
+   {
+    "name": "Stable Diffusion V1.5",
+    "role": "base",
+    "params": null,
+    "architecture": "latent diffusion UNet, four resolution levels",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AnimateDiff motion module",
+    "role": "proposed",
+    "params": null,
+    "architecture": "temporal Transformer: self-attention blocks along frame axis, sinusoidal position encoding, zero-initialised output projection with residual",
+    "init_from": "newly initialised",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "num_blocks": "N (value not given)"
+    }
+   },
+   {
+    "name": "MotionLoRA",
+    "role": "proposed",
+    "params": "about 30M storage (rank 128 ~36M, rank 2 ~1M in Fig 7)",
+    "architecture": "LoRA on motion-module self-attention",
+    "init_from": "pre-trained motion module",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Text2Video-Zero",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Tune-a-Video",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "epsilon-prediction MSE (Eq 2 for domain adapter on frames; Eq 7 for motion module/MotionLoRA on frame-wise latents)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "MotionLoRA: 2,000 iterations, around 1~2 hours",
+   "seeds": null,
+   "other": {
+    "stages": "1 domain adapter (LoRA in self/cross-attn, alpha=1), 2 motion module (adapter and base frozen), 3 optional MotionLoRA",
+    "MotionLoRA_iterations": "2,000",
+    "note": "Detailed configurations are in supplementary materials, not in this PDF"
+   }
+  },
+  "inference": {
+   "decoding": "iterative reverse diffusion from random noise, then decode latents; sampler not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Prompts from each community model's homepage (trigger words)",
+   "retrieval": null,
+   "parameters": {
+    "domain_adapter_alpha": "1 in training; adjustable at inference, 0 removes it",
+    "ablation": "alpha varied from 1 to 0 (Fig 6)"
+   },
+   "other": {
+    "controllable": "ControlNet with depth map sequence, no extra training"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "User study Average User Ranking (Text, Domain, Smooth)",
+     "definition": "participants rank results of the three methods on text alignment, domain similarity and motion smoothness; AUR",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP metric (Text, Domain, Smooth)",
+     "definition": "CLIP scores; domain similarity computed between animation frames and reference images generated by the personalized T2I",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Text2Video-Zero",
+    "Tune-a-Video",
+    "Gen-2 (qualitative)",
+    "Pika Labs (qualitative)"
+   ],
+   "protocol": "User study on animations from the same personalized T2Is; number of participants, prompts and models not stated in main text."
+  },
+  "availability": {
+   "code": "https://github.com/guoyww/AnimateDiff",
+   "weights": "pre-trained weights released",
+   "data": "WebVid-10M (public)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "AnimateDiff has the best motion smoothness in the user study.",
+   "kind": "measured",
+   "source": null,
+   "metric": "User study Smooth. (AUR)",
+   "value": "2.825",
+   "unit": "score",
+   "baseline_value": "1.615 (Tune-a-Video), 1.560 (Text2Video-Zero)",
+   "n": null,
+   "setup": "Animations from same personalized T2Is, ranking by participants, higher better",
+   "quote": null,
+   "table": "Table 1, row Ours, column User Study Smooth.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "AnimateDiff has the best domain similarity in the user study.",
+   "kind": "measured",
+   "source": null,
+   "metric": "User study Domain. (AUR)",
+   "value": "2.280",
+   "unit": "score",
+   "baseline_value": "2.620 (Text2Video-Zero), 1.100 (Tune-a-Video)",
+   "n": null,
+   "setup": "As above",
+   "quote": null,
+   "table": "Table 1, row Ours, column User Study Domain.",
+   "note": "Text2Video-Zero scores 2.620, higher than Ours 2.280, on user-study domain similarity",
+   "where": "Table 1"
+  },
+  {
+   "claim": "On user-study text alignment AnimateDiff scores 2.210, marginally above Tune-a-Video.",
+   "kind": "measured",
+   "source": null,
+   "metric": "User study Text. (AUR)",
+   "value": "2.210",
+   "unit": "score",
+   "baseline_value": "2.180 (Tune-a-Video), 1.620 (Text2Video-Zero)",
+   "n": null,
+   "setup": "As above",
+   "quote": null,
+   "table": "Table 1, row Ours, column User Study Text.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "AnimateDiff has the highest CLIP smoothness and domain scores but the lowest CLIP text score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP Text.",
+   "value": "31.39",
+   "unit": "CLIP score",
+   "baseline_value": "35.98 (Tune-a-Video), 32.04 (Text2Video-Zero)",
+   "n": null,
+   "setup": "CLIP metric as in Wu et al. 2023 and Khachatatryan et al. 2023",
+   "quote": null,
+   "table": "Table 1, row Ours, column CLIP Metric Text.",
+   "note": "CLIP Domain 87.29 and Smooth 98.00 are best (Table 1)",
+   "where": "Table 1"
+  },
+  {
+   "claim": "MotionLoRA works with as few as 20-50 reference videos, 2,000 iterations and about 30M storage.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Shot types (zoom, pan, roll) from rule-based augmented videos",
+   "quote": "MotionLoRA can achieve promising results even with as few as 20 ∼50 ref-\nerence videos, 2,000 training iterations (around 1 ∼2 hours) as well as about 30M storage space",
+   "table": null,
+   "note": "Unit of 30M not printed as MB",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "With N=5 reference videos MotionLoRA degrades significantly; N=50 learns the pattern.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7 qualitative, zoom-in; ranks 2 (~1M) vs 128 (~36M) comparable motion",
+   "quote": "when the number of\nreference videos is excessively limited (e.g., N = 5), significant degradation in quality is observed",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 7"
+  },
+  {
+   "claim": "A 1D temporal convolution motion module (matched parameters) yields identical frames with no motion, unlike the Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation, evidence only in supplementary",
+   "quote": "the convolutional motion module aligns all frames to be identical but does not\nincorporate any motion compared to the Transformer architecture",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Lowering domain-adapter scaler from 1 to 0 improves visual quality and removes the WebVid watermark.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, Fig 6, first frame",
+   "quote": "as the scaler of the adapter decreases, there is\nan improvement in overall visual quality",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Quantitative evidence is a user study and CLIP scores against two adapted baselines; commercial tools compared only qualitatively (Fig 5).",
+  "User study size, prompts and CLIP details are in supplementary, not in this PDF.",
+  "AnimateDiff has the lowest CLIP text score and Text2Video-Zero beats it on user-study domain similarity.",
+  "Motion module tied to the base T2I (SD v1.5) of the personalized checkpoints.",
+  "Authors note misuse risk: generates human-related content and community models may contain inappropriate content."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "domain adapter",
+   "definition": "LoRA layers fitted to static video frames to absorb the visual quality gap, dropped or scaled by alpha at inference",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "MotionLoRA",
+   "definition": "LoRA layers added to the motion module's self-attention to adapt it to new motion patterns",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-resolution image synthesis with latent diffusion models (Stable Diffusion)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base T2I, v1.5",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "domain adapter and MotionLoRA",
+   "quote": null
+  },
+  {
+   "work": "DreamBooth",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "personalization",
+   "quote": null
+  },
+  {
+   "work": "Adding conditional control to text-to-image diffusion models (ControlNet)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "zero init, controllable generation",
+   "quote": null
+  },
+  {
+   "work": "Align your latents",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "network inflation practice",
+   "quote": null
+  },
+  {
+   "work": "Tune-a-Video",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Text2Video-Zero",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "WebVid-10M (Frozen in time)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "video training data",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "temporal Transformer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Training pipeline of AnimateDiff. AnimateDiff consists of three training stages for the corresponding component modules.",
+   "page": 5,
+   "why": "Shows which part is trainable at each stage"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Quantitative comparison. A higher score indicates superior performance.",
+   "page": 8,
+   "why": "Only quantitative evidence"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "W' = W + dW = W + A B^T",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "Q = W^Q z + alpha * A B^T z",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplementary materials absent from PDF, so hyperparameters are null.",
+  "No embedded instructions found."
+ ]
+}

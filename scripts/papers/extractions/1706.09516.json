@@ -1,19 +1,677 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1706.09516",
  "pdf": "data-science/sources/prokhorenkova-2017-catboost.pdf",
  "bib": {
   "title": "CatBoost: unbiased boosting with categorical features",
-  "first_author": "Liudmila Prokhorenkova",
-  "year": "2017",
-  "venue": "arXiv (Cornell University)",
+  "authors": [
+   "Liudmila Prokhorenkova",
+   "Gleb Gusev",
+   "Aleksandr Vorobev",
+   "Anna Veronika Dorogush",
+   "Andrey Gulin"
+  ],
+  "first_author": "Prokhorenkova",
+  "year": 2017,
+  "venue": "preprint",
   "arxiv": "1706.09516",
   "doi": "10.48550/arxiv.1706.09516"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 72041,
+  "chars_total": 72041,
+  "engine": "pymupdf",
+  "skipped": "Appendix A proof algebra (Propositions 1-3, Lemmas 1-2) read only in part; text is garbled and the claim is stated in Theorem 1 in the body"
  },
- "legacy_report": "SOURCE: \"CatBoost: unbiased boosting with categorical features\", Prokhorenkova, Gusev, Vorobev, Dorogush, Gulin (Yandex/MIPT). This PDF is arXiv:1706.09516v5, dated 20 Jan 2019, and its footer reads \"Preprint. Work in progress.\" It prints no venue, so the NeurIPS 2018 citation in note 07 cannot be confirmed from this file.\n\nCOVERAGE: 70,940 of 70,940 chars, including Appendices A-G. Nothing was skipped. References were skimmed for origins. The proof algebra in Appendix A was read but is garbled (see PROBLEMS).\n\nCLAIMS\n\n- claim: CatBoost in its strong setting beats LightGBM and XGBoost on all nine datasets, and the gaps range from negligible to large.\n  number: Adult +2.4% and +2.2% logloss; Amazon +17% for both; Internet +6.8% and +7.9%; Upselling +0.3% and +0.04%\n  setup: Binary tasks; random 80/20 split; 5-fold CV for tuning; 50 steps of Hyperopt TPE minimising logloss; then a tree-count search over [1, 5000]. Epsilon used default parameters and tuned tree count only. Baselines received ordered TS as a preprocessing step. CatBoost ran in Ordered mode with feature combinations. Versions: catboost 0.3, xgboost 0.6, lightgbm 0.1.\n  quote: \"Adult 0.270 / 0.127 +2.4% / +1.9% +2.2% / +1.0%\" and \"Amazon 0.139 / 0.044 +17% / +21% +17% / +21%\" and \"Upselling 0.166 / 0.049 +0.3% / +0.1% +0.04% / +0.3%\"\n  where: Table 2 p8; absolute values Table 8 p21; setup D.2 p19-20\n\n- claim: Three of the nine dataset wins are not statistically significant.\n  number: p-value ≪ 0.01 on the other six\n  setup: Paired one-tailed t-test; the paper does not say what is paired or how many runs were used.\n  quote: \"except three datasets (Appetency, Churn and Upselling) the improvements are statistically signiﬁcant with p-value≪ 0.01 measured by the paired one-tailed t-test\"\n  where: S6 p8\n\n- claim: Stripped to a near-classical GBDT, CatBoost roughly ties the baselines, so the headline lead comes from the added techniques rather than the base implementation.\n  number: 0.2% each way on average\n  setup: Raw setting: Plain mode, depth 6, no CatBoost categorical options, the same ordered TS permutation for all libraries; 8 datasets (Epsilon absent, no reason given). The main remaining difference is oblivious trees.\n  quote: \"the raw setting of CatBoost outperforms the baselines in terms of zero-one loss by 0.2% while they are better in terms of logloss by 0.2%\"\n  where: Table 9 and text, p21-22\n\n- claim: Greedy target statistics cost far more on most datasets than on Adult, and every alternative loses to ordered TS except one Appetency zero-one cell.\n  number: Greedy logloss +1.1% on Adult, +40% on Amazon, +57% on Upselling. Leave-one-out +5.5% on Adult, +27% on Internet. Holdout +2.1% on Adult, +8.3% on Amazon.\n  setup: TS swapped as options inside CatBoost Ordered mode, \"keeping all other algorithmic details the same\"; 8 datasets, no Epsilon. Holdout on Appetency zero-one is the exception at -0.5%. A repeat with Plain mode is reported as \"very similar\" but not shown. This is CatBoost only, not across libraries.\n  quote: \"Adult +1.1% / +0.8% +2.1% / +2.0% +5.5% / +3.7%\" and \"Amazon +40% / +32% +8.3% / +8.3% +4.5% / +5.6%\" and \"Upselling +57% / +50% +1.6% / +0.9% +3.9% / +2.9%\"\n  where: Table 4 p9\n\n- claim: Ordered mode helps most on small data, but Plain has lower logloss on four of nine datasets.\n  number: Plain +1.1% on Adult, +3.9% on Internet; -0.6% on Amazon, -0.05% on Click, -0.06% on Churn, -0.2% on Kick\n  setup: Strong setting, Plain relative to Ordered. Authors' explanation: Adult and Internet are \"less than 40K training examples\". Amazon (32,769 instances, Table 7) is also small and favours Plain, a point the paper does not discuss; that observation is mine.\n  quote: \"Adult 0.272 (+1.1%) 0.127 (-0.1%)\" and \"Internet 0.217 (+3.9%) 0.099 (+5.4%)\" and \"Amazon 0.139 (-0.6%) 0.044 (-1.5%)\"\n  where: Table 3 and text, p8\n\n- claim: Ordered mode keeps a small average edge in the raw setting, and sharing the permutation between TS and boosting improves it.\n  number: Average -0.5% / -0.2% with independent permutations; -0.6% / -0.9% with shared\n  setup: Raw setting, relative to Plain, 8 datasets. Amazon logloss is worse in both variants (+0.9%, +0.8%).\n  quote: \"Average -0.5% / -0.2% -0.6% / -0.9%\"\n  where: Table 10 p22\n\n- claim: Prediction shift exists formally: reusing one dataset across boosting steps biases the model, and the bias shrinks with n.\n  number: bias -(1/(n-1)) c2 (x2 - 1/2), my transcription of garbled text\n  setup: Quadratic loss; two i.i.d. Bernoulli(1/2) features; y = c1x1 + c2x2; two stumps; step size 1. Theorem only, for this toy case. Bias \"can depend on the relation f∗\".\n  quote: \"we suffer from a bias − 1n−1c2(x2− 12), which is inversely proportional to the data size n\"\n  where: Theorem 1 p5; proof Appendix A p11-15\n\n- claim: Greedy TS can fit training data perfectly and still predict at chance.\n  number: accuracy 0.5\n  setup: Thought experiment: all category values unique, P(y=1|category) = 0.5; one split separates training data.\n  quote: \"the obtained model predicts 0 for all of them ifp<t and predicts 1 otherwise, thus having accuracy 0.5 in both cases\"\n  where: S3.2 p3\n\n- claim: Leave-one-out does not stop target leakage, because a constant categorical feature still separates the training set perfectly.\n  number: none\n  setup: Analytic example; threshold depends on n+ and yk.\n  quote: \"Surprisingly, it does not prevent target leakage.\"\n  where: S3.2 p4\n\n- claim: Ordered TS computes each row's statistic from rows earlier in a random permutation, while test rows use the whole training set.\n  number: none\n  setup: Meets P1 (no conditional shift) and P2 (uses all data). A single permutation gives early rows high variance, so permutations vary across boosting steps.\n  quote: \"take Dk ={xj : σ(j) < σ(k)} in Equation (5) for a training example andDk =D for a test one\"\n  where: S3.2 p4; test handling also S5 p7\n\n- claim: Ordered mode takes about 1.7 times as long per tree as Plain, and XGBoost is slowest in this test.\n  number: Plain 1.1 s, Ordered 1.9 s, XGBoost 3.9 s, LightGBM 1.1 s\n  setup: Epsilon only (400,000 rows, 2,000 features); fixed-size ensemble of 8,000 trees; depth 6 or 64 leaves; no feature subsampling or bagging; 16 threads, Xeon E3-12xx, 64GB. Time per tree, not time to a given quality.\n  quote: \"CatBoost Plain 1.1 s\" and \"CatBoost Ordered 1.9 s\" and \"XGBoost 3.9 s\" and \"LightGBM 1.1 s\"; \"followed by Ordered mode, which is about 1.7 times slower\"\n  where: C.2 and Table 6, p17-18; S6 p8\n\n- claim: Authors refuse a general speed ranking of libraries.\n  number: none\n  setup: Their reason is that quality/speed trade-offs differ by library, so only fixed-size training time is reported.\n  quote: \"one cannot compare libraries by time needed to obtain a certain level of quality\"\n  where: C.2 p17\n\n- claim: Allowing feature combinations improves logloss, with little gain beyond three features.\n  number: 1.86% average (reaching 11.3%) for cmax 2; 2.04% for cmax 3\n  setup: Relative to cmax = 1; 8 datasets in Figure 3.\n  quote: \"changing the number cmax of features allowed to be com-\\nbined from 1 to 2 provides an outstanding improvement of logloss by 1.86% (reaching 11.3%),\\nchanging from 1 to 3 yields 2.04%\"\n  where: S6 p9; Appendix G p22\n\n- claim: More permutations help only slightly.\n  number: 0.19% at s=3, 0.38% at s=9\n  setup: Relative to s=1; average logloss.\n  quote: \"by 0.19% fors = 3 and by 0.38% fors = 9 compared tos = 1\"\n  where: S6 p9; p23\n\n- claim: The implementation reduces maintained supporting predictions to linear size, matching standard GBDT with ordered TS asymptotically.\n  number: O(sn²) reduced to O(sn)\n  setup: Stores models at exponentially spaced prefixes. Compared with other TS types, ordered TS slows some procedures by a factor of s.\n  quote: \"reduces the number of maintained supporting\\npredictions toO(sn )\"\n  where: S5 p7; proof C.1 p17\n\n- claim: Target statistics need one stored number per category and are the authors' preferred method; one-hot and gradient statistics are out of scope.\n  number: none\n  setup: Argument, not a benchmark. Relevant to 05b: TS estimate E(y | category), so they require a label.\n  quote: \"We further focus on ways to calculate TS and leave one-hot encoding and gradient\\nstatistics out of the scope of the current paper.\"\n  where: S3.1 p3\n\nLIMITS\n- Authors' own benchmark on one random 80/20 split per dataset; tables carry no error bars or spread.\n- Baselines never used native categorical handling. LightGBM gradient statistics were excluded from comparison, so the paper does not test CatBoost against library defaults.\n- The evaluated models are all scored by logloss and zero-one loss, on tasks using binary metrics. No regression, multiclass or ranking experiments, and no AUC. This is my reading of the tables; the paper states regression targets are supported in principle.\n- Theory covers quadratic loss and a toy two-feature case only. \"We restrict the rest of Section 4 to this case\" (footnote 4, p4).\n- Authors concede a bias caveat: \"it can also depend on other properties of the dataset\" (p8).\n- No per-dataset categorical counts or cardinalities (Table 7 gives total features only). No test on temporal data, drift or missing-value strategies; the permutation is \"artiﬁcial\". \n- Nothing on unsupervised use, clustering, SHAP or interpretability.\n- Epsilon is missing from Tables 4, 9, 10 and Figures 2-4 without explanation.\n- GPU timing is deferred to GitHub.\n- Dated: library versions are from about 2017. Footnote 9 says CatBoost numbers \"may slightly differ\" from their repository because another version was used, which sits awkwardly with the listed \"catboost (0.3)\". The \"all existing implementations\" claim is as of writing.\n\nBUILDS ON\n- Friedman 2001 [12] gradient boosting; Friedman 2002 [13] stochastic subsampling; Friedman, Hastie, Tibshirani 2000 [10]; Mason et al. 2000 [24].\n- Micci-Barreca 2001 [25] target statistics; Cestnik 1990 [6]; Breiman et al. 1984 [4] and Hastie et al. 2001 [11] for optimal split via TS thresholds.\n- O. Zhang 2015 [31] leave-one-out; K. Zhang et al. 2013 [30] conditional shift.\n- Breiman 1996 [2] out-of-bag; Breiman 2001 [3] iterated bagging, shown still shifted in Appendix E.\n- Online learning inspiration: Bottou and Cun 2004 [1], He et al. 2014 [15], Langford et al. 2009 [18], Ling et al. 2017 [22].\n- Oblivious trees: Ferov and Modrý 2016 [9], Gulin et al. 2011 [14], Lou and Obukhov 2017 [23]. Rubin 1981 [28] Bayesian bootstrap.\n- Baselines: Chen and Guestrin 2016 [8], Ke et al. 2017 [16].\n\nCODE\nAlgorithm 1, p6, verbatim from extraction (not feasible as written; needs n models):\n```\nσ← random permutation of [1,n ] ;\nMi← 0 fori = 1..n;\nfort← 1 toI do\nfori← 1 ton do\nri←yi−Mσ(i)−1(xi);\nfori← 1 ton do\n∆M←\nLearnModel ((xj,rj) :\nσ(j)≤i);\nMi←Mi + ∆M ;\nreturnMn\n```\nRaw setting flags, p21: \"– – boosting–type Plain – – border–count 255 – – dev–bootstrap–type DiscreteUniform – – gradient–iterations 1 – – random–strength 0 – – depth 6\"\n\nFIGURES\n- Figure 1, p6, \"Ordered boosting principle, examples are ordered according to σ.\" Shows at a glance that row 7's residual comes from a model trained on rows 1-6.\n- Figure 2, p9, \"Relative error of Plain boosting mode compared to Ordered boosting mode depending on the fraction of the dataset.\" Shows Plain worsening as data shrinks across eight datasets; a table would hide that trend.\n- Figure 3, p23, \"Relative change in logloss for a given allowed complexity compared to the absence of feature combinations.\" Shows the plateau after 2-3 features, and that one dataset drives the large gain.\n- Figure 4, p23, \"Relative change in logloss for a given number of permutations s compared to s = 1,\". Lower priority; the effect is small.\n\nPROBLEMS\n- Extraction flattens maths: superscripts and fractions collapse (\"O(1/2n)\" is O(1/2^n); \"− 1n−1c2(x2− 12)\" is -(1/(n-1)) c2 (x2 - 1/2)). Check Theorem 1 against the PDF page before quoting it as a formula.\n- Spaces are dropped around symbols (\"fors = 3\"). Line breaks in quotes shown as \\n.\n- No embedded instructions found.\n- Filename says 2017, matching the arXiv ID; the file itself is v5 from 2019.\n\nComparison with data-science/01-classical-ml/notes/07-boosting-in-practice.md, for the caller to decide:\n- Line 191 says the paper quantifies the TS effect \"across libraries\". Table 4 compares TS options inside CatBoost only. The figures themselves (1.1%, 40%, 5.5%, 3.9%, 1.7x) match.\n- Line 52 says \"ahead by 1 to 2%\" on Adult, while its own parenthetical and Table 2 give +2.4% and +2.2%. Line 52 also omits that CatBoost additionally had Ordered mode and feature combinations, and that the raw setting loses on Adult (-1.4% / -1.7% logloss for baselines, Table 9).\n- data-science/01-classical-ml/notes/05b-clustering-categorical-and-mixed-data.md line 355 is consistent with the paper: TS are defined from the target. The paper says nothing about clustering."
+ "type": "empirical",
+ "question": "Do existing gradient boosting implementations suffer a prediction shift from target leakage (in gradient estimation and in categorical target statistics), and does an ordering-principle fix improve accuracy?",
+ "hypothesis": "Target leakage in target statistics and in residual estimation causes a shift of train vs test distributions; ordering (ordered TS and ordered boosting) removes it and improves quality, most on small datasets.",
+ "contributions": [
+  "Identify and formally analyse prediction shift in gradient boosting (Theorem 1)",
+  "Ordered boosting, a permutation-driven alternative to classic gradient boosting",
+  "Ordered target statistics for categorical features",
+  "CatBoost library combining them, compared with XGBoost and LightGBM"
+ ],
+ "method": {
+  "summary": "CatBoost builds oblivious decision trees by gradient boosting, with categorical features turned into ordered target statistics computed over random permutations and, in Ordered mode, gradients for each example computed from supporting models that never saw it. It is compared with XGBoost and LightGBM on 9 binary classification datasets, and ablated over boosting mode, TS type, feature combinations and number of permutations.",
+  "task": "gradient boosted trees with categorical features; binary classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Adult",
+    "role": "both",
+    "size": "48842 instances, 15 features",
+    "split": "random 80% train / 20% test; 5-fold CV on train",
+    "source": "UCI Adult",
+    "preprocessing": null
+   },
+   {
+    "name": "Amazon",
+    "role": "both",
+    "size": "32769 instances, 10 features",
+    "split": "80/20",
+    "source": "Kaggle Amazon Employee challenge",
+    "preprocessing": null
+   },
+   {
+    "name": "Click Prediction",
+    "role": "both",
+    "size": "399482 instances, 12 features",
+    "split": "80/20",
+    "source": "KDD Cup 2012, subsampled to 1%, majority class downsampled (about 5 to 1)",
+    "preprocessing": null
+   },
+   {
+    "name": "Epsilon",
+    "role": "both",
+    "size": "400000 instances, 2000 features",
+    "split": "80/20",
+    "source": "PASCAL Challenge 2008",
+    "preprocessing": null
+   },
+   {
+    "name": "KDD appetency",
+    "role": "both",
+    "size": "50000 instances, 231 features",
+    "split": "80/20",
+    "source": "small KDD Cup 2009 data",
+    "preprocessing": null
+   },
+   {
+    "name": "KDD churn",
+    "role": "both",
+    "size": "50000 instances, 231 features",
+    "split": "80/20",
+    "source": "small KDD Cup 2009 data",
+    "preprocessing": null
+   },
+   {
+    "name": "KDD Internet",
+    "role": "both",
+    "size": "10108 instances, 69 features",
+    "split": "80/20",
+    "source": "Internet usage data, binarised (majority class positive)",
+    "preprocessing": null
+   },
+   {
+    "name": "KDD upselling",
+    "role": "both",
+    "size": "50000 instances, 231 features",
+    "split": "80/20",
+    "source": "small KDD Cup 2009 data",
+    "preprocessing": null
+   },
+   {
+    "name": "Kick prediction",
+    "role": "both",
+    "size": "72983 instances, 36 features",
+    "split": "80/20",
+    "source": "Kaggle Don't Get Kicked",
+    "preprocessing": "Missing categorical values become a special category; missing numerics set to 0 with a binary dummy feature added"
+   }
+  ],
+  "models": [
+   {
+    "name": "CatBoost (strong setting)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "gradient boosted oblivious decision trees, Ordered mode, ordered TS, feature combinations",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "default tree depth": "6 (stated for the timing test)",
+     "library version": "catboost 0.3"
+    }
+   },
+   {
+    "name": "CatBoost Plain",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "standard GBDT with inbuilt ordered TS",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CatBoost raw setting",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "close to classical GBDT, GPU mode, oblivious trees, categoricals pre-encoded with ordered TS",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "flags": "--boosting-type Plain --border-count 255 --dev-bootstrap-type DiscreteUniform --gradient-iterations 1 --random-strength 0 --depth 6",
+     "tuned": "dev-sample-rate, learning-rate, l2-leaf-reg"
+    }
+   },
+   {
+    "name": "XGBoost",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GBDT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "library version": "xgboost 0.6",
+     "timing": "histogram-based version"
+    }
+   },
+   {
+    "name": "LightGBM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GBDT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "library version": "lightgbm 0.1",
+     "timing": "num_leaves 64"
+    }
+   }
+  ],
+  "training": {
+   "objective": "logloss (tuning criterion)",
+   "optimizer": "gradient boosting with decision trees; leaf values by gradient step",
+   "lr": "tuned: log-uniform [e^-7, 1] for all three libraries",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "number of trees chosen by search over [1, 5000], minimum 5-fold-averaged logloss",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "CatBoost l2_leaf_reg log-uniform [1,10], random_strength {1,20}, bagging_temperature uniform [0,1]; Bayesian bootstrap subsampling",
+   "hardware": "Intel Xeon E3-12xx 2.6GHz, 16 cores, 64GB RAM, 16 threads (timing test only)",
+   "compute": null,
+   "wall_clock": "time per tree on Epsilon: CatBoost Plain 1.1 s, Ordered 1.9 s, XGBoost 3.9 s, LightGBM 1.1 s",
+   "seeds": null,
+   "other": {
+    "tuning": "50 steps of Hyperopt TPE (tpe.suggest) minimising logloss, 5-fold CV stratified on the 80% train part",
+    "xgboost search space": "eta logU[e^-7,1]; max_depth U{2..10}; subsample U[0.5,1]; colsample_bytree U[0.5,1]; colsample_bylevel U[0.5,1]; min_child_weight logU[e^-16,e^5]; alpha, lambda, gamma 0.5*0 + 0.5*logU[e^-16,e^2]",
+    "lightgbm search space": "learning_rate logU[e^-7,1]; num_leaves discrete logU[1,e^7]; feature_fraction U[0.5,1]; bagging_fraction U[0.5,1]; min_sum_hessian_in_leaf logU[e^-16,e^5]; min_data_in_leaf discrete logU[1,e^6]; lambda_l1, lambda_l2 mixed as above",
+    "catboost search space": "learning_rate logU[e^-7,1]; random_strength {1,20}; one_hot_max_size {0,25}; l2_leaf_reg logU[1,10]; bagging_temperature U[0,1]; gradient_iterations {1,10}",
+    "timing test": "learning rate set so that overfitting starts near 7000 trees; mean time to train 8000 trees; no feature subsampling or bagging",
+    "Epsilon": "default parameters, only tree count tuned",
+    "permutations": "s+1 independent permutations; sigma_1..sigma_s for tree structure, sigma_0 for leaf values; s value used in main experiments not stated (Fig 4 varies s 1..10)",
+    "TS prior": "Equation 4 smoothing a>0, p = average target; value of a not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one random 80/20 split per dataset; no repeated seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "cmax (max features combined)": "varied 1 to 5 in Fig 3",
+    "s (permutations)": "varied 1 to 10 in Fig 4"
+   },
+   "other": {
+    "test-time TS": "computed on the whole training data"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "logloss",
+     "definition": "binary log loss on the 20% test set; baselines reported as relative increase over CatBoost",
+     "unit": "loss / % relative",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-one loss",
+     "definition": "misclassification rate on test set",
+     "unit": "loss / % relative",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "XGBoost",
+    "LightGBM",
+    "CatBoost Plain mode",
+    "greedy, holdout and leave-one-out TS"
+   ],
+   "protocol": "Single 80/20 split per dataset; paired one-tailed t-test for significance (p much less than 0.01 except Appetency, Churn, Upselling); what the test pairs over is not stated"
+  },
+  "availability": {
+   "code": "https://github.com/catboost/catboost; experiments https://github.com/catboost/benchmarks/tree/master/quality_benchmarks",
+   "weights": null,
+   "data": "public datasets, links in Appendix D"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "Each dataset was randomly split into training set (80%) and test set (20%).",
+    "where": "Appendix D.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CatBoost in its strong setting beats LightGBM and XGBoost on all nine datasets; Amazon shows the largest gap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+17%",
+   "unit": "logloss relative increase for baselines",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 binary datasets (Table 7); random 80/20 train/test split; parameters tuned by 5-fold CV with 50 Hyperopt TPE steps minimising logloss, then tree count searched in [1,5000]; Epsilon default parameters with only tree count tuned; CatBoost in Ordered mode with feature combinations; all libraries use ordered TS on categoricals; single split per dataset",
+   "quote": null,
+   "table": "Table 2, row Amazon, columns LightGBM and XGBoost (logloss)",
+   "note": null,
+   "where": "Table 2 / Table 8"
+  },
+  {
+   "claim": "On Adult CatBoost logloss is 0.270; LightGBM and XGBoost are 2.4% and 2.2% worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "0.270",
+   "unit": "logloss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 binary datasets (Table 7); random 80/20 train/test split; parameters tuned by 5-fold CV with 50 Hyperopt TPE steps minimising logloss, then tree count searched in [1,5000]; Epsilon default parameters with only tree count tuned; CatBoost in Ordered mode with feature combinations; all libraries use ordered TS on categoricals; single split per dataset",
+   "quote": null,
+   "table": "Table 2, row Adult, column CatBoost; Table 8 prints 0.2695",
+   "note": "Table 8 prints CatBoost Adult as 0.2695 and LightGBM +2.4%, XGBoost +2.2%",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On Internet, baselines are 6.8% (LightGBM) and 7.9% (XGBoost) worse in logloss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+6.8% / +7.9%",
+   "unit": "logloss relative increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 binary datasets (Table 7); random 80/20 train/test split; parameters tuned by 5-fold CV with 50 Hyperopt TPE steps minimising logloss, then tree count searched in [1,5000]; Epsilon default parameters with only tree count tuned; CatBoost in Ordered mode with feature combinations; all libraries use ordered TS on categoricals; single split per dataset",
+   "quote": null,
+   "table": "Table 2, row Internet",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On Upselling, Appetency and Churn the gaps are tiny and not statistically significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+0.04% to +0.5%",
+   "unit": "logloss relative increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 binary datasets (Table 7); random 80/20 train/test split; parameters tuned by 5-fold CV with 50 Hyperopt TPE steps minimising logloss, then tree count searched in [1,5000]; Epsilon default parameters with only tree count tuned; CatBoost in Ordered mode with feature combinations; all libraries use ordered TS on categoricals; single split per dataset",
+   "quote": "except three datasets (Appetency, Churn and Upselling) the improvements are statistically signiﬁcant with p-value ≪0.01 measured by the paired one-tailed t-test",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Epsilon: default parameters only, XGBoost is 11% worse than CatBoost in logloss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+11%",
+   "unit": "logloss relative increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Epsilon with default parameters and tuned tree count only",
+   "quote": null,
+   "table": "Table 2, row Epsilon, column XGBoost",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Ordered mode helps most on small datasets: Plain is 3.9% worse in logloss on Internet and 1.1% worse on Adult.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+3.9%",
+   "unit": "logloss change of Plain vs Ordered",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Strong CatBoost setting, Table 3",
+   "quote": null,
+   "table": "Table 3, row Internet, column Logloss",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Plain mode is slightly better on four of nine datasets in logloss (Amazon -0.6%, Click -0.05%, Churn -0.06%, Kick -0.2%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "-0.6%",
+   "unit": "logloss change of Plain vs Ordered",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, Amazon",
+   "quote": null,
+   "table": "Table 3, row Amazon, column Logloss",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Greedy target statistics are far worse than ordered TS, up to +57% logloss on Upselling and +40% on Amazon.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+57%",
+   "unit": "logloss relative to ordered TS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CatBoost Ordered mode, TS type varied only",
+   "quote": null,
+   "table": "Table 4, row Upselling, column Greedy",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Greedy TS on Adult is 1.1% worse than ordered TS in logloss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+1.1%",
+   "unit": "logloss relative to ordered TS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CatBoost Ordered mode",
+   "quote": null,
+   "table": "Table 4, row Adult, column Greedy",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Leave-one-out TS on Adult is 5.5% worse than ordered TS in logloss, much worse than elsewhere.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+5.5%",
+   "unit": "logloss relative to ordered TS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CatBoost Ordered mode",
+   "quote": null,
+   "table": "Table 4, row Adult, column Leave-one-out",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Holdout TS is the best baseline TS on most datasets but still worse than ordered TS (e.g. +8.3% on Amazon).",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "+8.3%",
+   "unit": "logloss relative to ordered TS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CatBoost Ordered mode",
+   "quote": null,
+   "table": "Table 4, row Amazon, column Holdout",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Allowing feature combinations of up to 2 features improves logloss by 1.86% on average, up to 11.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.86%",
+   "unit": "average logloss improvement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cmax 1 to 2, 8 datasets, Fig 3",
+   "quote": "provides an outstanding improvement of logloss by 1.86% (reaching 11.3%)",
+   "table": null,
+   "note": "Appendix G prints the same sentence as improvement of 1.86% (reaching 11.3%)",
+   "where": "Section 6"
+  },
+  {
+   "claim": "More permutations slightly lower logloss: 0.19% for s=3 and 0.38% for s=9 versus s=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.38%",
+   "unit": "average logloss decrease vs s=1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 datasets, Fig 4",
+   "quote": "increasing s slightly decreases logloss, e.g., by 0.19% for s = 3 and by 0.38% for s = 9 compared to s = 1",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Ordered mode is about 1.7 times slower per tree than Plain on Epsilon (1.9 s vs 1.1 s); XGBoost 3.9 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time per tree",
+   "value": "1.9 s",
+   "unit": "time per tree",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Epsilon, 16 threads, depth 6, 8000-tree ensembles",
+   "quote": null,
+   "table": "Table 6, row CatBoost Ordered, column time per tree",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "The raw CatBoost setting (close to classic GBDT) ties the baselines: 0.2% better on zero-one loss, 0.2% worse on logloss on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.2%",
+   "unit": "average difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 datasets (no Epsilon), raw setting, categoricals pre-encoded with the same ordered TS",
+   "quote": "by 0.2% while they are better in terms of logloss by 0.2%",
+   "table": null,
+   "note": null,
+   "where": "Appendix G, Table 9"
+  },
+  {
+   "claim": "In the raw setting Ordered with sigma_boost = sigma_cat beats Plain by 0.6% logloss and 0.9% zero-one loss; with independent permutations only 0.5% and 0.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "logloss",
+   "value": "-0.6%",
+   "unit": "logloss change vs Plain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Raw setting, 8 datasets",
+   "quote": null,
+   "table": "Table 10, row Average, column Ordered, sigma_boost = sigma_cat",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "Theorem 1: with the same dataset reused for both stumps, the model has bias -(1/(n-1)) c2 (x2 - 1/2), proportional to c2 and inversely to n.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy case: quadratic loss, two i.i.d. Bernoulli(1/2) features, y = c1 x1 + c2 x2, two stumps, step size 1",
+   "quote": "we suffer from a bias",
+   "table": null,
+   "note": "Theoretical, not measured; proof in Appendix A",
+   "where": "Section 4.1, Theorem 1"
+  }
+ ],
+ "limits": [
+  "Prediction shift is proved only for a toy regression (quadratic loss, 2 binary features, 2 stumps); general case is argued, not proved.",
+  "All comparisons use one random 80/20 split per dataset; no seed repeats or confidence intervals beyond a paired t-test whose pairing is unstated.",
+  "Only binary classification; metrics are logloss and zero-one loss, no AUC.",
+  "Authors tuned baselines with 50 TPE steps but Epsilon used defaults for all libraries.",
+  "Only CatBoost gets feature combinations, so the headline gap mixes ordered boosting, combinations and oblivious trees; the raw setting shows the base GBDT is on par.",
+  "Ordered mode is about 1.7 times slower than Plain on Epsilon.",
+  "Library versions are from 2017-2018 (catboost 0.3, xgboost 0.6, lightgbm 0.1).",
+  " GPU timings are deferred to a GitHub page.",
+  "Footer reads 'Preprint. Work in progress.'; this arXiv v5 PDF prints no venue."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prediction shift",
+   "definition": "the distribution of F(x_k) | x_k for a training example is shifted from that of F(x) | x for a test example, caused by gradients using the targets of the same data the model was built on",
+   "where": "Section 1 / 4.1"
+  },
+  {
+   "term": "ordered TS",
+   "definition": "target statistic for example k computed over D_k = {x_j : sigma(j) < sigma(k)} for a random permutation sigma, and over all of D for test examples",
+   "where": "Section 3.2"
+  },
+  {
+   "term": "ordered boosting",
+   "definition": "boosting where the residual for example j comes from a supporting model M_{j-1} trained only on the first j-1 examples of a permutation",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "oblivious decision tree",
+   "definition": "the same splitting criterion is used across an entire level of the tree",
+   "where": "Section 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Micci-Barreca, A preprocessing scheme for high-cardinality categorical attributes",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "greedy TS as numeric feature",
+   "quote": null
+  },
+  {
+   "work": "Friedman, Greedy function approximation: a gradient boosting machine",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "classic GBDT",
+   "quote": null
+  },
+  {
+   "work": "Friedman, Stochastic gradient boosting",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "subsampling only alleviates the shift",
+   "quote": null
+  },
+  {
+   "work": "Breiman, Using iterated bagging to debias regressions",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Appendix E shows its out-of-bag residuals are still shifted",
+   "quote": null
+  },
+  {
+   "work": "XGBoost (Chen and Guestrin)",
+   "year": 2016,
+   "arxiv": "1603.02754",
+   "relation": "baseline",
+   "note": "compared",
+   "quote": null
+  },
+  {
+   "work": "LightGBM (Ke et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared",
+   "quote": null
+  },
+  {
+   "work": "Lou and Obukhov, BDT: gradient boosted decision tables",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "oblivious trees",
+   "quote": null
+  },
+  {
+   "work": "Online learning (Langford et al. 2009, He et al. 2014 and others)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspiration for the ordering principle",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Ordered boosting principle, examples are ordered according to sigma.",
+   "page": 5,
+   "why": "Shows that the residual for example 7 comes from a model fitted on examples 1-6 only."
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Relative error of Plain boosting mode compared to Ordered boosting mode depending on the fraction of the dataset.",
+   "page": 9,
+   "why": "Shows the Ordered advantage grows as the dataset shrinks."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Relative change in logloss for a given allowed complexity compared to the absence of feature combinations.",
+   "page": 23,
+   "why": "Effect of cmax."
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Relative change in logloss for a given number of permutations s compared to s = 1.",
+   "page": 23,
+   "why": "Effect of s."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5",
+   "snippet": "x^i_k = ( sum_{x_j in D_k} 1{x^i_j = x^i_k} * y_j + a p ) / ( sum_{x_j in D_k} 1{x^i_j = x^i_k} + a )  with D_k = {x_j : sigma(j) < sigma(k)} for ordered TS",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Cached text contains NUL bytes and garbled Appendix A algebra.",
+  "Figure axis labels are in the text stream; figure values are not recoverable as numbers.",
+  "No embedded instructions found."
+ ]
 }

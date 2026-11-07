@@ -1,19 +1,613 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.18653/v1/2023.findings-acl.71",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/su-2023-one-embedder-any-task.pdf",
  "bib": {
   "title": "One Embedder, Any Task: Instruction-Finetuned Text Embeddings",
+  "authors": [
+   "Hongjin Su",
+   "Weijia Shi",
+   "Jungo Kasai",
+   "Yizhong Wang",
+   "Yushi Hu",
+   "Mari Ostendorf",
+   "Wen-tau Yih",
+   "Noah A. Smith",
+   "Luke Zettlemoyer",
+   "Tao Yu"
+  ],
   "first_author": "Su",
   "year": 2023,
-  "venue": "ACL (Findings) 2023",
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2023, pages 1102-1121",
   "arxiv": null,
-  "doi": null
+  "doi": "10.18653/v1/2023.findings-acl.71"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 73863,
+  "chars_total": 73863,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; checklist page not needed."
  },
- "legacy_report": "SOURCE: Su, Shi, Kasai, Wang, Hu, Ostendorf, Yih, Smith, Zettlemoyer, Yu. \"One Embedder, Any Task: Instruction-Finetuned Text Embeddings\". Findings of ACL 2023, pp. 1102–1121.\n\nCOVERAGE: All 20 of 20 PDF pages, 73,923 of 73,923 chars. That covers the body, limitations, Appendix A–D, Tables 4–10 and the checklist. I skimmed the references. Extraction was clean.\n\nCLAIMS\n1. One 335M model beats the previous best, a 4.8B model, on average.\n   number: 58.4 vs 56.5 (70-dataset average); the paper reports this as +3.4%; MTEB-56 average 61.6 vs 59.5\n   setup: INSTRUCTOR is GTR-Large (T5-based) fine-tuned on MEDI. The baseline is Sent-T5-XXL. 70 datasets in 9 categories (56 MTEB, 3 Billboard, 11 prompt retrieval); 66 of them unseen in training.\n   quote: \"compared to the previous state-of-the-art model, Sent-T5-XXL (58.4 vs. 56.5 on average), despite the fact that INSTRUCTOR has one order of magnitude fewer parameters (335M vs. 4.8B)\" (p.5, §3.1)\n2. Model sizes. Instruction fine-tuning adds +5.9% over the same-size GTR at both 335M and 1.5B. XL scores 58.8.\n   number: Base 0.1B, Large 335M, XL 1.5B; +5.9%; \"3.4% and 4.1%\" over Sent-T5-XXL\n   quote: \"Compared to GTR(335M/1.5B), from which INSTRUCTOR (335M/1.5B) is initialized, instruction finetuninig enhances the performance by 5.9%.\" (p.5, Table 2 caption)\n   The largest per-category gains at 335M: \"text evaluation (18.3%), classification (10.1%), and clustering tasks (8.9%)\". Retrieval gains only +0.4.\n3. Without instructions, fine-tuning on mixed symmetric and asymmetric data hurts. With instructions, the gains from the two kinds of data add up.\n   number: none (Fig. 3 is a bar chart and the text gives no values)\n   setup: MEDI split into symmetric and asymmetric groups. Each group is trained with and without instructions. Note: this is a training-time ablation.\n   quote: \"INSTRUCTOR suffers if finetuned without task instructions on the combination of both types of data (entire MEDI)\" (p.6, §4.1)\n4. Robustness to paraphrase depends on the 300 Super-NI datasets.\n   number: five paraphrases per eval dataset. The best-to-worst gap is shown only in Fig. 4, with no values.\n   setup: The paraphrases \"follow the unified template ... with the same information and only differ in wording choices\" (Table 6, p.15)\n   quote: \"Removing these datasets from training (w/o super-NI) substantially increases the performance gap between the best- and worst-performing instructions\" (p.6–7, §4.2)\n5. More detailed instructions score better. Even a bare dataset tag beats GTR.\n   number: four levels: N/A, tag, simple, detailed. Fig. 5 only, no values.\n   quote: \"Even with trivial dataset tags, INSTRUCTOR outperforms the original GTR model\" (p.7, §4.3)\n6. The gains are larger on unseen domains.\n   number: Geography 53.4→64.2 (+20.2%), Biology 25.7→31.3 (+21.8%), Civil 71.8→77.2 (+7.5%)\n   quote: \"Relative gain (%) +20.2 +21.8 +7.5\" (Table 3, p.8)\n\nSetup details: the instruction is concatenated with the text, but pooling is \"mean pooling ... over the tokens in x\" only, so instruction tokens are left out (p.3). The template is \"REPRESENT THE (DOMAIN) TEXT TYPE FOR TASK OBJECTIVE:\" (p.5). Retrieval uses different query and document instructions. Training: lr 2e-5, temperature 0.01, 20K steps, four negatives, each batch drawn from a single dataset (App. A).\n\nLIMITS\n- **Omitted instructions at inference: not tested directly.** The \"w/o instruction\" arms in Fig. 3 are models trained without instructions. Fig. 5's \"N/A\" is also not clearly an inference-only ablation. The paper never runs an instruction-trained model with no instruction, or with a wrong one, at query time.\n- Paraphrase robustness covers only rewordings inside the template. Free-form or off-template instructions are untested. No gap is given as a number.\n- Every ablation figure is a chart without values. There are no error bars or seed counts.\n- The headline is a comparison across sizes against Sent-T5-XXL. The fair comparison is with same-size GTR.\n- Some retrieval datasets get worse at 335M (Table 9): MSMARCO 42.7→39.7, NQ 55.1→50.1, HotpotQA 57.9→55.2, Touche 28.3→21.6.\n- English only (p.15).\n- Concessions the authors make: \"only able to use four negative examples ... due to computation constraints\"; no GTR-XXL run; no demonstrations in instructions (p.10, §7).\n- Dated: the MTEB \"SOTA\" claim is as of 2022–23.\n\nBUILDS ON: instruction fine-tuning from Zhong et al. 2021 (Findings EMNLP), Min et al. 2022, Sanh et al. 2022, Wei et al. 2022 (ICLR) and Super-NaturalInstructions (Wang et al. 2022, EMNLP). The GTR backbone and bidirectional in-batch contrastive loss follow Ni et al. 2021. Sentence-T5 is Ni et al. 2022. MTEB is Muennighoff et al. 2022. Concurrent work: task-aware retrieval with instructions, Asai et al. 2022.\n\nFIGURES: Fig. 1 (p.1–2): \"At execution time, INSTRUCTOR generates embeddings based on both the text input and the task instruction. The same input (e.g., Who sings the song \"Love Story\"?) will be encoded into different embeddings, depending on the end task\". This is the best fit for the section \"Instructions change what an embedding means\": it shows the same text producing three different vectors in one picture. The runner-up is Fig. 3 (p.6), the with/without-instruction training ablation.\n\nPROBLEMS: No embedded instructions. The Fig. 4 caption contradicts itself (\"W/o super-NI (w/ super-NI) refers to the inclusion (exclusion)\"). The figure axes extract as tick labels only, with no values. Typos in the source: \"Similiarty\", \"finetuninig\".\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/su-2023-one-embedder-any-task.pdf"
+ "type": "empirical",
+ "question": "Can one embedding model produce task- and domain-aware text embeddings from a natural-language instruction given with the input, without task-specific finetuning?",
+ "hypothesis": "Text embeddings of the same input can be adjusted to different downstream applications using task and domain descriptions, without further task- or domain-specific finetuning.",
+ "contributions": [
+  "INSTRUCTOR: embeds text together with a task instruction",
+  "MEDI: 330 datasets with human-written instructions",
+  "State-of-the-art on 70 embedding evaluation tasks (66 unseen)",
+  "Analysis of instruction robustness, complexity, model size and domain shift"
+ ],
+ "method": {
+  "summary": "Instruction-finetunes GTR (T5-based dual encoder) with a bidirectional in-batch contrastive loss on MEDI, where every input and target is prefixed by an instruction following 'Represent the (domain) text type for task objective:'. Evaluated on MTEB, Billboard and prompt retrieval.",
+  "task": "general-purpose text embedding (retrieval, STS, classification, clustering, reranking, text evaluation, prompt retrieval)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MEDI",
+    "role": "train",
+    "size": "330 datasets: 300 from Super-NaturalInstructions plus 30 from Sentence Transformers embedding data, KILT, MedMCQA; per-dataset instances downsampled (Table 5, e.g. msmarco 175,000, Super-NI 180,000 in total)",
+    "split": null,
+    "source": "super-NI; sentence-transformers embedding-training-data; KILT; MedMCQA",
+    "preprocessing": "super-NI pairs built with Sentence-T5 cosine similarity: classification uses same/different label among similar examples; other tasks pick highest s_pos as positive and highest s_neg as hard negative. One hard negative plus in-batch for super-NI; four negatives (hard or in-batch) for the other 30. Large datasets downsampled."
+   },
+   {
+    "name": "MTEB",
+    "role": "eval",
+    "size": "56 datasets, 7 categories (50 unseen)",
+    "split": "test",
+    "source": "Muennighoff et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Billboard",
+    "role": "eval",
+    "size": "3 datasets (MSCOCO, CNN/DailyMail, WMT21 zh-en)",
+    "split": null,
+    "source": "Kasai et al. 2022a",
+    "preprocessing": "English-to-German dropped because models are English only"
+   },
+   {
+    "name": "Prompt retrieval",
+    "role": "eval",
+    "size": "11 datasets, GPT-J in-context learning",
+    "split": null,
+    "source": "Su et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "INSTRUCTOR (Large)",
+    "role": "proposed",
+    "params": "335M",
+    "architecture": "single T5 encoder, mean pooling over tokens of x",
+    "init_from": "GTR-Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "INSTRUCTOR-Base",
+    "role": "proposed",
+    "params": "0.1B",
+    "architecture": "as above",
+    "init_from": "GTR-Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "INSTRUCTOR-XL",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "as above",
+    "init_from": "GTR-XL",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GTR-Large / XL / XXL",
+    "role": "baseline",
+    "params": "335M / 1.5B / 4.8B",
+    "architecture": "T5 dual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sent-T5-XXL",
+    "role": "baseline",
+    "params": "4.8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SimCSE, coCondenser, Contriever, SGPT-NLI",
+    "role": "baseline",
+    "params": "110M, 110M, 110M, 5.8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-J",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder LM for in-context learning in prompt retrieval",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Contrastive: softmax over s(x,y)/gamma with s = cosine of instruction-prefixed embeddings; loss also computed with x and y swapped and added (bidirectional in-batch)",
+   "optimizer": "AdamW",
+   "lr": "2 x 10^-5",
+   "lr_schedule": null,
+   "warmup": "ratio 0.1",
+   "batch_size": "inferred: maximum that fits memory (not stated as a number); each minibatch drawn from a single dataset",
+   "steps": "20K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "40GB A100 GPUs (count not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "softmax_temperature": "0.01",
+    "negatives": "1 hard negative + in-batch for super-NI; 4 negatives for the other 30 datasets",
+    "sampling": "pick a dataset at random each step, build batch only from it so in-batch negatives share the task"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per table cell",
+   "prompting": "instruction prepended: 'Represent the (domain) text type for task objective:'; asymmetric tasks use separate query and doc instructions",
+   "retrieval": "cosine similarity of embeddings",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "NDCG@10",
+     "definition": "retrieval",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "MAP",
+     "definition": "reranking",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "V-measure",
+     "definition": "clustering with k-means",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average precision",
+     "definition": "pair classification",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "classification with frozen embeddings and a trained classifier",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman",
+     "definition": "STS and summarization vs human judgement",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson",
+     "definition": "Billboard text evaluation vs human judgement, max cosine over references",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SimCSE",
+    "coCondenser",
+    "Contriever",
+    "GTR-Large/XL/XXL",
+    "Sent-T5-XXL",
+    "SGPT-NLI"
+   ],
+   "protocol": "Single run per cell, no seeds or significance test reported. Average over 9 categories (7 MTEB, 1 Billboard, 1 prompt retrieval)."
+  },
+  "availability": {
+   "code": "https://instructor-embedding.github.io",
+   "weights": "https://instructor-embedding.github.io",
+   "data": "MEDI, https://instructor-embedding.github.io"
+  },
+  "prompts": [
+   {
+    "purpose": "instruction template",
+    "text": "Represent the (DOMAIN) TEXT TYPE for TASK OBJECTIVE:",
+    "where": "Section 2.3"
+   },
+   {
+    "purpose": "Natural Questions query",
+    "text": "Represent the Wikipedia question for retrieving supporting documents:",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Natural Questions doc",
+    "text": "Represent the Wikipedia document for retrieval:",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "STS",
+    "text": "Represent the statement:",
+    "where": "Table 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "finetune it on MEDI using the AdamW optimizer with learning rate 2 × 10−5 and warmup ratio 0.1",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "INSTRUCTOR 335M beats the 4.8B Sent-T5-XXL on the 70-dataset average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average score",
+   "value": 58.4,
+   "unit": "score",
+   "baseline_value": 56.5,
+   "n": null,
+   "setup": "Table 2, 70 datasets",
+   "quote": "Sent-T5-XXL (58.4 vs. 56.5 on",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Instruction finetuning improves over GTR-Large on the overall average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative gain",
+   "value": 5.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2; INSTRUCTOR initialised from GTR-Large 335M, MEDI finetuning, 70 eval datasets (66 unseen)",
+   "quote": null,
+   "table": "Table 2, row Relative gain (%), column Avg., 335M",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Relative gain over GTR-Large in MTEB is 5.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative gain",
+   "value": 5.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2; INSTRUCTOR initialised from GTR-Large 335M, MEDI finetuning, 70 eval datasets (66 unseen)",
+   "quote": "enhances the performance by 5.7%, 18.3%, and 5.7% in",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Text evaluation gains most over GTR-Large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative gain",
+   "value": 18.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2; INSTRUCTOR initialised from GTR-Large 335M, MEDI finetuning, 70 eval datasets (66 unseen)",
+   "quote": "text evaluation (18.3%)",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Retrieval gains only slightly over GTR-Large at 335M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG@10",
+   "value": 47.6,
+   "unit": "score",
+   "baseline_value": 47.4,
+   "n": null,
+   "setup": "Table 2; INSTRUCTOR initialised from GTR-Large 335M, MEDI finetuning, 70 eval datasets (66 unseen)",
+   "quote": null,
+   "table": "Table 2, row INSTRUCTOR (335M), column Retri.",
+   "note": "GTR-Large 47.4; relative gain +0.4%",
+   "where": null
+  },
+  {
+   "claim": "MS MARCO gets worse after instruction finetuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG@10",
+   "value": 39.7,
+   "unit": "score",
+   "baseline_value": 42.7,
+   "n": null,
+   "setup": "Table 9, 335M",
+   "quote": null,
+   "table": "Table 9, row MSMARCO, columns GTR 335M and INSTRUCTOR 335M",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "INSTRUCTOR-XL average vs GTR-XL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average score",
+   "value": 58.8,
+   "unit": "score",
+   "baseline_value": 55.5,
+   "n": null,
+   "setup": "Table 2, 1.5B",
+   "quote": null,
+   "table": "Table 2, row INSTRUCTOR-XL (1.5B), column Avg.",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Out of 70 evaluation datasets, 66 are unseen during finetuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unseen datasets",
+   "value": 66,
+   "unit": "datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70 eval datasets",
+   "quote": "Out of the 70 evaluation datasets, 66 (50 from MTEB,",
+   "table": null,
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Unseen domain gains: geography.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 64.2,
+   "unit": "score",
+   "baseline_value": 53.4,
+   "n": null,
+   "setup": "Table 3, GeoQuery prompt retrieval",
+   "quote": null,
+   "table": "Table 3, row INSTRUCTOR, column Geography",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Unseen domain gains: biology.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 31.3,
+   "unit": "score",
+   "baseline_value": 25.7,
+   "n": null,
+   "setup": "Table 3",
+   "quote": null,
+   "table": "Table 3, row INSTRUCTOR, column Biology",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Unseen domain gains: civil comments.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score",
+   "value": 77.2,
+   "unit": "score",
+   "baseline_value": 71.8,
+   "n": null,
+   "setup": "Table 3",
+   "quote": null,
+   "table": "Table 3, row INSTRUCTOR, column Civil",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Robustness to instruction paraphrase: removing the 300 super-NI datasets widens the best-worst gap (read from Fig 4, no numbers printed).",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five paraphrased instructions per eval dataset (Table 6)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4.2 Fig 4"
+  },
+  {
+   "claim": "Without instructions, training on combined symmetric and asymmetric data hurts; with instructions it helps (read from Fig 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, GTR-Large 335M variants",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  }
+ ],
+ "limits": [
+  "Only four negatives per positive due to computation constraints (Section 7).",
+  "Could not apply multitask instruction finetuning to GTR-XXL (4.8B) for lack of compute.",
+  "Instruction format is a single unified template; paraphrases tested are within the template (Table 6).",
+  "English only (Billboard English-to-German dropped).",
+  "Single runs, no seeds or significance tests; training batch size and GPU count not stated.",
+  "Instructions help little for retrieval at 335M (+0.4%) and hurt some retrieval sets (MSMARCO, HotpotQA, NQ, Touche2020 at 335M)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MEDI",
+   "definition": "Multitask Embeddings Data with Instructions: 330 datasets with instructions",
+   "where": "Section 2.3"
+  },
+  {
+   "term": "symmetric task",
+   "definition": "input and output have the same form and encoding objective, so the instructions are the same",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large dual encoders are generalizable retrievers (GTR)",
+   "year": 2021,
+   "arxiv": "2112.07899",
+   "relation": "extends",
+   "note": "Initialisation backbone and loss",
+   "quote": null
+  },
+  {
+   "work": "Sentence-T5",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Used for pair construction and compared",
+   "quote": null
+  },
+  {
+   "work": "MTEB (Muennighoff et al.)",
+   "year": 2022,
+   "arxiv": "2210.07316",
+   "relation": "uses-data",
+   "note": "Main eval benchmark",
+   "quote": null
+  },
+  {
+   "work": "Super-NaturalInstructions (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2204.07705",
+   "relation": "uses-data",
+   "note": "300 training datasets with instructions",
+   "quote": null
+  },
+  {
+   "work": "Billboard (Kasai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Text evaluation",
+   "quote": null
+  },
+  {
+   "work": "Selective annotation / prompt retrieval (Su et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Prompt retrieval eval",
+   "quote": null
+  },
+  {
+   "work": "Task-aware retrieval with instructions (Asai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Concurrent work, retrieval only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "At execution time, INSTRUCTOR generates embeddings based on both the text input and the task instruction.",
+   "page": 2,
+   "why": "Same input embeds differently per task"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results on MTEB, Billboard and prompt retrieval.",
+   "page": 5,
+   "why": "Main numbers"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Average performance with/without instructions over symmetric, asymmetric or both training data.",
+   "page": 6,
+   "why": "Why instructions are needed for diverse training"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2.2",
+   "snippet": "s(x, y) = cos(EI(Ix ⊕ x), EI(Iy ⊕ y))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction scrambles Table 2 and Tables 9-10 into one value per line; numbers were matched by order.",
+  "Qualitative Fig 7 text does not say whether the without-instruction embeddings come from the same model."
+ ]
 }

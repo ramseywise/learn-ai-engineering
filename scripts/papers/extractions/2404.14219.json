@@ -1,0 +1,151 @@
+{
+ "schema": 1,
+ "key": "2404.14219",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/abdin-2024-phi-3-technical-report.pdf",
+ "bib": {
+  "title": "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone",
+  "authors": ["Microsoft (author list alphabetical, led by Marah Abdin)"],
+  "first_author": "Abdin",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.14219",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56743,
+  "chars_total": 56743,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a 3.8B-parameter model trained on heavily filtered web data plus synthetic data match the benchmark quality of much larger models such as Mixtral 8x7B and GPT-3.5 while running on a phone?",
+ "hypothesis": "Data quality, not scale, drives small-model capability: filtering web data to the right 'educational level' and adding synthetic data moves a small model toward a 'data optimal regime'.",
+ "contributions": [
+  "phi-3-mini (3.8B, 3.3T tokens) with performance rivalling Mixtral 8x7B and GPT-3.5, runnable on a phone",
+  "phi-3-small (7B) and phi-3-medium (14B) trained on 4.8T tokens as parameter-scaling results",
+  "phi-3.5 series: phi-3.5-mini, phi-3.5-MoE (16x3.8B, 6.6B active) and phi-3.5-Vision (4.2B) for multilingual, long-context and multimodal use",
+  "safety post-training and red-teaming results"
+ ],
+ "method": {
+  "summary": "Decoder-only transformers trained in two sequential phases on filtered public web data and LLM-generated synthetic data, then SFT and DPO. Models are compared with other open and closed models on a fixed internal few-shot evaluation pipeline.",
+  "task": "next-token pretraining of small language models, then SFT and DPO post-training",
+  "trains": true,
+  "datasets": [
+   {"name": "phi-3 pretraining mix phase 1", "role": "pretrain", "size": "3.3T tokens total for phi-3-mini; 4.8T for small and medium", "split": null, "source": "heavily filtered publicly available web data (filtered by 'educational level'), plus synthetic LLM-generated data; not released", "preprocessing": "web data filtered to the right level of 'knowledge' and kept pages that may improve reasoning; e.g. daily sports results removed"},
+   {"name": "phi-3 pretraining mix phase 2", "role": "pretrain", "size": null, "split": null, "source": "even more heavily filtered web data (a subset of phase 1) merged with some synthetic data teaching logical reasoning and niche skills", "preprocessing": null},
+   {"name": "phi-3-small extra multilingual data", "role": "pretrain", "size": "an additional 10% multilingual data", "split": null, "source": null, "preprocessing": null},
+   {"name": "SFT data", "role": "train", "size": null, "split": null, "source": "highly curated data in math, coding, reasoning, conversation, model identity, safety; starts with English-only examples", "preprocessing": null},
+   {"name": "DPO data", "role": "train", "size": null, "split": null, "source": "chat format, reasoning and responsible-AI data; unwanted outputs used as rejected responses", "preprocessing": null},
+   {"name": "Phi-3.5-Vision pretraining", "role": "pretrain", "size": "0.5T tokens (visual and text)", "split": null, "source": "interleaved image-text documents, FLD-5B image-text pairs, OCR synthetic data from PDFs, chart/table data, text-only data", "preprocessing": "max image resolution capped at 1344x1344"},
+   {"name": "Phi-3.5-Vision multimodal SFT", "role": "train", "size": "about 33B tokens", "split": null, "source": "text SFT data, public multimodal instruct data, in-house multimodal instruct data", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "phi-3-mini", "role": "proposed", "params": "3.8B", "architecture": "transformer decoder, Llama-2-like block structure", "init_from": null, "tokenizer": "Llama-2 tokenizer", "vocab": "32064", "layers": "32", "hidden": "3072", "heads": "32", "context": "4K default; phi-3-mini-128K via LongRope", "other": {"bos": "BoS tokens removed, extra chat-template tokens added", "chat_template": "<|user|>/n Question <|end|>/n <|assistant|>", "quantized": "4-bit, about 1.8GB"}},
+   {"name": "phi-3-small", "role": "proposed", "params": "7B", "architecture": "decoder, GEGLU activation, grouped-query attention (4 queries share 1 key), alternating dense and blocksparse attention layers", "init_from": null, "tokenizer": "tiktoken", "vocab": "100352", "layers": "32", "hidden": "4096", "heads": "32", "context": "8192 default", "other": {"hyperparameter_transfer": "muP tuned on a small proxy model and transferred to 7B", "tokens": "4.8T"}},
+   {"name": "phi-3-medium", "role": "proposed", "params": "14B", "architecture": "same tokenizer and architecture as phi-3-mini", "init_from": null, "tokenizer": "same as phi-3-mini", "vocab": "32064", "layers": "40", "hidden": "5120", "heads": "40", "context": null, "other": {"tokens": "4.8T, same data for slightly more epochs"}},
+   {"name": "phi-3.5-MoE", "role": "proposed", "params": "16x3.8B, 42B total, 6.6B active", "architecture": "MoE feed-forward layers, top-2 routing over 16 GLU experts", "init_from": null, "tokenizer": "same as phi-3-medium and phi-3-mini", "vocab": "32064", "layers": null, "hidden": null, "heads": null, "context": "128K", "other": {"router_training": "SparseMixer"}},
+   {"name": "phi-3.5-mini", "role": "proposed", "params": "3.8B", "architecture": "phi-3-mini with more multilingual and long-text mid-training data", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "128K (LongRope plus mixed context window)", "other": {}},
+   {"name": "phi-3.5-Vision", "role": "proposed", "params": "4.2B", "architecture": "CLIP ViT-L/14 image encoder plus phi-3.5-mini decoder; dynamic cropping; image and text tokens interleaved", "init_from": "phi-3.5-mini (decoder)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "phi-2", "role": "baseline", "params": "2.7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, Llama-3-instruct-8b, GPT-3.5 (version 1106)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "next-token prediction (pretraining); SFT then DPO (post-training)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "3.3T (phi-3-mini); 4.8T (phi-3-small, phi-3-medium)",
+   "seq_len": null,
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"phases": "two disjoint sequential pretraining phases", "phi3_5_vision_loss": "next-token loss on text tokens only; image-token loss ignored"}
+  },
+  "inference": {
+   "decoding": "temperature 0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "few-shot prompts with k per benchmark (see table), from a Microsoft internal evaluation tool; no optimisation of the pipeline for phi-3; a 2-shot example is in Appendix A; vision evaluated 0-shot in Llava-1.5 setting",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"phone_test": "4-bit phi-3-mini on iPhone 14, A16 Bionic, native, offline, more than 12 tokens per second", "videomme_frames": "16 frames sampled uniformly"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy on academic benchmarks", "definition": "k-shot accuracy per benchmark (MMLU 5-shot, HellaSwag 5-shot, GSM-8K 8-shot CoT, etc.)", "unit": "%", "higher_is_better": true},
+    {"name": "MT-bench", "definition": "2 round average", "unit": "score out of 10", "higher_is_better": true},
+    {"name": "RAI defect rates (DR-x)", "definition": "percentage of samples with harm severity (0 to 7) at least x; ungroundedness scored 0 to 4; GPT-4 simulates multi-turn conversations", "unit": "rate", "higher_is_better": false}
+   ],
+   "baselines": ["phi-2", "Mistral-7b-v0.1", "Mixtral-8x7b", "Gemma 7B", "Llama-3-instruct-8b", "GPT-3.5 version 1106", "Llama-3.1-8B", "Mistral-Nemo-12B", "Gemma-2-9B", "Gemini-1.5 Flash", "GPT-4o-mini"],
+   "protocol": "All numbers from the same internal pipeline; may differ from published numbers. Single run, no seeds or confidence intervals stated."
+  },
+  "availability": {"code": null, "weights": null, "data": "not released (inferred: no data link or statement in the paper)"},
+  "prompts": [
+   {"purpose": "example 2-shot benchmark prompt format", "text": "Question:\nSolve for x: ... Options:\nA. ... Answer:\nA\nQuestion:\nWhich of the following is the body cavity that contains the pituitary gland?\nOptions:\nA. Abdominal\nB. Cranial\nC. Pleural\nD. Spinal\nAnswer:\nB\nQuestion:\n...", "where": "Appendix A (abbreviated)"}
+  ],
+  "evidence": [
+   {"field": "inference.temperature", "quote": "we use few-shot prompts to evaluate the models, at temperature 0", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "phi-3-mini scores 68.8% on MMLU 5-shot, close to Mixtral 8x7b (70.5) and GPT-3.5 (71.4).", "kind": "measured", "source": null, "metric": "MMLU 5-shot", "value": "68.8", "unit": "%", "baseline_value": "70.5 (Mixtral 8x7b)", "n": null, "setup": "Internal few-shot pipeline, temperature 0, phi-3-mini 3.8B, 3.3T tokens", "quote": null, "table": "Table (Section 3), row MMLU (5-Shot), column Phi-3-mini 3.8b", "note": "abstract rounds to 69%; Table 3 reports phi-3.5-mini 69", "where": "Section 3 table"},
+  {"claim": "phi-3-mini scores low on TriviaQA (5-shot) versus Mixtral 8x7b, showing limited stored factual knowledge.", "kind": "measured", "source": null, "metric": "TriviaQA 5-shot", "value": "64.0", "unit": "%", "baseline_value": "82.2 (Mixtral 8x7b)", "n": null, "setup": "Internal pipeline, temperature 0", "quote": null, "table": "Table (Section 3), row TriviaQA (5-Shot), column Phi-3-mini 3.8b", "note": null, "where": "Section 3 table"},
+  {"claim": "phi-3-mini MT-bench score.", "kind": "measured", "source": null, "metric": "MT-bench", "value": "8.38", "unit": "score", "baseline_value": "8.35 (GPT-3.5)", "n": null, "setup": "2 round average", "quote": "8.38 on MT-bench", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "phi-3-small (7B) and phi-3-medium (14B) reach 75.7 and 78.0 MMLU 5-shot.", "kind": "measured", "source": null, "metric": "MMLU 5-shot", "value": "75.7", "unit": "%", "baseline_value": "68.8 (phi-3-mini)", "n": null, "setup": "phi-3-small 7B, 4.8T tokens; phi-3-medium 14B is 78.0", "quote": null, "table": "Table (Section 3), row MMLU (5-Shot), columns Phi-3-small 7b 75.7 and Phi-3-medium 14b 78.0", "note": "abstract rounds to 75% and 78%", "where": "Section 3 table"},
+  {"claim": "phi-3-mini on GSM-8K 8-shot CoT beats Mixtral 8x7b and GPT-3.5.", "kind": "measured", "source": null, "metric": "GSM-8K 8-shot CoT", "value": "82.5", "unit": "%", "baseline_value": "64.7 (Mixtral), 78.1 (GPT-3.5)", "n": null, "setup": "Internal pipeline", "quote": null, "table": "Table (Section 3), row GSM-8K, column Phi-3-mini 3.8b", "note": null, "where": "Section 3 table"},
+  {"claim": "4-bit quantized phi-3-mini fits in about 1.8GB and runs over 12 tokens/s on an iPhone 14.", "kind": "measured", "source": null, "metric": "on-device throughput", "value": "12", "unit": "tokens per second (more than)", "baseline_value": null, "n": null, "setup": "iPhone 14, A16 Bionic, native, offline", "quote": "achieving more than 12 tokens per second", "table": null, "note": null, "where": "Section 2"},
+  {"claim": "phi-3-medium gains less over phi-3-small than small over mini on some benchmarks, taken as a sign the mix is not yet data optimal at 14B.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "3.8B to 7B to 14B on the same data recipe", "quote": null, "table": null, "note": "no number given", "where": "Section 2"},
+  {"claim": "phi-3.5-MoE has 42B total parameters, 6.6B active, and scores 69.2 average vs GPT-4o-mini 74.9.", "kind": "measured", "source": null, "metric": "average over Table 3 benchmarks", "value": "69.2", "unit": "%", "baseline_value": "74.9 (GPT-4o-mini)", "n": null, "setup": "Table 3 benchmarks", "quote": null, "table": "Table 3, row Average, column Phi-3.5-MoE", "note": null, "where": "Table 3"},
+  {"claim": "On RULER, phi-3.5 models drop sharply at 128K context.", "kind": "measured", "source": null, "metric": "RULER 128k", "value": "64.2", "unit": "score (Phi-3.5-MoE)", "baseline_value": "77.0 (Llama-3.1-8B-Instruct)", "n": null, "setup": "Phi-3.5-MoE; phi-3.5-mini is 63.6", "quote": null, "table": "Table 2, row Phi-3.5-MoE, column 128k", "note": null, "where": "Table 2"},
+  {"claim": "phi-3.5-MoE RepoQA average.", "kind": "measured", "source": null, "metric": "RepoQA average", "value": "85", "unit": "score", "baseline_value": "90.6 (gpt-4o)", "n": null, "setup": "Phi-3.5-MoE", "quote": null, "table": "Table 1, row Phi-3.5-MoE, column Average", "note": null, "where": "Table 1"},
+  {"claim": "Safety alignment reduces harmful response rates on the Microsoft red-team test.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "phi-3-mini before and after safety post-training, Figure 5", "quote": null, "table": null, "note": "no numbers in text", "where": "Section 5"},
+  {"claim": "phi-3-mini ungroundedness on internal RAI benchmark.", "kind": "measured", "source": null, "metric": "Ungroundedness (0 to 4)", "value": "0.603", "unit": "score", "baseline_value": "1.481 (phi-2)", "n": null, "setup": "GPT-4 simulated multi-turn conversations", "quote": null, "table": "Table 4, row Ungroundedness, column Phi-3-mini", "note": null, "where": "Table 4"},
+  {"claim": "Phi-3.5-Vision on MMMU (val).", "kind": "measured", "source": null, "metric": "MMMU val", "value": "43.0", "unit": "%", "baseline_value": "61.8 (GPT-4O)", "n": null, "setup": "0-shot, Llava-1.5 setting", "quote": null, "table": "Table 5, row MMMU (val), column Phi-3.5-Vision", "note": null, "where": "Table 5"}
+ ],
+ "limits": [
+  "Model is limited by size for factual knowledge, shown by low TriviaQA; authors suggest search-engine augmentation (Figure 6).",
+  "Language mostly restricted to English for phi-3-mini.",
+  "Benchmark numbers come from a Microsoft internal pipeline and may differ from published numbers; authors say they did no prompt optimisation for phi-3.",
+  "Training data, optimizer, learning rate, batch size, hardware and compute are not stated; data and recipe are not released.",
+  "Gains from 7B to 14B are smaller on some benchmarks, so the data mixture may not be data optimal at 14B.",
+  "Significant performance drop on RULER at 128K, attributed to missing high-quality long-context mid-training data.",
+  "Residual hallucination, bias, inappropriate content and safety issues remain; Phi-3.5-Vision sometimes answers harmful queries (captcha, scam images) and weak at high-level reasoning.",
+  "Contamination of benchmarks is not analysed in the paper (inferred: no such section)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "data optimal regime", "definition": "calibrating training data, rather than compute or overtraining, to a given model scale; 'optimal' used in an aspirational sense", "where": "Section 2, footnote 3"}
+ ],
+ "lineage": [
+  {"work": "Textbooks Are All You Need", "year": 2023, "arxiv": "2306.11644", "relation": "extends", "note": "phi-1 line of high-quality data for small models", "quote": "We follow the sequence of works initiated in “Textbooks Are All You Need”"},
+  {"work": "Textbooks Are All You Need II: phi-1.5", "year": 2023, "arxiv": "2309.05463", "relation": "extends", "note": "earlier phi model", "quote": null},
+  {"work": "Phi-2: The surprising power of small language models", "year": 2023, "arxiv": null, "relation": "extends", "note": "phi-3 data is a scaled-up version of phi-2's; phi-2 also a baseline", "quote": null},
+  {"work": "Llama 2", "year": 2023, "arxiv": "2302.13971", "relation": "uses-method", "note": "block structure and tokenizer reused", "quote": null},
+  {"work": "Training compute-optimal large language models (Chinchilla)", "year": 2022, "arxiv": "2203.15556", "relation": "related", "note": "contrasted with the data optimal regime", "quote": null},
+  {"work": "LongRope", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "context extension to 128K", "quote": null},
+  {"work": "Tensor Programs V (muP)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "hyperparameter transfer for phi-3-small", "quote": null},
+  {"work": "Mixtral of experts", "year": 2024, "arxiv": null, "relation": "baseline", "note": "main comparison", "quote": null},
+  {"work": "Mistral 7B", "year": 2023, "arxiv": null, "relation": "baseline", "note": null, "quote": null},
+  {"work": "Gemma", "year": 2024, "arxiv": null, "relation": "baseline", "note": null, "quote": null},
+  {"work": "SparseMixer", "year": 2023, "arxiv": "2310.00811", "relation": "uses-method", "note": "MoE router training", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 3", "caption": "Scaling law close to the Data Optimal Regime (phi-1.5, phi-2, phi-3-mini, phi-3-small) versus Llama-2 family trained on the same fixed data; log MMLU error vs log model size.", "page": 4, "why": "Shows the central claim that data filtering shifts the scaling curve."},
+  {"figure": "Figure 1", "caption": "Toy illustration of the blocksparse attention in phi-3-small with 2 local blocks and vertical stride of 3.", "page": 3, "why": "Explains the attention sparsity pattern."}
+ ],
+ "code": [],
+ "problems": ["Author list is the whole Microsoft team, printed alphabetically on the last page.", "Most table cells were read from linearised table text; Table 3 column order verified against header order.", "Phi-3-small/medium vocab: the text footnote marks vocab sizes as 32064 and 100352 (footnote digits run into the numbers in extracted text, e.g. 320641 = 32064 + footnote 1)."]
+}

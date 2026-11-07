@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "key": "2307.16789",
+ "pdf": "generative-ai/03-agentic-foundations/sources/qin-2023-toolllm.pdf",
+ "bib": {
+  "title": "ToolLLM: Facilitating Large Language Models to Master 16000+ Real-World APIs",
+  "authors": [
+   "Yujia Qin",
+   "Shihao Liang",
+   "Yining Ye",
+   "Kunlun Zhu",
+   "Lan Yan",
+   "Yaxi Lu",
+   "Yankai Lin",
+   "Xin Cong",
+   "Xiangru Tang",
+   "Bill Qian",
+   "Sihan Zhao",
+   "Lauren Hong",
+   "Runchu Tian",
+   "Ruobing Xie",
+   "Jie Zhou",
+   "Mark Gerstein",
+   "Dahai Li",
+   "Zhiyuan Liu",
+   "Maosong Sun"
+  ],
+  "first_author": "Qin",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.16789",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 82130,
+  "chars_total": 82130,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can open-source LLMs be given strong tool-use ability over thousands of real-world APIs, including multi-tool instructions?",
+ "hypothesis": "Scaling the number and diversity of instructions and unique tools in the training data lets the fine-tuned model generalize to unseen instructions and APIs.",
+ "contributions": [
+  "ToolBench, an instruction-tuning dataset built automatically with ChatGPT over 16,464 RapidAPI APIs",
+  "DFSDT, a depth-first search-based decision tree reasoning strategy",
+  "ToolEval, an automatic ChatGPT-based evaluator (pass rate, win rate)",
+  "ToolLLaMA (LLaMA-2 7B fine-tuned on ToolBench) and a neural API retriever"
+ ],
+ "method": {
+  "summary": "ChatGPT (gpt-3.5-turbo-16k) generates instructions over sampled RapidAPI APIs and annotates solution paths with real API calls using DFSDT; LLaMA-2 7B is fine-tuned on the 126,486 passing pairs, and a Sentence-BERT retriever picks APIs. Evaluated with ChatGPT-based ToolEval on held-out instructions/tools/categories and on APIBench.",
+  "task": "tool use / API calling instruction tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ToolBench (RapidAPI)",
+    "role": "train",
+    "size": "126,486 (instruction, solution path) pairs; nearly 200k (instruction, relevant API) pairs: 87,413 I1, 84,815 I2, 25,251 I3; 3,451 tools, 16,464 APIs, 49 categories; 469,585 real API calls",
+    "split": "train/dev/test with Inst., Tool and Cat. generalization levels; test and dev set sizes not stated",
+    "source": "RapidAPI Hub, crawled; 10,853 tools / 53,190 APIs filtered to 3,451 / 16,464",
+    "preprocessing": "Filtering by working status, response time and response quality; API responses compressed with ChatGPT-derived schemas, truncated to 1024 tokens."
+   },
+   {
+    "name": "APIBench (TorchHub, TensorHub, HuggingFace)",
+    "role": "eval",
+    "size": null,
+    "split": "not stated",
+    "source": "Patil et al. 2023 (Gorilla)",
+    "preprocessing": "Each API treated as one function that selects an API, gives invocation code and describes output; no zero-shot setting evaluated."
+   }
+  ],
+  "models": [
+   {
+    "name": "ToolLLaMA",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "LLaMA-2 decoder-only",
+    "init_from": "LLaMA-2 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 (extended from 4096 by positional interpolation, ratio 2)",
+    "other": {}
+   },
+   {
+    "name": "API retriever",
+    "role": "retriever",
+    "params": "BERT-BASE (size not stated)",
+    "architecture": "Sentence-BERT dense retriever",
+    "init_from": "BERT-BASE",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "relevant APIs as positives, a few sampled negatives, contrastive learning; hyperparameters not stated"
+    }
+   },
+   {
+    "name": "ChatGPT (gpt-3.5-turbo-16k)",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "instruction generator and ToolEval judge"
+    }
+   },
+   {
+    "name": "GPT-4, Claude-2, Text-Davinci-003, Vicuna, Alpaca",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gorilla (ZS, RS) with BM25",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "LLaMA-7B fine-tuned on APIBench",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning on multi-round conversations in ChatGPT's input/output format; function field concatenated into the prompt",
+   "optimizer": null,
+   "lr": "5e-5",
+   "lr_schedule": null,
+   "warmup": "warmup ratio 4e-2",
+   "batch_size": "64 (total)",
+   "steps": null,
+   "epochs": "2 (best checkpoint on dev set selected)",
+   "tokens": null,
+   "seq_len": "8192",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "position_interpolation_ratio": "2"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated for test runs; ToolEval draws >=4 predictions per solution path and majority votes",
+   "prompting": "Tool-GPT system prompt with function-call fields; oracle (ground-truth) APIs fed to each model except the Retriever row",
+   "retrieval": "top 5 APIs from the trained retriever for ToolLLaMA-DFSDT-Retriever",
+   "parameters": {
+    "API response compression": "over 1024 tokens compressed, then first 1024 tokens kept",
+    "DFSDT": "pre-order traversal with no child sorting; diversity prompt on expansion; ReACT is the degraded case; ToolLLaMA used with either at inference",
+    "max search budget": "not stated"
+   },
+   "other": {
+    "multi-tool sampling": "2-5 tools from same category/collection, at most 3 APIs each",
+    "seed examples": "12 single-tool, 36 multi-tool; 3 sampled per prompt"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass rate",
+     "definition": "proportion of instructions successfully completed within limited budgets, judged by ChatGPT with majority vote over >=4 predictions (Pass/Fail/Unsure rules in A.5)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win rate",
+     "definition": "ChatGPT-judged preference vs ChatGPT-ReACT on paths both Pass or both Fail; ties split half to win and half to lose in Table 4",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NDCG@1/@5",
+     "definition": "retrieval ranking quality",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AST accuracy and hallucination rate",
+     "definition": "official APIBench metrics",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Vicuna",
+    "Alpaca",
+    "ChatGPT",
+    "Claude-2",
+    "Text-Davinci-003",
+    "GPT-4 (ReACT and DFSDT)",
+    "BM25 and OpenAI text-embedding-ada-002 (retrieval)",
+    "Gorilla ZS/RS (APIBench)"
+   ],
+   "protocol": "ChatGPT automatic evaluator; agreement with human annotators 87.1% pass rate, 80.3% win rate on 300 test instructions per method; single run, no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/OpenBMB/ToolBench",
+   "weights": "trained models publicly available per abstract",
+   "data": "ToolBench released at same repository"
+  },
+  "prompts": [
+   {
+    "purpose": "solution path annotation system prompt",
+    "text": "You are Tool-GPT, capable of utilizing numerous tools and functions to complete the given task. ... Let's Begin! Task description: {task_description}",
+    "where": "Appendix A.8 (full text there)"
+   },
+   {
+    "purpose": "diversity prompt for DFSDT child expansion",
+    "text": "This is not the first time you try this task, all previous trails failed. ... you must generate actions that is different from all of them. Here are some previous actions candidates: {previous_candidate}",
+    "where": "Appendix A.8"
+   },
+   {
+    "purpose": "instruction generation (single-tool and multi-tool)",
+    "text": "You will be provided with a tool, its description, all of the tool's available API functions ... creating 10 varied, innovative, and detailed user queries ...",
+    "where": "Appendix A.7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we use a learning rate of 5 × 10−5, a warmup ratio of 4 × 10−2, a total batch size of 64, a maximum sequence length of 8192, and use a position interpolation ratio of 2",
+    "where": "A.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ChatGPT pass rate rises from ReACT to DFSDT with oracle APIs (average over six test sets).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "64.8",
+   "unit": "%",
+   "baseline_value": "40.2",
+   "n": null,
+   "setup": "ChatGPT, oracle APIs, Table 4 average over I1-Inst., I1-Tool, I1-Cat., I2-Inst., I2-Cat., I3-Inst.",
+   "quote": null,
+   "table": "Table 4, rows ChatGPT ReACT / DFSDT, column Average Pass",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "ToolLLaMA with DFSDT reaches an average pass rate close to ChatGPT-DFSDT with oracle APIs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "66.7",
+   "unit": "%",
+   "baseline_value": "64.8",
+   "n": null,
+   "setup": "ToolLLaMA 7B, DFSDT, oracle APIs, average over six test sets",
+   "quote": null,
+   "table": "Table 4, row ToolLLaMA DFSDT, column Average Pass",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 with DFSDT has the highest average pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "71.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "oracle APIs, average over six test sets",
+   "quote": null,
+   "table": "Table 4, row GPT4 DFSDT, column Average Pass",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-4 with ReACT average pass rate (ChatGPT-DFSDT beats it).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "57.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "oracle APIs, average",
+   "quote": null,
+   "table": "Table 4, row GPT4 ReACT, column Average Pass",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "ToolLLaMA with DFSDT and ToolLLaMA ReACT average pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "29.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ToolLLaMA ReACT, oracle APIs, average",
+   "quote": null,
+   "table": "Table 4, row ToolLLaMA ReACT, column Average Pass",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "With the retriever's top 5 APIs instead of oracle, ToolLLaMA-DFSDT improves.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "67.3",
+   "unit": "%",
+   "baseline_value": "66.7",
+   "n": null,
+   "setup": "ToolLLaMA DFSDT-Retriever, top-5 retrieved APIs, average pass",
+   "quote": null,
+   "table": "Table 4, row DFSDT-Retriever, column Average Pass",
+   "note": "Win rate 63.1 vs 60.0 oracle",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Vicuna and Alpaca fail every instruction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "0.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all six test sets, ReACT and DFSDT",
+   "quote": "both Vicuna and Alpaca fail to pass any instruction (pass rate & win rate = 0)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "DFSDT beats ReACT and ReACT@N in annotation pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "63.8",
+   "unit": "%",
+   "baseline_value": "35.3",
+   "n": null,
+   "setup": "ChatGPT, average over I1,I2,I3; ReACT@N 44.5",
+   "quote": null,
+   "table": "Table 3, row DFSDT, column Average",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Retriever NDCG@1 average vs BM25 and Ada.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NDCG@1",
+   "value": "78.0",
+   "unit": "%",
+   "baseline_value": "49.6",
+   "n": null,
+   "setup": "Sentence-BERT on BERT-BASE, average over I1-I3; baseline is Ada; BM25 18.5; NDCG@5 84.9 vs 45.4",
+   "quote": null,
+   "table": "Table 2, row Ours, column Average NDCG@1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "ToolEval agreement with human annotators.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "87.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "300 test instructions per method",
+   "setup": "pass rate; win rate agreement 80.3%",
+   "quote": "Our ChatGPT evaluator demonstrates a high agreement of 87.1% in pass rate and 80.3% in win rate with human annotators.",
+   "table": null,
+   "note": null,
+   "where": "A.5"
+  },
+  {
+   "claim": "OOD APIBench TorchHub AST accuracy with oracle retriever.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AST accuracy",
+   "value": "85.88",
+   "unit": "%",
+   "baseline_value": "59.14",
+   "n": null,
+   "setup": "ToolLLaMA + Oracle vs Gorilla-ZS + Oracle; Gorilla-RS + Oracle 93.01",
+   "quote": null,
+   "table": "Table 5, row ToolLLaMA + Oracle, column TorchHub AST",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "On HuggingFace with the retriever, ToolLLaMA AST accuracy is low in absolute terms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AST accuracy",
+   "value": "16.77",
+   "unit": "%",
+   "baseline_value": "15.71",
+   "n": null,
+   "setup": "ToolLLaMA + Our Retriever vs Gorilla-RS + BM25; Gorilla-ZS + BM25 10.51",
+   "quote": null,
+   "table": "Table 5, row ToolLLaMA + Our Retriever, column HuggingFace AST",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Dataset scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": "instances",
+   "value": "126486",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ToolBench (instruction, solution path) pairs",
+   "quote": "Ultimately, we generate 126, 486 (instruction, solution path) pairs",
+   "table": null,
+   "note": "Table 1 prints 126486",
+   "where": "Sec 2.3"
+  }
+ ],
+ "limits": [
+  "Evaluation by a ChatGPT judge; humans themselves disagree on which path is better (A.5).",
+  "Main comparison uses oracle APIs; test set sizes not stated; single runs, no seeds.",
+  "Test uses RapidAPI whose APIs change over time (cited as reason no fixed ground truth).",
+  "Authors concede 'there is still a long way to go for a fair evaluation of the tool-use domain'.",
+  "Gorilla cannot be run on ToolBench, so the comparison is one-directional.",
+  "Retriever beating oracle attributed by authors to similar replacement APIs; not tested further."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DFSDT",
+   "definition": "depth-first search-based decision tree that lets the model abandon a node by calling Finish by Giving Up and expand a distinct new node",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Pass rate",
+   "definition": "proportion of successfully completing an instruction within limited budgets",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "baseline",
+   "note": "DFSDT compared against ReACT and treated as a generalization",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT/ReACT limits motivate DFSDT",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DFSDT said to extend Reflexion",
+   "quote": "Our DFSDT extends Reflexion to a more general method"
+  },
+  {
+   "work": "Tree of Thoughts",
+   "year": 2023,
+   "arxiv": "2305.10601",
+   "relation": "related",
+   "note": "concurrent similar idea",
+   "quote": null
+  },
+  {
+   "work": "Gorilla",
+   "year": 2023,
+   "arxiv": "2305.15334",
+   "relation": "baseline",
+   "note": "APIBench and Gorilla baselines",
+   "quote": null
+  },
+  {
+   "work": "LLaMA-2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Position interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2306.15595",
+   "relation": "uses-method",
+   "note": "context 4096 to 8192",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ToolEval design follows it",
+   "quote": null
+  },
+  {
+   "work": "ToolAlpaca, API-Bank, ToolBench (Xu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior tool datasets in Table 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Three phases of constructing ToolBench and how we train our API retriever and ToolLLaMA.",
+   "page": 2,
+   "why": "Whole pipeline in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Pass rate and win rate of different methods in tool-use evaluation.",
+   "page": 2,
+   "why": "Summary ranking of models and ReACT vs DFSDT"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "A comparison of our DFSDT and conventional CoT or ReACT during model reasoning (left). We show part of the solution path annotation process using ChatGPT (right).",
+   "page": 5,
+   "why": "Shows tree backtracking vs a single chain"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Test and dev set sizes are not printed; Table 4 values are copied from flattened table text and not independently verified by column layout."
+ ]
+}

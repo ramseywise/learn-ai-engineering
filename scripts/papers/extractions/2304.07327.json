@@ -1,0 +1,609 @@
+{
+ "schema": 1,
+ "key": "2304.07327",
+ "pdf": "generative-ai/05-RL/sources/kopf-2023-openassistant-conversations-democratizing-large-language.pdf",
+ "bib": {
+  "title": "OpenAssistant Conversations - Democratizing Large Language Model Alignment",
+  "authors": [
+   "Andreas Köpf",
+   "Yannic Kilcher",
+   "Dimitri von Rütte",
+   "Sotiris Anagnostidis",
+   "Zhi-Rui Tam",
+   "Keith Stevens",
+   "Abdullah Barhoum",
+   "Nguyen Minh Duc",
+   "Oliver Stanley",
+   "Richárd Nagyfi",
+   "Shahul ES",
+   "Sameer Suri",
+   "David Glushkov",
+   "Arnav Dantuluri",
+   "Andrew Maguire",
+   "Christoph Schuhmann",
+   "Huu Nguyen",
+   "Alexander Mattick"
+  ],
+  "first_author": "Köpf",
+  "year": 2023,
+  "venue": "NeurIPS 2023 Track on Datasets and Benchmarks (arXiv v2)",
+  "arxiv": "2304.07327",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 77185,
+  "chars_total": 77185,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a fully open, human-written and human-ranked assistant conversation corpus be built by crowd-sourcing and used to align open LLMs with SFT and RLHF?",
+ "hypothesis": "Models fine-tuned on OpenAssistant Conversations improve over their base models; ranking human-written (not policy) replies may explain why RLHF gains over SFT are small.",
+ "contributions": [
+  "Release OpenAssistant Conversations (OASST1): 161,443 messages, 35 languages, 461,292 quality ratings, >10,000 complete trees, from >13,500 volunteers",
+  "Release SFT, reward and RLHF models based on Pythia, LLaMA and Falcon",
+  "Data collection platform, guidelines and moderation pipeline released under a permissive licence",
+  "Analysis of dataset, toxicity, contributor demographics and ethics"
+ ],
+ "method": {
+  "summary": "Volunteers write prompts, assistant and prompter replies, label and rank replies in a web app that grows conversation trees one task at a time. Ranks from K independent rankers are merged with Tideman's ranked pairs. The data trains SFT models, reward models (pairwise loss) and PPO (trlx) policies on Pythia, LLaMA, Falcon.",
+  "task": "assistant-style SFT, reward modelling and RLHF from crowd-sourced conversation trees",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OpenAssistant Conversations (OASST1)",
+    "role": "train",
+    "size": "161,443 messages (91,829 prompter, 69,614 assistant) in 66,497 trees; 10,968 complete trees with 92,365 messages; 52,159 trees are a single initial prompt; 8,576 synthetic messages (152,867 human); 461,292 quality ratings; 35 languages",
+    "split": "SFT mix config uses val_split 0.05 for oasst_export; recommended variant is completed trees",
+    "source": "crowd-sourced from >13,000 volunteers (13,500 in abstract) via web app; released at huggingface.co/OpenAssistant/oasst1 under a fully permissive licence",
+    "preprocessing": "spam/guideline labels, moderator deletion, removal of ChatGPT-like phrases ('as a large language model'); deleted messages not exported; ranks merged by Tideman ranked pairs"
+   },
+   {
+    "name": "Falcon sft-mix extra datasets",
+    "role": "train",
+    "size": "vicuna 50% (16963), code_alpaca 50% (9510), oa_wiki_qa_bart_10000row (9434), grade_school_math_instructions (8351), dolly15k (14250), oasst_export (29899)",
+    "split": "val_split 0.025-0.05; max_val_set 250-300",
+    "source": "as named",
+    "preprocessing": "oasst_export langs bg,ca,cs,da,de,en,es,fr,hr,hu,it,nl,pl,pt,ro,ru,sl,sr,sv,uk; top_k 2; file 2023-06-02_oasst_all_labels.jsonl.gz"
+   },
+   {
+    "name": "LMEH subset (BoolQ, PIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OBQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "lm-evaluation-harness",
+    "preprocessing": null
+   },
+   {
+    "name": "Vicuna Elo, OpenAI Evals, HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "run externally via FastEval",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Pythia-12B",
+    "role": "base",
+    "params": "12B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Falcon-40B",
+    "role": "base",
+    "params": "40B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-30B (SFT/RLHF) and LLaMA-65B (baseline)",
+    "role": "base",
+    "params": "30B; 65B baseline",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "oasst-rlhf-3-llama-30b-5k-steps",
+    "role": "proposed",
+    "params": "30B",
+    "architecture": "LLaMA-30B SFT + PPO against RM",
+    "init_from": "oasst-sft-7e3-llama-30b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Detoxify",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT: LM loss on assistant tokens only (prompt tokens masked). RM: LM head replaced by linear layer giving scalar r_theta for last reply; pairwise loss -1/C(K,2) E[log sigma(r(x,yw)-r(x,yl))], optional regulariser. PPO via trlx with per-token KL penalty from SFT model",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "Pythia SFT 7k steps (name pythia-12b-sft-v8-7k-steps); LLaMA RLHF 5k steps (name only)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty in PPO; optional RM value regulariser",
+   "hardware": null,
+   "compute": "Redmond AI provided training compute; amount not stated",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "conversation_format": "<prompter_token> P1 <endoftext_token> <assistant_token> R1 <endoftext_token> ...",
+    "rm_eval": "accuracy at ordering pairs of replies of different rank on held-out validation set",
+    "ppo_prompts": "assistant replies generated to unanswered questions",
+    "hyperparameters": "deferred to GitHub LAION-AI/Open-Assistant model/model_training"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated for Table 1; political compass: multiple samples with majority vote",
+   "prompting": "standardized prompts for political compass (text not given)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "LMEH",
+     "definition": "average over BoolQ, PIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OBQA",
+     "unit": "score (average)",
+     "higher_is_better": true
+    },
+    {
+     "name": "VEL",
+     "definition": "Vicuna Elo Rank, LLM-judged Elo ranking",
+     "unit": "Elo",
+     "higher_is_better": true
+    },
+    {
+     "name": "OAIE",
+     "definition": "OpenAI Evals",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "HE",
+     "definition": "HumanEval functional correctness",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Detoxify categories",
+     "definition": "mean automated toxicity per category over messages",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "pythia-12b",
+    "falcon-40b",
+    "llama-65b",
+    "gpt-3.5-turbo"
+   ],
+   "protocol": "Evaluations run externally with FastEval, hosted on a continually updated leaderboard; single numbers, no seeds or significance tests; instruction benchmarks omitted for base models"
+  },
+  "availability": {
+   "code": "https://github.com/LAION-AI/Open-Assistant",
+   "weights": "https://huggingface.co/OpenAssistant",
+   "data": "https://huggingface.co/OpenAssistant/oasst1"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "OpenAssistant/oasst-sft-7e3-llama-30b",
+    "where": "Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Dataset size: messages, languages, ratings, volunteers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "messages",
+   "value": 161443,
+   "unit": "messages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OASST1 full release",
+   "quote": "we release OpenAssistant Conversations, a human-generated, human-annotated assistant-style conversation corpus consisting of 161,443 messages in 35 different languages, annotated with 461,292 quality ratings",
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Only 10,968 of 66,497 trees are complete.",
+   "kind": "measured",
+   "source": null,
+   "metric": "complete trees",
+   "value": 10968,
+   "unit": "trees",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OASST1",
+   "quote": "Of the 66,497 total conversation trees, we consider 10,968 complete",
+   "note": "Abstract says over 10,000 complete trees; 52,159 trees are only a single initial prompt.",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Falcon-40B SFT (top1) beats Falcon-40B base on LMEH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LMEH",
+   "value": 74.04,
+   "unit": "avg score",
+   "baseline_value": 72.29,
+   "n": null,
+   "setup": "falcon-40b-sft-top1-560 vs base 72.29",
+   "table": "Table 1, row falcon-40b-sft-top1-560, column LMEH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Falcon-40B sft-mix LMEH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LMEH",
+   "value": 74.4,
+   "unit": "avg score",
+   "baseline_value": 72.29,
+   "n": null,
+   "setup": "falcon-40b-sft-mix-1226 vs base 72.29",
+   "table": "Table 1, row falcon-40b-sft-mix-1226, column LMEH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Pythia-12B SFT does not improve LMEH over base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LMEH",
+   "value": 60.28,
+   "unit": "avg score",
+   "baseline_value": 60.33,
+   "n": null,
+   "setup": "pythia-12b-sft-v8-7k-steps vs base 60.33",
+   "table": "Table 1, row pythia-12b-sft-v8-7k-steps, column LMEH",
+   "note": "Contradicts the 'consistently outperforming' claim in the text for this pair.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "LLaMA-30B SFT edges LLaMA-65B base on LMEH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LMEH",
+   "value": 68.03,
+   "unit": "avg score",
+   "baseline_value": 67.24,
+   "n": null,
+   "setup": "oasst-sft-7e3-llama-30b vs llama-65b base 67.24",
+   "table": "Table 1, row oasst-sft-7e3-llama-30b, column LMEH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LLaMA-30B RLHF LMEH vs SFT 68.03.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LMEH",
+   "value": 68.51,
+   "unit": "avg score",
+   "baseline_value": 68.03,
+   "n": null,
+   "setup": "oasst-rlhf-3-llama-30b-5k-steps",
+   "table": "Table 1, row oasst-rlhf-3-llama-30b-5k-steps, column LMEH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LLaMA-30B RLHF Vicuna Elo is higher than SFT (979) but OpenAI Evals and HumanEval are lower (0.52/0.20 SFT vs 0.51/0.15 RLHF).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VEL",
+   "value": 1068,
+   "unit": "Elo",
+   "baseline_value": 979,
+   "n": null,
+   "setup": "oasst-rlhf-3-llama-30b-5k-steps",
+   "table": "Table 1, row oasst-rlhf-3-llama-30b-5k-steps, column VEL",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RLHF outperforms SFT on some benchmarks and not others.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-30B SFT vs RLHF",
+   "quote": "RLHF outperforms SFT in some benchmarks, but not in others.",
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Open models close to ChatGPT in some benchmarks; large gaps in others (gpt-3.5-turbo HumanEval 0.72, OAIE 0.87, VEL 1110; best OASST HumanEval 0.20).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HE",
+   "value": 0.2,
+   "unit": "score",
+   "baseline_value": 0.72,
+   "n": null,
+   "setup": "oasst-sft-7e3-llama-30b vs gpt-3.5-turbo 0.72",
+   "table": "Table 1, row oasst-sft-7e3-llama-30b, column HE",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Authors' hypothesis: RLHF gains over SFT are smaller than InstructGPT's because the RM was trained on human-written replies, not SFT-model samples.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OASST RLHF models vs InstructGPT",
+   "quote": "We hypothesize that the difference in data collection for the reward model could at least partially explain this gap.",
+   "note": "Untested; authors plan to collect rankings on their own SFT outputs.",
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Detoxify toxicity is higher for deleted than retained messages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Toxicity",
+   "value": 4.625,
+   "unit": "%",
+   "baseline_value": 0.988,
+   "n": null,
+   "setup": "deleted messages, 3422 sampled, Detoxify supported languages",
+   "table": "Table 2, row Deleted, column Toxicity",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Retained message toxicity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Toxicity",
+   "value": 0.988,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "retained messages, N=71359",
+   "table": "Table 2, row Retained, column Toxicity",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Over 95% of 270 survey respondents glad to have contributed (81.11% strongly agree, 14.44% agree).",
+   "kind": "measured",
+   "source": null,
+   "metric": "strongly agree",
+   "value": 81.11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discord survey of contributors, self-selected",
+   "table": "Table 3, row Overall glad I contributed, Strongly agree",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "89.1% of annotators identify as male, median age 26.",
+   "kind": "measured",
+   "source": null,
+   "metric": "male share",
+   "value": 89.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "survey respondents",
+   "quote": "Specifically, 89.1% of the annotators identify as male, with a median age of 26.",
+   "note": null,
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "RM trained on human-written replies, not policy samples; RLHF gains inconsistent (Sec 7)",
+  "Annotators 89.1% male, median age 26; power users over-represented",
+  "Dataset may contain unsafe content and residual ChatGPT-generated text",
+  "English 42.8% and Spanish 31.4% dominate",
+  "Training hyperparameters, compute and seeds not in paper (deferred to GitHub); benchmark numbers are single runs from an external leaderboard",
+  "Survey is a self-selected Discord sample (270 responses)",
+  "Authors advise research use only; models susceptible to prompt injection",
+  "Political compass results very preliminary"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Conversation Tree (CT)",
+   "definition": "root node is the initial prompt; nodes are messages, children have the opposite role; a root-to-node path is a thread",
+   "where": "Sec 2"
+  },
+  {
+   "term": "prompter / assistant",
+   "definition": "roles in conversation, reserving 'user' for human contributors",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "extends",
+   "note": "three-stage SFT/RM/PPO recipe followed; RM data differs",
+   "quote": null
+  },
+  {
+   "work": "Pythia",
+   "year": 2023,
+   "arxiv": "2304.01373",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Falcon-40B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "trlx (von Werra et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PPO framework",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "Tideman, Independence of clones",
+   "year": 1987,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rank merging",
+   "quote": null
+  },
+  {
+   "work": "Detoxify",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "toxicity classifier",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct, Alpaca, GPT4All, GPT-4 instruction tuning, Vicuna",
+   "year": 2023,
+   "arxiv": "2212.10560",
+   "relation": "related",
+   "note": "synthetic/LLM-generated instruction datasets contrasted",
+   "quote": null
+  },
+  {
+   "work": "Deep RL from human preferences; Learning to summarize from human feedback",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An example CT of depth 4 containing 12 messages. Any path from the root prompt to a node is a valid thread.",
+   "page": 2,
+   "why": "shows tree structure"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of model evaluation scores on different LLM benchmarks",
+   "page": 7,
+   "why": "main model results"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Collection parameters",
+   "page": 28,
+   "why": "tree state machine settings"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 flattened by extraction; blanks for base-model instruction benchmarks inferred from the text (omitted for base models)",
+  "Volunteer count differs: 13,500 (abstract) vs 13,000 (Sec 3)",
+  "No embedded instructions found"
+ ]
+}

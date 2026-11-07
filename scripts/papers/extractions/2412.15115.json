@@ -1,0 +1,532 @@
+{
+ "schema": 1,
+ "key": "2412.15115",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/qwen-2024-qwen2-5-technical-report.pdf",
+ "bib": {
+  "title": "Qwen2.5 Technical Report",
+  "authors": [
+   "Qwen Team"
+  ],
+  "first_author": "Qwen Team",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2412.15115",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 94942,
+  "chars_total": 94942,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage"
+ },
+ "type": "system",
+ "question": "How much do larger and better-filtered pre-training data plus staged SFT, DPO and GRPO improve an open-weight LLM family over Qwen2?",
+ "hypothesis": "Scaling and mixing data (7T to 18T tokens) and multistage post-training improve capability across sizes.",
+ "contributions": [
+  "Open-weight 0.5B-72B base and instruct models plus MoE Turbo and Plus",
+  "18T-token pre-training with model-based filtering",
+  "SFT >1M examples, DPO, GRPO",
+  "1M-token context for Turbo via progressive extension, YARN, DCA, sparse attention"
+ ],
+ "method": {
+  "summary": "Technical report for the Qwen2.5 family: dense decoder transformers 0.5B-72B (open) and two MoE API models, pretrained on 18T tokens, then SFT, DPO and GRPO. Evaluated on open and in-house benchmarks against Llama 3/3.1, Gemma2, Mistral and GPT-4o variants. No ablations and no pre-training hyperparameter values.",
+  "task": "LLM pre-training and post-training, evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Qwen2.5 pre-training corpus",
+    "role": "pretrain",
+    "size": "18T tokens",
+    "split": null,
+    "source": "Proprietary; includes Qwen2.5-Math and Qwen2.5-Coder data and synthetic data from Qwen2-72B-Instruct and Qwen2-Math-72B-Instruct",
+    "preprocessing": "Qwen2-Instruct models score and filter; domain down/up-sampling; n-gram decontamination (LCS>=13 and >=0.6 x min length)"
+   },
+   {
+    "name": "SFT data",
+    "role": "train",
+    "size": "over 1 million examples",
+    "split": null,
+    "source": "Proprietary: long-response, math CoT, code, instruction-following, structured data, 70,000 logical reasoning queries, cross-lingual, system prompts",
+    "preprocessing": "Rejection sampling, execution feedback, critic and multi-agent filtering"
+   },
+   {
+    "name": "Offline RL (DPO) pairs",
+    "role": "train",
+    "size": "approximately 150,000 pairs",
+    "split": null,
+    "source": "Resampled from SFT model; pass/fail on quality checks",
+    "preprocessing": null
+   },
+   {
+    "name": "Open benchmarks and in-house English/Chinese sets",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "MMLU, MMLU-Pro, GSM8K, MATH, HumanEval, MBPP, IFEval, Arena-Hard, MT-Bench, RULER, LV-Eval and others",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5 dense 0.5B/1.5B/3B/7B/14B/32B/72B",
+    "role": "proposed",
+    "params": "0.5B to 72B",
+    "architecture": "decoder-only Transformer with GQA, SwiGLU, RoPE, QKV bias, RMSNorm pre-norm",
+    "init_from": null,
+    "tokenizer": "byte-level BPE",
+    "vocab": "151,643 regular tokens, 22 control tokens",
+    "layers": "24/28/36/28/48/64/80",
+    "hidden": null,
+    "heads": "Q/KV: 14/2, 12/2, 16/2, 28/4, 40/8, 40/8, 64/8",
+    "context": "32K (0.5B-3B), 128K (7B and up); generation 8K",
+    "other": {
+     "tie_embedding": "Yes for 0.5B,1.5B,3B; No for 7B and up",
+     "license": "Apache 2.0 except 3B (Qwen Research) and 72B (Qwen)",
+     "non_embedding_params_7B": "6.5B"
+    }
+   },
+   {
+    "name": "Qwen2.5-Turbo / Qwen2.5-Plus",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MoE: fine-grained expert segmentation, shared experts, top-K routing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Turbo: up to 1M tokens",
+    "other": {
+     "note": "expert counts and parameters not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Pre-training: not stated explicitly (next-token implied); SFT; DPO; GRPO",
+   "optimizer": "Online Merging Optimizer for DPO; pre-training optimizer not stated",
+   "lr": "SFT 7e-6 to 7e-7; DPO 7e-7; pre-training lr from scaling law, value not stated",
+   "lr_schedule": "SFT: gradually decreased",
+   "warmup": null,
+   "batch_size": "GRPO 2048 global; pre-training from scaling law, not stated",
+   "steps": null,
+   "epochs": "SFT 2; DPO 1",
+   "tokens": "18T pre-training",
+   "seq_len": "4,096 then 32,768 (Turbo: 32K, 64K, 131K, 262K); SFT 32,768",
+   "precision": "bfloat16 release",
+   "weight_decay": "SFT 0.1",
+   "dropout": null,
+   "regularisation": "SFT gradient clipping at 1.0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scaling_law_study": "dense 44M-14B and MoE 44M-1B activated params, 0.8B-600B tokens, used to predict optimal lr and batch size",
+    "rope_base": "10,000 to 1,000,000 (ABF); Turbo 10,000,000",
+    "turbo_long_ctx_mix": "40% sequences at current max length, 60% shorter",
+    "grpo_samples_per_episode": "2048"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Base: MMLU 5-shot, BBH 3-shot, ARC-C 25-shot, HellaSwag 10-shot, GSM8K/MATH 4-shot, coding 0-shot",
+   "retrieval": null,
+   "parameters": {
+    "long_context": "YARN and Dual Chunk Attention give four-fold length capacity: 1M for Turbo, 131,072 for others"
+   },
+   "other": {
+    "sparse_attention": "MInference-based, 12.5x attention compute reduction at 1M"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Benchmark accuracy / pass rates",
+     "definition": "per benchmark, as in open suites",
+     "unit": "% (MT-Bench out of 10)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-3-70B/405B",
+    "Llama-3.1",
+    "Mixtral-8x22B",
+    "Gemma2",
+    "Yi-1.5-34B",
+    "Mistral-7B",
+    "Phi3.5-Mini",
+    "MiniCPM3-4B",
+    "GPT-4o-mini",
+    "GPT-4o",
+    "Claude3.5-sonnet",
+    "Qwen2"
+   ],
+   "protocol": "Single reported scores, no seeds or confidence intervals; baseline numbers partly from other reports (not stated which)"
+  },
+  "availability": {
+   "code": "https://github.com/QwenLM/Qwen2.5",
+   "weights": "Hugging Face, ModelScope, Kaggle; 3B and 72B under custom licences",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.tie_embedding",
+    "quote": null,
+    "where": "Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Pre-training data was scaled from 7T to 18T tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pre-training tokens",
+   "value": "18T",
+   "unit": null,
+   "baseline_value": "7T",
+   "n": null,
+   "setup": "Qwen2.5 dense and MoE models vs Qwen2",
+   "note": null,
+   "where": "Abstract",
+   "quote": "we have scaled the high-quality pre-training datasets from the\nprevious 7 trillion tokens to 18 trillion tokens"
+  },
+  {
+   "claim": "Qwen2.5-72B base scores 86.1 MMLU (5-shot), above Qwen2-72B 84.2 and Llama-3-405B 85.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 86.1,
+   "unit": "%",
+   "baseline_value": 85.2,
+   "n": null,
+   "setup": "Base models, 5-shot, 70B+ comparison",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MMLU, column Qwen2.5-72B"
+  },
+  {
+   "claim": "Qwen2.5-72B-Instruct scores 83.1 MATH and 81.2 Arena-Hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH",
+   "value": 83.1,
+   "unit": "%",
+   "baseline_value": 73.8,
+   "n": null,
+   "setup": "Instruct models; Llama-3.1-405B-Instruct scores 73.8",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MATH, column Qwen2.5-72B"
+  },
+  {
+   "claim": "Qwen2.5-7B base: 74.2 MMLU, 49.8 MATH, 57.9 HumanEval, with 6.5B non-embedding parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 74.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base 7B, 5-shot MMLU",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "achieving 74.2 on general benchmarks like MMLU (Hendrycks et al., 2021a), 49.8 on math\nchallenges such as MATH (Hendrycks et al., 2021b), and 57.9 on coding tasks like HumanEval"
+  },
+  {
+   "claim": "Non-embedding parameters of Qwen2.5-7B are 6.5B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "non-embedding params",
+   "value": "6.5B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-7B; Gemma2-9B has 8.2B",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "the non-embedding parameters of Qwen2-7B and Qwen2.5-7B are only 6.5B"
+  },
+  {
+   "claim": "Qwen2.5-Turbo reaches 100% passkey retrieval at 1M tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey accuracy",
+   "value": 100,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Turbo with YARN+DCA at 1M tokens",
+   "note": null,
+   "where": "Sec 5.2.4",
+   "quote": "Qwen2.5-Turbo achieves 100% accuracy in the 1M-token passkey\nretrieval task"
+  },
+  {
+   "claim": "Sparse attention cuts attention compute 12.5x at 1M tokens; TTFT speedup 3.2 to 4.3x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "attention compute reduction",
+   "value": "12.5x",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MInference-based sparse attention, 1M-token sequences",
+   "note": null,
+   "where": "Sec 5.2.4",
+   "quote": "this approach reduces the computational load of the attention mechanism by\n12.5 times"
+  },
+  {
+   "claim": "RULER average for Qwen2.5-72B-Instruct is 95.1 with DCA+YARN versus 90.8 without; at 128K it is 88.4 vs 67.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER avg",
+   "value": 95.1,
+   "unit": "score",
+   "baseline_value": 90.8,
+   "n": null,
+   "setup": "128K claimed length",
+   "note": null,
+   "where": "Table 16",
+   "table": "Table 16, row Qwen2.5-72B-Instruct and w/o DCA + YARN, columns Avg. and 128K"
+  },
+  {
+   "claim": "Context extension: 4,096 to 32,768 tokens in final pre-training stage with RoPE base 10,000 to 1,000,000 (ABF).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pretrain context",
+   "value": "32,768 tokens",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All dense models",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "we extend the context length from 4,096 to 32,768 tokens during the final\npre-training stage for all model variants except Qwen2.5-Turbo. Concurrently, we increase the base\nfrequency of RoPEfrom 10,000 to 1,000,000 using the ABF technique"
+  },
+  {
+   "claim": "SFT: over 1M examples, 2 epochs, seq len 32,768, lr 7e-6 to 7e-7, weight decay 0.1, grad clip 1.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SFT epochs",
+   "value": 2,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5 post-training",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "The model is fine-tuned for two epochs\nwith a sequence length of 32,768 tokens. To optimize learning, the learning rate is gradually decreased\nfrom 7 × 10−6 to 7 × 10−7."
+  },
+  {
+   "claim": "Offline RL: about 150,000 DPO pairs, one epoch, lr 7e-7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DPO pairs",
+   "value": "150,000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Offline RL stage",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "we\nconstruct a dataset consisting of approximately 150,000 training pairs. The model is then trained for one\nepoch using the Online Merging Optimizer (Lu et al., 2024a), with a learning rate of 7 × 10−7."
+  },
+  {
+   "claim": "Online RL GRPO: 8 responses per query, global batch 2048.",
+   "kind": "measured",
+   "source": null,
+   "metric": "responses per query",
+   "value": 8,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GRPO",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "We sample 8 responses\nfor each query. All models are trained with a 2048 global batch size"
+  },
+  {
+   "claim": "Qwen2.5-RM-72B Reward Bench score 91.59, below Llama-3.1-Nemotron-70B-Reward 94.10; best on PPE objective-avg 69.85.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Reward Bench score",
+   "value": 91.59,
+   "unit": "score",
+   "baseline_value": 94.1,
+   "n": null,
+   "setup": "Reward model",
+   "note": null,
+   "where": "Table 15",
+   "table": "Table 15, row Score, column Qwen2.5-RM-72B"
+  },
+  {
+   "claim": "Contamination filter: remove a training sequence if LCS with a test sequence is at least 13 tokens and at least 0.6 of the shorter length.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LCS threshold",
+   "value": 13,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "n-gram decontamination on pre- and post-training data",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "|LCS(st, se)| ≥13 and\n|LCS(st, se)| ≥0.6 × min(|st|, |se|)"
+  },
+  {
+   "claim": "Open-weight table: 0.5B/1.5B/3B tie embeddings, 7B and up do not; layers 24/28/36/28/48/64/80; GQA KV heads 2/2/2/4/8/8/8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense Qwen2.5 models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Tie Embedding and Layers"
+  }
+ ],
+ "limits": [
+  "No ablations isolating the effect of data size, filtering or each post-training stage.",
+  "Pre-training hyperparameters (lr, batch size, optimizer), hardware and compute are not given; the scaling-law results are described without numbers.",
+  "MoE sizes and expert counts of Turbo and Plus not stated.",
+  "Authors concede reward-model benchmark scores do not predict RL model quality, and cultural nuance (BLEnD) needs more work.",
+  "Per-size token counts are not stated; the abstract gives 18T for the series."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Qwen2 (Yang et al.)",
+   "year": 2024,
+   "arxiv": "2407.10671",
+   "relation": "extends",
+   "note": "Predecessor; same decoder architecture",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "Transformer decoder",
+   "quote": null
+  },
+  {
+   "work": "GQA (Ainslie et al.)",
+   "year": 2023,
+   "arxiv": "2305.13245",
+   "relation": "uses-method",
+   "note": "KV-cache efficiency",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al.)",
+   "year": 2024,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "position encoding",
+   "quote": null
+  },
+  {
+   "work": "ABF (Xiong et al.)",
+   "year": 2023,
+   "arxiv": "2309.16039",
+   "relation": "uses-method",
+   "note": "RoPE base increase",
+   "quote": null
+  },
+  {
+   "work": "YaRN (Peng et al.)",
+   "year": 2023,
+   "arxiv": "2309.00071",
+   "relation": "uses-method",
+   "note": "inference length extrapolation",
+   "quote": null
+  },
+  {
+   "work": "Dual Chunk Attention (An et al.)",
+   "year": 2024,
+   "arxiv": "2402.17463",
+   "relation": "uses-method",
+   "note": "inference length extrapolation",
+   "quote": null
+  },
+  {
+   "work": "DPO (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "offline RL",
+   "quote": null
+  },
+  {
+   "work": "GRPO (Shao et al.)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "online RL",
+   "quote": null
+  },
+  {
+   "work": "MInference (Jiang et al.)",
+   "year": 2024,
+   "arxiv": "2407.02490",
+   "relation": "uses-method",
+   "note": "sparse attention for Turbo",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 (Dubey et al.)",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "baseline",
+   "note": "Llama-3/3.1 70B and 405B",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5-Coder (Hui et al.)",
+   "year": 2024,
+   "arxiv": "2409.12186",
+   "relation": "uses-data",
+   "note": "code data in pre-training and SFT",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5-Math (Yang et al.)",
+   "year": 2024,
+   "arxiv": "2409.12122",
+   "relation": "uses-data",
+   "note": "math data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Model architecture and license of Qwen2.5 open-weight models.",
+   "page": 3,
+   "why": "Layers, Q/KV heads and tie-embedding per size in one place"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "TTFT (Time To First Token) of Qwen2.5-Turbo and Qwen2.5-7B with Full Attention and Our Method.",
+   "page": 18,
+   "why": "Shows sparse-attention speedup by hardware"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 3 and Figure 2 content is image-only; speedup values not used."
+ ]
+}

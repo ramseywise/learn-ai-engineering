@@ -1,19 +1,722 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.00093",
  "pdf": "ai-engineering/02-context-engineering/sources/shi-2023-large-language-models-can-be.pdf",
  "bib": {
   "title": "Large Language Models Can Be Easily Distracted by Irrelevant Context",
-  "first_author": "Freda Shi",
-  "year": "2023",
-  "venue": "ICML 2023",
+  "authors": [
+   "Freda Shi",
+   "Xinyun Chen",
+   "Kanishka Misra",
+   "Nathan Scales",
+   "David Dohan",
+   "Ed Chi",
+   "Nathanael Schärli",
+   "Denny Zhou"
+  ],
+  "first_author": "Shi",
+  "year": 2023,
+  "venue": "Proceedings of the 40th International Conference on Machine Learning, Honolulu, Hawaii, USA. PMLR 202, 2023",
   "arxiv": "2302.00093",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "ebcee23b-6f13-4c8f-abc4-afc1181accc4"
+  "at": "2026-11-07",
+  "chars_read": 68849,
+  "chars_total": 68849,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Large Language Models Can Be Easily Distracted by Irrelevant Context\", Freda Shi, Xinyun Chen, Kanishka Misra, Nathan Scales, David Dohan, Ed Chi, Nathanael Schärli, Denny Zhou. ICML 2023 (Proceedings of the 40th ICML, PMLR 202); arXiv:2302.00093v3, 6 Jun 2023.\n\nCOVERAGE: 68,910 of 68,910 chars, 18 of 18 pages, including appendices A-C. References were read for origins only. Nothing was skipped. Figures were not viewed as images: I have captions and whatever text the extraction gave.\n\nCLAIMS\n\nShared setup unless stated:\n- Data: GSM-IC-4K, 4,000 examples uniformly sampled from the 58,052-example GSM-IC. It derives from 100 easy GSM8K problems, each with one irrelevant sentence added.\n- Prompts: 1 exemplar.\n- Decoding: greedy (τ=0). SC means 20 samples at τ=0.7 with majority vote.\n- Metrics: micro is accuracy per example. Macro is the fraction of base problems solved under every distractor variant.\n\n- claim: Very few base problems survive all distractor variants under baseline prompts.\n  number: no more than 18%\n  setup: Best baseline is LTM at macro 18.0 (code-davinci-002, greedy, no instruction, clean exemplar). See PROBLEMS: 18.0 is over all 100 base problems, and Norm is 19.1.\n  quote: \"among the original problems that can be solved by baseline prompts with greedy decoding, no more than 18% of them can be consistently solved for all types of irrelevant information\"\n  where: p2; Table 3 p6\n\n- claim: Micro accuracy falls for every technique compared with the base set.\n  number: base to GSM-IC-4K: COT 95.0 to 72.4, LTM 94.0 to 77.5, PROGRAM 83.0 to 54.4, 0-COT 44.0 to 29.0\n  setup: code-davinci-002, clean exemplar, greedy. The base set is the 100-problem easy subset.\n  quote: \"95.0 94.0 83.0 44.0\" (Table 2 row, columns COT LTM PROGRAM 0-COT); \"COT 73.5 70.8 72.4 76.2 8.3 2.5 6.0 6.3\"; \"LTM 74.9 81.5 77.5 82.4 16.7 20.0 18.0 19.1\"\n  where: Table 2 p3; Table 3 p6\n\n- claim: Without SC, macro accuracy stays under 30% in all conditions.\n  number: fewer than 30% (best 28.0: LTM, distractor exemplar)\n  setup: Both models, all greedy prompt variants.\n  quote: \"The drop on macro accuracy is especially large, showing that fewer than 30% of the base problems are consistently solved after adding distractors.\"\n  where: p6\n\n- claim: Self-consistency is the strongest mitigation tested, but most base problems are still not consistently solved.\n  number: over 11 points micro; best macro 45%. Table 3 overall micro: COT+SC 88.1, LTM+SC 93.4, PROGRAM+SC 74.6, 0-COT+SC 64.3.\n  setup: code-davinci-002, clean exemplar, 20 samples, τ=0.7.\n  quote: \"Taking the majority vote from 20 samples, 6 SC improves the overall micro accuracy by more than 11 percentage points.\"; \"the best macro accuracy among all prompting techniques is only 45%, suggesting that for more than half of the base prob- lems, SC fails to prevent the model from being distracted\"\n  where: p7\n\n- claim: The correct answer is nearly always among the 20 samples, so distraction here is largely a problem of selecting the answer.\n  number: 99.7% (COT, LTM); 96.5% (0-COT)\n  setup: Recall within 20 samples at τ=0.7. This is an oracle measure, not what majority vote achieves.\n  quote: \"the correct answer for 99.7% of the problems is in the 20 sampled answers for both COT and LTM. Even for 0-COT, the recall of correct solutions within 20 samples is 96.5%.\"\n  where: p7\n\n- claim: A one-sentence instruction to ignore irrelevant information improves accuracy for the exemplar-based techniques, and it is that sentence that does the work.\n  number: overall micro: COT 72.4 to 77.8, LTM 77.5 to 80.6, PROGRAM 54.4 to 56.7. Macro: COT 6.0 to 15.0, LTM 18.0 to 25.0.\n  setup: code-davinci-002, clean exemplar, greedy. For 0-COT, micro moves 29.0 to 30.5 and macro stays 1.0.\n  quote: \"COT + INST. 79.0 76.0 77.8 81.8 20.0 7.0 15.0 15.8\"; \"Note that adding the instruction “Solve grade school math problems. ”alone does not significantly improve the performance, and it is the instruction “Feel free to ignore irrelevant information given in the questions. ”that makes the difference.\"\n  where: Table 3 p6; p8\n\n- claim: Using an exemplar that contains a distractor also helps, with no training or fine-tuning.\n  number: overall micro: COT 76.8, LTM 80.7, PROGRAM 62.2. Macro: 14.0, 28.0, 9.0.\n  setup: code-davinci-002, greedy, no instruction. Combining with the instruction gives LTM micro 82.8, macro 28.0.\n  quote: \"LTM 78.1 84.6 80.7 85.9 23.3 35.0 28.0 29.8\"; \"using ex- emplars with distractors (i.e., including problems with irrel- evant context) consistently outperforms using the original exemplars without distractors across prompting techniques.\"\n  where: Table 3 p6\n\n- claim: The type of distractor matters. In-topic is hardest, then role-name overlap, while number range matters least.\n  number: COT micro: in-topic 63.1 vs off-topic 80.7; role overlap 68.3 vs none 76.6; in-range 70.2 vs out-of-range 74.6. COT macro: in-topic 10.2 vs off-topic 33.0.\n  setup: Table 4 row for code-davinci-002, clean exemplar. Macro values here are computed on subsets, so they are higher than in Table 3 (authors' note). LTM is an exception on the role and number factors.\n  quote: \"COT 63.1 80.7 68.3 76.6 70.2 74.6 10.2 33.0 10.3 22.2 11.0 19.0\"; \"varying the numbers in the irrelevant information does not notably change the model performance, while the degree of lexical overlap with the original problem description matters.\"\n  where: Table 4 p8; p2\n\n- claim: More exemplars improve clean accuracy but can reduce robustness on harder problems.\n  number: 1 vs 4 exemplars: GSM8K dev 60.3 vs 66.3; GSM-IC-4K >2 steps 70.8 vs 69.4 (with instruction, 76.0 vs 70.6).\n  setup: COT, code-davinci-002. The 4-exemplar prompt comes from Zhou et al. 2022.\n  quote: \"COT 1 60.3 73.6 70.8\"; \"4 66.3 78.0 69.4\"; \"adding more exemplars can make the prompt less robust as it leads to some overfitting.\"\n  where: Table 6 and p9\n\n- claim: LTM holds up better than COT and PROGRAM as problems get longer.\n  number: micro at 2 / 3 / 4 / ≥5 steps: LTM 74.9, 86.5, 77.3, 80.3; COT 73.5, 78.8, 66.4, 66.3; PROGRAM 59.1, 57.2, 46.3, 36.7. Row assignment is inferred, see PROBLEMS.\n  setup: GSM-IC-4K, code-davinci-002 (the 2-step values match Table 3).\n  quote: \"the performance of LTM is fairly consistent across difficulty.\"\n  where: Figure 4 and p7\n\n- claim: The model upgrade does not fix distraction. text-davinci-003 is better normalised on micro but mostly worse on macro.\n  number: LTM micro 76.3, macro 5.0 (code-davinci-002 LTM: micro 77.5, macro 18.0). text-davinci-003 base accuracy: COT 80.0, LTM 81.0.\n  setup: text-davinci-003, clean exemplar, greedy.\n  quote: \"LTM 78.0 73.6 76.3 94.2 5.0 0.0 5.0 6.2\"; \"text-davinci-003 achieves better normalized micro accuracy than code-davinci-002, though its macro accuracy is mostly worse.\"\n  where: Table 3 and p6\n\n- claim: The instruction also helps on naturally noisy passages.\n  number: code-davinci-002: COT 67.4 to 68.9, LTM 73.4 to 74.4. text-davinci-003: COT 68.2 to 69.9, LTM 70.2 to 72.8.\n  setup: DROP football split, baseline prompts from Zhou et al. 2022. These are small gains, and there is no distractor-free condition.\n  quote: \"LTM + I NST. 74.4 72.8\"; \"LTM 73.4 70.2\"; \"the task is to answer a question according to a long passage that naturally con- tains irrelevant context.\"\n  where: Table 7 and p9\n\n- claim: Mitigations do not meaningfully harm clean-problem accuracy, by the authors' account (but see PROBLEMS).\n  number: GSM8K dev, COT with vs without distractor exemplar: 59.3 vs 60.3; SVAMP 79.1 vs 77.6.\n  setup: Table 5, code-davinci-002 presumed from the \"mainly use\" statement; the table does not name the model.\n  quote: \"COT ✓ 59.3 79.1\"; \"✗ 60.3 77.6\"; \"we do not observe a drop in ac- curacy when using exemplars with irrelevant information, adding natural language instructions, or both\"\n  where: Table 5 and p8\n\n- claim: Two failure mechanisms are visible: using the irrelevant number directly, and derailing without using it.\n  number: none\n  setup: Worked outputs in Figure 3 and Tables 11-12. Example: the correct Lucy balance of $76 becomes $66 after adding \"Lucy’s mother’s monthly rent is $10\", for COT, LTM and PROGRAM alike.\n  quote: \"One common error type is wrongly using the number in the irrelevant sentence\"; \"the presence of the irrelevant sentence in the reasoning steps alone can still cause a wrong prediction\"\n  where: p6; Table 12 p16\n\n- claim: The authors' conclusion is that mitigations help but the weakness remains.\n  number: none\n  setup: Whole study.\n  quote: \"a single piece of irrelevant in- formation can distract the models and substantially degrade their performance, even on problems whose clean versions they correctly solve.\"\n  where: p9\n\nLIMITS\n\nConceded by the authors:\n- \"We leave further investigation on the distractibility for other tasks and different language models for future work.\"\n- The base set is an \"easy\" subset of GSM8K, selected as solvable by at least one technique. 60 of the 100 are two-step.\n- 4K was sampled for cost reasons, and SC remains insufficient on macro.\n\nNot shown by the source (my reading of its setup):\n- It tests one added sentence. There is no scaling of distractor count or volume, no window occupancy, and no dose-response. It cannot support a claim that more marginal content degrades more, nor the note's 40-documents-vs-3 example.\n- It involves no retrieval, reranking, compression, agents, tools, multi-turn sessions or long context. The note's listed fixes (rerank, dynamic k, compression) are untested here. Its mitigations are all prompt or decoding level.\n- It has no attention or mechanistic analysis, so it does not show content \"crowding out\" signal or attention \"drifting\". It shows outcomes only.\n- In GSM-IC the distractor sits immediately before the question (Table 1) and comes from a template. It is not naturally occurring, except in DROP, which has no clean baseline and so measures instruction gain, not degradation.\n- It covers arithmetic reasoning only, and DROP's football split only.\n- No confidence intervals or significance tests are reported. Some gaps are small, such as 70.8 vs 69.4.\n- Macro depends on how many variants each base problem has, and is harsh by construction. The 4K sample is about 40 per base (my arithmetic). Table 4's note confirms macro rises when the variant set shrinks, so macro should not be quoted without saying so.\n- SC costs 20 samples per problem, and the paper does not analyse cost.\n- SC's 99.7% is recall, not an achieved accuracy. No method for selecting the right sample is offered; the authors only suggest one could be developed.\n\nDated:\n- Both models are 2022-era GPT-3 family, code-davinci-002 and text-davinci-003. No newer model is tested, so the absolute numbers describe those models only.\n\nBUILDS ON\n- Dataset: GSM8K (Cobbe et al., 2021).\n- Techniques: COT (Wei et al., 2022), 0-COT (Kojima et al., 2022), LTM (Zhou et al., 2022), PROGRAM (Chowdhery et al., 2022; Gao et al., 2022; Chen et al., 2022), SC (Wang et al., 2022c; Shi et al., 2022a).\n- Instruction line: Suzgun et al., 2022; Sanh et al., 2021; Ouyang et al., 2022.\n- Distraction precedents: Jia & Liang, 2017 (adversarial distracting sentences in QA); Li et al., 2022 (fine-tuning for robustness to noisy context); Liang et al., 2022; Patel et al., 2021 (SVAMP).\n- Other data: Dua et al., 2019 (DROP).\n- Psychology of irrelevant information: Hoyer et al., 1979; Pasolunghi et al., 1999; Marzocchi et al., 2002.\n\nCODE\n- Instruction prompt, verbatim (p5; Table 14 p18): \"Solve grade school math problems. Feel free to ignore irrelevant information given in the questions.\"\n- Distractor exemplar, verbatim (Figure 2 p5; Table 13 p17): \"Q: Elsa has 5 apples. Anna has 2 more apples than Elsa. Liz has 4 peaches. How many apples do they have together?\"\n- Off-topic template, verbatim (Table 9 p13): \"[ROLE] bought [NUMBER] tomatoes from the grocery store.\"\n- Dataset location, as printed in footnote 1 (p1): https://github.com/google-research-datasets/GSM-IC\n\nFIGURES\n- Figure 1, p3: \"Illustration of the considered factors when creating the GSM-IC dataset.\" Shows the three distractor factors at a glance. Image content not inspected.\n- Figure 2, p5: \"Prompt formats for the investigated techniques on the right, which are constructed from building blocks on the left\". Shows prompt assembly and where the instruction and distractor go.\n- Figure 3, p7: \"Example problem and corresponding outputs by different prompting techniques\". The strongest candidate: one irrelevant sentence, three different failures, faster than prose.\n- Figure 4, p7: \"Micro accuracies on GSM-IC-4K with respect to the number of required reasoning steps.\" LTM flat vs PROGRAM falling.\n- Figure 5, p13: \"Base problem distribution of GSM-IC with respect to the number of reasoning steps\". Shows the skew to easy problems (60, 15, 12, 9, 3, 1).\n- Non-figure candidates: Table 1 p1 (minimal example), Table 3 p6 (main results).\n\nPROBLEMS\n\nEmbedded instructions: none aimed at a reader. The \"ignore irrelevant information\" text is experimental material.\n\nFormatting of quotes and extraction faults:\n- In quotes, line breaks are collapsed to spaces and the extraction's hyphenation and spacing are kept, so \"prob- lems\" and \"I NST.\" are as extracted. Footnote mark \"6\" stays in one quote.\n- Fractions are flattened: \"110 ≤ ab ≤ 10\" is presumably 1/10 ≤ a/b ≤ 10, and \"norm(aM; M) = aMnM\" is presumably a_M/n_M. Boldface is lost, so best-in-column marks are not recoverable.\n- Figure 4 values arrive as a flat list. I assigned them to series by order, and only the 2-step values cross-check against Table 3. Verify against the image before using the 3, 4 and ≥5 values.\n\nInternal inconsistencies in the source, from my arithmetic. All are worth checking before citing, and I could not tell whether they sit in the original PDF or the text layer:\n- The text says 0-COT's SC gain is 35.5 points (\"35.5 percentage points\", p7), but Table 3 gives 64.3 − 29.0 = 35.3.\n- \"No more than 18%\" is worded as a share of problems solved by baseline, but 18.0 is the raw macro over all 100 base problems. The normalised LTM value is 19.1. Safest to cite the macro number with its setup.\n- \"LTM achieves about double macro accuracy of COT\" (p6): Table 3 shows 18.0 vs 6.0 (triple) with clean exemplars and 28.0 vs 14.0 (double) with distractor exemplars.\n- \"We do not observe a drop\" (p8): Table 5 shows small drops on GSM8K dev, such as COT 60.3 to 59.3 and PROGRAM 59.8 to 58.6.\n- COT+SC row: macro 29.0 / 28.3 with overall 30.0, where the overall exceeds both parts. Micro 87.6 / 90.1 with overall 88.1 does not fit a 60/40 weighting (about 88.6). Overall values do match the Norm column, so the step-split cells look suspect.\n- text-davinci-003 LTM macro: 5.0 / 0.0 with overall 5.0 does not fit a 60/40 weighting (would be 3.0).\n- COT 2-step is 73.5 in Table 3 and 73.6 in Table 6.\n- Table 5 shows identical COT ✓ and COT+INST ✓ values (59.3, 79.1). This may be coincidence or a duplicated row.\n\nTarget note read: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/02-context-engineering/notes/11-failure-modes.md\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/02-context-engineering/sources/shi-2023-large-language-models-can-be.pdf"
+ "type": "benchmark",
+ "question": "How much does irrelevant context in a problem description reduce LLM arithmetic reasoning accuracy, and which prompting strategies mitigate it?",
+ "hypothesis": "Prompted LLMs are sensitive to irrelevant information in the problem, as people are, and exemplars or instructions that show how to ignore it should help.",
+ "contributions": [
+  "GSM-IC, a GSM8K-derived arithmetic dataset with one irrelevant sentence added to each problem",
+  "Micro, macro and normalized accuracy metrics for distractibility",
+  "Evaluation of COT, 0-COT, LTM and PROGRAM prompting, with and without self-consistency, irrelevant-context exemplars and an ignore-irrelevant-information instruction",
+  "Breakdown by topic, role-name overlap and number range of the distractor",
+  "Extension to DROP"
+ ],
+ "method": {
+  "summary": "Builds GSM-IC by adding one template-generated irrelevant sentence to each of 100 easy GSM8K problems, then evaluates four prompting techniques on a 4,000-example sample with code-davinci-002 and text-davinci-003. Tests self-consistency, irrelevant-context exemplars and an instruction as mitigations.",
+  "task": "arithmetic word-problem reasoning under distractors; DROP football-split reading comprehension",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM-IC",
+    "role": "eval",
+    "size": "58,052 examples from 100 base problems",
+    "split": "full benchmark; GSM-IC-4K = 4,000 uniformly sampled, covers all 100 base problems",
+    "source": "derived from GSM8K (Cobbe et al. 2021); released at github.com/google-research-datasets/GSM-IC",
+    "preprocessing": "Base problems: 100 chosen from 1,000 random GSM8K training problems (dev set) that at least one prompting technique solves; 2 to 7 reasoning steps, 60 with two steps. One template sentence inserted immediately before the question; factors: topic (in/off), role-name overlap, number range (in-range if 1/10 <= a/b <= 10). Four in-topic and four off-topic templates, five overlapping and five non-overlapping role names, four in-range and four out-of-range numbers per problem. Manually verified; ambiguous questions rewritten."
+   },
+   {
+    "name": "GSM8K dev (1,000 training problems)",
+    "role": "dev",
+    "size": "1,000 problems",
+    "split": "random from GSM8K training set",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP test",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Patel et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "DROP football split",
+    "role": "eval",
+    "size": null,
+    "split": "football split",
+    "source": "Dua et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "GPT-3 family (Codex)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "GPT-3.5, trained with RLHF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature 0) without SC; sampling with majority vote for SC",
+   "temperature": "0 greedy; 0.7 for SC",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 samples per problem for self-consistency; ties broken by random top-tier result; one greedy run otherwise; no seeds stated",
+   "prompting": "One exemplar for main experiments (following Zhou et al. 2022), either original or with an irrelevant sentence; optional instruction prefix 'Solve grade school math problems. Feel free to ignore irrelevant information given in the questions.'; 0-COT zero-shot 'Let's think step by step:'; a 4-exemplar COT prompt is also tested (Table 6). PROGRAM executes generated Python in an external interpreter.",
+   "retrieval": null,
+   "parameters": {
+    "self_consistency_samples": 20,
+    "sc_temperature": 0.7,
+    "exemplars": 1,
+    "exemplars_alt": 4
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Micro accuracy",
+     "definition": "Mean accuracy over all test problems",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Macro accuracy",
+     "definition": "Fraction of base problems for which every derived problem is answered correctly",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Normalized accuracy",
+     "definition": "Micro or macro accuracy divided by the method's base-problem accuracy (Table 2)",
+     "unit": "ratio x100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "COT",
+    "0-COT",
+    "LTM",
+    "PROGRAM",
+    "same with SC",
+    "same with instruction",
+    "same with irrelevant-context exemplar"
+   ],
+   "protocol": "Single greedy run per setting on GSM-IC-4K; no significance test or seeds stated. Base accuracy on 100 base problems (Table 2, code-davinci-002): COT 95.0, LTM 94.0, PROGRAM 83.0, 0-COT 44.0; with SC 96.0, 99.0, 91.0, 76.0. text-davinci-003 base: COT 80.0, LTM 81.0."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://github.com/google-research-datasets/GSM-IC"
+  },
+  "prompts": [
+   {
+    "purpose": "Instruction prefix for instructed prompting",
+    "text": "Solve grade school math problems. Feel free to ignore irrelevant information given in the questions.",
+    "where": "Sec 4.3, Table 14"
+   },
+   {
+    "purpose": "COT exemplar (no irrelevant context)",
+    "text": "Q: Elsa has 5 apples. Anna has 2 more apples than Elsa. How many apples do they have together?\nA: Anna has 2 more apples than Elsa, so Anna has 2 + 5 = 7 apples. Elsa and Anna have 5 + 7 = 12 apples together. The answer is 12.\nQ: [Problem of Interest]\nA:",
+    "where": "Table 13"
+   },
+   {
+    "purpose": "Irrelevant-context exemplar question",
+    "text": "Q: Elsa has 5 apples. Anna has 2 more apples than Elsa. Liz has 4 peaches. How many apples do they have together?",
+    "where": "Fig 2, Table 13"
+   },
+   {
+    "purpose": "0-COT",
+    "text": "Q: [Problem of Interest]\nA: Let's think step by step:",
+    "where": "Table 13"
+   },
+   {
+    "purpose": "LTM answer prefix",
+    "text": "A: Let's break down this problem:",
+    "where": "Table 13"
+   },
+   {
+    "purpose": "PROGRAM answer prefix",
+    "text": "A: Let's solve the problem by a Python program:",
+    "where": "Table 13"
+   },
+   {
+    "purpose": "DROP instruction",
+    "text": "Solve following questions. Feel free to ignore irrelevant information given in the questions.",
+    "where": "Sec 5.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we sample 20 responses with temperature τ = 0.7 following Wang et al. (2022c)",
+    "where": "Sec 5"
+   }
+  ],
+  "other": {
+   "param_counts_not_stated": "The paper does not give parameter counts for the two models; max tokens and stop sequences are not stated."
+  }
+ },
+ "results": [
+  {
+   "claim": "Irrelevant sentences cut chain-of-thought micro accuracy on GSM-IC-4K well below its base-problem accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 72.4,
+   "unit": "x100",
+   "baseline_value": 95.0,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, COT",
+   "note": "Base accuracy 95.0 is Table 2 (100 base problems, COT).",
+   "where": "Table 3, Table 2",
+   "table": "Table 3, row COT, column Overall micro"
+  },
+  {
+   "claim": "Macro accuracy (base problem solved under every distractor) for COT is only 6.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro accuracy",
+   "value": 6.0,
+   "unit": "x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, COT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row COT, column Overall macro"
+  },
+  {
+   "claim": "No more than 18% of base problems solvable by baseline prompts are consistently solved for all types of irrelevant information.",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistent-solve rate",
+   "value": 18,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Baseline prompts with greedy decoding, GSM-IC",
+   "note": "Table 3 LTM overall macro is 18.0.",
+   "where": "Sec 1, finding 1",
+   "quote": "among the original problems that can be solved by baseline prompts with greedy decoding, no more than 18% of them can be consistently solved for all types of irrelevant information"
+  },
+  {
+   "claim": "LTM is the most robust base technique: overall micro 77.5 and macro 18.0 vs COT 72.4 and 6.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 77.5,
+   "unit": "x100",
+   "baseline_value": 94.0,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, LTM",
+   "note": null,
+   "where": "Table 3, Sec 5.1",
+   "table": "Table 3, row LTM, column Overall micro"
+  },
+  {
+   "claim": "Zero-shot CoT is the most distracted: overall micro 29.0 vs base 44.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 29.0,
+   "unit": "x100",
+   "baseline_value": 44.0,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, 0-COT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 0-COT, column Overall micro"
+  },
+  {
+   "claim": "PROGRAM prompting gets 54.4 overall micro accuracy under distractors (base 83.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 54.4,
+   "unit": "x100",
+   "baseline_value": 83.0,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, PROGRAM",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row PROGRAM, column Overall micro"
+  },
+  {
+   "claim": "Self-consistency (20 samples) improves overall micro accuracy by more than 11 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy gain",
+   "value": 11,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, 20 samples, tau=0.7, majority vote",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "SC improves the overall micro accuracy by more than 11 percentage points"
+  },
+  {
+   "claim": "COT + SC reaches 88.1 overall micro accuracy but 30.0 macro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 88.1,
+   "unit": "x100",
+   "baseline_value": 72.4,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, COT + SC, 20 samples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row COT + SC, column Overall micro"
+  },
+  {
+   "claim": "Self-consistency gain on 0-COT is 35.5 points micro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy gain",
+   "value": 35.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, 0-COT + SC vs 0-COT",
+   "note": "Table 3: 64.3 minus 29.0 = 35.3; text prints 35.5.",
+   "where": "Sec 5.1",
+   "quote": "The gain on micro accuracy is notably large on 0-COT (35.5 percentage points)"
+  },
+  {
+   "claim": "Correct answer appears in the 20 SC samples for 99.7% of problems for COT and LTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall within 20 samples",
+   "value": 99.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, 20 samples, tau=0.7",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "the correct answer for 99.7% of the problems is in the 20 sampled answers for both COT and LTM"
+  },
+  {
+   "claim": "0-COT recall of a correct solution within 20 samples is 96.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall within 20 samples",
+   "value": 96.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "the recall of correct solutions within 20 samples is 96.5%"
+  },
+  {
+   "claim": "Best macro accuracy over all techniques with SC is only 45%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro accuracy",
+   "value": 45,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, LTM + SC",
+   "note": "Table 3 prints 45.0 for LTM+SC.",
+   "where": "Sec 5.1",
+   "quote": "the best macro accuracy among all prompting techniques is only 45%"
+  },
+  {
+   "claim": "Instruction 'Feel free to ignore irrelevant information' lifts COT micro from 72.4 to 77.8 and macro from 6.0 to 15.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 77.8,
+   "unit": "x100",
+   "baseline_value": 72.4,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, COT + INST.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row COT + INST., column Overall micro"
+  },
+  {
+   "claim": "Instruction lifts LTM micro 77.5 to 80.6 and macro 18.0 to 25.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 80.6,
+   "unit": "x100",
+   "baseline_value": 77.5,
+   "n": null,
+   "setup": "GSM-IC-4K (4,000 sampled of 58,052 examples, all 100 base problems), code-davinci-002, 1-exemplar prompt without irrelevant context, greedy decoding, LTM + INST.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LTM + INST., column Overall micro"
+  },
+  {
+   "claim": "Putting an irrelevant-context problem in the exemplar lifts COT micro to 76.8 (from 72.4) and LTM to 80.7 (from 77.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 76.8,
+   "unit": "x100",
+   "baseline_value": 72.4,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, exemplar with irrelevant context, COT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, section Prompting Exemplar w/ Irrelevant Context, row COT, column Overall micro"
+  },
+  {
+   "claim": "For text-davinci-003, COT micro 68.4 and LTM micro 76.3; LTM macro is lower (5.0) than COT (9.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 68.4,
+   "unit": "x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, text-davinci-003, COT, greedy",
+   "note": "Base accuracy for text-davinci-003 is 80.0 (COT) and 81.0 (LTM) per Table 3 caption.",
+   "where": "Table 3",
+   "table": "Table 3, text-davinci-003 section, row COT, column Overall micro"
+  },
+  {
+   "claim": "Text-davinci-003 with LTM drops to 0 macro accuracy on >2-step problems and is highly susceptible to role-overlap distractors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro accuracy",
+   "value": 0,
+   "unit": "x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, text-davinci-003, LTM, >2 steps",
+   "note": "Text says role-overlap sentences drive macro to 0; Table 3 shows 0.0 for >2 steps.",
+   "where": "Table 3, Sec 5.1",
+   "table": "Table 3, text-davinci-003 section, row LTM, column >2 Steps macro"
+  },
+  {
+   "claim": "In-topic distractors are harder than off-topic: COT micro 63.1 vs 80.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 63.1,
+   "unit": "x100",
+   "baseline_value": 80.7,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, COT, in-topic vs off-topic",
+   "note": "baseline_value is the off-topic cell (80.7).",
+   "where": "Table 4",
+   "table": "Table 4, row COT (w/o irrelevant exemplar, code-davinci-002), column Topic In micro"
+  },
+  {
+   "claim": "Role-name overlap hurts: COT micro 68.3 with overlap vs 76.6 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 68.3,
+   "unit": "x100",
+   "baseline_value": 76.6,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, COT",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row COT, column Role Overlap Yes micro"
+  },
+  {
+   "claim": "In-range numbers are only slightly harder than out-of-range: COT 70.2 vs 74.6 micro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 70.2,
+   "unit": "x100",
+   "baseline_value": 74.6,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, COT",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row COT, column Num. Range In micro"
+  },
+  {
+   "claim": "COT and PROGRAM accuracy falls with more reasoning steps while LTM stays fairly consistent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 36.7,
+   "unit": "x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC-4K, code-davinci-002, PROGRAM at >=5 steps (read from Fig 4)",
+   "note": "Value read from Fig 4 text labels; label-to-bar mapping inferred.",
+   "where": "Fig 4, Sec 5.2.2",
+   "quote": "While we see a significant drop for COT and PROGRAM on problems that require four or more steps in the reasoning process, the performance of LTM is fairly consistent across difficulty."
+  },
+  {
+   "claim": "Instruction and irrelevant exemplars do not reduce accuracy on clean GSM8K dev (COT 59.3 with irr exemplar and instruction vs 60.3 baseline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.3,
+   "unit": "x100",
+   "baseline_value": 60.3,
+   "n": null,
+   "setup": "GSM8K dev set, code-davinci-002 (inferred), COT + irrelevant exemplar",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row COT, w/ IrrCtx check, column GSM8K Dev."
+  },
+  {
+   "claim": "4-exemplar COT scores higher on GSM8K dev (66.3) but is worse than the 1-exemplar prompt on >2-step GSM-IC problems (69.4 vs 70.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 69.4,
+   "unit": "x100",
+   "baseline_value": 70.8,
+   "n": null,
+   "setup": "GSM-IC-4K, COT, 4 exemplars (Zhou et al. 2022 Appendix D) vs 1 exemplar",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row COT, 4 exemplars, column > 2 Steps"
+  },
+  {
+   "claim": "With instructions, 4 exemplars add almost nothing on 2-step problems (79.0 vs 79.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro accuracy",
+   "value": 79.2,
+   "unit": "x100",
+   "baseline_value": 79.0,
+   "n": null,
+   "setup": "GSM-IC-4K, COT + INST., 2-step problems, 4 vs 1 exemplars",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "(79.0 vs 79.2)"
+  },
+  {
+   "claim": "On the DROP football split the instruction raises COT from 67.4 to 68.9 and LTM from 73.4 to 74.4 (code-davinci-002).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 68.9,
+   "unit": "x100",
+   "baseline_value": 67.4,
+   "n": null,
+   "setup": "DROP football split, code-davinci-002, COT + INST.",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row COT + INST., column code-davinci-002"
+  },
+  {
+   "claim": "GSM-IC contains 58,052 examples built from 100 base problems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": 58052,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-IC full benchmark",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "The full GSM-IC benchmark consists of 58,052 examples"
+  }
+ ],
+ "limits": [
+  "Only two GPT-3 family models (code-davinci-002, text-davinci-003) are tested; authors leave other tasks and models for future work.",
+  "Base set is an 'easy' subset of 100 problems chosen because at least one prompt solves them.",
+  "Distractors are template-generated, one sentence, inserted just before the question.",
+  "No seeds or significance tests; GSM-IC-4K is a 4,000 sample of 58,052.",
+  "Models are now dated (code-davinci-002 retired)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "micro accuracy",
+   "definition": "the average accuracy of method M over all the test problems",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "macro accuracy",
+   "definition": "M's prediction for a class is correct if and only if M's prediction for all problems in this class are correct",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "in-range number",
+   "definition": "for a number a, if there exists a number b in the original problem description or solution such that 1/10 <= a/b <= 10",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training verifiers to solve math word problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "source of base problems",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "COT (Wei et al. 2022)",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "evaluates",
+   "note": "0-COT",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LTM (Zhou et al. 2022)",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "program prompts",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al. 2022c)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "majority vote over 20 samples",
+   "quote": null
+  },
+  {
+   "work": "Large language models with controllable working memory",
+   "year": 2022,
+   "arxiv": "2211.05110",
+   "relation": "related",
+   "note": "Li et al. finetune on irrelevant context; this work shows prompting alone helps",
+   "quote": null
+  },
+  {
+   "work": "Adversarial examples for evaluating reading comprehension systems",
+   "year": 2017,
+   "arxiv": "1707.07328",
+   "relation": "related",
+   "note": "Jia & Liang distracting sentences",
+   "quote": null
+  },
+  {
+   "work": "SVAMP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Patel et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "DROP",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dua et al. 2019",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "An example problem from GSM-IC. An irrelevant sentence that does not affect the standard answer is added immediately before the question.",
+   "page": 1,
+   "why": "Shows what a distractor looks like"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the considered factors when creating the GSM-IC dataset.",
+   "page": 3,
+   "why": "topic, role overlap, number range factors"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example problem and corresponding outputs by different prompting techniques.",
+   "page": 7,
+   "why": "One sentence derails COT, LTM and PROGRAM differently"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Micro accuracies on GSM-IC-4K with respect to the number of required reasoning steps.",
+   "page": 7,
+   "why": "LTM robust to step count, COT and PROGRAM not"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "norm(a_M; M) = a_M / n_M",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Table 3 and 4 is one number per line; cell mapping done by order.",
+  "Fig 4 values read from text labels; mapping to bars is inferred.",
+  "Prior schema-0 legacy_report dropped as rewritten."
+ ]
 }

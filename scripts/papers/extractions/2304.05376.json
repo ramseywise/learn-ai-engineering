@@ -1,0 +1,102 @@
+{
+ "schema": 1,
+ "key": "2304.05376",
+ "pdf": "generative-ai/03-agentic-foundations/sources/bran-2023-chemcrow.pdf",
+ "bib": {
+  "title": "Augmenting large language models with chemistry tools",
+  "authors": ["Andres M. Bran", "Sam Cox", "Oliver Schilter", "Carlo Baldassari", "Andrew D. White", "Philippe Schwaller"],
+  "first_author": "Bran",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2304.05376",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 89406, "chars_total": 89406, "engine": "pymupdf", "skipped": "Reference list skimmed. Per-task scores in Appendix G (Figs 9-22) and Fig 4 bars are images, not in the text."},
+ "type": "system",
+ "question": "Can an LLM given expert chemistry tools in a ReAct loop solve chemistry tasks (synthesis planning, execution, molecular design) that the LLM alone cannot?",
+ "hypothesis": "Augmenting GPT-4 with expert-designed tools reduces hallucination and enables new capabilities in chemistry.",
+ "contributions": [
+  "ChemCrow, an LLM chemistry agent with 18 expert-designed tools",
+  "Autonomous planning and execution of DEET and three thiourea organocatalyst syntheses on the RoboRXN platform, and guided discovery of a chromophore",
+  "Evaluation on 14 tasks with four expert chemists and an LLM evaluator, showing the two disagree",
+  "Built-in safety tools and a safety workflow"
+ ],
+ "method": {
+  "summary": "GPT-4 (temperature 0.1) is prompted in the ReAct Thought/Action/Action Input/Observation format via LangChain with 18 chemistry, search, safety and reaction tools. It is compared to tool-less GPT-4 prompted as an expert chemist on 14 tasks, judged by four expert chemists and by EvaluatorGPT.",
+  "task": "tool-augmented LLM agent for chemistry (synthesis planning and execution, molecular design, chemical logic)",
+  "trains": false,
+  "datasets": [
+   {"name": "14 expert-designed chemistry tasks (Appendix G)", "role": "eval", "size": "14 tasks", "split": "none", "source": "developed with expert chemists; runs at github.com/ur-whitelab/chemcrow-runs", "preprocessing": "Molecules in answers converted to graph depictions with OPSIN for the human evaluation sheet"},
+   {"name": "Chromophore library (user-supplied)", "role": "train", "size": null, "split": "train/test split, ratio not stated", "source": "not stated", "preprocessing": "filtered to acetonitrile as solvent; Morgan fingerprints computed"}
+  ],
+  "models": [
+   {"name": "ChemCrow (GPT-4 + 18 tools)", "role": "proposed", "params": null, "architecture": "ReAct agent over OpenAI GPT-4 via LangChain", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4 (no tools, prompted as expert chemist)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "EvaluatorGPT (GPT-4)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.1 (GPT-4)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per task per model for the main comparison (inferred: not stated); five independent ChemCrow executions of task 6 for the reproducibility check",
+   "prompting": "ReAct format with tool names, descriptions and input/output details; safety instructions; ChemCrow output passed through a summarization layer for human evaluation; prompt text not printed in the main text",
+   "retrieval": "LitSearch tool: paper-qa, OpenAI Embeddings, FAISS, top-k passages summarised then used to answer; k not stated",
+   "parameters": {"tools": "18: WebSearch (SerpAPI), LitSearch, Python REPL, Human, Name2SMILES, SMILES2Price, Name2CAS, Similarity (Tanimoto on ECFP2), ModifyMol (SynSpace, 50 medchem reactions), PatentCheck, FuncGroups, SMILES2Weight, ControlledChemicalCheck, ExplosiveCheck, SafetySummary, NameRXN, ReactionPredict, ReactionExecute (plus ReactionPlanner)"},
+   "other": {"framework": "LangChain", "open_source_release": "12 of the original tools"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Expert score: correctness of the chemistry", "definition": "rating by four expert chemists", "unit": "scale not stated in text", "higher_is_better": true},
+    {"name": "Expert score: quality of reasoning", "definition": "rating by four expert chemists", "unit": "scale not stated in text", "higher_is_better": true},
+    {"name": "Expert score: degree of task completion", "definition": "rating by four expert chemists", "unit": "scale not stated in text", "higher_is_better": true},
+    {"name": "Per-task preference", "definition": "evaluators say which response they are more satisfied with", "unit": "preference", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-4 without tools, prompted as an expert chemist"],
+   "protocol": "Four expert chemists; response order randomly shuffled; ChemCrow output summarised to hide ReAct style; EvaluatorGPT grades task addressed and thought process correct, with strengths and weaknesses; 95% confidence intervals in Fig 4c."
+  },
+  "availability": {"code": "https://github.com/ur-whitelab/chemcrow-public (12 of the tools)", "weights": null, "data": "https://github.com/ur-whitelab/chemcrow-runs"},
+  "prompts": [
+   {"purpose": "Reproducibility task 6", "text": "Predict the product of a mixture of 1-Chloro-4-ethynylbenzene a Lindlars catalyst (use CC(=O)[O-].CC(=O)[O-].[Pd].[Pb+2]). Predict the same reaction but replacing the catalyst with \"[Pd]\". Finally, compare the two products and explain the reaction mechanisms.", "where": "Appendix E"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "ChemCrow autonomously planned and executed four syntheses (DEET and three thiourea organocatalysts) on the RoboRXN platform, each yielding the anticipated compound.", "kind": "measured", "source": null, "metric": "syntheses executed", "value": "4", "unit": "syntheses", "baseline_value": null, "n": 4, "setup": "GPT-4 agent with 18 tools, IBM RoboRXN cloud robotic platform; DEET, Schreiner's, Ricci's and Takemoto's catalysts", "quote": "The four syntheses yielded the anticipated compounds successfully", "table": null, "note": null, "where": "2.1"},
+  {"claim": "A chromophore proposed through human-ChemCrow collaboration was synthesised with a measured absorption maximum of 336 nm against a 369 nm target; the Random Forest RMSE was 37 nm.", "kind": "measured", "source": null, "metric": "absorption maximum wavelength", "value": "336", "unit": "nm", "baseline_value": "369", "n": 1, "setup": "ChemCrow trained a Random Forest on chromophore data (acetonitrile only) and proposed one molecule; target 369 nm", "quote": "measured absorption maximum wavelength of 336nm", "table": null, "note": "Random Forest RMSE 37 nm printed in Fig 3.", "where": "2.2"},
+  {"claim": "Expert chemists preferred ChemCrow over tool-less GPT-4, especially on complex tasks; GPT-4 wins mainly on easy, memorised tasks such as DEET and paracetamol synthesis.", "kind": "measured", "source": null, "metric": "expert preference", "value": null, "unit": null, "baseline_value": null, "n": 14, "setup": "14 tasks, four expert chemists, ChemCrow vs GPT-4 prompted as an expert chemist; numeric scores are only in Fig 4 and Appendix G images", "quote": "GPT-4 only outperforms ChemCrow at easier tasks, where the objective is very clear and all necessary information is a part of GPT-4’s training data", "table": null, "note": null, "where": "2.3, Fig 4"},
+  {"claim": "EvaluatorGPT (GPT-4) concluded on average that tool-less GPT-4 was better, favouring fluent, complete-looking answers, the opposite of the experts.", "kind": "measured", "source": null, "metric": "EvaluatorGPT preference", "value": null, "unit": null, "baseline_value": null, "n": 14, "setup": "Same 14 tasks, GPT-4 as evaluator", "quote": "EvaluatorGPT concludes that on average GPT-4 is a better model, typically basing its results in the fluency and apparent completeness of its responses", "table": null, "note": null, "where": "2.3"},
+  {"claim": "In five independent ChemCrow runs of task 6, the tools gave the correct products every time, but in two runs the LLM misread the SMILES CCc1ccc(Cl)cc1 as a trans-alkene and drew wrong mechanistic conclusions.", "kind": "measured", "source": null, "metric": "runs with misinterpretation", "value": "2 of 5", "unit": "runs", "baseline_value": null, "n": 5, "setup": "Task 6 (Lindlar vs Pd catalyst), five independent ChemCrow executions", "quote": "In two out of five cases, the LLM describes the SMILES string “CCc1ccc(Cl)cc1” as a trans-alkene product", "table": null, "note": null, "where": "Appendix E, Fig 8"},
+  {"claim": "ChemCrow's safety tools stop execution when a molecule is a controlled chemical or explosive; the nitroglycerin-analogue task halted with a warning.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 1, "setup": "Task 11 and Fig 5; no scores since execution stops", "quote": "If the molecule is found on these lists—indicating it could be a chemical weapon or a precursor—the agent immediately stops execution.", "table": null, "note": null, "where": "5.3.3, G.11"}
+ ],
+ "limits": [
+  "Hallucination, difficulty of evaluating results, and reproducibility are the stated limitations; external tools cannot fully rectify flawed LLM reasoning.",
+  "Validity depends on tool quality; ChemCrow is not expected to beat the retrosynthesis tools it uses.",
+  "Evaluation tasks are few (14), subject to implicit task-selection bias, and run on closed-source GPT-4 so single results are not reproducible.",
+  "Predicted synthesis procedures were not always directly executable on RoboRXN and needed iterative fixing.",
+  "Only 12 of the 18 tools are in the public release.",
+  "Numeric expert scores and the 95% intervals appear only in figures, not in text."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "EvaluatorGPT", "definition": "the evaluator LLM, instructed to act as a teacher, grading whether the task is addressed and whether the thought process is correct", "where": "2.3"}
+ ],
+ "lineage": [
+  {"work": "ReAct: Synergizing reasoning and acting in language models", "year": 2022, "arxiv": "2210.03629", "relation": "uses-method", "note": "Thought/Action/Action Input/Observation loop", "quote": null},
+  {"work": "MRKL", "year": null, "arxiv": null, "relation": "uses-method", "note": "modular reasoning with tools, cited with ReAct", "quote": null},
+  {"work": "Toolformer", "year": 2023, "arxiv": "2302.04761", "relation": "related", "note": "tools improve LLMs", "quote": null},
+  {"work": "Chain-of-thought prompting", "year": 2022, "arxiv": "2201.11903", "relation": "uses-method", "note": null, "quote": null},
+  {"work": "GPT-4 Technical Report", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "base LLM and baseline", "quote": null},
+  {"work": "Sparks of AGI: early experiments with GPT-4", "year": 2023, "arxiv": "2303.12712", "relation": "related", "note": "GPT-4 as self-evaluator, evaluation style adapted", "quote": null},
+  {"work": "Molecular Transformer / RXN4Chemistry", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "reaction prediction and planning tool", "quote": null},
+  {"work": "paper-qa", "year": null, "arxiv": null, "relation": "uses-method", "note": "LitSearch tool", "quote": null},
+  {"work": "LangChain", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "agent framework", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 4", "caption": "Evaluation results. Comparative performance of GPT-4 and ChemCrow across a range of tasks.", "page": 5, "why": "Shows expert preference vs EvaluatorGPT preference diverging"},
+  {"figure": "Fig 1", "caption": "Overview and toolset.", "page": 2, "why": "ReAct loop and the five tool groups"}
+ ],
+ "code": [],
+ "problems": ["Fig 4 and Appendix G scores are images; no numeric scores extracted.", "Appendix reference 'Appendix 14' for task 6 in text appears to mean G.6."]
+}

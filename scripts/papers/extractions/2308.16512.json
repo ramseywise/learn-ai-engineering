@@ -1,0 +1,493 @@
+{
+ "schema": 1,
+ "key": "2308.16512",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shi-2023-mvdream.pdf",
+ "bib": {
+  "title": "MVDream: Multi-view Diffusion for 3D Generation",
+  "authors": [
+   "Yichun Shi",
+   "Peng Wang",
+   "Jianglong Ye",
+   "Long Mai",
+   "Kejie Li",
+   "Xiao Yang"
+  ],
+  "first_author": "Shi",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, 18 Apr 2024)",
+  "arxiv": "2308.16512",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54299,
+  "chars_total": 54299,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a text-to-multi-view diffusion model, fine-tuned from a 2D text-to-image model on 3D renders plus 2D data, act as a 3D prior that removes the multi-face Janus and content drift problems of 2D-lifting text-to-3D?",
+ "hypothesis": "Even a perfect camera-conditioned single-view model is not sufficient; jointly generating consistent views with cross-view (3D) attention gives both consistency and generalisability.",
+ "contributions": [
+  "Multi-view diffusion model generating consistent multi-view images from text, trained on 3D renders and 2D image-text pairs",
+  "Use as a 3D prior via SDS (x0-reconstruction loss), more stable than 2D-lifting methods",
+  "Multi-view DreamBooth for personalized 3D generation from a few 2D images"
+ ],
+ "method": {
+  "summary": "Stable Diffusion 2.1 base is fine-tuned to denoise 4 orthogonal views jointly by inflating 2D self-attention to 3D (all views attend to each other) and adding a 2-layer-MLP camera embedding added to the time embedding; 70% of batches are Objaverse renders, 30% LAION 2D. The model replaces SD in threestudio SDS to optimise a hash-grid NeRF; a DreamBooth variant fine-tunes it on identity images.",
+  "task": "text-to-multi-view image generation; text-to-3D via score distillation sampling; personalised 3D generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Objaverse (filtered)",
+    "role": "train",
+    "size": "about 350K objects; each rendered twice with different random settings; 32 azimuths per render",
+    "split": "held-out validation set (size not stated); 1,000 validation subjects used for Table 1",
+    "source": "Deitke et al. 2023, public",
+    "preprocessing": "Names and tags as text; CLIP-score filter of irrelevant objects; object centred in [-0.5,0.5] box; fov in [15,60], elevation in [0,30], distance scale in [0.9,1.1]; random Blender HDRI; RGBA with random grayscale background; ', 3d asset' appended if '3d' not in prompt; 4x4 camera params normalised onto sphere (rotation only)"
+   },
+   {
+    "name": "LAION subset",
+    "role": "train",
+    "size": null,
+    "split": "30% of batches",
+    "source": "Schuhmann et al. 2022",
+    "preprocessing": "no multi-view; 3D attention and camera embedding turned off"
+   },
+   {
+    "name": "40 text prompts for text-to-3D",
+    "role": "eval",
+    "size": "40 prompts",
+    "split": null,
+    "source": "prior studies, internet image-generation prompts, user inputs from a 3D generation website (Luma)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MVDream multi-view diffusion",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SD 2.1 UNet; self-attention inflated to 3D over F views (B x FHW x C); camera MLP (2-layer) embedding added to time embedding",
+    "init_from": "Stable Diffusion v2.1 base (512x512)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4 views at 256x256 (main); 8 views at 512x512 over 90 degrees in the attention ablation",
+    "other": {
+     "view_setup": "4 orthogonal views, same elevation",
+     "prediction": "epsilon"
+    }
+   },
+   {
+    "name": "dreamfusion-IF, magic3d-IF-SD, textmesh-IF, prolificdreamer (threestudio re-implementations)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "DeepFloyd guidance (Magic3D variant uses SD per name); hash-grid NeRF except TextMesh (SDF)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DreamBooth3D",
+    "role": "baseline",
+    "params": null,
+    "architecture": "three-stage DreamBooth+multi-view data+MV DreamBooth",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Zero123-XL (+SDXL image)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "qualitative comparison only"
+    }
+   }
+  ],
+  "training": {
+   "objective": "epsilon-prediction MSE, L_MV = E||eps - eps_theta(x_t; y, c, t)||^2; with 30% chance trained as 2D text-to-image on LAION. DreamBooth: L_LDM + lambda*||theta-theta0||_1/N_theta, lambda=1",
+   "optimizer": "inferred: Stable Diffusion settings kept ('keep their settings for the optimizer'); exact optimiser not named for diffusion training",
+   "lr": "DreamBooth: 2e-6; diffusion pretraining lr not stated",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1,024 (4,096 images)",
+   "steps": "50,000 (diffusion); about 600 (DreamBooth)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.01 (DreamBooth only)",
+   "dropout": null,
+   "regularisation": "parameter preservation L1 loss (DreamBooth)",
+   "hardware": "32 Nvidia Tesla A100 GPUs",
+   "compute": null,
+   "wall_clock": "about 3 days",
+   "seeds": null,
+   "other": {
+    "resolution": "256x256 (reduced from 512)",
+    "dreambooth_batch_size": "4",
+    "timestep": "t ~ U(0,1000)",
+    "mode_sampling": "mode<=0.7 -> 3D sample, 4 random orthogonal views of 32; else 4 LAION images, c empty (Algorithm 1)",
+    "sds_optimisation": "threestudio implicit-volume (hash-grid + MLP); 10,000 steps AdamW lr 0.01; max/min timestep annealed 0.98->0.5 and 0.02 over first 8,000 steps; CFG rescale factor 0.5; render res 64x64 -> 256x256 after 5,000 steps; soft shading on after 5,000 steps; background replaced with 50% chance; about 1.5 h on a V100 with shading, 1 h without",
+    "sds_loss": "x0-reconstruction loss, equivalent to SDS with w(t)=2 sigma_t/alpha_t; orientation loss only; point lighting and soft shading; no sparsity loss; negative prompts fixed (text not given)"
+   }
+  },
+  "inference": {
+   "decoding": "DDIM sampler for Table 1",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Table 1: 4-view images for 1,000 validation subjects; text-to-3D: 40 prompts, one model each (seed count not stated)",
+   "prompting": "', 3d asset' appended to text for generation; original prompts (no direction-annotated prompts) in SDS",
+   "retrieval": null,
+   "parameters": {
+    "cfg_scale": null,
+    "cfg_rescale": 0.5
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance of generated 4-view images (1,000 held-out subjects)",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception Score of generated images",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP score",
+     "definition": "text-image consistency averaged across all views and subjects",
+     "unit": "CLIP",
+     "higher_is_better": true
+    },
+    {
+     "name": "User preference",
+     "definition": "each user sees 5 rendered videos with text and picks preferred 3D model",
+     "unit": "% of votes",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "dreamfusion-IF",
+    "magic3d-IF-SD",
+    "textmesh-IF",
+    "prolificdreamer",
+    "DreamBooth3D",
+    "Zero123-XL"
+   ],
+   "protocol": "Table 1 on 1,000 held-out subjects; 40-prompt text-to-3D comparison and user study with 914 feedbacks from 38 users; no seeds or significance tests; qualitative ablations on attention type, number of views (1, 2, 4), SDS tricks."
+  },
+  "availability": {
+   "code": "promised: will release code and model checkpoints after submission",
+   "weights": "promised",
+   "data": "Objaverse and LAION public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "a total batch size of 1,024 (4,096 images)",
+    "where": "A.3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "In the user study, 78% of votes preferred MVDream over the four baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "user preference",
+   "value": 78,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 914,
+   "setup": "40 prompts, 5 rendered videos per query (MVDream + 4 threestudio baselines), 914 feedbacks from 38 users",
+   "quote": "On average, 78% users prefer our model over others.",
+   "table": null,
+   "note": "Fig 7: dreamfusion-if 2%, magic3d-if-sd 11%, textmesh-if 1%, prolificdreamer 8%",
+   "where": "Sec 4.2, Fig 7"
+  },
+  {
+   "claim": "Joint 3D+LAION training gives lower FID than 3D data only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 39.04,
+   "unit": "FID",
+   "baseline_value": 40.38,
+   "n": null,
+   "setup": "4-view images from 1,000 held-out subjects, DDIM sampler",
+   "quote": "Multi-view Diffusion (3D + LAION 2D data)\n39.04",
+   "table": "Table 1, row Multi-view Diffusion (3D + LAION 2D data), column FID",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "3D+LAION model matches validation-set CLIP score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP",
+   "value": 30.38,
+   "unit": "CLIP",
+   "baseline_value": 30.12,
+   "n": null,
+   "setup": "Same as Table 1; validation set 30.12 +- 3.15",
+   "quote": "30.38 ± 3.50",
+   "table": "Table 1, row Multi-view Diffusion (3D + LAION 2D data), column CLIP",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "3D+LAION model IS vs validation set 12.90.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": 12.97,
+   "unit": "IS",
+   "baseline_value": 12.9,
+   "n": null,
+   "setup": "Same as Table 1; 3D only gives 12.33",
+   "quote": "12.97 ± 0.60",
+   "table": "Table 1, row Multi-view Diffusion (3D + LAION 2D data), column IS",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Fine-tuning takes about 3 days on 32 A100 GPUs for 50,000 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 3,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256, batch 1,024",
+   "quote": "The training takes about 3 days on 32 Nvidia Tesla A100 GPUs.",
+   "table": null,
+   "note": null,
+   "where": "A.3.1"
+  },
+  {
+   "claim": "MVDream SDS takes about 2 hours on one V100, versus more than 10 hours for ProlificDreamer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": 2,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single V100; Magic3D-IF-SD about 3.5 h",
+   "quote": "dreamfusion-IF, text2mesh-IF and MVDream takes about 2 hours on a single V100 GPU.",
+   "table": null,
+   "note": "A.3.2 says about 1.5 h with shading, 1 h without",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "1-view model still has severe Janus problem; 4-view model barely suffers consistency issues (qualitative, Fig 8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SDS with models trained with 1, 2, 4 views, all with camera embeddings",
+   "quote": "Finally, the 4-view model barely suffers from any multi-view consistency issues.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 8"
+  },
+  {
+   "claim": "Inflated 3D self-attention beats temporal attention and an added 3D attention module (qualitative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 frames over 90 degrees at 512x512",
+   "quote": "The proposed strategy of inflated 2D self-attention achieves the best consistency among all without losing generation quality.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 4"
+  },
+  {
+   "claim": "A random-view model trained on 4 views generated 64 views at inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "views",
+   "value": 64,
+   "unit": "views",
+   "baseline_value": null,
+   "n": null,
+   "setup": "random-view variant, worse quality than orthogonal model",
+   "quote": "it able to generate 64 views and potentially more, even though it is trained on 4 views",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "Output resolution only 256x256 vs 512x512 of base SD",
+  "Generalisability limited by base model",
+  "Generated styles (lighting, texture) affected by the rendered dataset",
+  "No quantitative 3D metric; text-to-3D evaluated by qualitative comparisons and a 38-user study on 40 prompts",
+  "Baselines are threestudio re-implementations that differ from originals (DeepFloyd instead of Imagen/eDiff-I)",
+  "Table 1 has no seeds or baselines; FID has no std",
+  "Few-shot 3D reconstruction route not explored",
+  "Code and checkpoints promised after submission"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Stable Diffusion v2.1 base",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "initialisation",
+   "quote": null
+  },
+  {
+   "work": "DreamFusion",
+   "year": 2023,
+   "arxiv": "2209.14988",
+   "relation": "baseline",
+   "note": "SDS; compared via threestudio",
+   "quote": null
+  },
+  {
+   "work": "Magic3D",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "ProlificDreamer (Wang et al. 2023c)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "DreamBooth",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-view DreamBooth",
+   "quote": null
+  },
+  {
+   "work": "DreamBooth3D",
+   "year": 2023,
+   "arxiv": "2303.13508",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Zero-1-to-3 / Zero123-XL",
+   "year": 2023,
+   "arxiv": "2303.11328",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Objaverse",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "LAION",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Common diffusion noise schedules and sample steps are flawed",
+   "year": 2023,
+   "arxiv": "2305.08891",
+   "relation": "uses-method",
+   "note": "CFG rescale",
+   "quote": null
+  },
+  {
+   "work": "Imagen Video",
+   "year": 2022,
+   "arxiv": "2210.02303",
+   "relation": "related",
+   "note": "video attention inflation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the multi-view diffusion model.",
+   "page": 3,
+   "why": "Shows 3D self-attention and camera embedding in the UNet and reverse use for SDS"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison between temporal attention, additional 3D attention and inflated 3D self-attention.",
+   "page": 6,
+   "why": "Ablation of attention design"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "SDS with diffusion models trained with 1, 2, 4 views.",
+   "page": 9,
+   "why": "Shows Janus faces vanish as views increase"
+  }
+ ],
+ "code": [
+  {
+   "where": "A.2 Eq 6",
+   "snippet": "w(t) = 2 sigma_t / alpha_t (x0-reconstruction loss equivalent to SDS)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Table 1 interleaves cells; values read in row order",
+  "No embedded instructions found"
+ ]
+}

@@ -1,0 +1,592 @@
+{
+ "schema": 1,
+ "key": "2301.12661",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/huang-2023-make-audio.pdf",
+ "bib": {
+  "title": "Make-An-Audio: Text-To-Audio Generation with Prompt-Enhanced Diffusion Models",
+  "authors": [
+   "Rongjie Huang",
+   "Jiawei Huang",
+   "Dongchao Yang",
+   "Yi Ren",
+   "Luping liu",
+   "Mingze Li",
+   "Zhenhui Ye",
+   "Jinglin Liu",
+   "Xiang Yin",
+   "Zhou Zhao"
+  ],
+  "first_author": "Huang",
+  "year": 2023,
+  "venue": "preprint (arXiv cs.SD)",
+  "arxiv": "2301.12661",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 58880,
+  "chars_total": 58880,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can text-to-audio generation be made high-fidelity despite scarce text-audio pairs and the length of raw waveforms, and can the same model take audio, image and video as input?",
+ "hypothesis": "Generating captions for language-free audio (distill-then-reprogram) plus a spectrogram latent diffusion model with CLAP conditioning will outperform prior text-to-audio systems.",
+ "contributions": [
+  "Latent diffusion with a spectrogram autoencoder to model long continuous audio",
+  "Pseudo prompt enhancement (distill-then-reprogram) to use language-free audio",
+  "Study of text representations, favouring CLAP for efficiency",
+  "State-of-the-art objective and subjective results",
+  "Generalisation to X-to-Audio (text, audio inpainting, image, video)"
+ ],
+ "method": {
+  "summary": "A mel-spectrogram autoencoder compresses audio to a 4-channel latent; a U-Net latent diffusion model conditioned on a frozen CLAP text encoder (cross-attention, classifier-free guidance) generates latents; a HiFi-GAN vocoder converts mel to waveform. Captions for unlabeled audio come from captioning and retrieval experts filtered by CLAP score, and training examples are concatenated online with sampled sound events.",
+  "task": "text-to-audio generation (plus audio inpainting, image/video-to-audio)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Combined training set (15 sources, Table 4)",
+    "role": "train",
+    "size": "~3k hours, 1M audio-text pairs",
+    "split": "AudioCaps-train used; AudioSet filtered to reduce speech and music",
+    "source": "AudioSet, BBC sound effects, Audiostock, AudioCaps, ESC-50, FSD50K, Free To Use Sounds, Sonniss, WeSoundEffects, MACS, Epidemic Sound, UrbanSound8K, WavText5Ks, LibriSpeech/LibriTTS, Medley-solos-DB",
+    "preprocessing": "16 kHz, pad to 10 s, FFT 1024, hop 256, mel 80x624; text normalisation; class labels discarded then replaced by pseudo prompts"
+   },
+   {
+    "name": "AudioCaption (AudioCaps) validation",
+    "role": "eval",
+    "size": "494 samples, 5 captions each",
+    "split": "validation",
+    "source": "Kim et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Clotho validation",
+    "role": "eval",
+    "size": null,
+    "split": "validation, zero-shot",
+    "source": "Drossos et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "FSD50K class-labelled subset",
+    "role": "train",
+    "size": "110h",
+    "split": null,
+    "source": "used for the visual-to-audio model",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Make-An-Audio (CLAP)",
+    "role": "proposed",
+    "params": "332M",
+    "architecture": "spectrogram autoencoder + latent diffusion U-Net + frozen CLAP text encoder + HiFi-GAN vocoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "320 model channels; 1024 condition channels",
+    "heads": "8",
+    "context": "77 text tokens",
+    "other": {
+     "latent": "10x78, 4 channels",
+     "channel_mult": "[1,2]",
+     "autoencoder_channel_mult": "[1,2,2,4]",
+     "autoencoder_residual_blocks": "2"
+    }
+   },
+   {
+    "name": "Make-An-Audio BERT / T5-Large / CLIP variants",
+    "role": "proposed",
+    "params": "809M / 563M / 576M",
+    "architecture": "same with other frozen text encoders",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Diffsound",
+    "role": "baseline",
+    "params": "520M",
+    "architecture": "discrete diffusion on VQ-VAE codes, CLIP text",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HiFi-GAN V1",
+    "role": "base",
+    "params": null,
+    "architecture": "vocoder trained on VGGSound",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Diffusion noise-prediction MSE; autoencoder: reconstruction + GAN + KL losses; text dropout 20% for classifier-free guidance",
+   "optimizer": null,
+   "lr": "0.005 base, scaled by number of GPUs and batch size following LDM",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "2M optimization steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "10 s audio, 80x624 mel",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "dynamic reprogramming (N in {0,1,2} concatenated events); text encoder frozen",
+   "hardware": "18 NVIDIA V100 GPU",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "unconditional_finetune": "base model fine-tuned so 20% of text sequences are empty",
+    "inpainting": "model explicitly fine-tuned for inpainting; masks: LaMa irregular thin/medium/thick and wav2vec2 frame masks p=30/50/70%"
+   }
+  },
+  "inference": {
+   "decoding": "latent diffusion with classifier-free guidance, scale s>=1",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "guidance_scale": "swept (Fig 7), chosen value not stated",
+    "sampler_steps": "not stated",
+    "sdedit_t0": "t0 in [0.2,0.5] works well for personalised generation",
+    "video": "4 uniformly picked frames, CLIP features pooled"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "melception-based FID",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "KL",
+     "definition": "melception-based KL divergence",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLAP score",
+     "definition": "reference-free audio-text alignment, adapted from CLIP score",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "MOS-Q / MOS-F",
+     "definition": "Amazon Mechanical Turk raters, 20-100 Likert scale, 95% CI; quality and faithfulness",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Diffsound"
+   ],
+   "protocol": "Number of raters and samples per MOS test not stated; $8/hour, about $750 total; no seeds."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "demo page https://Text-to-Audio.github.io; training data from public sources"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The base learning rate is set to 0.005, and we scale it by the number of GPUs and the batch size following LDM.",
+    "where": "Sec 5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Make-An-Audio beats Diffsound on FID on AudioCaption.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.61,
+   "unit": "FID (lower better)",
+   "baseline_value": 7.17,
+   "n": null,
+   "setup": "AudioCaption (AudioCaps) validation set, 494 samples with five captions each; Make-An-Audio (CLAP text encoder, 332M)",
+   "quote": "Make-An-Audio achieves the highest perceptual quality in AudioCaption with FID of 4.61 and KL of 2.79",
+   "table": "Table 1, row Make-An-Audio CLAP vs Diffsound, column FID",
+   "note": null,
+   "where": "Sec 6.1, Table 1"
+  },
+  {
+   "claim": "KL on AudioCaption.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KL",
+   "value": 2.79,
+   "unit": "KL (lower better)",
+   "baseline_value": 3.57,
+   "n": null,
+   "setup": "AudioCaption (AudioCaps) validation set, 494 samples with five captions each; Make-An-Audio (CLAP text encoder, 332M)",
+   "quote": "FID of 4.61 and KL of 2.79",
+   "table": "Table 1, column KL, Diffsound 3.57",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "CLAP score is 0.482 versus 0.526 for reference audio and 0.420 for Diffsound.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLAP",
+   "value": 0.482,
+   "unit": "score",
+   "baseline_value": 0.42,
+   "n": null,
+   "setup": "AudioCaption (AudioCaps) validation set, 494 samples with five captions each; Make-An-Audio (CLAP text encoder, 332M)",
+   "quote": null,
+   "table": "Table 1, row Make-An-Audio CLAP, column CLAP",
+   "note": "Text says it 'scores the highest CLAP with a gap of 0.037 compared to the ground truth', but Table 1 reference is 0.526 (gap 0.044) and the T5-Large row has 0.486 which is higher than the CLAP row.",
+   "where": "Sec 6.1, Table 1"
+  },
+  {
+   "claim": "MOS-Q and MOS-F for Make-An-Audio.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS-Q",
+   "value": 72.5,
+   "unit": "points",
+   "baseline_value": 67.1,
+   "n": null,
+   "setup": "AudioCaption (AudioCaps) validation set, 494 samples with five captions each; Make-An-Audio (CLAP text encoder, 332M)",
+   "quote": "MOS-Q of 72.5 and MOS-F of 78.6",
+   "table": null,
+   "note": "Diffsound MOS-Q 67.1, MOS-F 70.9; reference 74.7 and 80.5. Rater count not stated.",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Zero-shot Clotho FID-Z is 17.38 vs 24.97 for Diffsound.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-Z",
+   "value": 17.38,
+   "unit": "FID",
+   "baseline_value": 24.97,
+   "n": null,
+   "setup": "Clotho validation, zero-shot",
+   "quote": null,
+   "table": "Table 1, row Make-An-Audio CLAP, column FID-Z",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "CLAP text encoder reaches similar quality to T5-Large with fewer parameters (332M vs 563M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "params",
+   "value": 332,
+   "unit": "M",
+   "baseline_value": 563,
+   "n": null,
+   "setup": "AudioCaption (AudioCaps) validation set, 494 samples with five captions each; Make-An-Audio (CLAP text encoder, 332M) vs T5-Large variant FID 4.83",
+   "quote": "CLAP and T5-Large achieve similar performances on benchmarks dataset, while CLAP could be more computationally efficient (with only %59 params)",
+   "table": "Table 1, Params column",
+   "note": null,
+   "where": "Sec 6.3.1"
+  },
+  {
+   "claim": "CLIP text encoder is worse than CLAP for FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 6.45,
+   "unit": "FID",
+   "baseline_value": 4.61,
+   "n": null,
+   "setup": "Make-An-Audio with CLIP text encoder, AudioCaption",
+   "quote": null,
+   "table": "Table 1, row CLIP (Make-An-Audio), column FID",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Removing pseudo prompt enhancement worsens zero-shot Clotho FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 22.31,
+   "unit": "FID",
+   "baseline_value": 18.75,
+   "n": null,
+   "setup": "Make-An-Audio BERT, Clotho zero-shot, w/o PPE",
+   "quote": null,
+   "table": "Table 7, row w/o PPE (Clotho)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Removing PPE on AudioCaps: FID 5.37 vs 5.15.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 5.37,
+   "unit": "FID",
+   "baseline_value": 5.15,
+   "n": null,
+   "setup": "Make-An-Audio BERT, AudioCaps, w/o PPE",
+   "quote": null,
+   "table": "Table 7, row w/o PPE (AudioCaps)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Latent channel 4 beats 32 and 128 in FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 9.22,
+   "unit": "FID",
+   "baseline_value": 5.15,
+   "n": null,
+   "setup": "Make-An-Audio BERT, AudioCaps, 32 channels",
+   "quote": null,
+   "table": "Table 7, row 32",
+   "note": "128 channels FID 10.92",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Expert distillation with CLAP selection raises caption-audio CLAP on FSD50K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLAP",
+   "value": 0.54,
+   "unit": "score",
+   "baseline_value": 0.4,
+   "n": null,
+   "setup": "FSD50K single-label captions, both experts + CLAP select",
+   "quote": null,
+   "table": "Table 5, row Both + CLAP Select, column FSD50K",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Best inpainting FID on narrow masks, frame masking p=70%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 1.59,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inpainting, narrow test masks",
+   "quote": null,
+   "table": "Table 2, row Frame (p=70%), column Narrow FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Video-to-audio MOS-Q is 60.0 vs 69.5 reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS-Q",
+   "value": 60.0,
+   "unit": "points",
+   "baseline_value": 69.5,
+   "n": null,
+   "setup": "Video-to-audio generation",
+   "quote": null,
+   "table": "Table 3, row Make-An-Audio (Video), column MOS-Q",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Image-to-audio MOS-F 78.0 vs 76.4 reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS-F",
+   "value": 78.0,
+   "unit": "points",
+   "baseline_value": 76.4,
+   "n": null,
+   "setup": "Image-to-audio generation",
+   "quote": null,
+   "table": "Table 3, row Make-An-Audio (Image), column MOS-F",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Normalising the global CLIP condition improves FSD50K visual-to-audio FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 31.1,
+   "unit": "FID",
+   "baseline_value": 40.7,
+   "n": null,
+   "setup": "FSD50K train/test, NormGlobal condition",
+   "quote": null,
+   "table": "Table 8, row FSD50k NormGlobal, column FID",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Training set size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hours",
+   "value": 3000,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Combined training set",
+   "quote": "Overall we have ∼3k hours with 1M audio-text pairs for training data.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  }
+ ],
+ "limits": [
+  "Authors concede iterative sampling is slow and latent diffusion needs substantial compute, with degradation at smaller training data.",
+  "Only Diffsound is a baseline (stated as the only publicly available T2A model); AudioGen is not compared.",
+  "Number of MOS raters, sampling steps, guidance scale, batch size, optimizer and seeds are not stated.",
+  "Visual-to-audio uses a 110h FSD50K-trained variant, and quality (video MOS-Q 60.0) is below reference.",
+  "Text claims Make-An-Audio has the highest CLAP, but Table 1 shows T5-Large at 0.486 above 0.482.",
+  "Table 5 is cited in text as the dataset table, but dataset statistics are Table 4 (appendix numbering slip)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pseudo prompt enhancement",
+   "definition": "distill-then-reprogram: captions from expert models selected by CLAP score, then online concatenation with sampled events",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "dynamic reprogramming",
+   "definition": "each time N concepts are sampled from database D, N in {0,1,2}, and concatenated to the original pair by template",
+   "where": "Sec 3.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-Resolution Image Synthesis with Latent Diffusion Models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "implementation built on LDM",
+   "quote": "We implement our method over Latent Diffusion Models (LDMs)"
+  },
+  {
+   "work": "Diffsound: Discrete diffusion model for text-to-sound generation",
+   "year": 2022,
+   "arxiv": "2207.09983",
+   "relation": "baseline",
+   "note": "only public T2A baseline",
+   "quote": null
+  },
+  {
+   "work": "AudioGen (Kreuk et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent autoregressive T2A",
+   "quote": null
+  },
+  {
+   "work": "CLAP: Learning audio concepts from natural language supervision",
+   "year": 2022,
+   "arxiv": "2206.04769",
+   "relation": "uses-method",
+   "note": "frozen text encoder and caption selection",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free guidance (Ho & Salimans)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "guidance",
+   "quote": null
+  },
+  {
+   "work": "HiFi-GAN",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "V1 vocoder trained on VGGSound",
+   "quote": null
+  },
+  {
+   "work": "SDEdit (Meng et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "personalised generation",
+   "quote": null
+  },
+  {
+   "work": "AudioCaps",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Clotho",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "zero-shot eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The process of pseudo prompt enhancement.",
+   "page": 3,
+   "why": "Shows distillation and reprogramming in one picture."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Classifier-free guidance trade-off curves.",
+   "page": 7,
+   "why": "CLAP vs FID trade-off over guidance scale."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "ε̃θ(zt,t,c)=εθ(zt,t,c∅)+s·(εθ(zt,t,c)−εθ(zt,t,c∅))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures 5 and 7 values not in text; Table 1 and 2 cells parsed one per line, read by order.",
+  "Table 5 referenced twice with different meanings in the appendix text."
+ ]
+}

@@ -1,19 +1,683 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2210.01296",
  "pdf": "generative-ai/02-rag-retrieval/sources/sun-2022-recitation-augmented-language-models.pdf",
  "bib": {
-  "title": "Recitation-Augmented Language Models",
-  "first_author": null,
-  "year": null,
-  "venue": "ICLR 2023",
+  "title": "RECITATION-AUGMENTED LANGUAGE MODELS",
+  "authors": [
+   "Zhiqing Sun",
+   "Xuezhi Wang",
+   "Yi Tay",
+   "Yiming Yang",
+   "Denny Zhou"
+  ],
+  "first_author": "Sun",
+  "year": 2023,
+  "venue": "ICLR 2023 (arXiv v2, 16 Feb 2023)",
   "arxiv": "2210.01296",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 78031,
+  "chars_total": 78031,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figures 4-6 are plots whose values do not extract"
  },
- "legacy_report": "SOURCE: \"Recitation-Augmented Language Models\" (RECITE). Zhiqing Sun, Xuezhi Wang, Yi Tay, Yiming Yang, Denny Zhou (Google Research Brain Team and CMU LTI). Every page carries \"Published as a conference paper at ICLR 2023\". arXiv:2210.01296v2, 16 Feb 2023.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/sun-2022-recitation-augmented-language-models.pdf\n\nCOVERAGE: I read all 79,687 of 79,687 characters (23 pages). I read the main text, ethics and reproducibility statements, and appendices A–G (prompts, prompt design, fine-tuning details, model descriptions, shot-count and FLAN-T5 analyses, Algorithm 1, Tables 6–7, Figs 7–17) in full. I only skimmed the references (pp. 10–14). Figs 4, 5 and 6 are plots and their values do not extract, so none of their numbers appear below.\n\nCLAIMS\n1. Writing out a passage from the model's own memory before answering (\"recite-and-answer\") beats direct closed-book answering on NQ, TriviaQA and HotpotQA, for all four models tested.\n   number: NQ 5-shot EM: PaLM-62B 25.76 to 28.70; UL2-20B 10.16 to 14.16; OPT-30B 14.97 to 17.84; Codex-002 31.45 to 35.84\n   setup: Table 1, closed-book few-shot prompting, 20 self-consistency paths, EM/F1. NQ uses the test split if it has labels, otherwise dev. TriviaQA and HotpotQA use \"the first 1,024 data points\". TriviaQA is 5-shot, HotpotQA 4-shot. NQ 64-shot (PaLM) and 16-shot (UL2) rows are also given.\n   quote: \"Standard-prompting (direct) 25.76 / 36.47(5) 10.16 / 20.17(5) 14.97 / 22.93(5) 31.45 / 44.75(5)\" / \"Recite-and-answer (20-path) 28.70 / 39.76(5) 14.16 / 23.13(5) 17.84 / 26.74 (5) 35.84 / 49.12(5)\"\n   where: p.7, Table 1\n2. On TriviaQA the gain is small for strong models. The authors guess that trivia questions already carry the context that reciting would add.\n   number: PaLM-62B EM 65.38 to 65.84; UL2-20B EM 48.73 to 53.42\n   setup: Table 1, 5-shot, 20-path, first 1,024 examples\n   quote: \"TriviaQA Standard-prompting (direct) 65.38 / 71.85 (5) 48.73 / 54.32(5)\" ... \"Recite-and-answer (20-path) 65.84 / 72.10(5) 53.42 / 58.69(5)\"; \"improvements from recite-and-answer is more significant on smaller language models on TriviaQA\"\n   where: p.7\n3. **Direct comparison with retrieval.** A single top-1 BM25 passage beats recitation for UL2 but loses to it for Codex. A ground-truth passage beats both by a wide margin, which shows how much headroom external evidence has.\n   number: UL2-20B EM: none 10.16 / gold 41.02 / BM25 16.31 / recite 14.16. Codex-002 EM: 31.45 / 49.32 / 33.20 / 35.84\n   setup: Table 3. First 1,024 NQ validation examples, 5-shot, 20-path recitation. BM25 is top-1 only, over the pyserini \"enwiki-paragraphs\" index. The ground truth is NQ's \"long answer\" annotation.\n   quote: \"Ground-truth passage 41.02 / 55.73 49.32 / 64.32\" / \"BM25-Retrieval (Top-1) 16.31 / 27.66 33.20 / 47.45\" / \"LM-Recitation(5) (20-path) 14.16 / 23.13 35.84 / 49.12\"; \"the classic retrieval model, i.e., BM25, is still a very strong baseline\"; \"stronger models (i.e., Codex) tend to benefit more from the the model's own recitation than BM25 retrieved context.\"\n   where: pp.8–9\n4. Fine-tuning PaLM to sample diverse \"passage hints\" (Wikipedia page, section and paragraph titles), then greedy-decoding each passage, adds a further gain on NQ.\n   number: 5-shot EM 25.76 direct, 28.70 recite, 32.20 diversified; 64-shot 28.98, 31.34, 33.23\n   setup: Table 2. PaLM-62B fine-tuned for \"10,000 steps with a batch size of 64, which takes approximately 1 day in 64 TPUv4 chips\" (App. C). The training data are synthetic question-hint-passage pairs, generated from 5 exemplars over top-retrieved Wikipedia pages for NQ queries.\n   quote: \"Recite-and-answer w/ diversified recitation (20-path) 32.20 / 44.02 33.23 / 45.29\"\n   where: p.8 Table 2; p.15 App. C\n5. On multi-hop HotpotQA, \"multiple-recite-and-answer\" beats chain-of-thought with the same number of paths.\n   number: PaLM-62B EM: direct 20.51, CoT 23.73, recite 26.46. Codex 28.32, 34.38, 37.11\n   setup: Table 1, 4-shot, 20-path, first 1,024 examples. The CoT prompt is taken from Wang et al. 2022a.\n   quote: \"Chain-of-thought (20-path) 23.73 / 32.80 (4)\" ... \"Recite-and-answer (20-path) 26.46 / 35.67(4)\"\n   where: p.7\n6. Most errors come from bad recall, not from the reading step.\n   number: TriviaQA UL2-20B: correct 53.42%, answer never recited 21.09%, recited but not extracted 5.66%, in some path but outvoted 19.82%\n   setup: Table 4, 1,024 TriviaQA examples, 20 paths\n   quote: \"Hits@Majority 53.42% 49.02% / Not Recit. 21.09% 22.27% / Hits@20-Recit. 5.66% 8.01% / Hits@20-Path 19.82% 20.07%\"; \"the main bottleneck still lies in the recitation quality and answer aggregation strategies\"\n   where: p.9\n7. Per path, a correct recitation does not guarantee a correct answer, and a correct answer does not require a correct recitation.\n   number: around 7–10% and around 12%\n   setup: Table 5, UL2/OPT on TriviaQA (the table's check marks did not extract)\n   quote: \"around 7%∼ 10% questions have the correct recitation but cannot produce the correct answer, while around 12% questions do not have the correction recitation but can be answered correctly anyway.\"\n   where: p.9\n8. The gain holds across random exemplar choices and grows with the number of paths.\n   number: UL2 TriviaQA EM: direct 48.42 (±0.71), 5-path 49.75 (±0.50), 20-path 52.68 (±0.62)\n   setup: Table 6, 5 seeds, 5-shot, exemplars resampled and shuffled\n   quote: \"RECITE (20-path) 52.68 (± 0.62) 58.05 (± 0.58)\"\n   where: p.17\n9. Fig. 4, App. E and App. F give qualitative trends only. More paths help (OPT/UL2 on TriviaQA). On NQ with UL2, \"the largest improvement is achieved in the 1-shot setting\". On FLAN-T5 the largest gain is at \"xxl (11B)\".\n   number: none (plots)\n   where: p.8, p.16\n\nMethod details for the note: recitations are drawn by top-k sampling and the answer is greedy-decoded from each one. The final answer is a \"plurality/majority vote\" (p.5).\n\nLIMITS\n- The authors concede (p.9): \"updating time-sensitive knowledge for a pure LLM-based method requires training or fine-tuning the LLMs on the new corpus, which can be costly.\"\n- Ethics statement (p.10): \"unlike retrieval-augmented generation (RAG) models that can use external trustworthy corpus, all the intermediate steps in RECITE is generated by the LLM itself, RECITE may further enhance the existing biases\".\n- The abstract claims \"new state-of-the-art performance in various closed-book question answering (CBQA) tasks\", but no table compares against Atlas or any other open-book RAG system. The only retrieval baseline is BM25 top-1, on 1,024 NQ examples, for UL2 and Codex only.\n- The ground-truth passage beats recitation by about 14–27 EM points (Table 3). Recitation leaves a large gap that retrieval of the right evidence would close.\n- The appendix figures show recited passages that disagree with each other. For example, Fig. 14 gives four different home cities for the same band. The method relies on voting and does not verify recitations.\n- There is no cost or latency analysis, even though 20 paths means about 20x generation. The authors cite \"costly inference\" only as their reason for subsampling paths.\n- TriviaQA and HotpotQA use only the first 1,024 examples. Codex's size is unknown, and the paper reports GPT-3 hyperparameters \"as a common educational guess\" (Table 7).\n- **Dated (my note, not the authors'):** the models are from 2022 (PaLM-62B, UL2-20B, OPT-30B, code-davinci-002), and there is no study of contamination or recency.\n\nBUILDS ON: self-consistency (Wang et al., 2022b); chain-of-thought (Wei et al., 2022); few-shot in-context learning (Brown et al., 2020); closed-book QA with T5 (Roberts et al., 2020); the finding that CBQA scores reflect memorized training questions (Lewis et al., 2021); memorization and extraction work (Carlini et al., 2021; 2022); FiD-style aggregation of multiple passages (Izacard & Grave, 2021); retrieval-augmented baselines it positions against (Guu et al., 2020; Lewis et al., 2020; Izacard et al., 2022, Atlas); BM25 (Robertson et al., 2009) via BERTserini/pyserini (Yang et al., 2019a); Transformer memory as a retrieval index (Tay et al., 2022b).\n\nCODE: the recitation prompt format, quoted verbatim from Fig. 9, p.18:\n\"Question: What was Beethoven's last symphony?\nThe answer to the above question can be found in the following Wikipedia page, section, and paragraph:\nAnswer: The year 1823 saw the completion of three notable works, ...\"\nSeparators (App. B, p.15): \"\\n\\n\" between the parts of one exemplar and \"\\n\\n\\n\" between exemplars. UL2 uses \" ; \" instead of \"\\n\". Algorithm 1, the per-question error buckets, is on p.16.\n\nFIGURES\n- Fig. 1, p.1, is my pick. Its caption reads: \"Illustration of evaluating (few-shot) open-domain question answering with (closed-book) direct generation ..., (open-book) retrieval-augmented generation ..., and (closed-book) recitation-augmented generation (ours).\" It puts three panels side by side for the same question, so it shows the closed-book / retrieval / recitation split for \"The knowledge gap\" faster than prose can.\n- Alternatives: Table 3 (p.9) as a compact numeric version of the same comparison, or Fig. 14 (p.21) to show four recitations that contradict each other.\n\nPROBLEMS\n- In Table 1, the NQ rows run the 64-shot (PaLM) and 16-shot (UL2) values into the 5-shot line. PaLM's 64-shot figure is confirmed by Table 2. That the 16-shot value belongs to UL2 is my reading of the column order.\n- Table 5's check and cross column headers did not extract, so I used only the prose summary.\n- Figs 4–6 are images with no numeric data.\n- The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can an LLM answer closed-book knowledge questions more accurately if it first recites a relevant passage from its own memory instead of retrieving from a corpus?",
+ "hypothesis": "Encouraging the model to explicitly recite a specific knowledge source before answering will help augment its memory, and diversifying the recitation helps because several sources can answer the same question.",
+ "contributions": [
+  "RECITE: recite-and-answer paradigm for closed-book QA",
+  "Self-consistency over sampled recitations and multiple-recite-and-answer for multi-hop",
+  "Passage hint-based diversified recitation with fine-tuning on few-shot-generated questions",
+  "Results on four LLMs and three CBQA tasks"
+ ],
+ "method": {
+  "summary": "Few-shot prompt an LLM to write a recitation passage for the question, then answer conditioned on it; sample 20 recitations with top-k sampling and majority-vote the answers. For NQ, a PaLM-62B is also fine-tuned on synthetic question-passage-hint data so it can sample passage hints and greedily recite each.",
+  "task": "few-shot closed-book question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Natural Questions",
+    "role": "eval",
+    "size": null,
+    "split": "test split if labelled, otherwise dev; Table 3 uses first 1024 validation examples",
+    "source": "Kwiatkowski et al. 2019; long-answer annotation used as recitation exemplars",
+    "preprocessing": "normalised answers; normalisation differs slightly per dataset"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "first 1,024 data points",
+    "split": "test if labelled else dev",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "5 recitation exemplars manually composed from Wikipedia"
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": "first 1,024 data points",
+    "split": "test if labelled else dev",
+    "source": "Yang et al. 2018",
+    "preprocessing": "4 exemplars manually composed from web search"
+   },
+   {
+    "name": "Top-retrieved Wikipedia pages for NQ queries (fine-tuning corpus)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Wikipedia pages from NQ; passages annotated with hints by rule",
+    "preprocessing": "Synthetic questions generated by few-shot prompting with 5 long-answer/question exemplars for sampled passages"
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM-62B",
+    "role": "proposed",
+    "params": "62.50B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "64",
+    "hidden": "8192",
+    "heads": "32",
+    "context": null,
+    "other": {
+     "fine_tuned_for_diversified_recitation": true
+    }
+   },
+   {
+    "name": "UL2-20B",
+    "role": "evaluated",
+    "params": "19.46B",
+    "architecture": "encoder-decoder, S-Denoiser mode",
+    "init_from": null,
+    "tokenizer": "SentencePiece, no newline so ' ; ' used as separator",
+    "vocab": null,
+    "layers": "32 / 32",
+    "hidden": "4096",
+    "heads": "16",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT-30B",
+    "role": "evaluated",
+    "params": "29.97B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": "7168",
+    "heads": "56",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "evaluated",
+    "params": "unknown (Table 7 lists GPT-3 175.0B as an educational guess)",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "96 (GPT-3 guess)",
+    "hidden": "12288 (GPT-3 guess)",
+    "heads": "96 (GPT-3 guess)",
+    "context": null,
+    "other": {
+     "access": "OpenAI API"
+    }
+   },
+   {
+    "name": "FLAN-T5 (xxl 11B largest)",
+    "role": "evaluated",
+    "params": "up to 11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Fig 6 model-size sweep on TriviaQA"
+    }
+   },
+   {
+    "name": "BM25 (pyserini enwiki-paragraphs)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "lexical retrieval",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "top_k": "1"
+    }
+   }
+  ],
+  "training": {
+   "objective": "fine-tune PaLM-62B on synthetic question to passage hint and passage content (only the NQ diversified-recitation variant trains)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64",
+   "steps": "10,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "64 TPUv4 chips",
+   "compute": null,
+   "wall_clock": "approximately 1 day",
+   "seeds": null,
+   "other": {
+    "size_of_synthetic_corpus": null
+   }
+  },
+  "inference": {
+   "decoding": "recitations by top-k sampling, answers greedy; passage-hint variant: sample hints, de-duplicate, greedy decode each passage; majority vote over answers",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 recitations per question (self-consistency); Fig 4 uses random subsets of 20 five times; Table 6 uses 5 seeds of random exemplars",
+   "prompting": "NQ 5-shot and 64-shot (UL2 16-shot); TriviaQA 5-shot; HotpotQA 4-shot; exemplars separated by three newlines, components by two",
+   "retrieval": "none for RECITE; BM25 top-1 baseline in Table 3",
+   "parameters": {
+    "k_for_top-k_sampling": null,
+    "self_consistency_paths": "20"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "exact match on normalised answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token F1 on normalised answers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Standard direct prompting",
+    "Chain-of-thought (20-path) on HotpotQA",
+    "BM25 top-1 passage",
+    "Ground-truth long-answer passage"
+   ],
+   "protocol": "Single evaluation per setting except Table 6 (5 exemplar seeds, mean and std) and Fig 4 (5 random subsets); no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/Edward-Sun/RECITE",
+   "weights": "UL2-20B and OPT-30B public; Codex via API; PaLM not released",
+   "data": "NQ, TriviaQA, HotpotQA public"
+  },
+  "prompts": [
+   {
+    "purpose": "NQ evidence recitation exemplar",
+    "text": "Question: where did united states drop the atomic bomb\n\nThe answer to the above question can be found in the following Wikipedia page, section, and paragraph or table:\n\nAnswer: During the final stage of World War II, ...",
+    "where": "Fig 7, p.17"
+   },
+   {
+    "purpose": "TriviaQA evidence recitation",
+    "text": "Question: ...\nThe answer to the above question can be found in the following Wikipedia page, section, and paragraph:\nAnswer: ...",
+    "where": "Fig 9, p.18 (5 exemplars)"
+   },
+   {
+    "purpose": "TriviaQA question answering",
+    "text": "Q: What was Beethoven's last symphony?\nA: 9th",
+    "where": "Fig 11, p.19"
+   },
+   {
+    "purpose": "HotpotQA multiple evidence recitation",
+    "text": "Question: ...\nThe answer to the above question can be found in the following two Wikipedia page, section, and paragraphs:\nAnswer 1: ...\nAnswer 2: ...",
+    "where": "Fig 12, p.20 (4 exemplars)"
+   },
+   {
+    "purpose": "HotpotQA question answering",
+    "text": "Q: ...\nA: The answer is Delhi.",
+    "where": "Fig 13, p.20"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "We train PaLM in the constructed corpus for 10,000 steps with a batch size of 64, which takes approximately 1 day in 64 TPUv4 chips",
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Recite-and-answer beats direct prompting on NQ for PaLM-62B (5-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "28.70",
+   "unit": "%",
+   "baseline_value": "25.76",
+   "n": null,
+   "setup": "Natural Questions, 5-shot, closed-book, 20 self-consistency paths, test split if labelled else dev",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, NQ, row Recite-and-answer (20-path) vs Standard-prompting (direct), column PaLM-62B EM/F1(5)"
+  },
+  {
+   "claim": "Recite-and-answer beats direct prompting on NQ for Codex-002 (5-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "35.84",
+   "unit": "%",
+   "baseline_value": "31.45",
+   "n": null,
+   "setup": "Natural Questions, 5-shot, closed-book, 20 self-consistency paths, test split if labelled else dev",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, NQ, row Recite-and-answer (20-path), column Codex-002 EM/F1(5)"
+  },
+  {
+   "claim": "Recite-and-answer beats direct prompting on NQ for UL2-20B (5-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "14.16",
+   "unit": "%",
+   "baseline_value": "10.16",
+   "n": null,
+   "setup": "Natural Questions, 5-shot, closed-book, 20 self-consistency paths, test split if labelled else dev",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, NQ, row Recite-and-answer (20-path), column UL2-20B EM/F1(5)"
+  },
+  {
+   "claim": "Recite-and-answer beats direct prompting on NQ for OPT-30B (5-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "17.84",
+   "unit": "%",
+   "baseline_value": "14.97",
+   "n": null,
+   "setup": "Natural Questions, 5-shot, closed-book, 20 self-consistency paths, test split if labelled else dev",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, NQ, row Recite-and-answer (20-path), column OPT-30B EM/F1(5)"
+  },
+  {
+   "claim": "With 64 shots PaLM-62B gains less on NQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "31.34",
+   "unit": "%",
+   "baseline_value": "28.98",
+   "n": null,
+   "setup": "NQ, PaLM-62B, 64-shot, 20 paths",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, NQ, row Recite-and-answer (20-path), column PaLM-62B EM/F1(64)"
+  },
+  {
+   "claim": "Passage-hint diversified recitation with a fine-tuned PaLM-62B is the best NQ result (5-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "32.20",
+   "unit": "%",
+   "baseline_value": "28.70",
+   "n": null,
+   "setup": "NQ, PaLM-62B fine-tuned 10,000 steps on synthetic question-hint-passage data, 20 paths; baseline is plain recite-and-answer 20-path",
+   "note": null,
+   "where": "Table 2, p.8",
+   "table": "Table 2, row Recite-and-answer w/ diversified recitation (20-path), column EM / F1(5)"
+  },
+  {
+   "claim": "Diversified recitation, 64-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "33.23",
+   "unit": "%",
+   "baseline_value": "31.34",
+   "n": null,
+   "setup": "As above, 64-shot",
+   "note": null,
+   "where": "Table 2, p.8",
+   "table": "Table 2, row Recite-and-answer w/ diversified recitation (20-path), column EM / F1(64)"
+  },
+  {
+   "claim": "TriviaQA gain is small for PaLM-62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "65.84",
+   "unit": "%",
+   "baseline_value": "65.38",
+   "n": null,
+   "setup": "TriviaQA, first 1,024 questions, 5-shot, 20 paths",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, TriviaQA, row Recite-and-answer (20-path), column PaLM-62B"
+  },
+  {
+   "claim": "TriviaQA gain is larger for UL2-20B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "53.42",
+   "unit": "%",
+   "baseline_value": "48.73",
+   "n": null,
+   "setup": "TriviaQA, first 1,024 questions, 5-shot, 20 paths",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, TriviaQA, row Recite-and-answer (20-path), column UL2-20B"
+  },
+  {
+   "claim": "HotpotQA: multiple-recite-and-answer beats chain-of-thought and direct for PaLM-62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "26.46",
+   "unit": "%",
+   "baseline_value": "23.73",
+   "n": null,
+   "setup": "HotpotQA, first 1,024 questions, 4-shot, 20 paths; baseline is chain-of-thought (20-path), direct is 20.51",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, HotpotQA, row Recite-and-answer (20-path), column PaLM-62B"
+  },
+  {
+   "claim": "HotpotQA Codex-002 recite-and-answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "37.11",
+   "unit": "%",
+   "baseline_value": "34.38",
+   "n": null,
+   "setup": "HotpotQA 4-shot, 20 paths; baseline chain-of-thought (20-path); direct is 28.32",
+   "note": null,
+   "where": "Table 1, p.7",
+   "table": "Table 1, HotpotQA, row Recite-and-answer (20-path), column Codex-002"
+  },
+  {
+   "claim": "Ground-truth passage far exceeds both BM25 and recitation for UL2-20B on NQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "41.02",
+   "unit": "%",
+   "baseline_value": "10.16",
+   "n": null,
+   "setup": "NQ first 1,024 validation examples, UL2-20B 5-shot; baseline is no passage",
+   "note": null,
+   "where": "Table 3, p.9",
+   "table": "Table 3, row Ground-truth passage, column UL2-20B(5)"
+  },
+  {
+   "claim": "BM25 top-1 beats recitation for UL2-20B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "16.31",
+   "unit": "%",
+   "baseline_value": "14.16",
+   "n": null,
+   "setup": "NQ first 1,024 validation, UL2-20B 5-shot, BM25 over pyserini enwiki-paragraphs; baseline is LM-recitation 20-path",
+   "note": null,
+   "where": "Table 3, p.9",
+   "table": "Table 3, row BM25-Retrieval (Top-1), column UL2-20B(5)"
+  },
+  {
+   "claim": "Recitation beats BM25 top-1 for Codex-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "35.84",
+   "unit": "%",
+   "baseline_value": "33.20",
+   "n": null,
+   "setup": "NQ first 1,024 validation, Codex-002 5-shot; baseline is BM25 top-1",
+   "note": null,
+   "where": "Table 3, p.9",
+   "table": "Table 3, row LM-Recitation(5) (20-path), column Codex-002(5)"
+  },
+  {
+   "claim": "Ground-truth passage for Codex-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "49.32",
+   "unit": "%",
+   "baseline_value": "31.45",
+   "n": null,
+   "setup": "NQ first 1,024 validation, Codex-002 5-shot; baseline no passage",
+   "note": null,
+   "where": "Table 3, p.9",
+   "table": "Table 3, row Ground-truth passage, column Codex-002(5)"
+  },
+  {
+   "claim": "UL2 TriviaQA robustness over 5 seeds: 20-path recitation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "52.68",
+   "unit": "%",
+   "baseline_value": "48.42",
+   "n": null,
+   "setup": "UL2-20B, TriviaQA, 5 seeds of random 5-shot exemplars; std 0.62 vs 0.71",
+   "note": "Table 1 reports UL2 TriviaQA 53.42 (single prompt); Table 6 mean over seeds is 52.68",
+   "where": "Table 6, p.17",
+   "table": "Table 6, row RECITE (20-path), column EM(5)"
+  },
+  {
+   "claim": "Share of UL2-20B TriviaQA questions where the answer was never recited in any of 20 passages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "21.09",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UL2-20B 5-shot, 1,024 TriviaQA examples",
+   "note": "OPT-30B 22.27",
+   "where": "Table 4, p.9",
+   "table": "Table 4, row Not Recit., column UL2-20B(5)"
+  },
+  {
+   "claim": "Share where answer is in a recitation but not in any path output (UL2-20B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "5.66",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UL2-20B 5-shot, 1,024 TriviaQA examples",
+   "note": "OPT-30B 8.01",
+   "where": "Table 4, p.9",
+   "table": "Table 4, row Hits@20-Recit., column UL2-20B(5)"
+  },
+  {
+   "claim": "Share where the answer is among path outputs but loses the majority vote (UL2-20B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "19.82",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UL2-20B 5-shot, 1,024 TriviaQA examples",
+   "note": "OPT-30B 20.07",
+   "where": "Table 4, p.9",
+   "table": "Table 4, row Hits@20-Path, column UL2-20B(5)"
+  }
+ ],
+ "limits": [
+  "Updating time-sensitive knowledge for a pure LLM method requires training or fine-tuning on the new corpus, which can be costly (Sec 5).",
+  "Ethics: all intermediate steps are generated by the LLM, so RECITE may enhance biases in model weights compared to RAG.",
+  "Sampling temperature, top-k value and max length are not stated.",
+  "TriviaQA and HotpotQA evaluated on only the first 1,024 questions; NQ uses test or dev depending on labels; no significance tests.",
+  "Diversified recitation is evaluated only on NQ with PaLM-62B, which is not publicly available.",
+  "Gain on TriviaQA for PaLM-62B is 0.46 EM; authors hypothesise trivia questions carry context that weakens recitation for strong LLMs.",
+  "Only three closed-book QA tasks; fact checking left to future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "passage hint",
+   "definition": "a unique identifier of a passage formed by concatenating the section titles and the in-section order of each passage",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "main model; direct-prompt baseline",
+   "quote": null
+  },
+  {
+   "work": "UL2",
+   "year": 2022,
+   "arxiv": "2205.05131",
+   "relation": "evaluates",
+   "note": "evaluated",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "evaluates",
+   "note": "evaluated",
+   "quote": null
+  },
+  {
+   "work": "Codex",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "code-davinci-002",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "recite-then-answer analogous to rationale",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "majority vote over sampled paths",
+   "quote": null
+  },
+  {
+   "work": "Rationale-augmented ensembles",
+   "year": 2022,
+   "arxiv": "2207.00747",
+   "relation": "baseline",
+   "note": "HotpotQA CoT prompt",
+   "quote": null
+  },
+  {
+   "work": "Atlas (Izacard et al.)",
+   "year": 2022,
+   "arxiv": "2208.03299",
+   "relation": "related",
+   "note": "retrieval-augmented few-shot comparison point",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Carlini et al. memorization",
+   "year": 2022,
+   "arxiv": "2202.07646",
+   "relation": "related",
+   "note": "fuzzy memorization motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of evaluating (few-shot) open-domain question answering with (closed-book) direct generation, (open-book) retrieval-augmented generation, and (closed-book) recitation-augmented generation (ours).",
+   "page": 1,
+   "why": "Shows where recitation sits between direct and retrieval-augmented prompts"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Prompt-based in-context learning for recitation generation, recitation-augmented QA, self-consistency, and multiple-recite-and-answer.",
+   "page": 3,
+   "why": "The four-step pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Question answering with diverse recitation and the corresponding few-shot question generation and fine-tuning processes.",
+   "page": 5,
+   "why": "Passage-hint pipeline"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Natural Questions results with different context passages.",
+   "page": 9,
+   "why": "Recitation vs BM25 vs gold passage"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figs 4, 5 and 6 are plots; their values are not extractable.",
+  "Table 1 text extraction is column-interleaved; cell assignment checked against Table 2 and the schema-0 report."
+ ]
 }

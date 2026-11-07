@@ -1,19 +1,626 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2102.01454",
  "pdf": "generative-ai/02-rag-retrieval/sources/pillutla-2021-mauve.pdf",
  "bib": {
   "title": "MAUVE: Measuring the Gap Between Neural Text and Human Text using Divergence Frontiers",
+  "authors": [
+   "Krishna Pillutla",
+   "Swabha Swayamdipta",
+   "Rowan Zellers",
+   "John Thickstun",
+   "Sean Welleck",
+   "Yejin Choi",
+   "Zaid Harchaoui"
+  ],
   "first_author": "Pillutla",
   "year": 2021,
-  "venue": "NeurIPS 2021",
+  "venue": "NeurIPS 2021 (arXiv v3)",
   "arxiv": "2102.01454",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "b1513713-815e-49d2-b7fd-869d099bfec9"
+  "at": "2026-11-07",
+  "chars_read": 119033,
+  "chars_total": 119033,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: MAUVE: Measuring the Gap Between Neural Text and Human Text using Divergence Frontiers. Krishna Pillutla, Swabha Swayamdipta, Rowan Zellers, John Thickstun, Sean Welleck, Yejin Choi, Zaid Harchaoui. NeurIPS 2021 (arXiv:2102.01454v3, 23 Nov 2021).\n\nCOVERAGE: Read all 119,165 of 119,165 chars across all 35 pages: main text, references (skimmed for origins), and Appendices A–G (proofs, pseudocode, package listing, setup, full result tables 6–14, human-eval protocol, cluster interpretation, example generations). Nothing skipped.\n\nCLAIMS (ranked)\n- claim: MAUVE scores how close a model's *distribution* of text is to the human distribution. It embeds both sample sets with an external LM, quantises them together with k-means, and takes the area under a curve of soft Type I/Type II KL errors computed against mixtures R_λ = λP + (1−λ)Q.\n  number: none (definition)\n  setup: P = human text, Q = model + decoder. Default embedding is GPT-2 large; default quantiser is k-means with k=500.\n  quote: \"we jointly quantize the embedded samples (e.g. with k-means [36]), and count the cluster assignments to form histograms\" / \"Our proposed measure, MAUVE (P,Q ), is the area under the divergence curveC(P,Q )... MAUVE (P,Q ) lies in (0, 1], with a larger value meaning thatQ is closer toP . Further, MAUVE (P,Q ) = 1 if and only ifQ =P .\"\n  where: p.3–4\n- claim: MAUVE rank-correlates with human pairwise judgments better than the other automatic metrics tested.\n  number: 0.952 human-like, 0.810 interesting, 0.857 sensible (Spearman). Gen. PPL scored 0.810 / 0.643 / 0.738.\n  setup: Web text only, GPT-2 small/medium/large/xl × {ancestral, nucleus} = 8 settings plus human text. 36 pairs × 90 ratings each, from 214 AMT workers. Completions truncated to 256 tokens and required to be at least 200 tokens. Preferences were fit with Bradley-Terry, and MAUVE was then rank-correlated against the BT scores. The correlation therefore rests on about 8 system-level points (my inference from the 8 MAUVE values in the table). Baselines were Gen. PPL, Zipf, REP, Distinct-4 and Self-BLEU. BLEU/ROUGE/BERTScore against references were not tested.\n  quote: \"MAUVE correlates highly with human judgments of how human-like (0.952), interesting (0.810), and sensible (0.857) the machine text is... generation perplexity has correlations that are 0.12 to 0.17 lower than MAUVE ’s.\" / \"We obtain 90 preference ratings for each pair of settings, coming from a total of 214 crowd-workers\"\n  where: p.9–10 (Table 5); full in Table 14, p.28\n- claim: MAUVE tracks the accuracy of trained human-vs-machine discriminators and needs no training of its own.\n  number: 0.956 news, 0.893 stories\n  setup: News used Grover base/large/mega generations judged by a fine-tuned Grover-mega discriminator. Stories used GPT-2 medium fine-tuned on WritingPrompts, judged by a frozen GPT-2 large with a classification head.\n  quote: \"MAUVE correlates the highest with the discrimination accuracy (0.96 for news and 0.89 for stories) among all comparison measures.\"\n  where: p.10\n- claim: MAUVE orders decoders the expected way (greedy < ancestral < nucleus) and is not fooled by an adversarial decoder that matches human perplexity. Gen. PPL fails both tests.\n  number: greedy .016, ancestral .882, nucleus .940; adversarial 0.06\n  setup: Web text, GPT-2 xl, 5000 generations, max 1024 tokens.\n  quote: \"assigning the lowest quality to greedy decoding (.016) followed by ancestral sampling (.882), and the highest quality to nucleus sampling (.940)... generation perplexity rates the highly degenerate greedy-decoded text as better than ancestral sampling ( 11.324 vs. 19.284)\"\n  where: p.7 (Table 3, p.8)\n- claim: MAUVE rises with model size.\n  number: 0.878 / 0.915 / 0.936 / 0.940 (small→xl)\n  setup: Web text, nucleus sampling.\n  quote: \"MAUVE (↑) 0.878 0 .915 0 .936 0.940\"\n  where: Table 4, p.8\n- claim: MAUVE is the only metric tested that falls steadily as generations get longer. Fréchet distance improves with length, which is the wrong direction.\n  number: none (Figure 4)\n  setup: Web text, GPT-2 all sizes, 5 seeds.\n  quote: \"MAUVE is the only comparison measure which identiﬁes that generation quality decreases monotonically with increasing text length.\"\n  where: p.7\n- claim: Rankings hold up when the embedding model changes, though the absolute values move.\n  number: Spearman 0.993 (GPT-2 large vs RoBERTa large)\n  setup: RoBERTa was capped at 256 tokens. RoBERTa scores GPT-2 small sampling at 0.174, where GPT-2 large features give 0.589.\n  quote: \"The Spearman rank correlation between MAUVE computed with the two feature representations is 0.993... RoBERTa penalizes ancestral sampling more while rating greedy decoding higher\"\n  where: p.25 (Table 12, p.22–23)\n- claim: Rankings are stable across choices of k and quantiser. The absolute value is not stable, and extreme k values make it meaningless.\n  number: Spearman 0.99–1.00 for k from 100 to 5000; ≥0.99 for DRMM and lattice. Below k<100 every method scores near 1; above k>2000 every method scores near 0.\n  quote: \"the Spearman correlation is exactly 0.99 or 1.00\" / \"Ifk is too small (k <100), all methods are scored close to 1. If k is too large k > 2000), all methods are scored close to 0.\"\n  where: p.9; p.25\n- claim: Small samples inflate MAUVE and make it noisier.\n  number: none (Figure 7, sample sizes 300–5000, k = n/10)\n  quote: \"We observe that a smaller sample size gives an optimistic estimate of MAUVE ... We also note that a smaller sample size leads to a larger variance in MAUVE .\"\n  where: p.25\n- claim: The scaling constant c changes the value but never the ranking. The authors use c=5.\n  quote: \"Choice ofc does not affect the relative order of the curves but only the numerical value. We usec = 5\"\n  where: p.9\n- claim: MAUVE is cheap to compute once embeddings exist. Self-BLEU and per-system discriminators are expensive by comparison.\n  number: 1–3 minutes on one CPU core for 5000 generations; Self-BLEU takes about 7 hours\n  setup: k-means variant with cached GPT-2 large hidden states, Intel i9 at 2.80GHz. DRMM takes 1.75 h; lattice takes about 5 min on a TITAN Xp.\n  quote: \"Computation of MAUVE usingk-means with 5000 generations takes 1− 3 minutes on a single core of an Intel i9 CPU... using cached hidden state representations from a GPT-2 large\" / \"This operation takes around 7 hours to compute on a single core\"\n  where: p.20\n- claim: Reference-based n-gram metrics do not suit open-ended generation.\n  quote: \"classical metrics for n-gram matching [44, 32, 2]... making them fundamentally ill-suited for open-ended generation. Moreover, it has been recently shown in [ 42] show that these classical metrics only weakly agree with human judgments.\"\n  where: p.4\n- claim: MAUVE also scores beam search as degenerate.\n  number: beam b=4 0.021, b=8 0.366, ancestral 0.589, nucleus 0.878\n  setup: GPT-2 small, web text.\n  quote: \"Mauve 0.008 0 .021 0 .026 0 .366 0 .341 0 .5890.02 0.8780.007\"\n  where: Table 11, p.22\n\nLIMITS\n- It scores a distribution, not a single text. The inputs are lists of human and model texts (\"given neural text and human text, it yields a scalar measure of the gap between them\", p.1), and the paper uses 5000 per system. No per-answer score exists.\n- The paper never tests factuality, faithfulness to a source, or answer correctness. The tasks are open-ended continuation of web text, news and stories, where \"there is no 'correct' output; the main criteria... are coherence, creativity, and ﬂuency\" (p.2). Nothing covers QA or RAG.\n- The authors concede it disagrees with humans on some pairs: \"MAUVE rates nucleus sampling with GPT-2 medium as being better than pure sampling from GPT-2 large and xl\" (p.28). In news it preferred ancestral over nucleus for Grover large (p.23).\n- Its absolute values depend on k, the embedding model, c and sample size. Only the rankings are shown to be robust, so a number like \"0.9\" is not comparable across setups.\n- The human study rests on few points: one domain, GPT-2 models only, 256-token outputs, and AMT non-experts. The authors cite [10, 29] on human evaluations being inconsistent.\n- Extending it to closed-ended tasks with references is named as future work (p.10).\n- Dated: the models are 2019-era GPT-2 and Grover, and the embeddings come from GPT-2 large and RoBERTa.\n\nBUILDS ON: information divergence frontiers, Djolonga et al. [16] (AISTATS 2020); precision-recall for generative models, Sajjadi et al. [49] (NeurIPS 2018) and Kynkäänniemi et al. [31] (NeurIPS 2019); Fréchet/FID, Heusel et al. [25] (2017); nucleus sampling and degeneration, Holtzman et al. [26] (ICLR 2020); Bradley-Terry fit following Marden [37] (1995) and Hunter [27] (2004); companion theory on estimation and quantisation error, Liu et al. [33] (NeurIPS 2021).\n\nCODE (Listing 1, p.17; package `pip install mauve-text`; extraction inserted spaces inside identifiers, which are restored here)\n```python\nfrom mauve import compute_mauve\nout = compute_mauve(p_text=p_text, q_text=q_text,\n                    device_id=0,           # use GPU 0 for featurization\n                    max_text_length=256)   # truncate text to 256 tokens\nprint('MAUVE(P,Q) =', out.mauve)\n```\n\nFIGURES\n- Best candidate: Figure 1, p.2. \"MAUVE compares the machine text distribution Q to that of human text P by using the family of mixtures Rλ = λP+(1−λ)Q... Illustration of Type I errors, where Q produces degenerate, repetitive text... and, Type II errors, where Q cannot produce plausible human text.\" The panel pairs a repetitive \"the time is the time is\" example with a rare place-name sentence, so the two error types are clear at a glance.\n- Alternative: Figure 2, p.3, which shows actual divergence curves with MAUVE as the shaded area.\n- Alternative: Figure 4, p.7, which shows MAUVE against Fréchet distance, Gen. PPL and sparsemax as generations get longer.\n\nFIT WITH THE NOTES\n- Best fit: generative-ai/08-eval/notes/12-failure-modes.md, the \"Overlap metrics on open-ended text\" bullet (line 228). The paper supports what that bullet says. It states that n-gram reference metrics are \"fundamentally ill-suited for open-ended generation\" and weakly agree with humans (citing Novikova et al. 2017), and it offers the reference-free distributional alternative. Its finding that MAUVE falls with length complements the note's point that ROUGE-L rises with output length. It does not contradict anything there. One caveat if this is cited: MAUVE was never compared against ROUGE/BLEU on references, only against Self-BLEU, Gen. PPL, Zipf, REP and Distinct-4.\n- Secondary fit: generative-ai/02-rag-retrieval/notes/06-generation-for-rag.md. The ALCE table row (line 310) mentions fluency without naming MAUVE. A short clause could say that ALCE's fluency score is MAUVE, a corpus-level score that cannot judge one answer or check facts. Neither note mentions MAUVE today, so nothing in them is contradicted. The DR-score paragraph at line 405 is a fair contrast, since DR is per answer and reference-based while MAUVE covers the whole corpus with no references. This paper does not discuss ALCE, so the claim that ALCE uses MAUVE has to come from the ALCE paper itself.\n\nPROBLEMS\n- No embedded instructions found.\n- Extraction faults:\n  - The code listing came out with letters spaced apart.\n  - Superscripts were lost: \"103 clusters\" on p.8 means 10^3, which Appendix C.3 confirms with \"1000 components\".\n  - Subscripted standard deviations run into the main numbers in Tables 6, 8 and 9, e.g. \"0 .5890.018\" = 0.589 ± 0.018.\n- Typos in the paper itself:\n  - The order-preservation statement in C.3.1 (p.19) reads \"MAUVEc2(P,Q 2) > MAUVEc2(P,Q 2)\", where Q1 was meant on one side.\n  - The Pareto-frontier formula in A.1 repeats KL(P|R⋆λ) twice."
+ "type": "empirical",
+ "question": "How can the gap between a text generator's distribution and the human text distribution be measured automatically, capturing both degenerate output and failure to cover human text?",
+ "hypothesis": "A summary of the whole divergence curve between quantized embeddings of model and human text will rank decoders, model sizes and lengths as known properties and humans expect, and correlate with human judgments better than single-statistic metrics.",
+ "contributions": [
+  "Introduce MAUVE, a comparison measure between neural text and human text.",
+  "Show MAUVE quantifies known properties of generated text (length, model size, decoding) more correctly and with fewer restrictions than existing distributional metrics.",
+  "Find through human evaluation that MAUVE better correlates with human quality judgements.",
+  "Find MAUVE can be highly robust to the choice of quantization, embeddings and scaling; release a pip-installable package."
+ ],
+ "method": {
+  "summary": "Embed N human and N' model texts with GPT-2 large, jointly quantize with k-means (k=500 after PCA), form histograms, and take the area under the curve of exp(-c KL(Q|R_lambda)) vs exp(-c KL(P|R_lambda)) for mixtures R_lambda = lambda P + (1-lambda) Q, c=5. Validated on web text (GPT-2), news (Grover) and story continuation (fine-tuned GPT-2 medium) against alternative metrics, a 36-pair Mechanical Turk study and discriminator accuracy.",
+  "task": "evaluating open-ended text generation (text completion) against human text",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Webtext test set (public analogue of GPT-2 WebText)",
+    "role": "eval",
+    "size": "5000 articles; prompt = first 35 tokens; max generation 1024 tokens",
+    "split": "test",
+    "source": "github.com/openai/gpt-2-output-dataset",
+    "preprocessing": "human continuation up to 1024 tokens; for human eval 1831 of 5000 prompts hand-selected as well-formed English, completions truncated to 256 BPE tokens"
+   },
+   {
+    "name": "RealNews (April2019 set)",
+    "role": "eval",
+    "size": "5000 randomly chosen articles; max 1024 tokens",
+    "split": "April2019 set",
+    "source": "Zellers et al. Grover; public Grover generations reused",
+    "preprocessing": "prompt = headline and metadata (domain, date, authors)"
+   },
+   {
+    "name": "WritingPrompts",
+    "role": "both",
+    "size": "5000 randomly chosen test samples; prompt 50 tokens; max 512 tokens",
+    "split": "train for fine-tuning, test for prompts",
+    "source": "Fan et al. 2018",
+    "preprocessing": "human continuations truncated at 512 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 small/medium/large/xl",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only transformer, pretrained",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens (inferred: max generation length)",
+    "other": {
+     "note": "parameter counts not given"
+    }
+   },
+   {
+    "name": "Grover base/large/mega",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "GPT-2-like transformer conditioned on metadata",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 medium fine-tuned on WritingPrompts",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained GPT-2 medium",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "block size 512",
+    "other": {}
+   },
+   {
+    "name": "GPT-2 large (embedding model M)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "features for MAUVE; also external LM for Gen. PPL"
+    }
+   },
+   {
+    "name": "RoBERTa-large (alternative embedding)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 BPE tokens",
+    "other": {}
+   },
+   {
+    "name": "Grover mega / GPT-2 large / BERT discriminators",
+    "role": "judge",
+    "params": null,
+    "architecture": "binary classifier heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "story": "frozen GPT-2 large with classification head, 25% test split, regularization by 5-fold CV",
+     "news": "Grover mega fine-tuned with binary head"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "ancestral (pure) sampling, greedy, nucleus sampling, top-K, beam search (b=4,8, with/without 4-gram repeat block), adversarial perplexity sampling (first 15% tokens uniform random, remainder greedy to match human running perplexity)",
+   "temperature": null,
+   "top_p": "web text and stories {0.9,0.92,0.95,0.99}; news {0.9,0.92,0.94,0.96,0.98}; best by MAUVE reported",
+   "max_tokens": "1024 web text and news; 512 stories",
+   "samples": "5000 generations per setting; 5 random seeds for sampling-based methods (s.d. reported); greedy and beam deterministic",
+   "prompting": "text completion from prefix: 35 tokens (web), 50 tokens (stories), headline+metadata (news)",
+   "retrieval": null,
+   "parameters": {
+    "c": "5 (scaling constant)",
+    "k_means_k": "500 default; 100 to 5000 tested in main text, {100,250,500,1000} in C.3.3",
+    "pca": "keep 90% explained variance, unit l2 normalization",
+    "kmeans_iters": "max 500 iterations, 5 repetitions, best objective, FAISS",
+    "lambda_grid": "uniform grid {1/n..(n-1)/n}, n not stated",
+    "drmm": "3 layers x 10 components per layer, 20 epochs, batch 64, lr gamma0=0.005 constant then quadratic anneal",
+    "lattice": "4-d features, 2-layer MLP with batchnorm, 200 epochs, batch 64, lr 0.1 -> 0.05 at half -> 0.01 at 75%, 744 bins (radius sqrt(50))",
+    "finetune_story": "GPT-2 medium, 1 epoch, effective batch 32, block 512, Adam, lr 5e-5, HF defaults"
+   },
+   "other": {
+    "software": "Python 3.8, PyTorch 1.7, HF Transformers 4.3.2",
+    "hardware": "8 Nvidia Quadro RTX GPUs 24G, one per job; CPU work on Intel i9 2.80GHz 32 vCPU 126G",
+    "mauve_time": "1-3 min on single CPU core for 5000 generations with cached GPT-2 large states; DRMM 1.75 h; lattice ~5 min on TITAN Xp",
+    "self_bleu_time": "~7 hours single core",
+    "sample_size": "small samples give optimistic MAUVE and higher variance (Fig 7, k=n/10)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MAUVE",
+     "definition": "area under divergence curve {(exp(-c KL(Q|R_l)), exp(-c KL(P|R_l)))} with R_l=lP+(1-l)Q on k-means histograms of GPT-2-large embeddings",
+     "unit": "score in (0,1]",
+     "higher_is_better": true
+    },
+    {
+     "name": "Generation perplexity",
+     "definition": "perplexity of text under GPT-2 large; main paper reports |T(Q)-T(P)|",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Zipf coefficient, REP, Distinct-4, Self-BLEU (4-gram, 1000 vs 4999 others), Sparsemax score, JS, epsilon-PPL, Frechet distance",
+     "definition": "alternative statistics and LM metrics as defined in C.4 and D.2",
+     "unit": "various",
+     "higher_is_better": null
+    },
+    {
+     "name": "Discrimination accuracy",
+     "definition": "test accuracy of a trained human-vs-machine classifier",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Spearman rank correlation with Bradley-Terry human scores or discriminator accuracy",
+     "definition": "rank correlation of metric across (model, decoder) settings",
+     "unit": "[-1,1]",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Gen. PPL",
+    "Zipf coefficient",
+    "REP",
+    "Distinct-4",
+    "Self-BLEU",
+    "Sparsemax score (SP)",
+    "Token JS",
+    "epsilon-PPL",
+    "Frechet distance"
+   ],
+   "protocol": "Pairwise Mechanical Turk human study: 9 players (human + 4 GPT-2 sizes x ancestral/nucleus), 90 comparisons per pair of 36 pairs, 214 workers, USD 0.40 per annotation, 5-point scale (Definitely/Slightly A/B, Tie), ties assigned randomly, annotations under 25 s dropped, three questions (human-like, interesting, sensible); Bradley-Terry fit by Zermelo's algorithm; Spearman vs MAUVE. Sampling results mean +- s.d. over 5 runs."
+  },
+  "availability": {
+   "code": "github.com/krishnap25/mauve (pip install mauve-text) and github.com/krishnap25/mauve-experiments",
+   "weights": "public pretrained GPT-2 and Grover",
+   "data": "public Webtext, RealNews, WritingPrompts, Grover generations"
+  },
+  "prompts": [
+   {
+    "purpose": "human eval question: interestingness",
+    "text": "Which continuation is more interesting or creative, given the context?",
+    "where": "Appendix E.4"
+   },
+   {
+    "purpose": "human eval question: sensible",
+    "text": "Which continuation makes more sense, given the context?",
+    "where": "Appendix E.4"
+   },
+   {
+    "purpose": "human eval question: human-like",
+    "text": "Which continuation is more likely to be written by a human?",
+    "where": "Appendix E.4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.drmm",
+    "quote": "We use DRMM with 3 layers and 10 components per layer for a total of 103 clusters",
+    "where": "Sec 4.2 (103 is 10^3 lost superscript; C.3.3 says 1000 components)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MAUVE correlates with human-like Bradley-Terry scores far above generation perplexity on web text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman vs BT human-like",
+   "value": 0.952,
+   "unit": "Spearman",
+   "baseline_value": 0.81,
+   "n": null,
+   "setup": "Web text, GPT-2 small to xl with ancestral and nucleus sampling, 8 settings, completions up to 256 tokens, 90 ratings per pair",
+   "quote": "MAUVE correlates highly with human judgments of how human-like (0.952), interesting (0.810), and sensible (0.857) the machine text is.",
+   "table": null,
+   "note": "Baseline 0.810 is generation perplexity; Zipf is 0.833 (Table 5). Interesting 0.810 and sensible 0.857 are in same quote.",
+   "where": "Sec 4.3, Table 5"
+  },
+  {
+   "claim": "MAUVE correlates with discriminator accuracy for news.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.956,
+   "unit": "Spearman",
+   "baseline_value": 0.792,
+   "n": null,
+   "setup": "News, Grover base/large/mega, Grover mega discriminator",
+   "quote": null,
+   "table": "Table 5, row % Disc. Acc. News, column MAUVE",
+   "note": "Text says 0.96 for news and 0.89 for stories; best baseline for news is REP 0.792.",
+   "where": null
+  },
+  {
+   "claim": "MAUVE correlates with discriminator accuracy for stories.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.893,
+   "unit": "Spearman",
+   "baseline_value": 0.857,
+   "n": null,
+   "setup": "Story continuation, GPT-2 medium fine-tuned, GPT-2 large frozen discriminator",
+   "quote": null,
+   "table": "Table 5, row % Disc. Acc. Stories, column MAUVE",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "MAUVE ranks decoders greedy < ancestral < nucleus.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, GPT-2 xl, 5000 generations; greedy 0.016, ancestral 0.882, nucleus 0.940",
+   "quote": "MAUVE correctly identiﬁes the expected quality relationship, assigning the lowest quality to greedy decoding (.016) followed by ancestral sampling (.882), and the highest quality to nucleus sampling (.940).",
+   "table": null,
+   "note": "Table 3 as extracted shows 0.02, 0.88, 0.94 (rounded); Table 6 gives 0.016, 0.882, 0.940.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Generation perplexity rates degenerate greedy text better than ancestral sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 11.324,
+   "unit": "Gen. PPL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, GPT-2 xl",
+   "quote": "generation perplexity rates the highly degenerate greedy-decoded text as better than ancestral sampling (11.324 vs. 19.284)",
+   "table": null,
+   "note": "Main-paper values are |T(Q)-T(P)| differences from human.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "MAUVE increases with GPT-2 model size under nucleus sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.94,
+   "unit": "MAUVE",
+   "baseline_value": 0.878,
+   "n": null,
+   "setup": "Web text, nucleus sampling; small 0.878, medium 0.915, large 0.936, xl 0.940",
+   "quote": null,
+   "table": "Table 4, row MAUVE, column XL",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Adversarial perplexity sampling gets near-perfect generation perplexity but low MAUVE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.057,
+   "unit": "MAUVE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, GPT-2 xl adversarial decoder",
+   "quote": null,
+   "table": "Table 6, GPT-2 xl, row Adversarial, column MAUVE",
+   "note": "Other sizes 0.043, 0.044, 0.035 (small, medium, large).",
+   "where": null
+  },
+  {
+   "claim": "Beam search is degenerate by MAUVE, better than greedy, and blocking 4-gram repeats helps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.366,
+   "unit": "MAUVE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, GPT-2 small, 5 seeds for sampling; value shown is the 0.366 cell",
+   "quote": null,
+   "table": "Table 11, row Mauve",
+   "note": "Extracted column order of Table 11 is ambiguous: values 0.008, 0.021, 0.026, 0.366, 0.341; ancestral 0.589, nucleus 0.878.",
+   "where": null
+  },
+  {
+   "claim": "MAUVE with RoBERTa-large and GPT-2-large features rank settings almost identically.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.993,
+   "unit": "Spearman",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, all GPT-2 sizes and decoders",
+   "quote": "Quantitatively, the Spearman rank correlation between them across all model and decoders is 0.993.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "MAUVE ranking is robust to number of k-means clusters, DRMM and lattice quantization.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.99,
+   "unit": "Spearman",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k from 100 to 5000 vs k=500; DRMM and lattice vs k-means",
+   "quote": "Likewise, MAUVE computed with DRMM or lattice quantization has a near-perfect Spearman correlation of at least 0.99 with k-means.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "MAUVE falls with generation length for every model, where Frechet distance rises and Gen. PPL is non-monotonic.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web text, GPT-2, nucleus and ancestral sampling, max length 200 to 1000, 5 seeds",
+   "quote": "MAUVE is the only comparison measure which correctly shows this behavior across all models and decoding algorithms.",
+   "table": null,
+   "note": null,
+   "where": "Fig 6 caption, App D.2"
+  },
+  {
+   "claim": "Human raters ranked GPT-2 xl nucleus text below human text with loss probability 0.578.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.578,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bradley-Terry human-like axis, web text",
+   "quote": "will lose to human text with probability 0.578",
+   "table": null,
+   "note": null,
+   "where": "App E.3"
+  },
+  {
+   "claim": "MAUVE disagrees with humans on some pairs and on Grover large.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MAUVE rates GPT-2 medium nucleus above large and xl pure sampling; for Grover large it rates ancestral above nucleus",
+   "quote": "MAUVE rates nucleus sampling with GPT-2 medium as being better than pure sampling from GPT-2 large and xl.",
+   "table": null,
+   "note": null,
+   "where": "App E.3, D.1"
+  },
+  {
+   "claim": "Cost: MAUVE with k-means on 5000 generations runs in 1-3 minutes on one CPU core given cached embeddings.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intel i9 2.80GHz single core, GPT-2 large hidden states cached",
+   "quote": "takes 1 −3 minutes on a single core of an Intel i9 CPU",
+   "table": null,
+   "note": null,
+   "where": "App C.5"
+  }
+ ],
+ "limits": [
+  "Validated on three English domains with GPT-2 and Grover only; closed-ended tasks (summarization, translation) left to future work.",
+  "Human study covers 8 GPT-2 settings with 90 ratings per pair, web text only, crowd workers, completions truncated at 256 tokens.",
+  "MAUVE disagrees with humans on some specific comparisons and on Grover large (ancestral above nucleus); authors leave this to future work.",
+  "Numerical values depend on k, embedding model, c and sample size (smaller samples give optimistic values); only rankings are stable.",
+  "Embedding model inductive biases not studied.",
+  "Corpus-level score: needs thousands of generations, scores no single answer and checks no facts (this reading, not stated as a limit)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Type I error",
+   "definition": "Q places high mass on text which is unlikely under P.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Type II error",
+   "definition": "Q cannot generate text which is plausible under P.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "divergence curve",
+   "definition": "C(P,Q) = {(exp(-c KL(Q|R_l)), exp(-c KL(P|R_l))): R_l = lP+(1-l)Q, l in (0,1)}",
+   "where": "Eq 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Djolonga et al., Precision-Recall Curves Using Information Divergence Frontiers",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "divergence frontiers unify prior precision-recall metrics; MAUVE operationalizes them for text",
+   "quote": null
+  },
+  {
+   "work": "Sajjadi et al.; Kynkaanniemi et al. precision-recall for generative models",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "precision-recall curve metrics for images",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al., The Curious Case of Neural Text Degeneration",
+   "year": 2020,
+   "arxiv": "1904.09751",
+   "relation": "uses-method",
+   "note": "nucleus sampling and degeneration findings MAUVE is checked against; Gen. PPL, Zipf, Self-BLEU protocols",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "all sizes plus embedding model",
+   "quote": null
+  },
+  {
+   "work": "Grover (Zellers et al.)",
+   "year": 2019,
+   "arxiv": "1905.12616",
+   "relation": "evaluates",
+   "note": "news models, RealNews data, discriminator",
+   "quote": null
+  },
+  {
+   "work": "Fan et al., Hierarchical Neural Story Generation (WritingPrompts)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "story task",
+   "quote": null
+  },
+  {
+   "work": "Martins et al. sparsemax / epsilon-perplexity LM metrics",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SP, JS, eps-PPL",
+   "quote": null
+  },
+  {
+   "work": "Heusel et al., FID",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Frechet distance adapted to GPT-2 features",
+   "quote": null
+  },
+  {
+   "work": "Haemaelaeinen and Solin, Deep Residual Mixture Models",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "alternative quantizer",
+   "quote": null
+  },
+  {
+   "work": "Sablayrolles et al., spreading vectors",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "lattice quantizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "MAUVE compares machine text distribution Q to human text P using mixtures R_lambda; Type I and II errors.",
+   "page": 2,
+   "why": "Shows the two error types and the mixture trick at a glance."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Divergence curves for different models and decoding algorithms; MAUVE is the shaded area.",
+   "page": 3,
+   "why": "Shows greedy, ancestral and nucleus curves shrinking or growing."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Generation quality versus maximum generation length according to MAUVE and three alternative measures.",
+   "page": 7,
+   "why": "Only MAUVE falls monotonically with length."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Correlation of similarity measures with human judgments or discriminator accuracy.",
+   "page": 10,
+   "why": "Headline correlation numbers."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B, Listing 1",
+   "snippet": "from mauve import compute_mauve\nout = compute_mauve(p_text=p_text, q_text=q_text, device_id=0, max_text_length=256)\nprint('MAUVE(P, Q) =', out.mauve)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 3 and 4 cells are interleaved in extraction; values cross-checked against Tables 6, 9 and text.",
+  "Table 11 column order is ambiguous in extracted text.",
+  "Main text 'DRMM ... 103 clusters' is 10^3 with lost superscript; C.3.3 says 1000 components.",
+  "Main text says k-means k from 100 to 5000, C.3.3 says {100,250,500,1000}.",
+  "Main-paper Tables 3-4 give |T(Q)-T(P)| for statistics measures; appendix Tables 6-8 give raw T(Q)."
+ ]
 }

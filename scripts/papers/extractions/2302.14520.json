@@ -1,19 +1,426 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.14520",
  "pdf": "generative-ai/08-eval/sources/kocmi-2023-large-language-models-state-art.pdf",
  "bib": {
   "title": "Large Language Models Are State-of-the-Art Evaluators of Translation Quality",
+  "authors": [
+   "Tom Kocmi",
+   "Christian Federmann"
+  ],
   "first_author": "Kocmi",
   "year": 2023,
-  "venue": "EAMT 2023",
+  "venue": "preprint (arXiv 2302.14520v2, 31 May 2023)",
   "arxiv": "2302.14520",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 39974,
+  "chars_total": 39974,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Large Language Models Are State-of-the-Art Evaluators of Translation Quality\", Tom Kocmi and Christian Federmann (Microsoft). The extraction is arXiv 2302.14520v2, dated 31 May 2023. The EAMT 2023 venue does not appear anywhere in the extracted text, so it is unconfirmed from this PDF.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/kocmi-2023-large-language-models-state-art.pdf\n\nCOVERAGE: Read all 39,974 of 39,974 chars, including Limitations, Tables 1–8 and Appendices A (prompts), B (full results) and C (Ada answers). I skimmed the references for where the method comes from.\n\nAUDIT OF NOTE (generative-ai/08-eval/notes/05-llm-as-judge.md, ~line 63)\n- 89.8% / COMET-22 83.9% / BLEU 70.8%: CORRECT. All three are in Table 2. The 89.8% is GEMBA-GPT4-DA in **reference-based** mode (prompt is DA, 0–100), measured as system-level pairwise accuracy on WMT22 MQM 2022 for en-de, en-ru and zh-en. The note does not say it is reference-based, and it should, because the 60.6% figure that follows is from the no-reference variant. \"Ahead of every trained metric\" is true. The strongest trained metric is MetricX XXL at 85.0%. The no-reference GPT4-DA scores 87.6%, which also beats every metric.\n- τ 0.36–0.38 vs COMET-22 0.37–0.43: CORRECT against Table 4 (GPT4-DA: 0.36/0.36/0.38; COMET-22: 0.37/0.40/0.43 for en-de/en-ru/zh-en). The rule is Kendall tau-b. \"Trailed\" holds for the DA prompt only. GEMBA-GPT4-SQM[noref] scores 0.359/0.432/0.416 (Appendix B), which beats COMET-22 on en-ru (0.432 vs 0.400). So \"per segment it trailed\" should be pinned to GPT4-DA.\n- 60.6% at 95: PARTLY CORRECT. Table 5 gives 60.6% for GPT-4 DA[noref], but the body text says \"60.5%\". The paper contradicts itself. The table is the source and the note's figure matches it. For reference-based DA (the 89.8% variant) the share at 95 is 53.3%.\n- \"per-item ties were everywhere and only the averages separated systems\": OVERSTATED. The authors frame the tie explanation as a conjecture (\"We conjecture that frequent segment-level ties ... may contribute\"). The note states it as fact.\n- \"GEMBA shows what a wide numeric scale does\": NOT SUPPORTED by this paper, and arguably the reverse. The paper's own contribution claim is that \"the least constrained template achieves the best performance\", and its Figure 1 caption calls the DA 0–100 prompt \"best-performing\". Narrower scales did not fix segment-level τ:\n  - GPT4-Classes (5 labels, ref) gets τ 0.222/0.267/0.273, worse than DA's 0.357/0.358/0.382.\n  - GPT4-Stars (1–5) gets 0.326/0.351/0.382.\n\n  At system level, GPT-4 Stars and Classes[noref] reach 91.2%, above DA's 89.8%. The paper never tests the claim that wide scales hurt. The note uses GEMBA to illustrate the Huyen point, and that framing needs rewording.\n- \"Models below GPT-3.5 gave unusable output\": CORRECT. GPT-2 and Ada gave no in-range replies, and Babbage and Curie were \"close to random guessing\".\n- \"3 language pairs, 54 systems, professional MQM labels, zero-shot\": CORRECT.\n\nCLAIMS\n- claim: The GPT-4 DA prompt with a reference sets the system-level state of the art on WMT22 MQM.\n  number: 89.8% (COMET-22 83.9%, MetricX XXL 85.0%, BLEU 70.8%)\n  setup: gpt-4, zero-shot, GEMBA-DA reference-based, MQM 2022 en-de/en-ru/zh-en, 54 systems, 106k segments, system-level pairwise accuracy\n  quote: \"GEMBA-GPT4-DA 89.8%\" / \"MetricX XXL 85.0%\" / \"COMET-22 83.9%\" / \"BLEU 70.8%\"\n  where: Table 2, p.3\n- claim: The no-reference GPT-4 DA prompt beats all QE metrics and all reference-based WMT22 metrics.\n  number: 87.6% (COMETKiwi[noref] 78.8%)\n  setup: same as above, no reference\n  quote: \"GEMBA-GPT4-DA[noref] 87.6%\" ; \"COMETKiwi[noref] 78.8%\"\n  where: Table 2, p.3\n- claim: At segment level, GPT-4 DA sits slightly behind the top trained metrics.\n  number: τ 0.36/0.36/0.38 vs COMET-22 0.37/0.40/0.43, MetricX XXL 0.36/0.42/0.43\n  setup: Kendall tau-b per language pair (en-de/en-ru/zh-en)\n  quote: \"GEMBA-GPT4-DA 89.8% 0.36 0.36 0.38\" ; \"COMET-22 83.9% 0.37 0.40 0.43\" ; \"GPT-4 models are slightly behind the top-performing metrics\"\n  where: Table 4 and section 4.4, p.4\n- claim: The scores cluster heavily on a few values, especially 95.\n  number: 60.6% at 95 for DA[noref] (table) or 60.5% (text); 53.3% for DA (ref); over three-quarters of DA scores are 80, 95 or 100\n  setup: GPT-4, all systems, all 3 pairs, MQM 2022\n  quote: \"95 53.3% 60.6% 44.6% 49.4%\" ; \"we notice that 60.5% of all scores are of value \\\"95\\\"\" ; \"Over three-quarters of all scores are either score 80, 95, or 100.\"\n  where: Table 5 and section 4.4, p.4\n- claim: There are no system-level ties despite the segment clumping. The authors conjecture that segment ties lower τ.\n  number: none\n  quote: \"We should note, that there are no system-level ties.\" ; \"We conjecture that frequent segment-level ties and the discrete scale thus may contribute to the lower Kendall's Tau\"\n  where: section 4.4, p.4\n- claim: Only GPT-3.5-class models and larger work. Babbage and Curie are near-random.\n  number: Bab DA 39.1%, Curie DA 54.4%, Dav2 DA 85.8%\n  quote: \"Babbage and Curie are useless for translation quality assessment\" ; \"DA 39.1% 54.4% 85.8% 81.0% 88.0% 86.5% 89.8%\"\n  where: section 4.3 and Table 3, p.4\n- claim: The best GPT-4 system-level accuracy comes from Stars (ref) and Classes[noref], not DA.\n  number: 91.2%\n  quote: \"GEMBA-GPT4-Classes[noref] 91.2% 0.304 0.390 0.313\" ; \"GEMBA-GPT4-Stars 91.2% 0.326 0.351 0.382\"\n  where: Appendix B Table 7\n- claim: Invalid answers are rare except with SQM prompts on weak models.\n  number: under 1% (about 1,000 of 106,758)\n  quote: \"less than 1% of the answers being invalid\" ; \"Roughly 1,000 answers equal to 1% of the total volume.\"\n  where: section 4.5, Table 6, p.5\n\nLIMITS\n- Results cover only 3 high-resource language pairs. The authors expect performance to drop for under-resourced languages.\n- SOTA holds at system level only (\"GEMBA's state-of-the-art performance only holds for the system level\"). The authors say \"more analysis is needed before using it as the main tool\".\n- Training-data contamination cannot be ruled out. The authors argue it is unlikely because the test set was released Dec 2022, after OpenAI's Sep 2021 data cutoff.\n- Zero-shot only, segment-by-segment, with no document context.\n- Invalid answers are re-sampled at higher temperature, which adds some non-determinism.\n- ChatGPT and part of GPT-4 are excluded from the failure counts.\n- There are no significance tests or confidence intervals on the accuracies.\n- Dated: the models are text-davinci-002/003, text-chat-davinci-002 and early gpt-4, all now retired.\n\nBUILDS ON: WMT22 Metrics task (Freitag et al., 2022a/b); pairwise accuracy (Kocmi et al., 2021); MQM (Freitag et al., 2021a); DA/SQM templates from Appraise (Federmann, 2018); DA scale (Graham et al., 2013); Kendall tau variants (Callison-Burch et al., 2011; Macháček and Bojar, 2014); GPT translation (Hendy et al., 2023); related work by Lu et al. (2023).\n\nCODE: GEMBA-DA prompt (Fig. 1 / App. A.1, p.3/p.10). The \"human reference\" line is dropped in noref mode.\n```\nScore the following translation from {source_lang} to {target_lang} with respect\nto the human reference on a continuous scale from 0 to 100, where score of zero means\n\"no meaning preserved\" and score of one hundred means \"perfect meaning and grammar\".\n{source_lang} source: \"{source_seg}\"\n{target_lang} human reference: {reference_seg}\n{target_lang} translation: \"{target_seg}\"\nScore:\n```\n\nFIGURES: Figure 1, p.3: \"The best-performing prompt based on Direct Assessment expecting a score between 0–100.\" It is the only figure: the whole method is one prompt, which shows faster than prose how bare the judge is. Table 5 (p.4, the score histogram) explains the clumping better than words do.\n\nPROBLEMS\n- The paper contradicts itself in three places:\n  - 60.5% (text) vs 60.6% (Table 5).\n  - \"least constrained template achieves the best performance\" vs GPT-4 Stars and Classes[noref] at 91.2%, above DA's 89.8%.\n  - Section 2.3 says \"seven GPT models\", but Table 1 and the abstract list nine.\n- Section 4.4 has a garbled sentence: systems with more 95s are said to get \"a lower average score\".\n- The extraction lost the bold formatting that marks the ref-only prompt lines and the bolded Table 3 cells.\n- The text contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can LLMs be used for effective quality assessment of machine translations?",
+ "hypothesis": "Plainly implied: if a model can translate, it may be able to tell good translations from bad ones.",
+ "contributions": [
+  "State-of-the-art GPT-based translation quality assessment on WMT22 metrics data (system level)",
+  "Four prompt templates; the least constrained template achieves the best performance",
+  "Nine GPT models evaluated; only GPT 3.5 and larger are capable",
+  "GEMBA with GPT-4 is only slightly behind the best metrics on segment-level scores"
+ ],
+ "method": {
+  "summary": "GEMBA prompts a GPT model zero-shot once per segment for a quality score (DA, SQM, stars or classes), with or without a human reference, and averages segment scores into a system score. It is compared with WMT22 metrics against MQM human labels.",
+  "task": "translation quality assessment (metric and quality estimation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WMT22 Metrics shared task MQM 2022 test set",
+    "role": "eval",
+    "size": "106k segments (106,758 per Table 6), 54 system outputs or human translations, about 2,000 sentences per language pair",
+    "split": "en-de, en-ru, zh-en; four domains: news, social, conversational, e-commerce",
+    "source": "WMT22 (Freitag et al., 2022b); MQM annotation by professionals",
+    "preprocessing": "Test set is not in plaintext; pre-processing needed (Limitations)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (gpt-4)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "default model; OpenAI gives limited information"
+    }
+   },
+   {
+    "name": "GPT-3.5-turbo, Davinci-003, ChatGPT (text-chat-davinci-002), Davinci-002",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Davinci-002: max request 4,000 tokens, data to June 2021",
+    "other": {}
+   },
+   {
+    "name": "Ada, Babbage, Curie (GPT-3), GPT-2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Ada: max request 2,048 tokens",
+    "other": {
+     "result": "GPT-2 and Ada produce no usable answers; Babbage and Curie near random"
+    }
+   },
+   {
+    "name": "MetricX XXL, BLEURT-20, COMET-22, COMET-20, UniTE, BLEU, chrF etc.",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "scores reproduced with the official WMT22 script"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: API sampling; on invalid answer temperature is increased iteratively and the first in-range answer taken",
+   "temperature": "not stated for main runs; 0 confirmed deterministic by re-running GEMBA-Dav2-DA[noref]",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one query per segment; re-prompted with added randomness only when the answer is outside the range; no seeds or repeated runs stated",
+   "prompting": "zero-shot, one segment per request, no few-shot or document context; templates DA, SQM, Stars, Classes, each with and without reference",
+   "retrieval": null,
+   "parameters": {
+    "score ranges": "DA and SQM 0-100; stars 1-5; classes mapped to 0-4",
+    "aggregation": "mean of segment scores per system",
+    "parsing": "first number of the reply; stars parsed from forms like 'two', '**', 'two stars'"
+   },
+   "other": {
+    "invalid answers": "Table 6; under 1% for almost all combinations except SQM; ChatGPT and parts of GPT-4 excluded from Table 6"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "System-level pairwise accuracy",
+     "definition": "|sign(metric delta)==sign(human delta)| / |all system pairs|",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Segment-level Kendall's Tau-b",
+     "definition": "Tau-b as in Freitag et al. 2022a, with tie adjustment, against MQM",
+     "unit": "tau",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "WMT22 metrics: MetricX XXL, BLEURT-20, COMET-22, COMET-20, UniTE, MS-COMET-22, MATESE, YiSi-1, BERTScore, f200spBLEU, chrF, BLEU, and QE metrics COMETKiwi, COMET-QE, UniTE-src, MS-COMET-QE-22, MATESE-QE"
+   ],
+   "protocol": "Automatic metric vs MQM human labels per language pair; single run; no significance test reported"
+  },
+  "availability": {
+   "code": "https://github.com/MicrosoftTranslator/GEMBA",
+   "weights": null,
+   "data": "scoring results released (stated in abstract)"
+  },
+  "prompts": [
+   {
+    "purpose": "GEMBA-DA prompt (reference-based; reference line dropped for [noref])",
+    "text": "Score the following translation from {source_lang} to {target_lang} with respect to the human reference on a continuous scale from 0 to 100, where a score of zero means \"no meaning preserved\" and score of one hundred means \"perfect meaning and grammar\".\n{source_lang} source: \"{source_seg}\"\n{target_lang} human reference: {reference_seg}\n{target_lang} translation: \"{target_seg}\"\nScore:",
+    "where": "Appendix A.1, Figure 1"
+   },
+   {
+    "purpose": "GEMBA-SQM",
+    "text": "Score the following translation from {source_lang} to {target_lang} with respect to the human reference on a continuous scale from 0 to 100 that starts with \"No meaning preserved\", goes through \"Some meaning preserved\", then \"Most meaning preserved and few grammar mistakes\", up to \"Perfect meaning and grammar\".\n{source_lang} source: \"{source_seg}\"\n{target_lang} human reference: \"{reference_seg}\"\n{target_lang} translation: \"{target_seg}\"\nScore (0-100):",
+    "where": "Appendix A.2"
+   },
+   {
+    "purpose": "GEMBA-Stars",
+    "text": "Score the following translation from {source_lang} to {target_lang} with respect to the human reference with one to five stars. Where one star means \"Nonsense/No meaning preserved\", two stars mean \"Some meaning preserved, but not understandable\", three stars mean \"Some meaning preserved and understandable\", four stars mean \"Most meaning preserved with possibly few grammar mistakes\", and five stars mean \"Perfect meaning and grammar\".\n{source_lang} source: \"{source_seg}\"\n{target_lang} human reference: \"{reference_seg}\"\n{target_lang} translation: \"{target_seg}\"\nStars:",
+    "where": "Appendix A.3"
+   },
+   {
+    "purpose": "GEMBA-Classes",
+    "text": "Classify the quality of translation from {source_lang} to {target_lang} with respect to the human reference into one of following classes: \"No meaning preserved\", \"Some meaning preserved, but not understandable\", \"Some meaning preserved and understandable\", \"Most meaning preserved, minor issues\", \"Perfect translation\".\n{source_lang} source: \"{source_seg}\"\n{target_lang} human reference: \"{reference_seg}\"\n{target_lang} translation: \"{target_seg}\"\nClass:",
+    "where": "Appendix A.4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we confirm that a temperature equal to zero always returns the same answer",
+    "where": "4.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Reference-based GEMBA-GPT4-DA tops all WMT22 metrics at system level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "system-level pairwise accuracy",
+   "value": 89.8,
+   "unit": "%",
+   "baseline_value": 83.9,
+   "n": null,
+   "setup": "WMT22 MQM 2022 test set, en-de/en-ru/zh-en, 54 systems, 106k segments, zero-shot GPT-4, DA prompt with reference",
+   "note": null,
+   "where": "4.1, Table 2",
+   "quote": "The results in Table 2 show that our reference-based GEMBA-GPT4-DA metric sets a new state of the art.",
+   "table": "Table 2, row GEMBA-GPT4-DA, column Accuracy"
+  },
+  {
+   "claim": "Reference-free GEMBA-GPT4-DA[noref] also beats every other metric, reference-based or not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "system-level pairwise accuracy",
+   "value": 87.6,
+   "unit": "%",
+   "baseline_value": 85.0,
+   "n": null,
+   "setup": "WMT22 MQM 2022 test set, en-de/en-ru/zh-en, 54 systems, 106k segments, zero-shot GPT-4, DA prompt without reference",
+   "note": "Best trained metric MetricX XXL 85.0%; best QE metric COMETKiwi 78.8%",
+   "where": "4.2, Table 2",
+   "table": "Table 2, row GEMBA-GPT4-DA[noref], column Accuracy"
+  },
+  {
+   "claim": "BLEU is the weakest metric at system level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "system-level pairwise accuracy",
+   "value": 70.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT22 MQM 2022 test set, en-de/en-ru/zh-en, 54 systems, 106k segments, zero-shot GPT-4",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BLEU, column Accuracy"
+  },
+  {
+   "claim": "Only GPT 3.5 and larger models can assess translation quality; Babbage and Curie are near random, GPT-2 and Ada give no usable answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "system-level pairwise accuracy (Babbage DA)",
+   "value": 39.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, Babbage DA, same test set",
+   "note": null,
+   "where": "4.3, Table 3",
+   "table": "Table 3, row DA, column Bab"
+  },
+  {
+   "claim": "Stars prompt with GPT-4 gets the highest system accuracy among DA/SQM/Stars (tie with Classes[noref]).",
+   "kind": "measured",
+   "source": null,
+   "metric": "system-level pairwise accuracy",
+   "value": 91.2,
+   "unit": "%",
+   "baseline_value": 89.8,
+   "n": null,
+   "setup": "WMT22 MQM 2022 test set, en-de/en-ru/zh-en, 54 systems, 106k segments, zero-shot GPT-4, Stars with reference",
+   "note": "Also Classes[noref] 91.2%; this exceeds DA 89.8%, though the intro says the least constrained template performs best",
+   "where": "Table 3",
+   "table": "Table 3, row Stars, column GPT4"
+  },
+  {
+   "claim": "GPT-4 DA is slightly behind top metrics at segment level (en-de).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau-b",
+   "value": 0.36,
+   "unit": "tau",
+   "baseline_value": 0.37,
+   "n": null,
+   "setup": "en-de, GEMBA-GPT4-DA",
+   "note": "COMET-22 0.37, MetricX XXL 0.36; Appendix B prints 0.357 vs COMET-22 0.368",
+   "where": "Table 4",
+   "table": "Table 4, row GEMBA-GPT4-DA, column en-de"
+  },
+  {
+   "claim": "GEMBA-Dav3-DA[noref] has much lower segment-level tau than other top metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau-b",
+   "value": 0.18,
+   "unit": "tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "en-de, Davinci-003 DA[noref]",
+   "note": null,
+   "where": "4.4, Table 4",
+   "table": "Table 4, row GEMBA-Dav3-DA[noref], column en-de"
+  },
+  {
+   "claim": "Over half of reference-based GPT-4 DA scores are exactly 95.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of segment scores equal to 95",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 DA with reference, all systems and three language pairs",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 95, column DA"
+  },
+  {
+   "claim": "Without a reference, 60.6% of GPT-4 DA scores are 95 (body text says 60.5%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of segment scores equal to 95",
+   "value": 60.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 DA[noref]",
+   "note": "Body text 4.4 prints 60.5%; Table 5 prints 60.6%",
+   "where": "4.4, Table 5",
+   "table": "Table 5, row 95, column DA[noref]"
+  },
+  {
+   "claim": "Authors conjecture segment-level ties lower tau; stated as conjecture only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 DA score distribution",
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Invalid answers are under 1% for almost all model/prompt combinations except SQM, so the metric is mostly deterministic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "invalid answer share",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 106758,
+   "setup": "All models except SQM-style prompts; full set size 106,758",
+   "note": "Table 6 excludes ChatGPT and parts of GPT-4",
+   "where": "4.5, Table 6"
+  }
+ ],
+ "limits": [
+  "Only three language pairs; performance likely lower for under-resourced languages",
+  "State-of-the-art holds only at system level; segment level still has room",
+  "More analysis needed before using as the main tool for deciding translation quality",
+  "Cannot definitively rule out that test data was in OpenAI training data (cutoff Sept 2021 vs test set released Dec 2022)",
+  "Zero-shot only; no few-shot, fine-tuning, MQM error prompts or document-level context",
+  "Non-determinism from re-prompting with added randomness; ChatGPT/Turbo often add explanations; no significance test, single run",
+  "GPT-4 and API model details undisclosed; models deprecated since"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GEMBA",
+   "definition": "GPT Estimation Metric Based Assessment",
+   "where": "Introduction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Appraise DA+SQM template; Freitag et al. 2021a",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prompts designed from DA+SQM human-assessment templates",
+   "quote": null
+  },
+  {
+   "work": "Freitag et al. 2022b WMT22 Metrics shared task",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MQM 2022 test set and official scoring script",
+   "quote": null
+  },
+  {
+   "work": "WMT22 metrics: MetricX XXL, COMET-22, BLEURT, UniTE, BLEU",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared against",
+   "quote": null
+  },
+  {
+   "work": "Hendy et al. 2023, How good are GPT models at machine translation",
+   "year": 2023,
+   "arxiv": "2302.09210",
+   "relation": "related",
+   "note": "GPT translates well for high-resource languages",
+   "quote": null
+  },
+  {
+   "work": "Lu et al. 2023, Error analysis prompting",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "independent related report corroborating high LLM performance",
+   "quote": null
+  },
+  {
+   "work": "GPT-2, GPT-3, InstructGPT (Ouyang et al. 2022), GPT-4",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models used as judges",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The best-performing prompt based on Direct Assessment expecting a score between 0-100.",
+   "page": 2,
+   "why": "Shows the whole GEMBA-DA prompt"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Distribution of all distinct segment-level score values for MQM 2022 for model GPT-4.",
+   "page": 6,
+   "why": "Shows the clumping at 95 that causes ties"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue EAMT 2023 not printed in PDF; recorded as preprint",
+  "Table 5 (60.6%) and body text (60.5%) disagree"
+ ]
 }

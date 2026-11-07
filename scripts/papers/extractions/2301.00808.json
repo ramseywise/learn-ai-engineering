@@ -1,19 +1,612 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.00808",
  "pdf": "data-science/sources/woo-2023-convnext-v2.pdf",
  "bib": {
   "title": "ConvNeXt V2: Co-designing and Scaling ConvNets with Masked Autoencoders",
-  "first_author": "Sanghyun Woo",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Sanghyun Woo",
+   "Shoubhik Debnath",
+   "Ronghang Hu",
+   "Xinlei Chen",
+   "Zhuang Liu",
+   "In So Kweon",
+   "Saining Xie"
+  ],
+  "first_author": "Woo",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2301.00808",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 55771,
+  "chars_total": 69039,
+  "engine": "pymupdf",
+  "skipped": "reference list after offset 55771 skimmed only to the arXiv-id level"
  },
- "legacy_report": "SOURCE: ConvNeXt V2: Co-designing and Scaling ConvNets with Masked Autoencoders. Woo, Debnath, Hu, Chen, Liu, Kweon, Xie. The PDF is arXiv:2301.00808v1 (2 Jan 2023) and prints no venue; \"CVPR 2023\" comes only from the note and references.md, so I could not confirm it here.\n\nCOVERAGE: 69,051 of 69,051 chars, all 15 pages, including appendices and tables. References were read for origins. Nothing skipped.\n\nQuotes keep the extraction's line-break hyphens. Page offsets: p1 0, p3 9633, p4 14680, p5 18027, p6 22769, p7 26866, p8 32003, p9 37137, p10 41688, p11 45770, p12 49875, p13 53933.\n\nCLAIMS\n\n- claim: The headline range mixes setups. Atto is an IN-1K result; Huge 88.9% uses IN-22K labels and larger images.\n  number: 76.7% (3.7M) to 88.9% (650M)\n  setup: 76.7 is FCMAE then IN-1K fine-tuning, 224 single crop (Table 14). 88.9 is FCMAE, then IN-22K fine-tuning, then IN-1K fine-tuning, at 512² (Table 5/15).\n  quote: \"a 650M Huge model that reaches a state-of-the-art 88.9% accuracy when using IN-22K labels\"\n  where: p2\n\n- claim: On IN-1K alone at 224, Huge reaches 86.3, below MAE ViT-H at 86.9.\n  number: 86.3 vs 86.9\n  setup: IN-1K pre-training, end-to-end fine-tuning, 224 px, 1600 pre-training epochs.\n  quote: \"ConvNeXt V2-H FCMAE 659M 1600 86.3\" and \"ViT-H MAE 632M 1600 86.9\"\n  where: p7, Table 4\n\n- claim: The 88.9 \"state of the art\" margin is 0.1 over MViTV2-H, and it holds only among public-data methods.\n  number: 88.9 vs 88.8\n  setup: IN-1K validation, 512²; comparators trained with IN-22K supervised labels; no seeds or error bars reported.\n  quote: \"ConvNeXt V2-H 5122 659M 600.7G 88.9\" and \"MViTV2-H 512 2 667M 763.5G 88.8\"\n  where: p8, Table 5\n\n- claim: FCMAE alone gives no gain over supervised training; GRN plus FCMAE does.\n  number: 83.8 (V1 sup), 83.7 (V1 FCMAE), 84.3 (V2 sup), 84.6 (V2 FCMAE)\n  setup: ConvNeXt-Base, IN-1K; FCMAE pre-trains 800 epochs and fine-tunes 100; supervised baseline 300 epochs.\n  quote: \"V1 + Sup, 300ep. V1 + FCMAE V2 + FCMAE / 83.8 83.7 84.6\"; \"ConvNeXt V2-B Supervised 89M 15.4G 84.3 ( +0.5)\"\n  where: p6, p7 Table 3\n\n- claim: The co-design gain grows with model size, at Large versus Base.\n  number: +1.3 Large, +0.8 Base\n  setup: 800-epoch FCMAE, fine-tuned, relative to V1 supervised.\n  quote: \"ConvNeXt V2-L FCMAE 198M 34.4G 85.6 (+1.3)\"\n  where: p7, Table 3\n\n- claim: Blocking leakage with sparse convolution is essential.\n  number: 79.3 without, 83.7 with\n  setup: ConvNeXt-Base, V1 block (no GRN), FCMAE on IN-1K, 800 pre-training and 100 fine-tuning epochs.\n  quote: \"w/o Sparse conv. w/ Sparse conv. / 79.3 83.7\"\n  where: p3\n\n- claim: GRN must be present in both pre-training and fine-tuning.\n  number: 78.8 dropped at fine-tuning, 80.6 added only at fine-tuning, 84.6 both\n  setup: ConvNeXt-Base, IN-1K fine-tuning.\n  quote: \"drop at ft. 78.8 / add at ft. 80.6 / both 84.6\"\n  where: p6, Table 2f\n\n- claim: GRN beats other normalisers and matches gating layers without their added parameters.\n  number: GRN 84.6 at 89M; LRN 83.2, BN 80.5, LN 83.8; SE 84.4 and CBAM 84.5 at 109M\n  setup: ConvNeXt-Base, IN-1K fine-tuning.\n  quote: \"BN [41] 80.5\"; \"SE [37] 84.4 109M\"; \"GRN 84.6 89M\"\n  where: p6, Table 2d-e\n\n- claim: FCMAE masks less than MAE's 75%, and 0.6 was the best ratio tested.\n  number: 0.6; 32×32 patches; best range 0.5-0.7\n  setup: Mask size 32×32, IN-1K accuracy (Figure 8).\n  quote: \"we randomly remove 60% of the 32× 32 patches\"; \"a masking ratio in the range of 0.5 to 0.7 produces the best results\"\n  where: p3, p13\n\n- claim: A single ConvNeXt block decoder ties the UNet and is faster.\n  number: 83.7 at 7.7 hours vs 12.9 hours; 1.7× speedup\n  setup: ConvNeXt-Base, 800 pre-training epochs, 256-core TPU-v3 pod using JAX; speedup relative to the UNet baseline.\n  quote: \"ConvNeXt block 83.7 7.7 1.7×\"; \"UNet w/ skip 83.7 12.9 -\"\n  where: p4, Table 1a\n\n- claim: Sparse encoding's efficiency gain is a moderate byproduct, measured against dense masked convolution.\n  number: 1.3× throughput, 2× lower max memory\n  setup: 224×224, ratio 0.6, batch 64 per GPU, MinkowskiEngine, PyTorch, RTX A6000; simulated masked input, 20 steps.\n  quote: \"a moderate increase in pre-training efﬁciency, with an average of 1.3× increase in throughput and a 2× decrease in max memory usage\"\n  where: p12\n\n- claim: COCO box AP improves with both proposals and beats Swin + SimMIM at each size.\n  number: Huge 55.7 vs 54.4; Base 52.9 vs 52.3; V1-B supervised 50.3\n  setup: Mask R-CNN, 3x schedule, single-scale test with soft-NMS, COCO val2017, IN-1K pre-trained initialisation.\n  quote: \"ConvNeXt V2-H FCMAE 2525G 55.7 75.2 61.8 48.9 72.8 53.6\"; \"Swin V2-H SimMIM − 54.4\"\n  where: p8, Table 6\n\n- claim: On ADE20K, V2 loses to Swin at Base and wins at Large and Huge; the paper calls Base and Large \"on par\".\n  number: Base 52.1 vs 52.8; Large 53.7 vs 53.5; Huge 55.0 vs 54.2; 57.0 with 22K\n  setup: UperNet, 160K iterations, multi-scale test, initialised from weights after supervised IN-1K fine-tuning.\n  quote: \"Swin-B SimMIM 512 2 52.8 121M 1181G\"; \"ConvNeXt V2-B FCMAE 5122 52.1 122M 1170G\"\n  where: p8, Table 7; p10\n\n- claim: FCMAE beats MoCo v3 on fine-tuning with the same encoder.\n  number: 84.9 vs 83.7 (supervised 84.3)\n  setup: ConvNeXt V2-Base, default recipes for each method; supervised is 300 epochs.\n  quote: \"Sup, 300ep. MoCo V3 FCMAE / 84.3 83.7 84.9\"\n  where: p13\n\n- claim: V2 has more class-generic late-layer features, which the authors link to transfer, while deferring more exploration.\n  number: none\n  setup: Class selectivity index on the IN-1K validation set, V1 and V2 FCMAE weights.\n  quote: \"We leave more explorations as a future study.\"\n  where: p12\n\nLIMITS\n- Only end-to-end fine-tuning is evaluated: \"we focus on the end-to-end ﬁne-tuning performance\" (p3). There are no linear-probe or frozen-feature results for FCMAE.\n- Feature collapse is called a \"potential issue\" (p2) and rests on visualisations plus cosine distance on 1,000 validation images. It is \"mainly observed\" in dimension-expansion MLP layers. The link from diversity to accuracy is inferred, not separately tested.\n- The authors concede Huge \"slightly lagged\" ViT on IN-1K and offer only speculation about why (\"might be\", p7).\n- The main results ran on TPU with dense masked convolution, not sparse convolution; the authors state the outputs are numerically identical (p9). Sparse libraries \"are not highly optimized for modern hardware\" (p11).\n- ADE20K initialises from supervised fine-tuned weights, because raw self-supervised weights performed worse (p10).\n- No seeds, variance or significance are reported, while many comparisons differ by 0.1-0.3. Competitor numbers partly come from other papers (\"Swins' results are from [77]\"), so they are not same-run comparisons.\n- \"State-of-the-art\" is dated to January 2023 and restricted to public data.\n\nBUILDS ON\n- ConvNeXt: Liu et al., 2022 [52].\n- MAE: He et al., 2022 [31].\n- BEiT: Bao et al., 2022 [3].\n- SimMIM: Xie et al., 2022 [77].\n- Submanifold sparse convolution: Graham and van der Maaten, 2017 [28]; Graham et al., 2018 [27].\n- Minkowski engine: Choy et al., 2019 [15].\n- PointContrast: Xie et al., 2020 [76].\n- Response normalisation: Krizhevsky et al., 2017 [45].\n- Lateral inhibition: Hartline et al., 1956 [30]; Campbell and Robson, 1968 [6].\n- SE: Hu et al., 2018 [37]. CBAM: Woo et al., 2018 [72]. LayerScale: Touvron et al., 2021 [65].\n- Small variants: Wightman, 2019 [70].\n- Masked ConvNet difficulty: Jing et al., 2022 [43].\n\nCODE (Algorithm 1, p5). The code divides by the channel mean while Eq. 2 divides by the sum; footnote 1 reconciles them by scaling by channel count C.\n```\ngx = torch.norm(X, p=2, dim=(1,2), keepdim=True)\nnx = gx / (gx.mean(dim=-1, keepdim=True)+1e-6)\nreturn gamma * (X * nx) + beta + X\n```\n\nFIGURES\n- Fig 1, p1, model scaling: shows the per-size gain at a glance, up to 86 on the axis, so it excludes the 88.9 result.\n- Fig 2, p3, FCMAE framework: the sparse encoder, decoder and masked-only loss in one picture.\n- Fig 3, p4, feature activation visualisation: makes dead or saturated channels visible, V1 against V2.\n- Fig 4, p5, feature cosine distance: shows collapse across layers for V1, V2, supervised and MAE ViT.\n- Fig 5, p6, block designs: exactly where GRN goes and LayerScale leaves.\n- Fig 8, p13, masking ratio: the curve behind 0.6.\n- Lower priority: Fig 6, p11 (sparse encoding efficiency); Fig 7, p12 (class selectivity).\n\nPROBLEMS\n- No embedded instructions. Extraction is clean apart from flattened superscripts (\"5122\" means 512²) and scrambled equations.\n- Source inconsistencies:\n  - Huge is 650M (abstract, p2, p7), 659M (Fig 1, Tables 4-5, A.1) and 660M (Tables 14-15).\n  - The Table 5 caption says \"IN-21K labels\" while the text says ImageNet-22K.\n  - The Table 15 caption says 224 crop but lists 384 and 512 rows.\n  - Appendix D expands GRN as \"Global Relation Network\".\n  - Table 14 V2-B and V2-L FCMAE (84.9, 85.8) match the 1600-epoch rows of Table 4, while Table 3 uses 800-epoch (84.6, 85.6). Table 14 states no epochs, so this pairing is my inference.\n\nCOMPARISON WITH THE NOTE\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/notes/04-convolutional-networks.md, line 196 (also frontmatter line 15). The grep confirms the citation. Line 196 is the only ConvNeXt mention in the note. References row: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/references.md:46.\n\nThe numbers themselves are correct: 76.7, 3.7M, 88.9 and 650M all match the abstract. The problems are setup and framing.\n\n1. MISSING SETUP, most important. \"Reported top-1 on ImageNet runs from 76.7% with a 3.7M Atto model to 88.9% with a 650M Huge.\" This reads as one scale under one protocol, but it is not (first claim above). The same-protocol range is 76.7 to 86.3 (IN-1K only, 224). This also breaks the repo rule that every number carries its setup.\n\n2. MISLEADING JUXTAPOSITION. The preceding sentences give MAE ViT-H \"on ImageNet alone\" 87.8% at 448 px. A reader will conclude 88.9 beats it. But V2's 88.9 uses IN-22K labels at 512², which is exactly the condition the MAE sentence excludes. On the same footing in this paper's Table 4, ViT-H MAE wins, 86.9 to 86.3. The note never says this, and the authors concede it. The 87.8 itself was not checked against this source, which reports MAE only at 224 (86.9).\n\n3. UNDER-QUALIFIED. \"Counters feature collapse\" states as settled what the paper calls a \"potential issue\". Its evidence is visualisations and a cosine-distance analysis on 1,000 images, in a FCMAE-trained ConvNeXt-Base. The definition also drops \"saturated\" (\"dead or saturated feature maps\") and that the behaviour is mainly in the dimension-expansion MLP layers. Minor.\n\n4. MISSING: no number shows that either component matters, although the note gives such numbers for BEiT and MAE. Candidates: V1 FCMAE 83.7 vs V1 supervised 83.8 vs V2 FCMAE 84.6 (ConvNeXt-Base); sparse convolution 79.3 vs 83.7. The note also omits the paper's central finding, that FCMAE without GRN does not beat supervised training.\n\n5. MISSING CAVEAT, frozen features. The note reports linear-probe weakness for BEiT and MAE, then says nothing for V2. The paper has no frozen-feature evaluation, so the silence could read as the problem being absent. \"Tests only fine-tuning\" would close this.\n\n6. MISSING SETUP, masking ratio. MAE's 75% is stated right before V2, and V2's 60% of 32×32 patches is not, so a reader may carry over 75%.\n\n7. IMPLIED EFFICIENCY. The note gives MAE's 3.3× compute saving and then says V2 \"uses sparse convolutions\". A reader may assume a similar saving, or that the numbers came from sparse hardware runs. The paper reports a moderate 1.3× throughput and 2× memory gain, against masked dense convolution, on GPU. The main results used masked dense convolution on TPU (numerically identical per the authors). The note's stated purpose, preventing leakage, is correct and matches the paper's \"primary purpose\". Sparse convolution applies only during pre-training and converts back to dense at fine-tuning.\n\n8. MINOR.\n   - \"3.7M\" and \"650M\" do not say parameters.\n   - \"ImageNet\" should be ImageNet-1K validation.\n   - Huge is 659M in the tables; 650M is the abstract's rounding.\n   - \"CVPR 2023\" is not verifiable from this PDF.\n   - The note jumps to V2 without ever introducing ConvNeXt V1, so \"V2\" has no antecedent.\n\nSupported as written: fully convolutional masked autoencoder; sparse convolutions to stop leakage; GRN as a new layer; the \"borrowed from vision transformers\" framing. Table 4 also lists ViT-B BEiT at 83.2 (800 epochs), consistent with the note's BEiT figure.\n\nLedger: scripts/papers/ledger.jsonl:838 shows status \"downloaded\" and topic \"classical-ml\" for this paper, though the note already cites it. I report that without judging it."
+ "type": "empirical",
+ "question": "Can masked-autoencoder pre-training be made to work for pure ConvNets (ConvNeXt) by co-designing the framework and the architecture?",
+ "hypothesis": "Simply combining ConvNeXt with MAE gives subpar results; adding feature competition (GRN) to the architecture alongside a fully convolutional MAE should fix feature collapse and make masked pre-training effective.",
+ "contributions": [
+  "A fully convolutional masked autoencoder (FCMAE) using sparse convolution in the encoder and a single ConvNeXt block decoder",
+  "Global Response Normalization (GRN) layer to counter feature collapse",
+  "ConvNeXt V2 model family from Atto (3.7M) to Huge (650M), with pre-trained models, reaching 88.9% on ImageNet-1K with public data only"
+ ],
+ "method": {
+  "summary": "FCMAE masks 60% of 32x32 patches, encodes only visible pixels with submanifold sparse convolution in a ConvNeXt encoder, and reconstructs patch-normalised pixels with one ConvNeXt block decoder (MSE on masked patches). ConvNeXt V2 adds GRN after the expansion MLP and drops LayerScale. Models are pre-trained on IN-1K, fine-tuned end-to-end, and transferred to COCO and ADE20K.",
+  "task": "masked image modeling pre-training and end-to-end fine-tuning for image classification, detection, segmentation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "both",
+    "size": null,
+    "split": "train for pre-training and fine-tuning; top-1 on validation, single 224x224 center crop",
+    "source": "Russakovsky et al.",
+    "preprocessing": "pre-training: RandomResizedCrop only; mask 60% of 32x32 patches"
+   },
+   {
+    "name": "ImageNet-22K",
+    "role": "train",
+    "size": null,
+    "split": "supervised intermediate fine-tuning (pre-train, IN-22K ft, IN-1K ft); 384^2 images",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO",
+    "role": "both",
+    "size": null,
+    "split": "train; val2017 for mAP box/mask",
+    "source": "Lin et al.",
+    "preprocessing": "large-scale jittering 1024x1024, scale [0.1,2.0]"
+   },
+   {
+    "name": "ADE20K",
+    "role": "both",
+    "size": null,
+    "split": "train 512x512 crops; multi-scale test [0.75,0.875,1.0,1.125,1.25] of 512x2048",
+    "source": "Zhou et al.",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ConvNeXt V2 (A/F/P/N/T/B/L/H)",
+    "role": "proposed",
+    "params": "3.7M, 5.2M, 9.1M, 15.6M, 28M(28.6M), 89M, 198M, 659M (Huge also printed 650M and 660M)",
+    "architecture": "ConvNeXt block + GRN, LayerScale removed; FCMAE encoder uses submanifold sparse conv",
+    "init_from": "random for FCMAE pre-training",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "blocks per stage: A/F/P (2,2,6,2); N (2,2,8,2); T (3,3,9,3); B,L,H (3,3,27,3)",
+    "hidden": "channels C: A40 F48 P64 N80 T96 B128 L192 H352",
+    "heads": null,
+    "context": null,
+    "other": {
+     "decoder": "single ConvNeXt block, dim 512 (Table 1 ablates 128 to 1024)"
+    }
+   },
+   {
+    "name": "ConvNeXt V1",
+    "role": "baseline",
+    "params": "A to XL (350M)",
+    "architecture": "ConvNeXt",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MAE ViT, BEiT ViT, SimMIM Swin, MoCo V3",
+    "role": "baseline",
+    "params": "88M to 658M",
+    "architecture": "transformers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers quoted from the cited papers"
+    }
+   }
+  ],
+  "training": {
+   "objective": "MSE between reconstruction and patch-wise normalised target pixels, on masked patches only; masking ratio 0.6",
+   "optimizer": "AdamW, beta1,beta2=0.9,0.95 (pre-training)",
+   "lr": "base lr 1.5e-4, linear scaling lr = base lr x batchsize/256",
+   "lr_schedule": "cosine decay",
+   "warmup": "40 epochs",
+   "batch_size": "4096",
+   "steps": null,
+   "epochs": "800 or 1600 pre-training; fine-tuning per Tables 9-13 (Base/Large 100, Huge 50, Tiny 300, A/F/P/N 600, IN-22K 90 N/T or 30 B/L/H, 5 warmup, IN-1K after 22K: 90)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05 pre-training",
+   "dropout": null,
+   "regularisation": "fine-tuning: RandAug(9,0.5), label smoothing 0.1 (0.2 for A/F/P/N), mixup 0.8, cutmix 1.0 (smaller for A/F/P/N), drop path 0.1 B / 0.2 L / 0.3 H, EMA 0.9999",
+   "hardware": "TPU v3-256 pods with JAX for main-paper experiments (dense masked conv); GPU with MinkowskiEngine and PyTorch for the release",
+   "compute": null,
+   "wall_clock": "Table 1a decoder ablation on 256-core TPU-v3 pod: ConvNeXt block 7.7 hours, UNet 12.9 hours",
+   "seeds": null,
+   "other": {
+    "fine_tune_IN1K_B_L": "AdamW, base lr 6.25e-3 (B/L) 1.25e-3 (H), layer-wise lr decay 0.6 (B/L) 0.75 (H), batch 1024, Table 11",
+    "fine_tune_tiny": "lr 8e-4, 300 epochs, batch 1024, Table 10",
+    "fine_tune_AFPN": "lr 2e-4, wd 0.05 (F) 0.3 (A/P/N), 600 epochs, Table 9",
+    "IN22K_ft": "lr 2.5e-4, batch 4096, 90 epochs, wd 0.05, Table 12",
+    "IN1K_after_22K": "lr 2.5e-5, wd 1e-8, batch 512, 30 epochs (B/L/H) 90 (N/T), Table 13",
+    "COCO": "Mask R-CNN, MMDetection, 3x (36 epochs), batch 32, AdamW lr 1e-4, wd 0.05, sweep layer decay {0.9,0.95}, drop path {0.2,0.3,0.4,0.5}, soft-NMS single scale test",
+    "ADE20K": "UperNet, MMSegmentation, 160K iterations, batch 16, AdamW wd 0.05, sweep lr {1e-4,2e-4,3e-4}, layer decay {0.8,0.9}, drop path {0.1-0.4}; initialised from IN-1K supervised fine-tuned weights",
+    "ablation_protocol": "ConvNeXt-Base, 800 epoch pre-train, 100 epoch fine-tune on IN-1K"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per cell; no seeds or error bars stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "gamma_beta_init": "0",
+    "GRN_channel_scale": "normalised value also scaled by channel count C (footnote 1)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "IN-1K top-1 val accuracy",
+     "definition": "single 224x224 center crop unless stated",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "COCO AP box / AP mask",
+     "definition": "val2017",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "ADE20K mIoU",
+     "definition": "UperNet, multi-scale test",
+     "unit": "mIoU",
+     "higher_is_better": true
+    },
+    {
+     "name": "feature cosine distance",
+     "definition": "mean pairwise (1-cos)/2 across channels per layer, 1,000 IN-1K val images",
+     "unit": "distance",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ConvNeXt V1 supervised (100 and 300 epoch)",
+    "ConvNeXt V1 FCMAE",
+    "BEiT, MAE, SimMIM",
+    "MoCo V3",
+    "SE, CBAM, LRN, BN, LN",
+    "IN-22K SOTA models in Table 5"
+   ],
+   "protocol": "Fine-tuning accuracy is the main measure; no seeds, variance or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/ConvNeXt-V2",
+   "weights": "pre-trained models provided (abstract)",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "results.IN1K Huge",
+    "quote": "ConvNeXt V2-H FCMAE 659M 1600 86.3",
+    "where": "Table 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ConvNeXt V2-H with FCMAE, IN-22K intermediate fine-tuning and 512^2 reaches 88.9% top-1 with public data only",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 88.9,
+   "unit": "%",
+   "baseline_value": 88.8,
+   "n": null,
+   "setup": "FCMAE pre-train, IN-22K ft, IN-1K ft; 512x512 input; 659M",
+   "note": "baseline is MViTV2-H 512^2 88.8; Huge printed 650M in abstract, 659M/660M elsewhere; Table 15 caption says single 224 crop though sizes up to 512 are listed",
+   "where": "Table 5, Table 15",
+   "table": "Table 5, row ConvNeXt V2-H 512^2, column Val acc."
+  },
+  {
+   "claim": "In ConvNeXt-Base, FCMAE alone only matches 300-epoch supervised, while FCMAE with GRN (V2) beats it",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.6,
+   "unit": "%",
+   "baseline_value": 83.8,
+   "n": null,
+   "setup": "ConvNeXt-Base, IN-1K, 800 epoch FCMAE + 100 epoch ft, 224 single crop",
+   "note": "V1 FCMAE 83.7; V1 supervised 300ep 83.8; supervised 100ep 82.7",
+   "where": "Table 3, Sec 3-4",
+   "table": "Table 3, row ConvNeXt V2-B FCMAE, column Val acc."
+  },
+  {
+   "claim": "FCMAE pre-training with the V1 architecture gives 83.7 vs 82.7 for 100-epoch supervised, but below 83.8 of 300-epoch supervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 83.7,
+   "unit": "%",
+   "baseline_value": 82.7,
+   "n": null,
+   "setup": "ConvNeXt-Base V1, IN-1K",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "we ﬁnd that our FCMAE pre-training provides better initialization than the random baseline (i.e., 82.7 →83.7), but it still needs to catch up to the best performance"
+  },
+  {
+   "claim": "Sparse convolution matters: without it accuracy falls from 83.7 to 79.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 79.3,
+   "unit": "%",
+   "baseline_value": 83.7,
+   "n": null,
+   "setup": "ConvNeXt-Base, FCMAE 800 epochs, IN-1K ft",
+   "note": "inline text has no label tying values; read as w/o=79.3, w/=83.7 from the order of labels",
+   "where": "Sec 3",
+   "quote": "w/o Sparse conv. w/ Sparse conv. 79.3 83.7",
+   "table": "Sec 3 inline figure, w/o Sparse conv vs w/ Sparse conv"
+  },
+  {
+   "claim": "GRN gain on the V2 Large model with FCMAE is 85.6 vs 84.4 for V1 FCMAE",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 85.6,
+   "unit": "%",
+   "baseline_value": 84.4,
+   "n": null,
+   "setup": "ConvNeXt-Large, 800 epoch FCMAE, IN-1K 224",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ConvNeXt V2-L FCMAE, column Val acc."
+  },
+  {
+   "claim": "GRN has a small effect under supervised training",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.3,
+   "unit": "%",
+   "baseline_value": 83.8,
+   "n": null,
+   "setup": "ConvNeXt-Base supervised, V1 vs V2, IN-1K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ConvNeXt V2-B Supervised, column Val acc."
+  },
+  {
+   "claim": "Huge with FCMAE 1600 epochs on IN-1K only reaches 86.3, below ViT-H MAE 86.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 86.3,
+   "unit": "%",
+   "baseline_value": 86.9,
+   "n": null,
+   "setup": "IN-1K only, 224 end-to-end ft",
+   "note": "ViT-H MAE 632M, 1600 epochs",
+   "where": "Table 4",
+   "table": "Table 4, row ConvNeXt V2-H FCMAE 1600, column FT acc."
+  },
+  {
+   "claim": "Base FCMAE at 1600 epochs reaches 84.9 vs 84.6 at 800",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.9,
+   "unit": "%",
+   "baseline_value": 84.6,
+   "n": null,
+   "setup": "ConvNeXt V2-B, IN-1K",
+   "note": "Table 14 prints 84.9 for V2-B FCMAE without stating the epochs; Table 3 prints 84.6 at 800",
+   "where": "Table 4",
+   "table": "Table 4, row ConvNeXt V2-B FCMAE 1600, column FT acc."
+  },
+  {
+   "claim": "Atto (3.7M) FCMAE reaches 76.7 vs 75.7 for V1 supervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 76.7,
+   "unit": "%",
+   "baseline_value": 75.7,
+   "n": null,
+   "setup": "IN-1K, single 224 crop; pre-training epochs for this model not stated",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row ConvNeXt V2-A FCMAE, column Val acc."
+  },
+  {
+   "claim": "L2-norm aggregation gives the best GRN result (84.6) vs global average pooling 83.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.6,
+   "unit": "%",
+   "baseline_value": 83.7,
+   "n": null,
+   "setup": "ConvNeXt-Base ablation",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row L2, column ft"
+  },
+  {
+   "claim": "Dropping GRN at fine-tuning or adding it only at fine-tuning hurts",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 78.8,
+   "unit": "%",
+   "baseline_value": 84.6,
+   "n": null,
+   "setup": "ConvNeXt-Base ablation",
+   "note": "add at ft. 80.6",
+   "where": "Table 2f",
+   "table": "Table 2f, row drop at ft. and add at ft., column ft"
+  },
+  {
+   "claim": "GRN beats SE and CBAM with no extra parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.6,
+   "unit": "%",
+   "baseline_value": 84.5,
+   "n": null,
+   "setup": "ConvNeXt-Base, 89M vs 109M",
+   "note": "SE 84.4 (109M), CBAM 84.5 (109M)",
+   "where": "Table 2e",
+   "table": "Table 2e, row GRN, column ft"
+  },
+  {
+   "claim": "GRN compared to other normalisation: BN 80.5, LRN 83.2, LN 83.8, GRN 84.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 80.5,
+   "unit": "%",
+   "baseline_value": 84.6,
+   "n": null,
+   "setup": "ConvNeXt-Base ablation",
+   "note": null,
+   "where": "Table 2d",
+   "table": "Table 2d, row BN, column ft"
+  },
+  {
+   "claim": "Single ConvNeXt block decoder matches the UNet decoder and is 1.7x faster in pre-training",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 83.7,
+   "unit": "%",
+   "baseline_value": 83.7,
+   "n": null,
+   "setup": "ConvNeXt-Base, 800 epochs, 256-core TPU-v3 pod JAX",
+   "note": "7.7 hours vs 12.9 hours UNet w/ skip; transformer decoder 83.4",
+   "where": "Table 1a",
+   "table": "Table 1a, row ConvNeXt block, column ft"
+  },
+  {
+   "claim": "Masking ratio 0.6 gives the best result",
+   "kind": "measured",
+   "source": null,
+   "metric": "best masking ratio",
+   "value": 0.6,
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ConvNeXt-Base, mask 32x32",
+   "note": null,
+   "where": "App D, Fig 8",
+   "quote": "a masking ratio of 0.6 providing the highest performance"
+  },
+  {
+   "claim": "Sparse encoding gives about 1.3x throughput and 2x lower memory than masked dense conv",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput speedup",
+   "value": 1.3,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinkowskiEngine v0.5.4, PyTorch 1.8.0, RTX A6000, batch 64 per GPU, 224x224, mask 0.6",
+   "note": null,
+   "where": "App C, Fig 6",
+   "quote": "with an average of 1.3× increase in throughput and a 2×"
+  },
+  {
+   "claim": "COCO box AP of ConvNeXt V2-H FCMAE is 55.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO AP box",
+   "value": 55.7,
+   "unit": "AP",
+   "baseline_value": 54.4,
+   "n": null,
+   "setup": "Mask R-CNN, 3x schedule, IN-1K pretrained, 2525G FLOPs",
+   "note": "Swin V2-H SimMIM 54.4",
+   "where": "Table 6",
+   "table": "Table 6, row ConvNeXt V2-H FCMAE, column AP box"
+  },
+  {
+   "claim": "ADE20K mIoU of ConvNeXt V2-H FCMAE with 22K ft at 640^2 is 57.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20K mIoU",
+   "value": 57.0,
+   "unit": "mIoU",
+   "baseline_value": 55.0,
+   "n": null,
+   "setup": "UperNet, 707M",
+   "note": "55.0 is the same model without 22K ft, 512^2",
+   "where": "Table 7",
+   "table": "Table 7, row ConvNeXt V2-H FCMAE, 22K ft, column mIoU"
+  },
+  {
+   "claim": "FCMAE beats MoCo V3 as pre-training for ConvNeXt V2-Base",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1K top-1",
+   "value": 84.9,
+   "unit": "%",
+   "baseline_value": 83.7,
+   "n": null,
+   "setup": "end-to-end ft, default recipes",
+   "note": "labels order Sup 300ep=84.3, MoCo V3=83.7, FCMAE=84.9",
+   "where": "App D",
+   "quote": "Sup, 300ep. MoCo V3 FCMAE 84.3 83.7 84.9",
+   "table": "App D, Comparison with contrastive SSL, FCMAE vs MoCo V3"
+  }
+ ],
+ "limits": [
+  "Only end-to-end fine-tuning is reported; no linear-probe or frozen-feature evaluation.",
+  "No seeds, error bars or significance tests; differences of 0.1 to 0.5 points are single runs.",
+  "Huge trails ViT-H MAE on IN-1K alone (86.3 vs 86.9); authors suggest bigger ViTs benefit more from SSL.",
+  "Feature collapse is called a 'potential issue', shown by visualisation and cosine distance; no causal test.",
+  "Sparse conv libraries are not highly optimised; the efficiency gain depends on framework (authors concede).",
+  "ADE20K models start from IN-1K supervised fine-tuned weights, not raw SSL weights.",
+  "Pre-training epochs for the small models in Table 14 are not stated.",
+  "Main experiments ran on TPU with dense masked conv; the GPU sparse version is a PyTorch reproduction."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "FCMAE",
+   "definition": "Fully Convolutional Masked AutoEncoder: sparse-conv ConvNeXt encoder with a single ConvNeXt block decoder",
+   "where": "Sec 3"
+  },
+  {
+   "term": "GRN",
+   "definition": "Global Response Normalization: global L2 aggregation, divisive normalisation across channels, and calibration, with learnable gamma, beta and a residual",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ConvNeXt (A ConvNet for the 2020s)",
+   "year": 2022,
+   "arxiv": "2201.03545",
+   "relation": "extends",
+   "note": "base architecture; V1 supervised baselines",
+   "quote": null
+  },
+  {
+   "work": "Masked autoencoders are scalable vision learners",
+   "year": 2022,
+   "arxiv": "2111.06377",
+   "relation": "extends",
+   "note": "masking recipe and baseline (ViT MAE)",
+   "quote": null
+  },
+  {
+   "work": "Submanifold sparse convolutional networks",
+   "year": 2017,
+   "arxiv": "1706.01307",
+   "relation": "uses-method",
+   "note": "sparse conv in encoder",
+   "quote": null
+  },
+  {
+   "work": "BEiT",
+   "year": 2022,
+   "arxiv": "2106.08254",
+   "relation": "baseline",
+   "note": "Table 4 and IN-22K intermediate ft",
+   "quote": null
+  },
+  {
+   "work": "SimMIM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Swin comparisons, results quoted",
+   "quote": null
+  },
+  {
+   "work": "MoCo V3",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "contrastive comparison",
+   "quote": null
+  },
+  {
+   "work": "Squeeze-and-excitation / CBAM / LRN / BN / LN",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 2d,e",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-1K / ImageNet-22K, COCO, ADE20K",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our FCMAE framework",
+   "page": 4,
+   "why": "shows sparse encoder plus light decoder"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Feature cosine distance analysis",
+   "page": 5,
+   "why": "evidence of collapse in V1 FCMAE"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "ConvNeXt Block Designs",
+   "page": 6,
+   "why": "where GRN sits and LayerScale is dropped"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "gx = torch.norm(X, p=2, dim=(1,2), keepdim=True)\nnx = gx / (gx.mean(dim=-1, keepdim=True)+1e-6)\nreturn gamma * (X * nx) + beta + X",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Huge size printed as 650M (abstract), 659M (Tables 4,5), 660M (Tables 14,15).",
+  "Appendix D calls GRN 'Global Relation Network'.",
+  "Table 15 caption says single 224 crop but lists 384 and 512 sizes.",
+  "Table 14 lists V2-B FCMAE 84.9 (V2-L 85.8, H 86.3) without epochs; these match the 1600-epoch rows of Table 4, whereas Table 3 gives 84.6 and 85.6 at 800 epochs.",
+  "Inline small tables in the text (sec 3, 4, D) lost their labels in extraction; values are read from order."
+ ]
 }

@@ -1,19 +1,553 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2111.12681",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/fu-2021-violet.pdf",
  "bib": {
-  "title": "VIOLET : End-to-End Video-Language Transformers with Masked Visual-token Modeling",
+  "title": "VIOLET: End-to-End Video-Language Transformers with Masked Visual-token Modeling",
+  "authors": [
+   "Tsu-Jui Fu",
+   "Linjie Li",
+   "Zhe Gan",
+   "Kevin Lin",
+   "William Yang Wang",
+   "Lijuan Wang",
+   "Zicheng Liu"
+  ],
   "first_author": "Fu",
   "year": 2021,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2111.12681",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 71548,
+  "chars_total": 71548,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figures 6-9 are qualitative images."
  },
- "legacy_report": "SOURCE: VIOLET: End-to-End Video-Language Transformers with Masked Visual-token Modeling. Tsu-Jui Fu, Linjie Li, Zhe Gan, Kevin Lin, William Yang Wang, Lijuan Wang, Zicheng Liu (UC Santa Barbara, Microsoft). Preprint, arXiv 2111.12681v2, 16 Apr 2022 (v1 Nov 2021).\n\nCOVERAGE: I read all 71,512 of 71,512 chars: main text, Tables 1-8, Appendices A-E (downstream setup, masking strategy, VCR, qualitative examples, limitations) and the references. I skimmed the references for origins only. Figures 6-9 are qualitative images with no numbers.\n\nHEADLINE FOR THE CALLER: **The paper has no frame-count ablation.** It never varies T. The only frame numbers are fixed design choices: T=4 in pretraining, T=5 for downstream tasks, and one cross-paper comparison (VIOLET with 5 frames beats ClipBERT with 16). The most useful frame claim it supports is that **5 sparsely sampled 224x224 frames with temporal modelling beat 16 mean-pooled frames by about 10 R@1 points**. Even this comparison confounds frame count with encoder and pretraining data.\n\nTwo architecture points matter for the note:\n- **VIOLET does not pool before a language model.** It concatenates Video Swin features (one per frame) with word embeddings and feeds them into a single cross-modal BERT. The paper's argument is *against* pooling: mean pooling scores worst.\n- **Retrieval needs one model pass per pair.** It is a binary match classifier on [CLS] for every text-video pair, not separate embeddings with dot-product search. So it is a reranker-style cross-encoder, not something you can index for multimodal RAG. The paper does not discuss retrieval cost.\n\nCLAIMS\n- claim: Temporal modelling with Video Swin beats mean pooling and concatenation of per-frame features, in every setting tested, and the gap grows with video-text pretraining.\n  number: with WebVid pretraining, MSRVTT R@1 is 20.8 (Mean), 23.5 (Concat), 27.0 (VT)\n  setup: Table 3. Ablation on TGIF-Action/Transition and MSRVTT/DiDeMo retrieval. Mean and Concat use ResNet-50 frame features. Three settings: random init, ImageNet init, plus WebVid pretraining.\n  quote: \"Mean 80.3 88.7 20.8 / 44.9 / 58.1 17.9 / 43.5 / 51.3 Concat 82.5 91.2 23.5 / 51.9 / 63.0 22.2 / 50.5 / 62.6 VT 85.8 92.1 27.0 / 56.5 / 68.8 26.1 / 56.9 / 68.9\"; \"VT consistently outperforms Mean and Concat over the 4 datasets across all settings.\"\n  where: Table 3, about char 28,000-29,500 (p7)\n- claim: Five frames with temporal modelling beat ClipBERT's 16 frames by about 10 R@1 points.\n  number: +10% R@1; 5 vs 16 frames\n  setup: Finetuned text-to-video retrieval on MSRVTT (1K-A) and DiDeMo. Different pretraining data and encoders, so frame count is not isolated.\n  quote: \"VIOLET outperforms ClipBERT [18] by +10% on R@1 on both MSRVTT and DiDeMo, even though VIOLET uses even less frames (Ours: 5 frames vs. ClipBERT: 16 frames).\"\n  where: Sec 4.2, about char 24,900 (p6)\n- claim: The frame budget is fixed at 4 frames for pretraining and 5 for downstream tasks, all at 224x224 with 32x32 patches.\n  number: T=4 pretrain, T=5 downstream\n  setup: implementation details\n  quote: \"During pre-training, we sparsely sample T = 4 video frames and resize them into 224x224 to split into patches with H = W = 32.\"; \"For all downstream tasks, we adopt the same video frame size (224x224) and patch size (32x32) but 5 sparse-sampled frames.\"\n  where: Sec 4.1, about char 19,500-20,800 (p5)\n- claim: Finetuned retrieval sets new end-to-end results but still trails CLIP4Clip, which starts from CLIP's 400M image-text pairs.\n  number: MSRVTT 34.5 / 63.0 / 73.4; DiDeMo 32.6 / 62.8 / 74.7; YouCook2 35.7 / 66.7 / 78.2; LSMDC 16.1 / 36.6 / 41.2 (R@1/5/10). CLIP4Clip MSRVTT R@1 is 42.1.\n  setup: Table 1a, pretraining on YT-Temporal, WebVid and CC, then finetuning\n  quote: \"VIOLET 34.5 / 63.0 / 73.4 32.6 / 62.8 / 74.7 35.7 / 66.7 / 78.2 16.1 / 36.6 / 41.2\"; \"Clip4Clip [76] 42.1 / 71.9 / 81.4 43.4 / 70.2 / 80.6 - 21.6 / 41.8 / 49.8\"\n  where: Table 1a, about char 21,500-22,500 (p6)\n- claim: Zero-shot retrieval beats Frozen but not CLIP.\n  number: MSRVTT 25.9 / 49.5 / 59.7; DiDeMo 23.5 / 49.8 / 59.8; CLIP MSRVTT is 31.2 R@1\n  setup: Table 1b. Zero-shot uses the pretrained VTM head.\n  quote: \"VIOLET 25.9 / 49.5 / 59.7 23.5 / 49.8 / 59.8\"; \"CLIP [76, 78] 31.2 / 53.7 / 64.2 -\"\n  where: Table 1b, about char 24,000 (p6)\n- claim: Masked visual-token modelling (MVM: predicting DALL-E dVAE tokens of masked patches) is the only masked-visual objective that helps on every ablation task.\n  number: MSRVTT R@1 is 24.4 for VTM+MLM, against 26.0 (MCM), 26.2 (MFM), 26.6 (MPM), 27.0 (MVM). TGIF-Action is 85.4 against 85.8.\n  setup: Table 4. All variants pretrained on WebVid.\n  quote: \"VTM+MLM 85.4 91.6 24.4 / 54.4 / 68.1 25.8 / 54.2 / 67.0\"; \"+ MVM 85.8 92.1 27.0 / 56.5 / 68.8 26.1 / 56.9 / 68.9\"; \"MVM leads to the best performance on all tasks\"\n  where: Table 4, about char 30,500-32,500 (p7)\n- claim: MVM pretraining on video alone, with no text, still helps, and higher MVM accuracy tracks better downstream results.\n  number: 21.6% MVM accuracy on 100% of YT-Temporal; +2.3% TGIF-Action; +2.5 R@5 on MSRVTT\n  setup: Figure 4, MVM-only pretraining on 10/20/50/100% of YT-Temporal\n  quote: \"with a 21.6% MVM accuracy on 100% YT-Temporal data, our model achieves +2.3% improvement on TGIF-Action and +2.5% R@5 increase on MSRVTT.\"\n  where: Sec 4.3, about char 33,500 (p8)\n- claim: VideoQA beats ClipBERT on every task and comes close to MERLOT at about 1/14 of the pretraining compute.\n  number: TGIF-Action 92.5, Transition 95.7, Frame 68.9, MSRVTT-MC 91.9, MSRVTT-QA 43.9, LSMDC-MC 82.8, LSMDC-FiB 53.7, MSVD-QA 47.9. 2,240 V100 GPU hours against 30,720 TPU v3 hours.\n  setup: Table 2. Accuracy at 224x224. MERLOT finetunes at up to 704x704.\n  quote: \"VIOLET 92.5 95.7 68.9 91.9 43.9 82.8 53.7 47.9\"; \"The overall pre-training of MERLOT takes 30,720 TPU hours on TPU v3. In contrast, we pre-train VIOLET for 5 epochs, which results in 2,240 GPU hours on V100 GPUs.\"\n  where: Table 2 and Sec 4.2, about char 25,500-27,500 (p6)\n- claim: The choice of pretraining data decides which task improves. Noisy ASR text from 180M clips helps QA; 5.5M clean alt-text pairs help retrieval more.\n  number: MSRVTT R@1 is 25.4 (YT-Temporal) against 34.2 (WebVid+CC); TGIF-Action is 91.0 against 87.1\n  setup: Table 5\n  quote: \"VIOLET 87.1 93.6 34.2 / 63.5 / 73.6 32.9 / 63.0 / 74.5\"; \"VIOLET 91.0 94.7 25.4 / 54.3 / 64.6 26.7 / 56.4 / 64.6\"; \"much worse than WebVid+CC with a smaller data size (5.5M vs. 180M)\"\n  where: Table 5 and Sec 4.3, about char 33,000-36,000 (p8)\n- claim: Combining blockwise and attended masking works best; random masking gains the least.\n  number: MSRVTT R@1 is 24.3 (random) against 27.0 (BM+AM)\n  setup: Table 7, WebVid pretraining\n  quote: \"Random 83.7 90.8 24.3 / 54.8 / 66.7 24.2 / 53.5 / 67.6\"; \"BM+AM 85.8 92.1 27.0 / 56.5 / 68.8 26.1 / 56.9 / 68.9\"\n  where: Appendix B, about char 43,500 (p10)\n- claim: Higher input resolution helps, which makes resolution a second cost knob alongside frame count.\n  number: VCR 74.9 at 224x224, 76.3 at 384x384, against MERLOT's 75.1 at 384x704\n  setup: Table 8. Both models pretrained on YT-Temporal for 5 epochs.\n  quote: \"MERLOT [19] 384x704 75.1 VIOLET 224x224 74.9 VIOLET 384x384 76.3\"\n  where: Appendix C, about char 44,500 (p10)\n\nLIMITS:\n- **No frame-count sweep.** No sampling-strategy comparison (uniform vs other). No latency or inference-cost numbers. No seeds, variance or confidence intervals: every result is a single run.\n- **The ClipBERT and MERLOT comparisons confound** frame count, encoder, resolution and data. MERLOT is greyed out as too expensive to compare directly.\n- **Retrieval is a cross-encoder** (binary match per pair), so it is not an indexable embedding retriever.\n- **The authors concede:** sparse frames only, and dense full-length video (for example TGIF-Count) is future work; no audio; trails CLIP-initialised CLIP4Clip; they \"believe VIOLET can further improve with larger frame resolution and longer pre-training epoch if computational resources permit.\"\n- **Dated:** a 2021 BERT-style fusion encoder with no LLM. It predates video-LLMs, so it does not speak directly to \"pool before the language model\".\n- Hardware: finetuning on 8 V100s; pretraining 2,240 GPU hours.\n\nBUILDS ON: ClipBERT (Lei et al., CVPR 2021) for sparse sampling; Video Swin Transformer (Liu et al., arXiv 2106.13230, 2021); BEiT (Bao, Dong, Wei, arXiv 2106.08254, 2021) for masked visual tokens; VIMPAC (Tan et al., 2021) for blockwise masking; DALL-E dVAE (Ramesh et al., 2021) and VQ-VAE (van den Oord et al., NeurIPS 2017); MERLOT (Zellers et al., NeurIPS 2021) for YT-Temporal and attended masking for MLM; Frozen in Time (Bain et al., ICCV 2021) for WebVid and joint image-video training; UNITER (Chen et al., ECCV 2020) for MRM; HERO (Li et al., EMNLP 2020) for MFM; BERT (Devlin et al., NAACL 2019).\n\nCODE: none in the paper. The repository is cited as github.com/tsujuifu/pytorch_violet (footnote 1, p1). Equation 4 shows the fusion input, quoted verbatim: \"h = CT([v + pv, [CLS], w + px])\" (Sec 3.1, p3).\n\nFIGURES:\n- Fig 2 (p3), \"Overview of the proposed end-to-end VIdeO-LanguagE Transformer (VIOLET), with Video Swin Transformer, Language Embedder, and Cross-modal Transformer...\" It shows at a glance that frame features are not pooled: they are concatenated with text into a single fusion transformer.\n- Fig 3 (p5), \"Masking Strategy of MLM and MVM, including Blockwise Masking (BM) and Attended Masking (AM).\" It makes the space-time block masking easy to see.\n- Fig 4 (p7), \"MVM accuracy vs. downstream performance...\" It shows the scaling trend in one plot.\n- Table 3 (p7) is the most useful exhibit for the note's mean-pool vs temporal-model point.\n\nPROBLEMS:\n- The extraction is clean. Minor faults: \"0-0\" placeholders stand for missing table values; the blue highlighting marking rows that use extra modalities is lost; character offsets are approximate.\n- No embedded instructions were found.\n- Source path: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/fu-2021-violet.pdf"
+ "type": "empirical",
+ "question": "Does explicit temporal modelling with a video transformer plus a discrete-token masked visual pre-training task improve end-to-end video-language models over mean-pooled or concatenated frame features?",
+ "hypothesis": "Mean pooling or concatenation of sparse frame features loses temporal information; a Video Swin encoder and Masked Visual-token Modeling (MVM) will improve video-language tasks.",
+ "contributions": [
+  "VIOLET, a fully end-to-end video-language transformer modelling spatial-temporal dynamics",
+  "Masked Visual-token Modeling, recovering masked patches in a discrete visual token space",
+  "State of the art on 4 text-to-video retrieval and 5 out of 8 video question answering tasks",
+  "Ablations showing the need for temporal video modelling and the effect of MVM across pre-training settings"
+ ],
+ "method": {
+  "summary": "VIOLET feeds T sparsely sampled frames to a Video Swin Transformer, concatenates the per-frame features with BERT word embeddings and fuses them in a cross-modal BERT transformer. Pre-training uses VTM, MLM and the new MVM (targets from DALL-E's dVAE) with blockwise and attended masking, then fine-tunes end to end per task.",
+  "task": "video-language pre-training; text-to-video retrieval and video question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "YT-Temporal-180M",
+    "role": "pretrain",
+    "size": "6M YouTube videos, 180M video-subtitle pairs (every 4 consecutive segments, avg segment 9.29 s)",
+    "split": null,
+    "source": "MERLOT (Zellers et al.); ASR subtitles",
+    "preprocessing": "ASR text concatenated for each middle frame as text input"
+   },
+   {
+    "name": "WebVid-2.5M",
+    "role": "pretrain",
+    "size": "2.5M video-text pairs",
+    "split": null,
+    "source": "Bain et al. (Frozen), web-scraped",
+    "preprocessing": null
+   },
+   {
+    "name": "ConceptualCaptions-3M",
+    "role": "pretrain",
+    "size": "3.3M image-text pairs",
+    "split": null,
+    "source": "web",
+    "preprocessing": "images treated as T=1 video"
+   },
+   {
+    "name": "MSRVTT",
+    "role": "both",
+    "size": "10K videos, 200K annotations",
+    "split": "train on 9K train+val, evaluate on 1K-A test",
+    "source": "Xu et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "DiDeMo",
+    "role": "both",
+    "size": "10K videos, 40K sentences",
+    "split": "standard splits",
+    "source": "Flickr",
+    "preprocessing": "all sentences of a video concatenated into a paragraph"
+   },
+   {
+    "name": "YouCook2",
+    "role": "both",
+    "size": "14K clips, 2K cooking videos, 89 recipes",
+    "split": "report on entire validation clips",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LSMDC",
+    "role": "both",
+    "size": "118K clips from 202 movies",
+    "split": "1K test clips",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TGIF-QA (Action, Transition, Frame), MSRVTT-MC/QA, MSVD-QA, LSMDC-MC/FiB",
+    "role": "both",
+    "size": "MSRVTT-QA 243K questions over 10K videos; MSVD-QA 47K questions over 2K videos",
+    "split": "standard splits",
+    "source": null,
+    "preprocessing": "open-ended QA as classification over most common answers: 1,540 (TGIF-Frame), 1,500 (MSRVTT-QA), 1,000 (MSVD-QA), 908 (LSMDC-FiB); multiple choice 5 options"
+   },
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": null,
+    "split": "Q->A subtask",
+    "source": null,
+    "preprocessing": "colored highlights on referenced entities as in MERLOT"
+   }
+  ],
+  "models": [
+   {
+    "name": "VIOLET",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Video Swin Transformer + Language Embedder + Cross-modal Transformer (BERT-Base)",
+    "init_from": "VideoSwin-Base (Kinetics-400); BERT-Base for language embedder and cross-modal transformer",
+    "tokenizer": "WordPiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frames_pretrain": "T=4",
+     "frames_downstream": "T=5",
+     "frame_size": "224x224",
+     "patch_size": "32x32",
+     "visual_token_target": "pre-trained DALL-E dVAE",
+     "temporal_downsampling": "removed from Video Swin"
+    }
+   },
+   {
+    "name": "Mean / Concat ablations",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ResNet-50 per-frame features, mean-pooled or concatenated, fed to cross-modal transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ClipBERT, Frozen, Clip4Clip, MERLOT, JustAsk, etc.",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "VTM + MLM + MVM (cross-entropy over dVAE visual tokens for masked patches; MLM mask 15% with 80/10/10 BERT scheme; VTM binary match with in-batch negative text). Blockwise masking until >15% patches masked, attended masking picks top 15% most-attended tokens. Fine-tuning: binary match for retrieval, cross-entropy for QA",
+   "optimizer": "AdamW, betas (0.9, 0.98)",
+   "lr": "2e-5 pre-training; 1.2e-5 initial fine-tuning (task-specific learning rates by validation)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "fine-tuning: 56 (MSRVTT, YouCook2, LSMDC retrieval), 48 (DiDeMo, TGIF-Frame, MSRVTT-MC/QA, VCR), 80 (MSVD-QA, LSMDC-MC/FiB); pre-training batch size not stated",
+   "steps": null,
+   "epochs": "pre-training 5 epochs YT-Temporal then 5 epochs WebVid+CC; fine-tuning 20 epochs (MSRVTT, DiDeMo, TGIF-Frame, MSRVTT QA/MC, VCR) or 40 (YouCook2, LSMDC, MSVD-QA, LSMDC-MC/FiB)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-3",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "fine-tuning: Microsoft Azure, 8 Nvidia V100 (32GB); pre-training GPU type V100",
+   "compute": "2,240 GPU hours on V100 for pre-training (text also says 2K)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "curriculum": "YT-Temporal with ASR first, then WebVid+CC with alt-text"
+   }
+  },
+  "inference": {
+   "decoding": "classification (no generation)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds or variance reported",
+   "prompting": "multiple choice: Q+[SEP]+A per option",
+   "retrieval": "each text-video pair scored by FC on [CLS]; one fused forward pass per pair (cross-encoder, no embedding index); zero-shot uses pre-trained FC_VTM",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K (R@1/5/10)",
+     "definition": "text-to-video retrieval recall",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "video QA accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ClipBERT",
+    "Frozen",
+    "Clip4Clip",
+    "MERLOT",
+    "JustAsk",
+    "HERO",
+    "MMT",
+    "AVLnet",
+    "VideoCLIP",
+    "TACo",
+    "Support-Set",
+    "HT100M",
+    "MIL-NCE",
+    "VATT",
+    "CLIP"
+   ],
+   "protocol": "standard splits; learning rate and epochs chosen on validation; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/tsujuifu/pytorch_violet",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "which results in 2,240 GPU hours on V100 GPUs",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With WebVid pre-training, Video Swin (VT) beats mean-pooling and concatenation on MSRVTT retrieval R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT R@1",
+   "value": 27.0,
+   "unit": "%",
+   "baseline_value": 20.8,
+   "n": null,
+   "setup": "Table 3, WebVid pre-trained; Mean 20.8, Concat 23.5 use ResNet-50 frame features; single run",
+   "quote": null,
+   "table": "Table 3, row VT (+ WebVid), column MSRVTT-Retrieval R@1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Video Swin is better than Mean and Concat across all settings on 4 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TGIF-Action accuracy",
+   "value": 85.8,
+   "unit": "%",
+   "baseline_value": 80.3,
+   "n": null,
+   "setup": "Table 3 WebVid setting: Mean 80.3, Concat 82.5",
+   "quote": "VT consistently outperforms Mean and Concat over the 4 datasets across all settings.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "VIOLET (5 frames) beats ClipBERT (16 frames) by about 10 R@1 points on MSRVTT and DiDeMo; pre-training data and encoder differ so frame count is not isolated.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT R@1",
+   "value": 34.5,
+   "unit": "%",
+   "baseline_value": 22.0,
+   "n": null,
+   "setup": "Table 1a finetuned; ClipBERT 22.0",
+   "quote": "VIOLET outperforms ClipBERT [18] by +10% on R@1 on both MSRVTT and DiDeMo, even though VIOLET uses even less frames (Ours: 5 frames vs. ClipBERT: 16 frames).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Table 1a"
+  },
+  {
+   "claim": "Zero-shot MSRVTT R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT zero-shot R@1",
+   "value": 25.9,
+   "unit": "%",
+   "baseline_value": 24.7,
+   "n": null,
+   "setup": "Table 1b; Frozen 24.7, CLIP 31.2",
+   "quote": null,
+   "table": "Table 1b, row VIOLET, column MSRVTT R@1",
+   "note": null,
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Clip4Clip (CLIP-based) remains far ahead on finetuned MSRVTT R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT R@1",
+   "value": 42.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1a, Clip4Clip pretrained on CLIP's 400M image-text pairs",
+   "quote": null,
+   "table": "Table 1a, row Clip4Clip, column MSRVTT R@1",
+   "note": null,
+   "where": "Table 1a"
+  },
+  {
+   "claim": "MVM gives the best score among masked visual modelling variants on MSRVTT retrieval R@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT R@1",
+   "value": 27.0,
+   "unit": "%",
+   "baseline_value": 24.4,
+   "n": null,
+   "setup": "Table 4, WebVid pre-training; VTM+MLM alone 24.4, no pre-training 13.0",
+   "quote": null,
+   "table": "Table 4, row + MVM, column MSRVTT-Retrieval R@1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Video QA: VIOLET versus MERLOT on MSRVTT-QA, with far less pre-training compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT-QA accuracy",
+   "value": 43.9,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "Table 2; MERLOT 43.1; 30,720 TPU hours vs 2,240 V100 GPU hours, frame resolution 704 vs 224",
+   "quote": null,
+   "table": "Table 2, row VIOLET, column MSRVTT QA",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "VIOLET trails MERLOT on TGIF-Action.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TGIF-Action accuracy",
+   "value": 92.5,
+   "unit": "%",
+   "baseline_value": 94.0,
+   "n": null,
+   "setup": "Table 2; MERLOT 94.0",
+   "quote": null,
+   "table": "Table 2, row VIOLET, column TGIF Action",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pre-training compute is about 2,240 V100 GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": 2240,
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 epochs pre-training on V100",
+   "quote": "which results in 2,240 GPU hours on V100 GPUs",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "MVM-only pre-training on 100% of YT-Temporal reaches 21.6% MVM accuracy and raises TGIF-Action by 2.3 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TGIF-Action gain",
+   "value": 2.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, MVM only, no text",
+   "quote": "with a 21.6% MVM accuracy on 100% YT-Temporal data, our model achieves +2.3% improvement on TGIF-Action and +2.5% R@5 increase on MSRVTT",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Blockwise plus attended masking is best among masking strategies on TGIF-Action.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TGIF-Action accuracy",
+   "value": 85.8,
+   "unit": "%",
+   "baseline_value": 83.7,
+   "n": null,
+   "setup": "Table 7, WebVid; random masking 83.7",
+   "quote": null,
+   "table": "Table 7, row BM+AM, column TGIF-Action",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "On VCR Q->A at 224x224 VIOLET matches MERLOT (75.1 at 384x704); at 384x384 it exceeds it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR accuracy",
+   "value": 76.3,
+   "unit": "%",
+   "baseline_value": 75.1,
+   "n": null,
+   "setup": "Table 8, both pre-trained 5 epochs on YT-Temporal",
+   "quote": null,
+   "table": "Table 8, row VIOLET 384x384, column VCR",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Pre-training on WebVid+CC (5.5M) gives far better retrieval than YT-Temporal (180M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSRVTT R@1",
+   "value": 34.2,
+   "unit": "%",
+   "baseline_value": 25.4,
+   "n": null,
+   "setup": "Table 5; YT-Temporal 25.4",
+   "quote": null,
+   "table": "Table 5, row VIOLET (WebVid+CC), column MSRVTT R@1",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "No frame-count ablation: T is fixed at 4 (pre-training) and 5 (downstream).",
+  "Retrieval is a per-pair cross-encoder; retrieval cost over a corpus is not discussed.",
+  "Mean/Concat ablation baselines use ResNet-50 while VT uses Video Swin, so encoder and temporal modelling are confounded.",
+  "No seeds, variance or significance tests; no pre-training batch size, schedule or warmup.",
+  "Authors concede: densely sampled full-length videos (e.g. TGIF-Count) and audio are future work; larger resolution and longer pre-training would help.",
+  "Trails Clip4Clip (CLIP pre-trained on 400M pairs) and MERLOT on some tasks."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "imagify",
+   "definition": "feed a handful of sparsely sampled frames to a 2D CNN, then mean-pool or concatenate to obtain the video representation",
+   "where": "Abstract"
+  },
+  {
+   "term": "Masked Visual-token Modeling (MVM)",
+   "definition": "recover the discrete dVAE visual tokens of masked video patches",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Less is More: ClipBERT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sparse sampling and mean pooling that VIOLET replaces with temporal modelling",
+   "quote": null
+  },
+  {
+   "work": "Video Swin Transformer",
+   "year": 2021,
+   "arxiv": "2106.13230",
+   "relation": "extends",
+   "note": "video encoder, init from Kinetics-400",
+   "quote": null
+  },
+  {
+   "work": "BEiT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MVM takes inspiration, extended to video",
+   "quote": null
+  },
+  {
+   "work": "DALL-E dVAE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tokenizer for MVM targets",
+   "quote": null
+  },
+  {
+   "work": "MERLOT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "YT-Temporal data and VCR protocol; compared with at far lower compute",
+   "quote": null
+  },
+  {
+   "work": "Frozen in Time",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "WebVid-2.5M; retrieval baseline",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "init and MLM scheme",
+   "quote": null
+  },
+  {
+   "work": "VIMPAC",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "visual-token video pre-training without raw pixels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of VIOLET with Video Swin Transformer, Language Embedder and Cross-modal Transformer",
+   "page": 3,
+   "why": "shows pre-training heads and why video features are concatenated with text rather than pooled"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Impact of different temporal modeling methods over video inputs",
+   "page": 7,
+   "why": "the pooling vs concat vs Video Swin comparison"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells are split across lines in the cached text; table values were matched by reading row order.",
+  "Pre-training batch size, schedule and warmup are not stated."
+ ]
 }

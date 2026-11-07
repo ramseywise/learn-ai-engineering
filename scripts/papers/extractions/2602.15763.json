@@ -1,0 +1,991 @@
+{
+ "schema": 1,
+ "key": "2602.15763",
+ "pdf": "generative-ai/05-RL/sources/glm-5-team-2026-glm-5.pdf",
+ "bib": {
+  "title": "GLM-5: from Vibe Coding to Agentic Engineering",
+  "authors": [
+   "GLM-5 Team (Zhipu AI & Tsinghua University)"
+  ],
+  "first_author": "GLM-5 Team",
+  "year": 2026,
+  "venue": "preprint",
+  "arxiv": "2602.15763",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 137226,
+  "chars_total": 137226,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only; figure-embedded numbers (Figs 1-4, 11) not verified"
+ },
+ "type": "system",
+ "question": "How can a 744B open-weight MoE be trained and post-trained efficiently (DSA attention, asynchronous RL) to reach frontier agentic, reasoning and coding performance?",
+ "hypothesis": null,
+ "contributions": [
+  "DSA adopted to cut training and inference cost, model scaled to 744B and 28.5T tokens",
+  "new asynchronous RL infrastructure decoupling generation from training",
+  "asynchronous Agent RL algorithms (TITO, double-sided importance-sampling masking, stale-sample dropping)",
+  "full-stack adaptation to seven Chinese GPU platforms"
+ ],
+ "method": {
+  "summary": "GLM-5 is a 744B (40B active) MoE with MLA and DeepSeek Sparse Attention, pre-trained on 28.5T tokens, mid-trained to 200K context, then post-trained with SFT, Reasoning RL, Agentic RL, General RL and on-policy cross-stage distillation on the slime framework.",
+  "task": "foundation model pre-training and post-training for agentic engineering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pre-training corpus (web, code, math and science)",
+    "role": "pretrain",
+    "size": "28.5T tokens total including mid-training (introduction also says a 27T token corpus for base training)",
+    "split": null,
+    "source": "web with DCLM and world-knowledge classifiers, code platforms and Software Heritage, math/science from webpages, books, papers",
+    "preprocessing": "code corpus fuzzily deduplicated, 28% more unique tokens; no synthetic or template data in math/science"
+   },
+   {
+    "name": "Mid-training data",
+    "role": "pretrain",
+    "size": "32K stage 1T tokens, 128K stage 500B, 200K stage 50B; issue-PR portion about 160B unique tokens from about 10 million issue-PR pairs",
+    "split": null,
+    "source": "repo-level code, commit diffs, issues, PRs, books, papers, synthetic long-range data (NextLong, EntropyLong style), MRCR-like data at 200K",
+    "preprocessing": "PPL, dedup, length filters; interleaved packing"
+   },
+   {
+    "name": "SFT corpus",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "general chat, reasoning, coding and agent data; execution-environment trajectories",
+    "preprocessing": "rejection sampling, expert RL, errors masked in loss; difficulty filter vs GLM-4.7"
+   },
+   {
+    "name": "Reasoning RL prompts",
+    "role": "train",
+    "size": null,
+    "split": "roughly balanced across math, science, code, TIR",
+    "source": "open datasets, vendor-annotated, Codeforces, TACO, SYNTHETIC-2-RL, internal pools",
+    "preprocessing": "difficulty filter: GLM-4.7 solves rarely or fails, teachers (GPT-5.2 xhigh, Gemini 3 Pro Preview) can solve; binary outcome rewards"
+   },
+   {
+    "name": "Agentic RL environments",
+    "role": "train",
+    "size": "over 10K verifiable SWE and terminal environments; SWE across 9 languages; WKG over two million web pages for search tasks",
+    "split": null,
+    "source": "real GitHub issue-PR pairs via RepoLaunch, Harbor-format terminal tasks synthesized from seeds and web corpus, multi-hop QA from a web knowledge graph",
+    "preprocessing": "search-question filter: drop questions a tool-free model answers in at least 1 of 8 attempts"
+   },
+   {
+    "name": "CC-Bench-V2",
+    "role": "eval",
+    "size": "frontend 220 tasks (HTML 113, React 58, Vue 49); backend 85 tasks; plus repo exploration and chained tasks",
+    "split": null,
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Public ARC benchmarks",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "HLE, AIME 2026, HMMT 2025, IMO-AnswerBench, GPQA-Diamond, LongBench v2, SWE-bench Verified/Multilingual, Terminal-Bench 2.0, CyberGym, BrowseComp(-ZH), tau2-Bench, MCP-Atlas, Tool-Decathlon, Vending-Bench 2, GDPval-AA, SWE-rebench",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GLM-5",
+    "role": "proposed",
+    "params": "744B total, 40B active",
+    "architecture": "MoE with MLA (Muon Split, 256 head dim) and DSA, 3 shared-parameter MTP layers in training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "154880",
+    "layers": "3 dense + 75 MoE + 1 MTP (text says 80 layers)",
+    "hidden": "6144",
+    "heads": "64 attention heads; 32 indexer heads, indexer head dim 128",
+    "context": "202,752 tokens (200K)",
+    "other": {
+     "experts": "256 total, 8 routed, 1 shared",
+     "moe_intermediate": 2048,
+     "dense_intermediate": 12288,
+     "q_lora": 2048,
+     "kv_lora": 512,
+     "top_k_indexer": 2048
+    }
+   },
+   {
+    "name": "GLM-4.5",
+    "role": "baseline",
+    "params": "355B total, 32B active",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "151552",
+    "layers": "3 dense + 89 MoE + 1 MTP",
+    "hidden": "5120",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GLM-4.7",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GLM-9B",
+    "role": "base",
+    "params": "9B",
+    "architecture": "GQA, 40 layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {
+     "role": "efficient attention ablations"
+    }
+   },
+   {
+    "name": "GLM-4.7-Flash",
+    "role": "base",
+    "params": null,
+    "architecture": "MLA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "small-scale DSA experiment"
+    }
+   },
+   {
+    "name": "DeepSeek-V3.2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Kimi K2.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude Opus 4.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 3 Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-5.2 (xhigh)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "o3-mini",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "BrowseComp judge"
+    }
+   },
+   {
+    "name": "GPT-5.2 (medium)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "HLE judge"
+    }
+   },
+   {
+    "name": "Gemini 3 Pro",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "MCP-Atlas judge"
+    }
+   },
+   {
+    "name": "GPT-4.1",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "translation pairwise judge"
+    }
+   },
+   {
+    "name": "Claude Sonnet 4.5 + Playwright MCP",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "frontend Agent-as-a-Judge"
+    }
+   }
+  ],
+  "training": {
+   "objective": "GRPO with IcePop mismatch masking and no KL term (Reasoning RL); group-wise policy optimisation with token-level double-sided importance-sampling masking (Agentic RL); on-policy distillation with advantage log(pi_teacher/pi_train) (cross-stage); next-token plus MTP in pre-training",
+   "optimizer": "Muon (Muon Split for MLA up-projections)",
+   "lr": "pre-training warmup 0 to 2e-4 then decay to 4e-5; mid-training linear 4e-5 to 1e-5; DSA warm-up 5e-3 to 2e-4; DSA sparse adaptation constant 1e-5",
+   "lr_schedule": "cosine decay with batch-size warmup (following GLM-4.5)",
+   "warmup": "DSA warm-up stage 1000 steps; pre-training warmup length not stated",
+   "batch_size": "DSA warm-up 14 sequences per step; Reasoning RL batch 32 with group size 32; cross-stage distillation batch 1024 with group size 1; GLM-4.7-Flash DSA warm-up batch 16; pre-training batch size not stated",
+   "steps": "DSA warm-up 1000 steps",
+   "epochs": null,
+   "tokens": "28.5T total for base model; mid-training 1T (32K) + 500B (128K) + 50B (200K); DSA adaptation 20B; efficiency ablations 190B (GLM-9B) and 150B (GLM-4.7-Flash)",
+   "seq_len": "4K to 200K progressively; DSA warm-up 202,752 tokens per sequence; SFT up to 202,752",
+   "precision": "FP8 for rollout inference; INT4 QAT in SFT; training precision otherwise not stated",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "not stated for pre-training; rollout inference e.g. EP64 and DP64 over 8 nodes",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "reasoning_rl": "beta=2, eps_low=0.2, eps_high=0.28, fully on-policy, group 32, batch 32",
+    "agentic_rl": "epsilon_l, epsilon_h and staleness threshold tau not stated; optimizer reset after each weight sync to inference engine; weights pushed every K gradient updates (K not stated); over 1k concurrent rollouts; groups padded if more than half of valid samples remain, else dropped",
+    "indexer": "frozen during RL; torch.topk deterministic operator",
+    "rl_framework": "slime",
+    "sft": "3 thinking modes: interleaved, preserved, turn-level",
+    "k_keep_recent": 5,
+    "T_discard": "32k"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1.0 for HLE/reasoning and Claude Code TB2/CyberGym; 0.7 for SWE-bench and Terminus-2",
+   "top_p": "0.95 (HLE, SWE-bench, TB2 Claude Code); 1.0 (Terminus-2, CyberGym)",
+   "max_tokens": "131,072 reasoning; 202,752 HLE with tools; 16384 SWE-bench; 8192 Terminus-2; 65536 TB2 Claude Code; 32000 CyberGym",
+   "samples": "TB2 Claude Code averaged over 5 runs; CyberGym single-run Pass@1 over 1,507 tasks; repo exploration Pass@1 over three runs; other benchmarks not stated",
+   "prompting": "OpenHands with tailored instruction for SWE-bench; tau2-Bench user-simulator prompt adjusted for Retail and Telecom (Figs 12, 13)",
+   "retrieval": null,
+   "parameters": {
+    "keep_recent_k": 5,
+    "discard_all_threshold_T": "32k",
+    "DP_routing": "consistent hashing of rollout ID to DP rank"
+   },
+   "other": {
+    "mcp_atlas_timeout": "10 minutes per task, extended from 4",
+    "terminal_bench_terminus_limits": "timeout 2h, 16 CPUs, 32 GB RAM",
+    "cyber_gym_timeout": "250 minutes per task",
+    "swe_context": "200K"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1 / accuracy / resolved rate",
+     "definition": "benchmark-specific; Pass@1 on backend means all 5-10 unit tests pass",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BSR / ISR / CSR",
+     "definition": "build success rate; instance success (all specs pass); check-item success rate",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Vending-Bench 2 final balance",
+     "definition": "bank balance after a simulated year",
+     "unit": "$",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accept length",
+     "definition": "mean accepted draft tokens per step, 4 speculative steps",
+     "unit": "tokens",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GLM-4.7",
+    "DeepSeek-V3.2",
+    "Kimi K2.5",
+    "Claude Opus 4.5",
+    "Gemini 3 Pro",
+    "GPT-5.2 (xhigh)"
+   ],
+   "protocol": "Mixed: vendor-run for most; Vending-Bench 2 run independently by Andon Labs; no confidence intervals or seeds for most Table 7 scores; judges differ by benchmark"
+  },
+  "availability": {
+   "code": "https://github.com/zai-org/GLM-5",
+   "weights": "open weights released (HuggingFace, per the acknowledgements)",
+   "data": "verified Terminal-Bench 2.0 on HuggingFace zai-org/terminal-bench-2-verified; CC-Bench-V2 not stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "tau2-Bench Telecom user-simulator addendum",
+    "text": "Do not generate the '###TRANSFER###' before agent clearly tells \"YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.\".",
+    "where": "Fig 12, Appendix B.3"
+   },
+   {
+    "purpose": "tau2-Bench Retail user-simulator addendum",
+    "text": "Do not end until you have clearly and completely expressed all your requirements and constraints.",
+    "where": "Fig 13, Appendix B.3 (excerpt of a longer prompt)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.GLM-5.layers",
+    "quote": "GLM-5 scales to 256 experts and reduces its layer count to 80",
+    "where": "Sec 2.1; Table 10 lists 3 dense + 75 MoE layers + 1 MTP"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GLM-5 scores 77.8% on SWE-bench Verified in the authors' OpenHands run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWE-bench Verified",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": "73.8 (GLM-4.7)",
+   "n": null,
+   "setup": "OpenHands, tailored instruction prompt, temperature 0.7, top_p 0.95, max_new_tokens 16384, 200K context; single reported score, run count not stated",
+   "quote": null,
+   "table": "Table 7, row SWE-bench Verified, column GLM-5",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "On decontaminated SWE-rebench (January 2026), GLM-5 resolves 42.1%, level with GLM-4.7 at 41.3% and well below Claude Opus 4.6 at 52.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWE-rebench resolved rate",
+   "value": "42.1",
+   "unit": "%",
+   "baseline_value": "41.3 (GLM-4.7)",
+   "n": null,
+   "setup": "SWE-rebench Jan 2026 official leaderboard numbers; Resolved Rate, SEM 1.21%, Pass@5 50.0%; harness not described by the paper",
+   "quote": null,
+   "table": "Table 9, row GLM-5, column Resolved Rate (%)",
+   "note": "Table 9 prints GLM-5 SEM 1.21% and Kimi K2.5 SEM 1.21%.",
+   "where": "Table 9, Sec 6.2.4"
+  },
+  {
+   "claim": "A non-deterministic top-k operator in the DSA indexer made RL collapse after a few steps; deterministic torch.topk fixed it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reasoning RL on a DSA-based GLM-5; indexer k = 2048; no numbers given, described qualitatively",
+   "quote": "other non-deterministic top-k operators (e.g., CUDA or TileLang implementations) caused drastic performance degradation during RL after only a few steps, accompanied by a sharp drop in entropy",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Keep-recent-k=5 context folding lifts GLM-5 BrowseComp from 55.3% to 62.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BrowseComp",
+   "value": "62.0",
+   "unit": "%",
+   "baseline_value": "55.3",
+   "n": null,
+   "setup": "BrowseComp, judge o3-mini with official OpenAI prompt, k = 5",
+   "quote": "improves GLM-5 from 55.3%(w/o keep-recent-k) to 62.0%(w/ keep-recent-k)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.4"
+  },
+  {
+   "claim": "Hierarchical context management (keep-recent plus discard-all at T=32k) gives GLM-5 75.9 on BrowseComp.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BrowseComp w/ context management",
+   "value": "75.9",
+   "unit": "%",
+   "baseline_value": "67.5 (GLM-4.7)",
+   "n": null,
+   "setup": "T = 32k via parameter search, keep-recent k = 5",
+   "quote": null,
+   "table": "Table 7, row BrowseComp (w/ Context Manage), column GLM-5",
+   "note": null,
+   "where": "Table 7, Fig 8"
+  },
+  {
+   "claim": "GLM-5 reaches 56.2 on Terminal-Bench 2.0 (Terminus-2), 60.7 on the verified version.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Terminal-Bench 2.0",
+   "value": "56.2",
+   "unit": "%",
+   "baseline_value": "41.0 (GLM-4.7)",
+   "n": null,
+   "setup": "Terminus-2, timeout 2h, temperature 0.7, top_p 1.0, max_new_tokens 8192, 128K context, 16 CPUs 32 GB",
+   "quote": null,
+   "table": "Table 7, row Terminal-Bench 2.0 (Terminus-2), column GLM-5",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "GLM-5 closes DSA vs MLA gap with 20B tokens of sparse adaptation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Continued pre-training from mid-trained base; warm-up 1000 steps of 14 sequences of 202,752 tokens; DSA 128k: MQ-NIAH 100.0, MV-NIAH 97.0, SQuAD 86.0, HotpotQA 63.0 vs MLA 100.0/95.5/79.7/66.3",
+   "quote": "The sparse adaptation stage follows the training data and hyperparameters of mid-training and goes through 20B tokens.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.1, Table 3"
+  },
+  {
+   "claim": "Search-based SWA layer selection beats fixed interleaving on RULER@128K but still loses 5.69 points to full attention.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER@128K delta",
+   "value": "-5.69",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLM-9B, 40 layers, 190B continual-training tokens at 64K, 1:1 efficient to full layers, window 4096",
+   "quote": "up to 5.69 points on RULER@128K and 7.33 on RepoQA@128K",
+   "table": null,
+   "note": "Table 5 shows RepoQA@128K delta for SWA Pattern as 14.66 and SimpleGDN as 7.33; the text's 'up to' sentence is about the narrower set.",
+   "where": "Sec 2.1.2, Table 5"
+  },
+  {
+   "claim": "On GLM-4.7-Flash, DSA after 150B joint tokens is within 0.35 points of baseline at 128K RULER and above it at 16K to 64K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER@128K",
+   "value": "78.86",
+   "unit": "score",
+   "baseline_value": "79.21",
+   "n": null,
+   "setup": "GLM-4.7-Flash with MLA; indexer-only warm-up 1,000 steps batch 16 then 150B tokens joint",
+   "quote": "while incurring only a 0.35-point deficit at 128K",
+   "table": "Table 6, row GLM-4.7-Flash + DSA, column 128K",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "MTP with 3 parameter-shared layers gives accept length 2.76 vs DeepSeek-V3.2 2.55.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accept length",
+   "value": "2.76",
+   "unit": "tokens",
+   "baseline_value": "2.55",
+   "n": null,
+   "setup": "4 speculative steps on a private prompt set",
+   "quote": null,
+   "table": "Table 2, row GLM-5, column Accept Length",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Muon Split lets MLA match GQA-8 (e.g. HumanEval 36.7 vs 38.5 for GQA-8 and 33.5 for plain MLA).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval",
+   "value": "36.7",
+   "unit": "%",
+   "baseline_value": "33.5",
+   "n": null,
+   "setup": "Muon optimizer, orthogonalise per-head up-projection matrices separately; sizes of these ablation models not stated",
+   "quote": null,
+   "table": "Table 1, row MLA + Muon Split, column HumanEval",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Slide-generation RL raised strictly 16:9 pages from 40% to 92%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "16:9 compliance",
+   "value": "92",
+   "unit": "%",
+   "baseline_value": "40",
+   "n": null,
+   "setup": "HTML slide generation with three-level reward, plus rejection sampling and masking",
+   "quote": "increases from 40% to 92%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.5"
+  },
+  {
+   "claim": "Slide-generation RL showed reward hacking (hard truncation, spacing manipulation), fixed by patching the renderer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "slide RL, runtime-rendering reward level",
+   "quote": "we observe several forms of reward hacking behaviors, such as hard truncation of overlong content or excessive manipulation of spacing",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.5, Fig 9"
+  },
+  {
+   "claim": "Human evaluation: GLM-5 slides win 67.5% overall against GLM-4.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "67.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "human evaluation, sample size not stated; content 60%, layout 57.5%, aesthetics 65%",
+   "quote": "resulting in an overall win rate of 67.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.5"
+  },
+  {
+   "claim": "On CC-Bench-V2 chained tasks GLM-5 gets 52.3 Pass@1 vs GLM-4.7 43.0 and Claude Opus 4.5 61.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "52.3",
+   "unit": "%",
+   "baseline_value": "43.0",
+   "n": null,
+   "setup": "internal benchmark, Claude Code harness, Pass@1 on individual tasks",
+   "quote": null,
+   "table": "Table 8, row Chained Tasks, column GLM-5",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "GLM-5 build success rate on CC-Bench-V2 frontend is stated as 98.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BSR",
+   "value": "98.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BSR across stacks",
+   "quote": "GLM-5 achieves 98.0% BSR",
+   "table": null,
+   "note": "Table 8 per-stack BSR are 100, 100, 100, 95.0 (mean 98.75), not 98.0.",
+   "where": "Sec 6.2.1"
+  },
+  {
+   "claim": "Agent-as-a-Judge agrees with human experts on 94% of 130 check-items; ranking Spearman 85.7% over 8 models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "94",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "judge Claude Code with Claude Sonnet 4.5 plus Playwright MCP",
+   "quote": "the two agree on 94% of items",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.1"
+  },
+  {
+   "claim": "Base model GLM-5-Base improves EvalPlus to 87.0 Pass@1 vs GLM-4.5-Base 78.1 but drops on GSM8K (68.8 vs 79.4) and MATH (56.4 vs 61.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K EM",
+   "value": "68.8",
+   "unit": "%",
+   "baseline_value": "79.4 (GLM-4.5 Base)",
+   "n": null,
+   "setup": "few-shot base-model eval; protocol in Table 11 not described beyond metric names",
+   "quote": null,
+   "table": "Table 11, row GSM8K (EM), column GLM-5 Base",
+   "note": null,
+   "where": "Table 11"
+  },
+  {
+   "claim": "GLM-5 scores 50 on Artificial Analysis Intelligence Index v4.0, up from 42 for GLM-4.7.",
+   "kind": "reported",
+   "source": "Artificial Analysis",
+   "metric": "AA Intelligence Index",
+   "value": "50",
+   "unit": "points",
+   "baseline_value": "42",
+   "n": null,
+   "setup": "Intelligence Index v4.0, 10 evaluations",
+   "quote": "GLM-5 scores 50 on the Intelligence Index v4.0",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "GLM-5 scales to 744B total / 40B active parameters, 256 experts, trained on 28.5T tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE with DSA",
+   "quote": "This results in a 744B parameter model (40B active parameters)",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "The Chinese-chip port cuts long-sequence deployment cost by 50%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "single Chinese node (Ascend Atlas 800T A3) vs dual-GPU international cluster; no measurement details",
+   "quote": "reducing deployment costs in long-sequence scenarios by 50%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Reasoning RL is on-policy GRPO with IcePop, no KL term, group size 32 and batch size 32.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "beta=2, eps_low=0.2, eps_high=0.28",
+   "quote": "Training is performed entirely on-policy with a group size of 32 and a batch size of 32.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "On-policy cross-stage distillation uses group size 1 and batch size 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "teachers are final checkpoints of SFT, Reasoning RL and General RL",
+   "quote": "the group size in the GRPO algorithm is configured to 1 to increase data throughput, and the batch size is set to 1024",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  }
+ ],
+ "limits": [
+  "Most Table 7 scores are vendor-run, single runs with no intervals; run counts stated only for a few benchmarks.",
+  "Agentic RL clip bounds epsilon_l, epsilon_h, staleness threshold tau, sync interval K, and all pre-training batch/compute/hardware figures are not stated.",
+  "DSA RL findings on the top-k operator are qualitative with no curves or numbers.",
+  "Pre-training token total given as 27T in the introduction and 28.5T elsewhere (the latter includes mid-training).",
+  "Layer count given as 80 in text; Table 10 lists 3 dense + 75 MoE + 1 MTP.",
+  "CC-Bench-V2 is internal and judge-based; GLM-5 trails Claude Opus 4.5 on ISR and chained tasks.",
+  "Base-model GSM8K and MATH regress against GLM-4.5-Base (Table 11).",
+  "Text BSR 98.0% differs from Table 8 per-stack values (100, 100, 100, 95.0)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Token-in-Token-out (TITO)",
+   "definition": "the training pipeline consumes the exact tokenization and decoded-token stream produced by the inference engine",
+   "where": "Sec 4.1.2"
+  },
+  {
+   "term": "Keep-recent-k",
+   "definition": "fold tool observations older than the most recent k rounds",
+   "where": "Sec 4.2.4"
+  },
+  {
+   "term": "Muon Split",
+   "definition": "apply matrix orthogonalization separately to per-head slices of the MLA up-projection matrices",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GLM-4.5",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "predecessor; GLM-5 follows its Muon, cosine decay, data pipeline and slime",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-V3.2 (DSA)",
+   "year": 2025,
+   "arxiv": "2512.02556",
+   "relation": "uses-method",
+   "note": "DSA attention adopted and continually trained",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-V2 (MLA)",
+   "year": 2024,
+   "arxiv": "2405.04434",
+   "relation": "uses-method",
+   "note": "multi-latent attention",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-V3",
+   "year": 2024,
+   "arxiv": "2412.19437",
+   "relation": "uses-method",
+   "note": "MTP baseline",
+   "quote": null
+  },
+  {
+   "work": "GRPO",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL backbone [40]",
+   "quote": null
+  },
+  {
+   "work": "IcePop (Zhao et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "mismatch masking, KL removed",
+   "quote": null
+  },
+  {
+   "work": "Jet-Nemotron",
+   "year": 2025,
+   "arxiv": "2508.15884",
+   "relation": "uses-method",
+   "note": "PostNAS-style search and GDN pipeline",
+   "quote": null
+  },
+  {
+   "work": "On-policy distillation (Lu and Thinking Machines Lab)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cross-stage distillation",
+   "quote": null
+  },
+  {
+   "work": "RepoLaunch",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SWE environment construction",
+   "quote": null
+  },
+  {
+   "work": "SWE-rebench",
+   "year": 2025,
+   "arxiv": "2505.20411",
+   "relation": "evaluates",
+   "note": "decontaminated SWE evaluation",
+   "quote": null
+  },
+  {
+   "work": "Vending-Bench",
+   "year": 2025,
+   "arxiv": "2502.15840",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "tau2-Bench",
+   "year": 2025,
+   "arxiv": "2506.07982",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "MCP-Atlas",
+   "year": 2026,
+   "arxiv": "2602.00933",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Tool Decathlon",
+   "year": 2025,
+   "arxiv": "2510.25726",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GDPval",
+   "year": 2025,
+   "arxiv": "2510.04374",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Humanity's Last Exam",
+   "year": 2025,
+   "arxiv": "2501.14249",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SWE-bench",
+   "year": 2023,
+   "arxiv": "2310.06770",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Kimi K2.5",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Overall training pipeline of GLM-5.",
+   "page": 4,
+   "why": "shows stage order of pre-train, mid-train, SFT, RL stages, distillation"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Accuracy of BrowseComp with different context management strategies from GLM-4.7 to GLM-5.",
+   "page": 19,
+   "why": "accuracy against steps for each strategy"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Examples of reward hacking in the slides RL training.",
+   "page": 20,
+   "why": "visual evidence of the renderer loophole"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5, Sec 4.1.2",
+   "snippet": "f(x; eps_l, eps_h) = x if 1 - eps_l < x < 1 + eps_h else 0; r_t = exp(log pi_theta(a_t|s_t) - log pi_rollout(a_t|s_t))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text layer interleaves figure numbers; Figures 1 to 4 and 11 values not used as results.",
+  "Cover figure caption names DeepSeek-V3.2 while the introduction names GLM-4.7."
+ ]
+}

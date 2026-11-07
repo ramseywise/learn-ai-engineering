@@ -1,19 +1,558 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.12652",
  "pdf": "generative-ai/02-rag-retrieval/sources/shi-2023-replug.pdf",
  "bib": {
   "title": "REPLUG: Retrieval-Augmented Black-Box Language Models",
-  "first_author": "Weijia Shi",
-  "year": "2023",
-  "venue": "Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)",
+  "authors": [
+   "Weijia Shi",
+   "Sewon Min",
+   "Michihiro Yasunaga",
+   "Minjoon Seo",
+   "Rich James",
+   "Mike Lewis",
+   "Luke Zettlemoyer",
+   "Wen-tau Yih"
+  ],
+  "first_author": "Shi",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, 24 May 2023)",
   "arxiv": "2301.12652",
-  "doi": "10.18653/v1/2024.naacl-long.463"
+  "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "d1b1dbb5-4547-42d8-b95a-957fdf24c808"
+  "at": "2026-11-07",
+  "chars_read": 51488,
+  "chars_total": 51488,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
  },
- "legacy_report": "SOURCE: \"REPLUG: Retrieval-Augmented Black-Box Language Models\", Weijia Shi, Sewon Min, Michihiro Yasunaga, Minjoon Seo, Rich James, Mike Lewis, Luke Zettlemoyer, Wen-tau Yih. Proceedings of NAACL 2024 (Volume 1: Long Papers), pages 8371–8384, June 2024. (arXiv 2301.12652.) Code: github.com/swj0419/REPLUG.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/shi-2024-replug.pdf\n\nCOVERAGE: 52,327 of 52,327 chars; all 14 pages read (body pp.1–9, references pp.9–12 skimmed for origins, Appendices A–C pp.13–14 read in full). Nothing skipped. Figures 4–6 and 8 are plots whose values are only partly in the text; the numbers below are from the body text and tables, not read off the plots.\n\nCLAIMS (ranked)\n\n- claim: REPLUG prepends each retrieved document separately to the input of a frozen black-box LM, runs k parallel passes, and ensembles the next-token probabilities weighted by retrieval similarity; the LM is never fine-tuned.\n  number: none (formula)\n  setup: any LM with output probabilities; k docs from a Contriever dual encoder + FAISS index\n  quote: \"We prepend each document d ∈ D′ to x, pass this concatenation to the LM separately, and then ensemble output probabilities from all k passes. ... p(y | x, D′) = ∑ d∈D′ p(y | d ◦ x) · λ(d, x) ... λ(d, x) = e^{s(d,x)} / ∑ d∈D′ e^{s(d,x)}\"\n  where: p.4 (§3.2), chars ~15,800–16,300\n\n- claim: The ensemble exists because context length bounds k, and it trades compute for accuracy (k LM forward passes per prediction).\n  number: none\n  setup: design rationale\n  quote: \"Because the LM context length limits the number of documents that can be prepended, we also adopt an ensemble scheme that encodes the retrieved documents in parallel with the same black-box LM, allowing us to easily trade compute for accuracy.\"\n  where: p.1 (§1)\n\n- claim: REPLUG LSR trains only the retriever by minimising KL between the retrieval distribution over the top-k docs and an LM-likelihood distribution (softmax over P_LM(y|d,x)); the LM is a frozen scoring function.\n  number: none (formulas)\n  setup: top-20 docs per query, temperature 0.1 for both softmaxes; index rebuilt every T steps\n  quote: \"L = 1/|B| ∑x∈B KL(QLM(d | x, y) ∥ PR(d | x)) ... When minimizing the loss, we can only update the retrieval model parameters. The LM parameters are fixed due to our black-box assumption.\"\n  where: p.4 (§4.3)\n\n- claim: On the Pile, REPLUG LSR cuts GPT-3 Davinci 175B bits-per-byte from 0.80 to 0.75 (6.3% relative); plain REPLUG gets 0.77 (3.8%). Curie 6.7B: 0.88 → 0.85 (3.4%) → 0.82 (6.8%).\n  number: 6.3% (Davinci), 6.8% (Curie); averaged 7.7% (LSR) vs 4.7% (REPLUG) over 8 models\n  setup: Pile test, BPB metric; retrieval corpus = 36M random 128-token Pile training docs; 128-token query context; top-10 docs ensembled; Contriever retriever (LSR retriever trained with Curie as supervision LM)\n  quote: \"Davinci 175B 0.80 0.77 3.8 0.75 6.3\" (Table 1) and \"REPLUG LSR results in 7.7% improvement over baselines compared to 4.7% improvement of REPLUG averaged over the 8 models.\"\n  where: p.6 (Table 1, §6.1)\n\n- claim: On MMLU 5-shot, Codex 175B goes from 68.3 to 71.4 (REPLUG) and 71.8 (REPLUG LSR), i.e. +4.5% and +5.1% relative; LLaMA 13B goes 55.6 → 58.8 → 59.3. Flan-PaLM 540B scores 72.2; Atlas 11B scores 47.9.\n  number: 71.8 vs 68.3\n  setup: 5-shot in-context learning, direct prompting; 10 docs retrieved from Wikipedia (Dec 2018) using the test question as query, ensembled; Codex = code-davinci-002\n  quote: \"Codex 175B 74.2 76.9 57.8 70.1 68.3 ... Codex + REPLUG 175B 76.0 79.7 58.8 72.1 71.4 / Codex + REPLUG LSR 175B 76.5 79.9 58.9 73.2 71.8\" and \"both the REPLUG and REPLUG LSR improve the original Codex model by 4.5% and 5.1%, respectively.\"\n  where: p.7 (Table 2, §6.2)\n\n- claim: Open-domain QA, 16-shot: Codex NQ EM 40.6 → 44.7 (REPLUG) → 45.5 (LSR); TriviaQA 73.6 → 76.8 → 77.3. LLaMA 13B NQ 29.0 → 36.1 → 37.2; TQA 69.6 → 73.3 → 74.1. Beats Atlas few-shot (64-shot fine-tuned, NQ 30.9 / TQA 74.5) but not full-data fine-tuned retrieval LMs (Atlas 60.4 / 79.8).\n  number: 45.5 NQ, 77.3 TQA\n  setup: Wikipedia corpus, top-10 docs ensembled, 16-shot in-context learning, Exact Match on filtered TriviaQA\n  quote: \"Codex + REPLUG LSR 45.5 - 77.3 -\" (Table 3) and \"REPLUG LSR significantly improves the performance of the original Codex by 12.0% on NQ and 5.0% on TQA.\"\n  where: p.7 (Table 3, §6.3)\n\n- claim: Gains are not from ensembling per se: ensembling random documents hurts Curie on the Pile, and gains grow monotonically with k but ~10 docs is enough.\n  number: 10 docs\n  setup: GPT-3 Curie, Pile BPB, random vs REPLUG vs LSR docs, varying k\n  quote: \"We observed that ensembling random documents leads to worse performance ... as more documents were ensembled, the performance of REPLUG and REPLUG LSR improved monotonically. However, a small number of documents (e.g., 10) was sufficient to achieve large performance gains.\"\n  where: p.8 (§7.2), Figure 5 p.9\n\n- claim: Among off-the-shelf retrievers, BM25 beats Contriever, DPR and BERT-base, but the LM-supervised Contriever beats BM25.\n  number: none in text (Figures 6 and 8)\n  setup: Wikitext-103 perplexity, GPT-2 XL 1.5B and Large 774M, Wikitext-103 train as corpus\n  quote: \"Among all off-the-shelf retrievers, the sparse retriever BM25 performs best. However, it still lags behind our LM supervised retriever (Contriever LSR)\" and (Appendix B) \"BM25 consistently outperforms Contriever but falls short when compared to LM-supervised Contriever\"\n  where: p.8 (§7.3), p.13 (App. B)\n\n- claim: Gains hold across GPT-2, OPT (125M–66B) and BLOOM families and stay roughly constant with scale.\n  number: OPT-125M 6.9%, OPT-66B 5.6% perplexity improvement\n  setup: Wikitext-103 test perplexity; corpus = Wikitext-103 train; top-10 ensemble\n  quote: \"OPT-125M achieves 6.9% perplexity improvement, while OPT-66B achieves 5.6% perplexity improvement.\"\n  where: p.8 (§7.1), Figure 4\n\n- claim: Retrieval helps most on rare entities (qualitative).\n  number: 11% continuation perplexity improvement; 15% on \"Li Bai\"\n  setup: single Wikitext-103 example, GPT-2 1.5B, one retrieved doc\n  quote: \"After incorporating the retrieved document, the perplexity of the continuation improves by 11%.\" and \"(15% for \"Li Bai\" and 5% for \"greatest\")\"\n  where: p.13 (Appendix A, Figure 7)\n\n- claim: LSR training recipe.\n  number: 800K queries, 36M docs, 25k steps\n  setup: Pile; Contriever init; Curie supervision\n  quote: \"We use 800K sequences of 256 tokens each ... the first 128 tokens are used as the input context x, and the last 128 tokens are used as the ground truth continuation y. For the external corpus D, we sample 36M documents of 128 tokens from the Pile ... we retrieve the top 20 documents from the FAISS index and compute the retrieval likelihood and the LM likelihood with a temperature of 0.1. We train the retriever using the Adam optimizer ... learning rate of 2e-5, a batch size of 64, and a warmup ratio of 0.1. We re-compute the document embeddings every 3k steps and fine-tune the retriever for a total of 25k steps.\"\n  where: p.5 (§5.2)\n\nLIMITS\n- Authors' own (§9, p.9): no interpretability (\"It's unclear when the model relies on retrieved knowledge or on knowledge encoded within its own parameters\"); always-on retrieval (\"REPLUG always perform retrieval no matter if the external information is needed ... risk of presenting irrelevant documents ... additional computational overheads\"); corpus limited to Wikipedia/Pile.\n- Inference cost: k = 10 full LM forward passes per prediction (each with a document prepended); the paper frames this as \"trade compute for accuracy\" and never reports latency or dollar cost.\n- The ensemble needs per-token output probabilities from the API; it is not applicable to chat APIs that only return sampled text. Not stated by the authors; it follows from the formula.\n- No end-to-end tuning: only the retriever is trained; LM frozen. LSR supervision used Curie (6.7B) then transferred to Davinci/Codex; no ablation on supervision-LM choice.\n- Retrieval likelihood marginalises only over the top-k retrieved docs, not the corpus (p.4 §4.1, acknowledged as an approximation).\n- Few-shot QA still trails full-data fine-tuned retrieval LMs; authors attribute this to train/test overlap (\"32.5% of test questions overlap with the training sets in NQ\", p.7).\n- Figures 4, 6, 8 carry numbers not reproduced in text. MMLU/QA baselines (PaLM, Flan-PaLM, Chinchilla) are copied from other papers, not re-run.\n- Dated: models are GPT-3 (2020 API), Codex code-davinci-002, LLaMA 13B; Wikipedia snapshot Dec 2018. Retrieval corpus for Pile experiments is Pile training data itself (in-distribution).\n\nBUILDS ON\n- RETRO (Borgeaud et al., 2022) and Atlas (Izacard et al., 2022b): white-box retrieval LMs that update LM parameters; REPLUG contrasts with these.\n- kNN-LM (Khandelwal et al., 2020; Zhong et al., 2022): needs internal representations, so not black-box.\n- Contriever (Izacard et al., 2022a): the retriever used and the LSR initialisation; dual-encoder design following Qu et al. 2021 (RocketQA), Izacard and Grave 2021 (FiD), Ni et al. 2022.\n- Sachan et al. (2023), \"Questions are all you need to train a dense passage retriever\": the inspiration for LM-likelihood supervision of the retriever.\n- REALM (Guu et al., 2020): asynchronous index refresh during retriever training.\n- FAISS (Johnson et al., 2019); DPR (Karpukhin et al., 2020); BM25 (Robertson et al., 2009) as baselines.\n- Concurrent: Mallen et al. 2022, Si et al. 2023 (frozen retriever + GPT-3 on QA).\n\nCODE\nNo code in the paper. The two formulas worth keeping verbatim (p.4):\n- Ensemble: p(y | x, D′) = ∑_{d∈D′} p(y | d ◦ x) · λ(d, x), λ(d, x) = e^{s(d,x)} / ∑_{d∈D′} e^{s(d,x)}\n- LSR: P_R(d|x) = e^{s(d,x)/γ} / ∑ e^{s(d,x)/γ}; Q(d|x,y) = e^{P_LM(y|d,x)/β} / ∑ e^{P_LM(y|d,x)/β}; L = (1/|B|) ∑_{x∈B} KL(Q_LM(d|x,y) ∥ P_R(d|x))\nPrompt format (Table 4/5, p.14): \"Knowledge: <passage>\\nQuestion: <q>\\nA. ... D. ...\\nAnswer: <letter>\" for MMLU; \"Knowledge: <passage>\\nQuestion: <q>\\nAnswer: <a>\" for QA.\n\nFIGURES\n- Figure 2, p.3: \"REPLUG at inference\" — retrieve, prepend each doc separately, ensemble probabilities. Best single picture of the k-parallel-passes design; explains the cost faster than the formula.\n- Figure 3, p.5: \"REPLUG LSR training process\" — frozen LM scores docs, KL to retriever distribution. Explains LM-supervised retrieval at a glance.\n- Figure 5, p.9: Curie BPB vs number of docs for random / REPLUG / LSR. Shows ensembling alone does not help and that gains saturate around 10 docs.\n- Figure 6, p.9 and Figure 8, p.13: retriever comparison (BM25 > Contriever, LSR > BM25) on Wikitext-103 with GPT-2. Useful for a \"BM25 is a strong baseline\" point.\n- Figure 1, p.1: white-box vs black-box contrast with RETRO; lower value.\n- Figure 4, p.8: per-family scaling curves; values embedded as axis ticks only.\n\nPROBLEMS\n- Extraction clean; no embedded instructions found. Minor typos in source (\"Baddage\" for Babbage, \"temerature\", \"Witext-103\"). Figure 4 extracted as raw axis tick numbers (p.8), not data. The LLaMA reference in the bibliography is the Llama 2 paper (Touvron et al., 2023) though the body says \"LLaMA 13B\".\n- Note for the mapping: §7.3/Appendix B (BM25 beats dense Contriever off-the-shelf; retriever tuning from LM feedback beats both) is the part most relevant to notes/11-retrieval-improvements.md; the ensemble-cost point (k forward passes, needs logprobs) is relevant to notes/01-rag-pipeline.md."
+ "type": "empirical",
+ "question": "Can a frozen black-box LM be improved by prepending retrieved documents, and can the retriever be tuned using the LM's own scores as supervision?",
+ "hypothesis": "Adapting the retriever to the LM (rather than the LM to the retriever) finds documents that lower LM perplexity and beats an untuned retriever.",
+ "contributions": [
+  "REPLUG, first retrieval-augmented framework for black-box large LMs",
+  "REPLUG LSR training scheme using LM scores as supervision for the retriever",
+  "Evaluations on language modeling, MMLU and open-domain QA across GPT, OPT, BLOOM up to 175B"
+ ],
+ "method": {
+  "summary": "Top-k documents are retrieved with a dense dual-encoder (Contriever, cosine similarity, FAISS); each is prepended to the input in a separate LM pass and next-token probabilities are ensembled with softmax-of-similarity weights. REPLUG LSR fine-tunes the retriever by minimising KL between the retrieval likelihood and a softmax over the frozen LM's likelihood of the gold continuation per document.",
+  "task": "language modeling (Pile BPB, Wikitext-103 perplexity), MMLU, open-domain QA (NQ, TriviaQA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pile training queries",
+    "role": "train",
+    "size": "800K sequences of 256 tokens",
+    "split": "first 128 tokens = input x, last 128 = continuation y",
+    "source": "The Pile (Gao et al. 2020)",
+    "preprocessing": "retrieval corpus documents do not overlap with documents the queries came from"
+   },
+   {
+    "name": "Retrieval corpus for LSR training",
+    "role": "train",
+    "size": "36M documents of 128 tokens",
+    "split": null,
+    "source": "sampled from Pile train",
+    "preprocessing": null
+   },
+   {
+    "name": "Pile (eval)",
+    "role": "eval",
+    "size": null,
+    "split": "per-subset-domain BPB",
+    "source": "The Pile",
+    "preprocessing": "retrieval corpus: random subsample of Pile train, 367M documents of 128 tokens; no extra dedup filtering"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "57 tasks",
+    "split": "5-shot",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "retrieval corpus Wikipedia (Dec 2018)"
+   },
+   {
+    "name": "Natural Questions / TriviaQA (filtered)",
+    "role": "eval",
+    "size": null,
+    "split": "few-shot (16 shots for Codex-based) and full-data",
+    "source": "Kwiatkowski 2019; Joshi 2017",
+    "preprocessing": "Wikipedia (Dec 2018) retrieval corpus"
+   },
+   {
+    "name": "Wikitext-103",
+    "role": "eval",
+    "size": null,
+    "split": "test; train set as retrieval corpus",
+    "source": "Merity et al. (printed as Stephen et al. 2017)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "black-box API LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Ada/Babbage/Curie/Davinci",
+    "role": "evaluated",
+    "params": "350M/1.3B/6.7B/175B",
+    "architecture": "black-box API LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "curie_used_as_LSR_supervisor": true
+    }
+   },
+   {
+    "name": "GPT-2, OPT, BLOOM families",
+    "role": "evaluated",
+    "params": "GPT-2 117M-1.5B; OPT 125M-66B; BLOOM 560M-7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense dual encoder, mean pooling of last hidden states, cosine similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "REPLUG_LSR": "retriever initialised from Contriever and fine-tuned"
+    }
+   }
+  ],
+  "training": {
+   "objective": "KL(P_R(d|x) || Q_LM(d|x,y)) over top-20 retrieved docs; only retriever updated, LM frozen; both softmaxes temperature 0.1",
+   "optimizer": "Adam",
+   "lr": "2e-5",
+   "lr_schedule": null,
+   "warmup": "ratio 0.1",
+   "batch_size": "64",
+   "steps": "25k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "128-token context + 128-token continuation",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "index_refresh": "document embeddings recomputed and FAISS index rebuilt every 3k steps",
+    "supervision_LM": "GPT-3 Curie",
+    "gamma_beta": "temperature of 0.1 for retrieval and LM likelihoods (single value stated)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per setting; no seeds or variance reported",
+   "prompting": "MMLU 5-shot direct prompting with 'Knowledge: ... Question: ... Answer:' format; open-domain QA 16-shot for Codex",
+   "retrieval": "top-10 documents, each prepended separately, probabilities ensembled; 128-token context as retrieval query for language modeling; test question as query for MMLU/QA",
+   "parameters": {
+    "k": "10",
+    "lambda": "softmax of cosine similarity over top-k"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BPB",
+     "definition": "bits per UTF-8 encoded byte on Pile subsets",
+     "unit": "bits/byte",
+     "higher_is_better": false
+    },
+    {
+     "name": "Perplexity",
+     "definition": "Wikitext-103 test perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "MMLU accuracy",
+     "definition": "5-shot, averaged across categories",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NQ/TQA",
+     "definition": "not defined in text (exact match presumed)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "original LMs",
+    "Codex",
+    "PaLM",
+    "Flan-PaLM",
+    "Chinchilla",
+    "Atlas",
+    "RETRO",
+    "R2-D2",
+    "Codex + Contriever (Si et al. 2022)"
+   ],
+   "protocol": "Single reported numbers, no significance tests or seeds."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "MMLU 5-shot prompt with retrieved knowledge (excerpt of one shot)",
+    "text": "Question: As of 2019, about what percentage of Americans agree that the state is run for the benefit of all the people?\nA. 31% B. 46% C. 61% D. 76%\nAnswer: B",
+    "where": "Appendix Table 4 (each shot is preceded by a 'Knowledge:' passage)"
+   },
+   {
+    "purpose": "Open-domain QA prompt (excerpt)",
+    "text": "Question: Who won the mens money in the bank match?\nAnswer: Braun Strowman",
+    "where": "Appendix Table 5 (each shot is preceded by a 'Knowledge:' passage)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Adam opti-\nmizer (Kingma & Ba, 2015) with a learning rate of 2e-5, a\nbatch size of 64, and a warmup ratio of 0.1",
+    "where": "Sec 5.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "REPLUG LSR raises Codex 5-shot MMLU overall accuracy from 68.3 to 71.8 (relative +5.1%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": 71.8,
+   "unit": "% accuracy",
+   "baseline_value": 68.3,
+   "n": null,
+   "setup": "Codex (code-davinci-002) 175B, top-10 Wikipedia (Dec 2018) passages, ensemble, 5-shot direct prompting",
+   "note": null,
+   "where": "Table 2, p.4",
+   "table": "Table 2, row Codex + REPLUG LSR, column All"
+  },
+  {
+   "claim": "Untuned REPLUG (Contriever) raises Codex MMLU to 71.4, relative +4.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": 71.4,
+   "unit": "% accuracy",
+   "baseline_value": 68.3,
+   "n": null,
+   "setup": "Same as above, frozen Contriever",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Codex + REPLUG, column All"
+  },
+  {
+   "claim": "REPLUG and REPLUG LSR improve Codex on MMLU by 4.5% and 5.1% (relative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU relative gain",
+   "value": 5.1,
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 setup",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "improve the original Codex model by 4.5% and 5.1%, respectively"
+  },
+  {
+   "claim": "On Pile bits-per-byte, REPLUG LSR gives 7.7% average improvement over 8 baseline LMs vs 4.7% for REPLUG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPB",
+   "value": 7.7,
+   "unit": "% relative BPB gain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 LMs (GPT-2 S/M/L/XL, GPT-3 Ada/Babbage/Curie/Davinci), top-10 docs ensembled, 128-token retrieval context, 367M-doc corpus from Pile train",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "results in 7.7% improvement over baselines compared to 4.7% improvement of REPLUG averaged over the 8 models"
+  },
+  {
+   "claim": "GPT-3 Davinci (175B) Pile BPB goes 0.80 -> 0.77 (REPLUG) -> 0.75 (REPLUG LSR), a 6.3% gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPB",
+   "value": 0.75,
+   "unit": "BPB",
+   "baseline_value": 0.8,
+   "n": null,
+   "setup": "Pile, top-10 docs",
+   "note": "Abstract says 6.3% for GPT-3 175B language modeling; Table 1 gain is 6.3 for LSR.",
+   "where": "Table 1",
+   "table": "Table 1, row Davinci, column + REPLUG LSR"
+  },
+  {
+   "claim": "REPLUG LSR improves Codex 16-shot NQ from 40.6 to 45.5 (+12.0% relative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ few-shot",
+   "value": 45.5,
+   "unit": "% (NQ, metric not named; presumably exact match)",
+   "baseline_value": 40.6,
+   "n": null,
+   "setup": "Codex, top-10 Wikipedia passages, 16-shot in-context",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Codex + REPLUG LSR, column NQ Few-shot"
+  },
+  {
+   "claim": "REPLUG LSR improves Codex TriviaQA (filtered) from 73.6 to 77.3 (+5.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TQA few-shot",
+   "value": 77.3,
+   "unit": "%",
+   "baseline_value": 73.6,
+   "n": null,
+   "setup": "Codex 16-shot, top-10 Wikipedia",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Codex + REPLUG LSR, column TQA Few-shot"
+  },
+  {
+   "claim": "Untuned REPLUG on Codex gets NQ 44.7 and TQA 76.8; a prior Codex + Contriever concatenation (Si et al. 2022) gets 44.2 and 76.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ few-shot",
+   "value": 44.7,
+   "unit": "%",
+   "baseline_value": 44.2,
+   "n": null,
+   "setup": "16-shot, Wikipedia",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Codex + REPLUG, column NQ Few-shot"
+  },
+  {
+   "claim": "REPLUG LSR beats Atlas (finetuned on 64 examples) in few-shot NQ (42.4) and TQA (74.5) but lags fully finetuned retrieval LMs (Atlas full 60.4 NQ).",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Few-shot vs full-data finetuned",
+   "note": "Authors attribute the gap to test-train overlap (32.5% of NQ test questions overlap, Lewis et al. 2021).",
+   "where": "Sec 6.3, Table 3",
+   "quote": "This is likely due to the presence of near-duplicate test questions in the training set"
+  },
+  {
+   "claim": "REPLUG LSR on Codex MMLU is slightly below Flan-PaLM 540B (72.2) and above Atlas 11B (47.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": 71.8,
+   "unit": "%",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Flan-PaLM, column All"
+  },
+  {
+   "claim": "Ensembling random documents is worse than no retrieval; relevant documents are crucial; gains grow monotonically with more documents but ~10 suffice.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 Curie on Pile, number of docs varied (values only in Fig 4)",
+   "note": "Text calls it Figure 6 but the figure is Figure 4; Fig 6 is the Li Bai example.",
+   "where": "Sec 7.1, Fig 4",
+   "quote": "ensembling random documents leads to worse performance"
+  },
+  {
+   "claim": "REPLUG gain is consistent over model size: OPT 125M gets 6.9% perplexity improvement, OPT 66B 5.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 6.9,
+   "unit": "% perplexity improvement (OPT 125M)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikitext-103 test perplexity, Wikitext-103 train as retrieval corpus, top-10 ensembled; GPT-2, OPT, BLOOM",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "OPT with 125M parameters achieves 6.9% perplexity improvement, while OPT with 66B parameters achieves 5.6% perplexity improvement"
+  },
+  {
+   "claim": "REPLUG LSR gains 1.9% over original Codex in the STEM MMLU category.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU STEM",
+   "value": 1.9,
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "outperforms the original model by 1.9% even in the STEM category"
+  }
+ ],
+ "limits": [
+  "Authors concede REPLUG lacks interpretability: unclear when the model relies on retrieved or parametric knowledge.",
+  "Tuned only with Curie supervision and used for other LMs; Flan-PaLM and PaLM not accessible, so untested.",
+  "Requires k forward passes and token probabilities from the LM.",
+  "No seeds, variance, or significance; hardware and compute for LSR training unstated; code link not in the text.",
+  "Full-data finetuned retrieval LMs still beat it on NQ/TQA."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "REPLUG LSR",
+   "definition": "REPLUG with LM-Supervised Retrieval: retriever trained using the LM as supervision",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Contriever (Izacard et al. 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever initialisation",
+   "quote": null
+  },
+  {
+   "work": "Questions are all you need to train a dense passage retriever (Sachan et al.)",
+   "year": 2022,
+   "arxiv": "2206.10658",
+   "relation": "extends",
+   "note": "LSR objective inspired by it",
+   "quote": "Inspired by Sachan et al. (2022)"
+  },
+  {
+   "work": "Atlas (Izacard et al. 2022b)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "white-box retrieval LM",
+   "quote": null
+  },
+  {
+   "work": "RETRO (Borgeaud et al.)",
+   "year": 2021,
+   "arxiv": "2112.04426",
+   "relation": "baseline",
+   "note": "needs LM parameter updates",
+   "quote": null
+  },
+  {
+   "work": "kNN-LM (Khandelwal et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs internal representations",
+   "quote": null
+  },
+  {
+   "work": "REALM (Guu et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "asynchronous index refresh",
+   "quote": null
+  },
+  {
+   "work": "Prompting GPT-3 to be reliable (Si et al.)",
+   "year": 2022,
+   "arxiv": "2210.09150",
+   "relation": "baseline",
+   "note": "Codex + Contriever concatenation",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training queries, corpus, eval",
+   "quote": null
+  },
+  {
+   "work": "Demonstrate-search-predict (Khattab et al.)",
+   "year": 2022,
+   "arxiv": "2212.14024",
+   "relation": "related",
+   "note": "concurrent frozen-retriever work",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "REPLUG at inference",
+   "page": 2,
+   "why": "shows the per-document prepend and probability ensemble"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "REPLUG LSR training process",
+   "page": 3,
+   "why": "shows the KL loop with frozen LM"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Ensembling random documents does not result in improved performance.",
+   "page": 5,
+   "why": "ablation vs random docs"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cites Figure 6 for the random-doc ablation but it is Figure 4.",
+  "arXiv v4 PDF; the repo filename says 2023.",
+  "Prompt tables in the appendix are truncated examples, so prompts are abridged."
+ ]
 }

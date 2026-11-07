@@ -1,0 +1,469 @@
+{
+ "schema": 1,
+ "key": "1911.02150",
+ "pdf": "ai-engineering/07-inference-engineering/sources/shazeer-2019-fast-transformer-decoding.pdf",
+ "bib": {
+  "title": "Fast Transformer Decoding: One Write-Head is All You Need",
+  "authors": [
+   "Noam Shazeer"
+  ],
+  "first_author": "Shazeer",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1911.02150",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 21401,
+  "chars_total": 21401,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can sharing keys and values across attention heads cut the memory-bandwidth cost of incremental Transformer decoding without hurting quality?",
+ "hypothesis": "Removing the heads dimension from K and V reduces the n/d memory-to-compute term by a factor of h and so speeds incremental decoding with minor quality loss.",
+ "contributions": [
+  "Performance analysis of batched and incremental multi-head attention showing memory access to arithmetic ratio of Theta(n/d + 1/b)",
+  "Multi-query attention: heads share one set of keys and values",
+  "Experiments on WMT14 EN-DE and Billion-Word LM showing large decode speedup and small quality loss"
+ ],
+ "method": {
+  "summary": "Replace every attention layer (encoder self, decoder self, encoder-decoder) with multi-query attention, which keeps h query heads but one shared K and V, and widen the feed-forward layer to keep parameters equal. Compare quality and amortized training and inference time against multi-head, local attention and reduced-h/dk/dv variants.",
+  "task": "machine translation (WMT14 EN-DE) and language modelling (Billion-Word)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": null,
+    "split": "dev (wmt13 sacrebleu set) for BLEU and perplexity; test (wmt14) for final BLEU",
+    "source": "WMT 2014",
+    "preprocessing": "multiple training sentences concatenated to 256-token sequences"
+   },
+   {
+    "name": "Billion-Word Language Modeling Benchmark",
+    "role": "both",
+    "size": null,
+    "split": "dev perplexity reported",
+    "source": "Chelba et al., 2013",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "multi-head baseline (MT)",
+    "role": "baseline",
+    "params": "211 million",
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "dmodel=1024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "dff": 4096,
+     "dk=dv": 128,
+     "positional": "learned",
+     "embeddings": "token-embedding and output layers weight-shared"
+    }
+   },
+   {
+    "name": "multi-query (MT)",
+    "role": "proposed",
+    "params": "211 million",
+    "architecture": "same, all attention layers multi-query",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "dmodel=1024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "dff": 5440
+    }
+   },
+   {
+    "name": "local variants",
+    "role": "evaluated",
+    "params": "211 million",
+    "architecture": "decoder self-attention limited to current and previous 31 positions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": "8",
+    "context": "32 positions (decoder self-attn)",
+    "other": {}
+   },
+   {
+    "name": "reduced h/dk/dv variants",
+    "role": "baseline",
+    "params": "211 million",
+    "architecture": "multi-head with h in 1,2,4,8 and dk=dv in 128,64,32,16",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": "1, 2, 4 or 8",
+    "context": null,
+    "other": {
+     "dff": "6784 (MT)"
+    }
+   },
+   {
+    "name": "transformer-decoder LM baseline",
+    "role": "baseline",
+    "params": "192 million",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "dmodel=1024",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "dff": 8192,
+     "dk=dv": 128,
+     "multi-query dff": 9088,
+     "reduced-head dff": 9984
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "MT: 128 examples of 256 input + 256 target tokens; LM: 64K tokens",
+   "steps": "MT: 100,000; LM: 136K",
+   "epochs": "MT: ~20; LM: 10",
+   "tokens": null,
+   "seq_len": "256 input + 256 target (MT)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "32-core TPUv3 cluster",
+   "compute": null,
+   "wall_clock": "about 2 hours per MT model; about 3 hours per LM model",
+   "seeds": null,
+   "other": {
+    "note": "learning rates, dropout, label smoothing are deferred to a configuration link marked [to be added before publication]",
+    "library": "tensor2tensor and mesh-tensorflow"
+   }
+  },
+  "inference": {
+   "decoding": "greedy maximum-likelihood (dev); greedy and beam 4 with alpha 0.6 (test)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "target length 128 in speed test",
+   "samples": "single run per model; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "speed batch": "1024 sequences (128 per core)",
+    "speed source/target length": "128/128",
+    "padding": "fixed shapes with padding and masking, so each decode step takes the same time"
+   },
+   "other": {
+    "speed hardware": "one TPUv2 (8 cores)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "sacrebleu -t wmt13 -l en-de -tok intl on dev; -t wmt14 on test",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ln(PPL)",
+     "definition": "per-subword-token perplexity on dev (log)",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "dev-PPL",
+     "definition": "per-word perplexity on dev, Billion-Word",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "amortized time",
+     "definition": "step or pass time divided by number of tokens",
+     "unit": "TPUv2-microseconds per output token",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "multi-head attention",
+    "local attention",
+    "fewer heads and smaller dk, dv"
+   ],
+   "protocol": "single runs, no significance test or seeds reported"
+  },
+  "availability": {
+   "code": "configuration link left as [to be added before publication]",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Multi-query cuts amortized incremental decoder time per token about 12x versus multi-head (greedy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoder time",
+   "value": 3.8,
+   "unit": "us per token",
+   "baseline_value": 46,
+   "n": null,
+   "setup": "WMT14 EN-DE, 211M-param 6-layer encoder-decoder, incremental greedy inference on one TPUv2 (8 cores), batch 1024, source and target length 128",
+   "quote": "for amortized per-token costs of 1.5µs and 3.8µs respectively",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Multi-query decoding under beam-4 search is about 6x faster in the decoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoder time beam-4",
+   "value": 32,
+   "unit": "us per token",
+   "baseline_value": 203,
+   "n": null,
+   "setup": "same, beam-4 search",
+   "quote": null,
+   "table": "Table 2, row multi-query, column Beam-4 Search enc. + dec.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Multi-query decoder step takes 3.9 ms against 47 ms for multi-head.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoder step",
+   "value": 3.9,
+   "unit": "ms per step",
+   "baseline_value": 47,
+   "n": null,
+   "setup": "WMT14 EN-DE, 211M-param 6-layer encoder-decoder, incremental greedy inference on one TPUv2 (8 cores), batch 1024, source and target length 128",
+   "quote": "the decoder took 3.9ms per step",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Multi-query encoder pass is slightly faster, 195 ms versus 222 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "encoder time",
+   "value": 195,
+   "unit": "ms",
+   "baseline_value": 222,
+   "n": null,
+   "setup": "WMT14 EN-DE, 211M-param 6-layer encoder-decoder, incremental greedy inference on one TPUv2 (8 cores), batch 1024, source and target length 128",
+   "quote": "the encoder took 195ms",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Training step cost is essentially unchanged: 13.0 vs 13.2 us per token.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 13.0,
+   "unit": "us per (input+target) token",
+   "baseline_value": 13.2,
+   "n": null,
+   "setup": "one TPUv2 (8 cores), 32,768 input + 32,768 target tokens per step",
+   "quote": null,
+   "table": "Table 2, row multi-query, column Training enc. + dec.",
+   "note": "step times 425 ms vs 433 ms",
+   "where": "4.3"
+  },
+  {
+   "claim": "Dev BLEU is 0.2 lower for multi-query (greedy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU dev",
+   "value": 26.5,
+   "unit": "BLEU",
+   "baseline_value": 26.7,
+   "n": null,
+   "setup": "WMT14 EN-DE dev, greedy",
+   "quote": null,
+   "table": "Table 1, row multi-query, column BLEU (dev)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Dev ln(PPL) is 1.439 for multi-query against 1.424 for multi-head.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ln(PPL)",
+   "value": 1.439,
+   "unit": "ln(PPL)",
+   "baseline_value": 1.424,
+   "n": null,
+   "setup": "WMT14 EN-DE dev",
+   "quote": null,
+   "table": "Table 1, row multi-query, column ln(PPL) (dev)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Multi-query had the highest test BLEU with beam-4 decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU test beam 4",
+   "value": 28.5,
+   "unit": "BLEU",
+   "baseline_value": 28.4,
+   "n": null,
+   "setup": "WMT14 EN-DE test, beam 4, alpha 0.6",
+   "quote": "actually had the highest BLEU score (28.5) with beam-4 decoding",
+   "table": null,
+   "note": "greedy test: 27.5 vs 27.7 (Table 1)",
+   "where": "4.2"
+  },
+  {
+   "claim": "Cutting heads to 1 costs far more quality than multi-query (dev BLEU 25.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU dev",
+   "value": 25.8,
+   "unit": "BLEU",
+   "baseline_value": 26.5,
+   "n": null,
+   "setup": "WMT14 EN-DE dev, h=1, dk=dv=128, dff 6784",
+   "quote": null,
+   "table": "Table 1, row multi-head h=1, column BLEU (dev)",
+   "note": "multi-query dev BLEU is 26.5",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Memory access to arithmetic ratio of incremental multi-head attention is Theta(n/d + 1/b); multi-query removes a factor h from the n/d term.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "analysis with m=n, k=v=d/h, n<=d",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "2.4.1, 3.1"
+  }
+ ],
+ "limits": [
+  "Only one small setup: 211M WMT14 EN-DE and 192M Billion-Word models trained for hours; no large-scale or decoder-only generation quality tests.",
+  "Speed test uses fixed padded shapes, so every decode step costs the same; the author notes growing tensors could save time early in the sequence.",
+  "Single runs, no seeds or variance; training hyperparameters deferred to a link marked to be added before publication.",
+  "Quality drop is small but present (dev BLEU 26.7 to 26.5, LM PPL 29.9 to 30.2)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "multi-query attention",
+   "definition": "identical to multi-head attention except that the different heads share a single set of keys and values",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "multi-head Transformer being modified; WMT14 setup follows it",
+   "quote": null
+  },
+  {
+   "work": "One billion word benchmark (Chelba et al.)",
+   "year": 2013,
+   "arxiv": "1312.3005",
+   "relation": "uses-data",
+   "note": "LM experiments",
+   "quote": null
+  },
+  {
+   "work": "Generating Wikipedia by summarizing long sequences (Liu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memory compression, orthogonal approach",
+   "quote": null
+  },
+  {
+   "work": "Accelerating neural transformer via an average attention network (Zhang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reducing attended positions",
+   "quote": null
+  },
+  {
+   "work": "A time-restricted self-attention layer for ASR (Povey et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "local attention",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of neural attention",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "WMT14 EN-DE Results.",
+   "page": 8,
+   "why": "quality of multi-query vs fewer heads"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Amortized training and inference costs for WMT14 EN-DE Translation Task with sequence length 128. Values listed are in TPUv2-microseconds per output token.",
+   "page": 8,
+   "why": "decode speedup"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Billion-Word LM Benchmark Results.",
+   "page": 8,
+   "why": "LM quality"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3, MultiquerySelfAttentionIncremental",
+   "snippet": "K and V drop the h dimension: einsum(\"bd,dk->bk\", M, P_k); logits = einsum(\"bhk,bmk->bhm\", q, K)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Ligatures and split lines in extracted code; incremental code samples in the paper contain typos (M instead of x, O instead of o)."
+ ]
+}

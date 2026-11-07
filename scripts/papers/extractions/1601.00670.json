@@ -1,19 +1,369 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1601.00670",
  "pdf": "data-analytics/sources/blei-2016-variational-inference.pdf",
  "bib": {
   "title": "Variational Inference: A Review for Statisticians",
-  "first_author": "David M. Blei",
-  "year": "2016",
-  "venue": "Journal of the American Statistical Association",
+  "authors": [
+   "David M. Blei",
+   "Alp Kucukelbir",
+   "Jon D. McAuliffe"
+  ],
+  "first_author": "Blei",
+  "year": 2016,
+  "venue": "preprint (arXiv:1601.00670v9 [stat.CO], 9 May 2018; title page dated May 11, 2018)",
   "arxiv": "1601.00670",
-  "doi": "10.1080/01621459.2017.1285773"
+  "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "4ff94692-9505-4e4f-9dc4-87687ceaeec8"
+  "at": "2026-11-07",
+  "chars_read": 111091,
+  "chars_total": 111091,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
  },
- "legacy_report": "SOURCE: \"Variational Inference: A Review for Statisticians\", David M. Blei, Alp Kucukelbir, Jon D. McAuliffe.\nVenue as printed: preprint only. The PDF prints \"arXiv:1601.00670v9 [stat.CO] 9 May 2018\" and a title-page date of \"May 11, 2018\". No journal name, volume or acceptance note appears. The only \"American Statistical\" hits are reference entries for other papers. The filename's 2016 is not printed in the PDF except through the 1601 arXiv id. Any journal citation needs another source.\n\nCOVERAGE: 114,117 of 114,117 chars, all 41 pages, none empty. References were read for origins. Pages 9 and 17 were also rendered to check extraction and read Figure 6. Nothing was skipped.\n\nCLAIMS\n\nVI vs MCMC\n\n- claim: MCMC is asymptotically exact but heavier. VI only finds a nearby density but tends to be faster.\n  number: none\n  setup: general guidance, not a measured result\n  quote: \"MCMC methods tend to be more computationally intensive than variational inference but they also provide guarantees of producing (asymptotically) exact samples from the target density (Robert and Casella, 2004). Variational inference does not enjoy such guarantees—it can only ﬁnd a density close to the target—but tends to be faster than MCMC .\"\n  where: p3\n\n- claim: Use VI for large data and fast model exploration. Use MCMC for small data where precision justifies the cost.\n  number: 20 years; one billion documents (both are illustrative scenarios, not experiments)\n  setup: authors' hypothetical examples\n  quote: \"we might use MCMC in a setting where we spent 20 years collecting a small but expensive data set, where we are conﬁdent that our model is appropriate, and where we require precise inferences. We might use variational inference when ﬁtting a probabilistic model of text to one billion text documents\"\n  where: p3\n\n- claim: Posterior geometry also matters. For mixtures where Gibbs is unavailable, VI may beat HMC even on small data.\n  number: none\n  setup: multimodal mixture posteriors, citing Kucukelbir et al. 2015\n  quote: \"For mixture models where Gibbs sampling is not an option, variational inference may perform better than a more general MCMC technique (e.g., Hamiltonian Monte Carlo), even for small datasets (Kucukelbir et al., 2015).\"\n  where: p3\n\n- claim: Relative accuracy is unresolved. VI underestimates variance generally, yet predictive accuracy need not suffer.\n  number: none\n  setup: review of empirical lines of work\n  quote: \"The relative accuracy of variational inference and MCMC is still unknown. We do know that variational inference generally underestimates the variance of the posterior density; this is a consequence of its objective function.\"\n  where: p3\n  second quote: \"variational inference does not necessarily suffer in accuracy, e.g., in terms of posterior predictive densities\" (p3)\n\nKL direction and variance\n\n- claim: KL(q||p) penalises q placing mass where p has little, and penalises the reverse less, so marginals come out too narrow.\n  number: none\n  setup: illustrated on a highly correlated 2D Gaussian posterior under mean-field. The approximation has the same mean as the target. The authors call the effect common, not universal.\n  quote: \"It penalizes placing mass in q(·) on areas where p(·) has little mass, but penalizes less the reverse. In this example, in order to successfully match the marginal variances, the circular q(·) would have to expand into territory where p(·) has little mass.\"\n  where: p9\n\n- claim: For Bayesian Gaussian mixtures, the asymptotic variational covariance is provably too small.\n  number: O(1/n) is the rate at which the VI estimate and MLE approach each other\n  setup: Wang and Titterington 2005, 2006: conjugate priors, mean-field, variational posterior mean as estimator\n  quote: \"the VI estimate and maximum likelihood estimate (MLE) approach each other at a rate ofO (1/n). In Wang and Titterington (2005), they show that the asymptotic variational posterior covariance matrix is “too small”—it differs from the MLE covariance (i.e., the inverse Fisher information) by a positive-deﬁnite matrix.\"\n  where: p25\n\nELBO\n\n- claim: The KL is not computable because it contains log p(x), so VI maximises the ELBO, which is equivalent up to a constant.\n  number: none (equations 12-14)\n  setup: any model and any q\n  quote: \"ELBO (q) = E [log p(z,x)]− E [log q(z)] . (13)\"\n  where: p6\n  second quote: \"log p(x) = KL (q(z)‖p(z|x)) + ELBO (q). (14)\" (p7)\n\n- claim: The ELBO balances expected likelihood against closeness to the prior.\n  number: none\n  setup: general\n  quote: \"= E [log p(x|z)]− KL (q(z)‖p(z)) .\"\n  where: p6\n\n- claim: Picking a model by its ELBO sometimes works but has no theoretical justification.\n  number: none\n  setup: model selection\n  quote: \"Though this sometimes works in practice, selecting based on a bound is not justiﬁed in theory.\"\n  where: p7\n\nMean-field\n\n- claim: Mean-field makes all latent variables independent. It can capture any marginal but no correlation.\n  number: none\n  setup: equation 15, q(z) = product of q_j(z_j). The family is not a model of the data.\n  quote: \"it can capture any marginal density of the latent variables. However, it cannot capture correlation between them.\"\n  where: p8\n\n- claim: The independence assumption helps scaling but can worsen local optima and variance underestimation.\n  number: none\n  setup: stated as an open problem\n  quote: \"they can exacerbate issues with local optima of the objective and underestimating posterior variances; see Figure 1.\"\n  where: p26\n\nCAVI\n\n- claim: CAVI updates each factor in turn from the expected log complete conditional, the same conditional Gibbs samples from.\n  number: none (equations 17-18)\n  setup: mean-field family\n  quote: \"The Gibbs sampler main-tains a realization of the latent variables and iteratively samples from each variable’s com-plete conditional. Equation (18) uses the same complete conditional.\" (the hyphen breaks and the join across the Figure 1 stale-text boundary were normalised, see PROBLEMS; the sentence itself is on p10)\n  where: p10\n\n- claim: CAVI reaches only a local optimum, and the outcome depends on initialisation.\n  number: 10 random initialisations, each reaching a different value\n  setup: Gaussian mixture on the image data\n  quote: \"Figure 2 shows the ELBO trajectory for 10 random initializations using the Gaussian mixture model.\"\n  where: p11\n  second quote: \"CAVI only guar-antees convergence to a local optimum\" (p11, line break as extracted)\n\n- claim: Landing in one label-switching mode is often sufficient for mixtures.\n  number: none\n  setup: when the goal is exploring clusters or predicting new observations\n  quote: \"Representing one of these modes is sufﬁcient for exploring latent clusters or predicting new observations.\"\n  where: p11\n\n- claim: Exact evidence for a mixture is intractable.\n  number: K^n configurations\n  setup: Bayesian mixture of unit-variance Gaussians\n  quote: \"The time complexity of numerically evaluating the K-dimensional integral isO (K n).\"\n  where: pp5-6 (superscript lost in extraction)\n\nEmpirical examples\n\n- claim: CAVI fits a 30-cluster GMM to 10,000 images in under a minute and is orders of magnitude faster than Stan's HMC sampler.\n  number: 30 clusters; 576 dimensions; 10,000 training and 10,000 test images; under a minute. No speed ratio or hardware is stated.\n  setup: imageCLEF colour histograms, compared on held-out average log predictive. Details are in Appendix B: diagonal-covariance GMM, a0 = 1/K, Stan with assignments marginalised out.\n  quote: \"We use CAVI to ﬁt a Gaussian mixture model with thirty clusters to image histograms. We randomly select two sets of ten thousand images from the imageCLEF collection to serve as training and testing datasets.\" and \"CAVI is orders of magnitude faster than this sampling algorithm.\"\n  second quote: \"concatenating the three color histograms gives a 576-dimensional representation\" (p16)\n  third quote: \"CAVI ﬁts a Gaussian mixture model to ten thousand images in less than a minute.\" (p17, Figure 6 caption)\n  where: p16\n\n- claim: The authors say this comparison does not settle VI vs MCMC.\n  number: none\n  setup: footnote 5\n  quote: \"This is not a deﬁnitive comparison between variational inference and MCMC . Other samplers, such as a collapsed Gibbs sampler, may perform better than Hamiltonian Monte Carlo sampling.\"\n  where: p16\n\n- claim: The simulation study shows ELBO \"elbows\" on a non-convex objective.\n  number: K = 5\n  setup: 2D data, simulated Gaussians with random means and covariances. Sample size is not stated.\n  quote: \"We simulate K = 5 Gaussians with random means, covariances, and mixture assignments.\"\n  where: p14\n\nSVI\n\n- claim: CAVI iterates over all the data each round. SVI subsamples, using a noisy unbiased natural gradient.\n  number: none\n  setup: conditionally conjugate models, optimising global parameters. Reaches a local optimum.\n  quote: \"The noisy natural gradient ˆg(λ) is unbiased: Et [ˆg(λ)] = g(λ). And it is cheap to compute— it only involves a single sampled data point and only one set of optimized local parameters.\"\n  where: p21\n\n- claim: Step sizes must satisfy the Robbins-Monro conditions.\n  number: κ in (0.5, 1]\n  setup: step-size schedule\n  quote: \"Many sequences will satisfy these conditions, for exampleεt = t−κ forκ∈ (0.5, 1].\"\n  where: p21\n\n- claim: SVI needs no new derivation beyond CAVI.\n  number: none\n  setup: conditionally conjugate models\n  quote: \"We emphasize that SVI requires no new derivation beyond what is needed for CAVI.\"\n  where: p21\n\n- claim: SVI took topic models from thousands of documents to millions.\n  number: 1.8M articles. No timing is given.\n  setup: LDA on the New York Times, reproduced from Hoffman et al. 2013\n  quote: \"Figure 7 illustrates topics inferred using the latent Dirichlet allocation model (Blei et al., 2003) from 1.8M articles from the New York Times. This analysis would not have been possible without SVI.\"\n  where: p22\n\nPracticalities\n\n- claim: Held-out log predictive is a cheaper convergence proxy than the full ELBO, but it is not monotone.\n  number: none\n  setup: CAVI monitoring\n  quote: \"Unlike the full ELBO , held-out predictive probability is not guaranteed to monotonically increase across iterations of CAVI.\"\n  where: p11\n\n- claim: Non-conjugate models such as Bayesian logistic regression fall outside the basic recipe. Black-box and automatic methods address them.\n  number: none\n  setup: section 5.3, including ADVI in Stan, which the authors call a step towards derivation-free VI\n  quote: \"The posterior density of the coefﬁcients is not in an exponential family and we cannot apply the variational inference methods we discussed above.\"\n  where: p25\n\n- claim: Footnote 1 treats the Laplace approximation as variational in the broad sense. The review itself covers KL(q||p).\n  number: none\n  setup: definition, per Wainwright and Jordan 2008\n  quote: \"This includes methods like expectation propagation (Minka, 2001), belief propagation (Yedidia et al., 2001), or even the Laplace approximation.\"\n  where: p3\n\nOpen problems (pp24-26)\n\n- Alternative divergences, such as α-divergence and EP's \"other direction\". These \"may be difﬁcult to optimize\" but \"may give better approximations\" (p26).\n- Richer families with efficient optimisation: structured VI, non-diagonal Gaussians, Giordano et al.'s variance correction, hierarchical variational models (p26).\n- Combining VI and MCMC: \"A principled analysis of when to use (and combine) variational inference and MCMC would have both theoretical and practical impact in the ﬁeld.\" (p26)\n- VI as an estimator: \"the statistical properties of variational inference are not yet well understood, espe-cially in contrast to the wealth of analysis ofMCMC techniques.\" (p26)\n\nLIMITS\n\n- No exactness guarantee and no general accuracy bound. Bounding theory is something the authors only \"envision\" (p4).\n- Theory is piecemeal: \"Each result revolves around a single model and a single family of variational approximations.\" (p24) Results treat VI posterior means as point estimates, and \"Sometimes the research ﬁnds that they do not enjoy the same asymptotics.\" (p24)\n- The image study reports speed and held-out predictive only. It does not compare posterior variances or intervals against MCMC, so it does not measure the variance problem. It is one model, one sampler, no stated hardware, and no prose NUTS timing.\n- VI's convergence is to a local optimum, and the ELBO does not tell you how far q is from p. The paper offers no diagnostic of approximation quality.\n- Focus is mean-field and conditionally conjugate models.\n- Dated: the arXiv version is from 2018, but its citations stop at 2016 and the Stan reference is 2.8.0. The review does not mention normalizing flows or any later VI quality diagnostic. The \"VI is faster\" guidance predates current samplers and hardware, and the PDF cannot speak to them.\n\nBUILDS ON (as printed)\n\n- MCMC: Metropolis et al. 1953; Hastings 1970; Geman and Geman 1984; Gelfand and Smith 1990.\n- Early VI, two tracks: Peterson and Anderson 1987 (\"arguably the ﬁrst variational procedure\", Complex Systems), with Parisi 1988, Saul et al. 1996, Jaakkola and Jordan 1996/1997, Ghahramani and Jordan 1997, and Jordan et al. 1999 (Machine Learning). Second track: Hinton and Van Camp 1993 (Computational Learning Theory), Neal and Hinton 1999 (\"ﬁrst published in 1993\"), MacKay 1997, Waterhouse et al. 1996.\n- EM: Dempster et al. 1977 (JRSS B). KL: Kullback and Leibler 1951 (Annals of Mathematical Statistics).\n- CAVI: Bishop 2006. Message passing: Winn and Bishop 2005 (JMLR).\n- SVI: Hoffman et al. 2013 (JMLR); Robbins and Monro 1951 (Annals of Mathematical Statistics); Amari 1982, 1998.\n- Survey anchor: Wainwright and Jordan 2008.\n- Black-box and automatic VI: Ranganath et al. 2014; Kingma and Welling 2014 (ICLR); Rezende et al. 2014 (ICML); Kucukelbir et al. 2015 (NeurIPS, printed as \"Neural Information Processing Systems\") and 2016 (arXiv).\n- NUTS: Hoffman and Gelman 2014 (JMLR). This is also the source the target note already cites.\n\nCODE\n\n- Log-sum-exp identity, p11, equation 20: log sum exp(x_i) = α + log sum exp(x_i − α), with α \"typically set to maxi xi\".\n- Stan GMM, p30, Figure 8. The extraction is letter-spaced and should be re-read from the page. Its point is stated on p29: \"Since Stan does not support discrete latent variables, we marginalize over the assignment variables.\" Algorithms 1 (p10), 2 (p14) and 3 (p23) are compact pseudocode.\n\nFIGURES\n\n- Figure 1, p9: \"Visualizing the mean-ﬁeld approximation to a two-dimensional Gaussian posterior. The ellipses show the effect of mean-ﬁeld factorization.\" A round q sits inside an elongated p, which shows lost correlation and shrunken marginals at a glance. Best candidate.\n- Figure 6, p17: \"Comparison of CAVI to a Hamiltonian Monte Carlo-based sampling technique.\" Shows the speed gap and the metric on one axis. My reading of the rendered plot, approximate and not stated in the text: CAVI reaches about 0 within a few seconds and stays flat. NUTS starts near -1000 at about 15-20 s and reaches about -500 by about 140 s, then stays there to about 260 s. Do not cite these readings as reported values.\n- Figure 2, p11: \"Different initializations may lead CAVI to ﬁnd different local optima of the ELBO.\" Shows multiple ELBO trajectories over 0-50 seconds. Explains local optima faster than prose.\n- Figure 3, p15: \"A simulation study of a two dimensional Gaussian mixture model.\" Shows ELBO elbows alongside fitted components by iteration.\n- Figure 7, p22: 1.8M NYT topics. Useful for scale only.\n- Figures 4, 5 and 8 (pp16, 17, 30) support the image example and add little beyond it.\n\nPROBLEMS\n\n- Stale hidden text on p9: the Figure 1 image embeds an older draft of section 2.4, so extraction emits duplicate text (\"distribution\" where the final says \"density\"), garbled equations, and page marker \"9\". Rendering confirms this text is not visible on the page. Quotes above use the visible version.\n- Figure 3's embedded plot also extracts a stray \"Figure 1: Main caption\" (p15). It is not visible content that matters.\n- Equations partly garbled by extraction (superscripts lost, as in O(K n)). Figure 8 code is letter-spaced. Ligatures and hyphen breaks are kept in quotes except where noted.\n- Oddities in the source itself, as printed:\n  - p6 says computing the evidence is \"exponential in K\", although the count given is K^n, which is exponential in n.\n  - The Figure 6 legend says \"NUTS (Hoﬀman et al. 2013)\", while the text cites Hoffman and Gelman (2014).\n  - Algorithm 3's update prints λt on both sides and uses f(zt, xt), whereas equation 54 uses λt−1 and the text uses t(·,·).\n- No embedded instructions found.\n- Rendered check images are at /var/folders/f9/kl6j_lwx5p73h75kz13k6www0000gn/T/tmp.4WHdfWtmLJ/ (p9.png, p17.png). Source PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/data-analytics/sources/blei-2016-variational-inference.pdf"
+ "type": "survey",
+ "question": "What is variational inference, how does it approximate a posterior by optimization, and how does it compare with MCMC for statisticians?",
+ "hypothesis": null,
+ "contributions": [
+  "Review mean-field VI and coordinate ascent (CAVI)",
+  "Special case of exponential-family / conditionally conjugate models",
+  "Full worked example: Bayesian mixture of Gaussians",
+  "Derive stochastic variational inference (SVI) for massive data",
+  "Survey applications, theory and open problems"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "CAVI fit a 30-cluster Gaussian mixture to image histograms orders of magnitude faster than a Stan HMC/NUTS sampler.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed, average log predictive on held-out set",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "imageCLEF color histograms (576-dim), 30 clusters, 10,000 train and 10,000 test images; compared by average log predictive of test set vs time; single comparison, not definitive",
+   "quote": "CAVI is orders of magnitude faster than this sampling algorithm.",
+   "table": null,
+   "note": "Authors' footnote 5: not a definitive VI vs MCMC comparison; a collapsed Gibbs sampler may do better than HMC.",
+   "where": "Sec 3.4, p16; Fig 6"
+  },
+  {
+   "claim": "CAVI fits the mixture to ten thousand images in under a minute.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "less than a minute",
+   "unit": "time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same imageCLEF GMM experiment, Fig 6 caption",
+   "quote": "CAVI ﬁts a Gaussian mixture model to ten thousand images in less than a minute.",
+   "table": null,
+   "note": null,
+   "where": "Fig 6, p17"
+  },
+  {
+   "claim": "CAVI from 10 random initializations reaches different ELBO values, so the ELBO has many local optima.",
+   "kind": "measured",
+   "source": null,
+   "metric": "initializations",
+   "value": "10",
+   "unit": "random initializations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gaussian mixture on image data; means initialised from factorized Gaussian calibrated to data mean and variance; ELBO axis read from Fig 2 spans about -2.4e6 to -1.6e6 over 50 s",
+   "quote": "Figure 2 shows the ELBO trajectory for 10 random initializations using the Gaussian mixture model.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5, p11"
+  },
+  {
+   "claim": "In a simulation, K = 5 two-dimensional Gaussians were recovered by CAVI; ELBO shows elbows as plateaus are reached.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated 2-D data, random means, covariances and assignments",
+   "quote": "We simulate K = 5 Gaussians with random means, covariances, and mixture assignments.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, p14; Fig 3"
+  },
+  {
+   "claim": "Mean-field variational densities generally underestimate posterior variance because KL(q||p) penalises mass where p is small.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2-D correlated Gaussian illustration (Fig 1); general statement",
+   "quote": "Further, the marginal variances of the approximation under-represent those of the target density.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p9"
+  },
+  {
+   "claim": "VI is faster but has no exactness guarantee; MCMC is asymptotically exact but heavier.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General guidance, not measured",
+   "quote": "MCMC methods tend to be more computationally intensive than variational inference but they also provide guarantees of producing (asymptotically) exact samples from the target density",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p3"
+  },
+  {
+   "claim": "Where Gibbs is unavailable (mixture models) VI may beat general MCMC such as HMC even on small data.",
+   "kind": "reported",
+   "source": "Kucukelbir et al., 2015",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multimodal mixture posteriors",
+   "quote": "For mixture models where Gibbs sampling is not an option, variational inference may perform better than a more general MCMC technique (e.g., Hamiltonian Monte Carlo), even for small datasets (Kucukelbir et al., 2015).",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p3"
+  },
+  {
+   "claim": "Relative accuracy of VI and MCMC is unknown.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' assessment",
+   "quote": "The relative accuracy of variational inference and MCMC is still unknown.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p3"
+  },
+  {
+   "claim": "SVI scaled LDA topic modelling to 1.8M New York Times articles.",
+   "kind": "reported",
+   "source": "Hoffman et al., 2013",
+   "metric": null,
+   "value": "1.8M",
+   "unit": "articles",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LDA via SVI, figure reproduced from Hoffman et al. 2013",
+   "quote": "Figure 7 illustrates topics inferred using the latent Dirichlet allocation model (Blei et al., 2003) from 1.8M articles from the New York Times.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, p22"
+  },
+  {
+   "claim": "Early CAVI topic models analysed thousands to tens of thousands of documents; SVI reaches millions.",
+   "kind": "reported",
+   "source": "Blei et al., 2003; Hoffman et al., 2013",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LDA",
+   "quote": "With SVI, topic models scale up to millions of documents",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, p22"
+  },
+  {
+   "claim": "SVI step sizes must satisfy Robbins-Monro conditions, e.g. eps_t = t^-kappa with kappa in (0.5,1].",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stochastic natural-gradient updates for conditionally conjugate models",
+   "quote": "Many sequences will satisfy these conditions, for example εt = t−κ for κ ∈(0.5,1].",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, p21"
+  },
+  {
+   "claim": "VI posterior mean and MLE for a Bayesian Gaussian mixture approach each other at rate O(1/n); VI covariance is too small.",
+   "kind": "reported",
+   "source": "Wang and Titterington, 2005, 2006",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conjugate Bayesian Gaussian mixtures, mean-field",
+   "quote": "show that the asymptotic variational posterior covariance matrix is “too small”",
+   "table": null,
+   "note": "Quote may fail if text differs; see check.",
+   "where": "Sec 5.2, p25"
+  }
+ ],
+ "limits": [
+  "Review: theory for VI is thin; each result covers one model and one variational family (Sec 5.2).",
+  "Only experiments are one simulation and one image-histogram GMM vs Stan HMC; authors say it is not a definitive VI vs MCMC comparison (footnote 5, p16).",
+  "Mean-field ignores posterior correlation and underestimates variance; CAVI finds only local optima; ELBO as model selection is not justified in theory (Sec 2.2).",
+  "Covers KL(q||p) mean-field and conditionally conjugate models; non-conjugate and black-box VI only briefly (Sec 5.3), and normalizing flows / amortised VI post-date it.",
+  "No wall-clock hardware, seeds or implementation versions for the image experiment are given."
+ ],
+ "practices": [
+  "Use VI for large data and fast exploration of many models; use MCMC for small data needing precise samples (Sec 1).",
+  "Monitor convergence of CAVI by ELBO change below a small threshold, or by average log predictive on a small held-out set (Sec 2.5).",
+  "Run from several random initializations and keep the best ELBO, since the ELBO is non-convex (Sec 2.5).",
+  "Work with log probabilities and use the log-sum-exp trick with alpha = max_i x_i for numerical stability (Eq 20).",
+  "Use SVI with minibatches and Robbins-Monro step sizes to scale CAVI for conditionally conjugate models (Sec 4.3).",
+  "Do not rely on the ELBO as a model-selection criterion without caution (Sec 2.2)."
+ ],
+ "terms": [
+  {
+   "term": "ELBO",
+   "definition": "ELBO(q) = E[log p(z,x)] - E[log q(z)]; equal to the negative KL divergence to the posterior plus log p(x); lower-bounds log evidence",
+   "where": "Eq 13-14, p6-7"
+  },
+  {
+   "term": "Mean-field family",
+   "definition": "latent variables mutually independent, each governed by a distinct factor: q(z) = prod_j q_j(z_j)",
+   "where": "Eq 15, p7"
+  },
+  {
+   "term": "CAVI",
+   "definition": "coordinate ascent variational inference: iteratively set q_j proportional to exp E_-j[log p(z_j|z_-j,x)] while holding other factors fixed",
+   "where": "Eq 17-18, Alg 1"
+  },
+  {
+   "term": "SVI",
+   "definition": "stochastic variational inference: stochastic natural-gradient optimisation of global variational parameters using subsampled data",
+   "where": "Sec 4.3, Alg 3"
+  },
+  {
+   "term": "Complete conditional",
+   "definition": "conditional density of a latent variable given all other latent variables and the observations",
+   "where": "Sec 2.4"
+  },
+  {
+   "term": "Evidence",
+   "definition": "marginal density of the observations p(x), obtained by marginalizing out latent variables",
+   "where": "Eq 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Jordan et al. 1999; Wainwright and Jordan 2008",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "VI foundations the review builds on",
+   "quote": null
+  },
+  {
+   "work": "Hoffman et al. 2013 Stochastic variational inference",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SVI in Sec 4.3 and LDA example",
+   "quote": null
+  },
+  {
+   "work": "Bishop 2006 PRML ch 10",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CAVI and GMM derivation",
+   "quote": null
+  },
+  {
+   "work": "Kucukelbir et al. 2015/2016 automatic VI (ADVI)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Stan-based automatic VI; VI vs HMC on mixtures",
+   "quote": null
+  },
+  {
+   "work": "Blei, Ng, Jordan 2003 LDA",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "topic model example",
+   "quote": null
+  },
+  {
+   "work": "Stan Development Team 2015; Hoffman and Gelman 2014 NUTS",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HMC/NUTS baseline in Fig 6",
+   "quote": null
+  },
+  {
+   "work": "imageCLEF (Villegas et al. 2013)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "image histogram data",
+   "quote": null
+  },
+  {
+   "work": "Gelfand and Smith 1990; Geman and Geman 1984",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Gibbs sampler, linked to CAVI",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Visualizing the mean-field approximation to a two-dimensional Gaussian posterior.",
+   "page": 9,
+   "why": "Shows variance underestimation and decoupled covariance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Different initializations may lead CAVI to find different local optima of the ELBO.",
+   "page": 11,
+   "why": "Local optima sensitivity"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Comparison of CAVI to a Hamiltonian Monte Carlo-based sampling technique. CAVI fits a Gaussian mixture model to ten thousand images in less than a minute.",
+   "page": 17,
+   "why": "Only VI vs MCMC speed comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 13",
+   "snippet": "ELBO(q) = E[log p(z,x)] - E[log q(z)]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 54",
+   "snippet": "lambda_t = (1 - eps_t) lambda_{t-1} + eps_t E_phi[alpha_hat]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section map found only a few headings; PDF is the arXiv v9, venue/year in the filename (2016) is not printed except via arXiv id; JASA publication is not stated in the PDF.",
+  "Fig 3 axis tick text garbled in extraction; Stan code in Fig 8 is spaced out.",
+  "No embedded instructions found."
+ ]
 }

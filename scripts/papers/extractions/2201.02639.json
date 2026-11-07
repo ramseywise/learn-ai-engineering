@@ -1,19 +1,753 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2201.02639",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/zellers-2022-merlot-reserve.pdf",
  "bib": {
-  "title": "MERLOT RESERVE: Neural Script Knowledge through Vision and Language and Sound",
+  "title": "MERLOT Reserve: Neural Script Knowledge through Vision and Language and Sound",
+  "authors": [
+   "Rowan Zellers",
+   "Jiasen Lu",
+   "Ximing Lu",
+   "Youngjae Yu",
+   "Yanpeng Zhao",
+   "Mohammadreza Salehi",
+   "Aditya Kusupati",
+   "Jack Hessel",
+   "Ali Farhadi",
+   "Yejin Choi"
+  ],
   "first_author": "Zellers",
   "year": 2022,
-  "venue": "CVPR 2022",
+  "venue": "preprint (arXiv:2201.02639v4, 13 May 2022; the PDF prints no venue)",
   "arxiv": "2201.02639",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 151037,
+  "chars_total": 151037,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Fig 6 celebrity name list and Table 10/11 numeric columns are garbled in extraction and used only where legible."
  },
- "legacy_report": "SOURCE: \"MERLOT Reserve: Neural Script Knowledge through Vision and Language and Sound\", Rowan Zellers, Jiasen Lu, Ximing Lu, Youngjae Yu, Yanpeng Zhao, Mohammadreza Salehi, Aditya Kusupati, Jack Hessel, Ali Farhadi, Yejin Choi (UW / AI2 / Edinburgh). The extraction prints only \"arXiv:2201.02639v4 [cs.CV] 13 May 2022\". No venue appears in the text, so cite it as arXiv 2022. (It is widely known as CVPR 2022, but the PDF does not say so.)\n\nCOVERAGE: I read all 151,037 chars over 30 pages: main text, Tables 1-11, Appendices A-F, and Figure 10. I skimmed the references for origins. pypdf output was garbled (a shifted font map, e.g. \"RP million\" for \"20 million\"), so I used the PyMuPDF extraction for everything, which is clean. Paths: /tmp/m2.txt (clean) and the source /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/zellers-2022-merlot-reserve.pdf\n\nMOST USEFUL NUMBER ON AUDIO VS TRANSCRIPT: TVQA (Table 3). It uses one finetuned model, tested with subtitles only, audio only, or both (the two softmaxes averaged). For Reserve-L on test: subtitles 85.6, audio 84.8, both 86.1. On val: 85.9 / 85.6 / 86.5. For Reserve-B on val: 82.5 / 81.3 / 83.1. Audio alone scores slightly below the transcript (0.3 to 1.2 points). Adding it on top of the transcript gains about 0.5 to 0.6 points. So the transcript does most of the work, and audio adds a small gain on dialogue-heavy TV QA.\n\nCLAIMS\n- claim: Reserve learns joint video, audio and text representations. Snippets of text and audio are replaced with a MASK, and the model has to choose the correct masked-out snippet contrastively.\n  number: 20 million videos\n  setup: pretraining on YouTube\n  quote: \"Given a video, we replace snippets of text and audio with a MASK token; the model learns by choosing the correct masked-out snippet. Our objective learns faster than alternatives, and performs well at scale: we pretrain on 20 million YouTube videos.\"\n  where: p1 abstract\n- claim: Finetuned Reserve set the state of the art on VCR, TVQA and Kinetics-600.\n  number: 5%, 7%, 1.5%\n  setup: finetuned Reserve-L against prior work\n  quote: \"it sets state-of-the-art on Visual Commonsense Reasoning (VCR), TVQA, and Kinetics-600; outperforming prior work by 5%, 7%, and 1.5% respectively.\"\n  where: p1 abstract\n- claim: On TVQA, audio alone does about as well as subtitles, and combining the two is best.\n  number: L test 85.6 (subtitles) / 84.8 (audio) / 86.1 (both). Prior SOTA MERLOT 78.4. Human 89.4.\n  setup: Table 3. A single model is finetuned jointly on subtitle and audio copies of each sequence. \"Both\" averages the two softmax predictions. Each question uses 35 s of video around the annotated region.\n  quote: \"During training, each sequence is duplicated: we provide one sequence with subtitles from the video, and for the other, we use audio. This lets us train a single model, and then test how it will do given subtitles, given audio, or given both (by averaging the two softmax predictions).\" and \"Reserve-L improves over prior work by 7.6%.\"\n  where: p6, Table 3\n- claim: Adding audio during pretraining helps VCR, even though VCR has no sound.\n  number: +0.7 (audio as target), +1.0 (audio as input and target), plus about 1 more point from web text\n  setup: Table 1, VCR Q→A val after one pretraining epoch, same architecture and data throughout. Mask LM 67.2, VirTex-style 67.8, Contrastive Span 69.7, audio as target 70.4, audio as input and target 70.7, without strict localization 70.6, full Reserve-B 71.9.\n  quote: \"This boosts VCR accuracy by 0.7%.\" / \"This boosts accuracy by 1% in total.\" / \"Table 1: Ablation study of our contrastive span objective. It outperforms prior work in a Vision+Text setting, with a 1% boost when audio is added. Our full setup, adding written text, improves another 1%.\"\n  where: p5\n- claim: The contrastive span objective beats token-level Mask LM and VirTex on vision plus text alone.\n  number: over 2%\n  setup: Table 1, one epoch\n  quote: \"our contrastive span objective boosts performance by over 2%, after one epoch of pretraining only on vision and text.\"\n  where: p5\n- claim: On VCR test, Reserve-L beats every single model on the leaderboard.\n  number: Q→AR 72.0 (vs MERLOT 65.1, ERNIE-ViL-Large 66.3)\n  setup: Table 2, VCR test, single models\n  quote: \"Reserve-L outperforms all prior work, by over 5% on Q→AR metric.\"\n  where: p6\n- claim: On Kinetics-600, audio adds 1.7 points top-1.\n  number: B 88.1→89.7. L 89.4→91.1 (MTV-Huge 89.6).\n  setup: Table 4, val, finetuned jointly with and without audio. 4 uniformly sampled frames plus 6 audio subsegments (10 s).\n  quote: \"Reserve improves by 1.7% when it can jointly represent the video's frames with its sound.\"\n  where: p6-7, Table 4, App D.1.3\n- claim: Zero-shot, Reserve is competitive on four video tasks and beats supervised work on STAR. Audio helps on every task (here audio is added on top of frames, not compared against a transcript).\n  number: STAR overall B 39.4→40.5 with audio (ClipBERT supervised 36.7). MSR-VTT QA top-1 L 5.8 with audio vs Just Ask 2.9. LSMDC L 31.0 with audio (CLIP ≤2.3). EPIC verb R@5 L 15.6→23.2 with audio.\n  setup: Table 5, N=8 segments, labels encoded as phrases and nearest to MASK. Questions are rewritten as statements (templates for STAR, GPT-3 for MSR-VTT).\n  quote: \"Our base model outperforms all supervised prior work by 3.7%. The model with audio performs better, with average 1.1% improvement.\" and \"Reserve-L (+audio) outperforms Reserve-L with an average 3.0%\"\n  where: p7, App D.2.1-D.2.2\n- claim: On LSMDC, Reserve beats human text-only performance but not a supervised LSTM.\n  number: 31% vs 30.2% (human), 34.4% (LSTM)\n  setup: zero-shot fill-in-the-blank test, 30,354 examples\n  quote: \"Our model obtains 31% when audio is included, which outperforms human text-only performance (30.2 %) [82]... A supervised LSTM obtains 34.4% in this text-only setting\"\n  where: App D.2.3\n- claim: Model sizes and compute.\n  number: B about 200M finetunable parameters, L 644M. TPU v3-512 for 5 days (B) and 16 days (L).\n  setup: B has hidden size 768, ViT-B/16 and a 12-layer joint encoder. L has 1024, ViT-L/16 and a 24-layer joint encoder. Both use a 12-layer audio encoder (AST-style) and a 4-layer text span encoder. Batch is 1024 videos × 16 segments, 10 epochs, 750k steps.\n  quote: \"We train on TPU v3-512 accelerators; training takes 5 days for Reserve-B, and 16 days for Reserve-L.\" / \"Reserve-B has 200M finetunable parameters ... Reserve-L has 644M parameters.\"\n  where: p4, p6, Table 8\n- claim: Efficiency per VCR candidate.\n  number: GFLOPs: B 146, L 341, MERLOT 303, UNITER-Large 1867\n  setup: Table 7, one image plus 128 tokens\n  quote: \"our Reserve-L requires one-fifth the FLOPs of detector-based systems, like UNITER-Large\"\n  where: p6, Table 7\n- claim: Dataset. YT-Temporal-1B contains 20M English-subtitled YouTube videos and 1B frames.\n  number: 20M videos / 1B frames\n  setup: crawled through YouTube recommendations from YT-Temporal-180M, filtered by a T5 groundedness classifier. Only video IDs are released.\n  quote: \"we introduce a new training dataset of 20 million English-subtitled YouTube videos, and 1 billion frames, called YT-Temporal-1B.\"\n  where: p4, App E\n- claim: Input design relevant to frame selection. A video is cut into 5 s segments, and each segment contributes one frame taken from its middle plus either its ASR text or its audio.\n  number: 5 seconds\n  setup: pretraining\n  quote: \"Segments default to 5 seconds in length\" / \"A frame vt, from the middle of the segment\"\n  where: p3\n- claim: YouTube caption timestamps are slightly early and loose. The authors fit a regressor that corrects them by at most about 0.3 s.\n  number: about 0.1 s early, correction ≤0.3 s\n  setup: 2000 videos aligned against Google Cloud ASR\n  quote: \"they show up on average roughly 0.1 seconds before each word is spoken\" / \"the offsets can never be above 0.3 seconds\"\n  where: App C.1-C.2\n- claim: Audio does not help person recognition. Reserve recognises celebrities far worse than CLIP.\n  number: under 11% vs CLIP 86.0%\n  setup: Table 6, 120 celebrities, zero-shot\n  quote: \"In all modes, our model is less than 11% accurate at recognizing celebrities.\"\n  where: App A.1.1\n- claim: Zero-shot audio classification lags supervised AudioCLIP.\n  number: ESC50 52.2 vs 68.6. US8K 62.3 vs 68.8.\n  setup: Table 11, image-and-text prompt\n  quote: \"AudioCLIP [54] ... performs 16% higher on ESC50, and 6.4% higher on US8K.\"\n  where: App F.1\n- claim: Energy use.\n  number: 8.23 t CO2e, about 20,000 kWh\n  setup: about 3 weeks on TPU v3-512, europe-west4\n  quote: \"The total carbon footprint of our work was a net 8.23 tons of CO2 equivalent\"\n  where: App A.4\n\nLIMITS:\n- The authors concede: \"Our model only learns from 40-second long videos; relies on ASR models for subtitles, and can only match (not generate) text and audio.\"\n- Zero-shot results depend on hand-written question-to-statement prompts. Reserve-L does worse than B on STAR, which the authors attribute to sensitivity to grammar.\n- The audio-vs-transcript evidence comes from one task (TVQA, scripted TV) using averaged ensembles. No retrieval or RAG evaluation is reported.\n- Pretraining may not have converged: \"if we pretrained longer, VCR performance might continue to increase.\"\n- NaN gradients in L were zeroed out (\"We are not currently sure why this happens\").\n- The ASR was not cleaned, unlike MERLOT. Bias and privacy risks are acknowledged.\n- Dated: this is a 2022 encoder-only matching model that does not generate. It predates LLM-based video models.\n\nBUILDS ON: MERLOT (Zellers et al., 2021) for the frame-transcript matching objective and the data pipeline. CLIP (Radford et al., 2021) and ALIGN (Jia et al., 2021) for contrastive matching. BERT (Devlin et al., 2018) and SpanBERT (Joshi et al., 2020) for masking. VirTex (Desai & Johnson, 2021). ViT (Dosovitskiy et al., 2020). AST (Gong et al., 2021). Rotary embeddings (Su et al., 2021). VATT (Akbari et al., 2021) for the Kinetics setup. The Pile (Gao et al., 2020) for web text. \"Reentry\" from Edelman (1993). Scripts from Schank & Abelson (1975).\n\nCODE: none worth keeping. The paper has only the loss equation (Eq. 1: symmetric InfoNCE between L2-normalised MASK predictions and span encodings, scaled by a learned σ clipped at 100, p4) and the GPT-3 question-rewrite prompt (App D.2.4).\n\nFIGURES:\n- Fig 2 (p3) shows the architecture: ViT plus an audio encoder, with BPE text or audio at each segment, fused by a joint encoder. Faster than prose for \"one frame plus text-or-audio per segment\".\n- Fig 3 (p4) shows contrastive span training with masked text and audio matched against independent encodings. It explains the objective at a glance.\n- Fig 5 (p8) shows the popcorn and \"why\"-laugh examples where audio carries information the subtitles lack. It is the clearest intuition for when audio adds over a transcript.\n- Fig 7 (p22) shows the misalignment between ASR timing and audio and the masking fix. Relevant to timestamped transcripts.\n\nPROBLEMS:\n- pypdf extraction is garbled (font mapping), so I used the PyMuPDF text instead.\n- Internal inconsistency on FLOPs: the main text says Reserve-L \"uses fewer FLOPs than MERLOT, while scoring 7% higher\". Table 7 shows 341 GFLOPs for Reserve-L against 303 for MERLOT, and Appendix B.3 says \"roughly on par\", then \"it [MERLOT] uses more FLOPs than does our Reserve-L\". Don't cite the \"fewer FLOPs\" claim.\n- Table 7 gives Reserve-L VCR Q→AR as 71.5, while Table 2 gives 72.0 on test. The split for Table 7 is not stated.\n- Table 9 is described as finetuning hyperparameters, but D.1 calls it \"Table 8\".\n- The paper contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a model learn joint representations of video frames, subtitles and audio with a self-supervised contrastive span objective, and do they transfer to fine-tuned and zero-shot vision-language tasks, including ones without sound?",
+ "hypothesis": "Learning from all modalities in a time-locked, reentrant way (each modality teaching the others) gives better multimodal representations, and audio helps even audio-less tasks like VCR.",
+ "contributions": [
+  "Reserve, a model for multimodal script knowledge, fusing vision, audio, and text.",
+  "A new contrastive span matching objective, enabling our model to learn from text and audio self-supervision.",
+  "Experiments, ablations, and analysis, that demonstrate strong multimodal video representations."
+ ],
+ "method": {
+  "summary": "Video is split into 5-second segments, each a middle frame plus either ASR text or audio. Independent ViT, AST and text-span encoders feed a bidirectional joint Transformer; 25% of text/audio subsegments are replaced by MASK and the model contrastively matches the MASK output to an independent encoding of the hidden span, plus a frame-to-transcript contrastive loss. Pretrained from scratch on YT-Temporal-1B, then fine-tuned on VCR, TVQA, Kinetics-600 or used zero-shot.",
+  "task": "self-supervised multimodal video pretraining (contrastive masked span), then VCR, TVQA, Kinetics-600 fine-tuning and zero-shot STAR, EPIC-Kitchens, LSMDC, MSR-VTT QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "YT-Temporal-1B",
+    "role": "pretrain",
+    "size": "20 million English-subtitled YouTube videos, 1 billion frames",
+    "split": null,
+    "source": "YouTube, video IDs only released, research use; built from 30M candidate IDs",
+    "preprocessing": "filters: no gaming, dense speech (50 words in 30 s), cld3 English >=80%, thumbnail diversity, >=1 COCO object; no ASR clean-up; timing refined by MLP regressor trained on 2000 videos"
+   },
+   {
+    "name": "The Pile (web text)",
+    "role": "pretrain",
+    "size": null,
+    "split": "sequences of length 800 per video, 38 masked spans each",
+    "source": "The Pile [40]",
+    "preprocessing": "used for extra text candidates"
+   },
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": null,
+    "split": "test via leaderboard; val for ablations",
+    "source": "Zellers et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "TVQA",
+    "role": "both",
+    "size": null,
+    "split": "val and test",
+    "source": "Lei et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "Kinetics-600",
+    "role": "both",
+    "size": null,
+    "split": "validation set reported",
+    "source": "Carreira et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "STAR, EPIC-Kitchens, LSMDC FiB, MSR-VTT QA",
+    "role": "eval",
+    "size": "LSMDC test 30,354 examples; EPIC-Kitchens 700 videos",
+    "split": "zero-shot",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VoxCeleb2 / VGGFace2 subset",
+    "role": "eval",
+    "size": "120 celebrities x 100 samples",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Reserve-B",
+    "role": "proposed",
+    "params": "inferred: ~200M finetunable on VCR (stated)",
+    "architecture": "ViT-B/16 + AST audio encoder + text span encoder + bidirectional joint Transformer",
+    "init_from": "random initialization",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": "vision 12, audio 12, text-span 4, joint 12",
+    "hidden": 768,
+    "heads": 12,
+    "context": "640 tokens pretraining (8 segments), 1312 after res adaptation",
+    "other": {
+     "rotary_per_head": 32,
+     "head_size": 64,
+     "FLOPs_VCR": "146 GFLOPs"
+    }
+   },
+   {
+    "name": "Reserve-L",
+    "role": "proposed",
+    "params": "644M",
+    "architecture": "ViT-L/16 + AST + text span encoder + joint Transformer",
+    "init_from": "random initialization",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": "vision 24, audio 12, text-span 4, joint 24",
+    "hidden": 1024,
+    "heads": 16,
+    "context": "640 tokens pretraining, 1312 after res adaptation",
+    "other": {
+     "FLOPs_VCR": "341 GFLOPs"
+    }
+   },
+   {
+    "name": "MERLOT",
+    "role": "baseline",
+    "params": "223M",
+    "architecture": "ViT-ResNet50 hybrid + text, no audio",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP (ViT-B/16, RN50x16)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "image-text dual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "zero_shot": "logits averaged over frames, softmax over label space"
+    }
+   },
+   {
+    "name": "UNITER-Large, VilBERT, VisualBERT, ERNIE-ViL, Villa, VATT, MTV, Just Ask",
+    "role": "baseline",
+    "params": "UNITER-Large 378M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "rewrites MSR-VTT QA questions into MASK statements, prompted with a dozen examples"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = L_text + L_audio + L_frame; symmetric contrastive (CLIP-style) span matching with learned scale sigma clipped at 100; 25% of text/audio subsegments masked; two masked variants VT->TA and VTA->T",
+   "optimizer": "AdamW, beta2=0.98, eps=1e-6",
+   "lr": "peak 4e-4 (B), 3e-4 (L)",
+   "lr_schedule": "linear warmup then cosine decay to 0.02x of max over 10 epochs; res adaptation: warm up to 0.02x peak over first 1/5 epoch then cosine to 0",
+   "warmup": "3750 steps (1/20 epoch)",
+   "batch_size": "1024 videos x N=16 segments (two groups of 8); 16384 frames for matching; 49152 text spans and 49152 audio spans",
+   "steps": "750k (+75k for res adaptation)",
+   "epochs": "10 (+1 for res adaptation; Reserve-L res adaptation 0.5 epoch after preemption)",
+   "tokens": null,
+   "seq_len": "640 (160 text&pooled audio; 480 pooled vision); 1312 res-adapted",
+   "precision": "bfloat16, gradients and AdamW state in 16 bit, NaN gradients set to 0",
+   "weight_decay": 0.1,
+   "dropout": "none",
+   "regularisation": "no dropout; weight decay 0.1 also applied toward pretrained weights when fine-tuning",
+   "hardware": "TPU v3-512",
+   "compute": "5 days (B), 16 days (L) on TPU v3-512; roughly 3 weeks total, 20,000 kWh, 8.23 tCO2e",
+   "wall_clock": "5 days B, 16 days L",
+   "seeds": null,
+   "other": {
+    "grad_clip": "none",
+    "finetune": {
+     "VCR": "bs 32, 5 epochs, 288x512, lr 2e-5 (B) 8e-6 (L), grid tried 1e-5,2e-5,3e-5 / 8e-6,1e-5,1.2e-5",
+     "TVQA": "bs 32, 3 epochs, lr 5e-6, tried 5e-6,1e-5",
+     "Kinetics-600": "bs 64, 15 epochs, lr 1e-5 (B) 5e-6 (L), VATT augmentation"
+    },
+    "finetune_schedule": "linear warmup over first half of first epoch, linear decay to 0",
+    "audio": "22050 Hz (table) / 22500 Hz (text), window 1536, hop 588, 64 mel bins, 1.6 s subsegments",
+    "image": "192x320 pretraining, 288x512 and 384x384 res adaptation",
+    "masking": "max span 15, mean 5.5; segment 5 s",
+    "loss_spikes": "Reserve-L training loss sometimes spiked to near random init and recovered; cause unknown"
+   }
+  },
+  "inference": {
+   "decoding": "zero-shot: nearest label vector to MASK hidden state (no generation)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or variance reported",
+   "prompting": "zero-shot: question converted to statement with MASK; N=8 segments; audio optional",
+   "retrieval": "label-space matching: MASK output vs encoded candidate phrases",
+   "parameters": {
+    "N_segments_zeroshot": 8,
+    "EPIC_tau_a": 1,
+    "EPIC_frame_interval_s": 2.0,
+    "MSR-VTT_label_space": "top 1k (Sec 4.4) / top 2000 (App D.2.4)",
+    "TVQA_context": "35 s around annotated region; 7 further segments",
+    "Kinetics": "4 frames + 6 audio subsegments"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VCR Q->A, QA->R, Q->AR",
+     "definition": "four-way multiple choice for answer, rationale, and both correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TVQA accuracy",
+     "definition": "5-way multiple choice",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kinetics-600 top-1/top-5",
+     "definition": "600-way classification of 10 s clip",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "STAR, MSR-VTT QA, LSMDC FiB accuracy; EPIC-Kitchens class-mean R@5",
+     "definition": "zero-shot",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GFLOPs",
+     "definition": "per image+question+answer candidate on VCR, 128 text tokens",
+     "unit": "GFLOPs",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "MERLOT",
+    "UNITER",
+    "ERNIE-ViL",
+    "Villa",
+    "VilBERT",
+    "VisualBERT",
+    "B2T2",
+    "VATT",
+    "MTV",
+    "TimeSFormer",
+    "Florence",
+    "ClipBERT",
+    "AVT+",
+    "RULSTM",
+    "CLIP",
+    "Just Ask",
+    "AudioCLIP"
+   ],
+   "protocol": "Single runs, test on leaderboard or val; no seeds or confidence intervals stated; learning rate chosen by small grid on val."
+  },
+  "availability": {
+   "code": "rowanzellers.com/merlotreserve",
+   "weights": "checkpoints released for research use",
+   "data": "YT-Temporal-1B video IDs only"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3 rewrites MSR-VTT questions into statements with underscore blank",
+    "text": "what is a car being driven through?\na car is being driven through _.",
+    "where": "Appendix D.2.4"
+   },
+   {
+    "purpose": "STAR conversion example",
+    "text": "The person MASK the bottle.",
+    "where": "Appendix D.2.2"
+   },
+   {
+    "purpose": "zero-shot audio label prompt",
+    "text": "the sound of ${label}",
+    "where": "Appendix F.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "We increased the learning rate linearly to its peak value (4e-4 for\nReserve-B, 3e-4 for\nReserve-L) over 3750 steps",
+    "where": "Appendix B.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Reserve-L fine-tuned sets VCR Q->AR test accuracy of 72.0, over 5 points above the best prior single model (ERNIE-ViL-Large 66.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->AR test",
+   "value": "72.0",
+   "unit": "%",
+   "baseline_value": "66.3 (ERNIE-ViL-Large)",
+   "n": null,
+   "setup": "VCR test leaderboard, single models, Reserve-L pretrained 10 epochs on YT-Temporal-1B plus res-adaptation, fine-tuned 5 epochs.",
+   "note": "Table 7 prints Reserve-L Q->AR as 71.5 (and Reserve-B 62.6, MERLOT 65.1); Table 2 prints 72.0.",
+   "where": "Table 2, Sec 4.1.2",
+   "table": "Table 2, row Reserve-L, column Q->AR"
+  },
+  {
+   "claim": "TVQA test with subtitles only: Reserve-L 85.6 vs MERLOT 78.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TVQA test acc",
+   "value": "85.6",
+   "unit": "%",
+   "baseline_value": "78.4 (MERLOT)",
+   "n": null,
+   "setup": "One fine-tuned model (jointly on subtitle and audio sequences), tested with subtitles + frames; TVQA test.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Reserve-L (Subtitles), column Test"
+  },
+  {
+   "claim": "TVQA test with audio only instead of subtitles: Reserve-L 84.8, below subtitles by 0.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TVQA test acc",
+   "value": "84.8",
+   "unit": "%",
+   "baseline_value": "85.6 (subtitles)",
+   "n": null,
+   "setup": "Same model as the subtitles row, input is audio representations instead of subtitles.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Reserve-L (Audio), column Test"
+  },
+  {
+   "claim": "TVQA test with both (two softmaxes averaged): Reserve-L 86.1, 0.5 above subtitles alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TVQA test acc",
+   "value": "86.1",
+   "unit": "%",
+   "baseline_value": "85.6 (subtitles only)",
+   "n": null,
+   "setup": "Same model; averaging subtitle-sequence and audio-sequence softmax predictions; one run, no seeds reported.",
+   "note": null,
+   "where": "Table 3, Sec 4.2",
+   "table": "Table 3, row Reserve-L (Both), column Test"
+  },
+  {
+   "claim": "TVQA val, Reserve-B: subtitles 82.5, audio 81.3, both 83.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TVQA val acc (both)",
+   "value": "83.1",
+   "unit": "%",
+   "baseline_value": "82.5 (subtitles)",
+   "n": null,
+   "setup": "Reserve-B fine-tuned model, val set.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows Reserve-B, column Val"
+  },
+  {
+   "claim": "Reserve-L improves over prior TVQA work by 7.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TVQA gain over prior SOTA",
+   "value": "7.6",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TVQA, Reserve-L vs MERLOT, subtitles + audio.",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Reserve-L improves over prior work by 7.6%."
+  },
+  {
+   "claim": "Kinetics-600 val top-1 with audio: Reserve-L 91.1, 1.5 above the larger vision-only MTV-Huge (89.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kinetics-600 top-1",
+   "value": "91.1",
+   "unit": "%",
+   "baseline_value": "89.6 (MTV-Huge)",
+   "n": null,
+   "setup": "Kinetics-600 validation, fine-tuned 15 epochs, 4 frames + 6 audio subsegments.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Reserve-L +Audio, column Top-1"
+  },
+  {
+   "claim": "Adding audio lifts Kinetics-600 top-1 by 1.7 points for Reserve-L (89.4 to 91.1) with the same jointly fine-tuned model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kinetics-600 top-1 gain from audio",
+   "value": "1.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kinetics-600 val.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Reserve improves by 1.7% when it can jointly represent the video’s frames with its sound."
+  },
+  {
+   "claim": "Contrastive span objective beats Mask LM by 2.5 points on VCR Q->A val after one pretraining epoch (V+T only).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->A val",
+   "value": "69.7",
+   "unit": "%",
+   "baseline_value": "67.2 (Mask LM)",
+   "n": null,
+   "setup": "Ablation, same architecture and data, 1 epoch of pretraining, fine-tuned VCR Q->A val.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Contrastive Span vs Mask LM"
+  },
+  {
+   "claim": "Audio as input and target gives 70.7; full Reserve-B (with web text) 71.9 on the ablation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->A val",
+   "value": "71.9",
+   "unit": "%",
+   "baseline_value": "70.7 (audio as input and target)",
+   "n": null,
+   "setup": "Ablation table, VCR Q->A val, one epoch.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Reserve-B"
+  },
+  {
+   "claim": "Zero-shot STAR overall: Reserve-B +audio 40.5 vs CLIP ViT-B/16 38.0; beats supervised ClipBERT/MERLOT-type rows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STAR test overall",
+   "value": "40.5",
+   "unit": "%",
+   "baseline_value": "38.0 (CLIP ViT-B/16)",
+   "n": null,
+   "setup": "STAR test, N=8 frames, templated questions rewritten as statements with MASK, label space = 4 options.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Reserve-B (+audio), column Overall"
+  },
+  {
+   "claim": "On zero-shot STAR Reserve-B (39.4) outperforms Reserve-L (38.3) without audio.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STAR test overall",
+   "value": "39.4",
+   "unit": "%",
+   "baseline_value": "38.3 (Reserve-L)",
+   "n": null,
+   "setup": "STAR test.",
+   "note": "Authors hypothesise limited prompt searching around question templates.",
+   "where": "Table 5, Sec 4.4",
+   "table": "Table 5, rows Reserve-B and Reserve-L, column Overall"
+  },
+  {
+   "claim": "Zero-shot MSR-VTT QA: Reserve-L +audio 13.6 top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSR-VTT QA acc",
+   "value": "13.6",
+   "unit": "%",
+   "baseline_value": "2.9 (Just Ask ZS) / 8.8",
+   "n": null,
+   "setup": "MSR-VTT QA test; questions reworded into statements by GPT-3 with 12 examples; label space top 1k options (main text) vs top 2000 (appendix D.2.4).",
+   "note": "Main text 4.4 says top 1k options; Appendix D.2.4 says top 2000 most common answers. Intro claims it nearly doubles Just Ask zero-shot.",
+   "where": "Table 5",
+   "table": "Table 5, row Reserve-L (+audio), column MSR-VTT QA top1"
+  },
+  {
+   "claim": "Zero-shot LSMDC fill-in-the-blank: Reserve-L +audio 31.0, beating CLIP and human text-only 30.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LSMDC FiB acc",
+   "value": "31.0",
+   "unit": "%",
+   "baseline_value": "26.1 Reserve-B no audio; CLIP 2.0-2.3 not same column",
+   "n": null,
+   "setup": "LSMDC FiB test, 30,354 examples, N=8 segments, LSMDC vocabulary as label space.",
+   "note": "Table 5 column alignment from text extraction is unreliable.",
+   "where": "Sec D.2.3",
+   "quote": "Our model obtains 31% when audio is included",
+   "table": "Table 5, row Reserve-L (+audio), column LSMDC Acc"
+  },
+  {
+   "claim": "Reserve-L needs about one-fifth the FLOPs of UNITER-Large for a VCR candidate: 341 vs 1867 GFLOPs total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GFLOPs",
+   "value": "341",
+   "unit": "GFLOPs",
+   "baseline_value": "1867 (UNITER-Large)",
+   "n": null,
+   "setup": "FLOPs per image + question + answer candidate on VCR (128 text tokens), exact counts excluding NMS for UNITER.",
+   "note": null,
+   "where": "Table 7, Sec B.3",
+   "table": "Table 7, row Reserve-L vs UNITER-Large, column Total"
+  },
+  {
+   "claim": "Pretraining Reserve-B for 9 more epochs boosts VCR val accuracy by 5%, Reserve-L by 8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fine-tuned VCR Q->A val vs pretraining epochs.",
+   "note": null,
+   "where": "Fig 4 caption",
+   "quote": "Pretraining\nReserve-B for 9 more epochs boosts per-\nformance by 5%; L by 8%."
+  },
+  {
+   "claim": "Zero-shot person recognition is poor: under 11% for voice, image+voice, image vs CLIP 86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "celebrity recognition acc (voice)",
+   "value": "10.8",
+   "unit": "%",
+   "baseline_value": "86.0 (CLIP ViT-B/16, image)",
+   "n": null,
+   "setup": "120 celebrities x 100 samples from VoxCeleb2 and VGGFace2, 120-way names.",
+   "note": null,
+   "where": "Appendix A.1.1, Table 6",
+   "quote": "In all modes, our model is\nless than 11% accurate at recognizing celebrities."
+  },
+  {
+   "claim": "Pretraining compute: TPU v3-512 for 5 days (B) and 16 days (L); carbon about 8.23 tons CO2e.",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon",
+   "value": "8.23",
+   "unit": "tons CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretraining, europe-west4 TPUs, about 20,000 kWh.",
+   "note": null,
+   "where": "Appendix A.4",
+   "quote": "The total carbon\nfootprint of our work was a net 8.23 tons of CO2 equivalent"
+  },
+  {
+   "claim": "Zero-shot audio classification trails supervised AudioCLIP by 16% on ESC50 and 6.4% on US8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap to AudioCLIP on ESC50",
+   "value": "16",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 11, Reserve with text/image/image+text label prompts.",
+   "note": null,
+   "where": "Appendix F.1",
+   "quote": "performs\n16% higher on ESC50, and 6.4% higher on US8K."
+  }
+ ],
+ "limits": [
+  "Authors: only learns from 40-second long videos, relies on ASR for subtitles, can only match (not generate) text and audio.",
+  "No seeds, variance or significance tests; all numbers single runs.",
+  "Reserve-L loss spikes during pretraining unexplained; larger model underperforms base on zero-shot STAR (attributed to limited prompt search).",
+  "TVQA audio gain over subtitles is 0.5 points on scripted dialogue; transcript carries most of the signal.",
+  "Zero-shot person recognition is weak (<11%), authors present this as a privacy benefit.",
+  "Inconsistencies: Table 7 lists VCR Q->AR 71.5 for Reserve-L vs 72.0 in Table 2; MSR-VTT label space 1k vs 2000; sample rate 22050 vs 22500 Hz.",
+  "No retrieval or RAG evaluation: this is a representation-learning paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Contrastive span training",
+   "definition": "Replace a span of text or audio with MASK and train the model to match the MASK representation to an independent encoding of the hidden span, versus others in the batch.",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Reentry",
+   "definition": "Time-locked correlations enable one modality to educate others.",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MERLOT (Zellers et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "video+ASR predecessor without audio; Reserve extends data, objective and adds audio",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "contrastive loss with learned scale; zero-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "span masking and Mask LM ablation baseline",
+   "quote": null
+  },
+  {
+   "work": "VirTex",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ablation baseline",
+   "quote": null
+  },
+  {
+   "work": "VATT",
+   "year": 2021,
+   "arxiv": "2104.11178",
+   "relation": "baseline",
+   "note": "audio-video-text transformer; Kinetics finetune recipe followed",
+   "quote": null
+  },
+  {
+   "work": "Audio Spectrogram Transformer",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "audio encoder, modified (1D layout, no supervised pretraining)",
+   "quote": null
+  },
+  {
+   "work": "ViT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder",
+   "quote": null
+  },
+  {
+   "work": "Vision-and-language: UNITER, ERNIE-ViL, Villa, VilBERT, VisualBERT",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VCR comparisons",
+   "quote": null
+  },
+  {
+   "work": "VCR, TVQA, Kinetics-600, STAR, EPIC-Kitchens, LSMDC, MSR-VTT QA",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmarks",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "web text for extra candidates",
+   "quote": null
+  },
+  {
+   "work": "YT-Temporal-180M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "scaled to YT-Temporal-1B",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Reserve architecture.",
+   "page": 3,
+   "why": "Shows independent encoders feeding a joint encoder with masked targets."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Contrastive span training.",
+   "page": 4,
+   "why": "Shows the masked-span matching objective."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "TVQA results subtitles vs audio vs both.",
+   "page": 6,
+   "why": "Direct measure of what audio adds over a transcript."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Masking strategy for ASR/audio misalignment.",
+   "page": 22,
+   "why": "Explains the donate-tokens and sandwich rules."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.2",
+   "snippet": "L_mask->text = 1/|W| sum_{w_t in W} -log( exp(sigma * w^_t . w_t) / sum_{w in W} exp(sigma * w^_t . w) )  ; L = L_text + L_audio + L_frame",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Venue is not printed in the PDF; arXiv v4 only.",
+  "Table 5/10/11 column order is scrambled in the text layer; cell values were matched by position and should be checked against the PDF image before reuse."
+ ]
 }

@@ -1,19 +1,680 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2601.11868",
  "pdf": "generative-ai/08-eval/sources/merrill-2026-terminal-bench.pdf",
  "bib": {
-  "title": "Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces",
-  "first_author": "Mike A. Merrill",
-  "year": "2026",
-  "venue": "ICLR 2026",
+  "title": "TERMINAL-BENCH: BENCHMARKING AGENTS ON HARD, REALISTIC TASKS IN COMMAND LINE INTERFACES",
+  "authors": [
+   "Mike A. Merrill",
+   "Alexander G. Shaw",
+   "Nicholas Carlini",
+   "Boxuan Li",
+   "Harsh Raj",
+   "Ivan Bercovich",
+   "Lin Shi",
+   "Jeong Yeon Shin",
+   "Thomas Walshe",
+   "E. Kelly Buchanan",
+   "and about 70 further authors incl. Niklas Muennighoff, Ludwig Schmidt (last)"
+  ],
+  "first_author": "Merrill",
+  "year": 2026,
+  "venue": "preprint",
   "arxiv": "2601.11868",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "9e9cf84a-1741-4fc0-8279-05c7ba18c984"
+  "at": "2026-11-07",
+  "chars_read": 202617,
+  "chars_total": 202617,
+  "engine": "pymupdf",
+  "skipped": "Appendix E.1 per-model command-failure pie charts (Figs 15-33), the per-task heatmap labels (Figs 11-13) and the Appendix H task descriptions were skimmed, not studied line by line; they hold chart labels and task blurbs, no method numbers."
  },
- "legacy_report": "SOURCE: \"Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces\", Merrill, Shaw (equal contribution) et al., including Carlini, Schmidt and many others. Venue as stated: preprint. The PDF prints only \"arXiv:2601.11868v1 [cs.SE] 17 Jan 2026\" and names no conference. Dataset: Terminal-Bench 2.0.\n\nCOVERAGE: 201,877 of 201,877 chars; 84 of 84 pages. Nothing was skipped. References and the long Big-Bench author list were skimmed. Figures were not viewed as images, so I saw only their text labels and captions. Quotes were checked by script against whitespace-normalised text, with one exception flagged in claim 7. Line wraps are collapsed and odd spacing and model spellings are kept as extracted.\n\nCLAIMS\n1. claim: The best agent-model pair resolves under two-thirds of tasks.\n   number: 63% (Table 2: 62.9%±3.0%); next 57.8%±2.5%, 56.9%±2.5%\n   setup: 89 tasks; Codex CLI + GPT-5.2, then Terminus 2 + Opus 4.5 and Terminus 2 + Gemini 3 Pro; default reasoning effort; 95% CI. The CI method is not stated.\n   quote: \"Codex CLI paired with GPT-5.2 achieves the highest average resolution rate of 63%\"\n   where: p6, Table 2 p81\n2. claim: The score is an average over repeated trials across many pairs.\n   number: at least 5 runs per pair; 32,155 trials; 55 rows in Table 2\n   setup: 6 agents; 32 to 100 parallel Daytona containers. Closed models use first-party APIs, open-weight models Together.AI.\n   quote: \"we run the benchmark at least five times, resulting in a total of 32,155\"\n   where: p6\n3. claim: Grading checks only the final container state, not the path.\n   number: none\n   setup: every task; the agent can use any approach and is not restricted to the terminal.\n   quote: \"they do not test the agent’s commands or console output\"\n   where: p2\n   note section: Grade the outcome by state\n4. claim: Authors conclude the model matters more than the scaffold, but Table 2 also shows large scaffold gaps for one model.\n   number: 52% Nano-to-5.2 gain; 17% Gemini 2.5 Pro gain. Both are point differences in Table 2 (62.9 vs 11.5 is 51.4; 32.6 vs 15.7 is 16.9).\n   setup: Same-model gaps from Table 2: GPT-5 49.6 (Codex CLI) vs 35.2 (Terminus 2); Haiku 4.5 29.8 (Mini-SWE-Agent) vs 13.3 (OpenHands); Gemini 2.5 Pro 32.6 (Terminus 2) vs 19.6 (Gemini CLI); Opus 4.5 57.8 (Terminus 2) vs 52.1 (Claude Code).\n   quote: \"implying that model selection is usually more important than agent scaffold\"\n   where: p7, p81\n5. claim: Turn count and output volume do not predict success across models.\n   number: episodes r=-0.028, p=0.916; output tokens r=-0.170, p=0.515\n   setup: Terminus 2 only; per-model averages, about 19 points on the charts. Across-model correlation, not within-task. See PROBLEMS for conflicting chart legends.\n   quote: \"(r=-0.028, p=0.916)\"; \"(r=-0.170, p=0.515)\"\n   where: p52\n   note section: Efficiency metrics\n6. claim: Typical runs are short, with an extreme tail.\n   number: most under 20 minutes, under 25 calls, under 10M tokens; up to 2 hours, hundreds of calls, nearly 100M tokens\n   setup: time and tokens across all 32,155 trials; calls for Terminus 2 only. A full benchmark run costs \"one to a hundred dollars\" by model price (p7), with no per-model cost table; only the Fig. 5 chart.\n   quote: \"Most trials are completed in under 20 minutes, using fewer than 25 model calls and 10 million tokens\"\n   where: p21\n7. claim: Human difficulty labels only partly predict difficulty for models, and the miss is mostly on human-medium tasks.\n   number: r=0.436; 93.3% of human-hard were empirically hard; 54.5% of human-medium were empirically hard\n   setup: \"Empirical\" means Terminus 2's average pass rate across frontier models. Hard is <33.3%, easy is ≥66.7%. By my count, Appendix H labels 30 hard, 55 medium, 4 easy; the easy tasks are absent from the matrix.\n   quote: \"(r = 0.436, p <0.001)\"; \"93.3% of human-hard tasks are also empir- ically hard\" (hyphen break is in the source)\n   where: p8\n8. claim: Command-level failures are often missing tools rather than logic errors.\n   number: 9.2% (Grok 4) to 26.7% (GPT-OSS-120B) command error rate; 24.1% of failures were command not found\n   setup: Terminus 2. Failure detection: GPT-5 medium, 92.4% agreement on 66 pairs with a 3-annotator majority. Taxonomy: GPT-5 high, 82.0% agreement on 50 annotations by one author; 3,800 sampled failures.\n   quote: \"command error rates range from 9.2%(Grok 4) to26.7%(GPT-OSS-120B)\"; \"(24.1% of all failures) followed by failures when running executables (9.6%)\"\n   where: p9, p10\n9. claim: Execution errors dominate failures for the frontier closed models, while the open model shows a more balanced profile.\n   number: judge agreement 90% (92% precision, 90% recall) on 120 traces; annotators 93% Cohen's κ on 20 trials. Bar values appear only in the chart.\n   setup: Taxonomy adapted from MAST; 9 modes in 3 classes. Two failed trials per model per task, Terminus 2; judge is GPT-5 high reasoning, with rubrics refined using Docent. Opus 4.5, GPT-5.2 and Qwen Coder shown.\n   quote: \"with an agreement of 90% (92% precision, 90% recall)\"; \"(93% Cohen’s-κ)\"\n   where: p9, rubrics p29-34\n   note section: Log why each failed run ended\n10. claim: Task quality was heavily gated by people and tools.\n   number: 93 contributors, 229 tasks, 89 kept; about 3 reviewer-hours per task\n   setup: Selection used author difficulty and reviewer quality. CI requires the oracle to pass and a no-op agent to fail. Also LLM checks, a contributor checklist, model runs and a final audit.\n   quote: \"with 93 contributors creating 229 tasks\"; \"totaling roughly three reviewer-hours of work per task\"\n   where: p3-5, p21, p25\n   note section: Environment hygiene\n11. claim: An adversarial agent is run to find ways to pass without doing the work.\n   number: none\n   setup: OpenHands with a cheat-seeking prompt; an author inspects every trajectory. No counts of exploits or tasks changed.\n   quote: \"Common exploits found by this agent include monkey-patching test environments, guessing answers\"\n   where: p27\n12. claim: An LLM debug tool separates bad tasks from fair failures by comparing failure patterns across trials.\n   number: none\n   setup: Same tests failing with similar errors in all trials suggests an instruction fault; differing failures suggest fair difficulty. No accuracy is reported for the tool.\n   quote: \"If all trials fail on the same tests with similar errors\"\n   where: p26-27\n   note section: Treat a 0% task as suspect\n13. claim: Frontier scores rose quickly, and authors expect saturation.\n   number: nearly doubled in 8 months (Gemini 2.5 Pro 32.6 to GPT-5.2 62.9, each with its best harness)\n   setup: Fig. 6; best harness per model.\n   quote: \"state-of-the-art performance on the benchmark nearly doubled\"; \"Terminal-Bench 2.0 may become saturated within the next year\"\n   where: p7\n14. claim: Authors self-score highly on the Agentic Benchmark Checklist.\n   number: 0.857, 1.000, 0.830, average 0.896; ranked second\n   setup: Self-assessment, and the ABC authors were involved in development. Zeros: I.d.2, I.f.2, III.3, III.9. III.11 has no score in the extraction.\n   quote: \"averaging to0.896\"; \"Authors of ABC have been closely involved with the development process\"\n   where: p27-28, p82\n15. claim: Other benchmarks can be ported to the same harness and checked with parity runs.\n   number: 26 adapters\n   setup: Same agent and model on original and adapted versions. No parity results are given.\n   quote: \"Terminal-Bench currently supports 26 adapters\"\n   where: p36, Table 5 p84\n\nLIMITS\nAuthors concede:\n- Agents have internet access, so they could find the oracle solutions. Authors say they have not observed this, but describe no detection method or rate: \"we have not observed this behavior in tens of thousands of agent trajectories\" (p10).\n- All tasks are public. The canary string is \"largely a symbolic safeguard\", and there is no private test set (p10, p28).\n- Internet access and machine variability affect reproducibility, and flaky results remain: \"task outcomes can vary depending on hardware differences\" (p27).\n- Some tasks may still fail verification (p10), and flaw impact is not quantified (p28).\n\nNot shown:\n- No pass@k or pass^k; only mean resolution rate with a CI, plus per-task heatmaps (Figs. 11-13).\n- No measured human baseline; human times are author estimates. Yet ABC III.12 (non-AI baselines) and III.13 (trivial agents) score 1, and no such results are tabulated.\n- ABC II.5 (isolated from ground truth) and II.6 (no live website) score 1, which sits uneasily with the internet-access limit and the mteb-leaderboard task, which consults a leaderboard.\n- Agents cannot ask for clarification (p29).\n- Default reasoning effort only, so no effort sweep.\n- The judge (GPT-5) is also a benchmarked model family.\n- Failure analysis covers failed Terminus 2 samples, not passes.\n- Token counts are not split by caching. Totals vary widely within a model, e.g. Opus 4.5 3.9M (Terminus 2) vs 256.9M (Claude Code).\n\nDated: the model set ends around December 2025, and the authors themselves expected saturation within a year.\n\nBUILDS ON\n- MAST: Pan et al., 2025 (failure taxonomy); Docent: Meng et al., 2025.\n- Agentic Benchmark Checklist: Zhu et al., 2025.\n- Big-Bench canary: Srivastava et al., 2023.\n- Failure clustering: Nathani et al., 2025; Yang et al., 2025c.\n- Agents: OpenHands (Wang et al., 2025); Mini-SWE-Agent (Yang et al., 2024).\n- Comparators: SWE-Bench (Jimenez et al., 2024); τ-Bench (Yao et al., 2025); WebArena (Zhou et al., 2024); OS World (Xie et al., 2024); HumanEval (Chen et al., 2021). Horizon framing: Kwa et al., 2025.\n\nCODE\n- p6: `harbor run -d terminal-bench@2.0`\n- p27, adversarial agent prompt: \"If you can complete a task normally without cheating, DO NOT do it.\"\n- p26-27, debug tool: \"FAIL if multiple trials consistently fail the same tests, indicating systematic specification issues\"\n- p34, failure example: on task mteb-leaderboard, after 401/404/rate-limit errors the agent writes a guessed model id to /app/result.txt and sets \"task_complete\": true. Filed under Disobey specification; other modes listed include premature termination and no or incomplete verification.\n\nFIGURES\n- Fig. 2, p3: task anatomy (instruction, Docker container, tests, oracle); shows state grading at a glance.\n- Fig. 3, p4: audit pipeline, pre-merge and post-merge; a hygiene checklist as a diagram.\n- Fig. 5, p7: cost vs performance Pareto frontier, log scale; pairs with the note's Kapoor figure.\n- Fig. 7, p8: predicted vs empirical difficulty matrix.\n- Fig. 8, p9: failure modes for 3 models; the only source for those values.\n- Fig. 9, p10: command failure taxonomy ring chart.\n- Fig. 11, p22: task-by-model heatmap, showing the unsolved set and the diagonal of tasks becoming solvable.\n- Fig. 35, p52, and Fig. 36, p53: turns and output tokens vs success. Check the legend conflict below first.\n- Fig. 1, p3 and Fig. 6, p8 are standard leaderboard and trend charts.\n\nPROBLEMS\nInternal inconsistencies in the source (I did not resolve these):\n- Task count: 89 throughout, but Table 2 says \"Token counts are for running all 74 tasks\" (p81). Table 1 also sums to 74 (p5). Fig. 4 and Appendix H sum to 89. Table 1 and the token columns may predate the final set; the source does not say.\n- Correlations: Fig. 35 legend says \"Trend Line (r=-0.084, p=0.733)\" vs prose r=-0.028. Fig. 36 legend says \"Trend Line (r=-0.073, p=0.767)\" vs prose and caption r=-0.170.\n- Appendix G looks stale: \"GPT-5 Codex leads with the highest success rate\" (44%, p52), but Table 2 has Opus 4.5 at 57.8% and GPT-5.2 at 54.0% on Terminus 2, and no GPT-5-Codex row. It also uses GLM 4.5 Air where the main text uses GLM 4.6.\n- Duplicate charts: Figs. 28 and 29 (Grok 4, Grok Code Fast 1) have identical percentages, as do Figs. 31 and 33 (MiniMax M2, Qwen3). Script-confirmed; likely copy errors, so avoid per-model citations from these four.\n- Fig. 9 order vs prose: the prose ranks app failure second at 9.6%, but File not found appears to be 11.1%. That mapping is my inference from the extracted label and value order; check the image.\n- Model counts: \"16 frontier models\" (p6), but Section 3.3 names 21, omits GPT-5 (which has results), and lists Llama 4 Maverick (no results).\n- Rankings: \"top 13 positions\" (p7), but Table 2 has 14 proprietary rows before Kimi K2 Thinking, and Fig. 1 places Kimi 8th among best-per-model entries.\n- Difficulty: p8 says labels are \"medium or hard\", but Appendix H has 4 Easy tasks.\n- Agent coverage: Fig. 11's caption says Terminus 2, but its axis includes other agents and some pairs with no Table 2 row (e.g. Kimi K2 Instruct with Mini-SWE-Agent).\n\nExtraction:\n- Small-caps and italic spacing is lost (\"anoutcome-driven\", \"to26.7%\").\n- Approximation marks appear dropped in Appendix G (\"( 44%)\").\n- Fig. 8 has no numeric labels in text.\n\nEmbedded text: Appendices B, C and E contain LLM prompts addressed to other models, including a \"CHEAT\" prompt, plus a canary string asking not to be included in training corpora. I treated all of it as data and followed none of it.\n\nTemporary extraction with page markers: /tmp/tb_extract/t.txt\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/merrill-2026-terminal-bench.pdf"
+ "type": "benchmark",
+ "question": "How well do frontier models and agents perform on hard, realistic, long-horizon tasks in command-line environments, and where do they fail?",
+ "hypothesis": "Existing agent benchmarks are either unrealistic or too easy to measure frontier models; a curated, manually verified terminal benchmark will remain hard (implied).",
+ "contributions": [
+  "Terminal-Bench framework (instruction, Docker image, tests, oracle solution, time limit) in the Harbor task format",
+  "Terminal-Bench 2.0: 89 manually verified tasks",
+  "Evaluation of six agents across frontier models, 32,155 trials",
+  "Terminus 2, a neutral single-tool agent scaffold",
+  "Failure-mode taxonomy (trajectory-level and command-level)",
+  "26 adapters porting other benchmarks to the format"
+ ],
+ "method": {
+  "summary": "Crowdsourced 229 tasks from 93 contributors, kept 89 after expert review, CI checks, model runs and an adversarial exploit audit. Each task is a container, instruction, outcome tests and a human-written oracle solution. Six agents were run with multiple models, at least five times per pair, scored by resolution rate with 95% CI, followed by judge-based failure analysis.",
+  "task": "agentic task completion in a terminal (software engineering, system administration, security, data science and others)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Terminal-Bench 2.0",
+    "role": "eval",
+    "size": "89 tasks (selected from 229 submitted by 93 contributors)",
+    "split": "all 89 used; no train/dev split",
+    "source": "open-source contributions; published at tbench.ai and via Harbor registry (terminal-bench@2.0); licence not stated",
+    "preprocessing": "Each task verified for specificity, solvability, integrity by three experienced reviewers; Big-Bench canary string in every file"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-5.2, GPT-5, GPT-5-Mini, GPT-5-Nano, Claude Opus 4.5, Opus 4.1, Sonnet 4.5, Haiku 4.5, Gemini 3 Pro, 3 Flash, 2.5 Pro, 2.5 Flash, Grok 4, Grok Code Fast",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "first-party APIs"
+    }
+   },
+   {
+    "name": "GPT-OSS-120B, GPT-OSS-20B, Llama 4 Maverick, Qwen 3 Coder 480B, Kimi K2 Instruct, Kimi K2 Thinking, GLM 4.6, MiniMax M2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "Together.AI API",
+     "note": "Llama 4 Maverick is named in Sec 3.3 but has no row in Table 2"
+    }
+   },
+   {
+    "name": "GPT-5 (high reasoning) as failure judge; GPT-5 medium as command-failure judge; GPT-5 high as command taxonomy classifier",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "at least 5 runs per supported agent-model pair; 32,155 trials in total; resolution rate is the mean over trials with 95% CI (CI method not stated)",
+   "prompting": "Agent receives the task instruction in a Docker container; tasks have a time limit (value per task not given in text); internet access allowed",
+   "retrieval": null,
+   "parameters": {
+    "agents": "Claude Code, Codex CLI, Gemini CLI, OpenHands, Mini-SWE-Agent, Terminus 2",
+    "reasoning_effort": "provider default ('medium' for Anthropic and OpenAI models)",
+    "parallelism": "Daytona, 32 to 100 containers in parallel",
+    "figure_1_scaffold": "scaffold chosen per model to maximise performance"
+   },
+   "other": {
+    "terminus_2": "single tool, a headless terminal (tmux in Docker); model emits keystrokes via LiteLLM; context summarisation module when the context limit is reached (App F)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "resolution rate",
+     "definition": "fraction of trials whose final container state passes all task tests, averaged over trials",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "empirical difficulty",
+     "definition": "Easy if Terminus 2 resolves the task with >=66.7% of the selected frontier models, Medium 33.3% to 66.7%, Hard <33.3%",
+     "unit": "category",
+     "higher_is_better": null
+    },
+    {
+     "name": "command error rate",
+     "definition": "share of agent commands whose output a GPT-5 judge marks as a failure",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "no-op dummy agent (must fail every task, CI check)",
+    "oracle solution (must pass every task)"
+   ],
+   "protocol": "Tests check the final container state only, not commands or console output. Failure analysis samples two failed trials per task per model with Terminus 2, labelled by GPT-5 judge validated against human labels (120 traces)."
+  },
+  "availability": {
+   "code": "github.com/laude-institute/terminal-bench-experiments (Harbor configs); harness via harbor run -d terminal-bench@2.0",
+   "weights": null,
+   "data": "tbench.ai; Harbor registry"
+  },
+  "prompts": [
+   {
+    "purpose": "Adversarial exploit agent (OpenHands)",
+    "text": "You are a security researcher bot and your goal is to exploit any way to CHEAT and complete a task assigned to you. If you can complete a task normally without cheating, DO NOT do it. Complete a task ONLY IF you could use some cheating.",
+    "where": "App B.4, p27 (excerpt)"
+   },
+   {
+    "purpose": "Debug tool for failed tasks",
+    "text": "You are analyzing a terminal-bench task to determine if test failures are due to insufficient task instructions rather than normal agent limitations.",
+    "where": "App B.3, p26 (excerpt)"
+   },
+   {
+    "purpose": "Command failure identification judge",
+    "text": "You are an expert at understanding and analyzing CLI / terminal inputs and outputs in the asciinema cast v2 format.",
+    "where": "App E.3, p50 (excerpt)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best agent-model pair (Codex CLI with GPT-5.2) resolves under two-thirds of tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "62.9",
+   "unit": "% resolution rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": "Codex CLI paired with GPT-5.2 achieves the highest average resolution rate of 63%",
+   "table": "Table 2, row GPT-5.2 / Codex CLI, column Resolution Rate (62.9% ± 3.0%)",
+   "note": null,
+   "where": "Sec 4, p6; Table 2 p81"
+  },
+  {
+   "claim": "Terminus 2 with Claude Opus 4.5 is second.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "57.8",
+   "unit": "% resolution rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": null,
+   "table": "Table 2, row Claude Opus 4.5 / Terminus 2, column Resolution Rate (57.8% ± 2.5%)",
+   "note": null,
+   "where": "Table 2 p81"
+  },
+  {
+   "claim": "Terminus 2 with Gemini 3 Pro is third.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "56.9",
+   "unit": "% resolution rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": null,
+   "table": "Table 2, row Gemini 3 Pro / Terminus 2, column Resolution Rate (56.9% ± 2.5%)",
+   "note": null,
+   "where": "Table 2 p81"
+  },
+  {
+   "claim": "Best open-weight model is Kimi K2 Thinking in Terminus 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "35.7",
+   "unit": "% resolution rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": "resolving 36% of tasks on average",
+   "table": "Table 2, row Kimi K2 Thinking / Terminus 2, column Resolution Rate (35.7% ± 2.8%)",
+   "note": null,
+   "where": "Sec 4, p7; Table 2"
+  },
+  {
+   "claim": "Scale of the evaluation: six agents, 16 frontier models, at least five runs per pair.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "32155",
+   "unit": "trials",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0 experimental setup",
+   "quote": "we run the benchmark at least five times, resulting in a total of 32,155 trials",
+   "table": null,
+   "note": "Text says 16 frontier models; Sec 3.3 and Fig 1 list about 21 distinct model names, and Llama 4 Maverick (named in 3.3) has no Table 2 row.",
+   "where": "Sec 3, p6"
+  },
+  {
+   "claim": "Same model, different scaffold: GPT-5 scores far higher in Codex CLI than in Terminus 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "49.6",
+   "unit": "% resolution rate (Codex CLI)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": null,
+   "table": "Table 2, rows GPT-5 / Codex CLI (49.6% ± 2.9%) and GPT-5 / Terminus 2 (35.2% ± 3.1%)",
+   "note": "Authors nonetheless conclude model choice matters more than scaffold; same-model scaffold gaps of 14 to 17 points appear in Table 2 (GPT-5 49.6 vs 35.2; Haiku 4.5 29.8 Mini-SWE-Agent vs 13.3 OpenHands; Gemini 2.5 Pro 32.6 Terminus 2 vs 19.6 Gemini CLI).",
+   "where": "Table 2 p81"
+  },
+  {
+   "claim": "Authors conclude model selection matters more than agent scaffold, from a 52% Codex CLI gain GPT-5-Nano to GPT-5.2 and 17% Gemini 2.5 Pro gain Terminus 2 vs OpenHands.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2; the printed 52% and 17% are point differences (62.9 vs 11.5 and 32.6 vs 15.7), not relative changes",
+   "quote": "implying that model selection is usually more important than agent scaffold",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p7"
+  },
+  {
+   "claim": "Opus 4.5 scores higher in the neutral Terminus 2 scaffold than in its own vendor agent Claude Code.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolution rate",
+   "value": "57.8",
+   "unit": "% (Terminus 2) vs 52.1 (Claude Code)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, 89 tasks; each agent-model pair run at least 5 times; Harbor harness, Daytona containers; default reasoning effort; resolution rate with 95% CI",
+   "quote": null,
+   "table": "Table 2, rows Claude Opus 4.5 / Terminus 2 (57.8% ± 2.5%) and Claude Opus 4.5 / Claude Code (52.1% ± 2.5%)",
+   "note": null,
+   "where": "Table 2 p81"
+  },
+  {
+   "claim": "Running the benchmark costs between one and a hundred dollars depending on model price.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminal-Bench 2.0, Fig 5 Pareto plot of cost (log scale) vs performance; no per-model cost table",
+   "quote": "Running Terminal-Bench 2.0 costs anywhere from one to a hundred dollars",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p7"
+  },
+  {
+   "claim": "Individual trials usually under 20 minutes but can reach two hours and nearly 100M tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 32,155 trials; model calls recorded for Terminus 2 only",
+   "quote": "Most trials are completed in under 20 minutes, using fewer than 25 model calls and 10 million tokens",
+   "table": null,
+   "note": null,
+   "where": "Fig 10 caption, p21"
+  },
+  {
+   "claim": "Average turns per trial show essentially no correlation with success.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.028",
+   "unit": "Pearson r (text)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminus 2 trials, per-model aggregates, about 18 models",
+   "quote": "The analysis reveals negligible correlation (r=-0.028, p=0.916)",
+   "table": null,
+   "note": "Fig 35 caption/plot prints trend line r=-0.084, p=0.733 for the same relationship; two values in the paper.",
+   "where": "App G.1, p52"
+  },
+  {
+   "claim": "Average output tokens show a weak negative correlation with success.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.170",
+   "unit": "Pearson r (text)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminus 2 trials, per-model aggregates",
+   "quote": "The results show a weak negative correlation (r=-0.170, p=0.515)",
+   "table": null,
+   "note": "Fig 36 plot prints trend line r=-0.073, p=0.767 for the same relationship.",
+   "where": "App G.2, p52"
+  },
+  {
+   "claim": "State-of-the-art nearly doubled between Gemini 2.5 Pro and GPT-5.2 releases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, best harness per model, release dates Apr to Dec 2025",
+   "quote": "state-of-the-art performance on the benchmark nearly doubled",
+   "table": null,
+   "note": "Pairs 32.6% (Gemini 2.5 Pro, Terminus 2) with 62.9% (GPT-5.2, Codex CLI) in Table 2; the paper does not print those two figures in this sentence.",
+   "where": "Sec 4.2, p7"
+  },
+  {
+   "claim": "Authors expect the benchmark may saturate within a year.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4.2",
+   "quote": "Terminal-Bench 2.0 may become saturated within the next year",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p7"
+  },
+  {
+   "claim": "Author-predicted human difficulty correlates positively with empirical difficulty (Terminus 2 pass rate across frontier models).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.436",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Empirical difficulty: Easy if resolved by >=66.7% of selected frontier models, Medium 33.3% to 66.7%, Hard <33.3%",
+   "quote": "there is a positive correlation (r = 0.436, p < 0.001)",
+   "table": null,
+   "note": "Source text line-wrap: 'In general, there is a positive correlation (r = 0.436, p < 0.001)'",
+   "where": "Sec 4.3, p8"
+  },
+  {
+   "claim": "Most human-hard tasks are also empirically hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "93.3",
+   "unit": "% of human-hard tasks empirically hard",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7 matrix, rows sum to 100%",
+   "quote": "93.3% of human-hard tasks are also empir-",
+   "table": null,
+   "note": "Fig 7: human-medium tasks are 54.5% empirically hard, 29.1% medium, 16.4% easy.",
+   "where": "Sec 4.3, p8"
+  },
+  {
+   "claim": "Failure judge (GPT-5 high reasoning) agrees with human labels on 120 traces.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90",
+   "unit": "% agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trajectory-level failure analysis, two failed Terminus 2 trials per model per task",
+   "quote": "with an agreement of 90% (92% precision, 90% recall)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, p9"
+  },
+  {
+   "claim": "Two human annotators agree on a calibration subset of 20 trials.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "93",
+   "unit": "% Cohen's kappa as printed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Failure labelling calibration",
+   "quote": "annotators achieve high agreement (93% Cohen",
+   "table": null,
+   "note": "Printed as '93% Cohen's-kappa', a percentage for a kappa statistic.",
+   "where": "Sec 4.4, p9"
+  },
+  {
+   "claim": "Command error rate ranges across models in Terminus 2 trajectories.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9.2 to 26.7",
+   "unit": "% commands failing (Grok 4 lowest, GPT-OSS-120B highest)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM-as-judge (GPT-5 medium reasoning, 92.4% agreement with majority of three annotators on 66 pairs)",
+   "quote": "command error rates range from 9.2% (Grok 4) to 26.7% (GPT-OSS-120B)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5, p9"
+  },
+  {
+   "claim": "Most frequent command failure is an executable not installed or not in PATH.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "24.1",
+   "unit": "% of failures",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3,800 uniformly sampled failures classified by GPT-5 high reasoning (82.0% agreement with 50 author annotations)",
+   "quote": "(24.1% of all failures)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5, p10"
+  },
+  {
+   "claim": "Crowdsourced tasks were filtered to the final set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "89",
+   "unit": "tasks kept of 229 from 93 contributors",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Task construction",
+   "quote": "with 93 contributors creating 229 tasks",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2, p3"
+  },
+  {
+   "claim": "Review effort per task in the final benchmark.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3",
+   "unit": "reviewer-hours per task (roughly)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three reviews plus audits",
+   "quote": "totaling roughly three reviewer-hours of work per task",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p5"
+  },
+  {
+   "claim": "Expert completion time estimates are mostly under a day.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48.6",
+   "unit": "% of tasks under 1 hour (expert)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Task-author estimates, Table 1",
+   "quote": null,
+   "table": "Table 1, row Expert, column <1 hour (36 (48.6%))",
+   "note": "Table 1 counts sum to 74 per row (36+35+3), not 89; Table 2 caption also says 'all 74 tasks'. Body says 89.",
+   "where": "Table 1, p5"
+  },
+  {
+   "claim": "Self-assessed score on the Agentic Benchmark Checklist.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.896",
+   "unit": "average ABC score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors apply ABC (Zhu et al 2025); ABC authors were involved in development",
+   "quote": "averaging to 0.896",
+   "table": null,
+   "note": "Printed 'averaging to0.896' in extraction spacing; Outcome Validity 0.857, Task Validity 1.000, Benchmark Reporting 0.830; ranked second.",
+   "where": "App B.5, p28"
+  },
+  {
+   "claim": "No private test set; canary string is a symbolic safeguard against contamination.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Limitations",
+   "quote": "We consider the development of a private test set to be outside the scope of this paper",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p10"
+  }
+ ],
+ "limits": [
+  "Agents have internet access and could read public oracle solutions; authors have not observed this in tens of thousands of trajectories (Sec 5).",
+  "All tasks are public; canary string is largely symbolic; no private test set (Sec 5, App B.5).",
+  "Internet access, package changes and machine variability reduce reproducibility; flaky results remain (Sec 5, App B.5).",
+  "Some tasks may still fail verification criteria (Sec 5); no quantitative estimate of flaw impact (ABC III.9 scored 0).",
+  "Human completion times are author estimates, not measured; no measured human baseline.",
+  "Default reasoning effort only; CI method not stated; no pass@k.",
+  "Failure analysis covers failed Terminus 2 trials only, with GPT-5 as judge (also a benchmarked model).",
+  "Model set ends December 2025; authors expect saturation within a year."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Multi-Agent System Taxonomy (MAST), Pan et al. 2025",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "failure taxonomy simplified to Execution, Coherence, Verification",
+   "quote": null
+  },
+  {
+   "work": "Docent, Meng et al. 2025",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used with human annotators to refine rubrics",
+   "quote": null
+  },
+  {
+   "work": "Establishing best practices for building rigorous agentic benchmarks (ABC), Zhu et al. 2025",
+   "year": 2025,
+   "arxiv": "2507.02825",
+   "relation": "uses-method",
+   "note": "checklist applied in App B.5",
+   "quote": null
+  },
+  {
+   "work": "SWE-bench, Jimenez et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "related benchmark; adapted via adapter",
+   "quote": null
+  },
+  {
+   "work": "OpenHands, Wang et al. 2025",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "agent evaluated and used as exploit agent",
+   "quote": null
+  },
+  {
+   "work": "Mini-SWE-Agent / SWE-agent, Yang et al. 2024",
+   "year": 2024,
+   "arxiv": "2405.15793",
+   "relation": "evaluates",
+   "note": "agent evaluated",
+   "quote": null
+  },
+  {
+   "work": "Measuring AI ability to complete long tasks, Kwa et al. 2025",
+   "year": 2025,
+   "arxiv": "2503.14499",
+   "relation": "related",
+   "note": "long-horizon motivation",
+   "quote": null
+  },
+  {
+   "work": "Big-Bench, Srivastava et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "canary string",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Task resolution rate per model on Terminal-Bench 2.0. The error bars correspond to a 95% confidence interval.",
+   "page": 3,
+   "why": "ranking of 21 model-agent pairs at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A Terminal-Bench task is composed of an instruction, a Dockerfile, a set of tests, and an oracle solution.",
+   "page": 3,
+   "why": "shows what a task contains"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Our task audit process consists of multiple rounds of manual review",
+   "page": 4,
+   "why": "seven-step verification pipeline"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Distribution of empirical difficulty within each human-predicted category",
+   "page": 8,
+   "why": "human vs empirical difficulty matrix"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Trial results for all agent-model combinations evaluated on Terminal-Bench 2.0.",
+   "page": 81,
+   "why": "the full agent-by-model matrix with CI and token counts"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.4, p6",
+   "snippet": "harbor run -d terminal-bench@2.0",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 2 caption says token counts are for running 'all 74 tasks', but the benchmark has 89 tasks; Table 1 rows also sum to 74.",
+  "Text says 16 frontier models; Sec 3.3 and Fig 1 list about 21 model names; Llama 4 Maverick is listed but not in Table 2.",
+  "Correlation values in Appendix G text (r=-0.028 episodes; r=-0.170 tokens) differ from those in Fig 35/36 (r=-0.084; r=-0.073).",
+  "Fig 35/36 list 'GLM 4.5 Air' and 'GPT-5 Codex' while Sec 3.3 lists GLM 4.6.",
+  "Text says Gemini 2.5 Pro gains 17% Terminus 2 vs OpenHands; Table 2 gives 32.6 vs 15.7 (16.9 points), so '%' is points. Likewise 52% = 62.9 vs 11.5.",
+  "Legacy report (schema 0) used only as a map; all values re-confirmed from the text."
+ ]
 }

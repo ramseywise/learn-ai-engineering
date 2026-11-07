@@ -1,0 +1,200 @@
+{
+ "schema": 1,
+ "key": "2504.19413",
+ "pdf": "generative-ai/03-agentic-foundations/sources/chhikara-2025-mem0.pdf",
+ "bib": {
+  "title": "Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory",
+  "authors": ["Prateek Chhikara", "Dev Khant", "Saket Aryan", "Taranjeet Singh", "Deshraj Yadav"],
+  "first_author": "Chhikara",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2504.19413",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 69609,
+  "chars_total": 69609,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can an LLM agent keep coherent long-term memory across multi-session conversations without passing the full history through its context window?",
+ "hypothesis": "Extracting, consolidating and retrieving compact salient memories (optionally as a graph) beats RAG and other memory systems on accuracy and approaches full-context accuracy at far lower latency and token cost.",
+ "contributions": [
+  "Mem0: an extraction and update pipeline (ADD/UPDATE/DELETE/NOOP chosen by an LLM tool call) over a vector store",
+  "Mem0g: a graph-memory variant storing entity-relation triplets in Neo4j",
+  "Evaluation on LOCOMO against six baseline categories, with accuracy, token and latency metrics"
+ ],
+ "method": {
+  "summary": "Mem0 processes each message pair with a conversation summary and the last m messages to extract candidate facts with an LLM, then compares each fact with the top s similar stored memories and lets the LLM choose ADD, UPDATE, DELETE or NOOP. Mem0g stores entities and relation triplets in a Neo4j graph, with LLM conflict resolution that marks relations invalid rather than deleting them. Both are evaluated on LOCOMO with GPT-4o-mini.",
+  "task": "long-term conversational memory question answering (LOCOMO)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LOCOMO",
+    "role": "eval",
+    "size": "10 conversations, about 600 dialogues and 26000 tokens each on average, about 200 questions per conversation on average",
+    "split": "all four non-adversarial categories (single-hop, multi-hop, temporal, open-domain); adversarial category excluded",
+    "source": "Maharana et al., 2024",
+    "preprocessing": "Adversarial category dropped because ground-truth answers were unavailable"
+   }
+  ],
+  "models": [
+   {"name": "GPT-4o-mini", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "inference engine for all Mem0/Mem0g LLM operations (extraction, update, graph extraction, answer generation)"}},
+   {"name": "text-embedding-small-3", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8192 tokens max chunk size", "other": {"use": "embedding model for RAG and LangMem baselines; Mem0's own embedder is described only as 'dense embeddings'"}},
+   {"name": "LLM-as-a-Judge model", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "paper says 'a separate, more capable LLM'; model not named"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 where applicable, unless otherwise specified",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "J evaluated in 10 independent runs over the entire dataset, mean +/- 1 std reported",
+   "prompting": "Answer-generation prompt gives memories for both speakers with timestamps, step-by-step approach, answers under 5-6 words (Appendix A); Mem0g prompt adds graph relations for each speaker",
+   "retrieval": "Mem0: top s=10 similar memories in update phase; m=10 previous messages as context. RAG baseline: chunk sizes 128 to 8192 tokens, k in {1,2}. Mem0g: entity-centric subgraph plus semantic triplet matching above a relevance threshold",
+   "parameters": {
+    "m": "10 previous messages",
+    "s": "10 similar memories",
+    "node similarity threshold t": null,
+    "triplet relevance threshold": null
+   },
+   "other": {"graph_db": "Neo4j", "token_counter": "tiktoken cl100k_base"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "F1", "definition": "lexical token-overlap F1 between generated and gold answer", "unit": "score (0-100)", "higher_is_better": true},
+    {"name": "BLEU-1 (B1)", "definition": "unigram BLEU against the gold answer", "unit": "score (0-100)", "higher_is_better": true},
+    {"name": "LLM-as-a-Judge (J)", "definition": "judge LLM labels answer CORRECT or WRONG given question, gold answer and generated answer; prompt adapted from Packer et al. 2023", "unit": "%", "higher_is_better": true},
+    {"name": "Token consumption", "definition": "tokens retrieved as context per query (cl100k_base)", "unit": "tokens", "higher_is_better": false},
+    {"name": "Search latency", "definition": "time to search memory or chunks, p50 and p95", "unit": "seconds", "higher_is_better": false},
+    {"name": "Total latency", "definition": "retrieval plus answer generation time, p50 and p95", "unit": "seconds", "higher_is_better": false}
+   ],
+   "baselines": ["LoCoMo", "ReadAgent", "MemoryBank", "MemGPT", "A-Mem", "LangMem (Hot Path)", "RAG (7 chunk sizes, k=1,2)", "Full-context", "OpenAI memory (ChatGPT, gpt-4o-mini)", "Zep"],
+   "protocol": "10 runs for J; baselines LoCoMo, ReadAgent, MemoryBank, MemGPT and A-Mem take published numbers where gpt-4o-mini was the evaluator; A-Mem re-run (A-Mem*) at temperature 0 to get J. OpenAI memory: whole conversation ingested into one chat session, and all generated memories supplied as context (not retrieval of relevant ones)."
+  },
+  "availability": {"code": "https://mem0.ai/research", "weights": null, "data": "LOCOMO (Maharana et al., 2024)"},
+  "prompts": [
+   {"purpose": "LLM-as-a-Judge", "text": "Your task is to label an answer to a question as \"CORRECT\" or \"WRONG\". ... you should be generous with your grading - as long as it touches on the same topic as the gold answer, it should be counted as CORRECT. ... Just return the label CORRECT or WRONG in a json format with the key as \"label\".", "where": "Appendix A (abridged)"},
+   {"purpose": "Results generation (Mem0)", "text": "You are an intelligent memory assistant tasked with retrieving accurate information from conversation memories. ... 8. The answer should be less than 5-6 words. ... Memories for user {speaker_1_user_id}: {speaker_1_memories} ... Question: {question} Answer:", "where": "Appendix A (abridged)"},
+   {"purpose": "OpenAI ChatGPT memory ingestion", "text": "Can you please extract relevant information from this conversation and create memory entries for each user mentioned? Please store these memories in your knowledge base in addition to the timestamp provided for future reference and personalized interactions.", "where": "Appendix A"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters", "quote": "we configured the system with ‘m’ = 10 previous messages for contextual reference and ‘s’ = 10 similar memories for comparative analysis", "where": "Section 2.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Full-context beats Mem0 and Mem0g on overall J but at about 17 s p95 total latency.",
+   "kind": "measured", "source": null, "metric": "Overall J", "value": 72.9, "unit": "%", "baseline_value": 66.88, "n": 10,
+   "setup": "LOCOMO, GPT-4o-mini, full 26031-token conversation per query, mean of 10 runs",
+   "quote": null, "table": "Table 2, row Full-context, column Overall J (72.90 ± 0.19%); Mem0 66.88 ± 0.15%",
+   "note": "Text says full-context is 'approximately 73%'", "where": "Table 2"
+  },
+  {
+   "claim": "Mem0 overall J, and Mem0g overall J.",
+   "kind": "measured", "source": null, "metric": "Overall J", "value": 66.88, "unit": "%", "baseline_value": null, "n": 10,
+   "setup": "LOCOMO, GPT-4o-mini, k=10 style memory retrieval, 1764 memory tokens; Mem0g is 68.44 with 3616 memory tokens",
+   "quote": null, "table": "Table 2, row Mem0, column Overall J (66.88 ± 0.15%); row Mem0g 68.44 ± 0.17%",
+   "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Mem0 total p95 latency is far below full-context.",
+   "kind": "measured", "source": null, "metric": "total p95 latency", "value": 1.440, "unit": "s", "baseline_value": 17.117, "n": null,
+   "setup": "LOCOMO, GPT-4o-mini; Mem0 vs full-context",
+   "quote": "lower p95 latencies of around 1.44 seconds (a 92% reduction) and 2.6 seconds (a 85% reduction)", "table": null,
+   "note": "Abstract and conclusion say 91% lower p95 latency; Section 4.3 says 92% for Mem0 and 85% for Mem0g", "where": "Section 4.3"
+  },
+  {
+   "claim": "Mem0 has the lowest search latency of all methods.",
+   "kind": "measured", "source": null, "metric": "search p50 / p95", "value": 0.148, "unit": "s", "baseline_value": null, "n": null,
+   "setup": "LOCOMO; p95 is 0.200 s; Mem0g search p50 0.476 s",
+   "quote": "Our proposed Mem0 approach achieves the lowest search latency among all methods (p50: 0.148s, p95: 0.200s)", "table": null, "note": null, "where": "Section 4.4"
+  },
+  {
+   "claim": "Mem0 has relative 26% J gain over OpenAI's memory.",
+   "kind": "measured", "source": null, "metric": "relative J improvement over OpenAI", "value": 26, "unit": "%", "baseline_value": null, "n": null,
+   "setup": "LOCOMO, GPT-4o-mini; OpenAI memory given all generated memories as context",
+   "quote": "Mem0 achieves 26% relative improvements in the LLM-as-a-Judge metric over OpenAI", "table": null,
+   "note": "Overall J in Table 2 is 66.88 vs 52.90, about 26% relative", "where": "Abstract"
+  },
+  {
+   "claim": "Best RAG configuration peaks near 61% J, below Mem0.",
+   "kind": "measured", "source": null, "metric": "Overall J", "value": 60.97, "unit": "%", "baseline_value": 66.88, "n": 10,
+   "setup": "LOCOMO, RAG k=2, chunk 256 tokens (k=2 chunk 8192 gives 60.53)",
+   "quote": null, "table": "Table 2, row RAG k=2 chunk 256, column Overall J (60.97 ± 0.20%)", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Zep scores highest on open-domain questions, above Mem0 and Mem0g.",
+   "kind": "measured", "source": null, "metric": "J open-domain", "value": 76.60, "unit": "%", "baseline_value": 75.71, "n": 10,
+   "setup": "LOCOMO; Mem0g 75.71, Mem0 72.93",
+   "quote": "Zep’s J score of 76.60 surpasses Mem0g’s 75.71 by just 0.89 percentage points", "table": null, "note": null, "where": "Section 4.1"
+  },
+  {
+   "claim": "Mem0g is best on temporal questions; Mem0 is best on single-hop and multi-hop.",
+   "kind": "measured", "source": null, "metric": "J temporal (Mem0g)", "value": 58.13, "unit": "%", "baseline_value": 55.51, "n": 10,
+   "setup": "LOCOMO temporal; Mem0 55.51; single-hop Mem0 67.13 vs Mem0g 65.71; multi-hop Mem0 51.15 vs Mem0g 47.19",
+   "quote": null, "table": "Table 1, row Mem0g, column Temporal J (58.13 ± 0.44)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "OpenAI memory scores very low on temporal questions because generated memories mostly lack timestamps.",
+   "kind": "measured", "source": null, "metric": "J temporal (OpenAI)", "value": 21.71, "unit": "%", "baseline_value": null, "n": 10,
+   "setup": "LOCOMO temporal; ChatGPT memory with gpt-4o-mini, prompted to include timestamps",
+   "quote": null, "table": "Table 1, row OpenAI, column Temporal J (21.71 ± 0.20)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Memory footprint: Mem0 about 7k tokens per conversation, Mem0g about 14k, Zep over 600k.",
+   "kind": "measured", "source": null, "metric": "memory store tokens per conversation", "value": 7, "unit": "k tokens", "baseline_value": 600, "n": null,
+   "setup": "LOCOMO average per conversation; raw conversation is about 26k tokens",
+   "quote": "Mem0 encodes complete dialogue turns in a natural language representation and therefore occupies only 7k tokens per conversation on an average.", "table": null, "note": null, "where": "Section 4.5"
+  },
+  {
+   "claim": "Zep memories were not reliably searchable immediately; results improved after several hours.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Zep platform version on LOCOMO; anecdotal, no timings given. Mem0 graph construction said to finish in under a minute even in worst cases.",
+   "quote": null, "table": null, "note": null, "where": "Section 4.5"
+  },
+  {
+   "claim": "Mem0 search latency at p95 for LangMem is almost 60 s.",
+   "kind": "measured", "source": null, "metric": "LangMem search p95", "value": 59.82, "unit": "s", "baseline_value": null, "n": null,
+   "setup": "LOCOMO; LangMem Hot Path, overall J 58.10%",
+   "quote": "LangMem exhibits even higher search latencies (p50: 17.99s, p95: 59.82s)", "table": null, "note": null, "where": "Section 4.4"
+  }
+ ],
+ "limits": [
+  "Single benchmark (LOCOMO, 10 conversations of about 26k tokens), GPT-4o-mini only; adversarial category excluded.",
+  "Full-context still achieves the highest J (about 73%) and the authors present memory as a cost trade-off, not an accuracy win.",
+  "Judge model is not named; thresholds t and the triplet relevance cutoff are not given.",
+  "OpenAI baseline is given all generated memories rather than retrieved ones, and its extraction cost is excluded from latency; Zep runs used the platform version and a delay of hours affected results.",
+  "Graph variant does not help multi-hop (J 47.19 vs 51.15) or single-hop, and adds latency; authors list graph-operation optimisation as future work.",
+  "Authors are the Mem0 company team; baseline latency numbers depend on their infrastructure ('infra improvements').",
+  "The claim that memory systems keep consistent performance regardless of conversation length is asserted, not measured on longer conversations."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Mem0g", "definition": "memories stored as directed labeled graph G = (V, E, L) of entities, relations and type labels", "where": "Section 2.2"},
+  {"term": "Memory operations", "definition": "ADD, UPDATE, DELETE, NOOP, chosen by the LLM through a function-calling interface", "where": "Section 2.1"}
+ ],
+ "lineage": [
+  {"work": "Evaluating very long-term conversational memory of LLM agents (LOCOMO)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "benchmark and a baseline", "quote": null},
+  {"work": "MemGPT: Towards LLMs as operating systems", "year": 2023, "arxiv": null, "relation": "baseline", "note": "baseline; judge prompt adapted from it", "quote": null},
+  {"work": "A-Mem: Agentic memory for LLM agents", "year": 2025, "arxiv": "2502.12110", "relation": "baseline", "note": "re-run at temperature 0 for J", "quote": null},
+  {"work": "Zep: A temporal knowledge graph architecture for agent memory", "year": 2025, "arxiv": "2501.13956", "relation": "baseline", "note": "memory provider baseline", "quote": null},
+  {"work": "ReadAgent", "year": 2024, "arxiv": null, "relation": "baseline", "note": "published LOCOMO numbers", "quote": null},
+  {"work": "MemoryBank", "year": 2024, "arxiv": null, "relation": "baseline", "note": "published LOCOMO numbers", "quote": null},
+  {"work": "LangMem (Hot Path)", "year": null, "arxiv": null, "relation": "baseline", "note": "open-source memory baseline", "quote": null},
+  {"work": "OpenAI ChatGPT memory", "year": null, "arxiv": null, "relation": "baseline", "note": "proprietary baseline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Architectural overview of the Mem0 system showing extraction and update phase.", "page": 4, "why": "Shows the extract-then-compare-and-tool-call write path."},
+  {"figure": "Fig 4", "caption": "Latency Analysis of Different Memory Approaches.", "page": 12, "why": "J score against p50/p95 latency on a log axis."}
+ ],
+ "code": [],
+ "problems": [
+  "No venue printed in the PDF; arXiv v1.",
+  "Text says p95 latency reduction is 91% (abstract) and 92% (Section 4.3) for the same Mem0 comparison.",
+  "Table 1 extraction is one cell per line; values were matched by position."
+ ]
+}

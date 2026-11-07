@@ -1,0 +1,609 @@
+{
+ "schema": 1,
+ "key": "2405.21060",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dao-2024-transformers-ssms.pdf",
+ "bib": {
+  "title": "Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality",
+  "authors": [
+   "Tri Dao",
+   "Albert Gu"
+  ],
+  "first_author": "Dao",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.21060",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 177065,
+  "chars_total": 177065,
+  "engine": "pymupdf",
+  "skipped": "Proofs and derivations in Sections 3-5 and Appendices A-C were skimmed (theorem statements read, proofs not checked line by line); all of Sections 1, 2, 6-11 and Appendix D read."
+ },
+ "type": "empirical",
+ "question": "How are structured state space models (Mamba) related to attention variants, and can that relation yield a faster, matmul-friendly SSM layer that stays competitive with Transformers?",
+ "hypothesis": "SSMs and attention are closely related through structured (semiseparable) matrices, so Transformer algorithmic and systems optimisations can transfer to SSMs, giving a faster architecture (Mamba-2) with similar quality.",
+ "contributions": [
+  "Equivalence between state space models and semiseparable matrices (Section 3)",
+  "Structured masked attention (SMA), a generalisation of linear attention (Section 4)",
+  "Structured state space duality (SSD): scalar-identity SSMs and 1-semiseparable SMA are duals with both linear and quadratic forms (Section 5)",
+  "A block-decomposition SSD algorithm using matrix multiplication (Section 6)",
+  "The Mamba-2 architecture: parallel projections, extra normalisation, head patterns (Section 7)",
+  "Systems work: tensor parallel, sequence parallel, variable length (Section 8)"
+ ],
+ "method": {
+  "summary": "Theory linking SSMs, attention and semiseparable matrices, then a chunked SSD algorithm (diagonal blocks via quadratic form, off-diagonal low-rank blocks via states) and the Mamba-2 block. Mamba-2 models (125M-2.7B) are trained on the Pile and compared with Mamba, Transformer++ and open LMs; speed is benchmarked against Mamba's scan and FlashAttention-2.",
+  "task": "autoregressive language modelling (next-token pretraining), zero-shot downstream evaluation, synthetic MQAR associative recall",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "scaling runs: 2.5B/7B/15B/26B tokens; downstream models 300B tokens",
+    "split": "Pile validation split for perplexity",
+    "source": "Gao, Biderman et al. 2020",
+    "preprocessing": "GPT2 tokenizer for scaling laws; GPT-NeoX tokenizer for the 300B-token models"
+   },
+   {
+    "name": "MQAR (harder version of Based's)",
+    "role": "both",
+    "size": "each dataset 2^18 (about 250000) examples, 4 datasets cycled, 8 epochs each, total 2^28 (about 270M) examples",
+    "split": null,
+    "source": "Arora, Eyuboglu, Zhang et al. 2024 (Based)",
+    "preprocessing": "Non query/key/value tokens replaced with random tokens; T/4 key-value pairs for T in {256,512,1024}; vocab 8192; curriculum over T/32,T/16,T/8,T/4 pairs"
+   },
+   {
+    "name": "Zero-shot suite via EleutherAI LM evaluation harness",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "LAMBADA, HellaSwag, PIQA, ARC-easy, ARC-challenge, WinoGrande, OpenBookQA",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mamba-2",
+    "role": "proposed",
+    "params": "125M, 350M, 760M, 1.3B (scaling); 130M, 370M, 780M, 1.3B, 2.7B (downstream)",
+    "architecture": "SSD layer in parallel-projection Mamba block with extra normalisation, multi-input (MVA) head pattern, scalar-times-identity A, head dim P=64 or 128",
+    "init_from": null,
+    "tokenizer": "GPT2 (scaling), GPT-NeoX (downstream)",
+    "vocab": null,
+    "layers": "12/24/24/24 for 125M/350M/760M/1.3B (Table 9); 2.7B: 64 SSD layers (hybrid section), d=2560",
+    "hidden": "768/1024/1536/2048 (Table 9, applies only to Transformer models per caption)",
+    "heads": null,
+    "context": "scaling-law plot at sequence length 8192",
+    "other": {
+     "state_dim_N": "64 default in ablations; 16/64/256 in MQAR",
+     "head_dim_P": "64 or 128",
+     "kernel_feature_map": "Swish default"
+    }
+   },
+   {
+    "name": "Mamba (Mamba-1)",
+    "role": "baseline",
+    "params": "130M-2.8B",
+    "architecture": "selective SSM S6, diagonal A, P=1",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer++",
+    "role": "baseline",
+    "params": "same sizes as Mamba-2",
+    "architecture": "PaLM/LLaMA recipe: rotary, SwiGLU MLP, RMSNorm, no linear bias, higher LR",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2.7B: 32 attention + 32 gated MLP",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pythia, RWKV4, Hybrid H3, GPT-Neo, OPT, GPT-J",
+    "role": "baseline",
+    "params": "160M-7.4B",
+    "architecture": "open source LMs",
+    "init_from": null,
+    "tokenizer": "NeoX/GPT2/OPT",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction (implied by language modelling)",
+   "optimizer": "AdamW, beta=(.9,.95), gradient clip 1.0",
+   "lr": "125M 6e-4, 350M 3e-4, 760M 2.5e-4, 1.3B 2e-4 (Table 9; the 'improved recipe' uses a peak 5x the GPT3 value)",
+   "lr_schedule": "linear warmup with cosine decay to 1e-5",
+   "warmup": null,
+   "batch_size": "0.5M tokens (scaling); 1M for the 1.3B and 2.7B downstream models",
+   "steps": "4800 / 13500 / 29000 / 50000 for 125M/350M/760M/1.3B",
+   "epochs": null,
+   "tokens": "2.5B / 7B / 15B / 26B (scaling); 300B (downstream)",
+   "seq_len": "8192 for scaling-law plot (Fig 9)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "none",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mqar": "2 layers, model dim D in {32,64,128,256}, LR in {10^-3.5, 10^-2, 10^-2.5}, linear decay dropping each epoch (last epoch 1/8 of start), batch 2^18 tokens",
+    "table5_table6_ablations": "125M models 2.5B tokens; 360M models 7B tokens",
+    "hybrid_350M": "48 layers, 7B tokens, GPT-2 tokenizer"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single training run per configuration; no seeds or repeats stated",
+   "prompting": "zero-shot via LM evaluation harness; shot count not stated beyond 'zero-shot'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pile validation perplexity",
+     "definition": "perplexity on Pile validation split",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "LAMBADA ppl",
+     "definition": "perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot accuracy",
+     "definition": "accuracy on LAMBADA, HellaSwag, PIQA, Arc-E, Arc-C, WinoGrande, OpenBookQA; Average is across the accuracy columns",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MQAR accuracy",
+     "definition": "fraction of correct query completions",
+     "unit": "accuracy 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "kernel time",
+     "definition": "kernel time on A100 80GB PCIe",
+     "unit": "ms",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Mamba",
+    "Transformer++",
+    "Pythia",
+    "RWKV4",
+    "Hybrid H3",
+    "GPT-Neo",
+    "OPT",
+    "GPT-J",
+    "FlashAttention-2",
+    "Based (MQAR)",
+    "softmax attention (MQAR)"
+   ],
+   "protocol": "Chinchilla scaling protocol for 125M-1.3B; downstream models trained to 300B tokens and evaluated with the EleutherAI harness; speed on A100 80GB PCIe; no significance tests or seeds."
+  },
+  "availability": {
+   "code": "https://github.com/state-spaces/mamba",
+   "weights": "pre-trained checkpoints open-sourced at the same repo",
+   "data": "The Pile"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.mqar",
+    "quote": "The total batch size is 218 ≈0.25𝑀tokens",
+    "where": "Appendix D.1 (2^18 printed as 218 in the extracted text)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "A dedicated SSD implementation is 2-8x faster than Mamba's optimized selective scan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel time",
+   "value": "2-8",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 80GB PCIe, state dim 64 for left panel; Fig 10",
+   "note": null,
+   "where": "Section 9.3",
+   "quote": "As a result, it is 2-8× faster than Mamba’s fused associative scan"
+  },
+  {
+   "claim": "SSD is faster than FlashAttention-2 from sequence length 2K.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2K",
+   "unit": "sequence length crossover",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 80GB PCIe, Fig 10",
+   "note": null,
+   "where": "Section 9.3",
+   "quote": "Due to its linear scaling in sequence length, SSD is faster than FlashAttention-2 starting at sequence length 2𝐾."
+  },
+  {
+   "claim": "SSD is 6x faster than FlashAttention-2 at sequence length 16K.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intro claim, A100",
+   "note": null,
+   "where": "Section 1",
+   "quote": "crossing over at sequence length 2K and 6× faster at sequence length 16K"
+  },
+  {
+   "claim": "Mamba-2-2.7B reaches a higher zero-shot average than Mamba-2.8B and Pythia-2.8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot average",
+   "value": 60.2,
+   "unit": "avg acc %",
+   "baseline_value": 59.9,
+   "n": null,
+   "setup": "Pile, 300B tokens, GPT-NeoX tokenizer, EleutherAI harness, 7 tasks",
+   "note": "Mamba-2.8B average 59.9; Pythia-2.8B 55.7; Pythia-6.9B 58.3 (Table 10)",
+   "where": "Table 1 and Table 10",
+   "quote": "Mamba-2-2.7B NeoX 6.09 4.10 69.7 66.6 76.4 69.6 36.4 64.0 38.8 60.2",
+   "table": "Table 1, row Mamba-2-2.7B, column Average"
+  },
+  {
+   "claim": "Mamba-2-2.7B Pile validation perplexity 6.09 vs Mamba-2.8B 6.22.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile ppl",
+   "value": 6.09,
+   "unit": "ppl",
+   "baseline_value": 6.22,
+   "n": null,
+   "setup": "Pile validation, 300B tokens",
+   "note": null,
+   "where": "Table 1",
+   "quote": "6.09",
+   "table": "Table 1, row Mamba-2-2.7B, column Pile ppl"
+  },
+  {
+   "claim": "Mamba-2 and Transformer++ have about the same average zero-shot accuracy at 2.7B; adding 6 attention layers (Mamba-2-Attention) improves it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot average",
+   "value": 61.0,
+   "unit": "avg acc %",
+   "baseline_value": 60.2,
+   "n": null,
+   "setup": "2.7B, 64 layers, 300B tokens on the Pile",
+   "note": "Transformer++ 60.2, Mamba-2 60.2",
+   "where": "Table 3",
+   "quote": "Mamba-2-Attention NeoX 5.95 3.85 71.1 67.8 75.8 69.9 37.8 65.3 39.0 61.0",
+   "table": "Table 3, row Mamba-2-Attention, column Average"
+  },
+  {
+   "claim": "In a 350M 48-layer model, around 10% attention layers gives the best perplexity (6 attention blocks 8.26) vs pure Mamba-2 8.60 and Transformer++ 8.68.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile ppl",
+   "value": 8.26,
+   "unit": "ppl",
+   "baseline_value": 8.6,
+   "n": null,
+   "setup": "350M, 48 layers, 7B tokens on the Pile, GPT-2 tokenizer",
+   "note": "quote is my own assembly across lines; value 8.26 occurs in Table 2",
+   "where": "Table 2",
+   "quote": "0 (Mamba-2) 1 2 3 4 5 6 7 9 11 15 24 Transformer++ Perplexity ↓ 8.60 8.38 8.32 8.29 8.29 8.28 8.26 8.27 8.28 8.30 8.34 8.50 8.68",
+   "table": "Table 2, column 6 attention blocks"
+  },
+  {
+   "claim": "Multi-input (MVA) head pattern is far better than multi-query or multi-key patterns at equal state size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ppl",
+   "value": 11.66,
+   "unit": "ppl",
+   "baseline_value": 12.62,
+   "n": null,
+   "setup": "125M models, 2.5B tokens, N=64, P=64: MIS 11.66 vs MQA 12.62 vs MKA 12.59",
+   "note": "360M, 7B tokens: MIS 8.73, MQA 9.33, MKA 9.36",
+   "where": "Table 5",
+   "quote": "11.66",
+   "table": "Table 5, top, row Multi-input (MIS), column Ppl."
+  },
+  {
+   "claim": "Parallel projections plus extra normalisation give the best block perplexity (Mamba-2 block 11.49 vs Mamba-1 block 11.76), and use fewer parameters (126.5M vs 129.3M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ppl",
+   "value": 11.49,
+   "unit": "ppl",
+   "baseline_value": 11.76,
+   "n": null,
+   "setup": "SSD inner layer, small model",
+   "note": null,
+   "where": "Table 4",
+   "quote": "11.49",
+   "table": "Table 4, row Mamba-2 (Parallel, extra norm), column Perplexity"
+  },
+  {
+   "claim": "MQAR: Mamba-2 performs significantly better than Mamba-1 even at equal state size N=16, and accuracy improves with N=64 and N=256.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MQAR, T in {256,512,1024}, 2 layers, D in {32..256}; values read from Fig 8 not recorded",
+   "note": null,
+   "where": "Section 9.1, Fig 8",
+   "quote": "Surprisingly, it is significantly better than Mamba-1 even when the state sizes are controlled (N = 16)."
+  },
+  {
+   "claim": "Mamba-2 Pareto-dominates Mamba and Transformer++ in perplexity and wall-clock on Chinchilla scaling laws (about 125M-1.3B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pile, sequence length 8192, GPT2 tokenizer",
+   "note": null,
+   "where": "Fig 9",
+   "quote": "Compared to our Transformer baseline, Mamba-2 is Pareto dominant on performance (perplexity), theoretical FLOPs, and actual wall-clock time."
+  },
+  {
+   "claim": "Kernel feature maps from linear attention (cosFormer, Performer, Based, ReBased) do not improve on simple pointwise activations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "130M/380M models, Tables 6 and 7",
+   "note": null,
+   "where": "Section 9.4.3",
+   "quote": "Overall, Table 6 and Table 7 found that the kernel approximation methods we tried did not seem to improve over simple pointwise non-linear activation functions for 𝜓."
+  },
+  {
+   "claim": "SSD training cost is O(TN^2) FLOPs, inference O(N^2) memory, versus attention T^2 N training FLOPs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 6.1 with P=N",
+   "note": null,
+   "where": "Theorem 6.1",
+   "quote": "There exists an algorithm for computing the model on any input 𝑋∈R(T,P) which only requires 𝑂(TN2) training FLOPs"
+  },
+  {
+   "claim": "Any SSM of state size N on length T can be computed in O(TN) time.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 3.7, theory",
+   "note": null,
+   "where": "Section 3.4",
+   "quote": "Any state space model (Definition 2.2) of state size N on sequence length T can be computed in time 𝑂(TN) (not accounting for potential preprocessing)."
+  },
+  {
+   "claim": "Autoregressive SMA with bounded order must have a semiseparable mask L (efficient autoregressive attention is semiseparable SMA).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 5.2 (proof in Appendix C.2)",
+   "note": null,
+   "where": "Section 5",
+   "quote": "the structured mask 𝐿must be a semiseparable matrix."
+  },
+  {
+   "claim": "Mamba-2 reduces tensor-parallel all-reduces per block from two to one.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "design argument, no measured training throughput given",
+   "note": null,
+   "where": "Section 8.1",
+   "quote": "With Mamba-2, our goal is to have only one all-reduce per block, similar to attention or MLP blocks in Transformers."
+  }
+ ],
+ "limits": [
+  "SSD restricts A to scalar times identity: 'trades off this expressivity for improved hardware efficiency'.",
+  "Whole-model training may be slower than a Transformer at short sequence length (about 2K) because a Mamba-2 model has L SSD layers versus L/2 attention plus L/2 MLP layers.",
+  "SSD does not generalise softmax attention or any attention kernel without a finite feature map.",
+  "Largest model 2.7B and 300B tokens; no multi-seed variance or significance tests; no compute (GPU-hours) or hardware for training reported.",
+  "Authors do not know which architectural change explains Mamba-2's MQAR gain over Mamba-1 at equal N.",
+  "Adding MLP layers reduced quality in the 2.7B hybrid comparison.",
+  "Hybrid comparisons: Mamba-2 (SSD only) matches Transformer++ rather than beating it."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Structured state space duality (SSD)",
+   "definition": "State space models with scalar-identity structure on A and structured masked attention with 1-semiseparable mask are duals with the same linear and quadratic forms.",
+   "where": "Section 5.3"
+  },
+  {
+   "term": "Structured masked attention (SMA)",
+   "definition": "A generalisation of linear attention where a structured mask L multiplies the attention matrix, computed as a four-way tensor contraction.",
+   "where": "Section 4"
+  },
+  {
+   "term": "Semiseparable matrix",
+   "definition": "A lower triangular matrix is N-semiseparable if every submatrix on or below the diagonal has rank at most N.",
+   "where": "Definition 3.1"
+  },
+  {
+   "term": "Multi-input SSM (MIS)",
+   "definition": "Head pattern with X per head and B, C shared across heads; analogue of multi-value attention; the pattern used by Mamba and Mamba-2.",
+   "where": "Section 7.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mamba: Linear-Time Sequence Modeling with Selective State Spaces",
+   "year": 2023,
+   "arxiv": "2312.00752",
+   "relation": "extends",
+   "note": "Mamba-2 refines Mamba's selective SSM; same training setup and scaling protocol",
+   "quote": "This follows the same setup as reported in Mamba (Gu and Dao 2023)"
+  },
+  {
+   "work": "Transformers are RNNs (Katharopoulos et al.)",
+   "year": 2020,
+   "arxiv": "2006.16236",
+   "relation": "extends",
+   "note": "Linear attention duality; title is an homage",
+   "quote": "the title of this paper is an homage to Katharopoulos et al. (2020)"
+  },
+  {
+   "work": "S4 (Gu, Goel, Re)",
+   "year": 2022,
+   "arxiv": "2111.00396",
+   "relation": "extends",
+   "note": "structured SSM lineage",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention-2 (Dao)",
+   "year": 2024,
+   "arxiv": "2307.08691",
+   "relation": "baseline",
+   "note": "speed baseline",
+   "quote": null
+  },
+  {
+   "work": "Pythia (Biderman et al.)",
+   "year": 2023,
+   "arxiv": "2304.01373",
+   "relation": "baseline",
+   "note": "same tokenizer, data and 300B tokens",
+   "quote": null
+  },
+  {
+   "work": "Based (Arora, Eyuboglu, Zhang et al.)",
+   "year": 2024,
+   "arxiv": "2402.18668",
+   "relation": "uses-data",
+   "note": "MQAR task and baseline",
+   "quote": null
+  },
+  {
+   "work": "Chinchilla (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "scaling protocol",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "RetNet, GateLoop, GLA, Jamba, Griffin, RWKV, xLSTM",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "related and concurrent models discussed in Section 10.4",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(Structured State-Space Duality.) This paper fleshes out the relationship between state space models and attention through the bridge of structured matrices.",
+   "page": 2,
+   "why": "Roadmap of the paper's concepts."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "(SSD Algorithm.) Block decomposition of the semiseparable matrix into diagonal (intra-chunk) and low-rank (inter-chunk) blocks.",
+   "page": 20,
+   "why": "Shows how chunking mixes quadratic and linear forms."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "(Mamba-2 Architecture.) Parallel projections and extra normalisation.",
+   "page": 23,
+   "why": "Block diagram contrasting Mamba and Mamba-2 blocks."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "(Scaling Laws.) Models of size about 125M to 1.3B parameters, trained on the Pile.",
+   "page": 29,
+   "why": "Pareto comparison with Transformer++ and Mamba."
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "(Efficiency Benchmarks.) SSD is 2-8x faster than a Mamba fused scan and faster than FlashAttention-2 for sequence length 2k and above.",
+   "page": 29,
+   "why": "Speed crossover."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1, page 21",
+   "snippet": "def ssd(X, A, B, C, block_len=64, initial_states=None): ... Y_diag = torch.einsum(\"bclhn,bcshn,bhcls,bcshp->bclhp\", C, B, L, X)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table cells are extracted one value per line; checks rely on numbers occurring in text.",
+  "Per-parameter-count of the 125M-1.3B Mamba-2 models and exact Mamba-2 layer count/state size in language modelling runs are not tabulated (Table 9 d_model applies to Transformers only).",
+  "No warmup length, precision, hardware or compute stated.",
+  "Contains no embedded instructions."
+ ]
+}

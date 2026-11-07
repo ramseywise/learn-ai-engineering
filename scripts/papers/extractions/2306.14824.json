@@ -1,0 +1,526 @@
+{
+ "schema": 1,
+ "key": "2306.14824",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/peng-2023-kosmos-2.pdf",
+ "bib": {
+  "title": "KOSMOS-2: Grounding Multimodal Large Language Models to the World",
+  "authors": [
+   "Zhiliang Peng",
+   "Wenhui Wang",
+   "Li Dong",
+   "Yaru Hao",
+   "Shaohan Huang",
+   "Shuming Ma",
+   "Furu Wei"
+  ],
+  "first_author": "Peng",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.14824",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46109,
+  "chars_total": 46109,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a multimodal LLM be given grounding (emit bounding boxes for text spans) and referring (accept boxes as input) abilities by training on web-scale grounded image-text pairs, without losing its language and vision-language skills?",
+ "hypothesis": "Adding grounded image-text pairs, with boxes written as location tokens in a Markdown-link-like format, to KOSMOS-1 training unlocks grounding and referring while keeping general performance.",
+ "contributions": [
+  "GRIT, a web-scale dataset of grounded image-text pairs built from COYO-700M and LAION-2B",
+  "KOSMOS-2, an MLLM with grounding and referring via location tokens in a 'hyperlink' format",
+  "Evaluation on phrase grounding, referring expression comprehension and generation, captioning, VQA and language tasks"
+ ],
+ "method": {
+  "summary": "KOSMOS-2 starts from KOSMOS-1 and continues training with next-token prediction on text, image-caption pairs, interleaved data and the new GRIT data. Bounding boxes are discretised into 32x32 location tokens added to the vocabulary and written after the text span as '<p> span </p><box><loc><loc></box>'. Instruction tuning follows with LLaVA-Instruct, Unnatural Instructions, FLANv2 and grounded instructions from GRIT.",
+  "task": "next-token pretraining of a grounded multimodal LLM, then instruction tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GRIT",
+    "role": "train",
+    "size": "~91M images, 115M text spans, 137M bounding boxes (Table 1: 90,614,680 images; 137,349,210 objects; 114,978,233 text spans; avg expression length 4.7)",
+    "split": null,
+    "source": "subset of COYO-700M and LAION-2B; noun chunks via spaCy, boxes via GLIP; a subset is downloadable at aka.ms/kosmos-2",
+    "preprocessing": "drop abstract noun phrases; NMS on boxes; keep noun-chunk-box pairs with confidence > 0.65; discard pair if no box kept; expand noun chunks into referring expressions via dependency tree (no expansion for conjuncts); keep only expressions not contained in others"
+   },
+   {
+    "name": "KOSMOS-1 corpora (text corpora, image-caption pairs, interleaved image-text)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "as in KOSMOS-1 [HDW+23]",
+    "preprocessing": null
+   },
+   {
+    "name": "LLaVA-Instruct, Unnatural Instructions, FLANv2, grounded instruction data from GRIT",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "instruction tuning",
+    "preprocessing": "grounded instructions built from expression-box pairs with templates (Table 9)"
+   },
+   {
+    "name": "Flickr30k Entities",
+    "role": "eval",
+    "size": null,
+    "split": "val and test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "RefCOCO, RefCOCO+, RefCOCOg",
+    "role": "eval",
+    "size": null,
+    "split": "RefCOCO/+ val,testA,testB; RefCOCOg val,test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30k Karpathy split",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2",
+    "role": "eval",
+    "size": null,
+    "split": "test-dev",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "StoryCloze, HellaSwag, Winograd, Winogrande, PIQA, BoolQ, CB, COPA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "KOSMOS-2",
+    "role": "proposed",
+    "params": "~1.6B trainable",
+    "architecture": "vision encoder + resampler + 24-layer MAGNETO Transformer causal LM",
+    "init_from": "KOSMOS-1 weights; location-token embeddings random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 (LM); 24 (vision encoder)",
+    "hidden": "2,048 (LM); 1,024 (vision encoder)",
+    "heads": "32",
+    "context": null,
+    "other": {
+     "ffn_lm": "8,192",
+     "ffn_vision": "4,096",
+     "image_resolution": "224x224",
+     "patch_size": "14x14",
+     "image_embeddings": "64",
+     "location_tokens": "32x32 = 1,024, each bin 7x7 pixels",
+     "all_params_updated": "yes, in training and instruction tuning"
+    }
+   },
+   {
+    "name": "KOSMOS-1",
+    "role": "base",
+    "params": null,
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction; loss only on discrete tokens (text and location tokens)",
+   "optimizer": "AdamW, beta=(0.9, 0.98)",
+   "lr": "2e-4 (pretraining); 1e-5 (instruction tuning)",
+   "lr_schedule": "linear decay to zero",
+   "warmup": "375 steps",
+   "batch_size": "419K tokens: 185K text corpora, 215K original and grounded image-caption pairs, 19K interleaved; Table 7 sequences: 93 text, 1,117 caption, 1,117 grounded, 47 interleaved",
+   "steps": "60,000 (pretraining); 10,000 (instruction tuning)",
+   "epochs": null,
+   "tokens": "around 25 billion",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": "256 V100 GPUs",
+   "compute": null,
+   "wall_clock": "approximately one day",
+   "seeds": null,
+   "other": {
+    "instruction_tuning_batch": "Table 8: 117 language instruction, 351 vision-language instruction, 1404 grounded pairs and grounded instruction, 30 text corpora, 15 interleaved",
+    "instruction_tuning_warmup": "375 steps",
+    "grounding_token": "'<grounding>' prepended to grounded captions"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for referring expression generation and VQAv2; beam search size 5 for Flickr30k captioning",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds stated",
+   "prompting": "phrase grounding: preceding words as context plus '<p> {phrase} </p>'; REC: '<p> expression </p>'; REG: '<p> It </p><box><loc1><loc2></box> is' (few-shot k=2,4); captioning 'An image of'; VQA 'Question: {question} Answer: {answer}'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "image_resolution": "224x224",
+    "perception_language_evals_without_instruction_tuning": "yes, for fair comparison with KOSMOS-1"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "R@1/5/10 (Flickr30k Entities)",
+     "definition": "recall over top 1/5/10 generated boxes, correct if IoU > 0.5, ANY-BOX protocol of MDETR; undecodable output counts as negative",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (RefCOCO/+/g)",
+     "definition": "first generated box correct if IoU > 0.5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "METEOR, CIDEr (RefCOCOg REG)",
+     "definition": "standard",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr (Flickr30k)",
+     "definition": "COCOEvalCap",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy",
+     "definition": "VQAv2 evaluation server, test-dev",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VisualBert",
+    "MDETR",
+    "GLIP",
+    "FIBER",
+    "GRILL",
+    "UNITER",
+    "OFA",
+    "VisionLLM",
+    "SLR",
+    "FewVLM",
+    "METALM",
+    "Flamingo-3B/9B",
+    "KOSMOS-1",
+    "LLM baseline"
+   ],
+   "protocol": "zero-shot unless stated; single run, no significance tests"
+  },
+  "availability": {
+   "code": "https://aka.ms/kosmos-2",
+   "weights": "pretrained models at https://aka.ms/kosmos-2",
+   "data": "a subset of GRIT at https://aka.ms/kosmos-2"
+  },
+  "prompts": [
+   {
+    "purpose": "referring expression generation",
+    "text": "<p> It </p><box><loc1><loc2></box> is",
+    "where": "Sec 4.2.1"
+   },
+   {
+    "purpose": "image captioning",
+    "text": "An image of",
+    "where": "Sec 4.3.1"
+   },
+   {
+    "purpose": "VQA",
+    "text": "Question: {question} Answer: {answer}",
+    "where": "Sec 4.3.1"
+   },
+   {
+    "purpose": "instruction templates for expression generation",
+    "text": "What is <p> it </p><box><loc1><loc2></box>? It is {expression}.",
+    "where": "Table 9"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Zero-shot phrase grounding on Flickr30k Entities test reaches R@1 78.7 versus GRILL 18.9, the other zero-shot model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 78.7,
+   "unit": "%",
+   "baseline_value": 18.9,
+   "n": null,
+   "setup": "Flickr30k Entities test, zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row KOSMOS-2, column Test R@1"
+  },
+  {
+   "claim": "Zero-shot R@1 on Flickr30k val is below finetuned FIBER (87.1) and GLIP (86.7) but above VisualBert.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": 77.8,
+   "unit": "%",
+   "baseline_value": 87.1,
+   "n": null,
+   "setup": "Flickr30k Entities val, zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row KOSMOS-2, column Val R@1"
+  },
+  {
+   "claim": "R@5 and R@10 barely rise over R@1 because the model has no proposals or queries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@10",
+   "value": 79.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flickr30k Entities val, zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row KOSMOS-2, column Val R@10"
+  },
+  {
+   "claim": "Zero-shot RefCOCOg test accuracy is 61.65 vs GRILL 47.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.65,
+   "unit": "%",
+   "baseline_value": 47.5,
+   "n": null,
+   "setup": "RefCOCOg test, zero-shot, IoU>0.5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row KOSMOS-2, column RefCOCOg test"
+  },
+  {
+   "claim": "Zero-shot RefCOCO val accuracy is 52.32, well under finetuned FIBER 90.68.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.32,
+   "unit": "%",
+   "baseline_value": 90.68,
+   "n": null,
+   "setup": "RefCOCO val, zero-shot",
+   "note": "Authors attribute the gap to short expressions in RefCOCO/RefCOCO+.",
+   "where": "Table 3",
+   "table": "Table 3, row KOSMOS-2, column RefCOCO val"
+  },
+  {
+   "claim": "Zero-shot referring expression generation CIDEr 60.3 beats finetuned SLR 59.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 60.3,
+   "unit": "points",
+   "baseline_value": 59.2,
+   "n": null,
+   "setup": "RefCOCOg, zero-shot, greedy, 224x224",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row KOSMOS-2 Zero-shot, column CIDEr"
+  },
+  {
+   "claim": "Few-shot k=4 REG gives CIDEr 62.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 62.3,
+   "unit": "points",
+   "baseline_value": 60.3,
+   "n": null,
+   "setup": "RefCOCOg, few-shot k=4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row KOSMOS-2 Few-shot (k = 4), column CIDEr"
+  },
+  {
+   "claim": "Zero-shot Flickr30k captioning CIDEr 66.7 vs KOSMOS-1 65.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 66.7,
+   "unit": "points",
+   "baseline_value": 65.2,
+   "n": null,
+   "setup": "Flickr30k test, beam 5, prompt 'An image of', no instruction tuning",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row KOSMOS-2, column Flickr30k CIDEr"
+  },
+  {
+   "claim": "Zero-shot VQAv2 test-dev accuracy 45.6 vs KOSMOS-1 46.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA acc.",
+   "value": 45.6,
+   "unit": "%",
+   "baseline_value": 46.7,
+   "n": null,
+   "setup": "VQAv2 test-dev, greedy, no instruction tuning",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row KOSMOS-2, column VQAv2 VQA acc."
+  },
+  {
+   "claim": "Language tasks are comparable to KOSMOS-1; BoolQ 62.0 up from 56.4, CB 30.4 down from 44.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 62.0,
+   "unit": "%",
+   "baseline_value": 56.4,
+   "n": null,
+   "setup": "BoolQ zero-shot",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row KOSMOS-2, column BoolQ"
+  },
+  {
+   "claim": "Training took about 25B tokens in 60k steps on 256 V100s in about one day.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "25 billion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pretraining",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "We train KOSMOS-2 for 60k steps, equivalent to around 25 billion tokens."
+  }
+ ],
+ "limits": [
+  "Evaluated mainly zero-shot; far below finetuned specialists on RefCOCO and RefCOCO+ (authors cite short expressions)",
+  "Perception-language results are without instruction tuning; instruction-tuned numbers not reported",
+  "No seeds, variance or ablation of GRIT filtering thresholds",
+  "Grounding via GLIP pseudo-labels with confidence > 0.65; label noise not quantified",
+  "Boxes only, quantised to 32x32 bins at 224x224 input",
+  "No quantitative evaluation of grounded VQA or captioning (qualitative figures only)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "location tokens",
+   "definition": "P x P discrete tokens, one per bin of the image, added to the word vocabulary to encode box corners",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "GRIT",
+   "definition": "Grounded Image-Text pairs dataset built from COYO-700M and LAION-2B",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "KOSMOS-1 (Language Is Not All You Need)",
+   "year": 2023,
+   "arxiv": "2302.14045",
+   "relation": "extends",
+   "note": "same architecture and objective; initialised from its weights",
+   "quote": null
+  },
+  {
+   "work": "Pix2seq",
+   "year": 2021,
+   "arxiv": "2109.10852",
+   "relation": "uses-method",
+   "note": "location tokens for boxes",
+   "quote": null
+  },
+  {
+   "work": "GLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pretrained grounding model used to label GRIT",
+   "quote": null
+  },
+  {
+   "work": "COYO-700M",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of image-text pairs",
+   "quote": null
+  },
+  {
+   "work": "LAION-2B",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of image-text pairs",
+   "quote": null
+  },
+  {
+   "work": "GRILL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot grounding baseline",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "captioning/VQA comparison",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-Instruct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "instruction tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The pipeline of constructing web-scale grounded image-text pairs.",
+   "page": 4,
+   "why": "shows the two-step noun-chunk then referring-expression pipeline"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Input format of evaluation on (1) phrase grounding and (2) referring expression comprehension.",
+   "page": 7,
+   "why": "shows prompt formats"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and Tables 2-9 are flattened by extraction; cells read in order."
+ ]
+}

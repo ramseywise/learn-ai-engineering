@@ -1,0 +1,380 @@
+{
+ "schema": 1,
+ "key": "2507.18071",
+ "pdf": "generative-ai/05-RL/sources/zheng-2025-group-sequence-policy-optimization.pdf",
+ "bib": {
+  "title": "Group Sequence Policy Optimization",
+  "authors": [
+   "Chujie Zheng",
+   "Shixuan Liu",
+   "Mingze Li",
+   "Xiong-Hui Chen",
+   "Bowen Yu",
+   "Chang Gao",
+   "Kai Dang",
+   "Yuqiong Liu",
+   "Rui Men",
+   "An Yang",
+   "Jingren Zhou",
+   "Junyang Lin"
+  ],
+  "first_author": "Zheng",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2507.18071",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 22058,
+  "chars_total": 22058,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why does GRPO become unstable when training large (MoE) language models with long responses, and does a sequence-level importance ratio fix it?",
+ "hypothesis": "The unit of the optimization objective should match the unit of reward, so a sequence-level importance ratio and clipping will be more stable and efficient than GRPO's token-level ones.",
+ "contributions": [
+  "GSPO: sequence-likelihood importance ratio with sequence-level clipping, rewarding and optimization",
+  "GSPO-token: a token-level-advantage variant numerically identical to GSPO when advantages are equal",
+  "Stabilizes MoE RL training without Routing Replay",
+  "Potential to simplify RL infrastructure by using inference-engine likelihoods"
+ ],
+ "method": {
+  "summary": "GSPO replaces GRPO's per-token importance ratio with a length-normalized sequence ratio s_i=(pi_theta(y|x)/pi_old(y|x))^(1/|y|) and clips whole responses. Compared against GRPO (with Routing Replay) on a cold-start model fine-tuned from Qwen3-30B-A3B-Base, reported as training curves only.",
+  "task": "RL for LLM reasoning (math and code) with verifier rewards",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RL query set (unnamed)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "query set regularly updated during training; not described further"
+   },
+   {
+    "name": "AIME'24",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LiveCodeBench (202410-202502)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CodeForces",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "Elo rating"
+   }
+  ],
+  "models": [
+   {
+    "name": "Cold-start model fine-tuned from Qwen3-30B-A3B-Base",
+    "role": "base",
+    "params": "30B total (A3B active)",
+    "architecture": "Mixture-of-Experts, 48 layers",
+    "init_from": "Qwen3-30B-A3B-Base, cold-start fine-tuned (details not given)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "GSPO Eq. 5 with group advantage Eq. 6 and ratio Eq. 7; KL term omitted from the exposition; reward r(x,y) in [0,1] from a verifier",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "rollout batch split into 4 mini-batches per gradient updates (rollout batch size not given)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "x-axis 'Training Compute' in Fig 1 has no units",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "clip_range_GSPO": "left 3e-4, right 4e-4",
+    "clip_range_GRPO_baseline": "left 0.2, right 0.27 (tuned for fair comparison)",
+    "group_size_G": "not stated",
+    "GRPO_baseline_setup": "with Routing Replay for MoE"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "AIME'24 average Pass@1 over 32 samplings; LiveCodeBench average Pass@1 over 8 samplings",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AIME'24 Pass@1",
+     "definition": "average over 32 samplings",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LiveCodeBench Pass@1",
+     "definition": "average over 8 samplings, 202410-202502",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CodeForces",
+     "definition": "Elo rating",
+     "unit": "Elo",
+     "higher_is_better": true
+    },
+    {
+     "name": "Training reward",
+     "definition": "mean verifier reward during RL",
+     "unit": "[0,1]",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GRPO (with Routing Replay)",
+    "GRPO without Routing Replay (Fig 3)"
+   ],
+   "protocol": "Training curves in figures only (values read from axes); no tables, no seeds or significance reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.clip_range_GSPO",
+    "quote": "we set the left and right clipping ranges in Equation (5) to 3e-4 and 4e-4, respectively",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GSPO clips about two orders of magnitude more tokens than GRPO yet trains more efficiently.",
+   "kind": "measured",
+   "source": null,
+   "metric": "clipping fraction (GSPO)",
+   "value": "0.15",
+   "unit": "fraction of tokens",
+   "baseline_value": "0.0013 (GRPO)",
+   "n": null,
+   "setup": "Qwen3-30B-A3B-Base cold-start RL, average over training; assignment of 0.15 to GSPO and 0.0013 to GRPO read from Fig 2 labels plus text",
+   "quote": "we observe a difference of two orders of magnitude in the fractions of clipped tokens between GSPO and GRPO",
+   "table": null,
+   "note": "Fig 2 prints only the numbers 0.0013 and 0.15 without attributing them in text; attribution inferred from the text.",
+   "where": "Sec 5.2, Fig 2"
+  },
+  {
+   "claim": "About 10% of activated experts differ after each gradient update for the same rollout, which destabilizes GRPO's token ratios.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert activation change",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "48-layer Qwen3-30B-A3B-Base, per RL gradient update, same rollout sample",
+   "quote": "there are roughly 10% of the experts activated under the new policy",
+   "table": null,
+   "note": "'roughly'; more prominent in deeper MoE models.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "GSPO trains stably and beats GRPO (w/ Routing Replay) on training reward, AIME'24, LiveCodeBench and CodeForces at equal compute; no numeric table.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training curves",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3-30B-A3B-Base cold-start, Fig 1 axes roughly 0.50-0.70 reward, AIME'24 70-80, LCB 55-65, CodeForces 1800-2000; single runs",
+   "quote": "GSPO also demonstrates superior training efficiency over GRPO, achieving better training accuracy and benchmark performance under the same training compute and consumed queries.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 1"
+  },
+  {
+   "claim": "Without Routing Replay, GRPO MoE training does not converge normally; GSPO needs no Routing Replay.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training reward curve",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE GRPO, Fig 3",
+   "quote": "Figure 3 demonstrates that Routing Replay serves as an essential technique in the normal convergence of the GRPO training of MoE models.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "GSPO may allow using inference-engine likelihoods directly, avoiding recomputation; stated intuitively, not tested.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "discussion only",
+   "quote": "intuitively, the former is much more tolerant of precision discrepancies",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "GRPO collapse is attributed to misapplied token-level importance weights; collapse is irreversible even after reverting checkpoints or tuning clip ranges.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "no ablation shown",
+   "quote": "We have empirically observed that this can lead to model collapse that is often irreversible.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  }
+ ],
+ "limits": [
+  "Evidence is training curves for one model; no tables, seeds, or error bars",
+  "Baseline is GRPO with Routing Replay; no comparison with other stabilizers (e.g. DAPO) or dense models",
+  "Hyperparameters (learning rate, group size, batch size, steps, data, hardware) not given",
+  "Infrastructure benefit (Sec 5.4) is argued intuitively, not measured",
+  "Authors built GSPO and used it for Qwen3; collapse mechanism not isolated by ablation",
+  "Training Compute axis has no units"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sequence-level importance ratio",
+   "definition": "s_i(theta) = (pi_theta(y_i|x)/pi_old(y_i|x))^(1/|y_i|), length-normalized",
+   "where": "Eq 7"
+  },
+  {
+   "term": "GSPO-token",
+   "definition": "token-level objective variant with s_i,t = sg[s_i]*pi_theta(y_t)/sg[pi_theta(y_t)], allowing per-token advantages",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Routing Replay",
+   "definition": "cache the experts activated in pi_old and replay these routing modes in pi_theta when computing importance ratios",
+   "where": "Sec 5.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeekMath / GRPO",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "baseline",
+   "note": "GRPO is the compared baseline",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "clipped objective origin",
+   "quote": null
+  },
+  {
+   "work": "CLICK (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sequence-likelihood ratio definition",
+   "quote": null
+  },
+  {
+   "work": "Qwen3 technical report",
+   "year": 2025,
+   "arxiv": "2505.09388",
+   "relation": "evaluates",
+   "note": "GSPO used in latest Qwen3 models; Qwen3-30B-A3B-Base is the base",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "related",
+   "note": "large-scale RL context",
+   "quote": null
+  },
+  {
+   "work": "MiniMax-M1",
+   "year": 2025,
+   "arxiv": "2506.13585",
+   "relation": "related",
+   "note": "cited for GRPO instability",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Training curves of a cold-start model fine-tuned from Qwen3-30B-A3B-Base. GSPO possesses remarkably higher training efficiency than GRPO.",
+   "page": 4,
+   "why": "Only head-to-head evidence"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Average fractions of clipped tokens over the RL training of GSPO and GRPO.",
+   "page": 5,
+   "why": "Shows 0.15 vs 0.0013 clip fractions"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The Routing Replay strategy plays a critical role in the normal convergence of the GRPO training of MoE models.",
+   "page": 6,
+   "why": "Why MoE needed a workaround"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "s_i(theta) = (pi_theta(y_i|x)/pi_theta_old(y_i|x))^(1/|y_i|) = exp((1/|y_i|) sum_t log pi_theta(y_i,t|x,y_i,<t)/pi_theta_old(y_i,t|x,y_i,<t))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Cached text contains NUL bytes; Fig 2 value attribution inferred; no embedded instructions found"
+ ]
+}

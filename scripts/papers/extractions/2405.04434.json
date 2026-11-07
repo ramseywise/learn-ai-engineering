@@ -1,0 +1,640 @@
+{
+ "schema": 1,
+ "key": "2405.04434",
+ "pdf": "ai-engineering/07-inference-engineering/sources/deepseek-ai-2024-deepseek-v2.pdf",
+ "bib": {
+  "title": "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model",
+  "authors": [
+   "DeepSeek-AI"
+  ],
+  "first_author": "DeepSeek-AI",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.04434",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87400,
+  "chars_total": 109323,
+  "engine": "pymupdf",
+  "skipped": "Appendix G evaluation-format example tables 12-37 (benchmark prompt examples) and the reference list past a skim; not needed for method or results."
+ },
+ "type": "empirical",
+ "question": "Can an MoE language model with a compressed-KV attention (MLA) and DeepSeekMoE give top-tier open-source quality with cheaper training and much cheaper inference than a dense model?",
+ "hypothesis": "Low-rank joint key-value compression (MLA) can cut the KV cache heavily while matching or beating MHA quality, unlike GQA and MQA, which trade quality for cache size.",
+ "contributions": [
+  "MLA: low-rank joint KV compression with decoupled RoPE, caching (d_c + d_h^R) elements per token per layer",
+  "DeepSeekMoE with device-limited routing, three auxiliary balance losses and device-level token dropping",
+  "236B-total / 21B-active model pretrained on 8.1T tokens, extended to 128K context with YaRN, then SFT and GRPO RL",
+  "Release of DeepSeek-V2-Lite (15.7B total, 2.4B active)"
+ ],
+ "method": {
+  "summary": "A 60-layer Transformer whose attention is MLA (KV latent of 512 plus a 64-dim decoupled RoPE key) and whose FFNs, except layer 1, are DeepSeekMoE (2 shared + 160 routed experts, 6 active). Pretrained on 8.1T tokens at 4K sequence length, extended to 128K with YaRN, then SFT (1.5M instances) and two-stage GRPO RL.",
+  "task": "next-token pretraining of an MoE LM, then SFT and RL alignment; efficiency comparison against dense DeepSeek 67B",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DeepSeek-V2 pretraining corpus",
+    "role": "pretrain",
+    "size": "8.1T tokens (Chinese tokens about 12% more than English)",
+    "split": null,
+    "source": "multi-source; more Chinese data than the DeepSeek 67B corpus; contentious content filtered",
+    "preprocessing": "same stages as DeepSeek 67B with improved cleaning and quality filtering; BBPE tokenizer"
+   },
+   {
+    "name": "SFT data",
+    "role": "train",
+    "size": "1.5M instances (1.2M helpfulness, 0.3M safety)",
+    "split": null,
+    "source": "internal, covers math, code, writing, reasoning, safety",
+    "preprocessing": null
+   },
+   {
+    "name": "RL preference data",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "code preference from compiler feedback; math preference from ground-truth labels",
+    "preprocessing": "quality filtering and proportion adjustment (no sizes given)"
+   },
+   {
+    "name": "Benchmarks (MMLU, C-Eval, CMMLU, HellaSwag, PIQA, ARC, BBH, TriviaQA, NQ, RACE, DROP, C3, CMRC, WinoGrande, CLUEWSC, Pile-test, CHID, CCPM, GSM8K, MATH, CMath, HumanEval, MBPP, CRUXEval, AGIEval, IFEval, LiveCodeBench, MT-Bench, AlpacaEval 2.0, AlignBench)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public; LiveCodeBench questions 1 Sep 2023 to 1 Apr 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-V2",
+    "role": "proposed",
+    "params": "236B total, 21B activated",
+    "architecture": "Transformer with MLA + DeepSeekMoE",
+    "init_from": "random init, std 0.006",
+    "tokenizer": "byte-level BPE (same as DeepSeek 67B)",
+    "vocab": "100K",
+    "layers": "60",
+    "hidden": "5120",
+    "heads": "128 (d_h=128)",
+    "context": "4K pretrain; 128K after YaRN",
+    "other": {
+     "d_c (KV compression)": "512",
+     "d_c' (query compression)": "1536",
+     "d_h^R (decoupled RoPE)": "64",
+     "MoE": "all FFNs except first layer; 2 shared + 160 routed experts, expert intermediate dim 1536, 6 routed active",
+     "KV cache per token": "(d_c + d_h^R) l elements = 576 per layer, equal to GQA with 2.25 groups (d_c=4 d_h, d_h^R=d_h/2)",
+     "extra": "RMS Norm after compressed latents and scaling factors at width bottlenecks"
+    }
+   },
+   {
+    "name": "DeepSeek-V2 Chat (SFT) / (RL)",
+    "role": "proposed",
+    "params": "236B total, 21B activated",
+    "architecture": "same",
+    "init_from": "DeepSeek-V2 base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-V2-Lite",
+    "role": "proposed",
+    "params": "15.7B total, 2.4B activated",
+    "architecture": "MLA + DeepSeekMoE, queries not compressed",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "27",
+    "hidden": "2048",
+    "heads": "16 (d_h=128)",
+    "context": "4K pretrain, 32K after extension",
+    "other": {
+     "d_c": "512",
+     "d_h^R": "64",
+     "MoE": "2 shared + 64 routed, expert dim 1408, 6 active",
+     "tokens": "5.7T"
+    }
+   },
+   {
+    "name": "DeepSeek 67B",
+    "role": "baseline",
+    "params": "67B dense",
+    "architecture": "dense MHA-family (GQA per prior release; not stated here)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K",
+    "other": {}
+   },
+   {
+    "name": "Qwen1.5 72B, LLaMA 3 70B, Mixtral 8x22B (and chat/instruct versions)",
+    "role": "baseline",
+    "params": "72B / 70B / 141B total, 39B active",
+    "architecture": "dense / dense / MoE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (pretraining); SFT; GRPO RL with group-relative advantage and KL penalty",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "max 2.4e-4 (pretrain); 5e-6 (SFT)",
+   "lr_schedule": "warmup-and-step-decay: x0.316 after about 60% of tokens, again x0.316 after about 90%",
+   "warmup": "linear from 0 to max over first 2K steps",
+   "batch_size": "scheduled from 2304 to 9216 over the first 225B tokens, then 9216",
+   "steps": null,
+   "epochs": "2 (SFT)",
+   "tokens": "8.1T (pretrain); +1000 steps at 32K for long-context extension",
+   "seq_len": "4K (pretrain); 32K for the 1000-step extension (batch 576 sequences)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping norm 1.0; balance losses alpha1=0.003 (expert), alpha2=0.05 (device), alpha3=0.02 (communication); device-limited routing M=3, D=8; token dropping with capacity factor 1.0 and about 10% of sequences never dropped (training only)",
+   "hardware": "NVIDIA H800 cluster, 8 GPUs/node on NVLink and NVSwitch, InfiniBand across nodes",
+   "compute": "172.8K H800 GPU hours per trillion tokens (DeepSeek 67B: 300.6K)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "parallelism": "16-way zero-bubble pipeline, 8-way expert parallel, ZeRO-1 data parallel, no tensor parallel",
+    "framework": "HAI-LLM with custom CUDA kernels; MLA kernel based on an improved FlashAttention-2",
+    "YaRN": "scale s=40, alpha=1, beta=32, target max context 160K, length factor sqrt(t)=0.0707 ln s + 1, applied to the decoupled key",
+    "RL": "two stages (reasoning alignment with RM_reasoning, then multi-reward preference alignment); reward models initialised from DeepSeek-V2 Chat (SFT); RL inference backend vLLM; epsilon, beta, group size G, RL lr and steps not given",
+    "V2-Lite training": "lr 4.2e-4, x0.316 at 80% and 90% of tokens, constant batch 4608, alpha1=0.001, 5.7T tokens"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "few-shot counts per benchmark in Table 2 and 3; perplexity-based eval for multiple-choice sets, generation-based for the rest; no token dropping at evaluation",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "deployment": "parameters converted to FP8; KV cache quantised to 6 bits per element on average",
+    "throughput test": "prompt and generation length distribution from the deployed DeepSeek 67B service, single node of 8 H800"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "KV cache per token",
+     "definition": "number of cached elements regardless of storage precision (Table 1)",
+     "unit": "elements; KB/token in Fig 1",
+     "higher_is_better": false
+    },
+    {
+     "name": "Maximum generation throughput",
+     "definition": "tokens per second on one 8x H800 node",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "Training cost",
+     "definition": "H800 GPU hours per trillion tokens",
+     "unit": "K GPU hours/T tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "Benchmark accuracy / EM / Pass@1",
+     "definition": "per benchmark; Pile-test in bits-per-byte; AlpacaEval 2.0 length-controlled win rate; MT-Bench and AlignBench GPT-4 judge scores",
+     "unit": "% or score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DeepSeek 67B",
+    "Qwen1.5 72B",
+    "LLaMA 3 70B",
+    "Mixtral 8x22B",
+    "MHA/GQA/MQA ablation models"
+   ],
+   "protocol": "all baselines run in DeepSeek's internal framework with the same settings (Table 2); DeepSeek 67B Chat numbers taken from the earlier release; scores within 0.3 treated as equal; AlignBench rated by GPT-4-0613; single runs, no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/deepseek-ai/DeepSeek-V2",
+   "weights": "model checkpoints released at the same URL",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models[0].other.KV cache per token",
+    "quote": "For DeepSeek-V2, 𝑑𝑐is set to 4𝑑ℎand 𝑑𝑅",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DeepSeek-V2 cuts the KV cache by 93.3% against dense DeepSeek 67B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KV cache reduction",
+   "value": "93.3",
+   "unit": "%",
+   "base": null,
+   "n": null,
+   "setup": "DeepSeek-V2 (MLA, MoE, KV cache quantised to 6 bits on average) vs DeepSeek 67B; the figure bundles MLA, quantisation and architecture differences",
+   "quote": "reduces the KV cache by 93.3%",
+   "table": null,
+   "note": "Not isolated to MLA; paper does not report an MLA-only figure at full scale.",
+   "where": "Abstract; Fig 1(b)"
+  },
+  {
+   "claim": "Maximum generation throughput is 5.76 times that of DeepSeek 67B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max generation throughput",
+   "value": "5.76",
+   "unit": "x",
+   "base": null,
+   "n": null,
+   "setup": "Single node of 8 H800 GPUs, FP8 weights, 6-bit KV cache, prompt/generation length distribution from the deployed 67B service",
+   "quote": "which is 5.76 times the maximum generation throughput of DeepSeek 67B",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.3"
+  },
+  {
+   "claim": "Generation throughput exceeds 50K tokens per second on one 8-GPU H800 node.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50K",
+   "unit": "tokens/s",
+   "base": null,
+   "n": null,
+   "setup": "Same setup as the 5.76x claim",
+   "quote": "DeepSeek-V2 achieves a generation throughput exceeding 50K tokens per second",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.3"
+  },
+  {
+   "claim": "Prompt input throughput exceeds 100K tokens per second.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100K",
+   "unit": "tokens/s",
+   "base": null,
+   "n": null,
+   "setup": "Same node and deployment",
+   "quote": "the prompt input throughput of DeepSeek-V2 exceeds 100K tokens per second",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.3"
+  },
+  {
+   "claim": "Training costs 42.5% less than dense DeepSeek 67B (172.8K vs 300.6K H800 GPU hours per trillion tokens).",
+   "kind": "measured",
+   "source": null,
+   "metric": "training cost",
+   "value": "172.8K",
+   "unit": "GPU hours per T tokens",
+   "base": "300.6K",
+   "n": null,
+   "setup": "Practical training on the H800 cluster, per trillion tokens",
+   "quote": "DeepSeek 67B requires 300.6K GPU hours, while DeepSeek-V2 needs only 172.8K GPU hours",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.3"
+  },
+  {
+   "claim": "MLA caches (d_c + d_h^R) l elements per token, about 9/2 d_h l, equal to GQA with 2.25 groups.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.25",
+   "unit": "GQA groups equivalent",
+   "base": null,
+   "n": null,
+   "setup": "DeepSeek-V2 with d_c=4 d_h=512 and d_h^R=64 (d_h=128); elements, not bytes",
+   "quote": "MLA requires only a small amount of KV cache, equal to GQA with only 2.25 groups, but can achieve stronger performance than MHA.",
+   "table": "Table 1, row MLA (Ours)",
+   "note": "Capability column (Strong/Moderate/Weak/Stronger) is qualitative.",
+   "where": "Sec 2.1.4, Table 1"
+  },
+  {
+   "claim": "In MoE ablations MLA used 14% (small) and 4% (large) of the MHA KV cache.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4% to 14%",
+   "unit": "% of MHA cache",
+   "base": null,
+   "n": null,
+   "setup": "Small MoE ~16B total on 1.33T tokens; large MoE ~250B total on 420B tokens; same architecture except attention. Cache 15.6K vs 110.6K and 34.6K vs 860.2K elements/token",
+   "quote": "MLA requires a significantly smaller amount of KV cache (14% for small MoE models and 4% for large MoE models) than MHA.",
+   "table": "Table 9, row KV Cache per Token",
+   "note": null,
+   "where": "App D.2"
+  },
+  {
+   "claim": "Large MoE: MLA beats MHA on BBH (50.7 vs 46.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH EM",
+   "value": "50.7",
+   "unit": "EM %",
+   "base": "46.6",
+   "n": null,
+   "setup": "Large MoE ~250B total, 420B tokens, 3-shot EM; activated params 21.5B (MLA) vs 25.0B (MHA)",
+   "quote": null,
+   "table": "Table 9, row BBH, columns Large MoE w/ MLA and w/ MHA",
+   "note": "Activated parameters differ between the arms.",
+   "where": "App D.2"
+  },
+  {
+   "claim": "Small MoE: MLA is below MHA on C-Eval (50.9 vs 51.6) but above on BBH, MMLU and CMMLU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C-Eval Acc",
+   "value": "50.9",
+   "unit": "Acc %",
+   "base": "51.6",
+   "n": null,
+   "setup": "Small MoE ~16B total, 1.33T tokens; 5-shot Acc. for C-Eval; activated 2.4B (MLA) vs 2.5B (MHA)",
+   "quote": null,
+   "table": "Table 9, row C-Eval, columns Small MoE w/ MLA and w/ MHA",
+   "note": null,
+   "where": "App D.2"
+  },
+  {
+   "claim": "In 7B dense models trained on 1.33T tokens, MHA beats GQA (8 groups) and MQA on MMLU (45.2 vs 41.2 vs 37.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU Acc",
+   "value": "45.2",
+   "unit": "Acc %",
+   "base": "41.2 (GQA), 37.9 (MQA)",
+   "n": null,
+   "setup": "Dense ~7B, layers adjusted so parameters match (MQA 7.1B, GQA 6.9B, MHA 6.9B); 5-shot Acc.",
+   "quote": null,
+   "table": "Table 8, row MMLU (Acc.)",
+   "note": null,
+   "where": "App D.1"
+  },
+  {
+   "claim": "DeepSeek-V2 scores 78.5 on MMLU (5-shot) with 21B activated parameters, level with LLaMA 3 70B (78.9) and Mixtral 8x22B (77.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU Acc",
+   "value": "78.5",
+   "unit": "Acc %",
+   "base": "78.9 (LLaMA 3 70B)",
+   "n": null,
+   "setup": "Base models, internal framework, same settings",
+   "quote": null,
+   "table": "Table 2, row MMLU (Acc.), column DeepSeek-V2",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DeepSeek-V2 Chat (RL) reaches 38.9 length-controlled win rate on AlpacaEval 2.0 and 8.97 on MT-Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2.0",
+   "value": "38.9",
+   "unit": "LC win rate %",
+   "base": null,
+   "n": null,
+   "setup": "Chat model after SFT and two-stage GRPO RL",
+   "quote": "DeepSeek-V2 Chat (RL) achieves 38.9 length-controlled win rate on AlpacaEval 2.0",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Table 4"
+  },
+  {
+   "claim": "DeepSeek-V2 Chat (RL) scores 7.91 overall on AlignBench (GPT-4-0613 judge).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlignBench overall",
+   "value": "7.91",
+   "unit": "score",
+   "base": null,
+   "n": null,
+   "setup": "Chinese open-ended evaluation",
+   "quote": "7.91 overall score on AlignBench",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Table 5"
+  },
+  {
+   "claim": "YaRN plus 1000 steps at 32K extend the context from 4K to 128K with good NIAH results.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "128K",
+   "unit": "tokens context",
+   "base": null,
+   "n": null,
+   "setup": "YaRN s=40, trained 1000 steps, 32K sequences, batch 576",
+   "quote": "We additionally train the model for 1000 steps, with a sequence length of 32K and a batch size of 576 sequences.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.4, Fig 4"
+  },
+  {
+   "claim": "Decoupled RoPE is needed because RoPE blocks absorbing W^UK into W^Q, which would force recomputing prefix keys.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "base": null,
+   "n": null,
+   "setup": "Argument in Sec 2.1.3, no ablation of this choice",
+   "quote": "we must recompute the keys for all the prefix tokens during inference, which will significantly hinder the inference efficiency.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.3"
+  },
+  {
+   "claim": "Fewer than 10K SFT instances caused a significant IFEval decline.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "base": null,
+   "n": null,
+   "setup": "Stated observation, no numbers",
+   "quote": "we observe a significant performance decline on the IFEval benchmark if we use fewer than 10K instances",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "The 93.3% / 5.76x headline figures compare against dense DeepSeek 67B and bundle MLA, MoE sparsity, FP8 weights and 6-bit KV quantisation; no MLA-only efficiency ablation at full scale is given.",
+  "MLA vs MHA quality ablation is on two scales with different token budgets (1.33T and 420B) and activated parameters differ between arms; single runs, no seeds.",
+  "Throughput test uses the prompt/length distribution of the DeepSeek 67B service; batch size, hardware utilisation and kernel details are not given, and no prefill vs decode breakdown beyond one prompt-throughput number.",
+  "RL hyperparameters (epsilon, beta, G, lr, steps) and RL data sizes are not stated; no seeds.",
+  "Authors concede: no knowledge updates after pretraining, possible hallucination, limited proficiency outside Chinese and English, text only; alignment tax on BBH."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Multi-head Latent Attention (MLA)",
+   "definition": "an attention mechanism equipped with low-rank key-value joint compression",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Decoupled RoPE",
+   "definition": "additional multi-head queries q^R and a shared key k^R carry RoPE, so the compressed key path stays position-free and absorbable",
+   "where": "Sec 2.1.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is All You Need (Vaswani et al., 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MHA baseline and Transformer block",
+   "quote": null
+  },
+  {
+   "work": "Grouped-Query Attention (Ainslie et al., 2023)",
+   "year": 2023,
+   "arxiv": "2305.13245",
+   "relation": "baseline",
+   "note": "GQA compared in Table 1 and Table 8",
+   "quote": null
+  },
+  {
+   "work": "Fast Transformer Decoding: One Write-Head is All You Need (Shazeer, 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MQA",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMoE (Dai et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "FFN architecture",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek LLM / DeepSeek 67B (DeepSeek-AI, 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dense predecessor, tokenizer and data pipeline reused",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "position embedding that MLA must decouple",
+   "quote": null
+  },
+  {
+   "work": "YaRN (Peng et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "context extension to 128K",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath / GRPO (Shao et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention-2 (Dao, 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MLA kernel built on an improved version",
+   "quote": null
+  },
+  {
+   "work": "vLLM (Kwon et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL inference backend",
+   "quote": null
+  },
+  {
+   "work": "Qwen1.5 72B, LLaMA 3 70B, Mixtral 8x22B",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "open-source comparison models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of the KV cache per token among different attention mechanisms.",
+   "page": 9,
+   "why": "Gives the per-token cache formulas for MHA, GQA, MQA and MLA side by side."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Simplified illustration of MHA, GQA, MQA, and MLA.",
+   "page": 7,
+   "why": "Shows what is cached in each variant."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "(a) MMLU accuracy vs. activated parameters; (b) training costs and inference efficiency of DeepSeek 67B and DeepSeek-V2.",
+   "page": 1,
+   "why": "Headline 42.5% / 93.3% / 5.76x bars."
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Comparison between MLA and MHA on hard benchmarks.",
+   "page": 32,
+   "why": "Only controlled MLA vs MHA quality and cache evidence."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9-11, Sec 2.1.2",
+   "snippet": "c_t^KV = W^DKV h_t;  k_t^C = W^UK c_t^KV;  v_t^C = W^UV c_t^KV  (cache only c_t^KV: d_c * l elements)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.1.3",
+   "snippet": "k_t^R = RoPE(W^KR h_t);  k_{t,i} = [k_{t,i}^C ; k_t^R];  cache (d_c + d_h^R) l elements",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extracted with symbol fonts split across lines (math is garbled); equations in code are reconstructed, hence verbatim false.",
+  "Appendix G prompt tables 12-37 not read in detail."
+ ]
+}

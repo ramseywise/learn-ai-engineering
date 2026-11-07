@@ -1,0 +1,132 @@
+{
+ "schema": 1,
+ "key": "1612.03079",
+ "pdf": "ai-engineering/07-inference-engineering/sources/crankshaw-2016-clipper.pdf",
+ "bib": {
+  "title": "Clipper: A Low-Latency Online Prediction Serving System",
+  "authors": ["Daniel Crankshaw", "Xin Wang", "Giulio Zhou", "Michael J. Franklin", "Joseph E. Gonzalez", "Ion Stoica"],
+  "first_author": "Crankshaw",
+  "year": 2017,
+  "venue": "preprint (arXiv:1612.03079v2 [cs.DC], 28 Feb 2017; the PDF prints no venue)",
+  "arxiv": "1612.03079",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 76628,
+  "chars_total": 76628,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "system",
+ "question": "How can a general-purpose serving layer give low-latency, high-throughput and more accurate online predictions across heterogeneous ML frameworks without modifying them?",
+ "hypothesis": "A layered design (model abstraction layer with caching and adaptive batching, plus a bandit-based model selection layer) can match a framework-integrated server's throughput and latency while adding model composition and online learning.",
+ "contributions": [
+  "A layered architecture that abstracts away the complexity associated with serving predictions in existing machine learning frameworks (Sec 3).",
+  "A set of novel techniques to reduce and bound latency while maximizing throughput that generalize across machine learning frameworks (Sec 4).",
+  "A model selection layer that enables online model selection and composition to provide robust and accurate predictions for interactive applications (Sec 5)."
+ ],
+ "method": {
+  "summary": "Clipper, written in Rust, sits between applications (REST/RPC) and models in Docker containers. A model abstraction layer adds a per-model prediction cache (CLOCK eviction), per-container adaptive batching (AIMD against a latency SLO) and replicated containers; a model selection layer uses Exp3 (single model) or Exp4 (linear ensemble) bandit policies with straggler mitigation and per-user state in Redis. Evaluated by microbenchmarks on MNIST, CIFAR-10, ImageNet and TIMIT, and against TensorFlow Serving.",
+  "task": "online prediction serving (object recognition, speech recognition)",
+  "trains": false,
+  "datasets": [
+   {"name": "MNIST", "role": "eval", "size": "70K images, 28x28, 10 labels", "split": null, "source": "LeCun et al. 1998", "preprocessing": null},
+   {"name": "CIFAR-10", "role": "eval", "size": "60k images, 32x32x3, 10 labels", "split": null, "source": "Krizhevsky and Hinton", "preprocessing": null},
+   {"name": "ImageNet", "role": "eval", "size": "1.26M images, 299x299x3, 1000 labels", "split": null, "source": "Russakovsky et al. (ref 49)", "preprocessing": null},
+   {"name": "TIMIT speech", "role": "eval", "size": "6300 recordings, 5 sec., 39 labels; 630 speakers in eight dialects", "split": "users randomly drawn from the test corpus, interaction simulated from pre-recorded speech", "source": "Garofolo et al. 1993", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Clipper", "role": "proposed", "params": null, "architecture": "two-layer serving system, Rust, per-model Docker containers with RPC", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"frameworks_supported": "Spark MLLib, Scikit-Learn, Caffe, TensorFlow, HTK (each under 25 lines of code)", "container_bindings": "C++, Java, Python", "selection_state_store": "Redis", "cache_eviction": "CLOCK"}},
+   {"name": "TensorFlow Serving", "role": "baseline", "params": null, "architecture": "model and serving in same process, static batch sizes with timeout", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Scikit-Learn / PySpark MNIST models (linear SVM, kernel SVM, random forest, logistic regression, Spark linear SVM, no-op)", "role": "evaluated", "params": null, "architecture": "classical ML", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Caffe VGG, GoogLeNet, ResNet, CaffeNet; TensorFlow Inception (ensemble members)", "role": "evaluated", "params": null, "architecture": "CNNs", "init_from": null, "tokenizer": null, "vocab": null, "layers": "VGG 13 Conv and 3 FC; GoogLeNet 96 Conv and 5 FC; ResNet 151 Conv and 1 FC; CaffeNet 5 Conv and 3 FC; Inception 6 Conv, 1 FC, 3 Incept.", "hidden": null, "heads": null, "context": null, "other": {"table": "Table 2"}},
+   {"name": "TF serving-comparison networks", "role": "evaluated", "params": null, "architecture": "4-layer CNN (MNIST), 8-layer AlexNet (CIFAR-10), 22-layer Inception-v3 (ImageNet)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "latency_slo": "20ms in the batching microbenchmarks (interactive target 10-20ms)",
+    "aimd_backoff": "batch size reduced by 10% when batch latency exceeds the SLO; additive increase step not stated",
+    "delayed_batching": "2ms batch delay in Fig 5 example; timeout swept to 4000 us",
+    "exp3": "weight s_i = 1 per model, p_i = s_i/sum s_j, update s_i <- s_i exp(-eta L(y, yhat)/p_i), loss in [0,1]; eta value not stated",
+    "exp4_ensemble": "linear weighted average of base predictions, confidence = number of models agreeing; missing predictions replaced by their average value at the latency deadline",
+    "tf_serving_batch_sizes": "MNIST 512, CIFAR 128, ImageNet 16 (hand-tuned for TensorFlow Serving)",
+    "failure_simulation": "five Caffe CIFAR models, 20K sequential queries, best model degraded after 5K queries and recovered after 10K"
+   },
+   "other": {
+    "hardware": "all machines 2 Intel Haswell-EP CPUs, 256 GB RAM, Ubuntu 14.04, Linux 4.2.0; TensorFlow on Nvidia Tesla K20c, 5 GB GPU memory, 2496 cores; scaling cluster on 10Gbps and 1Gbps switch; single server unless noted",
+    "runs_seeds": null,
+    "cache_size": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "throughput", "definition": "queries per second; peak/maximum sustained for TF Serving comparison", "unit": "qps", "higher_is_better": true},
+    {"name": "latency (mean, P99)", "definition": "time to render a prediction given a query", "unit": "us / ms", "higher_is_better": false},
+    {"name": "error rate", "definition": "Top-1 (CIFAR-10), Top-5 (ImageNet), cumulative average error, speech error", "unit": "fraction", "higher_is_better": false}
+   ],
+   "baselines": ["no batching", "quantile-regression batching", "single best model", "TensorFlow Serving", "dialect-specific and dialect-oblivious speech models"],
+   "protocol": "microbenchmarks per feature; number of runs, seeds and confidence intervals not stated; Fig 11 shows p99 as error bars"
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.parameters.tf_serving_batch_sizes", "quote": "(MNIST: 512, CIFAR: 128, ImageNet: 16)", "where": "Sec 6"}
+  ]
+ },
+ "results": [
+  {"claim": "Batching raises throughput up to 26x for the Scikit-Learn SVM while meeting a 20ms SLO.", "kind": "measured", "source": null, "metric": "throughput gain vs no batching", "value": "26", "unit": "x", "baseline_value": null, "n": null, "setup": "MNIST models in Scikit-Learn/Spark, adaptive batching vs no batching, 20ms latency SLO, Fig 4", "quote": "can improve throughput by up to 26x", "table": null, "note": "Text says 'Scikit-Learn SVM'; Sec 4.3.1 says 'Scikit-Learn linear SVM'.", "where": "Sec 4.3"},
+  {"claim": "Max batch size within a 20ms SLO differs 241x between the linear SVM and the kernel SVM.", "kind": "measured", "source": null, "metric": "ratio of max batch size", "value": "241", "unit": "x", "baseline_value": null, "n": null, "setup": "Scikit-Learn linear vs kernel SVM on MNIST, 20ms SLO, Fig 3", "quote": "differs by 241x between the", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Under that SLO the linear SVM reaches nearly 30,000 qps while the kernel SVM is limited to 200 qps.", "kind": "measured", "source": null, "metric": "throughput", "value": "30,000 vs 200", "unit": "qps", "baseline_value": null, "n": null, "setup": "as above, 20ms SLO", "quote": "the kernel SVM is limited to 200 qps under this SLO", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "AIMD backs off the batch size by 10% on SLO violation and performs nearly identically to quantile regression but is simpler.", "kind": "measured", "source": null, "metric": "AIMD multiplicative backoff", "value": "10", "unit": "%", "baseline_value": null, "n": null, "setup": "Spark and Scikit-Learn models, Fig 4; AIMD default", "quote": "reducing the batch size by 10%", "table": null, "note": null, "where": "Sec 4.3.1"},
+  {"claim": "A 2ms batch delay gives a 3.3x throughput gain for the Scikit-Learn SVM but none for the Spark SVM.", "kind": "measured", "source": null, "metric": "throughput gain", "value": "3.3", "unit": "x", "baseline_value": null, "n": null, "setup": "bursty/moderate load, Fig 5", "quote": "a 2ms batch delay provides a 3.3x improvement", "table": null, "note": null, "where": "Sec 4.3.2"},
+  {"claim": "Replicating GPU containers across four nodes on 10Gbps scales throughput 3.95x (19,500 to 77,000 qps); 1Gbps saturates at the second remote machine.", "kind": "measured", "source": null, "metric": "aggregate throughput scaling", "value": "3.95", "unit": "x", "baseline_value": "19,500 qps", "n": 4, "setup": "four-node GPU cluster, 10Gbps switch, Fig 6", "quote": "Clipper gets a 3.95x throughput increase from 19,500 qps", "table": null, "note": "77,000 qps is the four-replica figure.", "where": "Sec 4.4.1"},
+  {"claim": "Prediction caching raises feedback processing throughput 1.6x, from about 6K to 11K observations per second.", "kind": "measured", "source": null, "metric": "feedback throughput", "value": "1.6", "unit": "x", "baseline_value": null, "n": 4, "setup": "four-model ensemble (random forest, logistic regression, linear SVM in Scikit-Learn, linear SVM in Spark)", "quote": "prediction caching increased feedback processing throughput in Clipper by 1.6x", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Linear ensembles of five off-the-shelf CNNs cut ImageNet error by 5.2% relative.", "kind": "measured", "source": null, "metric": "relative error reduction", "value": "5.2", "unit": "%", "baseline_value": null, "n": 5, "setup": "ImageNet, five models from Table 2, Fig 7 (Top-5 about 0.0618 single vs 0.0586 ensemble read from figure)", "quote": "achieves a 5.2% relative reduction in the error rate", "table": null, "note": "Figure 7 bar labels are ambiguous in extracted text.", "where": "Sec 5.2"},
+  {"claim": "Python TensorFlow containers lose 15-18% throughput vs TensorFlow Serving; C++ containers are nearly identical.", "kind": "measured", "source": null, "metric": "throughput relative to TF Serving", "value": "15-18", "unit": "% lower", "baseline_value": null, "n": 3, "setup": "MNIST CNN, CIFAR-10 AlexNet, ImageNet Inception-v3, GPU, hand-tuned batch sizes, Fig 11", "quote": "The Python model containers suffer a 15-18% performance hit", "table": null, "note": "Fig 11 labels (legend order TF Serving, Clipper TF-C++, Clipper TF-Python): MNIST 23138/22269/19537, CIFAR 5519/5472/4571, ImageNet 56/52/47; mapping to systems inferred from legend order.", "where": "Sec 6"},
+  {"claim": "Clipper TensorFlow Serving comparison, MNIST throughput: 23138 (TF Serving) vs 19537 (Clipper TF-Python).", "kind": "measured", "source": null, "metric": "peak throughput", "value": "23138", "unit": "qps", "baseline_value": null, "n": null, "setup": "MNIST, Fig 11a; unit assumed qps", "quote": null, "table": "Figure 11a, TensorFlow Serving throughput bar (value 23138)", "note": "Bar order inferred from legend.", "where": "Fig 11"},
+  {"claim": "Clipper renders low and bounded latency predictions under 20ms in the authors' evaluation.", "kind": "claim", "source": null, "metric": "latency", "value": "<20ms", "unit": "ms", "baseline_value": null, "n": null, "setup": "stated in introduction summary", "quote": "low and bounded latency predictions (<20ms)", "table": null, "note": null, "where": "Sec 1"},
+  {"claim": "Each of five frameworks was added with fewer than 25 lines of code.", "kind": "claim", "source": null, "metric": "lines of code per framework", "value": "<25", "unit": "lines", "baseline_value": null, "n": 5, "setup": "Spark MLLib, Scikit-Learn, Caffe, TensorFlow, HTK", "quote": "each was added using fewer than 25 lines of code", "table": null, "note": null, "where": "Sec 1"}
+ ],
+ "limits": [
+  "Models are black boxes: Clipper does not optimize execution within frameworks, so slow models remain slow.",
+  "Clipper does not manage training or retraining; if all models are stale it cannot beat what ensembles give.",
+  "The network becomes the bottleneck for large inputs on 1Gbps links.",
+  "No seeds, run counts or variance reported; cache size and Exp3 eta not stated; Fig 11 compares only three TensorFlow models with batch sizes hand-tuned for TensorFlow Serving.",
+  "2016-17 hardware (K20c) and models; no LLM or token-level workloads."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "latency profile", "definition": "the expected time to evaluate a batch of a given size", "where": "Sec 4.3"},
+  {"term": "optimal batch size", "definition": "the batch size that maximizes throughput subject to the constraint that the batch evaluation latency is under the target SLO", "where": "Sec 4.3.1"}
+ ],
+ "lineage": [
+  {"work": "Auer et al., The nonstochastic multiarmed bandit problem (Exp3, Exp4)", "year": 2003, "arxiv": null, "relation": "uses-method", "note": "basis of the single and ensemble selection policies", "quote": null},
+  {"work": "Chiu and Jain, increase and decrease algorithms for congestion avoidance", "year": 1989, "arxiv": null, "relation": "uses-method", "note": "AIMD, with a smaller backoff", "quote": null},
+  {"work": "Nagle, Congestion control in IP/TCP internetworks", "year": 1984, "arxiv": null, "relation": "uses-method", "note": "motivation for delayed batching", "quote": null},
+  {"work": "TensorFlow Serving", "year": 2016, "arxiv": null, "relation": "baseline", "note": "only system compared experimentally", "quote": null},
+  {"work": "LASER (Agarwal et al.)", "year": 2014, "arxiv": null, "relation": "related", "note": "closest system, not publicly available", "quote": null},
+  {"work": "Velox (Crankshaw et al.)", "year": 2015, "arxiv": null, "relation": "extends", "note": "UC Berkeley predecessor; Clipper selection policy generalizes its techniques", "quote": null},
+  {"work": "MNIST, CIFAR-10, ImageNet, TIMIT", "year": null, "arxiv": null, "relation": "uses-data", "note": "benchmark datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "The Clipper Architecture.", "page": 1, "why": "Shows the two layers and the path from REST API through cache, batching queue and RPC to containers."},
+  {"figure": "Figure 3", "caption": "Model Container Latency Profiles.", "page": 6, "why": "Shows the near-linear batch size vs P99 latency relation that makes per-model batch caps necessary."},
+  {"figure": "Figure 4", "caption": "Comparison of Dynamic Batching Strategies.", "page": 6, "why": "AIMD vs quantile regression vs no batching throughput and P99."},
+  {"figure": "Figure 11", "caption": "TensorFlow Serving Comparison.", "page": 12, "why": "Peak throughput and latency decomposition against TensorFlow Serving."}
+ ],
+ "code": [
+  {"where": "Listing 1", "snippet": "interface Predictor <X,Y> {\n List <List <Y>> pred_batch(List <X> inputs );\n}", "verbatim": true},
+  {"where": "Listing 2", "snippet": "interface SelectionPolicy <S, X, Y> {\n S init ();\n List <ModelId > select(S s, X x);\n pair <Y, double > combine(S s, X x,\n Map <ModelId , Y> pred);\n S observe(S s, X x, Y feedback ,\n Map <ModelId , Y> pred);\n}", "verbatim": true}
+ ],
+ "problems": ["Figure data labels (bar values) are extracted without axis association; Fig 7 and Fig 11 mappings are inferred.", "No embedded instructions found."]
+}

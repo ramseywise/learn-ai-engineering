@@ -1,0 +1,161 @@
+{
+ "schema": 1,
+ "key": "2412.08905",
+ "pdf": "generative-ai/05-RL/sources/abdin-2024-phi-4-technical-report.pdf",
+ "bib": {
+  "title": "Phi-4 Technical Report",
+  "authors": ["Marah Abdin","Jyoti Aneja","Harkirat Behl","Sébastien Bubeck","Ronen Eldan","Suriya Gunasekar","Michael Harrison","Russell J. Hewett","Mojan Javaheripi","Piero Kauffmann","James R. Lee","Yin Tat Lee","Yuanzhi Li","Weishung Liu","Caio C. T. Mendes","Anh Nguyen","Eric Price","Gustavo de Rosa","Olli Saarikivi","Adil Salim","Shital Shah","Xin Wang","Rachel Ward","Yue Wu","Dingli Yu","Cyril Zhang","Yi Zhang"],
+  "first_author": "Abdin",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2412.08905",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 96603, "chars_total": 96603, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a 14B model reach reasoning performance of much larger models by centring the training recipe on synthetic data quality, a tuned data mixture and a new DPO pair-generation method?",
+ "hypothesis": "Data quality, with synthetic data throughout training, can rival gains from scaling compute, and can take a student past its GPT-4o teacher on STEM QA.",
+ "contributions": [
+  "Synthetic data for pretraining and midtraining",
+  "Curation and filtering of high-quality organic data",
+  "Post-training with refined SFT data and Pivotal Token Search to create DPO pairs"
+ ],
+ "method": {
+  "summary": "A 14B decoder-only transformer (phi-3-medium architecture with tiktoken and full 4K attention) is pretrained on about 10T tokens of a mixture dominated by synthetic data, extended to 16K in midtraining, then post-trained with one SFT round, one DPO round on pivotal-token pairs and one judge-guided DPO round.",
+  "task": "language model pretraining and post-training (SFT, DPO)",
+  "trains": true,
+  "datasets": [
+   {"name": "Synthetic pretraining data (50 types)", "role": "pretrain", "size": "about 400B unweighted tokens; ~290B unique tokens in mixture", "split": "40% of pretraining tokens, 13.8 epochs", "source": "GPT-4-family generated from curated seeds; multi-agent prompting, self-revision, instruction reversal", "preprocessing": "validated by execution loops and tests for code; plurality-vote answers for questions"},
+   {"name": "Web", "role": "pretrain", "size": "1.3T unique tokens", "split": "15% of tokens, 1.2 epochs", "source": "filtered web dumps using small classifiers trained on ~10^6 LLM annotations", "preprocessing": "n-gram and compression-ratio outlier removal; custom HTML-to-text extractor"},
+   {"name": "Web rewrites", "role": "pretrain", "size": "290B unique tokens", "split": "15% of tokens, 5.2 epochs", "source": "synthetic rewrites of filtered web content", "preprocessing": null},
+   {"name": "Code data", "role": "pretrain", "size": "820B unique tokens", "split": "20% of tokens, 2.4 epochs", "source": "mixture of synthetic and raw code", "preprocessing": null},
+   {"name": "Acquired sources", "role": "pretrain", "size": "580B unique tokens", "split": "10% of tokens, 1.7 epochs", "source": "academic data, books, forums (arXiv, PubMed Central, GitHub, licensed books)", "preprocessing": null},
+   {"name": "SFT data", "role": "train", "size": "around 8B tokens", "split": null, "source": "public prompts plus synthetic; multiple responses, best chosen by LLM evaluation; multilingual data for 40 languages", "preprocessing": "chatml format"},
+   {"name": "Pivotal Token DPO data (Table 7)", "role": "train", "size": "3,000 unknown+safety; 132,859 generic multiple-choice Q&A; 76,552 math; 16,080 python; 21,806 cpp/go/java/js/rust", "split": null, "source": "Pivotal Token Search on prompts with ground truth", "preprocessing": "questions filtered to 0.2 <= p(success) <= 0.8"},
+   {"name": "Judge-guided DPO data (Table 8)", "role": "train", "size": "about 850k pairs: 43,842 unknown+safety; 266,000 any vs any overall; 532,000 any vs any accuracy", "split": null, "source": "responses from GPT-4o, GPT-4t and phi-4, labelled by GPT-4o judge", "preprocessing": null},
+   {"name": "November 2024 AMC 10/12", "role": "eval", "size": "78 questions (4 sets of 25, with overlaps)", "split": null, "source": "Art of Problem Solving Wiki", "preprocessing": null},
+   {"name": "PhiBench (internal)", "role": "eval", "size": null, "split": null, "source": "questions written by the team", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "phi-4", "role": "proposed", "params": "14B", "architecture": "decoder-only transformer, full attention over 4K context (phi-3-medium used a 2K sliding window)", "init_from": null, "tokenizer": "tiktoken", "vocab": "100,352 (padded, including unused tokens)", "layers": null, "hidden": null, "heads": null, "context": "4096, extended to 16K in midtraining", "other": {"rope_base_frequency_midtraining": "250K"}},
+   {"name": "phi-3-medium", "role": "baseline", "params": "14B", "architecture": "decoder-only transformer, 2K sliding window", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "13B synthetic-only ablation model", "role": "evaluated", "params": "13B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "trained solely on synthetic data, ablation only, over 20 repetitions of each source"}},
+   {"name": "GPT-4o", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also": "judge for judge-guided DPO and RAI evals; answer extractor for AMC"}}
+  ],
+  "training": {
+   "objective": "next-token pretraining; SFT; DPO (Rafailov et al. 2023) in two rounds",
+   "optimizer": null,
+   "lr": "pretraining peak 0.0003; midtraining peak 10x lower; SFT 10^-6",
+   "lr_schedule": "linear warm-up and decay",
+   "warmup": null,
+   "batch_size": "5760 (global, pretraining)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "about 10T pretraining; 250B midtraining; around 8B SFT",
+   "seq_len": "4096 pretraining; 16K after midtraining",
+   "precision": null,
+   "weight_decay": "0.1 (constant)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "midtraining_mix": "30% newly curated longer-context data, 70% recall tokens from pretraining",
+    "dpo_hyperparameters": "not stated (beta, lr, epochs, batch size)",
+    "pts_pgap": "not stated",
+    "pts_samples_per_estimate": "not stated for training; N = 529 in Fig 3 illustration",
+    "dpo_hallucination_data": "refusal DPO data used the first 5 tokens of the response",
+    "data_mixture_search": "ablations at 1T-token horizon, 7B scale, transferred to 14B"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.5 for simple-evals and AMC",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "AMC: 10 independent generations per question per model (Appendix C); Fig 1 caption says 100 runs; HELMET: average across 5 runs",
+   "prompting": "pretraining evals: log-likelihood for MMLU (5-shot), MMLU-pro, ARCC (1-shot); few-shot 1, 3, 4, 8 for TriviaQA, MBPP, MATH, GSM8k. Post-training evals: simple-evals prompts, extraction and temperature 0.5",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "simple-evals scores (MMLU, GPQA diamond, MATH, HumanEval, MGSM, SimpleQA F1, DROP)", "definition": "OpenAI simple-evals prompts/extraction", "unit": "%", "higher_is_better": true},
+    {"name": "AMC score", "definition": "6 points correct, 1.5 unanswered, 0 incorrect; max 150 per test; averaged over four tests", "unit": "points", "higher_is_better": true},
+    {"name": "RAI defect rate DR-x", "definition": "percentage of samples with severity >= x on a 0-7 scale, GPT-4o simulated conversations", "unit": "fraction", "higher_is_better": false}
+   ],
+   "baselines": ["phi-3 14B", "Qwen 2.5 14B instruct", "GPT-4o-mini", "Llama-3.3 70B instruct", "Qwen 2.5 72B instruct", "GPT-4o", "Claude 3.5 Sonnet", "Gemini Flash 1.5", "Gemini Pro 1.5"],
+   "protocol": "Decontamination by 13-gram and 7-gram hybrid algorithm against 20 benchmarks. AMC tests run after hyperparameters were fixed; three candidate models were scored and the final was chosen on other factors (footnote 8). GPT-4o extracts final answers at temperature 1. Single-run post-training table; no seeds or significance tests."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "AMC question template", "text": "The following question is from a 25-question, multiple choice test. Each question is followed by answers marked A, B, C, D, and E. Only one of these is correct. SCORING: You will receive 6 points for each correct answer, 1.5 points for each problem left unanswered, and 0 points for each incorrect answer. Solve the question step by step, then answer \\boxed{A}, \\boxed{B}, \\boxed{C}, \\boxed{D}, \\boxed{E}, or \\boxed{blank}.", "where": "Appendix C"},
+   {"purpose": "Bogus question generation for hallucination mitigation", "text": "Your job is to turn this problem into a nonsensical one, for which the answer is invalid or unlikely to be known by anyone.", "where": "Appendix A.1.1 (excerpt; full prompt in paper)"},
+   {"purpose": "Judge-guided DPO judge prompt", "text": "Your task is to judge which of the following reply given by an AI assistant is better.", "where": "Appendix A.2 (excerpt; JSON output with faults, accuracy, style, detail scores 1-5)"}
+  ],
+  "evidence": [
+   {"field": "training.tokens", "quote": "The model was pretrained for approximately 10T tokens using linear warm-up and decay schedules with peak learning rate of 0.0003, constant weight decay of 0.1, and global batch size of 5760.", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "phi-4 scores 56.1 on GPQA, above GPT-4o at 50.6.", "kind": "measured", "source": null, "metric": "GPQA", "value": "56.1", "unit": "%", "baseline_value": "50.6", "n": null, "setup": "simple-evals, temperature 0.5, phi-4 14B vs GPT-4o", "quote": null, "table": "Table 1, row GPQA, column phi-4 (GPT-4o 50.6)", "note": null, "where": "Table 1"},
+  {"claim": "phi-4 scores 80.4 on MATH, above GPT-4o at 74.6.", "kind": "measured", "source": null, "metric": "MATH", "value": "80.4", "unit": "%", "baseline_value": "74.6", "n": null, "setup": "simple-evals, temperature 0.5", "quote": null, "table": "Table 1, row MATH, column phi-4 (GPT-4o 74.6)", "note": "Footnote: Llama-3.3 scores 66.3 here under simple-evals strict formatting, Meta reports 77.", "where": "Table 1"},
+  {"claim": "Pivotal-token DPO raises GPQA from 47.3 (SFT) to 53.6.", "kind": "measured", "source": null, "metric": "GPQA", "value": "53.6", "unit": "%", "baseline_value": "47.3", "n": null, "setup": "simple-evals, phi-4 SFT checkpoint then DPO stage 1 (pivotal token)", "quote": null, "table": "Table 9, row GPQA, column DPO stage 1", "note": null, "where": "Table 9"},
+  {"claim": "Pivotal-token DPO raises MATH from 77.1 (SFT) to 80.5.", "kind": "measured", "source": null, "metric": "MATH", "value": "80.5", "unit": "%", "baseline_value": "77.1", "n": null, "setup": "simple-evals, SFT then DPO stage 1", "quote": null, "table": "Table 9, row MATH, column DPO stage 1", "note": null, "where": "Table 9"},
+  {"claim": "Judge-guided DPO alone (stage 2 only) takes ArenaHard from 56.7 to 69.8; with both stages 75.4.", "kind": "measured", "source": null, "metric": "ArenaHard", "value": "69.8", "unit": "%", "baseline_value": "56.7", "n": null, "setup": "SFT checkpoint, DPO stage 2 only; ArenaHard uses a GPT-4 judge", "quote": null, "table": "Table 9, row ArenaHard, column DPO stage 2 only (phi-4 stage 1 + 2 is 75.4)", "note": null, "where": "Table 9"},
+  {"claim": "Stage 2 only is worse than stage 1 on MATH (77.6 vs 80.5) and GPQA (52.4 vs 53.6); the authors find the two stages complementary.", "kind": "measured", "source": null, "metric": "MATH", "value": "77.6", "unit": "%", "baseline_value": "80.5", "n": null, "setup": "SFT checkpoint, DPO stage 2 only vs stage 1", "quote": "In general, we find that pivotal token DPO is most useful on reasoning-heavy tasks (GPQA, MATH) while judge-guided DPO is particularly useful for the benchmark that itself involves a GPT-4 judge: ArenaHard.", "table": null, "note": null, "where": "Section 4.5, Table 9"},
+  {"claim": "On fresh November 2024 AMC 10/12 tests, phi-4 averages 91.8 out of 150.", "kind": "measured", "source": null, "metric": "AMC average score", "value": "91.8", "unit": "points", "baseline_value": "81.6", "n": null, "setup": "Four tests, temperature 0.5, max 150; Fig 1 bar values read from figure text (phi-4 91.8, next 89.8 in order printed)", "quote": "This is the average score (with maximum score 150) over the four tests on 100 runs with temperature t = 0.5.", "table": null, "note": "Fig 1 caption says 100 runs; Appendix C says 10 independent generations per model. Footnote 8: three candidate models all exceeded 89 and the final was chosen after seeing the other two scores. The baseline 81.6 is read from the figure's value ordering, not labelled per model in the text.", "where": "Fig 1, Appendix C"},
+  {"claim": "phi-4 outperforms Qwen-2.5-14B-Instruct on 9 of 12 benchmarks; weakest on SimpleQA, DROP, IFEval.", "kind": "measured", "source": null, "metric": "benchmarks won vs Qwen-2.5-14B", "value": "9", "unit": "of 12", "baseline_value": null, "n": 12, "setup": "Table 1 benchmarks incl. internal framework ones", "quote": "phi-4 outperforms the closest in-class contemporary model, Qwen-2.5-14B-Instruct, in 9 out of 12 benchmarks.", "table": null, "note": null, "where": "Section 6"},
+  {"claim": "IFEval is a real weakness: phi-4 scores 63.0 vs Qwen 2.5 14B instruct at 78.7.", "kind": "measured", "source": null, "metric": "IFEval", "value": "63.0", "unit": "%", "baseline_value": "78.7", "n": null, "setup": "internal framework prompting and extraction", "quote": "However, IFEval reveals a real weakness of our model – it has trouble strictly following instructions.", "table": null, "note": null, "where": "Section 6, Table 1"},
+  {"claim": "Post-training moved SimpleQA outcomes from 90.0% incorrect/6.8% correct (base-stage bar) towards refusals: final 81.1% not attempted, 15.8% incorrect, 3.0% correct.", "kind": "measured", "source": null, "metric": "SimpleQA correct", "value": "3.0", "unit": "%", "baseline_value": "6.8", "n": null, "setup": "Fig 6 values read from figure; base model vs final phi-4; simple-evals F1 is 3.0 for phi-4 and 7.6 for phi-3", "quote": null, "table": "Table 1, row SimpleQA, column phi-4", "note": "Bar breakdown read from Fig 6 text layout, ordering of stacks inferred.", "where": "Fig 6, Appendix A.1"},
+  {"claim": "Synthetic data repeated for 12 epochs beats supplying more fresh web tokens in phase 2 runs.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 2, 5-shot MMLU, smaller scale phase 2 pretraining runs, 4 vs 12 epochs", "quote": "We see that despite many epochs on synthetic data, we do not see overfitting behavior and in fact the 12 epoch models perform better than those that have seen more unique web tokens.", "table": null, "note": null, "where": "Fig 2"},
+  {"claim": "A 13B model trained only on synthetic data lags phi-3-medium by 14.8 points on TriviaQA.", "kind": "measured", "source": null, "metric": "TQA delta vs phi-3-medium", "value": "-14.8", "unit": "points", "baseline_value": null, "n": null, "setup": "13B ablation, no web data, 20+ repetitions", "quote": null, "table": "Table 3, row Synthetic, column TQA", "note": null, "where": "Table 3"},
+  {"claim": "phi-4 pretrained gains +10.3 on MMLU-pro and +8.9 on MATH over phi-3-medium (4k).", "kind": "measured", "source": null, "metric": "MMLU-pro delta", "value": "+10.3", "unit": "points", "baseline_value": null, "n": null, "setup": "internal pretraining eval, base model, 4k", "quote": null, "table": "Table 2, row phi-4 (4k), column MMLU pro", "note": null, "where": "Table 2"},
+  {"claim": "Final pretraining mixture: web 15%, web rewrites 15%, synthetic 40%, code 20%, acquired 10%.", "kind": "measured", "source": null, "metric": "synthetic fraction", "value": "40%", "unit": "% of tokens", "baseline_value": null, "n": null, "setup": "Table 5; epochs 1.2, 5.2, 13.8, 2.4, 1.7", "quote": "The remaining tokens are largely sourced from synthetic data which accounts for 40% of the data mixture tokens.", "table": null, "note": null, "where": "Section 3.2, Table 5"},
+  {"claim": "Pivotal tokens are chosen by recursive binary search on change in estimated success probability, with prompts filtered to 0.2 <= p(success) <= 0.8.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Section 4.3; oracle is test suite for code, ground-truth match for math", "quote": "To improve sample efficiency, we filter the target questions to only include those with 0.2 ≤p(success) ≤0.8, as pivotal tokens are rare for tasks that are very easy or hard.", "table": null, "note": null, "where": "Section 4.3"},
+  {"claim": "Reference-free long-context: phi-4 at 16K scores 99.0 recall, 36.0 QA on HELMET.", "kind": "measured", "source": null, "metric": "HELMET Recall at 16K", "value": "99.0", "unit": "%", "baseline_value": null, "n": null, "setup": "average across 5 runs per category", "quote": null, "table": "Table 6, row phi-4 16K, column Recall", "note": null, "where": "Table 6"},
+  {"claim": "phi-4 jailbreak defect rate 0.073 is the lowest of the models compared; harmful content continuation 0.036 is higher than phi-3 variants.", "kind": "measured", "source": null, "metric": "Jailbreak DR1", "value": "0.073", "unit": "fraction", "baseline_value": "0.111", "n": null, "setup": "in-house RAI benchmark, GPT-4o simulated conversations; baseline is phi-3 14B-4K", "quote": null, "table": "Table 10, row Jailbreak(DR1), column phi-4", "note": null, "where": "Table 10"}
+ ],
+ "limits": [
+  "Authors concede factual hallucination (for example invented biographies for 'Who is X?') and weak strict instruction following, especially formatting constraints.",
+  "Verbose chain-of-thought answers on simple problems; tuned for single-turn queries.",
+  "Contamination: n-gram decontamination is not effective against rephrasing, leaving uncertainty about generalization.",
+  "AMC evaluation: final model was picked after seeing the other candidates' AMC scores (footnote 8); Fig 1 caption (100 runs) conflicts with Appendix C (10 generations).",
+  "Post-training results come from single runs with no seeds or variance; DPO hyperparameters, PTS thresholds and compute are not given; weights, code and data not released in this report.",
+  "SimpleQA is worse by F1 than the base model because post-training trades guesses for refusals."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "pivotal token", "definition": "a token with an outsized effect on the course of the solution, where the probability of a correct answer changes sharply once it is produced", "where": "Section 4.3"},
+  {"term": "Pivotal Token Search (PTS)", "definition": "recursively splits a response and estimates p(success) by sampling completions checked with an oracle, keeping single tokens whose probability change exceeds p_gap, then builds DPO pairs from a single accepted and a single rejected token", "where": "Section 4.3, Fig 4"},
+  {"term": "judge-guided DPO", "definition": "second DPO round on full-length preference pairs labelled by GPT-4o on accuracy, style and detail", "where": "Section 4.2"}
+ ],
+ "lineage": [
+  {"work": "Direct Preference Optimization (Rafailov et al.)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "DPO used in both post-training rounds", "quote": null},
+  {"work": "Phi-3 technical report", "year": 2024, "arxiv": "2404.14219", "relation": "extends", "note": "architecture closely follows phi-3-medium", "quote": null},
+  {"work": "Critical tokens matter (Lin et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "contrastive token-level estimation; PTS avoids a learned proxy", "quote": null},
+  {"work": "Math-Shepherd (Wang et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "automated process supervision; PTS seen as token-level analogue", "quote": null},
+  {"work": "Improve mathematical reasoning by automated process supervision (Luo et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "rollout-based process supervision", "quote": null},
+  {"work": "HELMET (Yen et al.)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "long-context evaluation", "quote": null},
+  {"work": "AgentKit (Wu et al.)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "trajectories for agent training data", "quote": null},
+  {"work": "simple-evals (OpenAI)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "evaluation framework", "quote": null},
+  {"work": "Textbooks Are All You Need", "year": 2023, "arxiv": "2306.11644", "relation": "extends", "note": "Phi family lineage", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Illustration of pivotal tokens for GPT-4o at temperature 1 on a problem from the MATH benchmark, where the initial success probability is 0.31.", "page": 13, "why": "shows that pivotal tokens differ from low-probability tokens and dilute full-sequence DPO"},
+  {"figure": "Fig 4", "caption": "Pseudocode for Pivotal Token Search (PTS).", "page": 13, "why": "the algorithm in a few lines"},
+  {"figure": "Fig 1", "caption": "Average performance of different models on the November 2024 AMC-10 and AMC-12 tests.", "page": 3, "why": "fresh-data contamination check"},
+  {"figure": "Table 9", "caption": "Performance through the post-training process. DPO stage 1 is pivotal token DPO, and DPO stage 2 is more standard judge-guided DPO.", "page": 17, "why": "ablation separating the two DPO rounds"}
+ ],
+ "code": [
+  {"where": "Fig 4, p13", "snippet": "if |T|<=1 or |p(success|Tprefix) - p(success|Tprefix+T)| < pgap then return [T]; Tleft,Tright <- Split(T) at the cumulative midpoint of token log probabilities; return Subdivide(Tprefix,Tleft) U Subdivide(Tprefix+Tleft,Tright)", "verbatim": false}
+ ],
+ "problems": [
+  "Fig 1 per-model bar values and Fig 6 stack values are read from scrambled figure text; per-model assignment in Fig 1 is by order only.",
+  "Fig 1 caption says 100 runs but Appendix C says 10 generations per model.",
+  "No embedded instructions found."
+ ]
+}

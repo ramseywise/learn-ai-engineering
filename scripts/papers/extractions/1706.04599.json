@@ -1,0 +1,650 @@
+{
+ "schema": 1,
+ "key": "1706.04599",
+ "pdf": "data-science/sources/guo-2017-calibration-modern-neural-networks.pdf",
+ "bib": {
+  "title": "On Calibration of Modern Neural Networks",
+  "authors": [
+   "Chuan Guo",
+   "Geoff Pleiss",
+   "Yu Sun",
+   "Kilian Q. Weinberger"
+  ],
+  "first_author": "Guo",
+  "year": 2017,
+  "venue": "Proceedings of the 34th International Conference on Machine Learning, Sydney, Australia, PMLR 70, 2017",
+  "arxiv": "1706.04599",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 55643,
+  "chars_total": 55643,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Are modern neural network classifiers well calibrated, what causes miscalibration, and which post-processing method fixes it best?",
+ "hypothesis": "Increased capacity and reduced regularisation (depth, width, Batch Normalization, less weight decay) worsen calibration, and a simple low-dimensional post-hoc correction suffices.",
+ "contributions": [
+  "Show modern deep nets are poorly calibrated, unlike older ones",
+  "Identify depth, width, weight decay and Batch Normalization as factors influencing calibration",
+  "Compare post-processing calibration methods and introduce temperature scaling (single-parameter Platt scaling), plus vector and matrix scaling extensions"
+ ],
+ "method": {
+  "summary": "Train standard CNN, DAN and TreeLSTM classifiers on 6 image and 4 text datasets, measure ECE/MCE/NLL/error on test sets, then fit post-hoc calibrators (histogram binning, isotonic regression, BBQ, temperature, vector, matrix scaling) on a held-out validation set with the network frozen.",
+  "task": "multiclass classification calibration (image and document classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Caltech-UCSD Birds",
+    "role": "both",
+    "size": "200 classes",
+    "split": "5994/2897/2897 train/val/test",
+    "source": "Welinder et al. 2010",
+    "preprocessing": null
+   },
+   {
+    "name": "Stanford Cars",
+    "role": "both",
+    "size": "196 classes",
+    "split": "8041/4020/4020 train/val/test",
+    "source": "Krause et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet 2012",
+    "role": "both",
+    "size": "1000 classes",
+    "split": "1.3 million/25,000/25,000 train/val/test",
+    "source": "Deng et al. 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10/CIFAR-100",
+    "role": "both",
+    "size": "32x32 colour, 10/100 classes",
+    "split": "45,000/5,000/10,000 train/val/test",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": "32x32 colour",
+    "split": "598,388/6,000/26,032 train/val/test",
+    "source": "Netzer et al. 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "20 News",
+    "role": "both",
+    "size": "20 categories",
+    "split": "9034/2259/7528 train/val/test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Reuters",
+    "role": "both",
+    "size": "8 categories",
+    "split": "4388/1097/2189 train/val/test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SST Binary / Fine Grained",
+    "role": "both",
+    "size": "binary and 5-class",
+    "split": "6920/872/1821 (binary), 544/1101/2210 (fine-grained)",
+    "source": "Socher et al. 2013; split per Tai et al. 2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet (110 layers; 50 for Birds/Cars; 152 for ImageNet/SVHN)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ResNet",
+    "init_from": "ImageNet-pretrained for Birds and Cars",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "110 / 50 / 152",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet with stochastic depth (SD)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ResNet-110 SD; ResNet-152 SD on SVHN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "110 / 152",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Wide ResNet 32",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Wide ResNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DenseNet 40 / 161",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "DenseNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40 (CIFAR), 161 (ImageNet)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LeNet 5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "5-layer CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DAN 3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Deep Averaging Network, 3 feed-forward layers with Batch Normalization",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TreeLSTM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Tree-structured LSTM (Tai et al. 2015)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Networks trained with the original papers' recipes (NLL / cross entropy). Calibrators: NLL on validation set for Platt/temperature/vector/matrix scaling; squared loss for binning and isotonic.",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": "Fig 3 run: learning rate drops by 10x at epochs 250 and 375",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "Fig 3 plots up to about 500 epochs; otherwise per original papers",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "varied 1e-5 to 1e-2 in Fig 2 far right (read from figure)",
+   "dropout": null,
+   "regularisation": "Data augmentation and Batch Normalization the only other regularisers in the weight-decay experiment",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "recipe": "We use the data preprocessing, training procedures, and hyperparameters as described in each paper. For text: default hyperparmaeters suggested by the authors.",
+    "calibrator_fit": "Each calibration method requires a hold-out validation set, which in practice can be the same set used for hyperparameter tuning.",
+    "temperature_solver": "conjugate gradient solver, optimal T in 10 iterations",
+    "fig2_setups": "depth sweep: ResNet CIFAR-100, 64 filters per layer; width sweep: ResNet-14 CIFAR-100; BN: 6-layer ConvNet CIFAR-100; weight decay: ResNet-110 CIFAR-100 (read from Fig 2 and text)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "T fit on validation set (post-hoc); T=1 during training",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single run per dataset/model/method; no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "ECE_bins": "M = 15",
+    "calibrated_probability": "q = max_k softmax(z/T)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ECE",
+     "definition": "sum over M bins of |B_m|/n * |acc(B_m) - conf(B_m)|, M=15 equal-width bins, top-label confidence",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "MCE",
+     "definition": "max over bins of |acc(B_m) - conf(B_m)|",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "NLL",
+     "definition": "-sum log pi_hat(y_i|x_i)",
+     "unit": "% as printed in Table S3 (values like 0.9786)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Test error",
+     "definition": "misclassification rate",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Uncalibrated network",
+    "Histogram binning",
+    "Isotonic regression",
+    "BBQ",
+    "Vector scaling",
+    "Matrix scaling"
+   ],
+   "protocol": "Test-set metrics before and after calibrators fit on validation split; single run; no significance testing stated."
+  },
+  "availability": {
+   "code": "http://github.com/gpleiss/temperature_scaling (example implementation)",
+   "weights": null,
+   "data": "public benchmark datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We set T =1 during training, and subsequently ﬁnd its optimal value on the validation set.",
+    "where": "Section 5, Ease of implementation"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Temperature scaling cuts ECE of a 110-layer ResNet on CIFAR-100 from 16.53% to 1.26%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": 1.26,
+   "unit": "%",
+   "baseline_value": 16.53,
+   "n": null,
+   "setup": "CIFAR-100, ResNet 110, 15 bins, T fit on 5,000-image validation set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CIFAR-100 ResNet 110, columns Uncalibrated and Temp. Scaling"
+  },
+  {
+   "claim": "Temperature scaling cuts ECE of ResNet 110 on CIFAR-10 from 4.6% to 0.83%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": 0.83,
+   "unit": "%",
+   "baseline_value": 4.6,
+   "n": null,
+   "setup": "CIFAR-10 ResNet 110, 15 bins",
+   "note": "Histogram binning (0.58%) and BBQ (0.54%) are lower here",
+   "where": "Table 1",
+   "table": "Table 1, row CIFAR-10 ResNet 110, column Temp. Scaling"
+  },
+  {
+   "claim": "Temperature scaling cuts ImageNet ResNet 152 ECE from 5.48% to 1.86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": 1.86,
+   "unit": "%",
+   "baseline_value": 5.48,
+   "n": null,
+   "setup": "ImageNet ResNet 152, 25,000 validation images, 15 bins",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ImageNet ResNet 152, columns Uncalibrated and Temp. Scaling"
+  },
+  {
+   "claim": "Typical uncalibrated ECE is 4 to 10%; SVHN and Reuters are below 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All datasets and architectures in Table 1",
+   "note": null,
+   "where": "Section 5",
+   "quote": "ECE typically between 4 to 10%"
+  },
+  {
+   "claim": "Temperature scaling outperforms all other methods on the vision tasks and performs comparably on NLP datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, 15 bins, single run",
+   "note": "Table 1 has exceptions: on CIFAR-10 ResNet 110 histogram binning and BBQ beat temperature scaling; Cars ResNet 50 histogram binning (1.74%) and BBQ (1.84%) beat it (2.35%)",
+   "where": "Section 5",
+   "quote": "Temperature scaling outperforms all other methods on the vision tasks, and performs comparably to other methods on the NLP datasets."
+  },
+  {
+   "claim": "Temperature scaling beats vector and matrix scaling although they are strictly more general; vector scaling learns nearly constant entries.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Section 5",
+   "quote": "network mis-\ncalibration is intrinsically low dimensional."
+  },
+  {
+   "claim": "Matrix scaling performs poorly with hundreds of classes and fails to converge on 1000-class ImageNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": 25.49,
+   "unit": "%",
+   "baseline_value": 16.53,
+   "n": null,
+   "setup": "CIFAR-100 ResNet 110, matrix scaling vs uncalibrated",
+   "note": null,
+   "where": "Table 1; Section 5",
+   "table": "Table 1, row CIFAR-100 ResNet 110, column Matrix Scaling"
+  },
+  {
+   "claim": "Temperature scaling does not change accuracy; binning methods change class predictions and can hurt it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test error",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table S2",
+   "note": "Example: Birds ResNet 50 error 22.54% uncalibrated, 55.02% histogram binning (Table S2)",
+   "where": "Table S2",
+   "quote": "Error with temperature scaling is exactly the same as uncalibrated."
+  },
+  {
+   "claim": "Finding the optimal temperature takes about 10 conjugate-gradient iterations, a fraction of a second.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations",
+   "value": 10,
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-D convex problem on validation set",
+   "note": null,
+   "where": "Section 5, Computation time",
+   "quote": "the optimal temperature can be found\nin 10 iterations"
+  },
+  {
+   "claim": "Vector scaling on CIFAR-100 needs at least 2 orders of magnitude more time than temperature scaling; BBQ about 3 orders.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conjugate gradient, CIFAR-100 K=100",
+   "note": null,
+   "where": "Section 5",
+   "quote": "requires\nat least 2 orders of magnitude more time"
+  },
+  {
+   "claim": "Test error drops from 29% to 27% in the region where NLL overfits on CIFAR-100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 27,
+   "unit": "%",
+   "baseline_value": 29,
+   "n": null,
+   "setup": "110-layer ResNet with stochastic depth, CIFAR-100, Fig 3",
+   "note": null,
+   "where": "Section 3",
+   "quote": "test error drops from 29% to 27% in the region where NLL\noverﬁts"
+  },
+  {
+   "claim": "Depth, width, Batch Normalization and less weight decay each raise ECE; calibration keeps improving with more weight decay past the accuracy optimum.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-100 ResNets and 6-layer ConvNet, Fig 2; effect sizes only in the figure",
+   "note": "Authors: cannot claim causality",
+   "where": "Section 3, Fig 2",
+   "quote": "the ECE metric grows substantially with model ca-\npacity"
+  },
+  {
+   "claim": "Figure 1: 110-layer ResNet is more accurate than 5-layer LeNet on CIFAR-100 but over-confident (error 30.6 vs 44.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "error",
+   "value": 30.6,
+   "unit": "%",
+   "baseline_value": 44.9,
+   "n": null,
+   "setup": "CIFAR-100, ResNet 110 vs LeNet 5",
+   "note": null,
+   "where": "Fig 1; Table S2",
+   "table": "Figure 1 annotations Error=44.9 (LeNet), Error=30.6 (ResNet); Table S2 CIFAR-100 LeNet 44.92%"
+  },
+  {
+   "claim": "Histogram binning typically beats isotonic regression and BBQ despite being less general.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Section 5",
+   "quote": "Histogram binning, the simplest\nbinning method, typically outperforms isotonic regression\nand BBQ"
+  }
+ ],
+ "limits": [
+  "Cannot claim causality for depth, width, weight decay and BN effects",
+  "Why these trends affect calibration while improving accuracy is left to future work",
+  "All calibrators need a held-out validation set drawn from the same distribution as test; no distribution shift studied",
+  "Reuters not improved by temperature scaling; authors suggest dataset split or binning scheme may affect measurements",
+  "MCE is very sensitive to binning scheme and unsuitable for small test sets (Table S1 caption)",
+  "Single run per setting, no seeds or confidence intervals; optimiser, learning rate, batch size not restated (deferred to cited papers)",
+  "Only top-label calibration, equal-width 15-bin ECE; ImageNet-era 2015-2016 architectures, later work (e.g. transformers) not covered",
+  "Training hyperparameters, compute and hardware not reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Perfect calibration",
+   "definition": "P(Y_hat = Y | P_hat = p) = p for all p in [0,1]",
+   "where": "Eq 1"
+  },
+  {
+   "term": "ECE",
+   "definition": "weighted average over M equal-width bins of |acc(B_m) - conf(B_m)|",
+   "where": "Eq 3"
+  },
+  {
+   "term": "MCE",
+   "definition": "largest bin gap max_m |acc(B_m) - conf(B_m)|",
+   "where": "Eq 5"
+  },
+  {
+   "term": "Temperature scaling",
+   "definition": "q_i = max_k softmax(z_i/T)^(k) with a single scalar T>0 fit by NLL on validation set; does not change argmax",
+   "where": "Eq 9"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Niculescu-Mizil & Caruana 2005, Predicting good probabilities with supervised learning",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Showed nets were well calibrated on binary tasks; this paper finds modern nets are not",
+   "quote": "Niculescu-Mizil & Caruana (2005) showed that\nneural networks typically produce well-calibrated proba-\nbilities on binary classiﬁcation tasks."
+  },
+  {
+   "work": "Platt 1999, Probabilistic outputs for support vector machines",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Temperature scaling is a single-parameter variant",
+   "quote": null
+  },
+  {
+   "work": "Zadrozny & Elkan 2001/2002 (histogram binning, isotonic regression)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Baseline calibrators, one-vs-all multiclass extension",
+   "quote": null
+  },
+  {
+   "work": "Naeini et al. 2015, Obtaining well calibrated probabilities using Bayesian binning",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BBQ baseline; source of ECE and MCE definitions",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. 2015, Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "related",
+   "note": "Temperature scaling used in distillation; authors know of no prior use for calibration",
+   "quote": null
+  },
+  {
+   "work": "DeGroot & Fienberg 1983",
+   "year": 1983,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Reliability diagrams",
+   "quote": null
+  },
+  {
+   "work": "He et al. 2016 ResNet; Huang et al. 2016 stochastic depth; Zagoruyko & Komodakis 2016 Wide ResNet; Huang et al. 2017 DenseNet; Iyyer et al. 2015 DAN; Tai et al. 2015 TreeLSTM",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Architectures studied",
+   "quote": null
+  },
+  {
+   "work": "Ioffe & Szegedy 2015, Batch Normalization",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BN found to worsen calibration",
+   "quote": null
+  },
+  {
+   "work": "CIFAR, ImageNet, SVHN, Birds, Cars, 20 News, Reuters, SST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Confidence histograms (top) and reliability diagrams (bottom) for a 5-layer LeNet (left) and a 110-layer ResNet (right) on CIFAR-100.",
+   "page": 2,
+   "why": "Shows overconfidence of the deeper, more accurate net at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The effect of network depth, width, Batch Normalization, and weight decay on miscalibration, as measured by ECE.",
+   "page": 3,
+   "why": "Source of the capacity and regularisation claims; effect sizes only here"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Test error and NLL of a 110-layer ResNet with stochastic depth on CIFAR-100 during training.",
+   "page": 4,
+   "why": "NLL overfits while error keeps falling"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Reliability diagrams for CIFAR-100 before and after calibration.",
+   "page": 7,
+   "why": "Temperature scaling recovers the diagonal with one parameter"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "ECE (%) (with M = 15 bins) on standard vision and NLP datasets before calibration and with various calibration methods.",
+   "page": 6,
+   "why": "Main comparison of all calibrators"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 4.2 Eq 9",
+   "snippet": "q_i = max_k softmax(z_i / T)^(k)",
+   "verbatim": false
+  },
+  {
+   "where": "Section 3 Eq 3",
+   "snippet": "ECE = sum_{m=1}^{M} |B_m|/n * | acc(B_m) - conf(B_m) |",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of equations is fragmented; table cells read from line-per-cell dump",
+  "Results quoted with embedded newlines copied from the extracted text",
+  "No embedded instructions found"
+ ]
+}

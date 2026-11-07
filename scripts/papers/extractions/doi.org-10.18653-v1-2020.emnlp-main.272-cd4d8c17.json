@@ -1,19 +1,500 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.18653/v1/2020.emnlp-main.272",
  "pdf": "generative-ai/02-rag-retrieval/sources/zhao-2020-knowledge-grounded-dialogue-generation-pre.pdf",
  "bib": {
   "title": "Knowledge-Grounded Dialogue Generation with Pre-trained Language Models",
+  "authors": [
+   "Xueliang Zhao",
+   "Wei Wu",
+   "Can Xu",
+   "Chongyang Tao",
+   "Dongyan Zhao",
+   "Rui Yan"
+  ],
   "first_author": "Zhao",
   "year": 2020,
-  "venue": "EMNLP (1) 2020",
+  "venue": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 3377-3390",
   "arxiv": null,
-  "doi": null
+  "doi": "10.18653/v1/2020.emnlp-main.272"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "b1513713-815e-49d2-b7fd-869d099bfec9"
+  "at": "2026-11-07",
+  "chars_read": 57465,
+  "chars_total": 57465,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
  },
- "legacy_report": "SOURCE: \"Knowledge-Grounded Dialogue Generation with Pre-trained Language Models\" (the model is called KnowledGPT), by Xueliang Zhao, Wei Wu, Can Xu, Chongyang Tao, Dongyan Zhao and Rui Yan. EMNLP 2020, pp. 3377–3390. The PDF does not print an arXiv id for this paper. The only arXiv ids in it belong to cited works, and the PDF metadata has none either. I did not supply one from memory.\n\nCOVERAGE: I read all 57,269 of 57,269 chars, across 14 pages (printed pp. 3377–3390). That includes the appendices A–E and the case tables 11–12. I skimmed the references (pp. 9–12) for the works the paper builds on. Page numbers below are PDF pages; printed page = 3376 + PDF page.\n\nCLAIMS\n- claim: The retrieved knowledge is far larger than GPT-2's input limit, which is why selection is needed.\n  number: 61.2 sentences / 1625.6 tokens vs 1024 max\n  setup: Wizard of Wikipedia, average per conversation context\n  quote: \"the maximum number for GPT-2 (Radford et al., 2019) is 1024), ... on average each conversation context is associated with 61.2 sentences retrieved from wiki articles, and the average number of tokens in the extra knowledge is 1625.6\"\n  where: p.2\n\n- claim: How it works. A BERT encoder scores each knowledge sentence jointly with the dialogue context (cross-encoder style: [CLS] context [SEP] sentence [SEP]). An LSTM+attention selector then picks sentences one at a time and stops when it picks a special end embedding or reaches Tmax. Only context + the selected sentences go to GPT-2.\n  number: Tmax 1 (Wizard), 2 (CMU_DoG); BERT 110M, GPT-2 117M\n  setup: implementation details\n  quote: \"Tmax for D′ is set as 1 in Wizard, and 2 in CMU DoG. We choose BERT (110M) and GPT-2 (117M)\"\n  where: p.5 (method), p.7 (details)\n\n- claim: Training needs no knowledge labels. (1) A warm-up builds pseudo-labels: sort sentences by unigram F1 to the human response, then keep the prefix that maximises F1. (2) The selector is then trained with REINFORCE, rewarded by the F1 of GPT-2's generated response, minus a mean baseline. (3) GPT-2 is fine-tuned on a curriculum that moves from pseudo-labels to the selector's own picks (Bernoulli p, starting at 1.0 and annealing).\n  number: warm-up 1000 steps, batch 64; p anneal rate 1e-5\n  setup: both datasets\n  quote: \"In warming up, we define Sim(·,·) as unigram F1, and optimize g(U,D) and the GPT-2 model with the pseudo ground-truth for 1000 steps with a batch size of 64.\"\n  where: p.5–7\n\n- claim: Main result on Wizard. KnowledGPT gets the best F1 on seen and unseen topics. Its F1 gain is largest on unseen topics.\n  number: F1 22.0 seen / 20.5 unseen. The comparisons are DRD 19.3/17.9, SKT* (uses human labels) 19.3/16.1, SKT+GPT-2* 20.3/17.8, GPT-2trunc 18.7/18.3, TMN 15.9/14.3\n  setup: Wizard Test Seen/Unseen, unigram F1 against the human response, greedy decoding. Bold entries mark t-test p<0.01\n  quote: \"KnowledGPT 19.2 22.0 0.872 0.463 0.682 22.3 20.5 0.870 0.452 0.674\" (PPL, F1, Average, Extrema, Greedy, seen then unseen)\n  where: p.7, Table 2\n\n- claim: Main result on CMU_DoG.\n  number: F1 13.5 vs 10.8 for both DRD and GPT-2trunc\n  setup: CMU_DoG test set, movie domain\n  quote: \"KnowledGPT 20.6 13.5 0.837 0.437 0.654\"; \"GPT-2trunc 18.6 10.8 0.730 0.419 0.597\"\n  where: p.7, Table 3\n\n- claim: Plain truncation loses the gold knowledge in most cases.\n  number: 53%\n  setup: GPT-2trunc, Wizard Test Seen+Unseen, gold sentence randomly mixed into the candidates\n  quote: \"we find that in 53% test examples (Test Seen+Test Unseen), the ground-truth knowledge is cut\"\n  where: p.7\n\n- claim: Irrelevant knowledge hurts even when nothing is cut. On CMU_DoG all the knowledge fits, yet truncation-free concatenation still loses to selection.\n  number: max knowledge length 502 tokens\n  setup: CMU_DoG\n  quote: \"GPT-2 trunc is worse than KnowledGPT on CMU DoG even though we do not cut anything on the knowledge (the maximum length of the knowledge input is 502, and thus is within the constraint of GPT-2)\"\n  where: p.8\n\n- claim: More knowledge means more noise. With the gold sentence forced into the input, F1 falls steadily as the token budget grows and the gold share shrinks. This is the clearest \"less but better context\" evidence in the paper.\n  number: F1 seen 30.9 (128 tokens) → 25.6 (256) → 21.8 (512) → 20.6 (768) → 19.7 (1024). Gold share 62.3% → 4.1%\n  setup: GPT-2trunc on Wizard, gold forced in (an oracle setting, as the authors concede). At 128 tokens PPL is poor because some inputs contain only the context\n  quote: \"128 10.8 30.9 11.6 30.4 62.3%\" ... \"1024 10.7 19.7 11.3 19.4 4.1%\"; \"even if ground-truth is retained, once more noise is introduced, the performance of GPT-2trunc will become worse\"\n  where: p.12, Appendix C, Table 9\n\n- claim: Letting the selector pick more sentences lowers perplexity but eventually lowers F1. Lower PPL is not the same as a better response.\n  number: Wizard seen F1 22.0/21.3/21.1 and PPL 19.2/18.2/17.2 for Tmax=1/2/3. CMU_DoG F1 12.6/13.5/11.2\n  setup: KnowledGPT, Table 6\n  quote: \"a larger Tmax also means more noise in generation. That is why when Tmax exceeds a value, F1 begins to drop.\"\n  where: p.8–9, Table 6\n\n- claim: The selector, trained without labels, beats a selector trained with labels (SKT) on selection accuracy against the gold sentence.\n  number: 28.0 / 25.4 vs SKT 26.8 / 18.3 (seen/unseen)\n  setup: Wizard knowledge-selection accuracy\n  quote: \"the accuracy scores of knowledge selection for SKT are 26.8 and 18.3 on Test Seen and Test Unseen respectively, while the two numbers are 28.0 and 25.4 respectively for KnowledGPT\"\n  where: p.8\n\n- claim: Without labels, earlier selectors collapse, according to the paper's account of Kim et al. 2020.\n  number: 27% → 0.3%\n  quote: \"when human labels are removed, the accuracy of knowledge selection drops from 27% to 0.3%\"\n  where: p.5\n\n- claim: In human evaluation fluency is similar across models. KnowledGPT leads on knowledge relevance.\n  number: Knowledge relevance 1.71/1.68/1.50 (Wizard seen/unseen, CMU_DoG) vs GPT-2trunc 1.22/1.20/1.06 and DRD 1.26/1.18/1.07. Fluency 1.89 vs 1.86 (trunc). Kappa ≥0.6\n  setup: 300 sampled examples per test set, 3 annotators, scale 0–2. On Wizard only the gold knowledge was shown to annotators\n  quote: \"KnowledGPT 1.89 1.67 1.71 0.70 1.88 1.60 1.68 0.73 1.83 1.65 1.50 0.77\"; \"All kappa values are no less than 0.6\"\n  where: p.8, Table 4; p.7 footnote 3\n\n- claim: In the ablation, the pseudo-label warm-up matters most on Wizard.\n  number: F1 seen 22.0 → 18.3 without pseudo; 20.4 without joint; 21.2 without curriculum; 21.3 without RL\n  setup: Table 5\n  quote: \"-pseudo 22.3 18.3 0.857 0.436 0.662\"\n  where: p.8\n\n- claim: The knowledge itself is needed. DialoGPT (345M), fine-tuned without knowledge, has lower PPL but lower F1.\n  number: F1 17.9/16.8/12.3 vs 22.0/20.5/13.5\n  quote: \"DialoGPT 16.0 17.9 20.0 16.8 16.9 12.3\"\n  where: p.12, Table 8\n\n- claim: A bigger generator (345M) lowers PPL but does not raise F1.\n  number: F1 22.0 vs 22.0 seen\n  quote: \"KnowledGPT (345M) 16.1 22.0 17.9 20.6 18.1 13.4\"\n  where: p.12, Table 10\n\nLIMITS: All models are 2020-scale: GPT-2 117M/345M with a 1024-token limit. Scoring is unigram F1 and embedding overlap against a single human reply. There is no hallucination or faithfulness metric. Selection is at sentence level within one retrieved document, and the paper does not study the retrieval step itself (\"we assume that knowledge is retrieved from documents\", p.2). Tmax is tiny (1–2 sentences), and the paper never compares against a modern cross-encoder reranker followed by top-k. The authors concede that the max-token experiment is an oracle (\"in practice, one has no way to perfectly locate the ground-truth\", p.12). Human eval on Wizard showed annotators only the gold knowledge. The pseudo-labels depend on responses overlapping the knowledge; the authors note that CMU_DoG workers \"do not refer to the external knowledge as much\" (p.8), and \"about 35% of the conversation has a weak correlation with the document\" (p.12). There are no significance tests for the human eval or the ablations, and no cost or latency figures. The PPL comparisons are muddied, since truncation gives lower PPL than selection. Position and order of the knowledge are not studied.\n\nBUILDS ON: Dinan et al., 2019 (Wizard of Wikipedia, TMN); Zhou et al., 2018b (CMU_DoG); Kim et al., 2020 (SKT, sequential latent knowledge selection); Lian et al., 2019; Ren et al., 2019; Zhao et al., 2020 (DRD, low-resource, arXiv:2002.10348); Li et al., 2019 (ITDD); Radford et al., 2019 (GPT-2); Devlin et al., 2018 (BERT); Sutton et al., 2000 (policy gradient); Clark and Manning, 2016 (baseline for variance reduction); Zhang et al., 2019c (DialoGPT).\n\nCODE: None in the paper. Algorithm 1 (p.6) is pseudo-code: warm up with MLE on the pseudo-labels, then each step does an RL update of the selector and a curriculum update of GPT-2 with p = p0·e^(−λm).\n\nFIGURES: Figure 1, \"Architecture of the proposed model.\", p.4. It shows the BERT context-aware encoder feeding the sequential selector, which emits D′, then data mixing with the pseudo D̄ and the reward path into GPT-2. It explains the select-then-generate loop with generator feedback faster than prose does. Table 9 (p.12) would make a better small chart for the course: F1 against token budget with the gold sentence forced in.\n\nFIT AND OVERLAP WITH NOTES:\n- Best fit is 06-generation-for-rag.md, \"Order and size of the context\". Table 9 and Table 6 are direct evidence that more context hurts even with the gold sentence present, alongside FiD (more passages help a fusion-trained reader) and ELI5. The two results pull against each other: FiD's reader is trained to fuse, while this GPT-2 concatenates. That contrast is worth stating.\n- 05-chunking-query-parsing-and-reranking.md, Reranking (line ~451): this paper supports the JPMorgan claim (Zhao et al., NAACL 2024, a different Zhao) that recall alone is the wrong target. It is a sharpens-type citation. Note that its selector is a learned cross-encoder-style selector, not an off-the-shelf reranker.\n- 01-rag-pipeline.md, \"Measure each stage\" (line 377): this paper extends the Dinan gold-vs-predicted paragraph. It gives selection accuracy of 28.0/25.4 without labels, against Dinan's best of 25.5%. That is consistent with the note, because the gold-vs-predicted gap persists. Mind the setup: the note's 25.5% is Dinan's selector on seen topics, and KnowledGPT's 28.0 is a different model.\n- Nothing in the notes is contradicted. Two cautions: the two \"Zhao et al.\" citations will collide in prose, so name the venue and year. And PPL drops as context grows while F1 falls, so don't cite PPL as quality.\n\nPROBLEMS: The extraction is clean. The table headers run together (e.g., \"Test Seen Test UnseenPPL F1\"), but the column order is recoverable. There were no embedded instructions. \"495570 nm\" in Table 12 is an extraction artifact (likely 495–570). The PDF does not state an arXiv id.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/zhao-2020-knowledge-grounded-dialogue-generation-pre.pdf"
+ "type": "empirical",
+ "question": "How can a pre-trained language model (GPT-2) be used for document-grounded dialogue generation when the retrieved knowledge exceeds its input limit and no knowledge-selection labels exist?",
+ "hypothesis": "A learned knowledge selector trained without human labels, jointly with GPT-2, beats truncation and label-dependent selectors.",
+ "contributions": [
+  "A knowledge selection module for applying pre-trained language models to knowledge-grounded dialogue generation",
+  "An unsupervised approach that learns knowledge selection and fine-tunes the pre-trained model jointly",
+  "Empirical verification on benchmarks of knowledge-grounded dialogue generation"
+ ],
+ "method": {
+  "summary": "KnowledGPT puts a BERT-based context-aware knowledge encoder and an LSTM sequential selector in front of GPT-2. The selector picks sentences one per step, up to Tmax, and GPT-2 generates from context plus the selected sentences. Training warms up on pseudo ground-truth built from the human response, then alternates a REINFORCE step for the selector (reward = unigram F1 of the GPT-2 response) and a curriculum step for GPT-2 that mixes pseudo and selected knowledge.",
+  "task": "knowledge-grounded (document-grounded) open-domain dialogue response generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wizard of Wikipedia",
+    "role": "both",
+    "size": "Train 166,787 utterances / 18,430 conversations; Valid 17,715 / 1,948; Test Seen 8,715 / 965; Test Unseen 8,782 / 968 (Table 7)",
+    "split": "official train/valid/Test Seen/Test Unseen",
+    "source": "crowd-sourced on Amazon Mechanical Turk, Wikipedia as knowledge base (Dinan et al., 2019)",
+    "preprocessing": "ParlAI code; only turns where knowledge is accessible are used; average 61.2 retrieved sentences and 1625.6 tokens of knowledge per context"
+   },
+   {
+    "name": "CMU Document Grounded Conversations (CMU DoG)",
+    "role": "both",
+    "size": "Train 74,717 utterances / 3,373 conversations; Valid 4,993 / 229; Test 13,646 / 619 (Table 7)",
+    "split": "official train/valid/test, version shared at github.com/lizekang/ITDD",
+    "source": "crowd-sourced on Amazon Mechanical Turk, Wikipedia movie documents (Zhou et al., 2018b)",
+    "preprocessing": "only turns where knowledge is accessible; maximum knowledge input length 502 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "KnowledGPT",
+    "role": "proposed",
+    "params": "BERT 110M + GPT-2 117M + selector (hidden 256, 1 layer)",
+    "architecture": "BERT cross-encoder over (context, sentence) pairs, one-layer LSTM sequential selector with attention, GPT-2 decoder",
+    "init_from": "pre-trained BERT and GPT-2 (HuggingFace transformers)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "selector: 1",
+    "hidden": "selector: 256",
+    "heads": null,
+    "context": "GPT-2 limit 1024 tokens",
+    "other": {
+     "Tmax": "1 on Wizard, 2 on CMU DoG",
+     "larger variant": "GPT-2 345M (Table 10)"
+    }
+   },
+   {
+    "name": "GPT-2trunc",
+    "role": "baseline",
+    "params": "117M inferred from the KnowledGPT GPT-2",
+    "architecture": "context and all knowledge concatenated, truncated to the GPT-2 limit",
+    "init_from": "GPT-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "Wizard": "ground truth randomly mixed with other candidates, repeated 8 times, mean and std reported"
+    }
+   },
+   {
+    "name": "SKT+GPT-2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "candidate selected by SKT fed to GPT-2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TMN, ITDD, SKT, DRD",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer Memory Network; Incremental Transformer with Deliberation Decoder; Sequential Knowledge Transformer (uses human knowledge labels, Wizard only); Disentangled Response Decoder (all parameters fine-tuned on full data)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DialoGPT",
+    "role": "baseline",
+    "params": "345M",
+    "architecture": "GPT-2 345M dialogue model, fine-tuned without knowledge",
+    "init_from": "DialoGPT (microsoft code)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Warm-up: MLE of selector on pseudo-knowledge D-bar and of GPT-2 on responses given D-bar, with D-bar chosen by Sim (unigram F1) against the response (Eq. 5). Joint: REINFORCE for the selector with reward R = Sim(generated, gold response) minus a mean baseline (Eq. 6); curriculum MLE for GPT-2 mixing D-bar and selected D' via Bernoulli(p) (Eq. 7).",
+   "optimizer": "Adam, beta1=0.9, beta2=0.999",
+   "lr": "joint optimization: 5e-6 for selector g(U,D), 5e-5 for GPT-2; warm-up lr not stated",
+   "lr_schedule": "halved if no improvement in PPL on validation set",
+   "warmup": "1000 steps on pseudo ground-truth, batch 64",
+   "batch_size": "64 in warm-up; 128 in joint optimization",
+   "steps": "warm-up 1000; joint maximum step M not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "GPT-2 limit 1024 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping on validation",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "curriculum p": "p = p0 exp(-lambda m); p initially 1.0, anneals at rate 1e-5",
+    "Sim": "unigram F1"
+   }
+  },
+  "inference": {
+   "decoding": "greedy search",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per item; GPT-2trunc on Wizard averaged over 8 random knowledge orderings",
+   "prompting": null,
+   "retrieval": "knowledge sentences per context come from Wikipedia as supplied by the datasets (Wizard: retrieved from Wikipedia given last two turns and original topic); no retriever is trained here",
+   "parameters": {
+    "Tmax": "1 Wizard, 2 CMU DoG; Table 6 sweeps 1,2,3",
+    "selector stop": "special embedding e_spe selected or Tmax reached"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "PPL",
+     "definition": "perplexity of ground-truth responses",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1",
+     "definition": "unigram F1 against the human response (ParlAI metrics.py)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BOW embedding Average/Extrema/Greedy",
+     "definition": "embedding-based similarity (Liu et al., 2016) via nlg-eval",
+     "unit": "cosine score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human fluency, context coherence, knowledge relevance",
+     "definition": "score in {0,1,2} per aspect, 300 examples each from Test Seen, Test Unseen, CMU DoG, 3 annotators, top-1 greedy; Fleiss' kappa",
+     "unit": "0-2 scale",
+     "higher_is_better": true
+    },
+    {
+     "name": "Knowledge selection accuracy",
+     "definition": "accuracy of picking the ground-truth sentence (Wizard)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "TMN",
+    "ITDD",
+    "SKT",
+    "DRD",
+    "GPT-2trunc",
+    "SKT+GPT-2",
+    "DialoGPT"
+   ],
+   "protocol": "t-test p<0.01 for bold improvements; 8 repeats for GPT-2trunc on Wizard; single run for the others (seeds not stated); human eval by 3 native speakers"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Wizard via ParlAI; CMU DoG via github.com/lizekang/ITDD"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "for 1000 steps with a batch size of 64",
+    "where": "5.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "KnowledGPT beats GPT-2trunc on unigram F1 on Wizard Test Seen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": "18.7",
+   "n": null,
+   "setup": "Wizard Test Seen, GPT-2 117M, Tmax=1, greedy; GPT-2trunc is the mean of 8 runs with random knowledge order",
+   "table": "Table 2, row KnowledGPT vs row GPT-2trunc, column Test Seen F1",
+   "note": "Test Unseen: 20.5 vs 18.3",
+   "where": "Table 2"
+  },
+  {
+   "claim": "KnowledGPT beats the best baseline on CMU DoG unigram F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "13.5",
+   "unit": "%",
+   "baseline_value": "10.8",
+   "n": null,
+   "setup": "CMU DoG test, Tmax=2; best baselines DRD and GPT-2trunc both 10.8",
+   "table": "Table 3, row KnowledGPT, column F1",
+   "note": "PPL is worse than GPT-2trunc (20.6 vs 18.6)",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Truncation cut the ground-truth knowledge in a majority of test examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of examples with ground-truth cut",
+   "value": "53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wizard Test Seen + Test Unseen, GPT-2trunc",
+   "quote": "in 53% test examples (Test Seen+Test Unseen), the ground-truth knowledge is cut",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Wizard retrieved knowledge averages 61.2 sentences and 1625.6 tokens per context, above the 1024-token GPT-2 limit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "knowledge size",
+   "value": "1625.6",
+   "unit": "tokens",
+   "baseline_value": "1024",
+   "n": null,
+   "setup": "Wizard of Wikipedia, per conversation context",
+   "quote": "the average number of tokens in the extra knowledge is 1625.6",
+   "table": null,
+   "note": "61.2 sentences",
+   "where": "1"
+  },
+  {
+   "claim": "Knowledge selection accuracy of KnowledGPT without labels exceeds SKT with labels, mainly on unseen topics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "selection accuracy",
+   "value": "28.0",
+   "unit": "%",
+   "baseline_value": "26.8",
+   "n": null,
+   "setup": "Wizard Test Seen; KnowledGPT without human labels; SKT with labels",
+   "quote": "while the two numbers are 28.0 and 25.4 respec-",
+   "table": null,
+   "note": "Test Unseen: 25.4 vs 18.3",
+   "where": "5.4"
+  },
+  {
+   "claim": "With ground truth forced into the input, GPT-2trunc F1 falls as the token limit grows from 128 to 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "30.9",
+   "unit": "%",
+   "baseline_value": "19.7",
+   "n": null,
+   "setup": "Wizard Test Seen, GPT-2trunc, ground-truth sentence always kept (oracle); 128 tokens vs 1024 tokens",
+   "table": "Table 9, rows 128 and 1024, column Test Seen F1",
+   "note": "Ground-truth share of input 62.3% at 128, 4.1% at 1024; Test Unseen 30.4 to 19.4",
+   "where": "Table 9, Appendix C"
+  },
+  {
+   "claim": "Larger Tmax lowers PPL but F1 drops on Wizard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": "21.1",
+   "n": null,
+   "setup": "Wizard Test Seen, Tmax=1 vs Tmax=3",
+   "table": "Table 6, rows Tmax=1 and Tmax=3, column Test Seen F1",
+   "note": "PPL 19.2 to 17.2. On CMU DoG F1 is 12.6, 13.5, 11.2 for Tmax 1,2,3, so Tmax=2 is best there",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Removing the pseudo ground-truth warm-up costs the most F1 on Wizard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "18.3",
+   "unit": "%",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "Wizard Test Seen, ablation -pseudo vs full",
+   "table": "Table 5, row -pseudo, column Test Seen F1",
+   "note": "-joint 20.4, -curriculum 21.2, -reinforcement 21.3",
+   "where": "Table 5"
+  },
+  {
+   "claim": "KnowledGPT beats DialoGPT 345M fine-tuned without knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": "17.9",
+   "n": null,
+   "setup": "Wizard Test Seen",
+   "table": "Table 8, rows DialoGPT and KnowledGPT, column Test Seen F1",
+   "note": "PPL is better for DialoGPT (16.0 vs 19.2)",
+   "where": "Table 8"
+  },
+  {
+   "claim": "GPT-2 345M lowers PPL but gives no real F1 gain over 117M.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "Wizard Test Seen, KnowledGPT 117M vs 345M",
+   "table": "Table 10, rows KnowledGPT (117M) and (345M), column Test Seen F1",
+   "note": "PPL 19.2 vs 16.1",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Human evaluation: KnowledGPT leads on knowledge relevance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "knowledge relevance",
+   "value": "1.71",
+   "unit": "0-2 score",
+   "baseline_value": "1.22",
+   "n": 300,
+   "setup": "Wizard Test Seen, 3 annotators, vs GPT-2trunc; DRD 1.26",
+   "table": "Table 4, row KnowledGPT, column Knowledge Relevance (Test Seen)",
+   "note": "kappa all at least 0.6",
+   "where": "Table 4"
+  }
+ ],
+ "limits": [
+  "Evidence is two small crowd-sourced datasets scored by word overlap against one human reply; only GPT-2 117M (and 345M) tested.",
+  "Forced-gold token-limit sweep (Table 9) is an oracle; the paper says one cannot locate the ground truth in practice.",
+  "Gains differ by dataset: on CMU DoG the response only weakly depends on the document (about 35% of conversations have BLEU < 0.1 to it), the pseudo ground-truth helps little, and KnowledGPT PPL is worse than GPT-2trunc.",
+  "Selection accuracy is low in absolute terms (28.0 and 25.4).",
+  "Seeds, hardware, compute, joint step count M, and curriculum constants p0 and lambda are not reported; code is not linked.",
+  "Retrieval itself is not studied; the knowledge sentences come with the datasets."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "knowledge encoder backbone",
+   "quote": null
+  },
+  {
+   "work": "Wizard of Wikipedia (Dinan et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset and TMN baseline",
+   "quote": null
+  },
+  {
+   "work": "A dataset for document grounded conversations (CMU DoG)",
+   "year": 2018,
+   "arxiv": "1809.07358",
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "Sequential latent knowledge selection (SKT), Kim et al.",
+   "year": 2020,
+   "arxiv": "2002.07510",
+   "relation": "baseline",
+   "note": "selector baseline that needs labels",
+   "quote": null
+  },
+  {
+   "work": "Low-resource knowledge-grounded dialogue generation (DRD), Zhao et al.",
+   "year": 2020,
+   "arxiv": "2002.10348",
+   "relation": "baseline",
+   "note": "prior pre-training approach",
+   "quote": null
+  },
+  {
+   "work": "ITDD, Li et al.",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "transformer baseline",
+   "quote": null
+  },
+  {
+   "work": "DialoGPT",
+   "year": 2019,
+   "arxiv": "1911.00536",
+   "relation": "baseline",
+   "note": "Appendix B comparison",
+   "quote": null
+  },
+  {
+   "work": "Policy gradient methods, Sutton et al.",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reinforcement step",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Architecture of the proposed model.",
+   "page": 4,
+   "why": "Shows encoder, sequential selector, reward and data mixing into GPT-2."
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Performance of GPT-2trunc under different maximum tokens with ground-truth knowledge involved.",
+   "page": 13,
+   "why": "Shows F1 falling as noise grows even with the gold sentence present."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5 and Eq. 6, p.5",
+   "snippet": "R(D~i) = Sim(r'i, ri); R~i = R(D~i) - b; b = mean of R(D~i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF prints no arXiv id; arxiv left null.",
+  "Section 1 sentence breaks across lines, so the 61.2 / 1625.6 figures are recorded via Section 1 rather than a clean quote."
+ ]
 }

@@ -1,0 +1,248 @@
+{
+ "schema": 1,
+ "key": "1812.06162",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mccandlish-2018-empirical-model-large-batch-training.pdf",
+ "bib": {
+  "title": "An Empirical Model of Large-Batch Training",
+  "authors": ["Sam McCandlish", "Jared Kaplan", "Dario Amodei", "OpenAI Dota Team"],
+  "first_author": "McCandlish",
+  "year": 2018,
+  "venue": "preprint",
+  "arxiv": "1812.06162",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92655,
+  "chars_total": 92655,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figure contents not visible in text (only captions)."
+ },
+ "type": "empirical",
+ "question": "Can a simple, easy-to-measure statistic (the gradient noise scale) predict the largest useful batch size for a task, and why do those limits differ across domains?",
+ "hypothesis": "Training parallelises almost linearly up to a batch size near the gradient noise scale, then returns diminish; the noise scale grows as loss falls and depends on model size only through achieved loss.",
+ "contributions": [
+  "A simple theory linking the gradient noise scale to the speed/compute tradeoff and the critical batch size (Eq. 2.11, 2.12).",
+  "Empirical tests on 8 tasks across supervised learning, RL and generative models that B_simple predicts B_crit at the order-of-magnitude level.",
+  "Evidence the noise scale rises during training and depends on model size mainly through achieved loss.",
+  "A zero-overhead unbiased estimator of the noise scale for data-parallel training and a model of adaptive batch-size gains."
+ ],
+ "method": {
+  "summary": "For each task the authors train at a grid of constant batch sizes with a separately tuned learning rate per batch size, record steps and examples to reach fixed goal values, and fit the hyperbolic tradeoff (S/Smin-1)(E/Emin-1)=1 to get B_crit=Emin/Smin. They compare B_crit to the simple noise scale B_simple=tr(Sigma)/|G|^2 measured in a single well-tuned run via the gradient norm at small and big batch sizes.",
+  "task": "Batch-size scaling / critical batch size across image classification, language modelling, generative modelling and RL",
+  "trains": true,
+  "datasets": [
+   {"name": "MNIST", "role": "train", "size": null, "split": "training-set goals (test-set goals in App. E.3)", "source": "LeCun and Cortes 2010", "preprocessing": null},
+   {"name": "SVHN (extended)", "role": "train", "size": null, "split": "training-set goals", "source": "Netzer et al. 2011", "preprocessing": null},
+   {"name": "CIFAR10", "role": "train", "size": null, "split": "training-set goals", "source": "Krizhevsky 2009", "preprocessing": null},
+   {"name": "ImageNet", "role": "train", "size": null, "split": "training classification error goals", "source": "Deng et al. 2009", "preprocessing": null},
+   {"name": "One Billion Word", "role": "train", "size": null, "split": null, "source": "Chelba et al. 2013", "preprocessing": "BPE vocabulary 40,000; 20-token sequences; LSTM state reset to zero between samples; perplexity reported on last token of the 20-token sequence"},
+   {"name": "Atari (7 games: Alien, Beamrider, Breakout, Pong, Qbert, Seaquest, Space Invaders)", "role": "train", "size": null, "split": null, "source": "Bellemare et al. 2012 via OpenAI Gym", "preprocessing": "each parallel environment randomly stepped up to 500 steps at start"},
+   {"name": "Dota 1v1 and 5v5", "role": "train", "size": null, "split": null, "source": "OpenAI Five (Brockman et al. 2018)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Simple CNN (MNIST, SVHN)", "role": "base", "params": null, "architecture": "two conv+pool layers (32 and 64 filters, 5x5), one 1024-unit FC layer, final dropout layer rate 0.4", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "1024 (FC)", "heads": null, "context": null, "other": {}},
+   {"name": "ResNet-32 (CIFAR10) and ResNet-50 (ImageNet)", "role": "base", "params": null, "architecture": "Residual network, TensorFlow Models implementation, hyperparameters unchanged except LR schedule", "init_from": null, "tokenizer": null, "vocab": null, "layers": "32 / 50", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LSTM language model", "role": "base", "params": null, "architecture": "single-layer LSTM, size 2048 (also 1024 and 512 for size comparison)", "init_from": null, "tokenizer": "BPE", "vocab": "40,000", "layers": "1", "hidden": "2048 (1024, 512)", "heads": null, "context": "20 tokens", "other": {"embedding": "512-dim (256-dim for the 512 LSTM)"}},
+   {"name": "VAE and autoencoder (SVHN)", "role": "base", "params": null, "architecture": "InfoGAN architecture (appendix C.2 of Chen et al. 2016)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "A2C Atari agent", "role": "base", "params": null, "architecture": "pure convolutional policy, adapted from OpenAI Baselines", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Dota PPO agents", "role": "base", "params": null, "architecture": "asynchronous PPO as in OpenAI Five", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "task losses: classification error/cross-entropy, autoregressive LM perplexity, VAE/autoencoder, A2C and PPO policy gradient",
+   "optimizer": "MNIST: SGD; SVHN: SGD and Adam (momentum 0.9, beta2 0.999); CIFAR10 and ImageNet: SGD with momentum 0.9; LSTM: Adam momentum 0.5; Atari: RMSProp alpha=0.99, eps=1e-5; Dota: PPO",
+   "lr": "tuned per batch size by grid search; central value eps_central(B)=eps*/(1+B*/B)^alpha; adaptive-batch SVHN case used eps=0.27B/(96+B); LSTM size comparison Adam LR 0.0007 at batch 1024",
+   "lr_schedule": "constant LR per run; CIFAR10/ImageNet LR divided by 10 when smoothed training error reaches 0.487, 0.312 and 0.229",
+   "warmup": null,
+   "batch_size": "swept per task over an exhaustive range of constant batch sizes (values not listed); Atari varied via number of parallel environments with 5-step rollouts",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "20 tokens (LSTM)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.4 on MNIST/SVHN CNN; none on LSTM",
+   "regularisation": "LSTM gradient clipping to norm 10",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "inferred: single run per setting (Atari text: 'we do not average over multiple seeds')",
+   "other": {"alpha": "alpha=1 for SGD/momentum, 0.5<alpha<1 for Adam/RMSProp", "goal_values_SVHN": "training classification error [0.2, 0.1, 0.07, 0.05, 0.035, 0.025, 0.015, 0.004]", "loss_smoothing": "exponentially weighted moving average, decay hand-chosen per task", "noise_scale_estimation": "|G|^2 and S computed each step, separate EMAs, decay tuned for stability, ratio of EMAs", "temperature_test_SVHN": "initial (eps,B)=(0.18,128)", "temperature_test_BillionWord": "initial (eps,B)=(6e-4,128)", "TrueSkill": "TrueSkill 50 roughly best semi-pro level on this paper's scale"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "single run per batch-size/LR grid point; B_simple from a single well-tuned run",
+   "prompting": null, "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Critical batch size B_crit", "definition": "Emin/Smin from a fit of (S/Smin-1)(E/Emin-1)=1 to Pareto fronts of optimizer steps vs examples to reach a goal; point where compute efficiency drops to 50% of optimal", "unit": "images, tokens or observations (frames)", "higher_is_better": null},
+    {"name": "Simple noise scale B_simple", "definition": "tr(Sigma)/|G|^2, ratio of gradient variance to squared gradient norm", "unit": "images, tokens or observations", "higher_is_better": null},
+    {"name": "Full noise scale B_noise", "definition": "tr(H Sigma)/(G^T H G); measured by line searches only for SVHN with SGD", "unit": "images", "higher_is_better": null}
+   ],
+   "baselines": ["Fixed-batch-size training vs adaptive batch size B=sqrt(r*B_simple) on SVHN"],
+   "protocol": "For each goal value and batch size take the grid-search run reaching the goal fastest; fit in log-space; B_crit errors are standard errors of the fit; training-set goals used for main results."
+  },
+  "availability": {"code": null, "weights": null, "data": "public datasets; Dota environment not released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "Instead of decaying the learning rate by a factor of 10 at speciﬁed epochs, we decay by a factor of 10 when the training classiﬁcation error (appropriately smoothed) reaches 0.487, 0.312, and 0.229.", "where": "A.4.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "The simple noise scale predicts the critical batch size at the order-of-magnitude level across tasks, with B_crit ranging from about 20 to over 10 million.",
+   "kind": "measured", "source": null, "metric": "B_crit range", "value": "20 to over 10 million", "unit": "images/tokens/observations", "baseline_value": null, "n": 8,
+   "setup": "8 tasks: MNIST, SVHN, CIFAR10, ImageNet, Billion Word, Atari, Dota, SVHN VAE/autoencoder; tuned full training runs at exhaustive batch sizes",
+   "quote": "We ﬁnd that the gradient noise scale predicts the critical batch size at the order of magnitude level, even as the latter varies from 20 (for an SVHN autoencoder) to over 10 million",
+   "table": null, "note": "Table 1 gives Dota 5v5 B_crit as '>8,000,000 (est.)' and not measured at start; Fig 4 uses the Dota team's batch size as a lower bound.", "where": "Section 3"
+  },
+  {
+   "claim": "At B=B_crit training takes twice the minimum steps and twice the minimum data; the tradeoff is S/Smin-1 = (E/Emin-1)^-1.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Theory (Eq 2.11-2.12) fitted to Pareto fronts across tasks; assumes fixed batch size and tuned LR",
+   "quote": "Training at this critical batch size provides a natural compromise between time and compute, as we take only twice the minimum number of optimization steps and use only twice the minimum amount of data.",
+   "table": null, "note": null, "where": "Section 5"
+  },
+  {
+   "claim": "B_crit is defined as the point where compute efficiency drops to 50% of optimal, where training speed is also typically 50% of optimal.",
+   "kind": "measured", "source": null, "metric": "efficiency at B_crit", "value": "50%", "unit": "% of optimal", "baseline_value": null, "n": null,
+   "setup": "Definition used for Fig 4",
+   "quote": "We deﬁne this “critical batch size” to be the point at which compute efﬁciency drops below 50% optimal, at which point training speed is also typically 50% of optimal.",
+   "table": null, "note": null, "where": "Fig 4 caption"
+  },
+  {
+   "claim": "ImageNet ResNet-50 noise scale is 2,000 to 100,000 in the main phase of training, matching reports that constant batches up to 64 thousand work; measured critical batch size is lower (15k vs 64k).",
+   "kind": "measured", "source": null, "metric": "ImageNet B_crit", "value": "15k", "unit": "images", "baseline_value": "64k", "n": null,
+   "setup": "ResNet-50, momentum SGD, LR divided by 10 at error 0.487, 0.312, 0.229; no layer-wise adaptive LR",
+   "quote": "Our critical batch sizes are slightly lower (15k vs 64k) than those reported in the literature",
+   "table": null, "note": null, "where": "Section 3.2"
+  },
+  {
+   "claim": "Table 1 gives noise scale and critical batch size early and averaged over training; ImageNet B_crit goes from 1,000 to 15,000 and B_simple from 4,000 to 30,000.",
+   "kind": "measured", "source": null, "metric": "ImageNet B_crit start/average", "value": "1,000 / 15,000", "unit": "images", "baseline_value": null, "n": null,
+   "setup": "Table 1, ImageNet row",
+   "quote": null,
+   "table": "Table 1, row ImageNet, columns Critical Batch Size Start 1,000 and Average 15,000; Simple Noise Scale 4,000 and 30,000",
+   "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Billion Word LSTM per-token critical batch size rises from 700 early to 100,000 averaged; simple noise scale from 1000 to 150,000.",
+   "kind": "measured", "source": null, "metric": "Billion Word B_crit start/average", "value": "700 / 100,000", "unit": "tokens", "baseline_value": null, "n": null,
+   "setup": "Table 1, Billion Word (per token)",
+   "quote": null,
+   "table": "Table 1, row Billion Word (per token), Critical Batch Size Start 700 Average 100,000; Simple Noise Scale 1000 and 150,000",
+   "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Dota 1v1 critical batch size is 50,000 early and 3,000,000 averaged; Dota 5v5 simple noise scale averages 24,000,000 and critical batch size is estimated >8,000,000.",
+   "kind": "measured", "source": null, "metric": "Dota B_crit / B_simple", "value": "3,000,000 (1v1 avg B_crit); 24,000,000 (5v5 avg B_simple)", "unit": "frames", "baseline_value": null, "n": null,
+   "setup": "Table 1, Dota rows; 5v5 Pareto fronts not measured due to resource constraints",
+   "quote": null,
+   "table": "Table 1, rows Dota 1v1 (per frame) 50,000 / 3,000,000 and Dota 5v5 (per frame) >8,000,000 (est.) / 24,000,000",
+   "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "The critical batch size typically increases by an order of magnitude or more over a training run.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Across tasks, fitted per goal value",
+   "quote": "The critical batch size typically increases by an order of magnitude or more over the course of training.",
+   "table": null, "note": null, "where": "Section 3.1"
+  },
+  {
+   "claim": "At fixed loss the noise scale is roughly independent of LSTM size; larger LSTMs reach larger noise scale only by reaching lower loss.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "LSTM sizes 512, 1024, 2048 on Billion Word, batch 1024, Adam LR 0.0007",
+   "quote": "the simple noise scale appears to be roughly independent of model size at a ﬁxed value of the loss. However, due to their higher performance and lower achieved loss, larger models eventually reach larger noise scales than smaller models.",
+   "table": null, "note": null, "where": "Section 3.2, Fig 8"
+  },
+  {
+   "claim": "Optimal learning rate for Adam and RMSProp initially follows a power law in batch size with exponent alpha between 0.5 and 1.0, then flattens; for SGD/momentum it follows Eq 2.6.",
+   "kind": "measured", "source": null, "metric": "alpha", "value": "0.5 to 1.0", "unit": null, "baseline_value": null, "n": null,
+   "setup": "Per-task grid search of LR at each batch size",
+   "quote": "For Adam and RMSProp the optimal learning rate initially obeys a power law ϵ (B) ∝Bα with α between 0.5 and 1.0 depending on the task, then becomes roughly constant.",
+   "table": null, "note": null, "where": "Section 3.1"
+  },
+  {
+   "claim": "Noise scale is proportional to inverse temperature eps/B: reducing eps/B by 16x raised the simple noise scale by 16x, then it returned when reset.",
+   "kind": "measured", "source": null, "metric": "noise scale change", "value": "16x", "unit": null, "baseline_value": null, "n": null,
+   "setup": "SVHN with SGD (epochs 1 to 1.5) and Billion Word LSTM with Adam (epochs 0.02 to 0.03); change eps, B or both",
+   "quote": "so that the temperature ϵ B was decreased by a factor of 16 between epochs 1 and 1.5 (SVHN) or 0.02 and 0.03 (BW). In all cases we see that the simple noise scale increased by a factor of 16",
+   "table": null, "note": null, "where": "Fig 15 caption, App C"
+  },
+  {
+   "claim": "Predicted efficiency gain from adaptive batch size on SVHN is modest (gamma = 24/25, about 4%); measured gains looked larger than theory explains.",
+   "kind": "measured", "source": null, "metric": "gamma", "value": "24/25 (about 4%)", "unit": null, "baseline_value": null, "n": null,
+   "setup": "SVHN, B_crit(s) ~ 10 sqrt(s); adaptive B = sqrt(r * B_simple)",
+   "quote": "or around 4%. The beneﬁts visible in Figure 16 in some cases appear too large to be fully explained by this analysis.",
+   "table": null, "note": null, "where": "App D.2"
+  },
+  {
+   "claim": "The noise scale is consistent between well-tuned runs at different batch sizes (at equal loss) but not across learning rates, so a well-tuned LR is needed to measure it.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "App A.1 and C",
+   "quote": "Note that while the noise scale measurement is consistent between runs at different batch sizes, it is not consistent at different learning rates",
+   "table": null, "note": null, "where": "App A.1"
+  },
+  {
+   "claim": "The ratio B_simple/B_crit varies by about an order of magnitude across tasks: below one for autoencoder, VAE and Dota 1v1, about one for LSTMs, above one for image classification and Atari.",
+   "kind": "measured", "source": null, "metric": "B_simple/B_crit", "value": "about 10x spread", "unit": null, "baseline_value": null, "n": null,
+   "setup": "Across the tasks in Table 1",
+   "quote": "the ratio Bsimple/Bcrit can vary by about an order of magnitude between tasks",
+   "table": null, "note": null, "where": "Section 5"
+  },
+  {
+   "claim": "Late in training, with fixed LR, the optimal line-search step is about half the actual update (oscillation in high-curvature directions).",
+   "kind": "measured", "source": null, "metric": "optimal step / actual update", "value": "about 0.5", "unit": null, "baseline_value": null, "n": null,
+   "setup": "LSTM with Adam on Billion Word and CNN with SGD on SVHN",
+   "quote": "training converges to an approximate steady state where the average update is about twice the optimal update.",
+   "table": null, "note": null, "where": "Fig 17 caption"
+  }
+ ],
+ "limits": [
+  "Theory is local (short-horizon bias), assumes quadratic loss, optimal step size and good conditioning; B_simple ignores the Hessian.",
+  "Says nothing about generalization; main results use training-set goals, test-set check is preliminary (App E.3).",
+  "Seeds are not averaged (e.g. Pong noisy); Dota 5v5 Pareto fronts not measured, batch size used is a lower bound.",
+  "Noise scale depends on learning rate via temperature so measurements require a well-tuned LR.",
+  "Results are for 2018-era models (CNNs, small LSTM, A2C/PPO); no transformer, no large-scale language model; not tested at modern pretraining scale.",
+  "Authors lack an explanation for the variation in B_simple/B_crit across tasks and for adaptive batch benefits larger than predicted; warmup and early-versus-late training not addressed theoretically."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "gradient noise scale", "definition": "B_noise = tr(H Sigma)/(G^T H G); essentially the signal-to-noise ratio of the gradient across training examples", "where": "Eq 2.8"},
+  {"term": "simple noise scale", "definition": "B_simple = tr(Sigma)/|G|^2, the sum of gradient component variances divided by the global squared gradient norm", "where": "Eq 2.9"},
+  {"term": "critical batch size", "definition": "B_crit = Emin/Smin from the fit of the steps/examples tradeoff", "where": "Eq 2.12"},
+  {"term": "temperature", "definition": "T = eps/eps_max(B), approximately eps/B for SGD at small batch; noise scale varies as 1/T", "where": "App C"}
+ ],
+ "lineage": [
+  {"work": "Measuring the effects of data parallelism on neural network training (Shallue et al.)", "year": 2018, "arxiv": "1811.03600", "relation": "related", "note": "parallel empirical study of batch size and generalization", "quote": null},
+  {"work": "Accurate, large minibatch SGD (Goyal et al.)", "year": 2017, "arxiv": "1706.02677", "relation": "related", "note": "ImageNet batch 8k reference", "quote": null},
+  {"work": "Don't decay the learning rate, increase the batch size (Smith et al.)", "year": 2017, "arxiv": "1711.00489", "relation": "uses-method", "note": "temperature view and batch/LR equivalence", "quote": null},
+  {"work": "Stochastic gradient descent as approximate Bayesian inference (Mandt et al.)", "year": 2017, "arxiv": "1704.04289", "relation": "uses-method", "note": "SGD equilibrium distribution motivating temperature", "quote": null},
+  {"work": "No more pesky learning rates (Schaul et al.)", "year": 2013, "arxiv": null, "relation": "uses-method", "note": "gradient noise and optimal step size; toy model of Sigma", "quote": null},
+  {"work": "Gradient diversity (Yin et al.)", "year": 2017, "arxiv": "1706.05699", "relation": "related", "note": "noise scale for a function class; predicts sharp change", "quote": null},
+  {"work": "OpenAI Five (Brockman et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "Dota training code and measurements", "quote": null},
+  {"work": "Deep learning scaling is predictable, empirically (Hestness et al.)", "year": 2017, "arxiv": "1712.00409", "relation": "related", "note": "scaling with model size, motivation", "quote": null},
+  {"work": "A2C / Asynchronous methods for deep RL (Mnih et al.)", "year": 2016, "arxiv": "1602.01783", "relation": "evaluates", "note": "Atari agent", "quote": null},
+  {"work": "PPO (Schulman et al.)", "year": 2017, "arxiv": "1707.06347", "relation": "evaluates", "note": "Dota agent", "quote": null},
+  {"work": "Adam (Kingma and Ba)", "year": 2014, "arxiv": "1412.6980", "relation": "evaluates", "note": "optimizer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The tradeoff between time and compute resources spent to train a model to a given level of performance takes the form of a Pareto frontier", "page": 3, "why": "Shows the hyperbolic steps-vs-examples tradeoff and its turning point."},
+  {"figure": "Fig 4", "caption": "The simple noise scale roughly predicts the maximum useful batch size for many ML tasks.", "page": 10, "why": "Summary across six orders of magnitude of B_simple vs B_crit."},
+  {"figure": "Table 1", "caption": "Simple noise scale and critical batch size early and averaged for each task", "page": 24, "why": "Gives the numbers per task."},
+  {"figure": "Fig 8", "caption": "Noise scale versus perplexity and tokens for LSTM sizes on Billion Word", "page": 14, "why": "Shows noise scale depends on size only via loss."}
+ ],
+ "code": [
+  {"where": "Eq 2.11", "snippet": "(S/Smin - 1) = (E/Emin - 1)^-1 ; Bcrit = Emin/Smin", "verbatim": false},
+  {"where": "Eq 2.9", "snippet": "Bsimple = tr(Sigma)/|G|^2", "verbatim": false},
+  {"where": "Eq A.3", "snippet": "eps_central(B) = eps* / (1 + B*/B)^alpha", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction renders equations imperfectly; equations are paraphrased in code field.",
+  "No embedded instructions found."
+ ]
+}

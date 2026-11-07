@@ -1,0 +1,677 @@
+{
+ "schema": 1,
+ "key": "2508.06471",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/team-2025-glm-4-5.pdf",
+ "bib": {
+  "title": "GLM-4.5: Agentic, Reasoning, and Coding (ARC) Foundation Models",
+  "authors": [
+   "GLM-4.5 Team (Zhipu AI & Tsinghua University)"
+  ],
+  "first_author": "Team",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2508.06471",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84958,
+  "chars_total": 84958,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "system",
+ "question": "Can one open-weight MoE model unify agentic, reasoning and coding abilities at frontier level with fewer parameters?",
+ "hypothesis": "Deeper, narrower MoE with multi-stage pre/mid-training and expert-iteration post-training yields a parameter-efficient generalist.",
+ "contributions": [
+  "GLM-4.5 (355B/32B active) and GLM-4.5-Air (106B/12B active), hybrid thinking and non-thinking modes",
+  "Multi-stage pretraining on 23T tokens plus mid-training to 128K context",
+  "Expert model iteration with self-distillation and RL (Slime infrastructure)",
+  "Open weights and evaluation toolkit"
+ ],
+ "method": {
+  "summary": "MoE decoder pretrained on 15T general + 7T code/reasoning-upweighted tokens, mid-trained on repo code, synthetic reasoning and long-context/agent data; post-trained by training reasoning, agent and chat experts (SFT then RL) and distilling them into one hybrid model, then general RL and pathology RL.",
+  "task": "LLM pretraining and post-training (SFT, RL)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "General pre-training corpus",
+    "role": "pretrain",
+    "size": "15T tokens",
+    "split": null,
+    "source": "English and Chinese web, social media, books, papers, code repositories; Fineweb-2 for multilingual",
+    "preprocessing": "Web quality buckets (Nemotron-CC style), top bucket >3.2 epochs, lowest discarded; MinHash plus SemDedup; code quality tiers with FIM on all source code; LLM-scored math/science classifier"
+   },
+   {
+    "name": "Code & reasoning continual pre-training corpus",
+    "role": "pretrain",
+    "size": "7T tokens",
+    "split": null,
+    "source": "upsampled GitHub code, coding/math/science web",
+    "preprocessing": null
+   },
+   {
+    "name": "Repo-level code data",
+    "role": "pretrain",
+    "size": "500B tokens",
+    "split": null,
+    "source": "concatenated repo files, model-filtered issues, PRs, commits",
+    "preprocessing": "best-fit packing"
+   },
+   {
+    "name": "Synthetic reasoning data",
+    "role": "pretrain",
+    "size": "500B tokens",
+    "split": null,
+    "source": "questions/answers from web and books with reasoning synthesized by a reasoning model",
+    "preprocessing": null
+   },
+   {
+    "name": "Long context & agent data",
+    "role": "pretrain",
+    "size": "100B tokens",
+    "split": null,
+    "source": "upsampled long documents plus synthetic agent trajectories",
+    "preprocessing": null
+   },
+   {
+    "name": "Overall SFT data",
+    "role": "train",
+    "size": "millions of samples",
+    "split": null,
+    "source": "outputs of expert models: reasoning, chat, agentic, long context",
+    "preprocessing": "rejection sampling; multistage filtering"
+   },
+   {
+    "name": "General chat human-eval prompts",
+    "role": "eval",
+    "size": "660 prompts (392 English, 108 Chinese, 160 other)",
+    "split": null,
+    "source": "curated real-scenario prompts",
+    "preprocessing": null
+   },
+   {
+    "name": "RL holistic prompts",
+    "role": "train",
+    "size": "roughly 5,000 prompts",
+    "split": null,
+    "source": "7 primary, 33 secondary, 139 tertiary categories",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GLM-4.5",
+    "role": "proposed",
+    "params": "355B total, 32B activated",
+    "architecture": "MoE, loss-free balance routing, sigmoid gates, GQA with partial RoPE, QK-Norm, 1 MTP layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 dense + 89 MoE + 1 MTP",
+    "hidden": "5120",
+    "heads": "96 (8 KV heads, head dim 128)",
+    "context": "128K (max seq 131,072)",
+    "other": {
+     "experts": "160 total, 8 active, 1 shared",
+     "moe_intermediate": 1536,
+     "dense_intermediate": 12288
+    }
+   },
+   {
+    "name": "GLM-4.5-Air",
+    "role": "proposed",
+    "params": "106B total, 12B activated",
+    "architecture": "MoE, no QK-Norm",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 dense + 45 MoE + 1 MTP",
+    "hidden": "4096",
+    "heads": "96 (8 KV heads, head dim 128)",
+    "context": "128K",
+    "other": {
+     "experts": "128 total, 8 active, 1 shared",
+     "moe_intermediate": 1408,
+     "dense_intermediate": 10944
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token (plus Fill-In-the-Middle on code, MTP loss); RL via GRPO without KL term",
+   "optimizer": "Muon for all parameters except word embedding, bias, RMSNorm weights; Newton-Schulz steps 5, momentum 0.95, update RMS scaled to 0.2",
+   "lr": "warm-up 0 to 2.5e-4, decay to 2.5e-5 until end of mid-training",
+   "lr_schedule": "cosine decay (WSD rejected as underfitting)",
+   "warmup": null,
+   "batch_size": "batch size warmup 16M to 64M tokens over first 500B tokens, then constant",
+   "steps": null,
+   "epochs": "highest-quality web bucket >3.2 epochs",
+   "tokens": "23T (15T + 7T pre-training; 500B+500B+100B mid-training)",
+   "seq_len": "4,096 in pre-training; 32,768 then 131,072 in mid-training",
+   "precision": "BF16 training, FP8 block-wise quantized inference in RL rollouts",
+   "weight_decay": "0.1",
+   "dropout": "none",
+   "regularisation": "auxiliary sequence-level balance loss weight 0.0001",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rope_base": "10,000 to 1,000,000 when extending to 32K",
+    "moe_bias_update_rate": "0.001 for first 15T tokens, then 0.0",
+    "mtp_loss_weight": "0.3 for first 15T tokens, then 0.1",
+    "rl_max_output": "64K single-stage",
+    "rl_infra": "Slime (Megatron training, SGLang rollout, Ray)",
+    "sft_context": "128K",
+    "packing": "no best-fit packing in pre-training; best-fit in mid-training",
+    "dynamic_temperature": "next temperature = max value not dropping >1% from current optimum on held-out set"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.6 for SWE-bench (OpenHands)",
+   "top_p": "1.0 for SWE-bench",
+   "max_tokens": "RL output length 64K",
+   "samples": "AIME Avg@32, GPQA Avg@8; ablation curves AVG@32",
+   "prompting": "TAU-bench uses an optimized user-simulator prompt (Fig 11)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "swe_bench": "OpenHands v0.34.0, 100 iterations, history truncation for 128K"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy/EM/Pass@1 on ARC benchmarks",
+     "definition": "as per benchmark; AIME Avg@32, GPQA Avg@8; HLE text-only judged by GPT-4o",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human score 0-10 (chat), 0-3 (translation)",
+     "definition": "single consistent evaluator, randomized order",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Qwen3-235B",
+    "Llama4-Maverick",
+    "DeepSeek-V3/R1",
+    "Kimi K2",
+    "o3",
+    "o4-mini",
+    "GPT-4.1",
+    "Claude Opus 4 / Sonnet 4",
+    "Gemini 2.5 Pro",
+    "Grok 4",
+    "Qwen3-Coder",
+    "Seed-X",
+    "Qwen-MT"
+   ],
+   "protocol": "Base model: internal framework. Post-trained: open-sourced glm-simple-evals; human evals single evaluator; no seeds or significance tests stated; LiveCodeBench problems 7/1/2024 to 1/1/2025."
+  },
+  "availability": {
+   "code": "https://github.com/zai-org/GLM-4.5; https://github.com/zai-org/glm-simple-evals; https://github.com/THUDM/slime",
+   "weights": "https://huggingface.co/zai-org/GLM-4.5",
+   "data": "CC-Bench trajectories on Hugging Face; pretraining and SFT data not released"
+  },
+  "prompts": [
+   {
+    "purpose": "TAU-bench user simulator",
+    "text": "You are a user interacting with an agent.{instruction_display} # Rules: - Just generate one line at a time to simulate the user's message. ... generate '###STOP###' as a standalone message ... (full text in Fig 11)",
+    "where": "Fig 11, p15"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The learning rate went through a warm-up stage from 0 to 2.5e-4 and a decaying stage to 2.5e-5 until the end of mid-training.",
+    "where": "Sec 2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GLM-4.5 scores 64.2% on SWE-bench Verified",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWE-bench Verified",
+   "value": "64.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Post-trained GLM-4.5, OpenHands v0.34.0, 100 iterations max, temperature 0.6, top_p 1.0, 500-instance Verified subset",
+   "note": null,
+   "where": "Sec 1, Sec 4.2.3",
+   "quote": "64.2% on SWE-bench Verified [20] and 37.5% on Terminal-Bench"
+  },
+  {
+   "claim": "GLM-4.5 scores 70.1% on TAU-Bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "TAU-Bench",
+   "value": "70.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Retail and airline domains with an optimized user simulator",
+   "note": null,
+   "where": "Abstract, Sec 1",
+   "quote": "GLM-4.5 scores 70.1% on TAU-Bench and 77.8% on BFCL v3"
+  },
+  {
+   "claim": "GLM-4.5 scores 91.0% on AIME 24",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 24 Avg@32",
+   "value": "91.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Thinking mode; average accuracy over 32 samples; LLM validation of answers",
+   "note": null,
+   "where": "Abstract",
+   "quote": "91.0% on AIME 24"
+  },
+  {
+   "claim": "GLM-4.5 ranks 3rd of the evaluated models on the average over 12 ARC benchmarks, 2nd on agentic",
+   "kind": "claim",
+   "source": null,
+   "metric": "rank",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 benchmarks (MMLU-Pro, AIME 24, MATH-500, SciCode, GPQA, HLE, LCB, SWE-bench Verified, Terminal-Bench, TAU-bench, BFCL V3, BrowseComp); models as of July 28, 2025",
+   "note": null,
+   "where": "Fig 1, Sec 1"
+  },
+  {
+   "claim": "GLM-4.5 BrowseComp 26.4 vs Claude Opus 4 18.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "BrowseComp",
+   "value": "26.4",
+   "unit": "%",
+   "baseline_value": "18.8",
+   "n": null,
+   "setup": "Web browsing agent",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BrowseComp, column GLM-4.5"
+  },
+  {
+   "claim": "GLM-4.5 Terminal-Bench 37.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Terminal-Bench",
+   "value": "37.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Terminus framework, standard function calling",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Terminal-Bench, column GLM-4.5"
+  },
+  {
+   "claim": "GLM-4.5-Air SWE-bench Verified",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWE-bench Verified",
+   "value": "57.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLM-4.5-Air 106B/12B active",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row SWE-bench Verified, column GLM-4.5-Air"
+  },
+  {
+   "claim": "GLM-4.5 BFCL V3 best among baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL V3",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Berkeley Function Calling Leaderboard V3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BFCL V3, column GLM-4.5"
+  },
+  {
+   "claim": "GLM-4.5 GPQA 79.1 (Avg@8)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPQA",
+   "value": "79.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average over 8 samples",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPQA, column GLM-4.5"
+  },
+  {
+   "claim": "GLM-4.5-Base MMLU 86.1 vs DeepSeek-V3-Base 87.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU (EM)",
+   "value": "86.1",
+   "unit": "%",
+   "baseline_value": "87.2",
+   "n": null,
+   "setup": "Last pre-training checkpoint, internal evaluation framework, no instruction data",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MMLU (EM), column GLM-4.5 Base"
+  },
+  {
+   "claim": "GLM-4.5-Base GSM8K 79.4, lowest of the compared bases",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K (EM)",
+   "value": "79.4",
+   "unit": "%",
+   "baseline_value": "87.6",
+   "n": null,
+   "setup": "Base model, internal eval",
+   "note": "Baseline is DeepSeek-V3 Base; Qwen3 94.4, Kimi-K2 92.1",
+   "where": "Table 2",
+   "table": "Table 2, row GSM8K (EM), column GLM-4.5 Base"
+  },
+  {
+   "claim": "GLM-4.5-Base EvalPlus Pass@1 78.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "EvalPlus (Pass@1)",
+   "value": "78.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base model",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row EvalPlus (Pass@1), column GLM-4.5 Base"
+  },
+  {
+   "claim": "Dropping the bottom 50% of prompts by response length gave 2%-4% gains in math and science despite half the data",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT prompt selection; smaller experimental model unspecified",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "resulting in a 2%-4% improvement in math and science"
+  },
+  {
+   "claim": "Four responses per hard prompt gave a further 1%-2%",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT response scaling",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Generating four responses for each prompt brought an additional 1%-2% improvement."
+  },
+  {
+   "claim": "Two-stage difficulty curriculum RL reached 83.4% AIME24 Avg@32 vs 81.8% baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 AVG@32",
+   "value": "83.4",
+   "unit": "%",
+   "baseline_value": "81.8",
+   "n": null,
+   "setup": "Smaller experimental model, not GLM-4.5; stage 2 uses pass@8=0, pass@512>0 problems with verified answers; baseline continues moderate data",
+   "note": null,
+   "where": "Fig 5",
+   "quote": "81.8%\n83.4%"
+  },
+  {
+   "claim": "Single-stage RL at 64K reached 83.4% vs 80.6% for multi-stage increasing length",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 AVG@32",
+   "value": "83.4",
+   "unit": "%",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "Smaller experimental model; multi-stage 16K,32K,48K,64K",
+   "note": null,
+   "where": "Fig 6",
+   "quote": "80.6%\n83.4%"
+  },
+  {
+   "claim": "Token-weighted mean loss for code RL converged faster; endpoints 46.5% vs 46.3% LiveCodeBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "LiveCodeBench accuracy",
+   "value": "46.5",
+   "unit": "%",
+   "baseline_value": "46.3",
+   "n": null,
+   "setup": "Smaller model, read from Fig 7 left",
+   "note": null,
+   "where": "Fig 7",
+   "quote": "46.5%\n46.3%"
+  },
+  {
+   "claim": "Science RL on expert-verified multiple choice only gave 65.8% GPQA-Diamond vs 62.9% mixed-quality data",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPQA accuracy",
+   "value": "65.8",
+   "unit": "%",
+   "baseline_value": "62.9",
+   "n": null,
+   "setup": "Smaller model, Fig 7 right",
+   "note": null,
+   "where": "Fig 7",
+   "quote": "65.8%\n62.9%"
+  },
+  {
+   "claim": "GLM-4.5 vs Claude Sonnet 4 on CC-Bench: 40.4% win, 9.6% tie, 50.0% loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "40.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52 tasks, human experts, Claude Code harness",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "GLM-4.5 vs Claude Sonnet 4: 40.4% win, 9.6% tie, 50.0% loss"
+  },
+  {
+   "claim": "GLM-4.5 tool-calling success rate 90.6% on CC-Bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "tool calling success rate",
+   "value": "90.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CC-Bench 52 tasks",
+   "note": null,
+   "where": "Sec 4.3.2",
+   "quote": "achieving the highest\nsuccess rate at 90.6%"
+  },
+  {
+   "claim": "GLM-4.5 SafetyBench overall 89.87",
+   "kind": "measured",
+   "source": null,
+   "metric": "SafetyBench average",
+   "value": "89.87",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "11,435 multiple choice questions, 7 categories",
+   "note": "Table 7 prints 89.9",
+   "where": "Sec 4.2.5",
+   "quote": "Its\noverall score of 89.87"
+  },
+  {
+   "claim": "GLM-4.5 human translation score 1.71 vs 0.65 best specialised model (Seed-X)",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score (0-3)",
+   "value": "1.71",
+   "unit": "points",
+   "baseline_value": "0.65",
+   "n": null,
+   "setup": "100 challenging cases, blind human eval",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row GLM-4.5, column Average Score"
+  }
+ ],
+ "limits": [
+  "No ablation of pre-training or mid-training stages; RL ablations are on an unnamed smaller model, not GLM-4.5",
+  "Hardware, compute, warmup steps, tokenizer and vocab not stated",
+  "Base model scores are from an internal framework; GSM8K and MATH lag peers",
+  "Human evaluations use a single evaluator, no inter-rater or significance tests",
+  "Frontier comparison as of July 28, 2025"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mid-training",
+   "definition": "stages after pre-training using medium-size domain-specific datasets, including instruction data",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-V3",
+   "year": 2024,
+   "arxiv": "2412.19437",
+   "relation": "extends",
+   "note": "loss-free balance routing and sigmoid gates; architecture comparison",
+   "quote": null
+  },
+  {
+   "work": "Auxiliary-loss-free load balancing",
+   "year": 2024,
+   "arxiv": "2408.15664",
+   "relation": "uses-method",
+   "note": "routing",
+   "quote": null
+  },
+  {
+   "work": "Muon is scalable for LLM training",
+   "year": 2025,
+   "arxiv": "2502.16982",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Nemotron-CC",
+   "year": 2024,
+   "arxiv": "2412.02595",
+   "relation": "uses-method",
+   "note": "quality buckets for web data",
+   "quote": null
+  },
+  {
+   "work": "SemDedup",
+   "year": 2023,
+   "arxiv": "2303.09540",
+   "relation": "uses-method",
+   "note": "embedding dedup",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "RL algorithm without KL",
+   "quote": null
+  },
+  {
+   "work": "DeepScaleR",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "multi-stage increasing-length RL found less effective than single-stage 64K",
+   "quote": "this multi-stage approach is less effective than a single-stage RL process"
+  },
+  {
+   "work": "Fewer truncations improve language modeling (best-fit packing)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "not used in pre-training, since random truncation is data augmentation",
+   "quote": null
+  },
+  {
+   "work": "MiniCPM (WSD schedule)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "WSD underfit on SimpleQA, MMLU in early experiments",
+   "quote": null
+  },
+  {
+   "work": "Fineweb-2",
+   "year": 2025,
+   "arxiv": "2506.20920",
+   "relation": "uses-data",
+   "note": "multilingual data",
+   "quote": null
+  },
+  {
+   "work": "Kimi K2",
+   "year": 2025,
+   "arxiv": "2507.20534",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Qwen3",
+   "year": 2025,
+   "arxiv": "2505.09388",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Pre-training and mid-training stages for GLM-4.5",
+   "page": 4,
+   "why": "Token budget and context length per stage"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Model architecture of GLM-4.5 and GLM-4.5-Air",
+   "page": 3,
+   "why": "Depth/width comparison with DeepSeek-V3 and Kimi K2"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction of tables is column-by-column; values read in row order",
+  "Abstract says 23T tokens; Fig 3 shows 15T+7T pre-training plus 1.1T mid-training"
+ ]
+}

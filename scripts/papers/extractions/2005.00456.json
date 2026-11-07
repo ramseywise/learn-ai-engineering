@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "key": "2005.00456",
+ "pdf": "generative-ai/08-eval/sources/mehri-2020-usr.pdf",
+ "bib": {
+  "title": "USR: An Unsupervised and Reference Free Evaluation Metric for Dialog Generation",
+  "authors": ["Shikib Mehri", "Maxine Eskenazi"],
+  "first_author": "Mehri",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL), pages 681-707",
+  "arxiv": "2005.00456",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 62306,
+  "chars_total": 62306,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an unsupervised, reference-free metric built from RoBERTa sub-metrics correlate with human judgement of open-domain dialog responses better than word-overlap and embedding metrics?",
+ "hypothesis": "Reference-free sub-metrics for specific dialog qualities, combined by a regression, correlate with human quality ratings better than reference-based metrics because dialog is one-to-many.",
+ "contributions": [
+  "a strongly-correlated, unsupervised and reference free metric is proposed for evaluating open-domain dialog systems",
+  "a thorough human quality annotation is carried out and is released to facilitate future benchmarking of dialog evaluation metrics"
+ ],
+ "method": {
+  "summary": "Human annotation of 60 contexts per corpus (Topical-Chat, PersonaChat) on six qualities by six researchers, three per response. USR combines a RoBERTa-base masked-LM likelihood metric and two RoBERTa retrieval (true vs random reply) metrics through a regression fit to the human sub-quality-to-overall mapping, and is compared with 13 word-overlap and embedding metrics by turn- and system-level correlation.",
+  "task": "automatic evaluation of open-domain dialog response generation",
+  "trains": true,
+  "datasets": [
+   {"name": "Topical-Chat", "role": "both", "size": "11,319 dialogs and 248,014 utterances", "split": "annotation: 60 dialog contexts randomly sampled from the frequent test set, 360 responses", "source": "Gopalakrishnan et al. 2019", "preprocessing": "heuristics identify the most relevant fact per response; MLM fine-tuned on dialog only, no facts"},
+   {"name": "PersonaChat", "role": "both", "size": "10,907 dialogs and 162,064 utterances", "split": "annotation: 60 contexts from the ConvAI2 validation set, 300 responses", "source": "Zhang et al. 2018", "preprocessing": "persona treated as analogous to Topical-Chat facts"}
+  ],
+  "models": [
+   {"name": "Transformer (Topical-Chat response generator)", "role": "evaluated", "params": null, "architecture": "encoder-decoder Transformer, input is concatenation of context and fact", "init_from": "inferred: random (randomly-initialized word embeddings of size 300)", "tokenizer": null, "vocab": null, "layers": "6", "hidden": "512", "heads": null, "context": null, "other": {"dropout": "0.1", "epochs": "50", "decoding": "argmax and nucleus sampling p = 0.3, 0.5, 0.7 (one model, four outputs)"}},
+   {"name": "Seq2Seq, LSTM LM, KV-MemNN (PersonaChat)", "role": "evaluated", "params": null, "architecture": "pre-trained ParlAI ConvAI2 models", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "a fourth model was excluded for possible data leakage"}},
+   {"name": "USR (RoBERTa-base sub-metrics + regression)", "role": "proposed", "params": null, "architecture": "RoBERTa-base (Liu et al. 2019) fine-tuned for MLM, then for retrieval", "init_from": "RoBERTa-base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "MLM metric: masked-LM on dialog; DR metric: binary classification of true vs randomly sampled response, as in Ubuntu dialog corpus; USR: regression from sub-metric scores to Overall Quality",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "RoBERTa MLM fine-tune: a single epoch; Transformer generator: 50 epochs; DR epochs not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (Transformer generator only)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"mlm_fine_tune_data": "training set of Topical-Chat, dialog only, via Wolf et al. 2019a implementation", "regression": "regression trained on z-scored human ratings, softmax over weights for Figure 2; trained per annotator for the analysis"}
+  },
+  "inference": {
+   "decoding": "Transformer generator: argmax and nucleus sampling",
+   "temperature": "not tuned for nucleus sampling",
+   "top_p": "0.3, 0.5, 0.7",
+   "max_tokens": null,
+   "samples": "one response per decoding strategy per context",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Turn-level Spearman/Pearson", "definition": "correlation of metric score with human rating over individual responses (ground-truth annotations excluded)", "unit": "correlation coefficient", "higher_is_better": true},
+    {"name": "System-level Spearman/Pearson", "definition": "correlation over per-system average scores", "unit": "correlation coefficient", "higher_is_better": true},
+    {"name": "MLM", "definition": "negative sum over response words of masked log-likelihood given context", "unit": "score", "higher_is_better": false},
+    {"name": "DR", "definition": "P(y=1 | x, r) from retrieval classifier; x = c (history and fact) or x = f (fact only)", "unit": "probability", "higher_is_better": true},
+    {"name": "Inter-annotator agreement", "definition": "mean pairwise correlation between annotators", "unit": "Spearman, Pearson", "higher_is_better": true}
+   ],
+   "baselines": ["F-1", "BLEU-1..4", "METEOR", "ROUGE-L", "Greedy Matching", "Embedding Average", "Vector Extrema", "Skip-Thought", "BERTScore base and large"],
+   "protocol": "Six dialog researchers, three annotators per response, randomly assigned; preliminary pass of 5 contexts each (30 responses) then instruction revision. Ratings: Understandable 0-1, Natural 1-3, Maintains Context 1-3, Interesting 1-3, Uses Knowledge 0-1, Overall Quality 1-5. Ground-truth annotations excluded from metric evaluation. Significance p<0.01 for Table 3 and Table 1; p>0.05 italicized in Tables 4-6."
+  },
+  "availability": {"code": "https://github.com/shikib/usr", "weights": null, "data": "http://shikib.com/usr (human quality annotations)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets[0].split", "quote": "60 dialog contexts randomly sampled from the frequent test set, for a total of 360 responses scored on six different qualities", "where": "3.4"},
+   {"field": "eval.protocol", "quote": "The annotations for the original ground-truth are not used for evaluation", "where": "5"}
+  ]
+ },
+ "results": [
+  {"claim": "USR turn-level correlation with Overall Quality on Topical-Chat.", "kind": "measured", "source": null, "metric": "turn-level Spearman, Overall Quality", "value": "0.4192", "unit": "Spearman", "baseline_value": "0.3365 (METEOR)", "n": null, "setup": "Topical-Chat, 60 contexts, reference-free responses of 5 non-ground-truth sources", "table": "Table 5, row USR, column Spearman", "quote": null, "note": "Appendix Table 10 prints 0.4192 under the column headed Pearson and 0.4220 under Spearman; main Table 5 and abstract (0.42) say Spearman 0.4192.", "where": "Table 5"},
+  {"claim": "USR turn-level correlation with Overall Quality on PersonaChat (abstract 0.48).", "kind": "measured", "source": null, "metric": "turn-level Spearman, Overall Quality", "value": "0.4693", "unit": "Spearman", "baseline_value": "0.4814 (USR-DR x=c)", "n": null, "setup": "PersonaChat, 60 contexts", "table": "Table 6, row USR, column Spearman", "quote": null, "note": "Abstract/conclusion say 0.48, which matches USR-DR (x = c) 0.4814 in Table 6, not the USR row 0.4693; DR (x=c) outperforms USR here.", "where": "Table 6"},
+  {"claim": "System-level Spearman of USR with Overall Quality is 1.0 on both datasets.", "kind": "measured", "source": null, "metric": "system-level Spearman", "value": "1.0", "unit": "Spearman", "baseline_value": null, "n": "5 systems Topical-Chat, 4 PersonaChat (inferred from ground-truth exclusion)", "setup": "Overall Quality, both datasets; Pearson 0.92 and 0.82", "quote": "USR signiﬁcantly (p < 0.01) outperforms all other metrics with a Spearman correlation of 1.0 on both datasets and Pearson correlations of 0.92 (Topical-Chat) and 0.82 (PersonaChat).", "note": null, "where": "5"},
+  {"claim": "Always outputting the ten most common tokens beats the dataset's Transformer on F-1.", "kind": "measured", "source": null, "metric": "F-1", "value": "25.6", "unit": "F-1", "baseline_value": "22.0 (inferred: 25.6 minus 3.6)", "n": null, "setup": "Topical-Chat, response '. i the , that a to it is of'", "quote": "attains an F-1 score of 25.6 which is a +3.6 improvement over the Transformer presented by Gopalakrishnan et al. (2019)", "note": null, "where": "4.1"},
+  {"claim": "Regression from the five quality ratings predicts Overall Quality with high fidelity.", "kind": "measured", "source": null, "metric": "Spearman", "value": "0.9654", "unit": "Spearman", "baseline_value": null, "n": null, "setup": "Topical-Chat annotations", "quote": "The Spearman correlation between the predicted score and the original overall score is 0.9654", "note": null, "where": "3.5"},
+  {"claim": "Inter-annotator agreement on Overall Quality.", "kind": "measured", "source": null, "metric": "mean pairwise Spearman", "value": "0.7183", "unit": "Spearman", "baseline_value": null, "n": null, "setup": "Topical-Chat; PersonaChat 0.6577", "table": "Table 1, row Topical-Chat Overall Quality, column Spearman", "quote": null, "note": "Text says 0.71 and 0.66; Pearson 0.7096.", "where": "Table 1"},
+  {"claim": "Understandable agreement is low on PersonaChat.", "kind": "measured", "source": null, "metric": "mean pairwise Spearman", "value": "0.2984", "unit": "Spearman", "baseline_value": null, "n": null, "setup": "PersonaChat Understandable", "table": "Table 1, row PersonaChat Understandable, column Spearman", "quote": null, "note": null, "where": "Table 1"},
+  {"claim": "New human responses score highest on Overall Quality, above original ground truth.", "kind": "measured", "source": null, "metric": "mean Overall Quality (1-5)", "value": "4.80", "unit": "rating", "baseline_value": "4.25 (Topical-Chat ground truth)", "n": null, "setup": "Topical-Chat and PersonaChat", "table": "Table 2, row New Human Generated, column OQ", "quote": null, "note": null, "where": "Table 2"},
+  {"claim": "Argmax decoding scores above nucleus sampling on Overall Quality (hyperparameters not tuned).", "kind": "measured", "source": null, "metric": "mean Overall Quality", "value": "2.76", "unit": "rating", "baseline_value": "2.40 (nucleus 0.3)", "n": null, "setup": "Topical-Chat Transformer", "table": "Table 2, row Argmax Decoding, column OQ", "quote": null, "note": null, "where": "Table 2"},
+  {"claim": "Best non-USR metric on Topical-Chat Maintains Context is METEOR; USR beats USR-DR.", "kind": "measured", "source": null, "metric": "turn-level Spearman", "value": "0.3769", "unit": "Spearman", "baseline_value": "0.3018 (METEOR)", "n": null, "setup": "Topical-Chat Maintains Context", "table": "Table 3, row Maintains Context USR, column Spearman", "quote": null, "note": null, "where": "Table 3"},
+  {"claim": "On PersonaChat, DR (x=c) beats full USR on Overall Quality.", "kind": "measured", "source": null, "metric": "turn-level Pearson", "value": "0.6087", "unit": "Pearson", "baseline_value": "0.4115 (USR)", "n": null, "setup": "PersonaChat Overall Quality", "table": "Table 6, row USR-DR (x = c), column Pearson", "quote": null, "note": "Appendix Table 11 prints 0.4814 and 0.6087 in swapped column order.", "where": "Table 6"},
+  {"claim": "USR-MLM has poor system-level correlation on Topical-Chat Understandable.", "kind": "measured", "source": null, "metric": "system-level Pearson", "value": "0.4666", "unit": "Pearson", "baseline_value": null, "n": null, "setup": "Topical-Chat Understandable", "table": "Table 12, row USR-MLM, last column", "quote": null, "note": null, "where": "Table 12"},
+  {"claim": "USR should be used alongside human evaluation, not to claim superiority.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Discussion", "quote": null, "note": "USR should not be used to claim superior performance over another method.", "where": "6"}
+ ],
+ "limits": [
+  "Only 60 contexts per corpus, six researchers annotating, no crowdsourcing; Overall Quality annotations contain annotator-specific subjectivity.",
+  "System-level correlation rests on very few systems (inferred 5 on Topical-Chat, 4 on PersonaChat).",
+  "Best sub-metrics for each quality differ between datasets; on PersonaChat DR (x=c) alone beats USR.",
+  "May not work with non-generative models; responses from models similar to the evaluation models (e.g., DR) are a concern.",
+  "Nucleus sampling hyperparameters (e.g., temperature) not tuned; objective was varied quality, not best models.",
+  "Training hyperparameters of RoBERTa fine-tuning (optimizer, lr, batch size) and of the regression are not stated; list of baseline metrics is not exhaustive."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "USR", "definition": "UnSupervised and Reference-free evaluation metric for dialog", "where": "Abstract"},
+  {"term": "Dialog retrieval (DR) metric", "definition": "probability P(y = 1 | x, r) that a RoBERTa classifier gives to r being the true response rather than a random one", "where": "4.2.2"}
+ ],
+ "lineage": [
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "uses-method", "note": "backbone for MLM and DR sub-metrics", "quote": null},
+  {"work": "Topical-Chat (Gopalakrishnan et al.)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "dialog corpus and F-1 baseline Transformer", "quote": null},
+  {"work": "PersonaChat (Zhang et al.)", "year": 2018, "arxiv": "1801.07243", "relation": "uses-data", "note": "second corpus", "quote": null},
+  {"work": "ADEM (Lowe et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "trained on explicit quality annotations, needs reference", "quote": null},
+  {"work": "BERTScore (Zhang et al.)", "year": 2019, "arxiv": "1904.09675", "relation": "baseline", "note": "best non-USR metric on several qualities", "quote": null},
+  {"work": "How not to evaluate your dialogue system (Liu et al.)", "year": 2016, "arxiv": "1603.08023", "relation": "related", "note": "word-overlap metrics correlate poorly with human judgement of dialog", "quote": null},
+  {"work": "Adversarial learning for neural dialogue generation (Li et al.)", "year": 2017, "arxiv": "1701.06547", "relation": "related", "note": "discriminator evaluator; correlation not evaluated", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 5", "caption": "Turn-level correlations between all automatic metrics and the Overall Quality ratings for the Topical-Chat corpus.", "page": 8, "why": "Shows USR 0.4192 against METEOR 0.3365 and BLEU-4 0.2160 in one place."},
+  {"figure": "Fig 2", "caption": "Weight attributed to each of the five specific metrics by each annotator, when labeling Overall Quality.", "page": 5, "why": "Shows annotators weight qualities differently."}
+ ],
+ "code": [],
+ "problems": [
+  "Appendix tables 10 and 11 have column headers (Pearson, Spearman) in the opposite order to main Tables 5 and 6 for turn-level values.",
+  "Appendix text refers to annotation Tables 6, 7, 8 and metric Tables 9-21, but they are numbered 7-9 and 10-21.",
+  "Appendix Overall Quality instruction heading reads '(1-3)' while the scale listed is 1-5.",
+  "Abstract turn-level 0.48 for PersonaChat matches USR-DR (x=c) 0.4814, not USR 0.4693.",
+  "No embedded instructions found."
+ ]
+}

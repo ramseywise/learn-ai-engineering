@@ -1,19 +1,961 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2505.06120",
  "pdf": "ai-engineering/02-context-engineering/sources/laban-2025-llms-get-lost-multi-turn.pdf",
  "bib": {
-  "title": "LLMs Get Lost In Multi-Turn Conversation",
-  "first_author": "Philippe Laban",
-  "year": "2025",
-  "venue": "ICLR 2026",
+  "title": "LLMS GET LOST IN MULTI-TURN CONVERSATION",
+  "authors": [
+   "Philippe Laban",
+   "Hiroaki Hayashi",
+   "Yingbo Zhou",
+   "Jennifer Neville"
+  ],
+  "first_author": "Laban",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2505.06120",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "ebcee23b-6f13-4c8f-abc4-afc1181accc4"
+  "at": "2026-11-07",
+  "chars_read": 155542,
+  "chars_total": 155542,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. Table 1 and Figure 6 text is column-scrambled in the cache; read from the extracted number order."
  },
- "legacy_report": "SOURCE: \"LLMs Get Lost In Multi-Turn Conversation\", Philippe Laban, Hiroaki Hayashi, Yingbo Zhou, Jennifer Neville (Microsoft Research, Salesforce Research). Preprint, arXiv:2505.06120v1, 9 May 2025. The PDF names no conference or journal.\n\nCOVERAGE: 155,603 of 155,603 chars, 36 of 36 pages, read in sequence, including the appendices and prompts. References were skimmed for origins. Figures and tables were read only as extracted text, and no images were viewed.\n\nCLAIMS\nShared setup for the main experiment (claims 1-5), p7-8:\n- 600 sharded instructions across 6 tasks: Code, Database, Actions, Math, Data-to-text, Summary.\n- 15 LLMs, 3 simulation types (FULL, CONCAT, SHARDED), N=10 per model and type, T=1.\n- The user simulator, strategy classifier and answer extractor are all prompt-based GPT-4o-mini (p4-5).\n- The assistant gets a minimal system instruction and is not told the conversation is multi-turn or underspecified (p5).\n- Max response is 1,000 tokens, or 10,000 for o3 and R1 (p25).\n\n1. - claim: Every tested model does worse when the same task is revealed over several turns than when given in one turn.\n   number: -39% average (FULL to SHARDED)\n   setup: Main experiment. This is the mean of per-task percentage drops. See PROBLEMS for the -35% and 25-point variants.\n   quote: \"every model sees its performance degrade on every task when comparing FULL and SHARDED performance, with an average degradation of -39%.\"\n   where: p8\n\n2. - claim: The loss is mostly unreliability, not lost best-case ability.\n   number: aptitude -16%; unreliability +112%\n   setup: Main experiment. Aptitude is the per-instruction 90th-percentile score. Unreliability is the 90th minus 10th percentile, averaged over the corpus.\n   quote: \"Model aptitude degrades in a non-significant way between the full and sharded settings, with an average drop of 16%. On the other hand, unreliability skyrockets with an average increase of 112% (more than doubling).\"\n   where: p10\n\n3. - claim: All models are about equally unreliable in multi-turn, regardless of single-turn strength.\n   number: about 50 points, best to worst run\n   setup: Main experiment, fixed instruction.\n   quote: \"all models we test exhibit very high unreliability, with performance degrading 50 percent points on average between the best and worst simulated run for a fixed instruction.\"\n   where: p10\n\n4. - claim: The drop comes from underspecification across turns, not from information lost in sharding.\n   number: CONCAT = 95.1% of FULL\n   setup: Same shards joined as a single-turn bullet list. Instructions were pre-filtered to keep only those with P_CONCAT >= 0.8 P_FULL (p20), so this control is partly selected for.\n   quote: \"CONCAT performance averaging 95.1% of the FULL counterpart.\"\n   where: p8\n\n5. - claim: Reasoning models get lost like the others, and write longer responses.\n   number: 33% longer\n   setup: o3 and Deepseek-R1 against the non-reasoning LLMs. The authors call length a \"potential root cause\".\n   quote: \"reasoning models tend to generate lengthier responses (on avg. 33% longer than non-reasoning LLMs).\"\n   where: p9\n\n6. - claim: Two turns are enough to trigger the effect, and only giving everything at once helps.\n   number: two-shard threshold. Figure 6c, GPT-4o unreliability: 19% at 1 shard, 49% at 2, 71% at 8. GPT-4o-mini: 32% at 1, 45% at 2, 56% at 8.\n   setup: 31 instructions expanded to 248 (1-8 shards each), N=10, GPT-4o and GPT-4o-mini only (p10, p29).\n   quote: \"any conversation that involves underspecification and occurs in two or more turns leads to models getting lost in conversation.\"\n   where: p10; Figure 6c p9\n\n7. - claim: Repeating earlier user turns helps partly, and does not reach single-turn performance.\n   number: \"15-20%\". Table 2, GPT-4o-mini: 86.8 / 84.4 / 50.4 / 66.5 / 61.8. GPT-4o: 93.0 / 90.9 / 59.1 / 76.6 / 65.3.\n   setup: Code, Database, Math, Actions; N=10; 2 models. Column order is read as FULL, CONCAT, SHARDED, RECAP, SNOWBALL because the headers were lost. RECAP is called unrealistic, since it needs to know which turn is last.\n   quote: \"SNOWBALL gives a sense of realistic performance gains achievable through user-turn repetition: it can mitigate the FULL-to-SHARDED performance deterioration by 15-20%.\"\n   where: p11. See PROBLEMS: the table does not obviously give this figure.\n\n8. - claim: Lowering temperature fixes single-turn reliability but not multi-turn reliability.\n   number: 50-80% drop single-turn; about 15-20% or none in SHARDED; about 30 unreliability left at T=0 for both user and assistant (Table 3: 30.5 for GPT-4o-mini, 29.7 for GPT-4o)\n   setup: 40 instructions (10 each from Code, Database, Actions, Math), GPT-4o and GPT-4o-mini, 20 runs per condition, assistant and user temperature in {0, 0.5, 1} (p30).\n   quote: \"Even when both the user and assistant temperatures are set to 0.0, there remains a large unreliability of around 30%.\"\n   where: p11\n\n9. - claim: Answering early goes with worse results.\n   number: 30.9 (first attempt in first 20% of turns) vs 64.4 (last 20%)\n   setup: Code and Math only, across all models; the other four tasks attempt an answer from turn 1 in most cases. Observational binning, not an intervention. The causal mechanism is stated as a hypothesis.\n   quote: \"conversations with the first attempt being made in the first 20% of conversations achieve a score of 30.9, less than half of the 64.4 when the LLM waits for the last 20% of the conversation to make an answer attempt.\"\n   where: p22\n\n10. - claim: Answers grow over turns because models build on earlier wrong assumptions instead of discarding them.\n    number: final attempts 20-300% longer; correct Code 27% longer (850 vs 668 chars); correct SQL 14% longer (129 vs 113 chars)\n    setup: Extracted answers, shown for Code, Database, Data-to-text, Summary (Figure 9). The growth per attempt is reported for three of them. Correct-solution lengths are Code and Database, score 100.0 only.\n    quote: \"the LLM does not successfully invalidate its prior assumptions and overly relies on its previous attempts.\"; \"tend to be 20-300% longer than the solutions generated in the FULL and CONCAT settings.\"\n    where: p23\n\n11. - claim: Lost-in-the-middle also happens across turns: first- and last-turn documents are cited more than middle-turn ones.\n    number: eighth-turn summaries, 20% cite turn 8 vs 8% each for turns 2 and 3; first-turn 13% (Figure 10)\n    setup: Summary task, averaged over the LLMs; the paper says 15, though OLMo2 and Phi-4 have no Summary scores in Table 1. Effect size varies by model, and model-level results are not included. Row totals under 100% are hallucinated citations.\n    quote: \"In eighth-turn summaries, 20% of citations are to documents introduced in turn 8, compared to 8% from turn 2 and 3 (150% difference).\"\n    where: p23-24\n\n12. - claim: Longer responses go with lower scores on five of six tasks.\n    number: 10-50% higher for the shortest quintile\n    setup: Quintiles within each (LLM, instruction) pair. Actions is the exception. Correlational; the assumption mechanism is a hypothesis.\n    quote: \"On five of the six tasks, performance is 10-50% higher in simulated conversations with shortest response length, compared to conversations with longest response length.\"\n    where: p24\n\n13. - claim: Episodic tasks that decompose by turn do not degrade, so the effect needs underspecified, non-decomposable generation.\n    number: BLEU within 10%. Table 4: 41.7 / 43.4 / 42.1 for GPT-4o-mini, 35.9 / 38.5 / 40.9 for GPT-4o.\n    setup: Translation, 30 German-English documents truncated to 10 sentences, 5 shards of two sentences (p28). The authors note BLEU may miss document-level nuance. The three required task properties are stated as a hypothesis.\n    quote: \"with BLEU scores being within 10% difference of each other in all settings.\"\n    where: p12\n\n14. - claim: Simulator error is small, and does not explain the drop.\n    number: under 5% of conversations had errors; under 2% were disfavoured; about 98% valid\n    setup: Manual inspection of Actions, Code, Math, Database only.\n    quote: \"errors introduced by the user simulator, strategy classifier, or answer extraction occurred in less than 5% of inspected conversations and that these errors disfavored the assistant model in less than 2% of the conversations.\"\n    where: p5; Table 5 p20\n\n15. - claim: The authors advise users to restart, and to consolidate requirements before retrying.\n    number: none\n    setup: Advice inferred from CONCAT results and a Reddit anecdote about Cursor. No experiment tests a mid-conversation LLM consolidation or a fresh restart. The authors call both \"patched solutions\".\n    quote: \"starting a new conversation that repeats the same information might yield significantly better outcomes than continuing an ongoing conversation.\"\n    where: p12\n\n16. - claim: The authors set a target for a reliable LLM.\n    number: U < 15 at T=1.0 in multi-turn\n    setup: A proposed target, not a measured result.\n    quote: \"have small unreliability (U 9010 < 15) in multi-turn settings\"\n    where: p11\n\nLIMITS\nConceded by the authors (p3, p13):\n- Simulated conversations are \"not representative of natural human-AI conversation\": narrow structure, one new shard per turn, intent always in turn 1, and all information available by the end.\n- Minimal shards are \"unrealistic and potentially adversarial\". The authors rely on gradual sharding to answer this, but it covers only two models.\n- They argue the result is \"most likely an underestimate\", which is an argument, not a measurement.\n- Only analytical, text-only, English tasks. Creative tasks are untested.\n\nNot shown:\n- No human users, no agent loops with tool execution, and no compaction or memory.\n- Not a window-occupancy study. Only Summary is described as testing long context. No result is tied to how full the window is, and the effect appears at two turns. For the target note, this is a different mechanism from \"occupancy grows; recall degrades\", and it does not support the note's ~50% threshold or its claim of monotonic decline with session length.\n- The nearest fit in the note's taxonomy is a model's own wrong assumptions persisting, as in poisoning (claim 10; p9 also mentions confusing user requirements with its own earlier turns). The paper does not use that vocabulary.\n- Claim 7 is relevant to the note's \"repeating the constraint\" anti-fix, but it tests repeating user turns over two models, not forceful repetition.\n- Default behaviour only. A system prompt encouraging clarification is untested, and the authors say it would likely change behaviour (p5).\n- Mechanism claims 9-12 are observational or hypothesised.\n- Sub-experiments use only GPT-4o and GPT-4o-mini, so they do not generalise to 15 models.\n\nDated: the model set is from May 2025 (GPT-4.1, o3, Claude 3.7 Sonnet, Gemini 2.5 previews, Llama 4 Scout).\n\nBUILDS ON\n- Herlihy et al. 2024 [27]: underspecification in logs, response categories.\n- Zipf 1949 [91]: principle of least effort.\n- Liu et al. 2024 [50], Huang et al. 2023 [29], Laban et al. 2024 [40]: loss in the middle.\n- Zheng et al. 2023 [89]: MT-bench, the episodic baseline it contrasts with.\n- Liu et al. 2022 [51]: atomic content units.\n- Choi et al. 2021 [13]: decontextualization.\n- Chang et al. 2025 [7]: users reveal the full instruction \"34% of the time\".\n- Belem et al. 2024 [3]: mini-Haystacks.\n- Zhong et al. 2020 [90]: SQL evaluation.\n- Papineni et al. 2002 [58]: BLEU.\n- Datasets: HumanEval (Chen 2021), LiveCodeBench (Jain 2024), Spider (Yu 2018), BFCL (Yan 2024), GSM8K (Cobbe 2021), ToTTo (Parikh 2020), Summary of a Haystack (Laban 2024), WMT 2019 (Scherrer 2019).\n\nCODE\n- Metrics, p7: `A90 = percentile90(S) U 9010 = percentile90(S) − percentile10(S).`\n- Snowball prompt, p30: `Just to reiterate:\\n - [past utterance 1]\\n- [past utterance 2]\\n\\n Also,\\n[current utterance].`\n- User simulator persona, p34: `The user is inherently lazy, and answers in short form, providing only minimal information to the system.`\n- Sharding acceptance rule, p20: `P CONCAT ≥ 0.8 P FULL` and `P SHUFFLE -CONCAT ≥ 0.8 P FULL`\n\nFIGURES (captions shortened; contents judged from extracted text only)\n- Figure 1, p1: \"we simulate single- and multi-turn conversations for six generation tasks.\" Shows the premature attempt, wrong assumption and bloat story alongside the aptitude and unreliability shift, all on one panel.\n- Figure 6, p9: Aptitude and Unreliability box plots, 15-model results, gradual sharding. Best single evidence figure; shows the gap widening for all models and at two shards.\n- Figure 10, p24: citation heatmap by turn. Shows loss-in-middle-turns at a glance.\n- Figure 4, p5: the five simulation types. Explains FULL, CONCAT, SHARDED, RECAP and SNOWBALL faster than prose.\n- Figure 9, p23: answer length by attempt number. Shows answer bloat directly.\n- Figure 11, p29: worked Math conversation with Llama3.1-8B-Instruct, showing invented pastries derailing the result (correct answer 85,000; extracted 45,000).\n- Figure 2, p4: paired full and sharded instruction. Defines sharding by example.\n\nPROBLEMS\nInconsistencies within the paper. Cite the specific number and setup:\n- Headline drop: -39% (abstract, p8), -35% (Figure 1, p1), and \"average performance of 65%–a 25-point drop from single-turn performances of 90%\" (p2). The paper does not reconcile them. My own average of Table 1's last column is about 61, which matches -39%.\n- Aptitude: -16% in the text (p10), -15% in Figure 1. It is also called \"non-significant\" with no test reported.\n- Inspection size: \"several hundred\" (p5), \"200\" (p20), and \"100\" in the Table 5 caption (p20).\n- Gradual sharding: Appendix K says \"a total of eight instructions across three tasks\", then \"the 31 instructions\" and 248 total. 31 x 8 = 248, and p10 also says 31, so \"eight\" looks like an error.\n- Section 6.3 calls maximality \"property P3\", but Appendix B lists it as P4.\n- Table 1's caption says the last two columns average \"performance drops\", but the values (for example 62.5) read as percent of FULL retained.\n- \"15-20%\" (claim 7) is not obviously derivable from Table 2. My own calculation gives Snowball recovering about 31% of the FULL-SHARDED gap for GPT-4o-mini and about 18% for GPT-4o, or 11.4 and 6.2 points. Check before restating it.\n- The conclusion calls agent-like concatenation \"ineffective\" (p13), while p11 reports partial improvement.\n- \"for every single model, conversations with a later first answer attempt lead to higher averaged performance\" (p22) is not strictly monotonic in Table 6: OLMo2 drops 47.3 to 26.4 and R1 drops 66.4 to 50.2 in the last bin; Llama 4 Scout drops 39.8 to 36.8 early.\n- Figure 6c (claim 6): GPT-4o unreliability rises from 49% to 71% between 2 and 8 shards, which sits uneasily with \"granularity...does not majorly impact reliability\" (p10).\n- Summary size: \"around twenty documents\" and 10 shards in the text (p7, p28), against a 12-document example in Figure 5 and 8 turns in Figure 10.\n\nExtraction faults:\n- Icon column headers in Tables 1, 2 and 4 were lost; I inferred order from captions and the surrounding text.\n- Figure 6 numbers come as loose text, and I read each triple as unreliability, aptitude, floor. Check these against the image before quoting.\n- Stray citation key in the text at p5: \"simulatesouthworth2023developingd\".\n- Line wraps in quotes are collapsed to spaces.\n\nEmbedded instructions: none aimed at a reader. The prompts in Appendix O are the paper's own experimental materials, and I treated them as data."
+ "type": "empirical",
+ "question": "How much does LLM performance drop when a task's requirements are revealed gradually over several conversation turns instead of in one fully specified instruction, and why?",
+ "hypothesis": "Multi-turn, underspecified conversation degrades LLM performance relative to single-turn fully specified instructions, mainly through unreliability, because models make early assumptions and over-rely on their earlier answers.",
+ "contributions": [
+  "Sharded simulation: a semi-automatic way to turn single-turn benchmark instructions into multi-turn underspecified ones",
+  "Large-scale simulation (200,000+ conversations, 15 LLMs, six tasks) showing an average 39% drop",
+  "Decomposition of the drop into small aptitude loss and large unreliability increase",
+  "Four behavioural causes: premature answers, answer bloat, loss-in-middle-turns, verbosity",
+  "Tests of agent-style remedies (RECAP, SNOWBALL) and lower temperature, neither of which closes the gap"
+ ],
+ "method": {
+  "summary": "Single-turn instructions from six benchmarks are split into 'shards' (one fact each). An LLM-simulated user (GPT-4o-mini) reveals one shard per turn to the assistant under test, whose answer attempts are extracted and scored with the original benchmark metric. The same instructions are run FULL, CONCAT and SHARDED, ten times each, and scored by average performance, aptitude (90th percentile) and unreliability (90th minus 10th percentile).",
+  "task": "multi-turn underspecified generation (code, SQL, API calls, math, table captioning, summarisation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Code (HumanEval + LiveCodeBench v5 call-based, Easy/Medium)",
+    "role": "eval",
+    "size": "100 sharded instructions (45 from HumanEval's 164 problems, rest from LiveCodeBench)",
+    "split": "n/a",
+    "source": "HumanEval [10], LiveCodeBench [31]",
+    "preprocessing": "sharded with the 4-step process; scored by test-case functional accuracy"
+   },
+   {
+    "name": "Database (Spider 1.0 validation)",
+    "role": "eval",
+    "size": "107 sharded instructions (from 433 queries after dropping EASY)",
+    "split": "validation",
+    "source": "Spider [86]",
+    "preprocessing": "schema in system message; execution match on multiple databases"
+   },
+   {
+    "name": "Actions (BFCL V3 Parallel)",
+    "role": "eval",
+    "size": "105 sharded instructions",
+    "split": "test",
+    "source": "Berkeley Function Calling Leaderboard",
+    "preprocessing": "tool docs in system message; official BFCL semantic-equivalence checker"
+   },
+   {
+    "name": "Math (GSM8K main)",
+    "role": "eval",
+    "size": "103 sharded instructions",
+    "split": "main",
+    "source": "GSM8K [14]",
+    "preprocessing": "shuffled, sharded incrementally; exact match after standardisation"
+   },
+   {
+    "name": "Data-to-text (ToTTo test)",
+    "role": "eval",
+    "size": "120 sharded instructions",
+    "split": "test",
+    "source": "ToTTo [59]",
+    "preprocessing": "5 shards: table, highlighted cells, page name, section name, 10 random example captions; BLEU"
+   },
+   {
+    "name": "Summary (Summary of a Haystack, mini-Haystacks)",
+    "role": "eval",
+    "size": "92 sharded instructions, 20 documents each, 10 shards of 2 documents",
+    "split": "n/a",
+    "source": "Summary of a Haystack [40], mini-Haystacks [3]",
+    "preprocessing": "summaries capped at 300 words, over-length summaries truncated; Joint Score (LLM judge)"
+   },
+   {
+    "name": "Translation (WMT 2019 document-level, de-en)",
+    "role": "eval",
+    "size": "30 documents, first 10 sentences, 5 shards of 2 sentences",
+    "split": "n/a",
+    "source": "WMT 2019 [70]",
+    "preprocessing": "BLEU; seventh task used only in Section 7.3"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o (gpt-4o-2024-11-20)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o-mini (gpt-4o-mini-2024-07-18)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4.1 (gpt-4.1-2025-04-14)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "o3 (o3-2025-04-16)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "reasoning model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude 3 Haiku (claude-3-haiku-20240307)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude 3.7 Sonnet (claude-3-7-sonnet-20250219)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 2.5 Flash (gemini-2.5-flash-preview-04-17)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 2.5 Pro (gemini-2.5-pro-preview-03-25)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "local Ollama"
+    }
+   },
+   {
+    "name": "Llama-3.3-70B-Instruct",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "Amazon Bedrock"
+    }
+   },
+   {
+    "name": "Llama-4-Scout-17B-16E",
+    "role": "evaluated",
+    "params": "17B active, 16 experts",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "Together AI"
+    }
+   },
+   {
+    "name": "Command-A (command-a-03-2025)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Deepseek-R1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "reasoning model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "Amazon Bedrock"
+    }
+   },
+   {
+    "name": "OLMo-2-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "local Ollama"
+    }
+   },
+   {
+    "name": "Phi-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "local Ollama"
+    }
+   },
+   {
+    "name": "GPT-4o-mini (user simulator, strategy classifier, answer extractor)",
+    "role": "judge",
+    "params": null,
+    "architecture": "prompt-based",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o (sharding segmentation, rephrasing, verification)",
+    "role": "base",
+    "params": null,
+    "architecture": "prompt-based",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling at default settings; no other decoding detail given",
+   "temperature": "1.0 (main); 0.0, 0.5, 1.0 for assistant and user in the temperature experiment",
+   "top_p": null,
+   "max_tokens": "1,000 per response; 10,000 for o3 and Deepseek-R1",
+   "samples": "N=10 simulations per (model, instruction, simulation type), 600 instructions x 3 types x 15 models = 200,000+ conversations; temperature experiment 20 runs per condition; gradual sharding 10 per instruction and model; RECAP/SNOWBALL N=10",
+   "prompting": "minimal system instruction with task context (schema, tool list, 'math problems'); assistant is not told the conversation is multi-turn or underspecified; user simulator is a lazy-user prompt revealing at most one shard per turn",
+   "retrieval": null,
+   "parameters": {
+    "shard_count_per_instruction": "3 or more (filter: fewer than 3 segments rejected)",
+    "sharding_acceptance_threshold": "P_CONCAT >= 0.8 P_FULL and P_SHUFFLE-CONCAT >= 0.8 P_FULL, 10 runs each",
+    "recap_prompt": "Just to reiterate:\\n - [past utterance 1]\\n- [past utterance 2]\\n\\n Also,\\n[current utterance]",
+    "conversation_end": "correct answer attempt, or no unrevealed shards at start of a turn",
+    "strategy_classes": "7: answer attempt, clarification, interrogation, discussion, hedging, refusal, missing"
+   },
+   "other": {
+    "cost": "around $5,000 for all simulations",
+    "manual_sharding_effort": "1-4 hours per task for 90-120 instructions; average 3 hours per 100 instructions; 1-3 minutes to inspect and edit one instruction",
+    "hardware": "not stated; Llama-3.1-8B, OLMo2, Phi-4 run through local Ollama"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Averaged performance P",
+     "definition": "mean over N simulations of score S_i (0-100)",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Aptitude A90",
+     "definition": "90th percentile of S over N simulations, per instruction, averaged over corpus",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Unreliability U90_10",
+     "definition": "90th percentile minus 10th percentile of S per instruction, averaged over corpus; reliability R = 100 - U",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Task scores",
+     "definition": "binary correctness mapped to 0/100 for Code (tests), Database (execution match), Actions (BFCL checker), Math (exact match); BLEU for Data-to-text and Translation; Joint Score (coverage and citation, LLM judge) for Summary",
+     "unit": "0-100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "FULL (single-turn, original instruction)",
+    "CONCAT (shards bullet-listed in one turn)",
+    "RECAP (SHARDED plus final recap turn)",
+    "SNOWBALL (every turn repeats earlier shards)"
+   ],
+   "protocol": "N=10 stochastic runs per cell, metrics per instruction then averaged; no significance tests or confidence intervals reported; simulator validity checked by manual annotation (Table 5)."
+  },
+  "availability": {
+   "code": "Microsoft/lost_in_conversation (GitHub, named on page 1)",
+   "weights": null,
+   "data": "datasets/Microsoft/lost_in_conversation (named on page 1)"
+  },
+  "prompts": [
+   {
+    "purpose": "User simulator (opening of prompt; full rules in Appendix O.2; sharding, classifier and extractor prompts in Appendix O)",
+    "text": "You are simulating a user of an interactive LLM system (like ChatGPT). The user is inherently lazy, and answers in short form, providing only minimal information to the system. You should not be proactive.",
+    "where": "Appendix O.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.max_tokens",
+    "quote": "We set the maximum response length to 1,000 tokens for all models, and did not observe models exceeding this limit frequently when generating responses.",
+    "where": "Appendix H"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Every model degrades on every task from FULL to SHARDED, averaging -39%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative drop FULL to SHARDED",
+   "value": -39,
+   "unit": "% (mean of per-task relative drops)",
+   "baseline_value": null,
+   "n": 15,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.1",
+   "note": "Elsewhere the paper prints -35% (Fig 1 caption) and a 90% to 65% (25-point) drop (Introduction); the three are not reconciled in the text.",
+   "quote": "with an average degradation of -39%"
+  },
+  {
+   "claim": "Single-turn average performance falls to 65% from 90%, a 25-point drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P FULL vs SHARDED",
+   "value": 25,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0. Averaged over models and tasks.",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "a 25-point drop from single-turn performances of 90%"
+  },
+  {
+   "claim": "CONCAT stays near FULL, so the SHARDED drop is not due to information lost in sharding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P_CONCAT / P_FULL",
+   "value": 95.1,
+   "unit": "% of FULL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.1",
+   "note": null,
+   "quote": "with CONCAT performance averaging 95.1% of the FULL counterpart"
+  },
+  {
+   "claim": "Aptitude barely drops in multi-turn while unreliability more than doubles.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unreliability U90_10",
+   "value": 112,
+   "unit": "% increase in U",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.2",
+   "note": "Aptitude drop printed as 16% in Sec 6.2 and as -15% in the Fig 1 graphic.",
+   "quote": "unreliability skyrockets with an average increase of 112% (more than doubling)"
+  },
+  {
+   "claim": "Aptitude falls by 16% on average between FULL and SHARDED.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aptitude A90",
+   "value": 16,
+   "unit": "% drop in A",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.2",
+   "note": null,
+   "quote": "with an average drop of 16%"
+  },
+  {
+   "claim": "Best and worst of 10 runs on the same instruction differ by about 50 points in multi-turn for every model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unreliability U90_10",
+   "value": 50,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.2",
+   "note": null,
+   "quote": "performance degrading 50 percent points on average between the best and worst simulated run for a fixed instruction"
+  },
+  {
+   "claim": "Reasoning models (o3, Deepseek-R1) degrade like the others; their responses are longer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "response length",
+   "value": 33,
+   "unit": "% longer responses",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.1",
+   "note": null,
+   "quote": "on avg. 33% longer than non-reasoning LLMs"
+  },
+  {
+   "claim": "Gemini 2.5 Pro: FULL 97.4 on Code falls to 68.1 SHARDED.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 cell values; column order read as Code, Database, Actions, Data-to-text, Math, Summary because headers are scrambled in the text.",
+   "where": "Table 1",
+   "note": "Column labels not recoverable from the extracted text; the Code mapping is inferred.",
+   "table": "Table 1, row 2.5-Pro, FULL then SHARDED first column: 97.4 and 68.1"
+  },
+  {
+   "claim": "Smaller models (Llama-3.1-8B, OLMo-2-13B, Claude 3 Haiku) lose more under CONCAT than larger ones, read as less robust to rephrasing.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 6.1",
+   "note": null,
+   "quote": "smaller models (Llama3.1-8B-Instruct, OLMo-2-13B, Claude 3 Haiku) have more pronounced CONCAT degradations (86-92)"
+  },
+  {
+   "claim": "Any conversation with two or more turns of underspecification triggers the loss; giving everything at once (1 shard) is the only effective fix.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "shards (threshold)",
+   "baseline_value": null,
+   "n": 2,
+   "setup": "Gradual sharding: 31 instructions (Appendix K also says eight instructions with eight shards, then 31 and 248), 1 to 8 shards, 10 simulations each, GPT-4o and GPT-4o-mini only.",
+   "where": "Sec 6.3",
+   "note": "Appendix K sentence 'a total of eight instructions across three tasks' conflicts with '31 instructions' in the next lines; 31 x 8 = 248 instructions.",
+   "quote": "any conversation that involves underspecification and occurs in two or more turns leads to models getting lost in conversation"
+  },
+  {
+   "claim": "SNOWBALL (turn-level repetition) recovers only part of the FULL-to-SHARDED loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code, Database, Math, Actions; GPT-4o and GPT-4o-mini; N=10; RECAP appended to SHARDED logs, SNOWBALL simulated from scratch.",
+   "where": "Sec 7.1",
+   "note": "Table 2 rows: GPT-4o-mini 86.8, 84.4, 50.4, 66.5, 61.8; GPT-4o 93.0, 90.9, 59.1, 76.6, 65.3. Headers are lost in the text; the order FULL, CONCAT, SHARDED, RECAP, SNOWBALL is inferred. Recovering (61.8-50.4)/(86.8-50.4) gives about 31%, not 15-20%, so the 15-20% definition is unclear.",
+   "quote": "it can mitigate the FULL-to-SHARDED performance deterioration by 15-20%"
+  },
+  {
+   "claim": "RECAP and SNOWBALL results for GPT-4o: SHARDED 59.1, RECAP 76.6, SNOWBALL 65.3 (FULL 93.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, GPT-4o; column order inferred.",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row 4o, columns 93.0 / 90.9 / 59.1 / 76.6 / 65.3"
+  },
+  {
+   "claim": "Lowering temperature to 0 helps single-turn reliability by 50-80% but barely helps SHARDED; about 30 unreliability remains at T=0 for both user and assistant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "U90_10",
+   "value": 30,
+   "unit": "unreliability points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "40 instructions (10 each Code, Database, Actions, Math), GPT-4o and GPT-4o-mini, 20 runs per condition, assistant and user temperature each in {0, 0.5, 1}.",
+   "where": "Sec 7.2",
+   "note": "Table 3 at AT=0.0, UT=0.0 prints 30.5 (4o-mini) and 29.7 (4o).",
+   "quote": "Even when both the user and assistant temperatures are set to 0.0, there remains a large unreliability of around 30%."
+  },
+  {
+   "claim": "Single-turn unreliability drop with temperature reduction is 50-80%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above, FULL and CONCAT rows.",
+   "where": "Sec 7.2",
+   "note": null,
+   "quote": "with a drop in unreliability (U 90",
+   "table": "Table 3, FULL row: 4o-mini 16.0 / 15.0 / 6.8, 4o 17.8 / 8.0 / 2.8 at AT=1.0 / 0.5 / 0.0"
+  },
+  {
+   "claim": "Conversations whose first answer attempt comes in the last 20% of turns score twice as high as those answering in the first 20%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "P",
+   "value": 30.9,
+   "unit": "P, first-attempt in first 20% of turns",
+   "baseline_value": 64.4,
+   "n": null,
+   "setup": "Code and Math only (other four tasks attempt from turn 1), all 15 models, SHARDED. Observational binning.",
+   "where": "Appendix F.1",
+   "note": "Table 6 Average row: 30.9, 40.5, 51.7, 60.4, 64.4.",
+   "quote": "conversations with the first attempt being made in the first 20% of conversations achieve a score of 30.9, less than half of the 64.4"
+  },
+  {
+   "claim": "Final SHARDED answer attempts are 20-300% longer than FULL/CONCAT ('answer bloat').",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code, Database, Data-to-text, Summary extracted answer attempts; growth shown on three of the four tasks.",
+   "where": "Appendix F.2",
+   "note": "Fig 9 FULL/CONCAT reference lengths: Code 706/639, Database 118/126, Data-to-text 195/190, Summary 1429/1432 chars.",
+   "quote": "tend to be 20-300% longer than the solutions generated in the FULL and CONCAT settings"
+  },
+  {
+   "claim": "Correct SHARDED Code solutions are 27% longer than correct FULL ones (850 vs 668 characters).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 850,
+   "unit": "characters",
+   "baseline_value": 668,
+   "n": null,
+   "setup": "Code, score 100.0 only.",
+   "where": "Appendix F.2",
+   "note": null,
+   "quote": "correct programs obtained from SHARDED setting are on average 850 characters long, which is 27% more characters than the correct solutions generated in the FULL setting (668 characters on average)"
+  },
+  {
+   "claim": "Citations skew to first and last turns: in eighth-turn summaries 20% cite turn-8 documents vs 8% for turns 2 and 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20,
+   "unit": "% of citations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summary task, averaged over 15 LLMs (OLMo2 and Phi-4 have no Summary scores in Table 1, so the 15 is doubtful). Model-level analysis not given.",
+   "where": "Appendix F.3",
+   "note": "Called 'loss-in-middle-turns'.",
+   "quote": "In eighth-turn summaries, 20% of citations are to documents introduced in turn 8, compared to 8% from turn 2 and 3 (150% difference)."
+  },
+  {
+   "claim": "Longer assistant responses go with lower scores on five of six tasks (Actions is the exception).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quintiles of mean per-turn response length within each (LLM, instruction) pair, SHARDED.",
+   "where": "Appendix F.4",
+   "note": null,
+   "quote": "performance is 10-50% higher in simulated conversations with shortest response length, compared to conversations with longest response length",
+   "table": "Table 7, row Average: 40.7, 40.8, 40.1, 38.6, 35.6"
+  },
+  {
+   "claim": "Translation does not degrade when sharded, because it is episodic (each shard adds sentences to translate).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o-mini and GPT-4o, 30 documents, 10 sentences, 5 shards of 2 sentences.",
+   "where": "Sec 7.3",
+   "note": "BLEU may miss document-level nuance (authors).",
+   "quote": "with BLEU scores being within 10% difference of each other in all settings",
+   "table": "Table 4, rows 4o-mini 41.7 / 43.4 / 42.1; 4o 35.9 / 38.5 / 40.9 (FULL, CONCAT, SHARDED; order inferred)"
+  },
+  {
+   "claim": "Simulator errors are rare: under 5% of inspected conversations, under 2% disadvantage the assistant.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "% conversations disfavouring assistant",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual annotation of simulated SHARDED conversations on Actions, Code, Math, Database; user simulator, strategy classifier, answer extractor.",
+   "where": "Sec 3.2; Appendix D",
+   "note": "Table 5 caption says 100 conversations; Appendix D text says 200; Sec 3.2 says 'several hundred'.",
+   "quote": "occurred in less than 5% of inspected conversations and that these errors disfavored the assistant model in less than 2% of the conversations",
+   "table": "Table 5, column All Tasks: Overall Success 97.8, Strategy Accuracy 95.2, Extraction Success 97.0, Shard Fully Revealed 96.0, Shard Contextualized 98.4"
+  },
+  {
+   "claim": "The authors propose a reliability target for LLM builders: multi-turn U below 15 at T=1.0.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 15,
+   "unit": "U90_10 points (threshold)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A proposed target, not a measurement.",
+   "where": "Sec 7.2",
+   "note": null,
+   "quote": "have small unreliability (U 90"
+  },
+  {
+   "claim": "Estimated cost of the main simulations was about $5,000.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5000,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main experiment: 600 sharded instructions over six tasks, 15 LLMs, FULL/CONCAT/SHARDED, N=10 simulations per model and type, T=1.0.",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "We estimate the total cost of conducting simulations to be around $5,000."
+  }
+ ],
+ "limits": [
+  "Fully automated, LLM-simulated user; authors say conversations are not representative of human-AI conversation and the degradation is likely an underestimate of real-world unreliability.",
+  "Shards are minimal and one is revealed per turn, which the authors admit can look adversarial; the final turn always completes the specification.",
+  "Analytical tasks only; creative or open-ended tasks untested.",
+  "English text only, no other languages or modalities.",
+  "Explanations of the drop (premature answers, bloat, verbosity, middle-turn loss) are correlational analyses of logs; the causal mechanisms are stated as hypotheses.",
+  "Remedies (RECAP, SNOWBALL, temperature) tested on only GPT-4o and GPT-4o-mini; gradual sharding likewise two models.",
+  "No confidence intervals or significance tests; N=10 per cell.",
+  "Closed-API model versions (2024-2025 snapshots) have since been superseded, so the absolute numbers have dated.",
+  "Reasoning-model max tokens raised to 10,000; no study of larger thinking budgets."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "sharded instruction",
+   "definition": "a set of smaller instructions that jointly deliver the same information as the original instruction; shard 1 states the high-level intent",
+   "where": "Sec 1, 3.1"
+  },
+  {
+   "term": "aptitude (A90)",
+   "definition": "an estimate of a model's 90th percentile score on a given instruction, a best-case metric",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "unreliability (U90_10)",
+   "definition": "the gap between the 90th and 10th percentile scores for an instruction",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "Lost in Conversation",
+   "definition": "when LLMs take a wrong turn in multi-turn conversation, they get lost and do not recover",
+   "where": "Sec 1"
+  },
+  {
+   "term": "answer bloat",
+   "definition": "answer attempts grow longer across turns because the LLM keeps relying on its earlier assumptions",
+   "where": "Appendix F.2"
+  },
+  {
+   "term": "loss-in-middle-turns",
+   "definition": "lost-in-the-middle occurring across conversation turns: first and last turns weigh more than middle ones",
+   "where": "Appendix F.3"
+  },
+  {
+   "term": "CONCAT / RECAP / SNOWBALL",
+   "definition": "CONCAT lists all shards in one turn; RECAP adds a final turn restating all shards; SNOWBALL restates all revealed shards at every turn",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Herlihy et al., On overcoming miscalibrated conversational priors in LLM-based chatbots",
+   "year": 2024,
+   "arxiv": "2406.01633",
+   "relation": "uses-method",
+   "note": "seven-class response strategy taxonomy and the finding that underspecification is prevalent",
+   "quote": null
+  },
+  {
+   "work": "HumanEval",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "Code instructions",
+   "quote": null
+  },
+  {
+   "work": "LiveCodeBench",
+   "year": 2024,
+   "arxiv": "2403.07974",
+   "relation": "uses-data",
+   "note": "Code instructions",
+   "quote": null
+  },
+  {
+   "work": "Spider",
+   "year": 2018,
+   "arxiv": "1809.08887",
+   "relation": "uses-data",
+   "note": "Database instructions",
+   "quote": null
+  },
+  {
+   "work": "Berkeley Function Calling Leaderboard",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Actions instructions",
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "Math instructions",
+   "quote": null
+  },
+  {
+   "work": "ToTTo",
+   "year": 2020,
+   "arxiv": "2004.14373",
+   "relation": "uses-data",
+   "note": "Data-to-text instructions",
+   "quote": null
+  },
+  {
+   "work": "Summary of a Haystack",
+   "year": 2024,
+   "arxiv": "2407.01370",
+   "relation": "uses-data",
+   "note": "Summary instructions and Joint Score metric",
+   "quote": null
+  },
+  {
+   "work": "MT-bench and follow-ups (MT-bench-101, MT-Eval, MultiChallenge, MINT)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "contradicts",
+   "note": "authors argue episodic multi-turn tasks overestimate multi-turn performance",
+   "quote": "we find that episodic tasks overestimate LLM performance in multi-turn conversations"
+  },
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "loss-in-middle-turns is the multi-turn analogue",
+   "quote": null
+  },
+  {
+   "work": "Zhong et al., Semantic evaluation for text-to-SQL with distilled test suites",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SQL execution-match evaluation",
+   "quote": null
+  },
+  {
+   "work": "Chang et al., ChatBench",
+   "year": 2025,
+   "arxiv": "2504.07114",
+   "relation": "related",
+   "note": "human reveals the whole instruction only 34% of the time",
+   "quote": null
+  },
+  {
+   "work": "GPT-4o, GPT-4.1, o3, Claude 3/3.7, Gemini 2.5, Llama 3.x/4, OLMo-2, Phi-4, Command-A, DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "15 LLMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "we simulate single- and multi-turn conversations for six generation tasks... Aptitude is defined as performance in best-case conversation simulation, and unreliability as the gap between best- and worst-case performance.",
+   "page": 1,
+   "why": "One image of the headline: small aptitude loss, large unreliability rise."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Sharded Conversation Simulation Diagram.",
+   "page": 4,
+   "why": "Shows the user simulator, strategy classifier, answer extractor and evaluator loop."
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Conversation simulation types based on sharded instructions (FULL, CONCAT, SHARDED, RECAP, SNOWBALL).",
+   "page": 5,
+   "why": "Shows how each condition releases the shards."
+  },
+  {
+   "figure": "Figure 6",
+   "caption": "(a) aptitude and unreliability on a box-plot, (b) reliability results for 15 LLMs, (c) gradual sharding results.",
+   "page": 9,
+   "why": "Per-model A and U in FULL, CONCAT, SHARDED, and the 1-to-8 shard curve."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Averaged Performance (P) of LLMs on six tasks, FULL, CONCAT, SHARDED.",
+   "page": 8,
+   "why": "The main per-task, per-model results."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.2",
+   "snippet": "P = sum(S_i)/N;  A90 = percentile90(S);  U90_10 = percentile90(S) - percentile10(S)",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix M",
+   "snippet": "Just to reiterate:\\n - [past utterance 1]\\n- [past utterance 2]\\n\\n Also,\\n[current utterance]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1, Figure 6b/6c, Table 2, 3, 4, 6 and 7 are column-scrambled in the cached text; headers were lost, so column orders are inferred and flagged in notes.",
+  "Internal inconsistencies: average drop printed as -39% (abstract, Sec 6.1), -35% (Fig 1 caption), 25 points of 90 (Sec 1); aptitude drop 16% (Sec 6.2) vs -15% (Fig 1); inspection set is 100 (Table 5), 200 (App D) or 'several hundred' (Sec 3.2); per-task instruction counts sum to 627 against the stated 600; gradual sharding is 31 instructions or 'eight instructions'; the 15-model Summary analysis includes models with no Summary scores.",
+  "Sec 3.2 contains a text glitch 'simulatesouthworth2023developingd'; harmless.",
+  "No embedded instructions found in the PDF text."
+ ]
 }

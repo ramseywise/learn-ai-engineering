@@ -1,0 +1,527 @@
+{
+ "schema": 1,
+ "key": "2503.09573",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/arriola-2025-block-diffusion.pdf",
+ "bib": {
+  "title": "Block Diffusion: Interpolating Between Autoregressive and Diffusion Language Models",
+  "authors": [
+   "Marianne Arriola",
+   "Aaron Kerem Gokaslan",
+   "Justin T. Chiu",
+   "Zhihan Yang",
+   "Zhixuan Qi",
+   "Jiaqi Han",
+   "Subham Sekhar Sahoo",
+   "Volodymyr Kuleshov"
+  ],
+  "first_author": "Arriola",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2503.09573",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 98874,
+  "chars_total": 98874,
+  "engine": "pymupdf",
+  "skipped": "Appendix A/B derivations and sample text skimmed; references skimmed."
+ },
+ "type": "empirical",
+ "question": "Can a language model interpolate between autoregressive and discrete diffusion to get arbitrary-length generation, KV caching and better perplexity than prior diffusion models?",
+ "hypothesis": "Gradient variance is a key contributor to the perplexity gap between diffusion and AR models; data-driven clipped noise schedules reduce it.",
+ "contributions": [
+  "Block discrete diffusion LMs: autoregressive over blocks, discrete diffusion within each block; variable length and KV caching.",
+  "Custom training algorithms using the whole batch of tokens (vectorized, single forward pass).",
+  "Identify gradient variance as limiting factor and propose data-driven clipped noise schedules.",
+  "New state-of-the-art perplexity among discrete diffusion models."
+ ],
+ "method": {
+  "summary": "Block diffusion LM: sequence split into blocks of L' tokens; p(x)=prod over blocks of a masked-diffusion conditional given previous blocks, parameterised by one transformer with block-causal attention over noisy+clean concatenation. A base model is pretrained with L'=L then finetuned per block size with a learned clipped mask-rate range.",
+  "task": "language modeling (likelihood) and unconditional generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LM1B",
+    "role": "both",
+    "size": "65B tokens, 73 epochs",
+    "split": "test split for perplexity",
+    "source": "Chelba et al. 2014",
+    "preprocessing": "bert-base-uncased tokenizer, context 128, sequences concatenated and wrapped to 128 (not padded)"
+   },
+   {
+    "name": "OpenWebText",
+    "role": "both",
+    "size": "524B tokens, 60 epochs",
+    "split": "last 100k documents held out for validation",
+    "source": "Gokaslan et al. 2019",
+    "preprocessing": "GPT2 tokenizer, context 1024, concatenated and wrapped; no BOS/EOS injected"
+   },
+   {
+    "name": "PTB, Wikitext, Lambada, AG News, Pubmed, Arxiv",
+    "role": "eval",
+    "size": null,
+    "split": "validation, zero-shot",
+    "source": "Radford et al. 2019 benchmark",
+    "preprocessing": "sequences wrapped to 1024, no EOS between"
+   }
+  ],
+  "models": [
+   {
+    "name": "BD3-LM",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "diffusion transformer with rotary embeddings, block-causal attention, no timestep conditioning",
+    "init_from": "base BD3-LM pretrained with L'=L (850K steps) then finetuned",
+    "tokenizer": "bert-base-uncased (LM1B); GPT2 (OWT)",
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "128 (LM1B); 1024 (OWT)",
+    "other": {
+     "block sizes": "L' in {4, 8, 16} (also 128, 1)"
+    }
+   },
+   {
+    "name": "AR, SEDD, MDLM",
+    "role": "baseline",
+    "params": "110M",
+    "architecture": "same transformer as Sahoo et al. 2024a",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": null,
+    "other": {
+     "note": "retrained with wrapping (and without BOS/EOS on OWT) for fairness"
+    }
+   },
+   {
+    "name": "SSD-LM",
+    "role": "baseline",
+    "params": "400M",
+    "architecture": "Gaussian-diffusion semi-AR, L'=25",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain tokens": "122B"
+    }
+   }
+  ],
+  "training": {
+   "objective": "masked-diffusion NELBO per block (Eq 8) with clipped mask-rate schedule 1-alpha_t ~ U[beta,omega]",
+   "optimizer": "AdamW",
+   "lr": "3e-4",
+   "lr_schedule": "constant after warmup",
+   "warmup": "0 to 3e-4 over 2.5K gradient updates",
+   "batch_size": 512,
+   "steps": "850K base (L'=L) + 150K finetune per block size",
+   "epochs": "73 (LM1B), 60 (OWT)",
+   "tokens": "65B (LM1B), 524B (OWT)",
+   "seq_len": "128 (LM1B), 1024 (OWT)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "3090, A5000, A6000 and A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "schedule search": "grid search over beta, omega every validation epoch (~5K updates) minimising Var of NELBO",
+    "sampler for t": "low-discrepancy (Kingma et al. 2021)"
+   }
+  },
+  "inference": {
+   "decoding": "block-wise diffusion sampling with KV cache; first-hitting sampler, 64-bit Gumbel; MDLM block-wise decoding with stride 512 for L=2048",
+   "temperature": null,
+   "top_p": "0.9 (BD3-LM, AR, MDLM); 0.99 (SEDD); 0.95 (SSD-LM)",
+   "max_tokens": "until EOS or mean entropy of last 256-token chunk < 4",
+   "samples": "300 samples (Gen PPL, Table 7); 500 documents (Table 6)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "T": "5K diffusion steps (BD3-LM, MDLM); 1K (SSD-LM, SEDD); 25 for SSD-LM matched-NFE",
+    "GPT2-Large sliding window stride": "512 tokens for samples >1024"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Test perplexity",
+     "definition": "exp of NELBO per token under uniformly sampled mask rates; upper bound for diffusion",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Generative perplexity",
+     "definition": "perplexity of samples under GPT2-Large",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "NFEs",
+     "definition": "number of function evaluations",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "Var NELBO",
+     "definition": "variance of NELBO estimator across batches and t",
+     "unit": "variance",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "AR",
+    "SEDD",
+    "MDLM",
+    "D3PM",
+    "Transformer-X",
+    "SSD-LM"
+   ],
+   "protocol": "Single Monte Carlo estimate of t with low-discrepancy sampler; no seeds or significance tests stated; low-entropy samples regenerated for Gen PPL."
+  },
+  "availability": {
+   "code": "https://github.com/kuleshov-group/bd3lms",
+   "weights": "released on project page m-arriola.com/bd3lms",
+   "data": "LM1B, OWT public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BD3-LM with block size 4 reaches the best diffusion test perplexity on OWT, still behind AR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "<=20.73",
+   "unit": "PPL",
+   "baseline_value": "17.54 (AR)",
+   "n": null,
+   "setup": "110M-parameter transformer trained on OpenWebText for 524B tokens (850K base steps + 150K finetune steps), context 1024, GPT2 tokenizer; AR 17.54, MDLM <=22.98, SEDD <=24.10",
+   "quote": null,
+   "table": "Table 4, row BD3-LMs, L'=4",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On LM1B BD3-LM L'=4 gets perplexity <=28.23 versus MDLM <=31.78 and AR 22.83.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "<=28.23",
+   "unit": "PPL",
+   "baseline_value": "22.83 (AR Transformer)",
+   "n": null,
+   "setup": "110M-parameter transformer trained on LM1B for 65B tokens, context 128 (wrapped), bert-base-uncased tokenizer",
+   "quote": null,
+   "table": "Table 3, row L' = 4",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Up to 13% perplexity improvement over MDLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "13",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110M-parameter transformer trained on LM1B for 65B tokens, context 128 (wrapped), bert-base-uncased tokenizer; also OWT",
+   "quote": "BD3-LMs achieve up to 13% improvement in perplexity.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Single-token block (L'=1) diffusion under the plain NELBO has a 2-point perplexity gap to AR on LM1B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "<=25.56",
+   "unit": "PPL",
+   "baseline_value": "22.88",
+   "n": null,
+   "setup": "LM1B, 16B tokens, L'=1, linear schedule; AR 22.88",
+   "quote": null,
+   "table": "Table 1, row BD3-LM L' = 1, column PPL",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Full-masking schedule closes the L'=1 gap, matching AR perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "22.88",
+   "unit": "PPL",
+   "baseline_value": "22.88",
+   "n": null,
+   "setup": "LM1B, 16B tokens, L'=1, tuned (full-mask) schedule",
+   "quote": null,
+   "table": "Table 1, row + tuned schedule, column PPL",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Variance of the training objective after 328M tokens drops from 1.52 (NELBO) to 0.11 (full masking).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.11",
+   "unit": "Var of L_BD",
+   "baseline_value": "1.52",
+   "n": null,
+   "setup": "L'=1, LM1B",
+   "quote": "while training on the NELBO results in a variance of 1.52, training under full masking reduces the variance to 0.11",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Generative perplexity under GPT2-Large, L=1024: BD3-LM L'=4 25.7 vs MDLM 46.8, SEDD 52.0, AR 14.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generative perplexity (GPT2-Large)",
+   "value": "25.7",
+   "unit": "Gen. PPL",
+   "baseline_value": "14.1 (AR)",
+   "n": null,
+   "setup": "300 samples, OWT models 110M/524B tokens, T=5K steps, nucleus p=0.9; NFEs 1K",
+   "quote": null,
+   "table": "Table 7, row BD3-LMs L' = 4, column L = 1024 Gen. PPL",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "At L=2048 BD3-LM L'=4 reaches Gen. PPL 23.6 versus MDLM 41.3 and AR 13.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generative perplexity",
+   "value": "23.6",
+   "unit": "Gen. PPL",
+   "baseline_value": "13.2 (AR)",
+   "n": null,
+   "setup": "300 samples, L=2048, NFEs 2K",
+   "quote": null,
+   "table": "Table 7, row BD3-LMs L' = 4, column L = 2048 Gen. PPL",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "SSD-LM (400M params) with T=1K steps/block gets Gen. PPL 37.2 but needs 40K NFEs; at T=25 its Gen. PPL is 281.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generative perplexity",
+   "value": "37.2",
+   "unit": "Gen. PPL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L=1024, SSD-LM L'=25, 122B pretraining tokens",
+   "quote": null,
+   "table": "Table 7, row SSD-LM L' = 25, column L = 1024 Gen. PPL",
+   "note": "Table text layout is ambiguous: 281.3 row is the T=25 / ~1K NFE SSD-LM row.",
+   "where": "Table 7"
+  },
+  {
+   "claim": "BD3-LM L'=16 generates sequences up to 9982 tokens versus SEDD max 1024.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9982",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 samples from OWT models; BD3-LM median 798",
+   "quote": null,
+   "table": "Table 6, row BD3-LM L' = 16, column Max # tokens",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Vectorized training gives 20-25% speed-up over two forward passes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20-25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "training, concatenated clean+noisy input with efficient attention kernels",
+   "quote": "Our vectorized approach has 20-25% speed-up during training relative to performing two forward passes.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "Clipped noise schedules lower NELBO variance and perplexity relative to linear for L'=4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "29.21",
+   "unit": "PPL",
+   "baseline_value": "30.18 (linear)",
+   "n": null,
+   "setup": "LM1B, finetune on 3B tokens, L'=4, clipped U[0.45,0.95]; linear 30.18 (Var 23.45 vs 6.24)",
+   "quote": null,
+   "table": "Table 8, L' = 4, row U[0.45, 0.95], column PPL",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "FlexAttention custom mask gives up to ~5X speedup over naive scaled_dot_product_attention.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single A5000, L=1024, batch 16",
+   "quote": "up to ≈5X speedup over the naive native scaled_dot_product_attention implementation",
+   "table": null,
+   "note": null,
+   "where": "Fig 4 caption"
+  },
+  {
+   "claim": "Zero-shot (OWT-trained) BD3-LM L'=4 reaches Pubmed perplexity 42.52, below AR 48.59.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "42.52",
+   "unit": "PPL",
+   "baseline_value": "48.59 (AR)",
+   "n": null,
+   "setup": "zero-shot validation, OWT-trained 524B tokens",
+   "quote": null,
+   "table": "Table 5, row BD3-LM L' = 4, column Pubmed",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Training BD3-LMs is more expensive than regular diffusion training; vectorized algorithm keeps it within <2x of diffusion training speed.",
+  "Blocks are generated sequentially so may share the speed and controllability constraints of AR when blocks are small; optimal block size is task specific.",
+  "Still behind AR in perplexity (OWT 20.73 vs 17.54 best).",
+  "Only 110M-parameter models; no seeds or variance across runs reported; no wall-clock inference benchmark."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BD3-LM",
+   "definition": "Block Discrete Denoising Diffusion Language Model: autoregressive over blocks, discrete diffusion within each block",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "D3PM (Austin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "block diffusion builds on D3PM",
+   "quote": null
+  },
+  {
+   "work": "MDLM (Sahoo et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "masked diffusion objective and setup; baseline",
+   "quote": null
+  },
+  {
+   "work": "SEDD (Lou et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SSD-LM (Han et al.)",
+   "year": 2022,
+   "arxiv": "2210.17432",
+   "relation": "baseline",
+   "note": "Gaussian semi-AR block diffusion",
+   "quote": null
+  },
+  {
+   "work": "Zheng et al. first-hitting sampler",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sampler and 64-bit Gumbel fix",
+   "quote": null
+  },
+  {
+   "work": "Kingma et al. Variational diffusion models",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "low-discrepancy sampler",
+   "quote": null
+  },
+  {
+   "work": "FlexAttention (Dong et al.)",
+   "year": 2024,
+   "arxiv": "2412.05496",
+   "relation": "uses-method",
+   "note": "sparse attention kernel",
+   "quote": null
+  },
+  {
+   "work": "LM1B",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "OpenWebText",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Block diffusion sequentially generates blocks of tokens by performing diffusion within each block and conditioning on previous blocks.",
+   "page": 2,
+   "why": "Shows AR vs diffusion vs block diffusion trade-offs"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Train NLLs for modeling the per-token likelihood on LM1B.",
+   "page": 6,
+   "why": "Shows variance gap between NELBO and AR training"
+  }
+ ],
+ "code": [
+  {
+   "where": "Alg. 1/2, p.4",
+   "snippet": "Sample t1..tB ~ U[0,1]; x^b_tb ~ q_tb(.|x^b); (_,K,V) <- x_theta(x); x^b_logit <- x_theta^b(x^b_tb, K_1:b-1, V_1:b-1)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 7 SSD-LM rows are ambiguous in the text layout."
+ ]
+}

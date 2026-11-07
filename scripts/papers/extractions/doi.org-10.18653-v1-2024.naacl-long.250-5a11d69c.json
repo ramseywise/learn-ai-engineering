@@ -1,0 +1,616 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.naacl-long.250",
+ "pdf": "generative-ai/05-RL/sources/jung-2024-impossible-distillation-paraphrasing-summarization.pdf",
+ "bib": {
+  "title": "Impossible Distillation for Paraphrasing and Summarization: How to Make High-quality Lemonade out of Small, Low-quality Models",
+  "authors": [
+   "Jaehun Jung",
+   "Peter West",
+   "Liwei Jiang",
+   "Faeze Brahman",
+   "Ximing Lu",
+   "Jillian Fisher",
+   "Taylor Sorensen",
+   "Yejin Choi"
+  ],
+  "first_author": "Jung",
+  "year": 2024,
+  "venue": "Proceedings of NAACL 2024 (Long Papers), pages 4439-4454",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.naacl-long.250"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 65795,
+  "chars_total": 65795,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a small, off-the-shelf LM that cannot itself paraphrase or summarize be used to distill a high-quality dataset and task model, without a large LLM teacher or human references?",
+ "hypothesis": "Paraphrastic proximity: a sentence and its paraphrases lie in a proximal subspace of a pretrained LM distribution, so constrained sampling plus critic filtering yields good paraphrase pairs.",
+ "contributions": [
+  "Impossible Distillation framework: pair generation from GPT2-scale LM, critic filtering, student distillation, self-distillation",
+  "DIMPLE, a 4M-pair synthetic paraphrase corpus (2M general, 2M biomedical)",
+  "Impossible-T5 (770M) beating same-size models trained on larger corpora and ChatGPT-distilled data",
+  "Generalisation to syntax-controlled paraphrase and sentence summarization (DIMSUM, 1.5M pairs)"
+ ],
+ "method": {
+  "summary": "Sample 100 next sentences per LM-generated context from GPT2-XL or BioGPT-large, enumerate all pairs, filter with NLI, ROUGE-L, tree-edit-distance and an entailment-graph diversity filter, fine-tune T5-large on 400k pairs, then self-distill: the student paraphrases new teacher-sampled sentences, the same critics filter, and T5-large is fine-tuned again. Controllable variant takes the target constituency tree as extra input; summarization swaps in a one-way entailment filter and a compression-ratio filter.",
+  "task": "paraphrase generation (unconstrained and syntax-controlled) and sentence summarization via critic-filtered self-distillation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DIMPLE (generated)",
+    "role": "train",
+    "size": "4.2M pairs in Table 1 text (4M: 2M general, 2M biomedical); 400k filtered pairs for first student stage",
+    "split": null,
+    "source": "GPT2-XL (general) and BioGPT-large (biomedical) generations",
+    "preprocessing": "critic filtering (NLI tau 0.75, ROUGE-L <= 0.75, TED >= 12, diversity filter)"
+   },
+   {
+    "name": "DIMSUM (generated)",
+    "role": "train",
+    "size": "1.5M sentence-summary pairs, news and biomedical",
+    "split": null,
+    "source": "same teachers, summarization filters",
+    "preprocessing": "unidirectional NLI >= 0.75, compression ratio < 0.8, diversity filter"
+   },
+   {
+    "name": "MRPC",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Dolan and Brockett 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "ParaNMT-small",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kumar et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "ParaSCI-arXiv",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Dong et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Quora, MSCOCO",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "unsupervised paraphrase benchmarks (App B)",
+    "preprocessing": null
+   },
+   {
+    "name": "Gigaword",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Rush et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "XSUM contexts (Sec 2 analysis)",
+    "role": "eval",
+    "size": "1000 contexts, 1-5 sentences",
+    "split": null,
+    "source": "Narayan et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "ParaBank1 / ParaBank2 / ChatGPT-Para",
+    "role": "train",
+    "size": "57.0M / 19.7M / 2.1M",
+    "split": null,
+    "source": "baseline corpora",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT2-XL",
+    "role": "teacher",
+    "params": "1.5B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BioGPT-large",
+    "role": "teacher",
+    "params": "1.5B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5-large (Impossible-T5)",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "encoder-decoder",
+    "init_from": "T5-large pretrained (Raffel et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Roberta-large-WANLI",
+    "role": "judge",
+    "params": null,
+    "architecture": "NLI critic",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 (text-davinci-003)",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mode": "zero-shot"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mode": "zero-shot; 5-shot also in syntax-controlled task"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximise E[log p(y|x)] over filtered pairs (conditional log-likelihood); controllable model also conditions on tree t",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 Quadro RTX 8000 GPUs (whole distillation process)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "first_stage_pairs": "400k filtered pairs",
+    "self_distillation": "one round; student generates y for teacher-sampled x, same critics, fine-tune again"
+   }
+  },
+  "inference": {
+   "decoding": "Pair generation: nucleus sampling, k=100 samples per context; contexts sampled with top_p 0.9",
+   "temperature": "0.7 for pair generation; 1.0 for sampling contexts",
+   "top_p": "0.9 for contexts; pair-generation top_p not stated",
+   "max_tokens": null,
+   "samples": "100 next sentences per context",
+   "prompting": "General-domain contexts prompted with prefix such as 'New York (CNN) -'; BioGPT free-form; ChatGPT baselines zero-shot / 5-shot",
+   "retrieval": null,
+   "parameters": {
+    "tau_semantic": "0.75",
+    "tau_rouge": "0.75",
+    "tau_TED": "12",
+    "tau_comp_ratio": "0.8 (summarization)",
+    "context_sentences": "1-5",
+    "k": "100"
+   },
+   "other": {
+    "student decoding at eval": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "iBLEU",
+     "definition": "Sun and Zhou 2012 paraphrase BLEU penalising copy",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BERT-iBLEU (B-iB)",
+     "definition": "iBLEU variant using BERT similarity, Niu et al. 2021",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU / ROUGE-L",
+     "definition": "token overlap with reference",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "SimCSE cosine, 2/3-gram entropy, MSTTR, Jaccard, TED-3, TED-F",
+     "definition": "dataset semantic, lexical and syntactic diversity",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human Likert (fluent, faithful, dissimilar/concise)",
+     "definition": "3-level scale, six MTurk workers",
+     "unit": "1-3",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "T5ParaBank1",
+    "T5ParaBank2",
+    "T5ChatGPT-Para",
+    "GPT-3.5",
+    "ChatGPT",
+    "Referee",
+    "Copy-Input",
+    "Lag VAE",
+    "CGMH",
+    "UPSA",
+    "BT",
+    "Corruption",
+    "ConRPG",
+    "MCPG"
+   ],
+   "protocol": "Single reported numbers; no seeds or significance tests stated. Human eval: 200 MRPC paraphrases per model (100 summaries each for Table 5), six MTurk workers, Krippendorff alpha 0.62, $15/hour."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "Throughout the distillation process, we used 4 Quadro RTX 8000 GPUs.",
+    "where": "App A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Impossible-T5 gets higher BERT-iBLEU on MRPC than T5 trained on ChatGPT-Para.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERT-iBLEU",
+   "value": "67.1",
+   "unit": "points",
+   "baseline_value": "62.9",
+   "n": null,
+   "setup": "MRPC, unconstrained paraphrase generation, T5-large student (770M) trained on DIMPLE-derived data, GPT2-XL/BioGPT-large 1.5B teachers; baseline T5 fine-tuned on ChatGPT-Para",
+   "quote": null,
+   "table": "Table 2, row Impossible-T5, column MRPC B-iB (67.1) vs row T5ChatGPT-Para (62.9)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Removing self-distillation drops BERT-iBLEU by 3.1 on MRPC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERT-iBLEU drop",
+   "value": "3.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRPC ablation, student distilled from teacher only",
+   "quote": "BERT-iBLEU in this case degrades by 3.1 from Impossible-T5",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5, Table 6"
+  },
+  {
+   "claim": "Applying the same critics to ChatGPT-Para (about 340k pairs left) and training T5-large reaches 64.1 BERT-iBLEU on MRPC, below Impossible-T5 (67.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERT-iBLEU",
+   "value": "64.1",
+   "unit": "points",
+   "baseline_value": "67.1",
+   "n": null,
+   "setup": "MRPC ablation",
+   "quote": "In this configuration, BERT-iBLEU on MRPC marks 64.1, improving over the original ChatGPT-Para but still falling behind Impossible-T5.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "DIMPLE (4.2M pairs) beats ParaBank1 (57.0M) on all three diversity and similarity families; SimCSE cosine similarity 87.68 vs 81.77.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SimCSE cosine similarity",
+   "value": "87.68",
+   "unit": "points",
+   "baseline_value": "81.77 (ParaBank1)",
+   "n": null,
+   "setup": "Dataset comparison, Table 1 (cosine similarity, 2/3-gram entropy, MSTTR, Jaccard, TED-3, TED-F)",
+   "quote": null,
+   "table": "Table 1, row DIMPLE (4.2M), column Cosine Sim.",
+   "note": "Text says 'more than 13 times larger'; 57.0M/4.2M = 13.6.",
+   "where": "Table 1, Sec 4.1"
+  },
+  {
+   "claim": "DIMPLE syntactic diversity TED-F is 29.84 vs 20.15 for ChatGPT-Para.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TED-F",
+   "value": "29.84",
+   "unit": "points",
+   "baseline_value": "20.15 (ChatGPT-Para)",
+   "n": null,
+   "setup": "Table 1",
+   "quote": null,
+   "table": "Table 1, row DIMPLE (4.2M), column TED-F",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Syntax-controlled paraphrase on ParaNMT-small: Impossible-T5 iBLEU 11.2 vs ChatGPT 5-shot 9.0, but ROUGE-L is lower than the T5 ParaBank baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iBLEU",
+   "value": "11.2",
+   "unit": "points",
+   "baseline_value": "9.0 (ChatGPT 5-shot)",
+   "n": null,
+   "setup": "ParaNMT-small, syntactic exemplar parsed to tree and fed to model",
+   "quote": null,
+   "table": "Table 4, row Impossible-T5, column iBLEU",
+   "note": "Paper: 'outperforms baselines across all metrics except ROUGE-L'. TED-F (lower better) 8.5 vs T5ParaBank1 8.4, so not best on that either.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Sentence summarization on Gigaword: Impossible-T5 BERTScore-F1 85.1 vs ChatGPT 84.8, Referee 78.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERTScore-F1",
+   "value": "85.1",
+   "unit": "points",
+   "baseline_value": "84.8 (ChatGPT)",
+   "n": null,
+   "setup": "Gigaword; baselines ChatGPT, Referee (GPT3-distilled), T5 on ParaBank_summ",
+   "quote": null,
+   "table": "Table 5, row Impossible-T5, column B-F1",
+   "note": "ROUGE-L 30.3 is below ChatGPT 33.6. No ChatGPT-distilled summarizer baseline in Table 5.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Human evaluation on MRPC: Impossible-T5 faithfulness 2.55 vs ChatGPT 2.37 (3-level scale).",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "2.55",
+   "unit": "1-3 Likert",
+   "baseline_value": "2.37 (ChatGPT)",
+   "n": null,
+   "setup": "200 paraphrases per model, six MTurk workers, Krippendorff alpha 0.62",
+   "quote": null,
+   "table": "Table 3, row Impossible-T5, column Faithful",
+   "note": "Fluent: Impossible-T5 2.74 vs ChatGPT 2.8, so ChatGPT is more fluent.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "On ParaSCI-arXiv Impossible-T5 outperforms ChatGPT on BERT-iBLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BERT-iBLEU",
+   "value": "64.5",
+   "unit": "points",
+   "baseline_value": "63.9",
+   "n": null,
+   "setup": "ParaSCI-arXiv",
+   "quote": null,
+   "table": "Table 2, row Impossible-T5, column ParaSCI-arXiv B-iB (64.5) vs ChatGPT (63.9)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Copy-Input scores state-of-the-art BLEU and ROUGE-L, so these metrics fail to assess paraphrase quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, all three benchmarks",
+   "quote": "a simple baseline that merely copies the input as an output (Copy-Input) marks state-of-the-art on these metrics, across all datasets.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Paraphrastic proximity: sampled GPT2-XL continuations are more often mutually entailing with longer context and lower temperature; Self-BLEU stays around 32 for equivalent pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Self-BLEU",
+   "value": "32",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 XSUM contexts of 1-5 sentences, 100 next sentences each, NLI both-direction entailment",
+   "quote": "the average pair-wise Self-BLEU is around 32",
+   "table": null,
+   "note": "Text prints '32' with footnote marker 1 (extracted as '321'). Human MRPC paraphrases average 39.",
+   "where": "Sec 2, Fig 3"
+  },
+  {
+   "claim": "Unsupervised baselines on Quora: Impossible-T5 iBLEU 16.40 vs MCPG 13.58.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iBLEU",
+   "value": "16.40",
+   "unit": "points",
+   "baseline_value": "13.58 (MCPG)",
+   "n": null,
+   "setup": "Quora and MSCOCO, unsupervised methods",
+   "quote": null,
+   "table": "Table 8, row Impossible-T5, column Quora iBLEU",
+   "note": null,
+   "where": "Table 8"
+  }
+ ],
+ "limits": [
+  "T5 fine-tuning hyperparameters (lr, batch size, epochs, optimizer) are not stated",
+  "Only sentence-level paraphrasing and summarization tested",
+  "Filters are frozen off-the-shelf critics; may not exist for other tasks",
+  "Distillation can inherit teacher bias and toxicity in open-ended settings",
+  "BLEU/ROUGE-L fail on paraphrase: Copy-Input is best",
+  "No seeds or significance tests; code and data release not stated in the text"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "paraphrastic proximity",
+   "definition": "LM's tendency to encode paraphrases on a proximal subspace in its distribution",
+   "where": "Fig 1, Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Symbolic Knowledge Distillation",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "West et al. 2022 framework of distilling via a textual dataset",
+   "quote": null
+  },
+  {
+   "work": "ParaBank / ParaBank2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Hu et al. 2019a,b back-translation corpora",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT-Para",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Vorobev et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "Referee",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Sclar et al. 2022 summarizer distilled from GPT3",
+   "quote": null
+  },
+  {
+   "work": "ConRPG",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Meng et al. 2021 indirectly uses paraphrastic proximity",
+   "quote": null
+  },
+  {
+   "work": "MCPG",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Chen et al. 2022b",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "student model",
+   "quote": null
+  },
+  {
+   "work": "GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "teacher",
+   "quote": null
+  },
+  {
+   "work": "BioGPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "biomedical teacher, Luo et al.",
+   "quote": null
+  },
+  {
+   "work": "WANLI",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Liu et al. 2022a NLI critic",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of IMPOSSIBLE DISTILLATION.",
+   "page": 3,
+   "why": "Four-stage pipeline in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "How paraphrastic are GPT2-XL generations?",
+   "page": 3,
+   "why": "Equivalence ratio vs context length and temperature"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF text extracted as 'Self-BLEU is around 321' where 1 is a footnote marker",
+  "Paper does not print arXiv id"
+ ]
+}

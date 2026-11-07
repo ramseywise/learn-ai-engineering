@@ -1,0 +1,466 @@
+{
+ "schema": 1,
+ "key": "1312.5602",
+ "pdf": "generative-ai/05-RL/sources/mnih-2013-dqn-atari.pdf",
+ "bib": {
+  "title": "Playing Atari with Deep Reinforcement Learning",
+  "authors": [
+   "Volodymyr Mnih",
+   "Koray Kavukcuoglu",
+   "David Silver",
+   "Alex Graves",
+   "Ioannis Antonoglou",
+   "Daan Wierstra",
+   "Martin Riedmiller"
+  ],
+  "first_author": "Mnih",
+  "year": 2013,
+  "venue": "preprint",
+  "arxiv": "1312.5602",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 36029,
+  "chars_total": 36029,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a single convolutional network trained with a Q-learning variant learn control policies for Atari games directly from raw pixels?",
+ "hypothesis": "Deep learning's success on raw sensory input can carry over to RL if experience replay is used to handle correlated data and a shifting data distribution.",
+ "contributions": [
+  "A CNN (DQN) trained end to end from raw pixels with Q-learning and SGD",
+  "Q-learning with experience replay and minibatch updates",
+  "One architecture and hyperparameter set across seven Atari games, state of the art on six"
+ ],
+ "method": {
+  "summary": "A CNN with one output per action estimates Q from the last 4 preprocessed frames. It is trained online with RMSProp on minibatches sampled uniformly from a replay memory, with epsilon-greedy behaviour, on seven ALE games.",
+  "task": "Atari 2600 game playing from pixels (ALE)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Arcade Learning Environment: Beam Rider, Breakout, Enduro, Pong, Q*bert, Seaquest, Space Invaders",
+    "role": "both",
+    "size": "7 games; 210x160 RGB at 60Hz",
+    "split": "no train/test split; trained and evaluated per game",
+    "source": "ALE (Bellemare et al. 2013)",
+    "preprocessing": "RGB to gray-scale, downsample to 110x84, crop 84x84 playing area; stack last 4 frames; rewards clipped to +1/-1 in training only; frame skip k=4 (k=3 on Space Invaders)"
+   }
+  ],
+  "models": [
+   {
+    "name": "DQN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CNN: conv 16 8x8 stride 4 + ReLU; conv 32 4x4 stride 2 + ReLU; FC 256 ReLU; linear output per action (4 to 18 actions)",
+    "init_from": "inferred: random weights, from Algorithm 1 'Initialize action-value function Q with random weights'",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 conv + 1 FC hidden + linear output",
+    "hidden": "256",
+    "heads": null,
+    "context": "inferred: input 84x84x4 (4 stacked frames)",
+    "other": {
+     "input": "84x84x4"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Squared TD error (y - Q(phi,a;theta))^2, y = r + gamma max_a' Q(phi',a';theta), y = r at terminal; previous-iteration parameters fixed in the loss (Eq 2-3)",
+   "optimizer": "RMSProp",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "Fig 2 caption: one epoch is 50000 minibatch weight updates or roughly 30 minutes of training time",
+   "seeds": null,
+   "other": {
+    "total_frames": "10 million",
+    "replay_memory": "1 million most recent frames",
+    "epsilon": "annealed linearly 1 to 0.1 over first million frames, then 0.1",
+    "gamma": null,
+    "rmsprop_decay": null,
+    "frame_skip": "k=4, k=3 on Space Invaders (the only per-game difference)",
+    "reward_clipping": "+1/-1 training only",
+    "epochs_plotted": "100 epochs in Fig 2 (read from Fig 2)"
+   }
+  },
+  "inference": {
+   "decoding": "epsilon-greedy with epsilon=0.05 at evaluation",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "eval_steps": "'a fixed number of steps', value not stated; Fig 2 uses 10000 steps"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "average total reward per episode",
+     "definition": "Total game score per episode averaged, from epsilon-greedy 0.05 policy run for a fixed number of steps",
+     "unit": "game score",
+     "higher_is_better": true
+    },
+    {
+     "name": "average max predicted Q",
+     "definition": "Mean over a held-out set of states (collected by a random policy before training) of max_a Q",
+     "unit": "Q value",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random",
+    "Sarsa (Bellemare et al. 2013)",
+    "Contingency (Bellemare et al. 2012)",
+    "HNeat Best and HNeat Pixel (Hausknecht et al. 2013)",
+    "Human expert (median reward after about two hours of play)"
+   ],
+   "protocol": "Single run per game as reported; no seeds, variance or significance test stated. HNeat and DQN Best are single best episodes."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "ALE (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "we used the RMSProp algorithm with minibatches of size 32",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DQN beats all previous learned approaches on six of seven games and a human expert on three.",
+   "kind": "measured",
+   "source": null,
+   "metric": "games beaten",
+   "value": 3,
+   "unit": "games of 7",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seven ALE games, DQN vs Sarsa, Contingency, HNeat, human",
+   "quote": "outperforms all previous approaches on six of the games and surpasses a human expert on three of them",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "DQN average score on Breakout is 168 vs human 31.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 168,
+   "unit": "game score",
+   "baseline_value": 31,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Breakout",
+   "quote": null,
+   "table": "Table 1, row DQN, column Breakout",
+   "note": "baseline_value is the Human row",
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Pong is 20 vs human -3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 20,
+   "unit": "game score",
+   "baseline_value": -3,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Pong",
+   "quote": null,
+   "table": "Table 1, row DQN, column Pong",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Enduro is 470 vs human 368.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 470,
+   "unit": "game score",
+   "baseline_value": 368,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Enduro",
+   "quote": null,
+   "table": "Table 1, row DQN, column Enduro",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Beam Rider is 4092 vs human 7456 (close to human, below it).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 4092,
+   "unit": "game score",
+   "baseline_value": 7456,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Beam Rider",
+   "quote": null,
+   "table": "Table 1, row DQN, column B. Rider",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Q*bert is 1952 vs human 18900.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 1952,
+   "unit": "game score",
+   "baseline_value": 18900,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Q*bert",
+   "quote": null,
+   "table": "Table 1, row DQN, column Q*bert",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Seaquest is 1705 vs human 28010.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 1705,
+   "unit": "game score",
+   "baseline_value": 28010,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Seaquest",
+   "quote": null,
+   "table": "Table 1, row DQN, column Seaquest",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average score on Space Invaders is 581 vs human 3690.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 581,
+   "unit": "game score",
+   "baseline_value": 3690,
+   "n": null,
+   "setup": "Table 1 (upper), average total reward, epsilon-greedy 0.05 for a fixed number of steps (number of steps not stated), 7 Atari games, Space Invaders",
+   "quote": null,
+   "table": "Table 1, row DQN, column S. Invaders",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Best single DQN episode on Breakout is 225, Pong 21, Enduro 661.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best-episode reward",
+   "value": 225,
+   "unit": "game score",
+   "baseline_value": 52,
+   "n": null,
+   "setup": "Table 1 lower, single best episode, Breakout; DQN uses epsilon 0.05, HNeat deterministic",
+   "quote": null,
+   "table": "Table 1, row DQN Best, column Breakout",
+   "note": "baseline_value is HNeat Best on Breakout",
+   "where": "Table 1"
+  },
+  {
+   "claim": "DQN average beats the HNeat best episode everywhere except Space Invaders (581 vs 1720).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average total reward",
+   "value": 581,
+   "unit": "game score",
+   "baseline_value": 1720,
+   "n": null,
+   "setup": "DQN average vs HNeat Best, Space Invaders",
+   "quote": "on all the games, except Space Invaders,\nnot only our max evaluation results (row 8), but also our average results (row 4) achieve better\nperformance",
+   "table": null,
+   "note": "Check: DQN average Beam Rider 4092 > HNeat Best 3616, Breakout 168>52, Enduro 470>106, Pong 20>19, Q*bert 1952>1800, Seaquest 1705>920 consistent with the claim.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Replay memory holds one million most recent frames; trained 10 million frames total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training frames",
+   "value": 10,
+   "unit": "million frames",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All seven games",
+   "quote": "We trained for a total of 10 million frames and used a replay\nmemory of one million most recent frames.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Average predicted Q rises smoothly while average reward per episode is noisy; no divergence seen.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Breakout and Seaquest, Fig 2; Q tracked on a fixed set of states collected with a random policy",
+   "quote": "we did not experience any\ndivergence issues in any of our experiments",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Rewards clipped to +1/-1 in training only.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All games, training only; evaluation on unmodified games",
+   "quote": "we\nﬁxed all positive rewards to be 1 and all negative rewards to be −1, leaving 0 rewards unchanged.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "Learning rate, gamma, RMSProp decay and number of evaluation steps are not stated.",
+  "Only seven games; DQN is far below human on Q*bert, Seaquest, Space Invaders (long-horizon strategies).",
+  "Reward clipping cannot distinguish reward magnitudes.",
+  "Uniform replay sampling and overwriting with recent transitions ignore transition importance; authors suggest prioritized sweeping.",
+  "No convergence guarantees; stability shown empirically only.",
+  "Human scores are the authors' own and are much higher than those in Bellemare et al.",
+  "No target network (introduced in the later Nature version)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Deep Q-Network (DQN)",
+   "definition": "convolutional networks trained with our approach",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "behaviour distribution",
+   "definition": "a probability distribution over sequences s and actions a",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Q-learning (Watkins and Dayan)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "algorithm adapted to a CNN with SGD",
+   "quote": null
+  },
+  {
+   "work": "Reinforcement learning for robots using neural networks (Lin)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "experience replay",
+   "quote": null
+  },
+  {
+   "work": "TD-Gammon (Tesauro)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "starting-point architecture",
+   "quote": null
+  },
+  {
+   "work": "Neural fitted Q iteration (Riedmiller)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most similar prior work; batch RPROP updates",
+   "quote": null
+  },
+  {
+   "work": "The Arcade Learning Environment (Bellemare et al.)",
+   "year": 2013,
+   "arxiv": "1207.4708",
+   "relation": "uses-data",
+   "note": "games, Sarsa baseline, evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "Investigating contingency awareness using Atari 2600 games (Bellemare et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Contingency",
+   "quote": null
+  },
+  {
+   "work": "A neuro-evolution approach to general Atari game playing (Hausknecht et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HNeat",
+   "quote": null
+  },
+  {
+   "work": "ImageNet classification with deep CNNs (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPU convolution implementation requiring square inputs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Average reward per episode and average max predicted Q on Breakout and Seaquest over training epochs",
+   "page": 7,
+   "why": "Shows noisy reward vs smooth Q"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Predicted value function for a 30 frame segment of Seaquest",
+   "page": 7,
+   "why": "Value jumps when an enemy appears and peaks before torpedo hit"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Average total reward and best-episode reward for each method on seven games",
+   "page": 8,
+   "why": "Main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "Deep Q-learning with Experience Replay: store (phi_t,a_t,r_t,phi_t+1) in D; sample random minibatch; y_j = r_j (terminal) or r_j + gamma max_a' Q(phi_j+1,a';theta); gradient step on (y_j - Q(phi_j,a_j;theta))^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Algorithm 1 text prints 'max_a Q*(phi(st),a;theta)' for action selection; figure plots lost to text extraction. No embedded instructions."
+ ]
+}

@@ -1,19 +1,734 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.04104",
  "pdf": "generative-ai/05-RL/sources/hafner-2023-mastering-diverse-domains-through-world.pdf",
  "bib": {
   "title": "Mastering Diverse Domains through World Models",
-  "first_author": "Danijar Hafner",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Danijar Hafner",
+   "Jurgis Pasukonis",
+   "Jimmy Ba",
+   "Timothy Lillicrap"
+  ],
+  "first_author": "Hafner",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2301.04104",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "80befaad-6201-423f-891b-a3823d7ee887"
+  "at": "2026-11-07",
+  "chars_read": 84660,
+  "chars_total": 84660,
+  "engine": "pymupdf",
+  "skipped": "Per-task learning-curve axis labels (figure text) skimmed; per-game table rows read only for summary rows and headers. Figures not inspected. PDF is arXiv v2 dated 17 Apr 2024."
  },
- "legacy_report": "SOURCE: \"Mastering Diverse Domains through World Models\" (DreamerV3), Danijar Hafner, Jurgis Pasukonis, Jimmy Ba, Timothy Lillicrap (Google DeepMind; University of Toronto). Preprint.\n- Version: the p1 stamp reads \"arXiv:2301.04104v2 [cs.AI] 17 Apr 2024\", so this is v2, not v1. PDF metadata creation date is 2024-04-18. The repo filename says 2023.\n- Venue: the PDF names no journal or conference. Confirm any venue outside this file. I did not fill it from memory.\n\nCOVERAGE: 85,073 of 85,073 chars; 40 of 40 pages. That covers Methods (pp17-22), Supplementary (pp23-40) and all results tables. References were skimmed for origins. Figures were read from captions only; images were not inspected.\n\nCLAIMS\n- claim: One configuration beats specialised methods across 8 domains.\n  number: over 150 tasks; 8 domains\n  setup: Atari, ProcGen, DMLab, Minecraft, Atari100k, Proprio Control, Visual Control, BSuite. Table 4 values are fixed, but see the first LIMITS item: model size and replay ratio vary.\n  quote: \"We evaluate the generality of Dreamer across 8 domains—with over 150 tasks—under fixed hyper-parameters.\" / \"The same values are used across all benchmarks, including proprioceptive and visual inputs, continuous and discrete actions, and 2D and 3D domains.\"\n  where: p8; p21 Table 4\n- claim: Every Dreamer run on Minecraft found a diamond within budget, from scratch; no baseline did.\n  number: 100% vs 0% of agents; 100M env steps; 10 seeds\n  setup: sparse +1 for 12 milestones, each once per episode; episodes up to 36000 steps; baselines PPO, and IMPALA and Rainbow tuned by the authors.\n  quote: \"over the course of training, 100% of Dreamer agents obtain one or more diamonds regardless of episode boundaries, compared to 0% of the baseline agents.\"\n  where: p24 Fig 9; seeds p19\n- claim: Per episode, diamonds remain rare, and the authors say so.\n  number: 0.4% of episodes\n  setup: at the 100M step budget.\n  quote: \"At the budget, Dreamer obtains diamonds in 0.4% of episodes, leaving a challenge for future research.\"\n  where: p24\n- claim: Minecraft final return is highest for Dreamer.\n  number: 9.1 vs IMPALA 7.1, Rainbow 6.3, PPO 5.1\n  setup: 100M env steps, Table 5.\n  quote: \"Dreamer 9.1 / IMPALA 7.1 / Rainbow 6.3 / PPO 5.1\" (table rows)\n  where: p24\n- claim: Compute is far lower than VPT's, though VPT is a different setup (behavioural cloning plus RL finetuning).\n  number: 1 GPU for 9 days vs 720 GPUs for 9 days\n  setup: Table 2 lists 8.9 GPU days for Minecraft.\n  quote: \"using 720 GPUs for 9 days. In comparison, Dreamer uses the MineRL competition action space to autonomously learn to collect diamonds from sparse rewards using 1 GPU for 9 days, without human data.\"\n  where: p11\n- claim: Atari: slightly ahead of MuZero, well ahead of PPO.\n  number: gamer median 830% vs MuZero 693%, PPO 180%; gamer mean 3381 vs 3054 vs 892; record mean capped 38 vs 34 vs 21\n  setup: 57 games, 200M steps, sticky actions.\n  quote: \"Gamer median (%) 0 100 3716 180 693 830\"\n  where: p26 Table 6\n- claim: ProcGen: a tie with PPG rather than a clear win.\n  number: 66.01 vs PPG 64.89, PPO 42.80, original PPO 41.16\n  setup: 16 games, 50M steps, hard mode, 1 seed.\n  quote: \"Normalized mean 41.16 42.80 64.89 66.01\"; text says \"matches the tuned expert algorithm PPG\"\n  where: p28 Table 7; p8\n- claim: DMLab: beats baselines given 10x the data, but not the 10B-step scores.\n  number: human mean capped 71.4 at 100M; IMPALA 66.3 at 1B, 85.1 at 10B; R2D2+ 85.4 at 10B; PPO 35.9 and IMPALA 31.0 at 100M\n  setup: 30 tasks.\n  quote: \"amounting to a data-efficiency gain of over 1000%. We note that these baselines were not designed for data-efficiency\"; \"Human mean capped (%) 85.4 85.1 66.3 31.0 35.9 71.4\"\n  where: p8; p30 Table 8\n- claim: Atari100k: leads on mean among comparable protocols, but not on median and not over EfficientMuZero.\n  number: gamer mean 125 vs IRIS 105, TWM 96; median 49 vs TWM 51; EffMuZero 190 / 109\n  setup: 26 games, 400K env steps. Table 10 notes protocol differences (planning, early resets, resolution).\n  quote: \"Gamer score (%) 33 190 62 105 96 125\" / \"Gamer median (%) 13 109 40 29 51 49\"\n  where: p32 Tables 9-10\n- claim: Control suites: new state of the art on task mean.\n  number: Proprio 871 vs DMPO 801, D4PG 792, PPO 94 (500K steps, 18 tasks). Visual 861 vs DrQ-v2 770, CURL 479, PPO 94 (1M steps, 20 tasks)\n  setup: action repeat 2; both use the 12M model.\n  quote: \"Task mean 94 771 801 792 871\"; \"Task mean 94 81 479 770 861\"\n  where: p34; p36\n- claim: BSuite: best overall and on scale and memory, but near zero on exploration.\n  number: task mean 66 vs Boot DQN 60; scale 0.82 vs 0.60; exploration 0.01 vs Boot DQN 0.68\n  setup: 23 environments, 468 configurations, 10 seeds.\n  quote: \"Task mean (%) 3 49 32 54 60 66\"; \"Exploration 0.00 0.00 0.00 0.00 0.68 0.01\"\n  where: p10; p38 Table 13\n- claim: Replay ratio is the compute-versus-data dial: higher ratios predictably raise performance and lower the data needed.\n  number: replay ratio 32 with action repeat 4 and batch 16 × 64 gives 1 gradient step per 128 env steps, 1.5M updates over 200M steps; ratios used range 32 to 1024\n  setup: scaling results from Crafter and one DMLab task only, read from Fig 6 curves; no numeric table.\n  quote: \"a replay ratio of 32 on Atari with action repeat of 4 and batch shape 16 × 64 corresponds to 1 gradient step every 128 env steps, or 1.5M gradient steps over 200M env steps.\"\n  where: p18; p9-10; p19 Table 2\n- claim: Bigger models score higher and need less environment interaction.\n  number: 12M to 400M parameters, 6 sizes\n  setup: same Crafter and DMLab experiment; all hyperparameters fixed across sizes.\n  quote: \"we train 6 model sizes ranging from 12M to 400M parameters\" / \"increasing the model size directly translates to both higher task performance and a lower data requirement.\"\n  where: p10; p20\n- claim: All robustness techniques help on average; each is critical only on some tasks. The KL objective matters most, then return normalisation and symexp twohot.\n  number: 14 tasks\n  setup: curves only (Fig 6a, Fig 17); no numeric effect sizes in the text.\n  quote: \"we ablate the robustness techniques and learning signals on a diverse set of 14 tasks\" / \"each individual technique is critical on a subset of tasks but may not affect performance on other tasks.\"\n  where: p10\n- claim: Performance rests mainly on the unsupervised reconstruction signal, not on reward and value gradients.\n  number: none\n  setup: 14 tasks, gradient-stopping ablation.\n  quote: \"Dreamer rests predominantly on the unsupervised objective of its world model.\"\n  where: p10\n\nMECHANISMS (explicitly requested)\n- Symlog: predict symlog(y), read out with symexp. Used on vector observations (encoder inputs and decoder targets). It avoids large-target divergence, truncation and normalisation non-stationarity. \"symlog transformations avoid truncating large targets, introducing non-stationary from normalization, or adjusting network weights when new extreme values are detected\" (p7, citation digits stripped).\n- Symexp two-hot: reward predictor and critic output a softmax over symexp(−20...+20) bins, trained by cross entropy on two-hot targets, \"decoupling the size of the gradients from the size of the targets\" (p7).\n- Percentile return normalisation: fixed entropy scale 3×10⁻⁴. Returns are divided by max(1, S), where S is an EMA (0.99) of the 95th minus 5th percentile, so \"we only scale down large return magnitudes but leave small returns below the threshold of L = 1 untouched\" (p6). Authors \"did not find stable hyperparameters across domains\" for advantage normalisation, standard-deviation normalisation or constrained entropy (p6).\n- KL balance and free bits: βdyn = 1, βrep = 0.1, losses clipped below 1 nat. \"combining free bits with a small representation loss resolves this dilemma, allowing for fixed hyperparameters across domains\" (p5). 1% uniform mix on categoricals (p5, p18).\n- RSSM (p3-4, p18): sequence model ht = f(ht−1, zt−1, at−1) is a block GRU with 8 blocks. Encoder zt ~ q(zt | ht, xt); dynamics predictor ẑt ~ p(ẑt | ht); reward, continue and decoder heads read from (ht, zt). Latents are vectors of softmax categoricals with straight-through gradients. CNNs handle images, MLPs handle vectors.\n- Imagined rollouts (p5-6): the actor and critic \"learn behaviors purely from abstract trajectories of representations predicted by the world model.\" Rollouts start from replayed representations, horizon T = 16 in the text. The critic learns the distribution of bootstrapped λ-returns (λ = 0.95, γ = 0.997), plus a replay-trajectory critic loss at scale 0.3, and is regularised towards an EMA copy (decay 0.98). The actor uses Reinforce for both discrete and continuous actions. In the environment: \"sampling from the actor network without lookahead planning.\"\n- Other fixed values (p21): LaProp, learning rate 4×10⁻⁵, AGC(0.3), batch 16 × 64, replay capacity 5×10⁶, uniform replay with an online queue.\n\nLIMITS\nConceded by the authors, or visible in the tables:\n- \"Fixed hyperparameters\" covers Table 4, not everything. Table 2 varies model size (200M, but 12M on both control suites), replay ratio (32 to 1024, \"chosen to fit the step budget of each benchmark\"), action repeat and env instances. A course note should not say \"nothing changes per domain\".\n- Minecraft is an author-modified setup, and its protocol is self-established. They remove early termination on diamond ore, hold jump for 200ms, follow the \"block breaking setting of prior work\", use a flat categorical action space and abstract crafting actions, and add ±0.01 heart rewards (\"did not investigate whether this is helpful\"). \"we establish the evaluation protocol\" (p19). So \"from scratch\" means no human data or curricula, not raw default MineRL.\n- \"First\" has a qualifier in the paper: Voyager reaches similar technology-tree depth via LLM API calls on a scripted layer (p11). VPT obtains diamonds with human data.\n- Seeds: 5 per benchmark, but \"1 seed for ProcGen due to computational constraints\" (p19). Curves show mean ± 1 std; no significance tests appear.\n- PPO was tuned by the authors (Acme implementation, discount matched to Dreamer). They validate it against ProcGen only. Other baselines are literature numbers, with protocol differences on Atari100k and a 10x data allowance on DMLab.\n- Uniform replay was chosen for ease even though prioritised replay \"improve[s] the performance of Dreamer\" (p18), so results are not maximal.\n- Weak tasks in the tables: Deep Sea 0.00; Venture 0; Pitfall 0; Skiing −29965, which is below the random score of −17098; Montezuma 1852 vs gamer 4753; Bigfish 8.62 vs PPG 31.26; Freeway at Atari100k 0.\n- Authors' bottom-line limit: 0.4% per-episode diamonds, \"leaving a challenge for future research.\"\n\nNot shown (my reading; the paper does not state these):\n- No real-robot or other real-world experiment. All domains are simulated or games, and \"practical applications\" is an aspiration.\n- No single world model across domains; that is named as future work (p11).\n- No unsupervised pretraining; \"could allow for future algorithm variants\" (p10).\n- No hyperparameter-sensitivity sweep for Table 4 values.\n- No numeric table for ablations or scaling; replay and size scaling rest on 2 tasks.\n- No claim about optimality, or about wins on every task.\n\nBUILDS ON (as printed):\n- Sutton 1991 (Dyna); Ha and Schmidhuber 2018 (World Models); Finn and Levine 2017\n- Hafner et al. 2018 (RSSM); Hafner et al. 2019 (DreamerV1); Hafner et al. 2020 (DreamerV2)\n- Kingma and Welling 2013 (VAE); Bengio et al. 2013 (straight-through); Kingma et al. 2016 (free bits)\n- Bellemare et al. 2017 (distributional RL); Schrittwieser et al. 2019 (MuZero; two-hot)\n- Williams 1992 (Reinforce); Williams and Peng 1991 (entropy)\n- Sutton and Barto 2018 (λ-returns); Webber 2012 (bi-symmetric log)\n- Schulman et al. 2017 (PPO)\n- Brock et al. 2021 (AGC); Ziyin et al. 2020 (LaProp); Van Keirsbilck et al. 2019 (block GRU); Cho et al. 2014 (GRU)\n- Guss et al. 2019 (MineRL); Kanitscheider et al. 2021; Baker et al. 2022 (VPT)\n\nCODE: The PDF has no code, only equations. It says a public implementation is \"available on the project website\" but prints no URL.\n- p7 Eq 9, verbatim extraction, parentheses lost: \"symlog(x) .= sign(x) ln |x| + 1 symexp(x) .= sign(x) exp(|x|) − 1\". Check the rendered page before copying.\n- p7 Eq 8: \"L(θ) .= 12  f (x, θ) − symlog(y)2 ˆy .= symexp f (x, θ)\".\n- p6 Eq 7: \"S .= EMA  Per(Rλt , 95) − Per(Rλt , 5), 0.99\".\n\nFIGURES:\n- Fig 3, p3: \"Training process of Dreamer\" shows world-model learning beside actor-critic learning in imagination. This is the best single explainer of the architecture.\n- Fig 1, p1: benchmark bars (\"Tuned experts / Unified configuration\") plus the Minecraft curve; gives the generality claim at a glance.\n- Fig 6, p9: ablations plus model-size and replay scaling; shows the compute-versus-data trade-off.\n- Fig 5, p8: fraction of agents reaching iron ingot, iron pickaxe and diamond. Pair it with Fig 9.\n- Fig 9, p24: per-episode item rates. It contrasts 100% of agents with 0.4% of episodes, which guards against misreading Fig 5.\n- Fig 4, p4: 5 context frames, then 45 open-loop predicted frames; makes \"imagination\" concrete.\n\nPROBLEMS:\n- Extraction: displayed equations lose brackets and subscripts; superscript citations fuse with text. Figure bar values are not extractable, so numbers above come from tables only.\n- Internal inconsistencies in the source:\n  - Imagination horizon is T = 16 on p5 but H = 15 in Table 4.\n  - Table 3 prints 1024 recurrent units for 12M, whereas 8d with d = 256 would be 2048.\n  - p8 says IMPALA and R2D2+ at 1B, but Table 8 labels its only R2D2+ column 10B (85.4). Fig 1 labels R2D2+ \"10x data\".\n  - Table 2's task counts sum to 191 (my arithmetic), consistent with \"over 150\".\n  - Typos in the source: \"synexp\", \"comntains\", \"world world\".\n- No embedded instructions found.\n- PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/05-RL/sources/hafner-2023-mastering-diverse-domains-through-world.pdf"
+ "type": "empirical",
+ "question": "Can one reinforcement learning algorithm with a single fixed hyperparameter configuration match or beat tuned specialist algorithms across many different domains, including collecting diamonds in Minecraft from scratch?",
+ "hypothesis": "A world-model agent with robustness techniques (symlog, free bits and KL balancing, percentile return normalization, twohot regression) can learn across domains without retuning.",
+ "contributions": [
+  "DreamerV3, a general algorithm with fixed hyperparameters that outperforms specialized methods across over 150 tasks",
+  "First algorithm to collect diamonds in Minecraft from scratch without human data or curricula",
+  "Robustness techniques: symlog, symexp twohot, KL balance with free bits, return normalization, 1% unimix",
+  "Scaling analysis: robust learning from 12M to 400M parameters and across replay ratios"
+ ],
+ "method": {
+  "summary": "DreamerV3 learns an RSSM world model from replayed experience and trains an actor and critic purely on imagined latent trajectories of the model; actions at environment time are sampled from the actor with no lookahead planning. One hyperparameter table is used across 8 benchmarks; compared against a tuned PPO with fixed hyperparameters and published expert results, plus tuned IMPALA and Rainbow on Minecraft.",
+  "task": "Reinforcement learning across control, games and Minecraft",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Atari (57 games, sticky actions)",
+    "role": "eval",
+    "size": "200M env steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ProcGen (16 games, hard, unlimited levels)",
+    "role": "eval",
+    "size": "50M env steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "DMLab (30 tasks)",
+    "role": "eval",
+    "size": "100M env steps; baselines up to 1B and 10B",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Minecraft Diamond (MineRL v0.4.4, Minecraft 1.11.2)",
+    "role": "eval",
+    "size": "100M env steps, episodes up to 36000 steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Atari100k (26 games)",
+    "role": "eval",
+    "size": "400K env steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "DMC Proprio Control (18 tasks, quadrupeds excluded)",
+    "role": "eval",
+    "size": "500K env steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "DMC Visual Control (20 tasks)",
+    "role": "eval",
+    "size": "1M env steps",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "BSuite (23 environments, 468 configurations)",
+    "role": "eval",
+    "size": "benchmark-defined",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Crafter and DMLab task for scaling",
+    "role": "eval",
+    "size": "up to 40M and 200M env steps (read from Fig 6)",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DreamerV3",
+    "role": "proposed",
+    "params": "12M, 25M, 50M, 100M, 200M, 400M (200M default; 12M on the two control suites)",
+    "architecture": "RSSM world model (GRU sequence model with 8 block-diagonal blocks, discrete categorical latents, CNN/MLP encoder and decoder), 3-layer MLP actor and critic, 1-layer MLP reward and continue predictors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "actor, critic, encoder, decoder MLPs: 3 layers; reward and continue: 1 layer",
+    "hidden": "256 / 384 / 512 / 768 / 1024 / 1536 (model dimension d, by size)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "recurrent_units": "8d: 1024, 3072, 4096, 6144, 8192, 12288",
+     "base_cnn_channels_and_codes_per_latent": "d/16: 16, 24, 32, 48, 64, 96",
+     "activation": "RMSNorm + SiLU",
+     "image_encoder": "stride-2 convs to 6x6 or 4x4, flattened"
+    }
+   },
+   {
+    "name": "PPO (Acme implementation, IMPALA network)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "IMPALA network",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hyperparameters": "Table 1: obs and reward normalization yes, reward clip 10 stddev, epoch batch 64x256, 3 epochs, minibatch 8, minibatch length 256, policy trust region 0.2, entropy 0.01, discount 0.997, GAE lambda 0.95, lr 3e-4, grad clip 0.5, Adam eps 1e-5"
+    }
+   },
+   {
+    "name": "IMPALA and Rainbow (Acme), Minecraft only",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same IMPALA network as PPO",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tuned": "learning rate and entropy regularizers (values not given)"
+    }
+   },
+   {
+    "name": "Published expert baselines (MuZero, Rainbow, IQN, PPG, IMPALA, R2D2+, SPR, IRIS, TWM, SimPLe, EfficientZero, D4PG, DMPO, MPO, DrQ-v2, CURL, Boot DQN)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "as published",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "World model: L = E[sum_t (1*L_pred + 1*L_dyn + 0.1*L_rep)] with symlog squared loss for decoder, symexp twohot for reward, logistic regression for continue, KL with free bits 1 nat; critic: maximum likelihood of lambda-returns (categorical, twohot) plus 0.3-weighted replay loss; actor: Reinforce surrogate with percentile return normalization and entropy 3e-4",
+   "optimizer": "LaProp (eps 1e-20, beta1 0.9, beta2 0.99) with Adaptive Gradient Clipping AGC(0.3, eps 1e-3)",
+   "lr": "4e-5",
+   "lr_schedule": "none: no hyperparameter annealing",
+   "warmup": null,
+   "batch_size": "16 sequences x 64 steps (B=16, T=64)",
+   "steps": "Per benchmark env steps (Table 2): Minecraft 100M, DMLab 100M, ProcGen 50M, Atari 200M, Atari100K 400K, Proprio 500K, Visual 1M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "64 (batch length); imagination horizon 15 (Table 4), text says prediction horizon T = 16",
+   "precision": null,
+   "weight_decay": "none",
+   "dropout": "none",
+   "regularisation": "1% unimix on categoricals, free nats 1, critic EMA regularizer (scale 1, decay 0.98), zero-initialised output layers of reward predictor and critic; no prioritized replay",
+   "hardware": "1x Nvidia A100 per agent",
+   "compute": "GPU days by benchmark (Table 2): Minecraft 8.9, DMLab 2.9, ProcGen 16.1, Atari 7.7, Atari100K 0.1, BSuite 0.5, Proprio 0.3, Visual 0.1",
+   "wall_clock": null,
+   "seeds": "5 per benchmark for Dreamer and PPO; 1 for ProcGen; 10 for BSuite; 10 for Minecraft",
+   "other": {
+    "replay_capacity": "5e6",
+    "replay": "uniform buffer with online queue; latent states stored and written back",
+    "replay_ratio_per_benchmark": "Minecraft 32, DMLab 32, ProcGen 64, Atari 32, Atari100K 128, BSuite 1024, Proprio 512, Visual 512",
+    "env_instances": "16 default; 64 Minecraft; 1 BSuite and Atari100K",
+    "action_repeat": "Minecraft 1, DMLab 4, ProcGen 1, Atari 4, Atari100K 4, BSuite 1, Proprio 2, Visual 2",
+    "gamma": "0.997",
+    "lambda": "0.95",
+    "entropy_eta": "3e-4",
+    "retnorm": "S = EMA(Per95 - Per5, 0.99), limit L=1",
+    "twohot_bins": "symexp(-20..+20)",
+    "critic_loss_scales": "beta_val 1, beta_repval 0.3, beta_pol 1",
+    "gradient_steps_example": "replay ratio 32 on Atari with action repeat 4 and batch 16x64 = 1 gradient step per 128 env steps, 1.5M steps over 200M env steps"
+   }
+  },
+  "inference": {
+   "decoding": "sample actions from the actor policy, no lookahead planning",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "see training.seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Atari gamer-normalized mean/median",
+     "definition": "score normalized by random and human reference values from Table 6",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Minecraft return",
+     "definition": "+1 per each of 12 milestones, once per episode, at 100M env steps; also fraction of agents/episodes with each item",
+     "unit": "return",
+     "higher_is_better": true
+    },
+    {
+     "name": "DMC return",
+     "definition": "return, 0-1000 scale",
+     "unit": "return",
+     "higher_is_better": true
+    },
+    {
+     "name": "ProcGen normalized mean",
+     "definition": "normalized score as in ProcGen protocol",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "DMLab human mean capped",
+     "definition": "human-normalized score capped at human level",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BSuite task mean",
+     "definition": "score per environment averaged over configurations",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PPO (Acme, fixed hyperparameters)",
+    "IMPALA and Rainbow (Minecraft, tuned)",
+    "MuZero, Rainbow, IQN (Atari)",
+    "PPG (ProcGen)",
+    "IMPALA, R2D2+ (DMLab)",
+    "EfficientZero, IRIS, TWM, SPR, SimPLe (Atari100k)",
+    "D4PG, DMPO, MPO, DDPG (Proprio)",
+    "DrQ-v2, CURL, SAC (Visual)",
+    "Boot DQN, DQN, AC-RNN (BSuite)"
+   ],
+   "protocol": "Mean over seeds with one standard deviation shaded; published baselines taken from the literature; DMLab baselines get 10x data (1B steps); 1 seed on ProcGen; Minecraft protocol set by the authors."
+  },
+  "availability": {
+   "code": "public implementation on the project website (no URL printed in the text)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 4, row Learning rate: 4 x 10-5"
+   },
+   {
+    "field": "training.other.replay_ratio_per_benchmark",
+    "quote": null,
+    "where": "Table 2, column Replay Ratio"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Every Dreamer run on Minecraft Diamond discovered a diamond within 100M steps; no baseline did.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agents obtaining a diamond",
+   "value": "100%",
+   "unit": "%",
+   "baseline_value": "0%",
+   "n": "10 seeds",
+   "setup": "Minecraft Diamond from sparse rewards, no human data, default hyperparameters, 10 seeds, 100M env steps; baselines PPO, IMPALA, Rainbow (IMPALA and Rainbow tuned by the authors)",
+   "note": null,
+   "where": "Fig 9 caption, p24",
+   "quote": "over the course of training, 100% of Dreamer agents obtain one or more diamonds regardless of episode boundaries, compared to 0% of the baseline agents."
+  },
+  {
+   "claim": "At the 100M step budget Dreamer gets a diamond in few episodes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "episodes with diamond at budget",
+   "value": "0.4",
+   "unit": "% of episodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft Diamond, 100M env steps; different metric from Fig 5",
+   "note": null,
+   "where": "Fig 9 caption, p24",
+   "quote": "At the budget, Dreamer obtains diamonds in 0.4% of episodes, leaving a challenge for future research."
+  },
+  {
+   "claim": "Minecraft Diamond return at 100M steps is highest for Dreamer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "episode return at 100M env steps",
+   "value": "9.1",
+   "unit": "return (12 milestones, +1 each)",
+   "baseline_value": "IMPALA 7.1, Rainbow 6.3, PPO 5.1",
+   "n": null,
+   "setup": "Minecraft Diamond, 100M env steps, protocol set by the authors",
+   "note": null,
+   "where": "Table 5, p24",
+   "table": "Table 5, row Dreamer, column Return"
+  },
+  {
+   "claim": "Dreamer scale: one hyperparameter configuration over 8 domains and 150+ tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "domains / tasks",
+   "value": "8 domains, over 150 tasks",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari, ProcGen, DMLab, Minecraft, Atari100k, Proprio Control, Visual Control, BSuite; model size and replay ratio differ per benchmark (Table 2)",
+   "note": null,
+   "where": "Results, p8",
+   "quote": "We evaluate the generality of Dreamer across 8 domains—with over 150 tasks—under fixed hyper-parameters."
+  },
+  {
+   "claim": "Atari 57 games at 200M steps: Dreamer gamer median beats MuZero and PPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer median",
+   "value": "830",
+   "unit": "%",
+   "baseline_value": "MuZero 693, PPO 180",
+   "n": null,
+   "setup": "57 Atari games, sticky actions, 200M env steps, 5 seeds; Dreamer 200M-parameter model",
+   "note": null,
+   "where": "Table 6, p26",
+   "table": "Table 6, row Gamer median (%), column Dreamer"
+  },
+  {
+   "claim": "Atari gamer mean at 200M steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer mean",
+   "value": "3381",
+   "unit": "%",
+   "baseline_value": "MuZero 3054, PPO 892",
+   "n": null,
+   "setup": "57 Atari games, 200M env steps",
+   "note": null,
+   "where": "Table 6, p26",
+   "table": "Table 6, row Gamer mean (%), column Dreamer"
+  },
+  {
+   "claim": "ProcGen normalized mean: Dreamer matches PPG and beats PPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized mean",
+   "value": "66.01",
+   "unit": null,
+   "baseline_value": "PPG 64.89, PPO 42.80, Original PPO 41.16",
+   "n": null,
+   "setup": "16 ProcGen games, hard difficulty, unlimited levels, 50M steps, 1 seed for Dreamer and PPO",
+   "note": "The authors ran 1 seed on ProcGen for compute reasons.",
+   "where": "Table 7, p28",
+   "table": "Table 7, row Normalized mean, column Dreamer"
+  },
+  {
+   "claim": "DMLab at 100M steps: Dreamer exceeds IMPALA at 1B steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human mean capped",
+   "value": "71.4",
+   "unit": "%",
+   "baseline_value": "IMPALA 1B 66.3",
+   "n": null,
+   "setup": "30 DMLab tasks; Dreamer 100M steps vs IMPALA 1B (66.3), 10B (85.1), R2D2+ 10B (85.4); IMPALA 100M 31.0, PPO 100M 35.9",
+   "note": null,
+   "where": "Table 8, p30",
+   "table": "Table 8, row Human mean capped (%), column Dreamer"
+  },
+  {
+   "claim": "Atari100k: Dreamer gamer mean beats IRIS, TWM, SPR, SimPLe but not EfficientZero under its different protocol.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamer mean",
+   "value": "125",
+   "unit": "%",
+   "baseline_value": "EffMuZero 190, IRIS 105, TWM 96, SPR 62, SimPLe 33",
+   "n": null,
+   "setup": "26 Atari games, 400K env steps (100K agent steps), 1 env instance, replay ratio 128, 0.1 GPU days",
+   "note": "Gamer median 49 for Dreamer vs 51 for TWM and 109 for EffMuZero (Table 10).",
+   "where": "Table 10, p32",
+   "table": "Table 10, row Gamer score (%), column Dreamer"
+  },
+  {
+   "claim": "Proprio Control: Dreamer task mean over D4PG, DMPO, DDPG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task mean",
+   "value": "871",
+   "unit": "return (0-1000)",
+   "baseline_value": "D4PG 792, DMPO 801, DDPG 771, PPO 94",
+   "n": null,
+   "setup": "18 proprioceptive DMC tasks, 500K env steps, 12M model",
+   "note": null,
+   "where": "Table 11, p34",
+   "table": "Table 11, row Task mean, column Dreamer"
+  },
+  {
+   "claim": "Visual Control: Dreamer task mean over DrQ-v2 and CURL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task mean",
+   "value": "861",
+   "unit": "return (0-1000)",
+   "baseline_value": "DrQ-v2 770, CURL 479, SAC 81, PPO 94",
+   "n": null,
+   "setup": "20 DMC tasks from pixels, 1M env steps, 12M model",
+   "note": null,
+   "where": "Table 12, p36",
+   "table": "Table 12, row Task mean, column Dreamer"
+  },
+  {
+   "claim": "BSuite task mean: Dreamer over Boot DQN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task mean",
+   "value": "66",
+   "unit": "%",
+   "baseline_value": "Boot DQN 60, DQN 54, PPO 49",
+   "n": null,
+   "setup": "23 BSuite environments, 468 configurations, 10 seeds",
+   "note": null,
+   "where": "Table 13, p38",
+   "table": "Table 13, row Task mean (%), column Dreamer"
+  },
+  {
+   "claim": "Dreamer scores near zero on BSuite exploration, where Boot DQN scores 0.68.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BSuite exploration category",
+   "value": "0.01",
+   "unit": null,
+   "baseline_value": "Boot DQN 0.68",
+   "n": null,
+   "setup": "BSuite exploration category",
+   "note": null,
+   "where": "Table 13, p38",
+   "table": "Table 13, row Exploration, column Dreamer"
+  },
+  {
+   "claim": "Ablations: all robustness techniques contribute; KL objective matters most, then return normalization and symexp twohot.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "14 tasks, Fig 6a/17; no numbers in text",
+   "note": null,
+   "where": "Results, p10",
+   "quote": "We observe that all robustness techniques contribute to performance, most notably the KL objective of the world model, followed by return normalization and symexp twohot regression for reward and value prediction."
+  },
+  {
+   "claim": "Dreamer relies predominantly on the unsupervised reconstruction loss rather than reward and value gradients.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Learning-signal ablation on 14 tasks, Fig 6b/18",
+   "note": null,
+   "where": "Results, p10",
+   "quote": "Dreamer rests predominantly on the unsupervised objective of its world model."
+  },
+  {
+   "claim": "Performance rises with model size from 12M to 400M and with replay ratio; larger models need less interaction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Crafter and one DMLab task, 6 model sizes, replay ratios 1 to 64, Fig 6c,d",
+   "note": null,
+   "where": "Results, p10",
+   "quote": "increasing the model size directly translates to both higher task performance and a lower data requirement."
+  },
+  {
+   "claim": "Compute: Dreamer uses 1 GPU for 9 days on Minecraft where VPT used 720 GPUs for 9 days (different setup: behavioural cloning plus RL finetuning).",
+   "kind": "reported",
+   "source": null,
+   "metric": "GPU count x days",
+   "value": "1 GPU for 9 days",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft diamond; VPT figure is as stated by the authors",
+   "note": "Table 2 lists 8.9 GPU days for Minecraft.",
+   "where": "Previous work, p11",
+   "quote": "using 1 GPU for 9 days, without human data."
+  }
+ ],
+ "limits": [
+  "Authors concede diamonds appear in only 0.4% of episodes at the 100M budget.",
+  "Model size (200M or 12M) and replay ratio vary by benchmark (Table 2), so 'fixed' refers to Table 4 hyperparameters only.",
+  "EfficientZero holds the Atari100k state of the art (gamer mean 190 vs 125) but uses online search and early resets, so the authors call comparison difficult.",
+  "DMLab baselines are compared at 1B steps against Dreamer at 100M, because 10B runs were infeasible.",
+  "ProcGen used 1 seed; Dreamer scores 0.01 on BSuite exploration versus 0.68 for Boot DQN.",
+  "Minecraft environment was modified from MineRL (early-termination removed, jump held 200ms) and evaluation protocol was set by the authors.",
+  "All experiments are simulators or games; none involve language models.",
+  "Text gives prediction horizon T=16 while Table 4 lists imagination horizon H=15."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "symlog",
+   "definition": "symlog(x) = sign(x) ln(|x|+1), with symexp as inverse; a bi-symmetric log transform for targets and inputs of unknown scale",
+   "where": "Robust predictions, p7"
+  },
+  {
+   "term": "symexp twohot loss",
+   "definition": "network outputs logits over exponentially spaced bins B = symexp(-20..+20) and trains on twohot targets with cross entropy",
+   "where": "p7"
+  },
+  {
+   "term": "free bits",
+   "definition": "clipping the dynamics and representation losses below 1 nat",
+   "where": "p5"
+  },
+  {
+   "term": "replay ratio",
+   "definition": "fraction of time steps trained on per time step collected from the environment, without action repeat",
+   "where": "Methods, p18"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dream to control (DreamerV1)",
+   "year": 2019,
+   "arxiv": "1912.01603",
+   "relation": "extends",
+   "note": "first generation, continuous control",
+   "quote": null
+  },
+  {
+   "work": "Mastering Atari with discrete world models (DreamerV2)",
+   "year": 2020,
+   "arxiv": "2010.02193",
+   "relation": "extends",
+   "note": "second generation, discrete latents",
+   "quote": null
+  },
+  {
+   "work": "Learning latent dynamics for planning from pixels (PlaNet, RSSM)",
+   "year": 2018,
+   "arxiv": "1811.04551",
+   "relation": "uses-method",
+   "note": "RSSM world model",
+   "quote": null
+  },
+  {
+   "work": "Dyna",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Sutton, imagined-experience idea",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "baseline",
+   "note": "PPO, Acme implementation",
+   "quote": null
+  },
+  {
+   "work": "MuZero",
+   "year": 2019,
+   "arxiv": "1911.08265",
+   "relation": "baseline",
+   "note": "Atari comparison",
+   "quote": null
+  },
+  {
+   "work": "Video pretraining (VPT)",
+   "year": 2022,
+   "arxiv": "2206.11795",
+   "relation": "baseline",
+   "note": "Minecraft diamonds with human data and 720 GPUs",
+   "quote": null
+  },
+  {
+   "work": "Phasic policy gradient",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ProcGen",
+   "quote": null
+  },
+  {
+   "work": "Efficient/Mastering Atari games with limited data (EfficientZero)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Atari100k",
+   "quote": null
+  },
+  {
+   "work": "Transformers are sample efficient world models (IRIS)",
+   "year": 2022,
+   "arxiv": "2209.00588",
+   "relation": "baseline",
+   "note": "Atari100k",
+   "quote": null
+  },
+  {
+   "work": "Recurrent experience replay (R2D2)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DMLab, IMPALA deep",
+   "quote": null
+  },
+  {
+   "work": "MineRL competition",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Minecraft environment basis; reference list prints arXiv 1904 only",
+   "quote": null
+  },
+  {
+   "work": "LaProp",
+   "year": 2020,
+   "arxiv": "2002.04839",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Adaptive gradient clipping (NF-Nets)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Brock et al.",
+   "quote": null
+  },
+  {
+   "work": "Voyager",
+   "year": 2023,
+   "arxiv": "2305.16291",
+   "relation": "related",
+   "note": "LLM agent reaching similar depth in tech tree via scripted API",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Benchmark summary. a, Using fixed hyperparameters across all domains, Dreamer outperforms tuned expert algorithms",
+   "page": 1,
+   "why": "one-page view of all 8 benchmarks"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Training process of Dreamer",
+   "page": 3,
+   "why": "world model and actor-critic imagination"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Fraction of trained agents that discover each of the three latest items in the Minecraft Diamond task",
+   "page": 8,
+   "why": "diamond discovery vs baselines"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Ablations and robust scaling of Dreamer",
+   "page": 9,
+   "why": "ablations, model size and replay ratio scaling"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Dreamer hyperparameters",
+   "page": 21,
+   "why": "the single shared configuration"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9, p7",
+   "snippet": "symlog(x) = sign(x) ln(|x| + 1);  symexp(x) = sign(x) (exp(|x|) - 1)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Old schema-0 extraction replaced. Figure axis text is interleaved with prose in the cached text. PDF is arXiv v2 (17 Apr 2024); no venue printed."
+ ]
 }

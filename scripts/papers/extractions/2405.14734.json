@@ -1,0 +1,778 @@
+{
+ "schema": 1,
+ "key": "2405.14734",
+ "pdf": "generative-ai/05-RL/sources/meng-2024-simpo.pdf",
+ "bib": {
+  "title": "SimPO: Simple Preference Optimization with a Reference-Free Reward",
+  "authors": [
+   "Yu Meng",
+   "Mengzhou Xia",
+   "Danqi Chen"
+  ],
+  "first_author": "Meng",
+  "year": 2024,
+  "venue": "NeurIPS 2024 (38th Conference on Neural Information Processing Systems)",
+  "arxiv": "2405.14734",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 101382,
+  "chars_total": 101382,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; qualitative example figures 9-11 not itemised"
+ },
+ "type": "empirical",
+ "question": "Can a preference-optimisation objective whose implicit reward is the length-normalised average log-likelihood, with no reference model and a target margin, beat DPO and its variants?",
+ "hypothesis": "DPO's reward (log ratio to a reference) is mismatched with the average log-likelihood used at generation, which may cause suboptimal performance; aligning them should help.",
+ "contributions": [
+  "SimPO: reference-free, length-normalised reward r=(beta/|y|) log pi(y|x) plus a target reward margin gamma in the Bradley-Terry objective",
+  "Comparison to DPO, RRHF, SLiC-HF, IPO, CPO, KTO, ORPO, R-DPO in four setups (Mistral/Llama-3, Base/Instruct) with per-method hyperparameter search",
+  "Analysis of length normalisation, margin, reward accuracy, KL and efficiency versus DPO",
+  "Gemma-2-9B-it-SimPO model topping AlpacaEval 2 and ranked first among <10B models on Chatbot Arena"
+ ],
+ "method": {
+  "summary": "Offline preference optimisation with loss -log sigma(beta/|yw| log pi(yw|x) - beta/|yl| log pi(yl|x) - gamma), no reference model. Trained on UltraFeedback preferences from Base (Zephyr-style SFT on UltraChat-200k) and Instruct (on-policy regenerated data scored by PairRM) starting points; evaluated on AlpacaEval 2, Arena-Hard and MT-Bench.",
+  "task": "offline preference optimisation / LLM alignment",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "UltraChat-200k",
+    "role": "train",
+    "size": null,
+    "split": "SFT for Base setups",
+    "source": "Ding et al. 2023 [25]",
+    "preprocessing": null
+   },
+   {
+    "name": "UltraFeedback",
+    "role": "train",
+    "size": null,
+    "split": "Base: original chosen/rejected; Instruct: prompts only, responses regenerated",
+    "source": "Cui et al. 2023 [23]",
+    "preprocessing": "Instruct setup: 5 responses per prompt from the SFT model at temperature 0.8, scored with llm-blender/PairRM; top-scoring is yw, lowest is yl; single pass, not iterative. Gemma 2 and Llama-3-Instruct v0.2 use RLHFlow/ArmoRM-Llama3-8B-v0.1 instead (up to 5 responses per prompt for Gemma)"
+   },
+   {
+    "name": "AlpacaEval 2",
+    "role": "eval",
+    "size": "805 examples",
+    "split": null,
+    "source": "Li et al. [55], Dubois et al. [28]",
+    "preprocessing": null
+   },
+   {
+    "name": "Arena-Hard v0.1",
+    "role": "eval",
+    "size": "500 examples",
+    "split": null,
+    "source": "Li et al. [54]",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": "80 examples",
+    "split": null,
+    "source": "Zheng et al. [99]",
+    "preprocessing": null
+   },
+   {
+    "name": "HF Open Leaderboard tasks (MMLU 5, ARC 25, HellaSwag 10, TruthfulQA 0, Winograd 5, GSM8K 5-shot)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "[9]",
+    "preprocessing": null
+   },
+   {
+    "name": "ZeroEval GSM and MMLU",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot",
+    "source": "ZeroEval repo",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral-7B-v0.1 (Base)",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sft": "trained on UltraChat-200k"
+    }
+   },
+   {
+    "name": "Meta-Llama-3-8B (Base)",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sft": "trained on UltraChat-200k"
+    }
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.2",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "off-the-shelf, treated as SFT model"
+    }
+   },
+   {
+    "name": "Meta-Llama-3-8B-Instruct",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "off-the-shelf, treated as SFT model"
+    }
+   },
+   {
+    "name": "Gemma-2-9B-it",
+    "role": "base",
+    "params": "9B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "llm-blender/PairRM",
+    "role": "reward",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RLHFlow/ArmoRM-Llama3-8B-v0.1",
+    "role": "reward",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 Turbo (GPT-4-Preview-1106)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_SimPO = -E log sigma( beta/|yw| log pi(yw|x) - beta/|yl| log pi(yl|x) - gamma )",
+   "optimizer": "Adam",
+   "lr": "SimPO: 3e-7 (Mistral-Base), 5e-7 (Mistral-Instruct), 6e-7 (Llama-3-Base), 1e-6 (Llama-3-Instruct); baselines searched over [3e-7, 5e-7, 6e-7, 1e-6]; SFT stage 2e-5",
+   "lr_schedule": "cosine with 10% warmup steps",
+   "warmup": "10% of steps",
+   "batch_size": "128 (searched [32, 64, 128])",
+   "steps": null,
+   "epochs": "1 for preference optimisation (searched [1, 2, 3]); 1 for SFT",
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "none (no KL term)",
+   "hardware": "8xH100 GPUs, alignment-handbook repo",
+   "compute": null,
+   "wall_clock": "Fig 5c: DPO 73 min, SimPO 60 min (Llama-3-Base, 8xH100)",
+   "seeds": null,
+   "other": {
+    "SimPO beta,gamma": "Mistral-Base 2.0/1.6; Mistral-Instruct 2.5/0.3; Llama-3-Base 2.0/1.0; Llama-3-Instruct 2.5/1.4 (Table 8)",
+    "SimPO search": "beta in [2.0, 2.5], gamma in [0.3, 0.5, 1.0, 1.2, 1.4, 1.6] (Table 7)",
+    "Llama-3-Instruct v0.2": "beta=10, gamma=3, other hyperparameters unchanged",
+    "Gemma-2-9B": "lr 6e-7, 8e-7 (released), 1e-6 tried; beta and gamma not stated",
+    "baseline search": "DPO beta [0.01,0.05,0.1]; IPO tau [0.01,0.1,0.5,1.0]; RRHF lambda [0.1,0.5,1.0,10.0]; SLiC-HF lambda [0.1,0.5,1.0,10.0], delta [0.1,0.5,1.0,2.0] (printed as beta); CPO lambda=1.0, beta [0.01,0.05,0.1]; KTO lambda_w=lambda_l=1.0, beta [0.01,0.05,0.1]; ORPO lambda [0.1,0.5,1.0,2.0]; R-DPO alpha [0.05,0.1,0.5,1.0], beta [0.01,0.05,0.1]",
+    "KTO optimiser": "Adam used for all, not RMSProp as in KTO paper",
+    "ORPO": "started from same SFT checkpoints as other methods"
+   }
+  },
+  "inference": {
+   "decoding": "AlpacaEval 2: sampling; Arena-Hard: greedy; MT-Bench: official per-category temperatures",
+   "temperature": "AlpacaEval 2: 0.7 Mistral-Base, 0.5 Mistral-Instruct, 0.9 both Llama-3 (grid-searched over 0.1,0.3,0.5,0.7,0.9 for Llama-3-Base with DPO, then fixed for all methods)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one generation per benchmark prompt; run count and seeds not stated",
+   "prompting": "benchmark default chat protocols",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AlpacaEval 2 LC win rate",
+     "definition": "length-controlled win rate versus GPT-4 Turbo, judged by GPT-4 Turbo",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval 2 raw WR",
+     "definition": "raw win rate vs GPT-4 Turbo baseline",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Arena-Hard WR",
+     "definition": "win rate versus GPT-4-0314, judged by GPT-4 Turbo",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "single-answer grading 1-10 with GPT-4 Turbo and GPT-4 judges",
+     "unit": "score 1-10",
+     "higher_is_better": true
+    },
+    {
+     "name": "Reward accuracy",
+     "definition": "percentage of held-out pairs where r(x,yw) > r(x,yl)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SFT",
+    "RRHF",
+    "SLiC-HF",
+    "DPO",
+    "IPO",
+    "CPO",
+    "KTO",
+    "ORPO",
+    "R-DPO"
+   ],
+   "protocol": "Table 10 reports AlpacaEval 2 standard deviation and Arena-Hard 95% CI; single training run per cell implied, seeds not stated; hyperparameters tuned per method with best result reported."
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/SimPO",
+   "weights": "https://github.com/princeton-nlp/SimPO (checkpoints released)",
+   "data": "UltraFeedback and UltraChat-200k public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 8, rows per setting"
+   },
+   {
+    "field": "training.other.Llama-3-Instruct v0.2",
+    "quote": "We use the following hyperparameters for SimPO under the Llama-3 Instruct v0.2 setting: β = 10 and γ = 3.",
+    "where": "Appendix H"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SimPO beats the best baseline by 3.6 to 4.8 points AlpacaEval 2 LC across the four setups.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC gain over best baseline",
+   "value": "3.6 to 4.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4, four setups, UltraFeedback-trained 7B/8B models",
+   "quote": "SimPO outperforms the best baseline by 3.6 to 4.8 points on the AlpacaEval 2 LC\nwin rate across various settings.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "SimPO versus DPO on Mistral-Base AlpacaEval 2 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "21.5",
+   "unit": "%",
+   "baseline_value": "15.1",
+   "n": null,
+   "setup": "Mistral-Base 7B",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Mistral-Base AlpacaEval 2 LC",
+   "note": "Table 10 prints SimPO LC as 21.4 for this cell",
+   "where": "Table 4"
+  },
+  {
+   "claim": "SimPO versus DPO on Mistral-Instruct AlpacaEval 2 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "32.1",
+   "unit": "%",
+   "baseline_value": "26.8",
+   "n": null,
+   "setup": "Mistral-Instruct 7B",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Mistral-Instruct AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SimPO versus DPO on Llama-3-Base AlpacaEval 2 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": "18.2",
+   "n": null,
+   "setup": "Llama-3-Base 8B",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Llama-3-Base AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SimPO versus DPO on Llama-3-Instruct (PairRM data) AlpacaEval 2 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "44.7",
+   "unit": "%",
+   "baseline_value": "40.3",
+   "n": null,
+   "setup": "Llama-3-Instruct 8B, PairRM-labelled data (v0.1)",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Llama-3-Instruct AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SimPO Arena-Hard WR on Mistral-Base versus DPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arena-Hard WR",
+   "value": "16.6",
+   "unit": "%",
+   "baseline_value": "10.4",
+   "n": null,
+   "setup": "Mistral-Base 7B",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Mistral-Base Arena-Hard WR",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SimPO Arena-Hard WR on Llama-3-Base versus DPO (largest gain, 7.5 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arena-Hard WR",
+   "value": "23.4",
+   "unit": "%",
+   "baseline_value": "15.9",
+   "n": null,
+   "setup": "Llama-3-Base 8B",
+   "quote": null,
+   "table": "Table 4, row SimPO, column Llama-3-Base Arena-Hard WR",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CPO beats SimPO on Mistral-Instruct Arena-Hard WR but its responses are about 50% longer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arena-Hard WR",
+   "value": "22.6",
+   "unit": "%",
+   "baseline_value": "21.0",
+   "n": null,
+   "setup": "Mistral-Instruct 7B, CPO",
+   "quote": null,
+   "table": "Table 4, row CPO, column Mistral-Instruct Arena-Hard WR",
+   "note": "baseline_value is SimPO",
+   "where": "Sec 4.1, Table 4"
+  },
+  {
+   "claim": "Removing length normalisation drops Mistral-Base AlpacaEval 2 LC from 21.5 to 11.9, below DPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "11.9",
+   "unit": "%",
+   "baseline_value": "21.5",
+   "n": null,
+   "setup": "Mistral-Base, SimPO w/o LN",
+   "quote": null,
+   "table": "Table 5, row w/o LN, column Mistral-Base AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Setting gamma to 0 lowers Mistral-Base AlpacaEval 2 LC to 16.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "16.8",
+   "unit": "%",
+   "baseline_value": "21.5",
+   "n": null,
+   "setup": "Mistral-Base, gamma=0",
+   "quote": null,
+   "table": "Table 5, row γ = 0, column Mistral-Base AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Spearman correlation between average log-likelihood and response length: SimPO 0.34, DPO 0.59, SimPO w/o LN 0.82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman rho (SimPO)",
+   "value": "0.34",
+   "unit": "rho",
+   "baseline_value": "0.82",
+   "n": null,
+   "setup": "Mistral-Base, held-out set",
+   "quote": null,
+   "table": "Table 6, column SimPO",
+   "note": "baseline_value is SimPO w/o LN; DPO is 0.59",
+   "where": "Table 6"
+  },
+  {
+   "claim": "About half of DPO training triples have reward ranking disagree with average-log-likelihood ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fraction of DPO-trained triples where reward ranking matches likelihood ranking",
+   "value": "~50%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-Base, UltraFeedback training set; counts in Fig 4b: 8.0k, 8.3k, 23.0k, 21.2k",
+   "quote": "we observed that only ∼50% of the triples\nfrom the training set satisfy this condition when trained with DPO (Figure 4b)",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "SimPO cuts run time by about 20% and GPU memory by about 10% versus vanilla DPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Run time reduction",
+   "value": "~20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3-Base, 8xH100; Fig 5c reads 73 min/77 GB (DPO) vs 60 min/69 GB (SimPO)",
+   "quote": "SimPO cuts run time by roughly 20% and reduces GPU memory\nusage by about 10%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Adding length normalisation to DPO helps in Mistral-Base (15.1 to 21.0 LC) but not Mistral-Instruct (26.8 to 21.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC, DPO w/ LN, Mistral-Base",
+   "value": "21.0",
+   "unit": "%",
+   "baseline_value": "15.1",
+   "n": null,
+   "setup": "Appendix I, Table 15",
+   "quote": null,
+   "table": "Table 15, row w/ LN, column Mistral-Base AlpacaEval 2 LC",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "Switching the labeller from PairRM to ArmoRM lifts Llama-3-Instruct SimPO to 53.7 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "53.7",
+   "unit": "%",
+   "baseline_value": "48.2",
+   "n": null,
+   "setup": "Llama-3-Instruct v0.2, ArmoRM labels, beta=10 gamma=3",
+   "quote": null,
+   "table": "Table 12, row SimPO v0.2, column AlpacaEval 2 LC",
+   "note": "baseline_value is DPO v0.2; text says 9.0 point gain over v0.1 (44.7)",
+   "where": "Table 12, App H"
+  },
+  {
+   "claim": "With ArmoRM labels DPO matches SimPO raw win rate (47.5 vs 47.5); algorithm differences shrink.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 WR",
+   "value": "47.5",
+   "unit": "%",
+   "baseline_value": "47.5",
+   "n": null,
+   "setup": "Llama-3-Instruct v0.2",
+   "quote": null,
+   "table": "Table 12, row DPO [66], column WR (%)",
+   "note": "baseline_value is SimPO v0.2 WR",
+   "where": "Table 12"
+  },
+  {
+   "claim": "Adding an SFT loss to SimPO lowers AlpacaEval 2 LC from 53.7 to 41.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "41.4",
+   "unit": "%",
+   "baseline_value": "53.7",
+   "n": null,
+   "setup": "Llama-3-Instruct v0.2, SimPO w/ SFT",
+   "quote": null,
+   "table": "Table 14, row w/ SFT, column LC (%)",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "Gemma-2-9B-it-SimPO reaches 72.4 AlpacaEval 2 LC and 59.1 Arena-Hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2 LC",
+   "value": "72.4",
+   "unit": "%",
+   "baseline_value": "67.8",
+   "n": null,
+   "setup": "Gemma-2-9B-it, ArmoRM-labelled UltraFeedback, lr 8e-7",
+   "quote": null,
+   "table": "Table 17, row Gemma-2-9B-SimPO (lr=8e-7)*, column AlpacaEval 2 LC",
+   "note": "baseline_value is Gemma-2-9B-DPO; Arena-Hard 59.1 vs 58.9",
+   "where": "Table 17"
+  },
+  {
+   "claim": "Higher learning rate boosts chat score but causes catastrophic forgetting on GSM8K: lr 1e-6 gives 53.7 LC, 57.4 GSM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ZeroEval GSM",
+   "value": "57.4",
+   "unit": "%",
+   "baseline_value": "78.5",
+   "n": null,
+   "setup": "Llama-3-8B-Instruct continued with SimPO, lr=1e-6",
+   "quote": null,
+   "table": "Table 16, row SimPO (lr=1e-6)*, column GSM (%)",
+   "note": null,
+   "where": "Table 16"
+  },
+  {
+   "claim": "Preference optimisation lowers GSM8K: SimPO on Llama-3-Instruct GSM8K 50.72 versus 68.69 for SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K (5-shot)",
+   "value": "50.72",
+   "unit": "accuracy %",
+   "baseline_value": "68.69",
+   "n": null,
+   "setup": "Llama-3-Instruct, v0.1 data",
+   "quote": null,
+   "table": "Table 9, Llama-3-Instruct, row SimPO, column GSM8K",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "MT-Bench separates methods poorly.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4",
+   "quote": "we find that MT-\nBench exhibits poor separability across different methods.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "Authors concede no rigorous theory for why SimPO works and that gamma is a new hyperparameter needing manual tuning (App A).",
+  "UltraFeedback focuses on helpfulness; safety and honesty not evaluated beyond TruthfulQA (App A).",
+  "Preference optimisation, SimPO included, lowers GSM8K and sometimes MMLU, especially with higher learning rates (App A, C, J).",
+  "Without KL regularisation SimPO could in principle reward-hack; no collapse seen with proper tuning (Sec 4.4).",
+  "No PPO comparison (footnote 7); offline only, no iterative training.",
+  "Benchmarks rely on GPT-4 judges, limited query space; MT-Bench differences may be noise.",
+  "Gains shrink with a stronger SFT model and higher-quality labels (App H).",
+  "Seeds, run counts and total token counts not stated; each method tuned only over small grids.",
+  "Hyperparameters beta, gamma are setting-specific (beta 2.0-2.5 but v0.2 uses beta 10, gamma 3)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "target reward margin",
+   "definition": "gamma > 0 added to the Bradley-Terry objective so r(x,yw) exceeds r(x,yl) by at least gamma",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "length-normalised reward",
+   "definition": "r_SimPO(x,y) = beta/|y| log pi(y|x), the average token log-probability scaled by beta",
+   "where": "Eq. 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "main baseline; SimPO replaces the reference-ratio reward",
+   "quote": null
+  },
+  {
+   "work": "Zephyr (Tunstall et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Base-setup training pipeline, alignment-handbook",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback (Cui et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "preference data",
+   "quote": null
+  },
+  {
+   "work": "UltraChat (Ding et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SFT data",
+   "quote": null
+  },
+  {
+   "work": "RRHF, SLiC-HF, IPO, CPO, KTO, ORPO, R-DPO",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in all four setups",
+   "quote": null
+  },
+  {
+   "work": "PairRM (Jiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "labeller for Instruct setups",
+   "quote": null
+  },
+  {
+   "work": "ArmoRM (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "stronger labeller for v0.2 and Gemma 2",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval 2, Arena-Hard, MT-Bench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmarks",
+   "quote": null
+  },
+  {
+   "work": "Concurrent work [14] (reference 14 in paper)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "finds DPO models show random likelihood-ranking accuracy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SimPO and DPO mainly differ in their reward formulation... SimPO outperforms DPO significantly across a range of settings on AlpacaEval 2 and Arena-Hard.",
+   "page": 2,
+   "why": "side-by-side reward formulas and gains per setup"
+  },
+  {
+   "figure": "Fig 4b",
+   "caption": "Contingency table of rankings based on DPO rewards and the average log likelihood",
+   "page": 9,
+   "why": "shows reward/likelihood mismatch of DPO"
+  },
+  {
+   "figure": "Fig 5c",
+   "caption": "Runtime and memory usage for DPO and SimPO.",
+   "page": 9,
+   "why": "efficiency numbers"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "AlpacaEval 2, Arena-Hard, and MT-Bench results under the four settings.",
+   "page": 6,
+   "why": "main comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 6",
+   "snippet": "L_SimPO = -E log sigma( beta/|yw| log pi(yw|x) - beta/|yl| log pi(yl|x) - gamma )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 4 gives SimPO Mistral-Base LC 21.5; Table 10 gives 21.4.",
+  "Table 7 lists SLiC-HF with a second hyperparameter printed as beta, though Table 3 uses delta.",
+  "Text says Fig 2b/2c for gamma distributions in Sec 4.3; they are Fig 3b/3c.",
+  "Gemma-2 beta and gamma not stated."
+ ]
+}

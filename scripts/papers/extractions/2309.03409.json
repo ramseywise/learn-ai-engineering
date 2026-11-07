@@ -1,0 +1,598 @@
+{
+ "schema": 1,
+ "key": "2309.03409",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/yang-2023-large-language-models-as-optimizers.pdf",
+ "bib": {
+  "title": "Large Language Models as Optimizers",
+  "authors": [
+   "Chengrun Yang",
+   "Xuezhi Wang",
+   "Yifeng Lu",
+   "Hanxiao Liu",
+   "Quoc V. Le",
+   "Denny Zhou",
+   "Xinyun Chen"
+  ],
+  "first_author": "Yang",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 15 Apr 2024)",
+  "arxiv": "2309.03409",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 150911,
+  "chars_total": 150911,
+  "engine": "pymupdf",
+  "skipped": "Reference list and the per-task instruction listings in Tables 8, 9, 11-13, 15 skimmed only; Table 7/10/14 per-task accuracy rows only partly read."
+ },
+ "type": "empirical",
+ "question": "Can an LLM act as an optimizer, generating new solutions from a prompt containing past solutions and their scores, and does this find better task prompts than human-written ones?",
+ "hypothesis": "An LLM shown the optimization trajectory (solutions with scores) in a meta-prompt can iteratively propose better solutions, including better instructions for a scorer LLM.",
+ "contributions": [
+  "Propose OPRO, optimization by prompting, with a meta-prompt of solution-score pairs and a task description",
+  "Show it on linear regression and TSP",
+  "Apply it to prompt optimization on GSM8K and BBH, beating human-designed prompts",
+  "Show optimized prompts transfer to MultiArith and AQuA"
+ ],
+ "method": {
+  "summary": "At each step an optimizer LLM receives a meta-prompt with the best 20 prior solutions and scores (ascending order) plus task exemplars, and is sampled 8 times; the new solutions are scored and added. For prompt optimization the score is accuracy of a scorer LLM using the generated instruction on a training subset.",
+  "task": "LLM-driven black-box optimization; prompt (instruction) optimization for reasoning tasks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "7,473 train, 1,319 test",
+    "split": "3.5% of train sampled (fixed subset) for optimization; full test set for evaluation",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-Bench Hard (23 tasks)",
+    "role": "both",
+    "size": "up to 250 examples per task",
+    "split": "20% of each task for optimization, remaining 80% test",
+    "source": "Suzgun et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": null,
+    "split": "transfer eval of GSM8K-optimized instructions",
+    "source": "Roy & Roth, 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": null,
+    "split": "transfer eval of GSM8K-optimized instructions",
+    "source": "Ling et al., 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic linear regression",
+    "role": "eval",
+    "size": "50 points, x from 1 to 50, standard Gaussian noise",
+    "split": null,
+    "source": "generated",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic TSP instances",
+    "role": "eval",
+    "size": "5 problems per n (n = 10, 15, 20, 50 in Table 3)",
+    "split": null,
+    "source": "generated; coordinates in [-100,100]; Gurobi oracle",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM 2-L (pre-trained)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "optimizer and scorer"
+    }
+   },
+   {
+    "name": "PaLM 2-L-IT (instruction-tuned PaLM 2-L)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "optimizer"
+    }
+   },
+   {
+    "name": "text-bison",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "optimizer and scorer; instruction-tuned"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo-0613",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "optimizer"
+    }
+   },
+   {
+    "name": "gpt-4-0613",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "optimizer"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "scorer: greedy (temperature 0) when evaluating instructions; optimizer: sampled",
+   "temperature": "1.0 default for optimizer; 0 for scorer; ablation 0.0 to 2.0 (Fig 10)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "8 instructions per step, 200 steps default; ablation results are mean of 3 optimization repetitions; linear regression 5 runs; TSP 5 instances per n",
+   "prompting": "Meta-prompt: past instructions with scores sorted ascending, 3 random training exemplars, meta-instructions; scorer instruction position Q_begin, Q_end or A_begin",
+   "retrieval": null,
+   "parameters": {
+    "top_k_in_meta_prompt": "20 instructions",
+    "exemplars_per_step": "3 (ablation 0, 10)",
+    "candidates_per_step": "8 (ablation 1, 2, 4, 16 in Fig 8)",
+    "steps": "200 default",
+    "score_presentation": "accuracy rounded to integer (100 buckets); ablation 20 buckets or none",
+    "order": "ascending (default)",
+    "linear_regression": "5 random start pairs, best 20 pairs, 8 candidates per step, temperature 1.0",
+    "TSP": "5 random start solutions, at most 8 new solutions per step"
+   },
+   "other": {
+    "scorer_pairing": "pre-trained PaLM 2-L scorer uses A_begin; text-bison uses Q_begin or Q_end",
+    "initial_instruction_default": "empty string for text-bison; empty (BBH) or 'Let's solve the problem.' (GSM8K) for PaLM 2-L",
+    "ablation_setup": "text-bison scorer, PaLM 2-L optimizer; GSM8K and BBH sports_understanding",
+    "no_validation_set": "default setting sets aside no validation set"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of correct answers on train subset (objective) and held-out test set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "optimality gap (TSP)",
+     "definition": "(distance of solution minus oracle distance) divided by oracle distance",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "steps / unique pairs to optimum (linear regression)",
+     "definition": "steps and unique (w,b) pairs explored before reaching global optimum",
+     "unit": "count",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "'Let's think step by step.' (Kojima et al., 2022)",
+    "'Let's work this out in a step by step way to be sure we have the right answer.' (Zhou et al., 2022b)",
+    "empty string",
+    "'Let's solve the problem.'",
+    "Nearest Neighbor and Farthest Insertion (TSP)",
+    "EvoPrompt GA and DE (Guo et al., 2023)"
+   ],
+   "protocol": "Instruction chosen by training accuracy in the default setting; Table 4 reports the instruction with highest test accuracy per scorer-optimizer pair. Single optimization run for main tables (repetition counts stated only for ablations and linear regression)."
+  },
+  "availability": {
+   "code": "https://github.com/google-deepmind/opro",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "Meta-prompt for PaLM 2-L-IT on GSM8K (Figure 3)",
+    "text": "I have some texts along with their corresponding scores. The texts are arranged in ascending order based on their scores, where higher scores indicate better quality.\ntext:\nLet’s figure it out!\nscore:\n61\ntext:\nLet’s solve the problem.\nscore:\n63\n(. . . more instructions and scores ...)\nThe following exemplars show how to apply your text: you replace <INS> in each input with your text, then read the input and give an output. We say your output is wrong if your output is different from the given output, and we say your output is correct if they are the same.\ninput:\nQ: ... A: <INS>\noutput:\n140\n(. . . more exemplars ...)\nWrite your new text that is different from the old ones and has a score as high as possible. Write the text in square brackets.",
+    "where": "Figure 3, Sec 4"
+   },
+   {
+    "purpose": "Meta-prompt for GPT models on GSM8K (Figure 22)",
+    "text": "Your task is to generate the instruction <INS>. Below are some previous instructions with their scores. The score ranges from 0 to 100.\n... Generate an instruction that is different from all the instructions <INS> above, and has a higher score than all the instructions <INS> above. The instruction should begin with <INS> and end with </INS>. The instruction should be concise, effective, and generally applicable to all problems above.",
+    "where": "Figure 22, Appendix C.2"
+   },
+   {
+    "purpose": "Meta-prompt for pre-trained PaLM 2-L on GSM8K (Figure 21)",
+    "text": "Create a piece of text at the beginning of the answer to enhance the precision in solving diverse grade school math problems.\nPrecision: 4 <TEXT>A dime</TEXT>\n...",
+    "where": "Figure 21, Appendix C.2"
+   },
+   {
+    "purpose": "Meta-prompt for linear regression (Figure 19)",
+    "text": "Now you will help me minimize a function with two input variables w, b. ... Give me a new (w, b) pair that is different from all pairs above, and has a function value lower than any of the above. Do not write code. The output must end with a pair [w, b], where w and b are numerical values.",
+    "where": "Figure 19, Appendix C.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "Our meta-prompt at each step contains the best 20 instructions so far and 3\nrandomly picked exemplars from the training set.",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PaLM 2-L-IT-optimized instruction 'Take a deep breath and work on this problem step-by-step.' reaches 80.2 GSM8K zero-shot test accuracy vs 71.8 for 'Let's think step by step.'",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "80.2",
+   "unit": "%",
+   "baseline_value": "71.8",
+   "n": null,
+   "setup": "GSM8K test (1,319), pre-trained PaLM 2-L scorer, A_begin position, PaLM 2-L-IT optimizer; Table 4 shows the highest-test-accuracy instruction for each scorer-optimizer pair",
+   "note": "Table 4 caption says the instruction shown is the one with the highest test accuracy for the pair.",
+   "where": "Table 1, Table 4",
+   "table": "Table 1, row PaLM 2-L-IT, column Acc"
+  },
+  {
+   "claim": "Best OPRO prompts beat human-designed prompts by up to 8% on GSM8K and up to 50% on Big-Bench Hard",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K gain",
+   "value": "8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and 23 BBH tasks, several scorer/optimizer LLMs; human baselines are 'Let's think step by step.' and the empty string",
+   "note": null,
+   "where": "Abstract",
+   "quote": "outperform human-designed prompts by\nup to 8% on GSM8K, and by up to 50% on Big-Bench Hard tasks"
+  },
+  {
+   "claim": "Pre-trained PaLM 2-L as its own optimizer finds 'Break this down.' at 79.9 on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "79.9",
+   "unit": "%",
+   "baseline_value": "71.8",
+   "n": null,
+   "setup": "pre-trained PaLM 2-L scorer and optimizer, A_begin",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PaLM 2-L / PaLM 2-L, column Acc"
+  },
+  {
+   "claim": "Optimizer LLM changes the best instruction style and score: gpt-3.5-turbo 78.5, gpt-4 74.5 with the PaLM 2-L scorer",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "78.5",
+   "unit": "%",
+   "baseline_value": "71.8",
+   "n": null,
+   "setup": "GSM8K, PaLM 2-L scorer, A_begin",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows gpt-3.5-turbo and gpt-4, column Acc"
+  },
+  {
+   "claim": "With the text-bison scorer, OPRO-found instructions do not clearly beat baselines on GSM8K: best 68.5 (Q_end) vs 65.6 for the Zhou et al. baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "68.5",
+   "unit": "%",
+   "baseline_value": "65.6",
+   "n": null,
+   "setup": "GSM8K, text-bison scorer, Q_begin/Q_end",
+   "note": "PaLM 2-L-IT optimizer with text-bison scorer gives 64.4, equal to the Kojima baseline 64.4 and below 65.6.",
+   "where": "Table 4",
+   "table": "Table 4, row text-bison / text-bison, column Acc"
+  },
+  {
+   "claim": "Paraphrase sensitivity: 'Let's work together to solve this problem step by step.' scores 49.4 though it combines two instructions scoring 71.8 and 60.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "49.4",
+   "unit": "%",
+   "baseline_value": "71.8",
+   "n": null,
+   "setup": "GSM8K test, PaLM 2-L scorer",
+   "note": null,
+   "where": "Sec 5.2.3",
+   "quote": "accuracy of “Let’s work together to solve this problem step by step.” is only 49.4"
+  },
+  {
+   "claim": "Generating 50 instructions in one step (no trajectory) is much worse than OPRO",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K test accuracy",
+   "value": "60.8",
+   "unit": "%",
+   "baseline_value": "76.3",
+   "n": null,
+   "setup": "GSM8K, PaLM 2-L scorer, PaLM 2-L-IT optimizer, start 'Let's solve the problem'; best of 50 vs OPRO's 'Let's do the math!' at step 5",
+   "note": "OPRO instruction 'Let's do the math!' had 78.2 training and 76.3 test accuracy at step 5.",
+   "where": "Sec 5.3",
+   "quote": "the best instruction among all 50 is still “Let’s solve the problem”, with a\n64.4 training accuracy and a 60.8 test accuracy"
+  },
+  {
+   "claim": "Transfer: GSM8K-optimized 'Take a deep breath...' scores 95.3 on MultiArith and 54.3 on AQuA",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiArith accuracy",
+   "value": "95.3",
+   "unit": "%",
+   "baseline_value": "85.7",
+   "n": null,
+   "setup": "PaLM 2-L scorer, A_begin, instruction optimized on GSM8K",
+   "note": "AQuA 54.3 vs 44.9 for 'Let's think step by step.'. text-bison Q_begin instruction gets 96.8 MultiArith but only 37.8 on AQuA.",
+   "where": "Table 6",
+   "table": "Table 6, row Take a deep breath..., columns MultiArith, AQuA"
+  },
+  {
+   "claim": "Optimization uses only a small training slice: 3.5% of GSM8K train and 20% of each BBH task",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K train fraction used",
+   "value": "3.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, BBH",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "3.5% of the training set for GSM8K (Cobbe et al., 2021), 20%\nfor Big-Bench Hard"
+  },
+  {
+   "claim": "OPRO beats 'Let's think step by step.' by over 5% on 19/23 BBH tasks with the PaLM 2-L scorer and 15/23 with text-bison",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH tasks with >5% gain",
+   "value": "19",
+   "unit": "tasks of 23",
+   "baseline_value": null,
+   "n": null,
+   "setup": "23 BBH tasks, PaLM 2-L-IT optimizer, empty-string start, 20/80 train-test split",
+   "note": null,
+   "where": "Sec 5.2.2",
+   "quote": "our instructions outperform by over\n5% on 19/23 tasks with the PaLM 2-L scorer, and on 15/23 tasks with the text-bison scorer"
+  },
+  {
+   "claim": "Overfitting: training accuracy is often 5%-20% above test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "train minus test accuracy",
+   "value": "5-20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH Tables 7 and 10",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "our training accuracies are often 5%-20% higher than our test accuracies"
+  },
+  {
+   "claim": "Sampling 8 instructions per step gives the best performance; optimizer temperature 1.0 is best",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimizer temperature",
+   "value": "1.0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and BBH sports_understanding, text-bison scorer, PaLM 2-L optimizer, 3 repetitions",
+   "note": "Read from Fig 8 and Fig 10; no table of numbers.",
+   "where": "Sec 5.3",
+   "quote": "Figure 10 shows the default temperature 1.0 achieves the best performance"
+  },
+  {
+   "claim": "Linear regression: gpt-4 reaches the optimum in 4.0 +/- 1.5 steps when w_true=15, b_true=14, vs 5.8 +/- 2.6 text-bison and 7.6 +/- 4.5 gpt-3.5-turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps to optimum",
+   "value": "4.0",
+   "unit": "steps",
+   "baseline_value": "7.6",
+   "n": null,
+   "setup": "1-D linear regression, 50 points, 5 runs, temperature 1.0, 8 candidates per step, best 20 pairs in meta-prompt",
+   "note": "Column order in the extracted text is text-bison, gpt-3.5-turbo, gpt-4; row values 5.8, 7.6, 4.0 so gpt-4 4.0 and gpt-3.5-turbo 7.6 (extraction order of columns is inferred).",
+   "where": "Table 2",
+   "table": "Table 2, row w_true 15 b_true 14, columns number of steps"
+  },
+  {
+   "claim": "TSP: at n=10 all three LLMs reach 0.0 optimality gap; at n=50 gpt-4 gets 11.0 vs 219.8 text-bison and 133.0 gpt-3.5-turbo, and farthest insertion (9.8) is better",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimality gap",
+   "value": "11.0",
+   "unit": "%",
+   "baseline_value": "9.8",
+   "n": null,
+   "setup": "5 random instances per n, coordinates in [-100,100], Gurobi oracle, 5 initial solutions, up to 8 solutions per step",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row n=50, columns optimality gap (%)"
+  },
+  {
+   "claim": "OPRO improves steadily on GSM8K with gpt-3.5-turbo, while EvoPrompt (GA, DE) degrades performance",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, PaLM 2-L scorer A_begin, gpt-3.5-turbo optimizer, starts 'Let's solve the problem.' and 'Here is the answer.', 3 repetitions",
+   "note": "Read from Fig 12; no numbers printed.",
+   "where": "Sec 5.5, Fig 12",
+   "quote": "both versions\nof EvoPrompt even degrade the performance on GSM8K"
+  }
+ ],
+ "limits": [
+  "Authors: OPRO is not meant to beat gradient-based optimizers or specialized TSP solvers; context length limits problem size (Sec 3.2 Limitations).",
+  "Authors: farthest insertion beats all LLMs on TSP as n grows; OPRO degrades quickly with larger n.",
+  "Authors: optimizer does not effectively use error cases; including them gave similar results.",
+  "Authors: prompt optimization needs a training set (at least tens of samples) and overfits; train accuracy often 5-20% above test.",
+  "Authors: sensitive to initialization; weaker start points converge slower (Fig 9b).",
+  "Main results are single runs on PaLM 2 / text-bison / GPT-3.5 / GPT-4 of 2023; best-instruction picks in Table 4 are by test accuracy.",
+  "Optimized instructions are model-specific; no human or statistical significance test reported for main tables.",
+  "Failure cases (Appendix A): hallucinated function values, repeating earlier solutions, getting stuck on the Rosenbrock function."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "meta-prompt",
+   "definition": "The prompt to the LLM serves as a call to the optimizer, and we name it the meta-prompt.",
+   "where": "Sec 1"
+  },
+  {
+   "term": "scorer LLM / optimizer LLM",
+   "definition": "We denote the LLM for objective function evaluation as the scorer LLM, and the LLM for optimization as the optimizer LLM.",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Q_begin / Q_end / A_begin",
+   "definition": "Instruction placed before the question, after the question, or at the beginning of the scorer output.",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large Language Models are Human-Level Prompt Engineers (APE)",
+   "year": 2022,
+   "arxiv": "2211.01910",
+   "relation": "baseline",
+   "note": "Source of the 'Let's work this out in a step by step way' baseline; generates semantically similar variants",
+   "quote": null
+  },
+  {
+   "work": "Large Language Models are Zero-Shot Reasoners",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "'Let's think step by step.' baseline",
+   "quote": null
+  },
+  {
+   "work": "Automatic Prompt Optimization with Gradient Descent and Beam Search (APO)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Edits one prompt from natural-language feedback",
+   "quote": null
+  },
+  {
+   "work": "EvoPrompt (Guo et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GA and DE meta-prompts compared in Sec 5.5",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Main benchmark",
+   "quote": null
+  },
+  {
+   "work": "Big-Bench Hard (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "23 tasks",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "PaLM 2-L, text-bison",
+   "quote": null
+  },
+  {
+   "work": "Zhao et al. (2021) Calibrate before use",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recency bias cited for ascending ordering",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of the OPRO framework.",
+   "page": 3,
+   "why": "Shows the loop of meta-prompt, generation, scoring, update."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An example of the meta-prompt for prompt optimization with PaLM 2-L-IT on GSM8K",
+   "page": 7,
+   "why": "Concrete meta-prompt layout."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Test accuracies on GSM8K. We show the instruction with the highest test accuracy for each scorer-optimizer pair.",
+   "page": 9,
+   "why": "Shows each scorer/optimizer pair yields a different best prompt."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table columns in cached text are flattened; Table 2 column assignment is inferred from the caption order.",
+  "Per-task rows of the BBH accuracy tables and instruction listings (Tables 7-15) were skimmed, not recorded."
+ ]
+}

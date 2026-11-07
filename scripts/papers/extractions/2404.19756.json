@@ -1,19 +1,659 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2404.19756",
  "pdf": "data-science/sources/liu-2024-kan.pdf",
  "bib": {
   "title": "KAN: Kolmogorov-Arnold Networks",
-  "first_author": "Ziming Liu",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Ziming Liu",
+   "Yixuan Wang",
+   "Sachin Vaidya",
+   "Fabian Ruehle",
+   "James Halverson",
+   "Marin Soljačić",
+   "Thomas Y. Hou",
+   "Max Tegmark"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "Accepted by ICLR 2025 (arXiv:2404.19756v5, 9 Feb 2025)",
   "arxiv": "2404.19756",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 134765,
+  "chars_total": 134765,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only; figure images not viewed (plot axis text is flattened in the cache)."
  },
- "legacy_report": "SOURCE: KAN: Kolmogorov-Arnold Networks. Liu, Wang, Vaidya, Ruehle, Halverson, Soljačić, Hou, Tegmark. The PDF states \"Accepted by International Conference on Learning Representations (ICLR) 2025\"; arXiv:2404.19756v5, 9 Feb 2025.\n\nCOVERAGE: 134,726 of 134,726 chars, all pages. References were read only for origins. Figures: captions only, I did not view the images, so curves are not reported beyond their captions.\n\nCLAIMS (page = printed page, which matches the PDF page. Superscripts are flattened by extraction: \"102 vs 104\" means 10^2 vs 10^4.)\n\n- claim: KANs train about 10x slower than MLPs at equal parameter count; the authors call this the biggest bottleneck.\n  number: 10x\n  setup: their pykan implementation. No hardware, timing table or MLP timing is reported.\n  quote: \"Currently, the biggest bottleneck of KANs lies in its slow training. KANs are usually 10x slower than MLPs, given the same number of parameters.\"\n  where: p33 (also p18)\n\n- claim: The knot size gap is large against DeepMind's MLP, but a later 60-parameter MLP nearly closes the accuracy gap and is smaller than the KAN.\n  number: 81.6% at ≈200 params vs 78% at ≈3×10^5; 60-param MLP at 80%\n  setup: 17 knot invariants predicting signature, one-hot with cross-entropy, [17,1,14] KAN (G=3, k=3) vs 4-layer width-300 MLP. The 60-param result is another lab's and unpublished.\n  quote: \"an extremely small [17, 1, 14] KAN is able to achieve 81.6% test accuracy (while Deepmind's 4-layer width-300 MLP achieves 78% test accuracy)\"; \"an MLP with only 60 parameters is sufficient to achieve 80% accuracy (public but unpublished results)\"\n  where: p23, text and Table 3 caption\n\n- claim: On Feynman equations, where the true shape is uncertain, KANs and MLPs tie on average.\n  number: none in the prose. My count of Table 2: best of the three KAN variants beats MLP on 18 of 27 rows, MLP wins 9; on I.9.18 only the human-built KAN wins.\n  setup: KANs width 5, depth 2-6, G up to 200, LBFGS. MLPs width 5, depth 2-6, Tanh/ReLU/SiLU. 3 seeds, best model reported.\n  quote: \"We find that MLPs and KANs behave comparably on average.\"\n  where: p17; Table 2 p16\n\n- claim: On 15 special functions, KANs have better Pareto frontiers.\n  number: best KAN test RMSE below MLP on 15 of 15 rows (my count), e.g. lpmv m=0 5.25 × 10−5 vs 1.74 × 10−2; iv 9.28 × 10−3 vs 1.07 × 10−2\n  setup: MLPs width 5 or 100, depth 2-6. KANs width 5, depth 2-6, with and without pruning. G up to 200, LBFGS, 3 seeds.\n  quote: \"KANs' performance is shown to be consistently better than MLPs, i.e., KANs can achieve lower training/test losses than MLPs, given the same number of parameters.\"\n  where: p15; Table 1 p16\n\n- claim: On one Poisson PDE, a small KAN beat a larger MLP on both error and size.\n  number: 10^-7 vs 10^-5 MSE; 10^2 vs 10^4 params\n  setup: PINN loss on [-1,1]^2, ni=10000, nb=800, α=0.01; KAN [2,10,1] vs MLP [2,100,100,100,1]. The authors say a symbolic ground truth may be unfair to MLPs.\n  quote: \"A 2-Layer width-10 KAN is 100 times more accurate than a 4-Layer width-100 MLP ( 10−7 vs 10−5 MSE) and 100 times more parameter efficient ( 102 vs 104 parameters).\"\n  where: p18\n\n- claim: Theory gives a dimension-independent grid rate, assuming a smooth KA representation exists; the constant may still depend on dimension.\n  number: α = 4 for cubic splines\n  setup: Theorem 2.1, each activation (k+1)-times continuously differentiable.\n  quote: \"We choose k = 3 cubic splines so α = 4 which is the largest and best scaling exponent compared to other works.\"; \"Of course, the constant C is dependent on the representation; hence it will depend on the dimension.\"\n  where: p8\n\n- claim: On five synthetic functions with known smooth KA forms, KANs nearly reach N^-4 while MLPs plateau, but the experiment gave KANs the true shape.\n  number: α = 4 (Theory lines in Fig 3.1 include N^-0.04 for the 100-dimensional case)\n  setup: J0(20x), exp(sin(πx)+y²), xy, a 100-dim function and a 4-dim function; grid extended every 200 steps to G=1000; LBFGS for 1800 steps; no Adam-plus-LBFGS or boosting.\n  quote: \"KANs can almost saturate the steeper red lines, while MLPs struggle to converge even as fast as the slower black lines and plateau quickly.\"; \"One caveat for the above results is that we assume knowledge of the \"true\" KAN shape.\"\n  where: p14\n\n- claim: Measured grid scaling falls short of theory.\n  number: G^-3 measured vs G^-4 expected\n  setup: [2,1,1] KAN on exp(sin(πx)+y²). Using the median of squared losses gets closer to G^-4; authors suspect boundary effects and optimisation.\n  quote: \"a [2,1,1] KAN scales roughly as test RMSE ∝ G−3. However, according to the Theorem 2.1, we would expect test RMSE ∝ G−4.\"\n  where: p10\n\n- claim: Grid extension shows a U-shaped test loss, which the authors read as bias-variance with a minimum near the interpolation threshold.\n  number: predicted G≈67, observed G~50\n  setup: [2,5,1] KAN, 1000 training samples. At G=1000 optimisation stops working.\n  quote: \"we expect the interpolation threshold to be G = 1000/15 ≈ 67, which roughly agrees with our experimentally observed value G ∼ 50.\"\n  where: p10\n\n- claim: A KAN costs more per unit of width and depth, and the saving depends on needing much smaller N.\n  number: O(N²L(G+k)) vs O(N²L)\n  setup: equal width N, depth L, spline order k on G intervals.\n  quote: \"Then there are in total O(N 2L(G + k)) ∼ O(N 2LG) parameters. In contrast, an MLP with depth L and width N only needs O(N 2L) parameters\"\n  where: p7\n\n- claim: KANs are \"splines inside, MLPs outside\": edges learn univariate functions, the graph learns composition.\n  number: none\n  setup: conceptual. Original KA form is shape [n, 2n+1, 1], which the authors generalise to arbitrary depth without a matching theorem.\n  quote: \"External dofs (that MLPs also have but splines do not) are responsible for learning compositional structures of multiple variables. Internal dofs (that splines also have but MLPs do not) are responsible for learning univariate functions.\"\n  where: p11\n\n- claim: UAT gives no rate, whereas the KAN bound assumes compositional structure; for general function spaces neither escapes the curse of dimensionality.\n  number: none\n  setup: comparison of theory, not an experiment.\n  quote: \"However, the UAT guarantees no bound for how N (ϵ) scales with ϵ.\"; \"for general function spaces like Sobolev or Besov spaces, the nonlinear n-widths theory [29, 30, 31] indicates that we can never beat the curse of dimensionality, while MLPs with ReLU activations can achieve the tight rate\"\n  where: p8-9\n\n- claim: KANs recover known science relations, with accuracy traded for simplicity.\n  number: Table 4 formulas: human (DeepMind) 83.1%, KAN [3,2,1] 84.0%; Table 5: GAAM theory 99.2%, KAN auto 99.0%\n  setup: knot signature; quasiperiodic mobility edges. A \"hypothetical user\" narrates the workflow; nothing new was found in the unsupervised knot run.\n  quote: \"the bad news is that we have not discovered anything new yet.\"\n  where: p24-25, p28\n\n- claim: KANs avoid catastrophic forgetting on one toy problem through spline locality, and generalisation is unknown.\n  number: 5 Gaussian peaks\n  setup: 1D regression, data presented sequentially.\n  quote: \"it remains unclear whether our method can generalize to more realistic setups, especially in high-dimensional cases where it is unclear how to define \"locality\".\"\n  where: p19\n\n- claim: LANs (learnable activations on nodes) are less interpretable than KANs and need few extra parameters in the image test.\n  number: ≈4% more parameters\n  setup: SIREN variant, [2,128,128,128,128,128,1], G=5. Marked preliminary.\n  quote: \"the additional parameter increase is roughly G/N = 5/128 ≈ 4% over the original parameters.\"\n  where: p44\n\nLIMITS:\n- Scope is stated by the authors: \"at least for small-scale AI + Science problems\" (p33). The paper has no KAN experiment on images, text or large datasets, and none with label noise. \"Kansformers\" are only proposed (p32).\n- Open question: \"Do KA representations exist for general tasks? If so, does our training find these representations in practice?\" (p31).\n- The authors say \"our mathematical understanding of them is still very limited\" (p32), and no generalised KA theorem exists for deep KANs (p5).\n- They treat slow training as engineering rather than fundamental, admitting \"we did not try hard to optimize KANs' efficiency\" (p33). That is opinion, not a result. Total training cost at the smaller KAN sizes is never compared with MLPs.\n- Results are reported as best over seeds and depths with 3 seeds; no error bars appear in the tables. Comparisons are accuracy against parameter count, not against time.\n- The 10^2 PDE figure looks order-of-magnitude. By the paper's 15G count for [2,5,1], [2,10,1] would be 30G, and G for that comparison is not stated (my arithmetic).\n- The intro's \"MLPs consume almost all non-embedding parameters\" in transformers (p2) is unquantified. See the 05b note below.\n- Interpretability is shown through worked examples and visual inspection, with no user study. Results depend on seed (p22, Appendix C p44).\n- Dated: the 60-param MLP caption was added after the first preprint. This source says nothing about later replications.\n\nBUILDS ON: Kolmogorov 1956, 1957; Braun & Griebel 2009; Cybenko 1989 and Hornik et al. 1989 (UAT); Girosi & Poggio 1989 and Poggio et al. 2020 (the objection that KA is irrelevant); Lai & Shen 2021; Lin, Tegmark & Rolnick 2017; Sharma & Kaplan 2020; Michaud et al. 2023; De Boor 1978; Ramachandran et al. 2017, Bohra et al. 2020, Fakhoury et al. 2022 (learnable activations); Raissi et al. 2019 (PINNs); Davies et al. 2021 (knots).\n\nCODE:\n- p3: `pip install pykan`; https://github.com/KindXiaoming/pykan\n- p6, Eq 2.10-2.11: \"ϕ(x) = wbb(x) + wsspline(x)\" and \"b(x) = silu(x) = x/(1 + e−x)\"\n- p13, Eq 2.23: `fix_symbolic(0,0,0,'sin')`, `fix_symbolic(0,1,0,'xˆ2')`, `fix_symbolic(1,0,0,'exp')`\n\nFIGURES:\n- Fig 0.1, p1: \"Multi-Layer Perceptrons (MLPs) vs. Kolmogorov-Arnold Networks (KANs)\". Shows theorem, formula and placement of activations side by side.\n- Fig 2.3, p9: grid extension. Shows staircase loss curves, test RMSE against G and seconds per step.\n- Fig 3.1, p14: scaling laws on five toy functions.\n- Fig 3.3, p18: PDE losses and scaling.\n- Fig 3.4, p19: continual learning, KAN vs MLP phase by phase.\n- Fig 6.1, p33: \"Should I use KANs or MLPs?\" decision tree. Its contents are not in the text.\n\nPROBLEMS:\n- No embedded instructions found.\n- Extraction flattens superscripts and drops minus signs on figure axes (\"10 7\"). Formulas in Tables 2 and 4-5 are partly scrambled, but the numeric columns read cleanly. Quotes have line breaks normalised and end-of-line hyphens rejoined.\n- Internal inconsistencies in the paper: the 4-dim function is given as [4, 2, 1, 1] on p7, and on p14 as [4, 4, 2, 1], then \"[4, 2, 2, 1]\" in the same section. MAAM step 4A is 96.9% in the text (p29) but 96.6% in Table 5 (p28).\n- The 18/27 and 15/15 tallies are my hand counts, not the paper's.\n\nNOTES CHECK (data-science/02-deep-learning/notes/): no note makes a claim this paper changes. No note states the universal approximation theorem: \"universal\" appears only as Universal Sentence Encoder, and \"approximat\", \"Kolmogorov\" and \"spline\" have no relevant hits. There is no UAT claim to sharpen. The paper is uncited there, and the ledger row is `status: downloaded`, `pillar: classical-ml`.\n\nNearest places it could add a contrast, none of them wrong today:\n\n1. 01-neural-networks-fundamentals.md, \"Is deep learning a different kind of model?\", line 343, closest fit: \"What the paper does treat as distinctive is representation learning: most model classes fit weights over fixed basis functions, while a network learns the basis as well.\" KAN's internal/external split (p11) sharpens this, since a standard MLP still fixes its univariate functions. The same paragraph's \"parameter counting was always a poor proxy for complexity\" sits in tension with the paper's own conjecture that test loss is best at the interpolation threshold (p10). That conjecture rests on one toy function.\n\n2. 01-neural-networks-fundamentals.md, \"The forward pass\", line 48: \"Why a non-linear $g$ at all: a stack of linear layers multiplies out to one linear layer, so depth buys nothing without it.\" Also the table row \"| ReLU | $\\max(0, z)$ | $1[z>0]$ | Default hidden layer |\" (line 44) and checklist line 400. These still hold. KAN is a contrast case: no linear weights, summation on nodes, learned non-linearity on edges.\n\n3. 05b-transformer-encoders.md, parameter table at about lines 164-167: \"one block's attention        4224\" and \"one block's feed-forward     4192\". This does not need changing, but it runs against the paper's unquantified \"MLPs consume almost all non-embedding parameters\" for this small encoder (32-dim, feed-forward 64). So that sentence should not be carried over as fact.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/sources/liu-2024-kan.pdf; /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md; /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/02-deep-learning/notes/05b-transformer-encoders.md"
+ "type": "empirical",
+ "question": "Can replacing fixed node activations and linear weights of an MLP with learnable spline activations on edges give more accurate and more interpretable models on small-scale AI + Science tasks?",
+ "hypothesis": "KANs, built on the Kolmogorov-Arnold representation theorem, beat MLPs in accuracy (faster neural scaling, fewer parameters) and interpretability when the target has a smooth compositional structure.",
+ "contributions": [
+  "Generalise the Kolmogorov-Arnold representation to arbitrary width and depth (KAN layers as matrices of learnable 1D B-spline functions)",
+  "Approximation theorem (Thm 2.1) giving scaling exponent k+1 independent of input dimension, given a smooth KA representation",
+  "Grid extension to refine accuracy without retraining from scratch",
+  "Sparsification, pruning and symbolification for interpretability",
+  "Experiments: toy functions, 15 special functions, Feynman equations, Poisson PDE, continual learning, knot theory, Anderson localization"
+ ],
+ "method": {
+  "summary": "A KAN stacks layers whose edges each carry a learnable function phi = w_b*silu(x) + w_s*sum_i c_i B_i(x) (B-splines of order k on G intervals); nodes only sum. Models are trained with LBFGS while the spline grid is refined every 200 steps, optionally with L1+entropy sparsity, pruning and symbolic snapping. Compared against MLPs by Pareto frontier of test RMSE against parameter count.",
+  "task": "function fitting / regression, PINN PDE solving, classification (knot signature), symbolic discovery",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Five toy functions (J0(20x); exp(sin(pi x)+y^2); xy; 100-d exp(mean sin^2(pi x_i/2)); 4-d exp(sin(pi(x1^2+x2^2))+sin(pi(x3^2+x4^2))))",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Toy exp(sin(pi x)+y^2) used in Fig 2.3",
+    "role": "both",
+    "size": "1000 training samples",
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "15 special functions (scipy.special, Table 1)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "scipy.special",
+    "preprocessing": null
+   },
+   {
+    "name": "Feynman_no_units, 27 equations with >=2 variables (Table 2)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Udrescu & Tegmark AI Feynman; u,v drawn uniformly from (-1,1) in the worked example",
+    "preprocessing": "dimensionless forms"
+   },
+   {
+    "name": "Poisson PDE on [-1,1]^2 (PINN)",
+    "role": "train",
+    "size": "n_i=10000 interior points, n_b=800 boundary points",
+    "split": null,
+    "source": "synthetic, true solution u=sin(pi x)sin(pi y^2)",
+    "preprocessing": null
+   },
+   {
+    "name": "Knot theory dataset (Davies et al. 2021)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "DeepMind knot data; 17 invariants as inputs, signature output (14 classes); 18 variables in unsupervised mode",
+    "preprocessing": "signature one-hot, cross-entropy"
+   },
+   {
+    "name": "Anderson localization tight-binding data (MM, GAAM, MAAM)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "numerically generated eigenstates; fractal dimension / IPR; random phi, alpha, lambda with t=1 (GAAM); t1=1 (MAAM)",
+    "preprocessing": null
+   },
+   {
+    "name": "1D regression, 5 Gaussian peaks (continual learning)",
+    "role": "train",
+    "size": "5 sequential phases",
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Image fitting for LAN (SIREN setup)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "image not named",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "KAN",
+    "role": "proposed",
+    "params": "15G for [2,5,1] (G = grid intervals); ~200 for [17,1,14] G=3 k=3; O(N^2 L (G+k)) in general",
+    "architecture": "shape [n0,...,nL]; edge function phi = w_b silu(x) + w_s * sum c_i B_i(x); nodes sum; cubic splines k=3 usually",
+    "init_from": "w_s=1, spline ~ 0 (c_i ~ N(0,sigma^2), sigma=0.1), w_b Xavier",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "depth 2-6 in sweeps",
+    "hidden": "width 5 in sweeps",
+    "heads": null,
+    "context": null,
+    "other": {
+     "grid_G_schedule": "3,5,10,20,50,100,200 (toy: up to 1000) increased every 200 LBFGS steps",
+     "spline_order_k": "3 (usually)",
+     "grid_update": "grids updated on the fly from input activations",
+     "pruning_threshold_theta": "1e-2 default",
+     "sparsity_lambda": "1e-2 or 1e-3 in sweeps; mu1=mu2=1"
+    }
+   },
+   {
+    "name": "MLP baseline (sweeps)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fully connected; width 5 or 100 (special functions), width 5 (Feynman); activations Tanh/ReLU/SiLU (Feynman)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "depth 2-6 (2-5 in Fig 3.1)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepMind knot MLP",
+    "role": "baseline",
+    "params": "3 x 10^5",
+    "architecture": "4 layer, width-300",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4",
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LAN (learnable activation network)",
+    "role": "proposed",
+    "params": "N^2 L + N L G",
+    "architecture": "MLP with spline-parametrised learnable activations on nodes; image fit shape [2,128,128,128,128,128,1], G=5",
+    "init_from": "optionally a pretrained MLP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "prediction loss (RMSE/MSE regression; cross-entropy for signature) + lambda*(mu1*sum L1(Phi_l) + mu2*sum entropy(Phi_l)) in the sparsified runs; PINN loss alpha*loss_i + loss_b with alpha=0.01 for PDE",
+   "optimizer": "LBFGS (Fig 3.1: 1800 steps total, no Adam/LBFGS switching or boosting); Adam for LAN image fitting",
+   "lr": "LAN image fit: 1e-3 for 5000 steps then 1e-4 for 5000 steps; not stated for KAN (LBFGS)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4096 (LAN image fit only); not stated otherwise",
+   "steps": "1800 LBFGS steps in total (200 per grid size, 9 grid sizes) on toy functions; 250 steps shown in PDE plots (read from Fig 3.3)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "L1 + entropy on activation functions, lambda 1e-2 or 1e-3, mu1=mu2=1; pruning threshold theta=1e-2",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "KANs ~10x slower than MLPs at same parameter count (no timings given)",
+   "seeds": "3 random seeds per hyperparameter combination (special functions, Feynman); seeds 0..99 with lambda in {1e-2,1e-3} = 200 networks (knot unsupervised)",
+   "other": {
+    "depths_swept": "2,3,4,5,6",
+    "best_model_selection": "best over seeds and depths, lowest test RMSE or minimal shape with test RMSE<1e-2",
+    "PDE_KAN_shapes": "[2,5,1],[2,7,1],[2,10,1] vs MLP depth 2-5; PDE plot compares KAN [2,10,1] with MLP [2,10,1] and [2,100,100,100,1]"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 seeds per configuration, best reported; no error bars",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test RMSE",
+     "definition": "root mean squared error on held-out samples, plotted against parameter count (Pareto frontier = fits with no other fit both simpler and more accurate)",
+     "unit": "RMSE",
+     "higher_is_better": false
+    },
+    {
+     "name": "L2 and H1 error squared",
+     "definition": "PDE solution error in L2 and energy norms",
+     "unit": "squared error",
+     "higher_is_better": false
+    },
+    {
+     "name": "test accuracy",
+     "definition": "signature classification accuracy; mobility-edge classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MLPs of matched depth/width sweeps",
+    "DeepMind 4-layer width-300 MLP (Davies et al. 2021)",
+    "human-constructed KAN shapes",
+    "unpruned KANs"
+   ],
+   "protocol": "Accuracy compared at equal parameter count (Pareto frontier); 3 seeds, best model reported; no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/KindXiaoming/pykan (pip install pykan)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "Both MLPs and KANs are trained with LBFGS for 1800 steps in total.",
+    "where": "Section 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "KANs train about 10x slower than MLPs at equal parameter count; authors call it the biggest bottleneck.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training slowdown vs MLP",
+   "value": "10",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pykan implementation, not optimised; no hardware or timings reported",
+   "quote": "Currently, the biggest bottleneck of KANs lies in its slow training. KANs are usually 10x slower than MLPs, given the same number of parameters.",
+   "table": null,
+   "note": null,
+   "where": "Section 6 (p33); also p18"
+  },
+  {
+   "claim": "Signature classification: a [17,1,14] KAN (G=3,k=3) beats DeepMind's 4-layer width-300 MLP with far fewer parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "81.6",
+   "unit": "%",
+   "baseline_value": "78.0",
+   "n": null,
+   "setup": "Knot dataset, 17 invariants, one-hot signature, cross-entropy; MLP figure is DeepMind's",
+   "quote": "an extremely small [17, 1, 14] KAN is able to achieve 81.6% test accuracy (while Deepmind's 4-layer width-300 MLP achieves 78% test accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Table 3"
+  },
+  {
+   "claim": "An MLP with only 60 parameters reaches 80% on the same task (another lab, unpublished).",
+   "kind": "reported",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "80",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Knot signature classification; Shi Lab, Georgia Tech; public but unpublished",
+   "quote": "an MLP with only 60 parameters is sufficient to achieve 80% accuracy (public but unpublished results)",
+   "table": null,
+   "note": null,
+   "where": "Table 3 caption"
+  },
+  {
+   "claim": "On 27 Feynman equations KANs and MLPs behave comparably on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Width-5 KAN and MLP, depth 2-6, G up to 200, LBFGS, 3 seeds, best over seeds and depths; MLP activations Tanh/ReLU/SiLU",
+   "quote": "We find that MLPs and KANs behave comparably on average.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3, Table 2"
+  },
+  {
+   "claim": "The 2-layer width-10 KAN is 100x more accurate and 100x more parameter efficient than a 4-layer width-100 MLP on the Poisson PINN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy ratio",
+   "value": "100",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Poisson equation on [-1,1]^2, n_i=10000, n_b=800, alpha=0.01; ground truth is symbolic, which the authors say may favour KANs",
+   "quote": "A 2-Layer width-10 KAN is 100 times more accurate than a 4-Layer width-100 MLP (10−7 vs 10−5 MSE) and 100 times more parameter efficient (102 vs 104 parameters).",
+   "table": null,
+   "note": "Superscripts flattened by extraction: 10^-7 vs 10^-5 MSE; 10^2 vs 10^4 parameters.",
+   "where": "Section 3.4"
+  },
+  {
+   "claim": "Theory: scaling exponent alpha = k+1 = 4 for cubic splines, independent of dimension given a smooth KA representation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scaling exponent alpha",
+   "value": "4",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 2.1; constant C may depend on dimension",
+   "quote": "We choose k = 3 cubic splines so α = 4 which is the largest and best scaling exponent compared to other works.",
+   "table": null,
+   "note": null,
+   "where": "Section 2.3"
+  },
+  {
+   "claim": "Measured grid scaling is roughly G^-3, short of the G^-4 expected from theory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test RMSE grid exponent",
+   "value": "-3",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "[2,1,1] KAN on exp(sin(pi x)+y^2); median-based loss gives closer to G^-4",
+   "quote": "a [2,1,1] KAN scales roughly as test RMSE ∝G−3",
+   "table": null,
+   "note": "Text printed 'G−3' vs expected 'G−4'.",
+   "where": "Section 2.4"
+  },
+  {
+   "claim": "KANs nearly reach N^-4 on five toy functions with known KA shape while MLPs plateau.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five toy functions; KANs given true shape; LBFGS 1800 steps; G in {3,...,1000}",
+   "quote": "KANs can almost saturate the steeper red lines, while MLPs struggle to converge even as fast as the slower black lines and plateau quickly.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1, Fig 3.1"
+  },
+  {
+   "claim": "Interpolation threshold of [2,5,1] KAN predicted G~67, observed G~50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "G at best test loss",
+   "value": "50",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 training samples, 15G parameters",
+   "quote": "we expect the interpolation threshold to be G = 1000/15 ≈67, which roughly agrees with our experimentally observed value G ∼50",
+   "table": null,
+   "note": null,
+   "where": "Section 2.4"
+  },
+  {
+   "claim": "KAN parameter count is O(N^2 L (G+k)) versus O(N^2 L) for an MLP; the saving relies on KANs needing much smaller N.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "depth L, width N, order k, G intervals",
+   "quote": "Then there are in total O(N 2L(G + k)) ∼O(N 2LG) parameters.",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2"
+  },
+  {
+   "claim": "Special functions: KAN best test RMSE lower than MLP on 15 of 15 (e.g. lpmv m=0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1; MLP width 5 or 100, depth 2-6; KAN width 5 depth 2-6, with/without pruning; 3 seeds",
+   "quote": "KANs' performance is shown to be consistently better than MLPs",
+   "table": "Table 1, row Associated Legendre function (m = 0), columns Best KAN test RMSE 5.25 × 10−5 and MLP test RMSE 1.74 × 10−2",
+   "note": "Exception: iv, 9.28 × 10−3 vs 1.07 × 10−2, is nearly tied.",
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Signature formula from a [3,2,1] KAN reaches 84.0% test accuracy versus 83.1% for the human DeepMind formula.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "84.0",
+   "unit": "%",
+   "baseline_value": "83.1",
+   "n": null,
+   "setup": "Table 4, inputs mu_r, mu_i, lambda",
+   "quote": "KANs can trade-off between simplicity and accuracy (B, C, D).",
+   "table": "Table 4, row D column test acc 84.0%; row A 83.1%",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Formula F uses only mu_r and lambda and reaches 77.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "[3,1]/[3,1] KAN numerator/denominator",
+   "quote": "KANs also discovered a formula F which only involves two variables (µr and λ) instead of all three variables, with little sacrifice in accuracy.",
+   "table": "Table 4, row F, column test acc 77.8%",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "KAN [17,1,14] to [3,1,14] on the three important variables gives 78.2%; mu_r alone 65.0%, mu_i alone 43.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "65.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "knot signature",
+   "quote": "µr alone can achieve 65.0% accuracy, while µi alone can only achieve 43.8% accuracy",
+   "table": null,
+   "note": "[3,1,14] KAN: 78.2%.",
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Mobility edge GAAM: theory formula 99.2% vs KAN auto 99.0%; MAAM 98.6% vs auto 97.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5",
+   "quote": "Table 5: Symbolic formulas for two systems GAAM and MAAM, ground truth ones and KAN-discovered ones.",
+   "table": "Table 5, rows GAAM Theory 99.2%, KAN auto 99.0%",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Unsupervised knot run rediscovers three known relations; nothing new found.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "[18,1,1] KAN, Gaussian last activation, 200 networks",
+   "quote": "the bad news is that we have not discovered anything new yet",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "KANs avoid catastrophic forgetting on a 5-peak toy task; generalisation unclear.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1D regression, sequential phases",
+   "quote": "it remains unclear whether our method can generalize to more realistic setups",
+   "table": null,
+   "note": null,
+   "where": "Section 3.5"
+  },
+  {
+   "claim": "LAN adds ~4% parameters in the SIREN image fit.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "[2,128,128,128,128,128,1], G=5, Adam, batch 4096",
+   "quote": "the additional parameter increase is roughly G/N = 5/128 ≈4% over the original parameters",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.3"
+  }
+ ],
+ "limits": [
+  "Scope limited by the authors to small-scale AI + Science problems; no KAN experiment on images, text or large data.",
+  "Authors concede mathematical understanding is very limited; no generalised KA theorem for deeper KANs.",
+  "Toy scaling experiments give KANs the true shape; the PDE ground truth is symbolic, which the authors say may favour KANs.",
+  "Best over 3 seeds and depths with no error bars; compares accuracy against parameter count, not wall-clock; no timings given.",
+  "Fast scaling (alpha=4) not reached empirically (G^-3 measured); constant C may depend on dimension.",
+  "Unsupervised relation discovery depends on seed; no new discoveries.",
+  "Continual-learning result is one toy example.",
+  "Training is slow and unoptimised (10x slower than MLPs)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "KAN layer",
+   "definition": "a matrix of 1D functions Phi = {phi_q,p}, p=1..n_in, q=1..n_out",
+   "where": "Section 2.2"
+  },
+  {
+   "term": "external vs internal degrees of freedom",
+   "definition": "graph connectivity learns compositional structure; grid points inside an activation learn univariate functions",
+   "where": "Section 2.4"
+  },
+  {
+   "term": "LAN",
+   "definition": "learnable activation network: MLP with learnable spline activations on nodes",
+   "where": "Appendix B"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kolmogorov-Arnold representation theorem (Kolmogorov 1956/1957; Braun & Griebel 2009)",
+   "year": 1957,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "generalised from depth-2 width 2n+1 to arbitrary widths and depths",
+   "quote": null
+  },
+  {
+   "work": "Lai & Shen, The Kolmogorov superposition theorem can break the curse of dimensionality",
+   "year": 2021,
+   "arxiv": "2112.09963",
+   "relation": "related",
+   "note": "prior KA network analysis",
+   "quote": null
+  },
+  {
+   "work": "Davies et al., Advancing mathematics by guiding human intuition with AI",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "knot dataset and MLP baseline",
+   "quote": null
+  },
+  {
+   "work": "Sharma & Kaplan, A neural scaling law from the dimension of the data manifold",
+   "year": 2020,
+   "arxiv": "2004.10802",
+   "relation": "related",
+   "note": "alpha=(k+1)/d comparison",
+   "quote": null
+  },
+  {
+   "work": "Michaud, Liu & Tegmark, Precision machine learning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "boundary effects and MLP plateau",
+   "quote": null
+  },
+  {
+   "work": "AI Feynman (Udrescu & Tegmark)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Feynman dataset",
+   "quote": null
+  },
+  {
+   "work": "SIREN (Sitzmann et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LAN image fitting",
+   "quote": null
+  },
+  {
+   "work": "PINNs (Raissi et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PDE loss",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 0.1",
+   "caption": "Multi-Layer Perceptrons (MLPs) vs. Kolmogorov-Arnold Networks (KANs)",
+   "page": 1,
+   "why": "Shows fixed activations on nodes versus learnable on edges."
+  },
+  {
+   "figure": "Figure 3.1",
+   "caption": "Compare KANs to MLPs on five toy examples. KANs can almost saturate the fastest scaling law predicted by our theory (alpha = 4), while MLPs scales slowly and plateau quickly.",
+   "page": 14,
+   "why": "Scaling curves."
+  },
+  {
+   "figure": "Figure 6.1",
+   "caption": "Should I use KANs or MLPs?",
+   "page": 33,
+   "why": "Decision tree."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2.10-2.12",
+   "snippet": "phi(x) = w_b b(x) + w_s spline(x); b(x)=silu(x)=x/(1+e^{-x}); spline(x)=sum_i c_i B_i(x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts flattened by extraction (10^2 vs 10^4 appears as '102 vs 104').",
+  "No instructions embedded in the PDF found."
+ ]
 }

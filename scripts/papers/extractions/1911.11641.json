@@ -1,0 +1,405 @@
+{
+ "schema": 1,
+ "key": "1911.11641",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/bisk-2020-piqa.pdf",
+ "bib": {
+  "title": "PIQA: Reasoning about Physical Commonsense in Natural Language",
+  "authors": [
+   "Yonatan Bisk",
+   "Rowan Zellers",
+   "Ronan Le Bras",
+   "Jianfeng Gao",
+   "Yejin Choi"
+  ],
+  "first_author": "Bisk",
+  "year": 2020,
+  "venue": "AAAI 2020 (arXiv v1, Nov 2019)",
+  "arxiv": "1911.11641",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 39847,
+  "chars_total": 39847,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can language models trained on text alone answer physical commonsense questions about everyday objects and their affordances?",
+ "hypothesis": "Modeling physical commonsense is a major challenge, and text-only pretrained models will lack it because of reporting bias.",
+ "contributions": [
+  "PIQA, a two-choice goal/solution benchmark for physical commonsense",
+  "Adversarial cleaning of the data with AFLite",
+  "Evaluation of GPT, BERT and RoBERTa against human performance",
+  "Error analysis by edit distance and single-word pivots"
+ ],
+ "method": {
+  "summary": "Crowdworkers on Mechanical Turk wrote a goal, a valid solution and a subtly wrong 'trick' solution, seeded by instructables.com pages. AFLite removed artifacts and produced the train/dev/test folds. GPT, BERT-Large and RoBERTa-Large were fine-tuned as two-way classifiers and compared with humans.",
+  "task": "two-choice physical commonsense QA (goal, two solutions, pick the correct one)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PIQA",
+    "role": "both",
+    "size": "over 16,000 training QA pairs, ~2K dev, ~3K test; goals avg 7.8 words, solutions avg 21.3 words; over 3.7 million lexical tokens in training",
+    "split": "train/dev/test produced automatically by AFLite",
+    "source": "crowdsourced on MTurk, seeded from instructables.com in six categories (costume, outside, craft, home, food, workshop); English only; annotator pay averaged > 15$/hr",
+    "preprocessing": "AFLite: 5,000 examples used to fine-tune BERT-Large, embeddings of the rest computed, ensemble of linear classifiers on random subsets, instances highly predictable from embeddings discarded; examples with low annotator agreement removed; inputs truncated at 150 tokens (affects 1% of data)"
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenAI GPT",
+    "role": "evaluated",
+    "params": "124M",
+    "architecture": "left-to-right transformer LM",
+    "init_from": "pretrained GPT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "extra": "auxiliary language modeling loss during fine-tuning"
+    }
+   },
+   {
+    "name": "BERT-Large",
+    "role": "evaluated",
+    "params": "340M",
+    "architecture": "bidirectional masked LM transformer",
+    "init_from": "pretrained BERT-Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-Large",
+    "role": "evaluated",
+    "params": "355M",
+    "architecture": "robustly optimized BERT",
+    "init_from": "pretrained RoBERTa-Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over the two options (linear layer on [CLS] hidden state per goal+solution, softmax over two); GPT adds a language modeling loss",
+   "optimizer": null,
+   "lr": "grid search, value not stated",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "grid search, value not stated",
+   "steps": null,
+   "epochs": "grid search, value not stated",
+   "tokens": null,
+   "seq_len": "truncated at 150 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "library": "transformers",
+    "stability": "fine-tuning often unstable, some configurations at chance on validation, particularly BERT"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single reported configuration per model; no seeds or runs stated",
+   "prompting": "each solution scored independently with goal, solution and a [CLS] token",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions where the correct of two solutions is chosen",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random Chance 50.0",
+    "Majority Class",
+    "Human"
+   ],
+   "protocol": "best grid-search config picked on validation; test reported; human accuracy by majority vote of annotators with >=90% on the qualification HIT, measured on development data"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://yonatanbisk.com/piqa"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "Human evaluation was performed on development data",
+    "where": "Experiments"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RoBERTa-Large reaches 77.1% test accuracy against 94.9% human",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.1,
+   "unit": "%",
+   "baseline_value": 94.9,
+   "n": null,
+   "setup": "PIQA test set (~3K), models fine-tuned on the 16K training pairs, best grid-search config chosen on validation; RoBERTa-Large 355M",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FAIR RoBERTa, column Test"
+  },
+  {
+   "claim": "Human accuracy is 94.9% (measured on validation)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "majority vote of qualified annotators on the development data",
+   "note": "Human is a single number in the table, one column; the text says human evaluation was on development data. Abstract rounds to 95%.",
+   "where": "Table 1",
+   "table": "Table 1, row Human, Validation column"
+  },
+  {
+   "claim": "OpenAI GPT test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PIQA test set (~3K), models fine-tuned on the 16K training pairs, best grid-search config chosen on validation; GPT 124M",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row OpenAI GPT, column Test"
+  },
+  {
+   "claim": "BERT-Large test accuracy, lowest of the three",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PIQA test set (~3K), models fine-tuned on the 16K training pairs, best grid-search config chosen on validation; BERT-Large 340M",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Google BERT, column Test"
+  },
+  {
+   "claim": "RoBERTa validation accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PIQA validation, RoBERTa-Large",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FAIR RoBERTa, column Validation"
+  },
+  {
+   "claim": "BERT is worst because the dataset was built adversarial to BERT",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim_text",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AFLite used BERT-Large",
+   "note": null,
+   "where": "Results",
+   "quote": "As the dataset was constructed to be adversarial to BERT, it is not surprising that it performs the worst of three models"
+  },
+  {
+   "claim": "Majority class gets 50.4% test",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PIQA test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Majority Class, column Test"
+  },
+  {
+   "claim": "RoBERTa accuracy on examples whose solutions differ by 'water' is about 75%, versus 90% for 'spoon'",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PIQA validation, RoBERTa",
+   "note": null,
+   "where": "Fig 8 caption",
+   "quote": "RoBERTa performs much butter at examples where ‘spoon’ is the pivot word (90%) versus ‘water’ (75%)"
+  },
+  {
+   "claim": "Roughly 60% of the dataset involves a 1-2 word edit between solutions",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "validation and training, edit distance over tokenised lowercased strings",
+   "note": null,
+   "where": "Analysis",
+   "quote": "roughly 60% of the dataset in both validation and training involves a 1-2 word edit between solutions"
+  },
+  {
+   "claim": "Dataset size: over 16,000 training pairs, ~2K dev, ~3K test",
+   "kind": "measured",
+   "source": null,
+   "metric": "size",
+   "value": 16000,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "training set",
+   "note": null,
+   "where": "Statistics",
+   "quote": "over 16,000 training QA pairs with an additional ∼2K and ∼3k held out for development and testing"
+  }
+ ],
+ "limits": [
+  "Only three models tested (GPT, BERT-Large, RoBERTa-Large), all 2018-2019 era; no later models.",
+  "Authors concede fine-tuning was unstable and report the best grid-search configuration on validation; hyperparameter values and seeds are not given.",
+  "Some dev 'mistakes' are correct answers needing a web search to verify.",
+  "Authors say models trained on large web crawls may eventually surpass human performance.",
+  "Human accuracy measured on dev, models reported on test.",
+  "Two-choice format only, 50% chance.",
+  "English only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AFLite",
+   "definition": "a systematic data bias reduction that discards instances whose given feature representations are collectively highly indicative of the target label",
+   "where": "Removing Annotation Artifacts"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AFLite / WinoGrande (Sakaguchi et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "artifact removal and split production",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "BERT-Large also the AFLite filter model",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "best model",
+   "quote": null
+  },
+  {
+   "work": "GPT (Radford et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "124M original GPT",
+   "quote": null
+  },
+  {
+   "work": "SWAG (Zellers et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adversarial filtering predecessor",
+   "quote": null
+  },
+  {
+   "work": "HellaSwag (Zellers et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adversarial filtering",
+   "quote": null
+  },
+  {
+   "work": "SocialIQa (Sap et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for AFLite use",
+   "quote": null
+  },
+  {
+   "work": "instructables.com",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "seed prompts for annotators",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Results of state-of-the-art natural language understanding models on PIQA, compared with human performance.",
+   "page": 4,
+   "why": "Single table gives all accuracy numbers"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Breaking down PIQA by edit distance between solution choices.",
+   "page": 5,
+   "why": "Shows accuracy falls as edit distance grows"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue in PDF is AAAI 2020; text is the arXiv v1. No embedded instructions found."
+ ]
+}

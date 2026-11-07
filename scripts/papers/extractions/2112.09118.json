@@ -1,19 +1,718 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2112.09118",
  "pdf": "generative-ai/02-rag-retrieval/sources/izacard-2021-unsupervised-dense-information-retrieval-contrastive.pdf",
  "bib": {
   "title": "Unsupervised Dense Information Retrieval with Contrastive Learning",
+  "authors": [
+   "Gautier Izacard",
+   "Mathilde Caron",
+   "Lucas Hosseini",
+   "Sebastian Riedel",
+   "Piotr Bojanowski",
+   "Armand Joulin",
+   "Edouard Grave"
+  ],
   "first_author": "Izacard",
   "year": 2021,
-  "venue": "Trans. Mach. Learn. Res. 2022",
+  "venue": "Transactions on Machine Learning Research (08/2022)",
   "arxiv": "2112.09118",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 75291,
+  "chars_total": 75291,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only"
  },
- "legacy_report": "SOURCE: \"Unsupervised Dense Information Retrieval with Contrastive Learning\", Gautier Izacard, Mathilde Caron, Lucas Hosseini, Sebastian Riedel, Piotr Bojanowski, Armand Joulin, Edouard Grave (Meta AI Research et al.). Transactions on Machine Learning Research (08/2022); arXiv:2112.09118v4, 29 Aug 2022.\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/izacard-2021-unsupervised-dense-information-retrieval-contrastive.pdf\n\nCOVERAGE: I read all 75,168 of 75,168 chars, pages 1–21. That covers the body, the ablations, the discussion, Appendix A (A.1–A.3, Table 10) and Appendix B (B.1–B.3, Tables 11–15). I skimmed the references for origins only. I did not run figures.py: both figure captions came through cleanly in the text.\n\nCLAIMS\n- claim: With no labelled data, Contriever beats BM25 on 11 of 15 BEIR datasets at Recall@100. Its average Recall@100 is still below BM25's.\n  number: 11/15. Average Recall@100 is 60.1 for Contriever and 63.6 for BM25.\n  setup: Unsupervised, BERT-base, BEIR test sets. Trec-COVID uses capped recall. BM25 is 3 points better on average because it wins Trec-COVID (49.8 vs 17.2) and Touche (53.8 vs 22.5) by wide margins.\n  quote: \"it obtains better performance than BM25 on 11 out of 15 datasets from the benchmark for the recall@100\" / Table 11 row \"Avg. 63.6 19.0 45.4 46.9 60.1\"\n  where: p.7 §4.3; p.19 Table 11. I recounted Table 11 myself and got 11/15. Table 11's \"Best on\" row gives Contriever 10 because that count includes the other baselines.\n- claim: At nDCG@10, the unsupervised model still loses to BM25. BM25 is best on 12 of 15 datasets.\n  number: Average nDCG@10 is 36.0 for Contriever and 41.7 for BM25. Best-on counts are 12 for BM25 and 2 for Contriever.\n  setup: Same unsupervised setting. The authors blame Trec-COVID (the training data predates COVID) and Touche-2020 (long documents).\n  quote: \"while Contriever largely closes the gap between unsupervised retrievers and BM25, it is still outperformed by BM25 as reported in Table 11\" / Table 11 nDCG rows \"Avg. 41.7 8.7 24.6 25.1 36.0\" and \"Best on 12 0 1 0 2\"\n  where: p.7; p.19\n- claim: The authors make Recall@100 their main metric, although nDCG@10 is BEIR's main metric. Their reason is that a downstream reader or re-ranker consumes the top 100.\n  number: none\n  setup: Their own framing.\n  quote: \"While nDCG@10 is the main metric of BEIR, we are more interested in the Recall@100 to evaluate bi-encoders, as our goal is to develop retrievers that can be used in ML systems.\"\n  where: p.6 §4.1\n- claim: Positive pairs come from independent random cropping, meaning two spans sampled from the same document, with 10% token deletion. This beat ICT in the ablation.\n  number: nDCG@10 overall is 25.9 for ICT, 32.2 for crop, 33.8 for crop + delete and 32.9 for crop + replace.\n  setup: Unsupervised, Wikipedia only, 200k steps, batch size 2,048, 7 BEIR datasets.\n  quote: \"ICT 23.2 19.4 31.6 27.6 21.3 10.6 55.6 25.9 / Crop 27.6 ... 32.2 / Crop + delete ... 33.8\"\n  where: p.13 Table 7. The authors' reason (p.4): \"Independent cropping also lead to overlap between the two views of the data, hence encouraging the network to learn exact matches between the query and document, in a way that is similar to lexical matching methods like BM25\". They also say the symmetric query and key distributions make MoCo training more stable (p.12).\n- claim: In the final recipe, documents are 256 tokens and span lengths are 5–50% of the document. Training uses MoCo with a queue of 131,072, momentum 0.9995 and temperature 0.05, with batch size 2,048 for 500k steps on 50/50 Wikipedia/CCNet.\n  number: queue 131,072; momentum 0.9995; τ 0.05\n  setup: English Contriever, initialised from BERT base uncased, AdamW, learning rate 5e-5.\n  quote: \"we use the MoCo algorithm He et al. (2020) with a queue of size 131,072, a momentum value of 0.9995 and a temperature of 0.05. We use the random cropping data augmentation, with documents of 256 tokens and span sizes sampled between 5% and 50% of the document length.\"\n  where: p.17 App. A.1\n- claim: With the number of negatives held equal, MoCo did not beat in-batch negatives (in-batch scored slightly higher unsupervised). The authors chose MoCo because its queue scales without a larger batch.\n  number: average nDCG@10 is 30.1 for MoCo and 31.9 for in-batch negatives.\n  setup: Batch size 4,096 with the queue capped at 4,096, unsupervised, 8 BEIR datasets.\n  quote: \"MoCo 26.2 13.1 13.7 33.0 69.5 20.0 11.9 57.6 30.1 / In-batch negatives 24.2 21.6 13.0 33.7 74.9 17.9 13.6 56.1 31.9\"; \"We thus propose to use MoCo as our contrastive learning framework, since it scales to a larger number of negative examples without the need to increase the batch size.\"\n  where: p.11 Table 6 and text\n- claim: More negatives help on average across BEIR, mostly in the unsupervised setting, and not equally on every dataset.\n  number: queue sizes from 2,048 to 131,072\n  setup: Figure 2, nDCG@10 with and without MS MARCO fine-tuning.\n  quote: \"We consider values ranging from 2,048 to 131,072 ... increasing the number of negatives leads to better retrieval performance, especially in the unsupervised setting. However, we note that this effect is not equally strong for all datasets.\"\n  where: p.11\n- claim: After MS MARCO fine-tuning, Contriever has the best average nDCG@10 among the bi-encoders shown, below the sparse Splade v2. It is state of the art on Recall@100. Re-ranking its results with a cross-encoder gives state-of-the-art average nDCG@10.\n  number: Average nDCG@10 without CQA is 47.5, against 50.6 for Splade v2, 43.7 for TAS-B and 44.0 for BM25. Ours+CE reaches 51.2. Recall@100 rises from 65.0 to 67.1, and Ours+CE is \"Best on\" 9 datasets.\n  setup: 14 BEIR datasets (3 excluded for licence), MS MARCO excluded from the average. Re-ranker: ms-marco-MiniLM-L-6-v2. Fine-tuning used ASAM, in-batch negatives and one round of hard-negative mining, with no distillation.\n  quote: \"contriever obtains the best results among dense bi-encoder methods for the nDCG@10, and is state-of-the-art for the recall@100 (improving the average recall@100 from 65.0 to 67.1)\"; Table 2 \"Avg. w/o CQA 44.0 49.5 26.3 41.3 43.7 43.1 45.1 50.6 47.5 51.2\"\n  where: p.8 Table 2 and text; p.18 Table 10\n- claim: Most of the fine-tuned gain comes from the pre-training. When BERT gets the same fine-tuning, it scores lower.\n  number: nDCG@10 overall is 42.0 for BERT and 46.5 for Contriever.\n  setup: Ablation-scale models, MS MARCO fine-tuning for 20k steps, 8 BEIR datasets.\n  quote: \"BERT 28.2 44.6 25.9 35.0 84.0 34.4 13.0 69.8 42.0 / Contriever 33.2 50.2 28.8 46.0 85.4 38.8 16.0 77.7 46.5\"\n  where: p.13 Table 9\n- claim: In the few-shot setting, pre-training alone beats BERT even when BERT is first fine-tuned on MS MARCO.\n  number: SciFact nDCG@10 is 84.0 for Contriever, 80.9 for BERT+MS MARCO and 66.5 for BM25. FiQA is 36.4 against 30.9.\n  setup: 729, 2,590 and 5,500 in-domain training queries; 500 epochs.\n  quote: \"Contriever - 84.0 33.6 36.4 / BERT ms marco 80.9 33.2 30.9\"\n  where: p.8 Table 3\n- claim: On unsupervised open-domain QA, Contriever beats BM25 on NQ at R@100 and ties it on TriviaQA.\n  number: NQ R@100 is 82.1 against 78.3. TriviaQA R@100 is 83.2 against 83.2.\n  setup: Wikipedia Dec-2018 dump.\n  quote: \"BM25 (Ma et al., 2021) - 62.9 78.3 - 76.4 83.2 / Contriever 47.8 67.8 82.1 59.4 74.2 83.2\"\n  where: p.7 Table 1\n- claim: On Mr. TyDi (monolingual, 11 languages), unsupervised mContriever beats BM25 on average Recall@100 but trails it on MRR@100. After MS MARCO fine-tuning it is state of the art on R@100.\n  number: average R@100 is 77.2 for mContriever and 74.3 for BM25. Average MRR@100 is 25.0 against 33.3. With MS MARCO, R@100 is 87.0, and adding Mr. TyDi fine-tuning gives 93.6.\n  setup: mBERT init, 29 pre-training languages, queue 32,768.\n  quote: Table 4 rows \"BM25 ... 33.3\", \"mContriever ... 25.0\", \"BM25 ... 74.3\", \"mContriever ... 77.2\", \"+ MS MARCO ... 87.0\"\n  where: p.10 Table 4\n- claim: For cross-lingual retrieval (queries in 26 languages against English Wikipedia), fine-tuning on English-only MS MARCO beats CORA. Unsupervised mContriever is well below CORA.\n  number: average R@100 is 65.6 for mContriever+MS MARCO, 59.8 for CORA and 49.2 for unsupervised mContriever.\n  setup: Derived from MKQA, 6,619 queries, lowercased.\n  quote: \"CORA (Asai et al., 2021) 49.0 59.8 ... / mContriever 31.4 49.2 ... / + MS MARCO 53.9 65.6\"\n  where: p.11 Table 5\n- claim: Adding pre-training languages hurts quality (\"curse of multilinguality\").\n  number: Mr. TyDi average R@100 is 78.9 with 11 languages and 77.2 with 29.\n  quote: \"11 languages 83.4 ... 78.9 / 29 languages 82.0 ... 77.2\"\n  where: p.21 Table 15\n\nLIMITS: The authors concede that the unsupervised model is \"competitive with BM25 (albeit not state-of-the-art)\" (p.13). It still loses to BM25 on nDCG@10, on average Recall@100, on Trec-COVID, on Touche-2020 (long documents) and on Mr. TyDi MRR@100. Their MS MARCO fine-tuning is deliberately simple, with no distillation, so it is not compared against stronger recipes on equal terms. Three BEIR datasets are excluded for licence reasons. All ablations use the small Wikipedia-only setting. Every model is BERT-base. The paper reports no latency, no index size and no comparison with hybrid BM25+dense (except Mr. TyDi's reported Hybrid baseline, which beats unsupervised mContriever: average R@100 80.9). The temperature for multilingual pre-training was not tuned. On dating: these baselines are from 2021, and later embedders such as E5, GTE and BGE are absent, so \"state of the art\" is stale.\n\nBUILDS ON: InfoNCE/instance discrimination (Wu et al., 2018); MoCo (He et al., 2020); SimCLR (Chen et al., 2020); ICT (Lee et al., 2019); the bi-encoder from DSSM (Huang et al., 2013) and DPR (Karpukhin et al., 2020); ANCE (Xiong et al., 2020); BEIR (Thakur et al., 2021); CCNet (Wenzek et al., 2020); BERT (Devlin et al., 2019). Concurrent work: coCondenser (Gao & Callan, 2021) and Spider (Ram et al., 2021).\n\nCODE: none in the paper. The repo it points to is https://github.com/facebookresearch/contriever (p.2). Two equations are worth keeping, from p.4 and p.6: InfoNCE \"L(q,k+) = −exp(s(q,k+)/τ) / (exp(s(q,k+)/τ) + Σ exp(s(q,ki)/τ))\" and the momentum update \"θk←mθk + (1−m)θq\". The PDF extraction drops the log in InfoNCE, which is presumably −log of that ratio, so check the equation against the PDF before quoting it.\n\nFIGURES:\n- Fig. 1, p.5: \"Unsupervised retrieval. We compare our pre-training without using any annotated data to REALM, SimCSE and BM25 ... on par with BM25 but on 2 datasets.\" This per-dataset Recall@100 bar chart shows the gap closing, and the two Trec-COVID/Touche outliers, at a glance.\n- Fig. 2, p.12: \"Impact of the number of negatives. ... nDCG@10 as a function of the queue size, with and without fine-tuning on MS MARCO.\" It shows uneven scaling across datasets faster than a table would.\n\nPROBLEMS: No embedded instructions. Small faults:\n- The InfoNCE equation lost its log and fraction layout in extraction.\n- Table 2 has the stray value \"37.0.\" for BM25+CE on CQADupStack.\n- The Table 12 checkmarks did not extract, so per-language pre-training/evaluation membership is unreadable.\n- Table 11 gives BM25 average nDCG@10 as 41.7 and Table 2 gives 43.0. The two use different averaging sets: Table 11 appears to include MS MARCO. Cite each average with its own table.\n- Figure 1's caption (\"on par ... but on 2 datasets\") and the text's \"11 out of 15\" describe different things. Being \"competitive\" is not the same as winning."
+ "type": "empirical",
+ "question": "Can a dense retriever be trained with no supervision, using contrastive learning, to match BM25 and to serve as pre-training for supervised, few-shot and multilingual retrieval?",
+ "hypothesis": "Contrastive learning with positive pairs built from a single document (random cropping) and many negatives (MoCo) yields unsupervised dense retrievers competitive with BM25.",
+ "contributions": [
+  "Contrastive learning gives strong unsupervised retrievers, competitive with BM25 on Recall@100 on most of BEIR",
+  "In a few-shot setting the model benefits from few examples and beats transfer from MS MARCO",
+  "As pre-training before MS MARCO fine-tuning it gives strong BEIR performance",
+  "Ablations show cropping works better than the inverse Cloze task",
+  "A multilingual dense retriever (mContriever) trained with contrastive learning reaches state-of-the-art on Mr. TyDi Recall@100 and cross-lingual MKQA"
+ ],
+ "method": {
+  "summary": "Contriever is a shared-weight BERT-base bi-encoder (mean-pooled last layer, dot-product score) trained with an InfoNCE loss on two random crops of the same document, with a MoCo momentum-encoder queue of negatives. It is evaluated unsupervised, after MS MARCO fine-tuning, few-shot, and in a multilingual variant (mContriever).",
+  "task": "Document/passage retrieval (BEIR, NaturalQuestions, TriviaQA, Mr. TyDi, MKQA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia + CCNet (pre-training)",
+    "role": "pretrain",
+    "size": null,
+    "split": "half of batches from each source",
+    "source": "Wikipedia and CCNet (Wenzek et al., 2020); random pieces of text of 256 tokens",
+    "preprocessing": "random cropping, span 5%-50% of document length, token deletion p=10%"
+   },
+   {
+    "name": "MS MARCO",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Bajaj et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "BEIR",
+    "role": "eval",
+    "size": "18 datasets; 14 used in averages (3 excluded for licence, MS MARCO excluded from averages)",
+    "split": "test",
+    "source": "Thakur et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "NaturalQuestions, TriviaQA (open domain)",
+    "role": "eval",
+    "size": null,
+    "split": "test; collection = English Wikipedia dump of Dec. 20, 2018",
+    "source": "Lee et al. 2019 versions",
+    "preprocessing": null
+   },
+   {
+    "name": "SciFact / NFCorpus / FiQA (few-shot)",
+    "role": "both",
+    "size": "729 / 2,590 / 5,500 train queries",
+    "split": "SciFact: 10% of train held out as dev, leaving 729 train samples",
+    "source": "BEIR",
+    "preprocessing": null
+   },
+   {
+    "name": "Mr. TyDi",
+    "role": "both",
+    "size": "11 languages",
+    "split": "test",
+    "source": "Zhang et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MKQA (cross-lingual)",
+    "role": "eval",
+    "size": "6619 queries after filtering",
+    "split": null,
+    "source": "Longpre et al. 2020; retrieval over English Wikipedia",
+    "preprocessing": "unanswerable, yes/no and long-answer questions removed; queries and documents lowercased at evaluation"
+   }
+  ],
+  "models": [
+   {
+    "name": "Contriever",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-base uncased bi-encoder, one shared encoder for query and document, mean pooling of last layer",
+    "init_from": "BERT base uncased",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "score": "dot product",
+     "parameter count": "not stated"
+    }
+   },
+   {
+    "name": "mContriever",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multilingual BERT bi-encoder",
+    "init_from": "mBERT (104 languages)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain_languages": "29 (CCNet), sampled uniformly over languages"
+    }
+   },
+   {
+    "name": "BM25, DPR, ANCE, TAS-B, GenQ, ColBERT, Splade v2, REALM, SimCSE (RoBERTa large), CORA, mBERT/XLM-R + MS MARCO",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ms-marco-MiniLM-L-6-v2 cross-encoder",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "cross-encoder re-ranker",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "re-ranks Contriever top 100 (Ours+CE)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE contrastive loss with temperature; MoCo queue of negatives with momentum-encoder keys (theta_k <- m theta_k + (1-m) theta_q)",
+   "optimizer": "AdamW for pre-training; ASAM for English MS MARCO fine-tuning; AdamW for multilingual fine-tuning",
+   "lr": "5e-5 pre-training; 1e-5 MS MARCO fine-tuning (English and multilingual)",
+   "lr_schedule": "mContriever pre-training: linear warmup then linear decay; multilingual fine-tuning: linear decay after warmup; English schedule not stated",
+   "warmup": "mContriever pre-training 20,000 steps; multilingual fine-tuning 1000 steps",
+   "batch_size": "2,048 pre-training; 1024 MS MARCO fine-tuning (ablations: 2,048 pretrain on 32 GPUs, 512 fine-tune on 8 GPUs); few-shot 256; multilingual fine-tune 1024",
+   "steps": "500,000 pre-training (Contriever and mContriever); MS MARCO 20,000 steps for the first (random negative) model, then a second model with hard negatives (steps not stated); Mr. TyDi 20k; NQ 1k; ablations 200k pre-train, 20k fine-tune",
+   "epochs": "few-shot: 500 epochs with early stopping on dev every 100 updates",
+   "tokens": null,
+   "seq_len": "256 tokens per document (crop spans 5%-50% of it)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "token deletion 10% as data augmentation",
+   "hardware": "ablations: 32 GPUs pre-training, 8 GPUs fine-tuning; GPU type not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "moco_queue": "131,072 (Contriever), 32,768 (mContriever)",
+    "moco_momentum": "0.9995 (Contriever), 0.999 (mContriever)",
+    "temperature": "0.05",
+    "finetune_negatives": "in-batch, no MoCo; each query has gold doc and one negative (random in phase 1, hard negative 10% of the time in phase 2)",
+    "multilingual_temperature_no_pretrain": "tau=1 for mBERT, 5 for XLM-R, chosen from {10,5,2,1,0.1,0.05}",
+    "NQ_finetune": "reduced to 1k steps due to overfitting"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per configuration, no seeds or variance reported",
+   "prompting": null,
+   "retrieval": "bi-encoder dot product over pre-encoded collection (FAISS cited); cross-encoder re-ranks top 100 for Ours+CE",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "nDCG@10",
+     "definition": "ranking quality of top 10 retrieved documents; BEIR main metric",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@100",
+     "definition": "recall of relevant documents in top 100; Trec-COVID uses capped Recall@100 per BEIR",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-k retrieval accuracy",
+     "definition": "number of questions for which at least one of the top-k passages contains the answer (NQ, TriviaQA)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR@100",
+     "definition": "mean reciprocal rank at 100 (Mr. TyDi)",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "REALM",
+    "SimCSE",
+    "DPR",
+    "ANCE",
+    "TAS-B",
+    "GenQ",
+    "ColBERT",
+    "Splade v2",
+    "BM25+CE",
+    "ICT and masked salient spans (Sachan et al. 2021)",
+    "CORA",
+    "mDPR",
+    "mBERT+MS MARCO",
+    "XLM-R+MS MARCO"
+   ],
+   "protocol": "Single reported numbers per setting; no seeds, variance or significance tests. Averages exclude MS MARCO and (for 'w/o CQA') CQADupStack; 3 BEIR datasets excluded for licence."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/contriever",
+   "weights": "pre-trained models released at the same repo",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.moco_queue",
+    "quote": "queue of size 131,072, a momentum value of 0.9995 and a temperature of 0.05",
+    "where": "Appendix A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Unsupervised Contriever beats BM25 on 11 of 15 BEIR datasets at Recall@100",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won vs BM25 (Recall@100)",
+   "value": 11,
+   "unit": "datasets of 15",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unsupervised Contriever (BERT-base, MoCo + random cropping, Wikipedia+CCNet), no MS MARCO or other labelled data; BEIR test sets",
+   "note": "Table 11 'Best on' row gives Contriever 10 because it counts the other baselines too; recounting rows gives 11 over BM25",
+   "where": "Sec 4.3",
+   "quote": "it obtains better performance than BM25 on 11 out of 15 datasets from the benchmark for the recall@100"
+  },
+  {
+   "claim": "Average unsupervised Recall@100 is still below BM25",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100 avg",
+   "value": 60.1,
+   "unit": "Recall@100",
+   "baseline_value": 63.6,
+   "n": null,
+   "setup": "Unsupervised Contriever (BERT-base, MoCo + random cropping, Wikipedia+CCNet), no MS MARCO or other labelled data; BEIR test sets; Trec-COVID capped recall; average row of Table 11",
+   "note": "BM25 wins Trec-COVID 49.8 vs 17.2 and Touche 53.8 vs 22.5",
+   "where": "App Table 11",
+   "table": "Table 11, Recall@100 block, row Avg., column Contriever (BM25 63.6)"
+  },
+  {
+   "claim": "Unsupervised Contriever loses to BM25 on average nDCG@10",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 avg",
+   "value": 36.0,
+   "unit": "nDCG@10",
+   "baseline_value": 41.7,
+   "n": null,
+   "setup": "Unsupervised Contriever (BERT-base, MoCo + random cropping, Wikipedia+CCNet), no MS MARCO or other labelled data; BEIR test sets",
+   "note": "BM25 best on 12 datasets, Contriever 2",
+   "where": "App Table 11",
+   "table": "Table 11, nDCG@10 block, row Avg., column Contriever (BM25 41.7)"
+  },
+  {
+   "claim": "Authors attribute the BM25 gap to Trec-COVID (data predates COVID) and Touche-2020 (long documents)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unsupervised Contriever (BERT-base, MoCo + random cropping, Wikipedia+CCNet), no MS MARCO or other labelled data; BEIR test sets",
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "On NaturalQuestions Contriever gets Recall@100 of 82.1 vs BM25 78.3, unsupervised",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@100",
+   "value": 82.1,
+   "unit": "Recall@100 (%)",
+   "baseline_value": 78.3,
+   "n": null,
+   "setup": "Unsupervised, NQ test, Wikipedia Dec 2018 dump; BM25 from Ma et al. 2021",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Contriever, column NaturalQuestions R@100 (BM25 78.3)"
+  },
+  {
+   "claim": "On TriviaQA unsupervised Contriever ties BM25 at Recall@100",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@100",
+   "value": 83.2,
+   "unit": "Recall@100 (%)",
+   "baseline_value": 83.2,
+   "n": null,
+   "setup": "Unsupervised, TriviaQA test",
+   "note": "BM25 is ahead at R@20 (76.4 vs 74.2)",
+   "where": "Table 1",
+   "table": "Table 1, row Contriever, column TriviaQA R@100 (BM25 83.2)"
+  },
+  {
+   "claim": "After MS MARCO fine-tuning Contriever has the best average nDCG@10 among dense bi-encoders; Splade v2 (sparse) is higher",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 avg",
+   "value": 47.5,
+   "unit": "nDCG@10",
+   "baseline_value": 44.0,
+   "n": null,
+   "setup": "Contriever pre-trained then fine-tuned on MS MARCO (in-batch negatives, hard negatives 10% of time); BEIR test sets, bi-encoder; Avg. w/o CQADupStack; BM25 baseline 44.0, Splade v2 50.6, TAS-B 43.7",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Avg. w/o CQA, column Ours (BM25 44.0)"
+  },
+  {
+   "claim": "Re-ranking Contriever's top 100 with a cross-encoder gives the best average nDCG@10 in the table",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10 avg",
+   "value": 51.2,
+   "unit": "nDCG@10",
+   "baseline_value": 49.5,
+   "n": null,
+   "setup": "Contriever pre-trained then fine-tuned on MS MARCO (in-batch negatives, hard negatives 10% of time); BEIR test sets, bi-encoder + ms-marco-MiniLM-L-6-v2 cross-encoder; baseline BM25+CE",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Avg. w/o CQA, column Ours+CE (BM25+CE 49.5)"
+  },
+  {
+   "claim": "Fine-tuned Contriever improves average Recall@100 over the previous best",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100 avg",
+   "value": 67.1,
+   "unit": "Recall@100",
+   "baseline_value": 65.0,
+   "n": null,
+   "setup": "Contriever pre-trained then fine-tuned on MS MARCO (in-batch negatives, hard negatives 10% of time); BEIR test sets, bi-encoder",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "improving the average recall@100 from 65.0 to 67.1"
+  },
+  {
+   "claim": "Few-shot on SciFact (729 train queries), Contriever beats BM25 and BERT",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 84.0,
+   "unit": "nDCG@10",
+   "baseline_value": 66.5,
+   "n": null,
+   "setup": "Few-shot fine-tune on in-domain train set, no MS MARCO; BERT 75.2",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Contriever (no additional data), column SciFact"
+  },
+  {
+   "claim": "Few-shot on FiQA (5,500 train queries), Contriever beats BM25 by 12.8 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 36.4,
+   "unit": "nDCG@10",
+   "baseline_value": 23.6,
+   "n": null,
+   "setup": "Few-shot, no additional data; BERT 26.1, BERT+MS MARCO 30.9",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Contriever (no additional data), column FiQA"
+  },
+  {
+   "claim": "Random cropping beats the inverse Cloze task as positive-pair construction",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 32.2,
+   "unit": "nDCG@10 overall",
+   "baseline_value": 25.9,
+   "n": null,
+   "setup": "200k-step pre-training on English Wikipedia, batch 2,048, no MS MARCO, 7 datasets",
+   "note": "Crop+delete 33.8 is best",
+   "where": "Table 7",
+   "table": "Table 7, row Crop, column Overall (ICT 25.9)"
+  },
+  {
+   "claim": "MoCo and in-batch negatives differ little; in-batch scores slightly higher without fine-tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 30.1,
+   "unit": "nDCG@10 avg",
+   "baseline_value": 31.9,
+   "n": null,
+   "setup": "Batch/queue 4,096, no MS MARCO fine-tune, 8 BEIR datasets",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, AVG column, row MoCo (in-batch 31.9)"
+  },
+  {
+   "claim": "Training data: CCNet alone scores best overall in the ablation; 50/50 mix scores 34.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 34.9,
+   "unit": "nDCG@10 overall",
+   "baseline_value": 33.0,
+   "n": null,
+   "setup": "Without fine-tuning, 8 datasets; baseline is Wikipedia only",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row CCNet, column Overall (Wiki 33.0, Uniform 33.9, 50/50% 34.7)"
+  },
+  {
+   "claim": "Same MS MARCO fine-tuning on BERT gives lower results than on Contriever, so the gain comes from pre-training",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 46.5,
+   "unit": "nDCG@10 overall",
+   "baseline_value": 42.0,
+   "n": null,
+   "setup": "8 BEIR datasets after MS MARCO fine-tune",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Contriever, column Overall (BERT 42.0)"
+  },
+  {
+   "claim": "mContriever unsupervised beats BM25 on Mr. TyDi Recall@100",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 77.2,
+   "unit": "Recall@100 avg",
+   "baseline_value": 74.3,
+   "n": null,
+   "setup": "Unsupervised mContriever pre-trained on 29 languages; Mr. TyDi test",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, Recall@100 block, row mContriever, column avg (BM25 74.3)"
+  },
+  {
+   "claim": "Unsupervised mContriever is behind BM25 on Mr. TyDi MRR@100",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@100",
+   "value": 25.0,
+   "unit": "MRR@100 avg",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "Unsupervised mContriever",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, MRR@100 block, row mContriever, column avg (BM25 33.3)"
+  },
+  {
+   "claim": "mContriever + MS MARCO gets state-of-the-art Mr. TyDi Recall@100",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 87.0,
+   "unit": "Recall@100 avg",
+   "baseline_value": 80.9,
+   "n": null,
+   "setup": "mContriever fine-tuned on MS MARCO (English); baseline Hybrid",
+   "note": "Further fine-tuning on Mr. TyDi gives 93.6",
+   "where": "Table 4",
+   "table": "Table 4, Recall@100 block, row + MS MARCO, column avg (Hybrid 80.9)"
+  },
+  {
+   "claim": "Cross-lingual MKQA Recall@100: mContriever + MS MARCO beats CORA using only English supervised data",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 65.6,
+   "unit": "Recall@100 avg",
+   "baseline_value": 59.8,
+   "n": null,
+   "setup": "MKQA queries, English Wikipedia retrieval, 6619 queries",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, column Avg. R@100, row + MS MARCO (CORA 59.8)"
+  },
+  {
+   "claim": "Pre-training on only the 11 Mr. TyDi languages beats 29 languages (curse of multilinguality)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 78.9,
+   "unit": "Recall@100 avg",
+   "baseline_value": 77.2,
+   "n": null,
+   "setup": "Unsupervised, Mr. TyDi test",
+   "note": null,
+   "where": "App Table 15",
+   "table": "Table 15, R@100 block, row 11 languages, column avg (29 languages 77.2)"
+  },
+  {
+   "claim": "More negatives help on average, especially unsupervised, but unevenly across datasets",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoCo queue 2,048 to 131,072; BEIR average",
+   "note": null,
+   "where": "Sec 6, Fig 2"
+  }
+ ],
+ "limits": [
+  "Unsupervised model loses to BM25 on nDCG@10 average and on Trec-COVID, Touche-2020",
+  "Authors say long documents (Touche-2020) are poorly supported by dense retrievers",
+  "MS MARCO fine-tuning is simple: no distillation and simple negative mining; authors expect more gains from adding those",
+  "No seeds, variance or significance tests reported; parameter count, compute, GPU type and wall clock not stated",
+  "Multilingual pre-training on more languages degrades performance",
+  "Unsupervised mContriever lags BM25 on MRR@100"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Inverse Cloze Task",
+   "definition": "a data augmentation that generates two mutually exclusive views of a document: a sampled span as query and its complement as key",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "Independent cropping",
+   "definition": "samples independently two spans from a document to form a positive pair",
+   "where": "Sec 3.1.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Latent retrieval for weakly supervised open domain QA (Lee et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Inverse Cloze Task, compared against cropping",
+   "quote": null
+  },
+  {
+   "work": "Momentum contrast for unsupervised visual representation learning (He et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MoCo queue + momentum encoder",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": "bi-encoder baseline",
+   "quote": null
+  },
+  {
+   "work": "ANCE (Xiong et al.)",
+   "year": 2020,
+   "arxiv": "2007.00808",
+   "relation": "baseline",
+   "note": "dense baseline",
+   "quote": null
+  },
+  {
+   "work": "BEIR (Thakur et al.)",
+   "year": 2021,
+   "arxiv": "2104.08663",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "BM25 (Robertson & Zaragoza)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unsupervised lexical baseline",
+   "quote": null
+  },
+  {
+   "work": "Mr. TyDi (Zhang et al.)",
+   "year": 2021,
+   "arxiv": "2108.08787",
+   "relation": "uses-data",
+   "note": "multilingual eval",
+   "quote": null
+  },
+  {
+   "work": "MKQA (Longpre et al.)",
+   "year": 2020,
+   "arxiv": "2007.15207",
+   "relation": "uses-data",
+   "note": "cross-lingual eval",
+   "quote": null
+  },
+  {
+   "work": "CCNet (Wenzek et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training data",
+   "quote": null
+  },
+  {
+   "work": "Splade v2 (Formal et al.)",
+   "year": 2021,
+   "arxiv": "2109.10086",
+   "relation": "baseline",
+   "note": "sparse learned baseline",
+   "quote": null
+  },
+  {
+   "work": "Spider (Ram et al.)",
+   "year": 2021,
+   "arxiv": "2112.07708",
+   "relation": "related",
+   "note": "contemporary unsupervised retriever",
+   "quote": null
+  },
+  {
+   "work": "Sachan et al. end-to-end multi-doc reader and retriever",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ICT and masked salient spans numbers in Table 1",
+   "quote": null
+  },
+  {
+   "work": "CORA (Asai et al.)",
+   "year": 2021,
+   "arxiv": "2107.11976",
+   "relation": "baseline",
+   "note": "cross-lingual baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Unsupervised retrieval. We compare our pre-training without using any annotated data to REALM, SimCSE and BM25 (Recall@100 per BEIR dataset).",
+   "page": 5,
+   "why": "Shows per-dataset where unsupervised Contriever matches or trails BM25"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Impact of the number of negatives. nDCG@10 as a function of the queue size, with and without fine-tuning on MS MARCO.",
+   "page": 12,
+   "why": "Per-dataset effect of MoCo queue size 2,048 to 131,072"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "BEIR Benchmark nDCG@10 for bi-encoder methods without re-ranker.",
+   "page": 8,
+   "why": "Main comparison against fine-tuned retrievers"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1.1, Eq 1",
+   "snippet": "s(q, d) = <f_theta(q), f_theta(d)>; InfoNCE L(q,k+) = -log[ exp(s(q,k+)/tau) / (exp(s(q,k+)/tau) + sum_i exp(s(q,k_i)/tau)) ] (extracted text omits the log)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Eq 1 in extracted text lacks the log; Table 3 header 'Additional data' rows parsed in column order",
+  "Figure 1 values not extractable from text; Table 11 'Best on' for Contriever (10) counts all baselines"
+ ]
 }

@@ -1,19 +1,569 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "https://doi.org/10.18653/v1/p19-1536",
  "pdf": "generative-ai/07-agentic-applications/sources/henderson-2019-training-neural-response-selection-task.pdf",
  "bib": {
   "title": "Training Neural Response Selection for Task-Oriented Dialogue Systems",
+  "authors": [
+   "Matthew Henderson",
+   "Ivan Vulić",
+   "Daniela Gerz",
+   "Iñigo Casanueva",
+   "Paweł Budzianowski",
+   "Sam Coope",
+   "Georgios Spithourakis",
+   "Tsung-Hsien Wen",
+   "Nikola Mrkšić",
+   "Pei-Hao Su"
+  ],
   "first_author": "Henderson",
   "year": 2019,
-  "venue": "ACL (1) 2019",
+  "venue": "ACL 2019 (57th Annual Meeting of the ACL), pp. 5392-5404",
   "arxiv": null,
-  "doi": null
+  "doi": "10.18653/v1/p19-1536"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "0cc86b74-e81e-4405-a519-2f1165f541d1"
+  "at": "2026-11-07",
+  "chars_read": 55284,
+  "chars_total": 55284,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; no appendix in PDF; supplemental t-SNE plots not included."
  },
- "legacy_report": "SOURCE: \"Training Neural Response Selection for Task-Oriented Dialogue Systems\", Matthew Henderson, Ivan Vulić, Daniela Gerz, Iñigo Casanueva, Paweł Budzianowski, Sam Coope, Georgios Spithourakis, Tsung-Hsien Wen, Nikola Mrkšić, Pei-Hao Su (PolyAI). ACL 2019 (Proceedings pp. 5392–5404). No arXiv id or DOI is printed in the PDF. The DOI comes from the caller only.\n\nCOVERAGE: Read all 55,304 of 55,304 chars across 13 PDF pages. I skimmed the references (pp. 5401–5404) only for origins. Page references below use the printed proceedings numbers (PDF p.1 = 5392 through PDF p.13 = 5404). There is no appendix in the PDF. The \"supplemental material\" with the full 77-category t-SNE plots is not included.\n\nKEY CORRECTION FOR THE NOTE: The note says the model was fine-tuned on \"six target domains\". The paper says six in some places, but only five domains are actually fine-tuned: OpenSubtitles, AmazonQA, Ubuntu, Banking and SemEval15. The sixth \"domain\" is the held-out Reddit test set, which gets no fine-tuning. The paper's own conclusion says \"across each of the five different dialogue domains\" (p. 5400). Table 3's caption still says \"all six target domains\". The paper also never uses the term \"dual encoder\". It calls the model an \"input-response encoder\", with separate towers scored by cosine similarity.\n\nCLAIMS\n- claim: Pretraining on Reddit and then fine-tuning beats both applying the Reddit model with no fine-tuning and training from scratch, on every fine-tuned domain.\n  number: FT-DIRECT R100@1: OpenSub 30.6, AmazonQA 84.2, Ubuntu 38.7, Banking 94.8, SemEval15 52.5 (FT-MIXED 56.5)\n  setup: R100@1 means the correct response must rank first among 100 candidates. Same encoder throughout. TARGET-ONLY = same architecture trained from scratch.\n  quote: \"TARGET -ONLY - 29.0 (18.2) 83.3 (11.6) 6.2 ( 2.3) 88.3 ( 1.2) 7.5 ( 1.1) / FT-DIRECT - 30.6 (40.0) 84.2 (30.8) 38.7 (51.9) 94.8 (55.3) 52.5 (55.2)\"\n  where: Table 3, p. 5398\n- claim: The gain from pretraining over from-scratch training is uneven. It is large on SemEval15 (+45 points) and Ubuntu (+32.5). It is small on Banking (+6.5), OpenSub (+1.6) and AmazonQA (+0.9). This is my arithmetic from Table 3. The authors' prose says the gains are large \"especially for tasks with smaller training datasets (e.g., BANKING, SEMEVAL15)\", but their own Banking from-scratch score is 88.3.\n  number: from-scratch vs FT-DIRECT on Banking: 88.3 vs 94.8\n  setup: Table 3, as above\n  quote: \"We report large gains over the TARGET -ONLY model (which trains a domain-speciﬁc response selection encoder from scratch) especially for tasks with smaller training datasets (e.g., BANKING , SEMEVAL 15).\"\n  where: p. 5399\n- claim: Fine-tuning on a small amount of in-domain data gives large gains over using the Reddit model with no fine-tuning.\n  number: +67.5 Banking, +32.5 Ubuntu, +22.8 AmazonQA, +11.5 OpenSub. These are absolute points, though the paper prints them with \"%\".\n  setup: FT-DIRECT vs REDDIT-DIRECT, R100@1\n  quote: \"the gains over REDDIT -DIRECT are +67.5% on BANKING , +32.5% on UBUNTU , +22.8% on AMAZON QA, and +11.5% on OPEN -SUB.\"\n  where: p. 5399\n- claim: The authors' main conclusion is that in-domain data is too small to train from scratch but is invaluable for adapting a pretrained model.\n  number: none\n  setup: generalisation across Table 3\n  quote: \"while in-domain data are insufﬁcient to train response selection models from scratch for many target domains, such data are invaluable for adapting a pretrained general-domain model to the target domain.\"\n  where: p. 5399\n- claim: The pretraining corpus is 727M Reddit comment-response pairs, built from about 3.7B comments posted January 2015 to December 2018. By comparison, MultiWOZ has 115,424 turns.\n  number: 727M pairs; 3.7B comments\n  setup: kept only sentences with more than 8 and fewer than 128 word tokens\n  quote: \"the Reddit corpus used in this work for response selection pretraining comprises 727M dialogue turns.\" / \"span almost 3.7B comments\"\n  where: p. 5393\n- claim: The target datasets range from about 284M pairs down to about 10K pairs.\n  number: Reddit 654,396,778 train; OpenSub 283,651,561; AmazonQA 3,316,905; Ubuntu 3,954,134; Banking 10,395; SemEval15 9,680\n  setup: training counts of unique (input, response) pairs. Banking is a new e-banking FAQ dataset with 77 categories, 10 paraphrases per question, split 70/20/10.\n  quote: \"BANKING New e-banking applications, banking FAQ 10,395 1,485\" / \"SEMEVAL 15 (Nakov et al., 2015) lifestyle, tourist and residential info 9,680 1,158\"\n  where: Table 1, p. 5397\n- claim: Off-the-shelf sentence encoders used as plain similarity (SIM) do poorly, sometimes worse than TF-IDF. Learning a linear map (MAP) helps a lot. The two-step method wins on every domain except SemEval15.\n  number: e.g. BERT-LARGE-SIM Banking 10.4; TF-IDF Banking 27.3; USE-LARGE-MAP SemEval15 56.5\n  setup: USE, USE-Large, ELMo, BERT-small and BERT-large. MAP is trained on 10,000 training examples.\n  quote: \"we report substantial gains with our FT-DIRECT and FT-MIXED ﬁne-tuning on top of Reddit pretraining for all target domains but one (SEMEVAL 15).\"\n  where: p. 5399; Table 3, p. 5398\n- claim: FT-DIRECT forgets Reddit performance. FT-MIXED keeps it by mixing in Reddit pairs at a 3:1 ratio, at some cost in-domain.\n  number: Reddit test after fine-tuning: FT-DIRECT 30.8–55.3, FT-MIXED 59.4–60.0, versus pretrained 61.3\n  setup: scores in parentheses in Table 3\n  quote: \"With more in-domain training data FT-DIRECT becomes worse on the REDDIT test set. On the other hand,FT- MIXED manages to maintain its high performance on REDDIT due to the in-batch mixing\"\n  where: p. 5399\n- claim: Pretraining is expensive and done once, while fine-tuning is cheap.\n  number: 13 K80 GPUs for 18 hours, about 2B examples seen; fine-tuning takes \"minutes\"\n  setup: final Reddit model\n  quote: \"we train the model on 13 GPU nodes with one Tesla K80 each for 18 hours: the model sees around 2B examples\" / \"training time is typically measured in days ... ﬁne-tuning time is in minutes\"\n  where: p. 5396; p. 5393\n- claim: The architecture works as follows. Unigram and bigram embeddings (d=320) feed positional embeddings and self-attention. These are reduced to one vector, passed through 3 swish feed-forward layers of width 1,024, and projected to 512 dimensions. Responses are scored by scaled cosine similarity, and the loss uses the other responses in the batch as negatives.\n  number: Reddit R100@1 = 61.3\n  setup: batch 500, SGD lr 0.03, label smoothing 0.8\n  quote: \"Full Reddit Model 61.3\"\n  where: p. 5394; Table 2, p. 5398\n- claim: Ablations show bigrams and self-attention matter most, and larger batches (which mean more negatives) help.\n  number: no self-attention 48.7; remove bigrams 35.5; batch size 50 gives 57.4. Ablations are cumulative.\n  setup: Reddit test, R100@1\n  quote: \"- no self-attention 48.7 / - remove bigrams 35.5\"; \"increasing the batch size in fact means learning from a larger number of negative examples.\"\n  where: Table 2 and p. 5398\n- claim: Inference cost is low because the separate towers let candidate vectors be precomputed and searched with approximate nearest neighbours.\n  number: 130x speed-up with 95% top-30 recall retained\n  setup: Reddit test data, HNSW (Malkov and Yashunin 2016)\n  quote: \"experiments on Reddit test data reveal a 130× speed-up using the approximate search method of Malkov and Yashunin (2016) while retaining 95% top-30 recall.\"\n  where: footnote 6, p. 5395\n\nLIMITS:\n- There is no learning-curve or subsampled low-data experiment. \"Low-data\" is shown only by comparing datasets of different sizes.\n- Negatives are random in-batch only. The authors list hard negatives as future work.\n- The authors report mixing Reddit into a single training set (data-mixing strategies) only as \"preliminary experiments\", with no numbers.\n- Only one ratio is reported for FT-MIXED. The footnote says 3:1 to 1:3 gives \"only slight variations\".\n- Each input is a single sentence, not multi-turn context. Higher-order n-grams, RNNs and CNNs were tried and \"have not provided any substantial gain\" (footnote 4).\n- The SemEval15 results are not a win. FT-MIXED only ties USE-LARGE-MAP at 56.5, and FT-DIRECT (52.5) is below it.\n- The paper is inconsistent on the domain count (six vs five).\n- The work is dated. It uses a 2019 encoder and BERT baselines run frozen with SIM/MAP, not fine-tuned BERT. That makes the BERT comparison weak by current standards.\n\nBUILDS ON: Henderson et al. 2017 (Smart Reply efficient response suggestion; n-gram features and in-batch negatives); Kannan et al. 2016 (Smart Reply); Al-Rfou et al. 2016 (Reddit response ranking); Yang et al. 2018 and Cer et al. 2018 (USE, learning from conversations); Henderson et al. 2019 (conversational datasets repository); Howard and Ruder 2018 (ULMFiT-style fine-tuning); Peters et al. 2018; Devlin et al. 2019; Vaswani et al. 2017; Ramachandran et al. 2017 (swish); Szegedy et al. 2016 (label smoothing); Malkov and Yashunin 2016 (HNSW).\n\nCODE: none. The loss is Eq. (1) on p. 5394: J = Σ S(xi,yi) − Σ log Σ_j e^{S(xi,yj)}, with S(x,y) = C·cos(hx,hy) and C constrained to [0, √l]. The extraction garbles the formula layout. Datasets are at github.com/PolyAI-LDN/conversational-datasets (p. 5393).\n\nFIGURES:\n- Figure 3, p. 5395 (PDF p.4) is the best candidate. Caption: \"High-level overview of baseline and fine-tuning strategies used in our evaluation. (a) REDDIT-DIRECT ... (b) FT-DIRECT ... (c) FT-MIXED\". It shows the pretrain-once, fine-tune-per-domain recipe and its alternatives side by side, which is the exact point the note makes.\n- Alternatives: Figure 2, p. 5394 (encoder schematic, two towers, dot-product loss), and Figure 4, p. 5399 (t-SNE of Banking questions clustering after fine-tuning).\n\nPROBLEMS:\n- Text extraction is clean apart from equation layout and ligatures.\n- The \"%\" gains on p. 5399 are absolute point differences. The Ubuntu figure does not match Table 3: 38.7 − 9.6 = 29.1, not 32.5. The other three match.\n- The PDF contains no embedded instructions.\n- File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/07-agentic-applications/sources/henderson-2019-training-neural-response-selection-task.pdf"
+ "type": "empirical",
+ "question": "Can a response selection model be pretrained on large general-domain conversational data (Reddit) and fine-tuned on small task-oriented dialogue domains?",
+ "hypothesis": "Pretraining on Reddit then fine-tuning overcomes the low-data regime and beats training from scratch and off-the-shelf sentence encoders.",
+ "contributions": [
+  "Two-step pretrain on Reddit then fine-tune training method for response selection",
+  "Comparison of FT-DIRECT and FT-MIXED fine-tuning",
+  "New e-banking FAQ dataset with 77 categories",
+  "Evaluation on diverse domains vs TF-IDF, BM25, USE, ELMo, BERT baselines"
+ ],
+ "method": {
+  "summary": "A dual-tower (shared-weights input and response) n-gram + self-attention encoder is trained with in-batch negatives on 727M Reddit pairs, then fine-tuned on small target datasets either directly or with in-batch Reddit mixing (3:1).",
+  "task": "conversational response selection",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Reddit",
+    "role": "pretrain",
+    "size": "654,396,778 train / 72,616,937 test pairs (Table 1); text says >727M pairs from ~3.7B comments Jan 2015-Dec 2018",
+    "split": "Reddit held-out test: 50K random pairs",
+    "source": "Henderson et al. 2019, BigQuery",
+    "preprocessing": "lower-cased, tokenised; numbers of 5+ digits -> #; words >16 chars -> LONGWORD; <S> </S> added; comments kept only if >8 and <128 word tokens (Reddit)"
+   },
+   {
+    "name": "OpenSubtitles",
+    "role": "both",
+    "size": "283,651,561 train / 33,240,156 test",
+    "split": "splits of Henderson et al. 2019",
+    "source": "Lison and Tiedemann 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "AmazonQA",
+    "role": "both",
+    "size": "3,316,905 train / 373,007 test",
+    "split": "standard",
+    "source": "Wan and McAuley 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Ubuntu",
+    "role": "both",
+    "size": "3,954,134 train / 72,763 test",
+    "split": "standard",
+    "source": "Lowe et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Banking",
+    "role": "both",
+    "size": "10,395 train / 1,485 test (unique pairs)",
+    "split": "70/20/10 train/val/test; 77 categories, 10 paraphrases per question",
+    "source": "new dataset by authors",
+    "preprocessing": "answers de-duplicated for evaluation"
+   },
+   {
+    "name": "SemEval15",
+    "role": "both",
+    "size": "9,680 train / 1,158 test",
+    "split": "standard",
+    "source": "Nakov et al. 2015",
+    "preprocessing": "inputs de-duplicated for evaluation"
+   }
+  ],
+  "models": [
+   {
+    "name": "Input-response encoder (Reddit model)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "shared unigram+bigram embeddings (d=320), positional emb + self-attention (projection dim 64), sqrt-length reduction, 3 x 1024 swish layers, linear to 512; scaled cosine score",
+    "init_from": null,
+    "tokenizer": "lower-cased word tokens; unigrams + bigrams",
+    "vocab": "105K unigrams (>=10 occurrences in 1M Reddit subset) + 200K bigrams; OOV n-grams hashed to random id 0-50,000",
+    "layers": "H=3 hidden layers",
+    "hidden": "1024 (h); output 512 (l)",
+    "heads": null,
+    "context": "sentences of 8-128 word tokens (Reddit filter)",
+    "other": {
+     "scale C": "learned, in [0, sqrt(l)]",
+     "swish beta": 1
+    }
+   },
+   {
+    "name": "TARGET-ONLY",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same encoder trained from scratch on target data",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tuned": "word embedding sizes and embedding dropout rates"
+    }
+   },
+   {
+    "name": "USE / USE-LARGE, ELMo, BERT-SMALL, BERT-LARGE (SIM and MAP)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "public TF-Hub encoders",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "MAP": "linear map W+alpha*I on response vector, trained on random 10,000 train examples with Eq.1 loss; vectors l2-normalised"
+    }
+   },
+   {
+    "name": "TF-IDF, BM25",
+    "role": "baseline",
+    "params": null,
+    "architecture": "keyword retrieval",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "in-batch softmax over K pairs with scaled cosine score, J = sum S(xi,yi) - sum log sum_j exp S(xi,yj); label smoothing: positive gets 0.8, rest spread over in-batch negatives",
+   "optimizer": "SGD",
+   "lr": "0.03 initial",
+   "lr_schedule": "decay by 0.3x every 1M steps after the first 2.5M steps",
+   "warmup": null,
+   "batch_size": "500",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "label smoothing 0.8; embedding dropout tuned for TARGET-ONLY",
+   "hardware": "13 GPU nodes, one Tesla K80 each",
+   "compute": "~2B examples seen in pretraining",
+   "wall_clock": "18 hours pretraining; fine-tuning in minutes",
+   "seeds": null,
+   "other": {
+    "embedding gradients": "unigram and bigram embedding gradients scaled by batch size",
+    "fine-tuning": "early stopping on in-domain validation data; fine-tuning lr, batch size, steps not given",
+    "FT-MIXED": "Reddit:in-domain ratio 3:1 in every batch; 3:1 to 1:3 gave slight variation",
+    "negatives": "K-1 in-batch random negatives"
+   }
+  },
+  "inference": {
+   "decoding": "rank candidates by scaled cosine similarity",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per cell; no seeds reported",
+   "prompting": null,
+   "retrieval": "candidate response vectors precomputed; approximate NN search possible",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "R100@1",
+     "definition": "fraction of queries whose correct response ranks first among 100 candidates, averaged over queries",
+     "unit": "% (x100)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "TARGET-ONLY",
+    "REDDIT-DIRECT",
+    "TF-IDF",
+    "BM25",
+    "USE/USE-LARGE SIM and MAP",
+    "ELMo SIM/MAP",
+    "BERT-SMALL/LARGE SIM/MAP"
+   ],
+   "protocol": "single reported score per cell, no significance test or variance; Banking and SemEval15 scores use de-duplicated inputs/answers"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "github.com/PolyAI-LDN/conversational-datasets (Reddit, OpenSubtitles, AmazonQA, Ubuntu); Banking dataset release not stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "decaying the learning rate by 0.3x every 1M training steps after the ﬁrst 2.5M steps",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FT-DIRECT beats TARGET-ONLY on Ubuntu by a large margin (from-scratch overfits)",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 38.7,
+   "unit": "%",
+   "baseline_value": 6.2,
+   "n": null,
+   "setup": "R100@1 x100%, 100 candidates, one relevant; Reddit-pretrained input-response encoder; Ubuntu test, FT-DIRECT vs TARGET-ONLY",
+   "note": null,
+   "where": "Table 3, p.5398",
+   "table": "Table 3, row FT-DIRECT, column UBUNTU (TARGET-ONLY 6.2)"
+  },
+  {
+   "claim": "FT-DIRECT on Banking FAQ (77 categories)",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 94.8,
+   "unit": "%",
+   "baseline_value": 88.3,
+   "n": null,
+   "setup": "R100@1 x100%, 100 candidates, one relevant; Reddit-pretrained input-response encoder; BANKING test (1,485 pairs), FT-DIRECT",
+   "note": null,
+   "where": "Table 3, p.5398",
+   "table": "Table 3, row FT-DIRECT, column BANKING (TARGET-ONLY 88.3, REDDIT-DIRECT 27.3)"
+  },
+  {
+   "claim": "FT-DIRECT on SemEval15 is below FT-MIXED; both far above TARGET-ONLY",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 52.5,
+   "unit": "%",
+   "baseline_value": 7.5,
+   "n": null,
+   "setup": "R100@1 x100%, 100 candidates, one relevant; Reddit-pretrained input-response encoder; SEMEVAL15, FT-DIRECT (FT-MIXED 56.5, TARGET-ONLY 7.5, USE-LARGE-MAP 56.5)",
+   "note": "USE-LARGE-MAP also scores 56.5, equal to FT-MIXED; paper says gains for all domains but SEMEVAL15.",
+   "where": "Table 3, p.5398",
+   "table": "Table 3, row FT-DIRECT, column SEMEVAL15"
+  },
+  {
+   "claim": "FT-DIRECT on AmazonQA, slight gain over scratch",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 84.2,
+   "unit": "%",
+   "baseline_value": 83.3,
+   "n": null,
+   "setup": "R100@1 x100%, 100 candidates, one relevant; Reddit-pretrained input-response encoder; AMAZONQA, FT-DIRECT",
+   "note": null,
+   "where": "Table 3, p.5398",
+   "table": "Table 3, row FT-DIRECT, column AMAZONQA (TARGET-ONLY 83.3)"
+  },
+  {
+   "claim": "FT-DIRECT on OpenSubtitles, slight gain over scratch",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 30.6,
+   "unit": "%",
+   "baseline_value": 29.0,
+   "n": null,
+   "setup": "R100@1 x100%, 100 candidates, one relevant; Reddit-pretrained input-response encoder; OPENSUB, FT-DIRECT",
+   "note": null,
+   "where": "Table 3, p.5398",
+   "table": "Table 3, row FT-DIRECT, column OPENSUB (TARGET-ONLY 29.0)"
+  },
+  {
+   "claim": "Full Reddit model score on Reddit held-out test (50K pairs)",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 61.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit held-out 50K pairs; full model, Table 2",
+   "note": "Same 61.3 as REDDIT-DIRECT in Table 3.",
+   "where": "Table 2, p.5397",
+   "table": "Table 2, row Full Reddit Model"
+  },
+  {
+   "claim": "Removing bigrams is the most damaging ablation",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 35.5,
+   "unit": "%",
+   "baseline_value": 61.3,
+   "n": null,
+   "setup": "Reddit test; cumulative ablation (each row removes a further component)",
+   "note": null,
+   "where": "Table 2, p.5397",
+   "table": "Table 2, row remove bigrams"
+  },
+  {
+   "claim": "Removing self-attention drops Reddit score",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 48.7,
+   "unit": "%",
+   "baseline_value": 61.3,
+   "n": null,
+   "setup": "Reddit test; cumulative ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row no self-attention"
+  },
+  {
+   "claim": "Batch size 50 instead of 500 hurts",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 57.4,
+   "unit": "%",
+   "baseline_value": 61.3,
+   "n": null,
+   "setup": "Reddit test; cumulative ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Batch size 50"
+  },
+  {
+   "claim": "Gain of FT-DIRECT over REDDIT-DIRECT on Banking",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": "+67.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BANKING, 94.8 vs 27.3",
+   "note": "Printed as %, but they are absolute points. Ubuntu 38.7-9.6=29.1, not 32.5 (32.5 equals 38.7-6.2, the gain over TARGET-ONLY). Other three check out.",
+   "where": "p.5398",
+   "quote": "the gains over REDDIT-DIRECT are +67.5% on BANKING, +32.5% on UBUNTU, +22.8% on AMAZONQA, and +11.5% on OPEN-"
+  },
+  {
+   "claim": "FT-MIXED keeps Reddit performance while FT-DIRECT degrades on it",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1 on Reddit",
+   "value": 59.8,
+   "unit": "%",
+   "baseline_value": 55.3,
+   "n": null,
+   "setup": "Reddit test after fine-tuning on Banking with FT-MIXED (FT-DIRECT 55.3, TARGET-ONLY 1.2)",
+   "note": "FT-MIXED Reddit scores 59.4-60.0 across domains; FT-DIRECT falls to 30.8-55.3.",
+   "where": "Table 3",
+   "table": "Table 3, row FT-MIXED, column BANKING parenthesis"
+  },
+  {
+   "claim": "Pretrain once on Reddit takes about 18 hours on 13 K80 nodes; fine-tuning takes minutes",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 18,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13 GPU nodes, one Tesla K80 each; ~2B examples seen",
+   "note": null,
+   "where": "p.5396",
+   "quote": "we train the model on 13 GPU nodes with one Tesla K80 each for 18 hours: the model sees around 2B examples"
+  },
+  {
+   "claim": "Off-the-shelf encoders without a response mapping do poorly vs TF-IDF",
+   "kind": "measured",
+   "source": null,
+   "metric": "R100@1",
+   "value": 11.5,
+   "unit": "%",
+   "baseline_value": 27.5,
+   "n": null,
+   "setup": "USE-SIM on Ubuntu vs TF-IDF 27.5 and BM25 19.6",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row USE-SIM, column UBUNTU"
+  },
+  {
+   "claim": "Approximate NN search speedup on Reddit test",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 130,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Malkov and Yashunin HNSW, 95% top-30 recall",
+   "note": null,
+   "where": "footnote 6, p.5395",
+   "quote": "experiments on Reddit test data reveal a 130× speed-up using the approximate search method of Malkov and Yashunin (2016) while retaining 95% top-30 recall"
+  }
+ ],
+ "limits": [
+  "Only 5 domains are fine-tuned; Reddit is held out, though 'six target domains' appears in abstract/Table 3 caption and conclusion says five.",
+  "Single scores, no seeds or significance tests.",
+  "Fine-tuning hyperparameters (lr, batch, steps) not stated; no code or weights released.",
+  "Random negatives only; harder negative sampling left to future work.",
+  "Compared with BERT/USE only as frozen encoders, not fine-tuned for response selection.",
+  "SemEval15: USE-LARGE-MAP (56.5) ties FT-MIXED.",
+  "Supplemental t-SNE for all 77 categories not in PDF."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "response selection",
+   "definition": "selecting the most appropriate system response from a large candidate set given the dialogue context",
+   "where": "Sec 1"
+  },
+  {
+   "term": "FT-DIRECT",
+   "definition": "continue training the Reddit model on target data only",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "FT-MIXED",
+   "definition": "fine-tune with in-batch mixing of Reddit and in-domain pairs (3:1)",
+   "where": "Sec 2.2, 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Henderson et al. 2017 Efficient natural language response suggestion for Smart Reply",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same n-gram feed-forward dot-product design, here with attention and fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Al-Rfou et al. 2016 Conversational contextual cues",
+   "year": 2016,
+   "arxiv": "1606.00372",
+   "relation": "uses-method",
+   "note": "Reddit for response ranking",
+   "quote": null
+  },
+  {
+   "work": "Yang et al. 2018 (Reddit-based sentence encoders)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest work, no fine-tuning across domains",
+   "quote": null
+  },
+  {
+   "work": "Henderson et al. 2019 conversational datasets",
+   "year": 2019,
+   "arxiv": "1904.06472",
+   "relation": "uses-data",
+   "note": "Reddit and OpenSubtitles splits",
+   "quote": null
+  },
+  {
+   "work": "Cer et al. 2018 Universal Sentence Encoder",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "USE baseline",
+   "quote": null
+  },
+  {
+   "work": "Devlin et al. 2019 BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BERT-SMALL/LARGE baselines, pretrain-finetune inspiration",
+   "quote": null
+  },
+  {
+   "work": "Peters et al. 2018 ELMo",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ELMo baseline",
+   "quote": null
+  },
+  {
+   "work": "Vaswani et al. 2017 Transformer",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "self-attention and positional embeddings",
+   "quote": null
+  },
+  {
+   "work": "Lowe et al. 2017 Ubuntu; Wan and McAuley 2016 AmazonQA; Nakov et al. 2015 SemEval15; Lison and Tiedemann 2016 OpenSubtitles",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "target domains",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 2",
+   "caption": "Schematic input-response encoder model structure.",
+   "page": 5394,
+   "why": "Shows the tower architecture."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "High-level overview of baseline and fine-tuning strategies: REDDIT-DIRECT, FT-DIRECT, FT-MIXED.",
+   "page": 5395,
+   "why": "Distinguishes the strategies."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Summary of the results (R100@1 x100%) with fine-tuning on all six target domains.",
+   "page": 5398,
+   "why": "All baselines vs fine-tuning in one grid."
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "t-SNE plots of encoded questions for 10 BANKING categories.",
+   "page": 5399,
+   "why": "Cluster coherence after fine-tuning."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2 / Sec 2.1",
+   "snippet": "S(x, y) = C * cos(h_x, h_y)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Old schema-0 file listed doi null and arxiv null; none printed in PDF (arXiv id not given).",
+  "Text extraction lost some table row labels; Table 3 columns reconstructed in order REDDIT, OPENSUB, AMAZONQA, UBUNTU, BANKING, SEMEVAL15.",
+  "No embedded instructions seen."
+ ]
 }

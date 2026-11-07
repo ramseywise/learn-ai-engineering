@@ -1,0 +1,558 @@
+{
+ "schema": 1,
+ "key": "2502.12110",
+ "pdf": "generative-ai/03-agentic-foundations/sources/xu-2025-mem.pdf",
+ "bib": {
+  "title": "A-Mem: Agentic Memory for LLM Agents",
+  "authors": [
+   "Wujiang Xu",
+   "Zujie Liang",
+   "Kai Mei",
+   "Hang Gao",
+   "Juntao Tan",
+   "Yongfeng Zhang"
+  ],
+  "first_author": "Xu",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2502.12110",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87751,
+  "chars_total": 87751,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can an LLM agent memory that builds linked, self-updating Zettelkasten-style notes outperform fixed-structure memory systems on long-term conversational QA?",
+ "hypothesis": "Dynamic note construction, link generation and memory evolution give better organised memory than predefined schemas and fixed workflows.",
+ "contributions": [
+  "A-MEM, an agentic memory system with autonomous generation of contextual descriptions, dynamic connections and evolution of existing memories.",
+  "Update mechanism where a new memory triggers link generation and memory evolution.",
+  "Evaluation on LoCoMo across six foundation models and six metrics, plus t-SNE visualisations."
+ ],
+ "method": {
+  "summary": "Each interaction becomes a note (content, timestamp, LLM-written keywords, tags, context, embedding, links). On insertion the top-k cosine neighbours are fetched, an LLM decides links, and an LLM may rewrite neighbours' context, keywords and tags. Retrieval is top-k cosine over note embeddings. No training; prompts only.",
+  "task": "long-term conversational question answering with agent memory",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LoCoMo",
+    "role": "eval",
+    "size": "7,512 question-answer pairs; dialogues avg 9K tokens, up to 35 sessions",
+    "split": "not stated",
+    "source": "Maharana et al. 2024 (arXiv:2402.17753)",
+    "preprocessing": null
+   },
+   {
+    "name": "DialSim",
+    "role": "eval",
+    "size": "1,300 sessions over five years, ~350,000 tokens, >1,000 questions per session",
+    "split": "not stated",
+    "source": "Kim et al. 2024 (arXiv:2406.13144); Friends, Big Bang Theory, The Office",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "A-MEM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "note store + embedding retrieval + LLM link/evolve calls",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "encoder": "all-minilm-l6-v2 (Sentence-BERT)"
+    }
+   },
+   {
+    "name": "GPT-4o-mini",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "official structured output API"
+    }
+   },
+   {
+    "name": "GPT-4o",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "labelled '4o' in Table 1"
+    }
+   },
+   {
+    "name": "Qwen2.5",
+    "role": "evaluated",
+    "params": "1.5B and 3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "serving": "Ollama + LiteLLM structured output"
+    }
+   },
+   {
+    "name": "Llama 3.2",
+    "role": "evaluated",
+    "params": "1B and 3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "serving": "Ollama + LiteLLM structured output"
+    }
+   },
+   {
+    "name": "DeepSeek-R1-32B, Claude 3.0 Haiku, Claude 3.5 Haiku",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "where": "Appendix Table 7, compared with LoCoMo and MemGPT only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per cell; no error bars (checklist item 7: answered No, cost of multiple API calls)",
+   "prompting": "identical system prompts for all methods (Appendix B); note-construction, link and evolution templates Ps1, Ps2, Ps3 in Appendix B.1-B.3",
+   "retrieval": "cosine similarity over all-minilm-l6-v2 embeddings of concat(content, keywords, tags, context); top-k with k=10 primarily, per-category k in Table 8",
+   "parameters": {
+    "k_GPT-4o-mini_and_GPT-4o": "multi-hop 40, temporal 40, open domain 50, single hop 50, adversarial 40",
+    "k_Qwen2.5-1.5b": "10 all categories",
+    "k_Qwen2.5-3b": "10 except open domain 50",
+    "k_Llama3.2-1b": "10 all categories",
+    "k_Llama3.2-3b": "10 except temporal 20",
+    "k_selection": "models already SOTA at k=10 kept k=10 without tuning (A.5); tuning set not stated"
+   },
+   "other": {
+    "hardware": "Llama 3.2 1B timing on a single GPU, model not named"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "harmonic mean of precision and recall of answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU-1",
+     "definition": "unigram precision with brevity penalty",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L / ROUGE-2 / METEOR / SBERT similarity",
+     "definition": "standard definitions in Appendix A.2",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Token length",
+     "definition": "average tokens to answer one question",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "LoCoMo (full preceding conversation in prompt, no memory)",
+    "ReadAgent",
+    "MemoryBank",
+    "MemGPT"
+   ],
+   "protocol": "Five LoCoMo question categories; averaged ranking column. DialSim compared only with LoCoMo and MemGPT. Scaling test compares MemoryBank and ReadAgent."
+  },
+  "availability": {
+   "code": "https://github.com/WujiangXu/AgenticMemory (benchmark); https://github.com/WujiangXu/A-mem-sys (production)",
+   "weights": null,
+   "data": "LoCoMo and DialSim are public (cited)"
+  },
+  "prompts": [
+   {
+    "purpose": "Note construction Ps1",
+    "text": "Generate a structured analysis of the following content by:",
+    "where": "Appendix B.1 (opening line only; full template in paper)"
+   },
+   {
+    "purpose": "Link generation Ps2",
+    "text": "You are an AI memory evolution agent responsible for managing and",
+    "where": "Appendix B.2 (opening only; full template in paper)"
+   },
+   {
+    "purpose": "Memory evolution Ps3",
+    "text": "What specific actions should be taken (strengthen,",
+    "where": "Appendix B.3 (fragment; full template in paper)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.retrieval",
+    "quote": "we primarily employ k=10 for top-k memory selection to maintain computational efficiency, while adjusting this parameter for specific categories to optimize performance",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Removing both link generation and memory evolution drops GPT-4o-mini multi-hop F1 from 27.02 to 9.65.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 multi-hop",
+   "value": "9.65",
+   "unit": "%",
+   "baseline_value": "27.02",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o-mini, single run, ablation of A-MEM.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/o LG & ME, column Multi Hop F1 (A-MEM row: 27.02)"
+  },
+  {
+   "claim": "Link generation alone (w/o ME) recovers most of the multi-hop F1: 21.35 vs full 27.02.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 multi-hop",
+   "value": "21.35",
+   "unit": "%",
+   "baseline_value": "27.02",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o-mini.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/o ME, column Multi Hop F1"
+  },
+  {
+   "claim": "On DialSim A-MEM reaches F1 3.45, 35% above LoCoMo (full-context) and 192% above MemGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "3.45",
+   "unit": "%",
+   "baseline_value": "2.55",
+   "n": null,
+   "setup": "DialSim (~350,000 tokens, 1,300 sessions); LoCoMo and MemGPT as baselines; F1 values are very low in absolute terms.",
+   "note": null,
+   "where": "Sec 4.3, Table 2",
+   "quote": "score of 3.45 (a 35% improvement over LoCoMo’s 2.55 and 192% higher than MemGPT’s 1.18)"
+  },
+  {
+   "claim": "A-MEM uses about 1,200 tokens per memory operation versus about 16,900 for LoCoMo and MemGPT, an 85-93% reduction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens per operation",
+   "value": "1,200",
+   "unit": "tokens",
+   "baseline_value": "16,900",
+   "n": null,
+   "setup": "LoCoMo QA; tokens counted per question answered.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "The system requires approximately 1,200 tokens per memory operation, achieving an 85-93% reduction in token usage compared to baseline methods (LoCoMo and MemGPT with 16,900 tokens)"
+  },
+  {
+   "claim": "With GPT-4o, A-MEM temporal F1 is 39.41 vs 9.09 for LoCoMo (full conversation in prompt), at 1,216 tokens vs 16,910.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 temporal",
+   "value": "39.41",
+   "unit": "%",
+   "baseline_value": "9.09",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o (row '4o'), F1.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 4o A-MEM, column Temporal F1 (LoCoMo 9.09); Token Length 1,216 vs 16,910"
+  },
+  {
+   "claim": "With GPT-4o, A-MEM loses to the full-context LoCoMo baseline on single-hop (48.43 vs 61.56 F1) and adversarial (36.35 vs 52.61 F1) questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 single-hop",
+   "value": "48.43",
+   "unit": "%",
+   "baseline_value": "61.56",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o, F1.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 4o A-MEM, columns Single Hop F1 48.43 and Adversial F1 36.35; LoCoMo 61.56 and 52.61"
+  },
+  {
+   "claim": "With GPT-4o-mini, A-MEM multi-hop F1 is 27.02 vs 25.02 (LoCoMo) and 26.65 (MemGPT), a small margin.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 multi-hop",
+   "value": "27.02",
+   "unit": "%",
+   "baseline_value": "26.65",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o-mini, F1.",
+   "note": "Text of Sec 4.3 says A-MEM achieves 'at least two times better performance' in Multi-Hop for GPT models; Table 1 shows 27.02 vs 25.02 and 26.65 for GPT-4o-mini and 32.86 vs 28.00 and 30.36 for GPT-4o.",
+   "where": "Table 1, Sec 4.3",
+   "table": "Table 1, row GPT 4o-mini A-MEM, column Multi Hop F1"
+  },
+  {
+   "claim": "With small open models A-MEM beats all baselines in most cells, e.g. Qwen2.5-1.5b temporal F1 24.32 vs 4.46 best baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 temporal",
+   "value": "24.32",
+   "unit": "%",
+   "baseline_value": "4.46",
+   "n": null,
+   "setup": "LoCoMo, Qwen2.5 1.5b via Ollama, F1.",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5 1.5b A-MEM, column Temporal F1"
+  },
+  {
+   "claim": "Each memory operation costs under $0.0003 with commercial APIs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per operation",
+   "value": "$0.0003",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimate stated in text, no breakdown given.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "each memory operation costing less than $0.0003 when using commercial API services"
+  },
+  {
+   "claim": "Processing takes 5.4 s per operation with GPT-4o-mini and 1.1 s with local Llama 3.2 1B on one GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "processing time",
+   "value": "5.4",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Latency of memory processing; GPU model not given.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Processing times average 5.4 seconds using GPT-4o-mini and only 1.1 seconds with locally-hosted Llama 3.2 1B on a single GPU."
+  },
+  {
+   "claim": "Retrieval time for A-MEM grows from 0.31 us at 1,000 memories to 3.70 us at 1,000,000, slower than MemoryBank (1.91 us) but vastly faster than ReadAgent (120,069.68 us).",
+   "kind": "measured",
+   "source": null,
+   "metric": "retrieval time",
+   "value": "3.70",
+   "unit": "us",
+   "baseline_value": "1.91",
+   "n": null,
+   "setup": "Vector retrieval timing over identical memory contents, four scales.",
+   "note": null,
+   "where": "Sec 4.6, Table 4",
+   "quote": "Even when scaling to 1 million memories, A-MEM’s retrieval time increases only from 0.31µs to 3.70µs"
+  },
+  {
+   "claim": "Multi-hop F1 with GPT-4o-mini rises with k then plateaus: 19.91 at k=10, 27.02 at k=40, 26.81 at k=50; adversarial peaks at k=40 (50.03).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 multi-hop at k=40",
+   "value": "27.02",
+   "unit": "%",
+   "baseline_value": "19.91",
+   "n": null,
+   "setup": "LoCoMo, GPT-4o-mini, k in {10,20,30,40,50}.",
+   "note": "Table 1 headline numbers for GPT models use per-category tuned k (40/40/50/50/40), not k=10; text says 'primarily employ k=10'.",
+   "where": "Fig 3, Table 8",
+   "table": "Figure 3(a) values (read from figure): k=10 19.91, k=40 27.02, k=50 26.81; Table 8 gives k=40 for GPT-4o-mini multi-hop"
+  },
+  {
+   "claim": "Embeddings of A-MEM notes cluster more coherently than the no-LG/ME base in t-SNE for sampled dialogues.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two dialogues in main text, eight in appendix; qualitative only.",
+   "note": null,
+   "where": "Sec 4.7, Fig 4/5",
+   "quote": "A-MEM (shown in blue) consistently exhibits more coherent clustering patterns compared to the baseline system (shown in red)"
+  }
+ ],
+ "limits": [
+  "Quality of organisation depends on the underlying LLM (authors, Sec 6).",
+  "Text only; multimodal not tested (authors).",
+  "Single run per cell, no error bars (checklist).",
+  "Only LoCoMo and DialSim, both conversational QA; LoCoMo baseline puts whole conversation in prompt and does better on single-hop and adversarial with GPT-4o.",
+  "Text claims 'at least two times better' multi-hop for GPT models but Table 1 margins are small there.",
+  "Headline GPT results use per-category tuned k (up to 50) while text says k=10; tuning data not stated.",
+  "Ablation (Table 3) is GPT-4o-mini only.",
+  "DialSim absolute scores are very low (F1 3.45).",
+  "Retrieval-time microbenchmark measures vector search only, not LLM calls for link generation and evolution.",
+  "Venue on PDF is a NeurIPS checklist version, arXiv v11 labelled Preprint."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Zettelkasten",
+   "definition": "knowledge management method creating interconnected information networks through atomic notes and flexible linking",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Memory evolution",
+   "definition": "new memories trigger updates to the contextual representations and attributes of existing memories",
+   "where": "Abstract, Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Zettelkasten method (Ahrens 2017; Kadavy 2021)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "design inspiration",
+   "quote": null
+  },
+  {
+   "work": "LoCoMo: Evaluating very long-term conversational memory of LLM agents",
+   "year": 2024,
+   "arxiv": "2402.17753",
+   "relation": "uses-data",
+   "note": "main benchmark and full-context baseline",
+   "quote": null
+  },
+  {
+   "work": "DialSim",
+   "year": 2024,
+   "arxiv": "2406.13144",
+   "relation": "uses-data",
+   "note": "second benchmark",
+   "quote": null
+  },
+  {
+   "work": "MemGPT: Towards LLMs as operating systems",
+   "year": 2023,
+   "arxiv": "2310.08560",
+   "relation": "baseline",
+   "note": "OS-style main/external context",
+   "quote": null
+  },
+  {
+   "work": "MemoryBank",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Ebbinghaus-style forgetting",
+   "quote": null
+  },
+  {
+   "work": "ReadAgent",
+   "year": 2024,
+   "arxiv": "2402.09727",
+   "relation": "baseline",
+   "note": "pagination, gisting, look-up",
+   "quote": null
+  },
+  {
+   "work": "Mem0",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "graph-database memory, criticised for predefined schemas; not compared experimentally",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "all-minilm-l6-v2 encoder",
+   "quote": null
+  },
+  {
+   "work": "Self-RAG; Active RAG",
+   "year": 2023,
+   "arxiv": "2310.11511",
+   "relation": "related",
+   "note": "agentic RAG acts on retrieval, A-MEM on storage and evolution",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A-MEM architecture: note construction, link generation, memory evolution, retrieval.",
+   "page": 4,
+   "why": "Shows the write path and what neighbours get rewritten."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Impact of memory retrieval parameter k across task categories with GPT-4o-mini.",
+   "page": 8,
+   "why": "Shows per-category sensitivity to k."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Ablation of link generation (LG) and memory evolution (ME), GPT-4o-mini.",
+   "page": 7,
+   "why": "Isolates each module's contribution."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "m*_j <- LLM(m_n || M_near^n \\ m_j || m_j || Ps3)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Table 1 is a flat column stream; row/column mapping inferred from order (Qwen 3b row appears before Llama 3.2 1b).",
+  "Figure 3 values read from figure text labels.",
+  "No embedded instructions found."
+ ]
+}

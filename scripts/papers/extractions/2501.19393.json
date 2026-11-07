@@ -1,0 +1,664 @@
+{
+ "schema": 1,
+ "key": "2501.19393",
+ "pdf": "generative-ai/05-RL/sources/muennighoff-2025-s1.pdf",
+ "bib": {
+  "title": "s1: Simple test-time scaling",
+  "authors": [
+   "Niklas Muennighoff",
+   "Zitong Yang",
+   "Weijia Shi",
+   "Xiang Lisa Li",
+   "Li Fei-Fei",
+   "Hannaneh Hajishirzi",
+   "Luke Zettlemoyer",
+   "Percy Liang",
+   "Emmanuel Candès",
+   "Tatsunori Hashimoto"
+  ],
+  "first_author": "Muennighoff",
+  "year": 2025,
+  "venue": "preprint (arXiv v3, 1 Mar 2025)",
+  "arxiv": "2501.19393",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 139822,
+  "chars_total": 139822,
+  "engine": "pymupdf",
+  "skipped": "Training-sample tables 9-11 and Table 15 (long worked examples) skimmed, not read line by line; reference list skimmed."
+ },
+ "type": "empirical",
+ "question": "What is the simplest approach to achieve both test-time scaling and strong reasoning performance?",
+ "hypothesis": "Pretrained models already hold reasoning ability, so SFT on a small, difficult, diverse, high-quality set (1,000 samples) plus a decoding-time control of thinking length suffices.",
+ "contributions": [
+  "s1K: 1,000 questions with reasoning traces selected by difficulty, diversity and quality (§2)",
+  "budget forcing, a decoding-time test-time scaling method (§3)",
+  "s1-32B, competitive with o1-preview, the most sample-efficient open-data reasoning model (§4)",
+  "ablations of data selection (§5.1) and test-time scaling methods (§5.2); Control/Scaling/Performance metrics (§3.2)"
+ ],
+ "method": {
+  "summary": "SFT of Qwen2.5-32B-Instruct on s1K (1,000 questions, Gemini 2.0 Flash Thinking traces) gives s1-32B. At inference, budget forcing caps thinking by appending the end-of-thinking delimiter, or lengthens it by suppressing that delimiter and appending 'Wait'. Compared against conditional length control and rejection sampling.",
+  "task": "supervised fine-tuning for reasoning plus test-time compute scaling (math and science QA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "59K candidate pool",
+    "role": "train",
+    "size": "59,029 questions from 16 sources, each with Gemini reasoning trace and solution",
+    "split": null,
+    "source": "NuminaMATH 30,660; MATH 11,999; OlympicArena 4,250; OmniMath 4,238; AGIEval 2,385; xword 999; OlympiadBench 896; AIME 1983-2021 890; TheoremQA 747; USACO 519; JEEBench 515; GPQA 348; SciEval 227; s1-prob 182; LiveCodeBench 151; s1-teasers 23 (Table 7)",
+    "preprocessing": "8-gram decontamination against MATH500, GPQA Diamond, AIME24, deduplication; AIME 2022-2023 excluded (90 questions used in development)"
+   },
+   {
+    "name": "s1K",
+    "role": "train",
+    "size": "1,000 questions, 4.7M total tokens, 51 domains by Table 6 (text says 50 domains)",
+    "split": null,
+    "source": "Selected from 59K: 59,029 -> 54,116 (drop API errors) -> 51,581 (drop formatting issues) -> 24,496 (drop questions Qwen2.5-7B-Instruct or 32B-Instruct solve, graded by Claude 3.5 Sonnet) -> 1,000 (384 from sources judged high-quality, rest by random domain then length-weighted sampling, weights 2^-rank)",
+    "preprocessing": "Grader marks 53.6% of s1K traces correct (63.0% for s1K-1.1); incorrect traces kept deliberately"
+   },
+   {
+    "name": "AIME24",
+    "role": "eval",
+    "size": "30 problems",
+    "split": null,
+    "source": "AIME 2024; figures given as Asymptote code",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500",
+    "role": "eval",
+    "size": "500 problems",
+    "split": null,
+    "source": "Hendrycks et al. 2021; the OpenAI subset from Lightman et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA Diamond",
+    "role": "eval",
+    "size": "198 questions",
+    "split": null,
+    "source": "Rein et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-32B-Instruct",
+    "role": "base",
+    "params": "32B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "s1-32B",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Qwen2.5-32B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 2.0 Flash Thinking Experimental (gemini-2.0-flash-thinking-exp-1219)",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude 3.5 Sonnet / Claude 3.7",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "3.5 Sonnet grades difficulty filter and classifies domains; final 1,000 graded with 3.7"
+    }
+   },
+   {
+    "name": "REBASE process reward model",
+    "role": "reward",
+    "params": "34B",
+    "architecture": null,
+    "init_from": "LLaMA-34B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "s1.1 (appendix A)",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": null,
+    "init_from": "Qwen2.5-32B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "same 1,000 questions, traces regenerated with DeepSeek r1, same training procedure"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (SFT); loss only on reasoning trace and solution, not on the question",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "1e-5",
+   "lr_schedule": "cosine decay to 0 over remaining 299 steps",
+   "warmup": "linear, 5% (16 steps)",
+   "batch_size": "16",
+   "steps": "315 gradient steps",
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": "32768 (chosen; 4096 ablated, 74% samples cut off)",
+   "precision": "bfloat16",
+   "weight_decay": "1e-4",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 NVIDIA H100 GPUs, PyTorch FSDP",
+   "compute": "7 H100 GPU hours (59K run: 394 H100 GPU hours)",
+   "wall_clock": "26 minutes",
+   "seeds": null,
+   "other": {
+    "delimiters": "thinking enclosed by <|im_start|>think and <|im_start|>answer, each preceded and followed by a newline",
+    "seq_len_32768": "inferred: Table 8 Model B training sequence length 32768, 0% cutoff; text says only 'longest training sequence length'"
+   }
+  },
+  "inference": {
+   "decoding": "greedy; vLLM; budget forcing appends end-of-thinking delimiter (optionally 'Final Answer:') to cap, suppresses delimiter and appends 'Wait' to extend",
+   "temperature": "0 unless stated; 1 for majority voting (64 evals) and rejection sampling",
+   "top_p": null,
+   "max_tokens": "about 30,000 thinking tokens max for Table 2 scores",
+   "samples": "1 greedy run per benchmark; majority voting 2..64 samples (Fig 4b); REBASE and majority 16 trajectories (Fig 7); Table 3 uses |A| = 2 to 5 evaluation runs per method",
+   "prompting": "questions as-is; length-control variants add instruction to user prompt (Fig 10)",
+   "retrieval": null,
+   "parameters": {
+    "budget_forcing_waits": "2x/4x/6x ignoring of end-of-thinking (Fig 4a); 2x in Table 4",
+    "max_thinking_budgets": "2048/4096 forced (Fig 4a)",
+    "rejection_sampling_caps": "3500,4000,5000,8000,16000 thinking tokens; 655, 97, 8, 3, 2, 1 average tries"
+   },
+   "other": {
+    "determinism": "Scores vary across runs even with same seed and greedy (batch size, tensor parallelism, continued generation); final evals mostly in full precision"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (pass@1)",
+     "definition": "greedy accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Control",
+     "definition": "fraction of runs whose thinking tokens fall within a_min..a_max",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Scaling",
+     "definition": "average slope of piece-wise linear accuracy vs thinking tokens",
+     "unit": "accuracy points per compute unit (not stated)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Performance",
+     "definition": "max accuracy over compute settings",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "o1-preview, o1-mini, o1",
+    "Gemini 2.0 Flash Thinking",
+    "Qwen2.5-32B-Instruct",
+    "QwQ-32B-preview",
+    "r1 and r1-distill (800K)",
+    "Sky-T1 (17K)",
+    "Bespoke-32B (17K)",
+    "o3-mini, LIMO (Table 5)"
+   ],
+   "protocol": "Own runs for s1 variants, Qwen and Gemini (AIME24 only, via web interface because of API recitation error); others from reports. 95% paired bootstrap CIs (10,000 samples) for differences relative to s1K in Table 2."
+  },
+  "availability": {
+   "code": "https://github.com/simplescaling/s1",
+   "weights": "open (stated)",
+   "data": "open (stated)"
+  },
+  "prompts": [
+   {
+    "purpose": "grading prompt for correctness of attempts",
+    "text": "You are an AI assistant for grading a science problem. The user will provide you with the question itself, an attempt made by a student and the correct answer to the problem. Your job is to judge whether the attempt is correct by comparing it with the correct answer. If the expected solution concludes with a number or choice, there should be no ambiguity. If the expected solution involves going through the entire reasoning process, you should judge the attempt based on whether the reasoning process is correct with correct answer if helpful. [format: # Problem {problem} ## Attempt {attempt} ## Correct answer {solution}] Explain your reasoning, and end your response on a new line with only \"Yes\" or \"No\" (without quotes).",
+    "where": "Fig 8, App C.3"
+   },
+   {
+    "purpose": "class-conditional control, short",
+    "text": "Answer after a short amount of thinking. Do not spend excessive time double-checking your work.",
+    "where": "Table 14"
+   },
+   {
+    "purpose": "class-conditional control, long",
+    "text": "Answer after a long amount of thinking. If you feel like you are finished early, spend the extra time trying to double-check your work until you are absolutely sure that you have the correct answer.",
+    "where": "Table 14"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "To finetune on 59K samples, we use 394 H100 GPU hours",
+    "where": "§5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "s1-32B with budget forcing scores 56.7% on AIME24, above o1-preview.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 56.7,
+   "unit": "%",
+   "baseline_value": 44.6,
+   "n": null,
+   "setup": "s1-32B, AIME24, greedy, budget forcing 'Wait', single run",
+   "quote": null,
+   "table": "Table 1, row s1-32B, column AIME 2024",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Without budget forcing s1 scores 50.0% on AIME24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 50.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "s1 w/o BF, AIME24",
+   "quote": null,
+   "table": "Table 1, row s1 w/o BF, column AIME 2024",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "s1-32B scores 93.0% on MATH500 and 59.6% on GPQA Diamond.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH500 accuracy",
+   "value": 93.0,
+   "unit": "%",
+   "baseline_value": 85.5,
+   "n": null,
+   "setup": "s1-32B with budget forcing",
+   "quote": null,
+   "table": "Table 1, row s1-32B, column MATH 500",
+   "note": "o1-preview baseline 85.5; GPQA 59.6 vs o1-preview 73.3",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Fine-tuning took 26 minutes on 16 H100 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training wall clock",
+   "value": 26,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT of Qwen2.5-32B-Instruct on s1K",
+   "quote": "Finetuning took 26 minutes on 16 NVIDIA H100 GPUs with PyTorch FSDP.",
+   "table": null,
+   "note": null,
+   "where": "§4.1"
+  },
+  {
+   "claim": "Fine-tuning on all 59K samples costs 394 H100 GPU hours against 7 for s1K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": 394,
+   "unit": "H100 GPU hours",
+   "baseline_value": 7,
+   "n": null,
+   "setup": "Training cost comparison",
+   "quote": "To finetune on 59K samples, we use 394 H100 GPU hours",
+   "table": null,
+   "note": null,
+   "where": "§5.1"
+  },
+  {
+   "claim": "59K-full scores 53.3% AIME24, close to s1K 50.0%; interval for the difference is wide.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "Table 2, budget forcing max about 30,000 thinking tokens, 95% paired bootstrap CI (10,000 samples)",
+   "quote": null,
+   "table": "Table 2, row 59K-full, column AIME 2024; CI [-13.3%, 20.0%]",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "1K-random scores 36.7% AIME24 under the same budget-forced setup as s1K 50.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 36.7,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "Table 2, BF max about 30,000 thinking tokens",
+   "quote": null,
+   "table": "Table 2, row 1K-random, column AIME 2024; CI [-26.7%, -3.3%]",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "1K-diverse scores 26.7% and 1K-longest 33.3% on AIME24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 26.7,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "Table 2, BF max about 30,000 thinking tokens",
+   "quote": null,
+   "table": "Table 2, row 1K-diverse, column AIME 2024",
+   "note": "1K-longest 33.3",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Budget forcing has perfect control (100%), scaling slope 15 and best AIME24 performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Performance",
+   "value": 56.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, AIME24, |A|=5 runs",
+   "quote": null,
+   "table": "Table 3, row BF, column Performance",
+   "note": "Control 100%, Scaling 15; TCC 40%/-24/40.0; SCC 60%/3/36.7; CCC 50%/25/36.7 (|A|=2); RS 100%/-35/40.0",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Rejection sampling gives inverse scaling on AIME24.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "s1-32B, temperature 1, caps 3500..16000 thinking tokens",
+   "quote": "Surprisingly, we find that simply sampling until the generation fits a specific length leads to an inverse scaling trend as depicted in Figure 6.",
+   "table": null,
+   "note": null,
+   "where": "§5.2"
+  },
+  {
+   "claim": "'Wait' is the best extrapolation string; 2x Wait gives 53.3% AIME24 vs 50.0% without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "Table 4, ignoring end-of-thinking twice",
+   "quote": null,
+   "table": "Table 4, row 2x \"Wait\", column AIME 2024",
+   "note": "2x 'Alternatively' 50.0, 2x 'Hmm' 50.0, 2x without string 50.0 (MATH500 90.2, GPQA 55.1)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Budget forcing extrapolates AIME24 from 50% to 57% but flattens at about six 'Wait's; over-suppression causes repetitive loops.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "s1-32B AIME24",
+   "quote": "it does eventually flatten out at six times.",
+   "table": null,
+   "note": null,
+   "where": "§4.2"
+  },
+  {
+   "claim": "Sequential scaling with s1-32B beats parallel majority voting on the base Qwen2.5-32B-Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Majority voting over 2..64 samples at temperature 1, AIME24",
+   "quote": "Scaling test-time compute on the base model via majority voting cannot catch up with the performance of s1-32B",
+   "table": null,
+   "note": null,
+   "where": "§4.2, Fig 4"
+  },
+  {
+   "claim": "Training on 4096-token sequences (74% of samples cut off) gives AIME24 30.0% vs 50.0% at 32768.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy",
+   "value": 30.0,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "Table 8",
+   "quote": null,
+   "table": "Table 8, row AIME24, column Model A (4096)",
+   "note": "Model A thinking tokens 20721 vs 6984",
+   "where": "Table 8"
+  },
+  {
+   "claim": "The grader marks 53.6% of s1K traces correct and 63.0% of s1K-1.1 traces.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 53.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grader Claude 3.7 on final 1,000",
+   "quote": "Our grader (§C.3) deems 53.6% correct in s1K and 63.0% in our follow-up s1K-1.1 (see §A).",
+   "table": null,
+   "note": null,
+   "where": "§2.2"
+  },
+  {
+   "claim": "s1.1 (r1 traces) scores 50.0% on AIME 2025 without budget forcing vs 26.7% for s1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME25 accuracy",
+   "value": 50.0,
+   "unit": "%",
+   "baseline_value": 26.7,
+   "n": null,
+   "setup": "Table 5, s1.1 w/o BF vs s1 w/o BF",
+   "quote": null,
+   "table": "Table 5, row s1.1 w/o BF, column AIME 2025",
+   "note": "Table 5 prints r1 MATH500 as '07.3' (typo for 97.3; Table 1 has 97.3)",
+   "where": "Table 5"
+  },
+  {
+   "claim": "REBASE parallel scaling scales better than majority voting and sequential scaling in Fig 7; at 512 steps 12 of 30 questions overflow the context.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12,
+   "unit": "questions of 30",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AIME24, 16 trajectories, step-conditional model from earlier data version",
+   "quote": "for 12 out of the 30 evaluation questions the model generates a response that exceeds the context window",
+   "table": null,
+   "note": null,
+   "where": "§6.2"
+  }
+ ],
+ "limits": [
+  "Budget forcing flattens out and is bounded by the context window (§6.2).",
+  "Single greedy runs on 30-problem AIME24; evaluation not deterministic across batch size or parallelism (App B), so 2-3 point differences are within noise.",
+  "Gemini 2.0 Flash Thinking was evaluated on AIME24 only, via web interface; MATH500 and GPQA are N.A.",
+  "Only about half of s1K traces are correct per the grader (53.6%).",
+  "Data filtering used the same base model (Qwen2.5-32B-Instruct) that is fine-tuned; authors say the idea should generalize, not shown.",
+  "Open question whether r1-level performance is reachable with 1,000 samples.",
+  "Fig 7 step-conditional model used an earlier data version and eval codebase.",
+  "Dated: s1.1, o3-mini, LIMO and AIME 2025 added in v3 (App A)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "budget forcing",
+   "definition": "a decoding-time intervention that forces a maximum and/or minimum number of thinking tokens by appending the end-of-thinking delimiter or suppressing it and appending 'Wait'",
+   "where": "§3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "baseline",
+   "note": "r1 and r1-distill compared; s1.1 traces distilled from r1",
+   "quote": null
+  },
+  {
+   "work": "OpenAI o1 / o1-preview / o1-mini",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "s1 reproduces the test-time scaling curve openly",
+   "quote": null
+  },
+  {
+   "work": "Gemini 2.0 Flash Thinking",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "teacher for s1K traces",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Qwen2.5-32B-Instruct is the fine-tuned base",
+   "quote": null
+  },
+  {
+   "work": "LIMA: Less is more for alignment",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Superficial Alignment Hypothesis analogue",
+   "quote": null
+  },
+  {
+   "work": "Snell et al. 2024; Brown et al. 2024",
+   "year": 2024,
+   "arxiv": "2407.21787",
+   "relation": "related",
+   "note": "sequential vs parallel test-time scaling taxonomy",
+   "quote": null
+  },
+  {
+   "work": "REBASE (Wu et al. 2024b)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tree search with PRM in Fig 7",
+   "quote": null
+  },
+  {
+   "work": "Sky-T1, Bespoke-32B, QwQ-32B-preview",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open reasoning models compared",
+   "quote": null
+  },
+  {
+   "work": "NuminaMATH, OlympicArena, OmniMath, AGIEval, MATH, GPQA",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "s1K source pool and evals",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Test-time scaling with s1-32B",
+   "page": 1,
+   "why": "accuracy vs thinking tokens on MATH500, AIME24, GPQA"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Budget forcing with s1-32B",
+   "page": 4,
+   "why": "shows 'Wait' fixing raspberry count"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "s1K data ablations",
+   "page": 6,
+   "why": "selection criteria with bootstrap CIs"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 5 prints r1 MATH500 as '07.3' (Table 1: 97.3).",
+  "Text says s1K spans 50 domains; Table 6 says 51 and lists 27 remaining domains.",
+  "Text says s1-32B 'only required 7 H100 GPU hours' while also 26 min on 16 GPUs (consistent: 26/60*16=6.9).",
+  "No embedded instructions found."
+ ]
+}

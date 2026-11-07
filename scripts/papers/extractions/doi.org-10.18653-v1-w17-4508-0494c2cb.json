@@ -1,0 +1,326 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/w17-4508",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/volske-2017-tl-dr.pdf",
+ "bib": {
+  "title": "TL;DR: Mining Reddit to Learn Automatic Summarization",
+  "authors": [
+   "Michael Völske",
+   "Martin Potthast",
+   "Shahbaz Syed",
+   "Benno Stein"
+  ],
+  "first_author": "Völske",
+  "year": 2017,
+  "venue": "Proceedings of the Workshop on New Frontiers in Summarization (NFiS), EMNLP 2017, pages 59-63",
+  "arxiv": null,
+  "doi": "10.18653/v1/w17-4508"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 21545,
+  "chars_total": 21545,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can author-provided TL;DR summaries in social media posts be mined at scale into a training corpus for abstractive summarization beyond the news genre?",
+ "hypothesis": "Social media posts with appended TL;DR lines give text-summary pairs written by the same person, usable to train summarizers; the technique should transfer to other sites and web crawls.",
+ "contributions": [
+  "A method for mining author-provided summaries via the TL;DR convention",
+  "The Webis-TLDR-17 corpus of about 4 million content-summary pairs from Reddit",
+  "Corpus statistics and heuristic verticals (true summaries, question summaries, vulgar summaries)"
+ ],
+ "method": {
+  "summary": "A five-step filtering pipeline over the Pushshift Reddit dump finds posts containing TL;DR spelling variants, removes bot accounts, splits each post at the TL;DR into content and summary, and applies length rules. A 1000-pair manual check estimates precision.",
+  "task": "dataset construction for single-document abstractive summarization",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Reddit crawl (Pushshift)",
+    "role": "eval",
+    "size": "286,168,475 submissions and 1,659,361,605 comments (617,812 subreddits)",
+    "split": null,
+    "source": "http://files.pushshift.io/reddit/ ; posts from 2006 to 2016",
+    "preprocessing": "regex tl.{0,3}dr then 33 manually chosen spelling variants, bot removal, split at TL;DR"
+   },
+   {
+    "name": "Webis-TLDR-17",
+    "role": "train",
+    "size": "about 4 million content-summary pairs (1,667,129 submissions, 2,377,372 comments, 32,778 subreddits)",
+    "split": null,
+    "source": "https://www.uni-weimar.de/medien/webis/corpora/",
+    "preprocessing": "drop multiple TL;DRs, summary must be shorter than content, content at least 2 words, summary at least 1 word; Markdown and inline URLs ignored when searching; a subset with 100-word content threshold is provided"
+   }
+  ],
+  "models": [
+   {
+    "name": "Rush et al. (2015) and Nallapati et al. (2016) models",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "neural abstractive summarizers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "only mentioned as preliminary experiments; no settings given"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one pass over the corpus; 1000 randomly selected pairs reviewed manually",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "tldr_regex": "tl.{0,3}dr, case-insensitive",
+    "spelling_variants_kept": "33 of the 100 most frequent (covering 90% of the distribution)",
+    "content_min_words": 2,
+    "summary_min_words": 1,
+    "long_content_subset_threshold": "100 words",
+    "question_words": "21 English question words plus a question mark",
+    "vulgar_word_list": "more than 500 words, Google What Do You Love project"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "precision of pairs",
+     "definition": "share of 1000 random pairs judged correct by manual review",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [],
+   "protocol": "manual review of 1000 randomly selected pairs; reviewer count and criteria not stated; no quantitative summarization evaluation"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://www.uni-weimar.de/medien/webis/corpora/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The pipeline yields about 4 million content-summary pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs",
+   "value": 4000000,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016",
+   "quote": "for a total of 4 million content-summary",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "95% of 1000 randomly reviewed pairs were correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 95,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016; manual review",
+   "quote": "we reviewed\n1000 randomly selected pairs and found 95% to be\ncorrect",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Only 966,430 pairs share a noun phrase between content and summary, a stated lower bound on true summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs passing noun-phrase test",
+   "value": 966430,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016; 580,391 from submissions and 386,039 from comments",
+   "quote": "Only 966,430 content-summary pairs",
+   "table": null,
+   "note": "Paper says this is a lower bound because abstractive summaries may share no noun phrases.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Median comment summary is 15 words and median submission summary is 22 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median summary length",
+   "value": 22,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Submissions; comments median 15 (Table 4)",
+   "quote": "3,526",
+   "table": null,
+   "note": "Table 4 submissions Summary: min 1, median 22, max 3,526, mean 33.65, sigma 47.87; comments Summary: median 15, mean 22.21.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Summary is about 11% of content words for submissions and 8% for comments.",
+   "kind": "measured",
+   "source": null,
+   "metric": "summary share",
+   "value": 11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016",
+   "quote": "about 11% being typical",
+   "table": null,
+   "note": "comments 8%",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Length of summary correlates with post length (Pearson 0.40 submissions, 0.35 comments).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.4,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016",
+   "quote": "Pearson correlations of 0.40 for",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "78,710 pairs have question summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs",
+   "value": 78710,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016",
+   "quote": "78,710 content-summary pairs",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "299,145 summaries are vulgar.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairs",
+   "value": 299145,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Webis-TLDR-17 built from the Reddit crawl of 286M submissions and 1.6B comments, 2006-2016",
+   "quote": "299,145 vulgar",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Corpus is comparable in size to English Gigaword (4M) and larger than CNN/Daily Mail (300,000) and DUC.",
+   "kind": "reported",
+   "source": null,
+   "metric": "training pairs",
+   "value": 300000,
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 comparison of corpora",
+   "quote": "300,000",
+   "table": null,
+   "note": "Other corpora figures are quoted from prior work, not measured here.",
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation of summarizers trained on the corpus; preliminary experiments with Rush et al. (2015) and Nallapati et al. (2016) judged only by manual inspection",
+  "95% precision rests on 1000 pairs, reviewer count and criteria not given",
+  "Only 966,430 of 4M pairs share noun phrases; many TL;DRs are questions, judgments or vulgar, not true summaries",
+  "Filtering threshold is very lenient (2 content words)",
+  "No ontology for subreddits",
+  "Reddit crawl covers 2006-2016 only"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "TL;DR",
+   "definition": "abbreviation originally meaning too long; didn't read, now typically indicating that a summary of the entire post follows",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Rush et al. 2015, A neural attention model for abstractive sentence summarization",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model trained preliminarily on the corpus",
+   "quote": null
+  },
+  {
+   "work": "Nallapati et al. 2016, Abstractive text summarization using seq2seq RNNs",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model trained preliminarily on the corpus; also source of CNN/Daily Mail",
+   "quote": null
+  },
+  {
+   "work": "Hu et al. 2015, LCSTS",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest in genre and collection method (Weibo, 2.5M pairs)",
+   "quote": null
+  },
+  {
+   "work": "English Gigaword, CNN/Daily Mail, DUC 2003/2004",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "existing corpora in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Pushshift Reddit crawl",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "286M submissions, 1.6B comments",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "Filtering steps to get the TL;DR corpus.",
+   "page": 3,
+   "why": "Shows how counts shrink from 286M submissions to 1.67M pairs"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Length statistics for the TL;DR corpus.",
+   "page": 4,
+   "why": "Content and summary length distributions"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

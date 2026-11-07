@@ -1,0 +1,541 @@
+{
+ "schema": 1,
+ "key": "2312.06674",
+ "pdf": "ai-engineering/09-safety-and-security/sources/inan-2023-llama-guard.pdf",
+ "bib": {
+  "title": "Llama Guard: LLM-based Input-Output Safeguard for Human-AI Conversations",
+  "authors": [
+   "Hakan Inan",
+   "Kartikeya Upasani",
+   "Jianfeng Chi",
+   "Rashi Rungta",
+   "Krithika Iyer",
+   "Yuning Mao",
+   "Michael Tontchev",
+   "Qing Hu",
+   "Brian Fuller",
+   "Davide Testuggine",
+   "Madian Khabsa"
+  ],
+  "first_author": "Inan",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2312.06674",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48104,
+  "chars_total": 48104,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can an instruction-tuned LLM serve as an adaptable input-output safeguard that separately classifies user prompts and model responses against a configurable taxonomy?",
+ "hypothesis": "Fine-tuning an LLM with the guidelines as input gives a classifier that performs well on its own taxonomy and adapts to other taxonomies by zero-shot, few-shot prompting or further fine-tuning.",
+ "contributions": [
+  "A safety risk taxonomy for interacting with AI agents.",
+  "Llama Guard, an LLM-based input-output safeguard fine-tuned on data labeled by the taxonomy, with the taxonomy as input.",
+  "Separate instructions for classifying prompts vs responses in a single model.",
+  "Public release of the model weights."
+ ],
+ "method": {
+  "summary": "Llama2-7b is instruction-tuned to output safe/unsafe plus violated category codes given a Llama Guard prompt containing guidelines, classification type (prompt or response), conversation and output format. Trained on 13,997 red-team-annotated prompt/response pairs built from Anthropic harmlessness prompts, with category-dropping augmentation; evaluated by AUPRC in-domain and on ToxicChat and OpenAI Mod by prompting and fine-tuning.",
+  "task": "safety classification of LLM prompts and responses (binary and per-category)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Internal annotated dataset (Anthropic harmless first-turn prompts + Llama-generated responses)",
+    "role": "both",
+    "size": "13,997 prompts and responses",
+    "split": "random 3:1 between fine-tuning and evaluation",
+    "source": "Anthropic human preference data about harmlessness (Ganguli et al., 2022); responses from an internal Llama checkpoint; labeled by in-house red team",
+    "preprocessing": "First human prompt kept, assistant response and other turns discarded; badly formatted examples discarded; 4 labels: prompt-category, response-category, prompt-label, response-label"
+   },
+   {
+    "name": "ToxicChat",
+    "role": "eval",
+    "size": "10k samples",
+    "split": null,
+    "source": "Lin et al., 2023",
+    "preprocessing": "binary toxicity label by strict majority vote (>=3 annotators); also used for fine-tuning at 10%, 20%, 50%, 100% of its training data"
+   },
+   {
+    "name": "OpenAI Moderation Evaluation Dataset",
+    "role": "eval",
+    "size": "1,680 prompt examples",
+    "split": null,
+    "source": "Markov et al., 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama Guard",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Llama2-7b instruction-tuned for classification",
+    "init_from": "Llama2-7b",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: 4096 tokens from training sequence length",
+    "other": {}
+   },
+   {
+    "name": "OpenAI Moderation API",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GPT-based multi-label classifier, 11 categories",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Perspective API",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Azure AI Content Safety API",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "zero-shot content moderation prompting"
+    }
+   },
+   {
+    "name": "Llama2-7b",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "fine-tuned on ToxicChat in same setup as comparison"
+    }
+   }
+  ],
+  "training": {
+   "objective": "language modeling objective on instruction + target (safe/unsafe and category list)",
+   "optimizer": null,
+   "lr": "2e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2",
+   "steps": "500",
+   "epochs": "~1",
+   "tokens": null,
+   "seq_len": "4096",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "data augmentation: drop random non-violated categories; drop all violated categories and relabel safe; shuffle category indices",
+   "hardware": "single machine, 8xA100 80GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "model_parallelism": "1",
+    "note": "batch size 2 as printed; whether per device or global is not stated"
+   }
+  },
+  "inference": {
+   "decoding": "first-token probability of safe/unsafe read as classifier score; single-token generation for 1-vs-all",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per item; no seeds or repeats stated",
+   "prompting": "Llama Guard prompt with guidelines, classification type, conversation, output format. Zero-shot: category names and descriptions of target taxonomy. Few-shot: 2 to 4 examples per category, mix of unsafe and hard-negative safe.",
+   "retrieval": null,
+   "parameters": {
+    "fewshot_examples_per_category": "2 to 4",
+    "category_output_format": "letter 'O' plus 1-based index"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUPRC",
+     "definition": "area under precision-recall curve on the unsafe class",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall/F1",
+     "definition": "threshold 0.5, for baselines without probabilities (Azure, GPT-4)",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenAI Moderation API",
+    "Perspective API",
+    "Azure AI Content Safety API",
+    "GPT-4",
+    "Llama2-7b fine-tuned on ToxicChat"
+   ],
+   "protocol": "Binary score for APIs = max over per-category scores (Eq 1). Per-category: 1-vs-all for Llama Guard (only category of interest in prompt); 1-vs-benign for baseline APIs off-policy (drops other-category positives, possibly optimistic). Azure integer 0-6 binarised with threshold 1-6 chosen for best average precision on the dataset. Llama Guard main results use adapted zero-shot (taxonomy and description, no examples). No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/PurpleLlama/tree/main/Llama-Guard",
+   "weights": "released (Llama Guard model weights)",
+   "data": "not released (training data not stated as available)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "using a batch size of 2, with sequence length of 4096",
+    "where": "3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Llama Guard beats OpenAI and Perspective APIs on its own test set, prompt classification.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.945,
+   "unit": "score",
+   "baseline_value": 0.764,
+   "n": null,
+   "setup": "Internal test set (prompt), AUPRC, Llama Guard zero-shot with target taxonomy",
+   "quote": null,
+   "table": "Table 2, row Llama Guard, column Our Test Set (Prompt)",
+   "note": "baseline_value is OpenAI API 0.764; Perspective 0.728",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Llama Guard response classification on its own test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.953,
+   "unit": "score",
+   "baseline_value": 0.769,
+   "n": null,
+   "setup": "Internal test set (response), AUPRC",
+   "quote": null,
+   "table": "Table 2, row Llama Guard, column Our Test Set (Response)",
+   "note": "baseline_value is OpenAI API; Perspective 0.699",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Llama Guard beats all baselines on ToxicChat without training on it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.626,
+   "unit": "score",
+   "baseline_value": 0.588,
+   "n": null,
+   "setup": "ToxicChat, AUPRC, zero-shot with ToxicChat taxonomy",
+   "quote": null,
+   "table": "Table 2, row Llama Guard, column ToxicChat",
+   "note": "baseline_value is OpenAI API; Perspective 0.532",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On OpenAI Mod dataset Llama Guard zero-shot is slightly below the OpenAI API trained for it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.847,
+   "unit": "score",
+   "baseline_value": 0.856,
+   "n": null,
+   "setup": "OpenAI Mod dataset, AUPRC, zero-shot with OpenAI taxonomy",
+   "quote": null,
+   "table": "Table 2, row Llama Guard, column OpenAI Mod",
+   "note": "baseline_value is OpenAI API 0.856; Perspective 0.787",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Few-shot prompting lifts Llama Guard above the OpenAI API on its own dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.872,
+   "unit": "score",
+   "baseline_value": 0.856,
+   "n": null,
+   "setup": "OpenAI Mod, AUPRC, taxonomy description plus 2 to 4 in-context examples per category",
+   "quote": null,
+   "table": "Table 4, row Llama Guard Few-shot (w/ description and in-context examples)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Llama Guard without any adaptation on OpenAI Mod.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.837,
+   "unit": "score",
+   "baseline_value": 0.856,
+   "n": null,
+   "setup": "OpenAI Mod, AUPRC, own taxonomy only",
+   "quote": null,
+   "table": "Table 4, row Llama Guard (no adaptation)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Fine-tuning from Llama Guard needs about 20% of ToxicChat data to match Llama2-7b trained on 100%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data fraction",
+   "value": 20,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ToxicChat fine-tuning at 10/20/50/100% of training data, AUPRC (read from Fig 3)",
+   "quote": "Llama Guard needs only 20% of the ToxicChat dataset to perform comparably with",
+   "table": null,
+   "note": null,
+   "where": "4.5.2"
+  },
+  {
+   "claim": "Zero-shot Llama2-7b produced only malformed outputs so is scored 0; Llama Guard scores 0.626 zero-shot on ToxicChat.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ToxicChat zero-shot",
+   "quote": "therefore, we set its AUPRC as zero, whereas Llama Guard achieves 0.626 AUPRC in the zero-shot setting.",
+   "table": null,
+   "note": "Llama2-7b AUPRC 0 is a set convention, not a measurement of score",
+   "where": "4.5.2"
+  },
+  {
+   "claim": "Per-category prompt AUPRC is low for OpenAI Mod API on Guns and Illegal Weapons.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUPRC",
+   "value": 0.035,
+   "unit": "score",
+   "baseline_value": 0.798,
+   "n": null,
+   "setup": "Internal test set, AUPRC, prompt (left)",
+   "quote": null,
+   "table": "Table 3, row Guns and Illegal Weapons, column OpenAI Mod API",
+   "note": "baseline_value is Llama Guard prompt 0.798",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Threshold 0.5 overall prompt classification: Llama Guard F1 vs GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.872,
+   "unit": "score",
+   "baseline_value": 0.816,
+   "n": null,
+   "setup": "Internal test set prompts, P/R/F1 at threshold 0.5",
+   "quote": null,
+   "table": "Table 5, row Overall, column Llama Guard",
+   "note": "Llama Guard 0.880/0.864/0.872; GPT-4 0.717/0.947/0.816",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Threshold 0.5 overall response classification: Llama Guard F1 vs GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.884,
+   "unit": "score",
+   "baseline_value": 0.801,
+   "n": null,
+   "setup": "Internal test set responses, P/R/F1 at threshold 0.5",
+   "quote": null,
+   "table": "Table 6, row Overall, column Llama Guard",
+   "note": "Llama Guard 0.900/0.867/0.884; GPT-4 0.813/0.788/0.801",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Training set is small and quick: about one epoch, 500 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-7b, 8xA100 80GB, seq 4096",
+   "quote": "We train for 500 steps, which corresponds to ∼1 epoch over our training set.",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  }
+ ],
+ "limits": [
+  "Common-sense knowledge limited by training and pretraining data; may give wrong judgements.",
+  "Fine-tuning data and most pretraining data are English; no guarantee for other languages.",
+  "No claim of perfect policy coverage; labels are from a single in-house red team.",
+  "May be susceptible to prompt injection attacks.",
+  "When prompted as a chat model it may generate unsafe language (no chat safety tuning).",
+  "Internal test set is in-domain (same taxonomy, same data process) so 0.945 is a ceiling; off-policy baselines use 1-vs-benign which may be optimistic.",
+  "AUPRC cannot be computed for Azure and GPT-4, so main comparison excludes them; GPT-4 and Azure compared at threshold 0.5 in the appendix only.",
+  "Training optimizer, schedule, seeds and exact prompt text (Figure 1 is an image) are not stated; no variance reported.",
+  "Dated: 2023 taxonomy of six categories and Llama2-7b backbone."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prompt classification vs response classification",
+   "definition": "classifying the user messages (prompts) or the agent messages (responses) as two separate moderation tasks, drawn by change of wording in the instruction",
+   "where": "3.1"
+  },
+  {
+   "term": "1-vs-all",
+   "definition": "one prediction task per category where only that category is positive and all other samples are negatives",
+   "where": "4.1"
+  },
+  {
+   "term": "1-vs-benign",
+   "definition": "like 1-vs-all but positives from other categories are dropped, leaving only benign negatives",
+   "where": "4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "extends",
+   "note": "backbone Llama2-7b",
+   "quote": "We build Llama Guard on top of Llama2-7b"
+  },
+  {
+   "work": "Finetuned language models are zero-shot learners (FLAN)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "instruction-following paradigm",
+   "quote": null
+  },
+  {
+   "work": "Anthropic harmlessness preference data (Ganguli et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of prompts",
+   "quote": null
+  },
+  {
+   "work": "A holistic approach to undesired content detection (Markov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "OpenAI Moderation API and Mod eval dataset; AUPRC protocol; Llama Guard departs from its taxonomy alignment",
+   "quote": null
+  },
+  {
+   "work": "ToxicChat",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval and fine-tune adaptation",
+   "quote": null
+  },
+  {
+   "work": "Perspective API",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Azure AI Content Safety API",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot moderation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Example task instructions for the Llama Guard prompt and response classification tasks.",
+   "page": 4,
+   "why": "Shows four-part task format; the text is an image so not in extraction."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Adapting Llama Guard and Llama2-7b to ToxicChat via further fine-tuning.",
+   "page": 10,
+   "why": "Data-efficiency of fine-tuning from Llama Guard."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1 (4.1)",
+   "snippet": "y_hat_i = max_{c in {c1..cn}} y_hat_{c,i}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Prompt text is in Figure 1 (image) and not in the text layer; prompts left empty.",
+  "Fig 3 values not readable from text."
+ ]
+}

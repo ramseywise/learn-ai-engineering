@@ -1,0 +1,586 @@
+{
+ "schema": 1,
+ "key": "2306.08568",
+ "pdf": "generative-ai/05-RL/sources/luo-2023-wizardcoder.pdf",
+ "bib": {
+  "title": "WizardCoder: Empowering Code Large Language Models with Evol-Instruct",
+  "authors": [
+   "Ziyang Luo",
+   "Can Xu",
+   "Pu Zhao",
+   "Qingfeng Sun",
+   "Xiubo Geng",
+   "Wenxiang Hu",
+   "Chongyang Tao",
+   "Jing Ma",
+   "Qingwei Lin",
+   "Daxin Jiang"
+  ],
+  "first_author": "Luo",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v2, 27 May 2025)",
+  "arxiv": "2306.08568",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 64019,
+  "chars_total": 64019,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can adapting Evol-Instruct to code, to make instructions progressively harder, improve instruction-tuned open-source Code LLMs?",
+ "hypothesis": "Increasing the complexity of code instruction data is the key to coding performance.",
+ "contributions": [
+  "Code Evol-Instruct, an instruction fine-tuning approach for code",
+  "WizardCoder models that surpass other open-source Code LLMs; 15B beats Claude and Bard, 34B matches GPT-3.5 on HumanEval and exceeds it on HumanEval+",
+  "A preliminary study on the role of instruction complexity"
+ ],
+ "method": {
+  "summary": "Evolve Code Alpaca (about 20k) for several rounds with gpt-3.5-turbo using five coding-specific heuristics, merge all rounds, and fine-tune StarCoder 15B and CodeLlama-34B-Python on the result; stop evolving when an external dev set score drops.",
+  "task": "instruction fine-tuning for code generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Code Alpaca",
+    "role": "train",
+    "size": "around 20k samples (seed)",
+    "split": null,
+    "source": "Chaudhary 2023, github.com/sahil280114/codealpaca",
+    "preprocessing": "Evolved by Code Evol-Instruct with gpt-3.5-turbo; evolved data of all previous rounds merged with the original each round; leakage filter: top 5 gte-large neighbours per test sample, GPT-4 yes/no match, drop on yes"
+   },
+   {
+    "name": "Evolved Code Alpaca",
+    "role": "train",
+    "size": "approximately 78k samples",
+    "split": null,
+    "source": "derived",
+    "preprocessing": "Rounds of evolution; stop when external dev set performance drops"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems, avg 9.6 tests",
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval+",
+    "role": "eval",
+    "size": "avg 774.8 tests per problem",
+    "split": null,
+    "source": "Liu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "eval",
+    "size": "500 test problems, 3 tests each",
+    "split": "MBPP-400 dev set = train + dev merged",
+    "source": "Austin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "DS-1000",
+    "role": "eval",
+    "size": "1,000 problems, 7 libraries",
+    "split": null,
+    "source": "Lai et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiPL-E",
+    "role": "eval",
+    "size": null,
+    "split": "8 languages: Java, JavaScript, C++, PHP, R, Julia, Swift, Rust",
+    "source": "Cassano et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "WizardCoder 15B",
+    "role": "proposed",
+    "params": "15B",
+    "architecture": "decoder-only code LLM",
+    "init_from": "StarCoder 15B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WizardCoder 34B",
+    "role": "proposed",
+    "params": "34B",
+    "architecture": "decoder-only code LLM",
+    "init_from": "CodeLlama-34B-Python",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "evolves instructions and writes responses; Table 4 also tries GPT-4 and CodeLlama-Instruct-34B"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "similarity scoring and leakage filtering; also evolver in Table 4"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: supervised instruction fine-tuning (next-token loss on instruction-response pairs); not stated",
+   "optimizer": null,
+   "lr": "2e-5",
+   "lr_schedule": "Cosine",
+   "warmup": "30 steps",
+   "batch_size": "512",
+   "steps": "200 fine-tuning steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": "fp16 mixed precision",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "evolution_rounds": "three rounds gave best dev and HumanEval scores (Fig 3); Table 5 shows rounds 0 to 4"
+   }
+  },
+  "inference": {
+   "decoding": "Table 1: sampling; EvalPlus comparison (Fig 2): greedy decoding",
+   "temperature": "0.2",
+   "top_p": "0.95 (Tables 1, 2); 0.5 (Table 3 DS-1000)",
+   "max_tokens": "512 (MultiPL-E); 1024 (DS-1000); not stated for HumanEval/MBPP",
+   "samples": "n=200 (HumanEval, MBPP); n=50 (MultiPL-E); n=40 (DS-1000); single greedy sample on EvalPlus",
+   "prompting": "HumanEval/HumanEval+ zero-shot; MBPP three-shot (three test examples in prompt); DS-1000 completion zero-shot; DS-1000 insertion and MultiPL-E use StarCoder prompt format",
+   "retrieval": null,
+   "parameters": {
+    "evolution_methods": 5,
+    "evol_stop": "halt when external dev set performance drops"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "fraction of problems solved by the first attempt, estimated from n samples (Chen et al. 2021)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5",
+    "GPT-4",
+    "Claude",
+    "Bard",
+    "PaLM 2",
+    "Code-Davinci-002",
+    "Codex",
+    "StarCoder",
+    "CodeLlama series",
+    "CodeLlama-Instruct",
+    "OctoCoder",
+    "PanguCoder2",
+    "Unnatural-CodeLlama",
+    "CodeGen",
+    "CodeGeeX",
+    "CodeT5+"
+   ],
+   "protocol": "Single run per setting; no seeds or confidence intervals reported. Many baseline numbers copied from other papers (Appendix B); Claude and Bard via API."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Code Evol-Instruct evolution",
+    "text": "Please increase the difficulty of the given programming test question a bit.\nYou can increase the difficulty using, but not limited to, the following methods:\n{method}\n{question}",
+    "where": "Sec 3.1, p4"
+   },
+   {
+    "purpose": "evolution heuristics (5)",
+    "text": "1. Add new constraints and requirements to the original problem, adding approximately 10 additional words. 2. Replace a commonly used requirement in the programming task with a less common and more specific one. 3. If the original problem can be solved with only a few logical steps, please add more reasoning steps. 4. Provide a piece of erroneous code as a reference to increase misdirection. 5. Propose higher time or space complexity requirements, but please refrain from doing so frequently.",
+    "where": "Sec 3.1, p5"
+   },
+   {
+    "purpose": "fine-tuning format",
+    "text": "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n### Instruction:\n{instruction}\n### Response:",
+    "where": "Sec 3.2, p5"
+   },
+   {
+    "purpose": "HumanEval zero-shot evaluation",
+    "text": "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n### Instruction:\nCreate a Python script for this problem:\n{Question}\n### Response:",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "similarity checking (system)",
+    "text": "Your task is to evaluate the similarity of the two given coding tasks. Please review the two coding tasks carefully, paying close attention to the overlap in function names, code structures, topics, and contents. Once you have carefully reviewed both coding tasks, provide a similarity score between these two coding tasks. The score should range from 1 to 10 (1: completely different coding tasks; 10: identical coding tasks). You only need to provide your score.",
+    "where": "Appendix C"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "200 fine-tuning steps, 30 warmup steps, a learning rate of 2e-5",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "WizardCoder 15B (StarCoder fine-tuned on evolved Code Alpaca) reaches 57.3 pass@1 on HumanEval vs 33.6 for StarCoder 15B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 57.3,
+   "unit": "%",
+   "baseline_value": 33.6,
+   "n": null,
+   "setup": "HumanEval pass@1, n=200 samples, temperature 0.2, top_p 0.95 (Table 1)",
+   "note": "StarCoder 33.6 is quoted from other work (StarCoder paper, per Appendix B).",
+   "where": "Table 1, p7",
+   "table": "Table 1, row WizardCoder 15B, column HumanEval"
+  },
+  {
+   "claim": "WizardCoder 34B (CodeLlama-34B-Python fine-tuned) reaches 71.5 pass@1 on HumanEval vs 53.7 for CodeLlama-Python 34B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 71.5,
+   "unit": "%",
+   "baseline_value": 53.7,
+   "n": null,
+   "setup": "HumanEval pass@1, n=200 samples, temperature 0.2, top_p 0.95 (Table 1)",
+   "note": "CodeLlama-Python 53.7 is from the CodeLlama paper (Appendix B).",
+   "where": "Table 1, p7",
+   "table": "Table 1, row WizardCoder 34B, column HumanEval"
+  },
+  {
+   "claim": "WizardCoder 34B scores 61.2 on MBPP, equal to Unnatural-CodeLlama 34B and above CodeLlama-Python 34B (56.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MBPP pass@1",
+   "value": 61.2,
+   "unit": "%",
+   "baseline_value": 56.2,
+   "n": null,
+   "setup": "MBPP, 3-shot prompt, n=200, temperature 0.2, top_p 0.95",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row WizardCoder 34B, column MBPP"
+  },
+  {
+   "claim": "WizardCoder 15B scores 51.8 on MBPP, above StarCoder 43.6 (re-evaluated by the authors) but below CodeLlama-Python 34B 56.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MBPP pass@1",
+   "value": 51.8,
+   "unit": "%",
+   "baseline_value": 43.6,
+   "n": null,
+   "setup": "MBPP, n=200, temperature 0.2, top_p 0.95",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row WizardCoder 15B, column MBPP"
+  },
+  {
+   "claim": "With greedy decoding on HumanEval+, WizardCoder 34B beats GPT-3.5 (64.6 vs 63.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval+ pass@1",
+   "value": 64.6,
+   "unit": "%",
+   "baseline_value": 63.4,
+   "n": null,
+   "setup": "EvalPlus leaderboard setting, greedy decoding, single attempt; GPT-3.5 figure from EvalPlus",
+   "note": null,
+   "where": "Sec 4.3, p7",
+   "quote": "surpassing GPT3.5 (ChatGPT, 64.6 vs. 63.4) on HumanEval+"
+  },
+  {
+   "claim": "WizardCoder 15B beats Claude-Plus and Bard on HumanEval+ (59.8 vs 53.0 and 44.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval+ pass@1",
+   "value": 59.8,
+   "unit": "%",
+   "baseline_value": 53.0,
+   "n": null,
+   "setup": "EvalPlus setting, greedy decoding; Claude and Bard evaluated through their APIs",
+   "note": null,
+   "where": "Sec 4.3, p7",
+   "quote": "Our 15B version outperforms Claude-Plus (59.8 vs. 53.0) and Bard (59.8 vs. 44.5)."
+  },
+  {
+   "claim": "Swapping the evolver from GPT-3.5 to GPT-4 lifts 34B HumanEval only from 73.2 to 73.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 73.8,
+   "unit": "%",
+   "baseline_value": 73.2,
+   "n": null,
+   "setup": "CodeLlama-34B fine-tuned on data evolved by GPT-4; 200 steps",
+   "note": "Table 4 gives 73.2 for the GPT-3.5 evolved 34B, which differs from the 71.5 in Table 1; the paper does not explain the gap.",
+   "where": "Table 4 and Sec 5, p8",
+   "quote": "Despite GPT-4’s superior coding performance (88.4 vs. 73.2), the gain in evolved rounds is not proportional (73.8 vs. 73.2)."
+  },
+  {
+   "claim": "An open-source evolver (CodeLlama-Instruct-34B) still works: 70.1 for the 34B base and 55.5 for the 15B base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 70.1,
+   "unit": "%",
+   "baseline_value": 73.2,
+   "n": null,
+   "setup": "CodeLlama-34B base, evolver CodeLlama-34B (fine-tuned on code-alpaca first for response generation, Appendix E)",
+   "note": null,
+   "where": "Table 4, p8",
+   "quote": "yielding scores of 70.1 (34B) and 55.5 (15B)"
+  },
+  {
+   "claim": "Best HumanEval and MBPP-400 dev scores come after three evolution rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cumulative data from rounds 0..k merged, 200 fine-tuning steps",
+   "note": null,
+   "where": "Sec 5, Fig 3, p8-9"
+  },
+  {
+   "claim": "Complexity, not sample count: training on round 1 data alone with a similar number of samples gives 56.1 vs 45.7 for the seed round 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 56.1,
+   "unit": "%",
+   "baseline_value": 45.7,
+   "n": null,
+   "setup": "Fine-tune from scratch on a single round, about 19k samples each",
+   "note": null,
+   "where": "Table 5, p9",
+   "table": "Table 5, upper part, row Round 1, column Pass@1"
+  },
+  {
+   "claim": "With matched tokens (2.3M), the best single round is round 2 at 52.4 vs 44.5 for round 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 52.4,
+   "unit": "%",
+   "baseline_value": 44.5,
+   "n": null,
+   "setup": "Single-round data at 2.3M tokens",
+   "note": null,
+   "where": "Table 5, p9",
+   "table": "Table 5, lower part, row Round 2, column Pass@1"
+  },
+  {
+   "claim": "Evolved data is not more similar to HumanEval than seed data; similarity scores stay low.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "gte-large top-1 retrieval per test sample, GPT-4 scores 1 to 10",
+   "note": null,
+   "where": "Fig 4, p9"
+  },
+  {
+   "claim": "On MultiPL-E, WizardCoder 34B reaches 55.3 on JavaScript, ahead of CodeLlama-Instruct 34B 45.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiPL-E pass@1",
+   "value": 55.3,
+   "unit": "%",
+   "baseline_value": 45.9,
+   "n": null,
+   "setup": "temperature 0.2, top_p 0.95, max length 512, n=50",
+   "note": null,
+   "where": "Table 2, p8",
+   "table": "Table 2, row WizardCoder 34B, column Js"
+  },
+  {
+   "claim": "On DS-1000 (insertion), WizardCoder 15B scores 32.8 overall vs 25.4 for StarCoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DS-1000 pass@1",
+   "value": 32.8,
+   "unit": "%",
+   "baseline_value": 25.4,
+   "n": null,
+   "setup": "15B only; temperature 0.2, top_p 0.5, max length 1024, 40 samples averaged",
+   "note": null,
+   "where": "Table 3, p8",
+   "table": "Table 3, row Insertion WizardCoder, column All"
+  }
+ ],
+ "limits": [
+  "No code, weights or data release is stated in the text.",
+  "No optimizer, hardware, compute or seeds given; single run per setting.",
+  "Evolution depends on gpt-3.5-turbo outputs, so gains are partly distillation from a stronger closed model; Table 4 shows a stronger evolver (GPT-4) adds little.",
+  "DS-1000 reported for 15B only because the 34B model could not be aligned with the benchmark framework (footnote 6).",
+  "Authors concede the model still falls significantly behind GPT-4.",
+  "Comparisons hold only against open models before 24 August 2023; many baseline scores are copied from other papers with different protocols (StarCoder MBPP re-evaluated on the full 500-problem set, Appendix B).",
+  "Complexity claim is called preliminary; mechanism not isolated beyond sample/token matching and a similarity check."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "WizardLM: Empowering Large Language Models to Follow Complex Instructions",
+   "year": 2023,
+   "arxiv": "2304.12244",
+   "relation": "extends",
+   "note": "Evol-Instruct adapted to code",
+   "quote": null
+  },
+  {
+   "work": "Code Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "seed instruction set",
+   "quote": null
+  },
+  {
+   "work": "StarCoder: may the source be with you!",
+   "year": 2023,
+   "arxiv": "2305.06161",
+   "relation": "uses-method",
+   "note": "base model (15B)",
+   "quote": null
+  },
+  {
+   "work": "Code Llama: Open foundation models for code",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "uses-method",
+   "note": "base model CodeLlama-34B-Python; baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "related",
+   "note": "instruction generation used by Alpaca",
+   "quote": null
+  },
+  {
+   "work": "EvalPlus / HumanEval+",
+   "year": 2023,
+   "arxiv": "2305.01210",
+   "relation": "uses-data",
+   "note": "leaderboard setting for greedy comparison",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Evaluating LLMs trained on code)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "benchmark and pass@k estimator",
+   "quote": null
+  },
+  {
+   "work": "MBPP (Program synthesis with LLMs)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "DS-1000",
+   "year": 2022,
+   "arxiv": "2211.11501",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "MultiPL-E",
+   "year": 2022,
+   "arxiv": "2208.08227",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "OctoPack",
+   "year": 2023,
+   "arxiv": "2308.07124",
+   "relation": "baseline",
+   "note": "OctoCoder",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of our novel Code Evol-Instruct and the superior pass@1 performance of our WizardCoder 34B",
+   "page": 2,
+   "why": "Shows an easy task evolved into a harder one."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Analysis of whether the performance gain comes from more tokens.",
+   "page": 9,
+   "why": "Controls for samples and tokens."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 2 to 4 are charts; values read only from the text."
+ ]
+}

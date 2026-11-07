@@ -1,19 +1,363 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2212.10773",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/xu-2023-multiinstruct.pdf",
  "bib": {
-  "title": "MultiInstruct: Improving Multi-Modal Zero-Shot Learning via Instruction Tuning",
+  "title": "MULTIINSTRUCT: Improving Multi-Modal Zero-Shot Learning via Instruction Tuning",
+  "authors": [
+   "Zhiyang Xu",
+   "Ying Shen",
+   "Lifu Huang"
+  ],
   "first_author": "Xu",
   "year": 2023,
-  "venue": "ACL (1) 2023",
+  "venue": "ACL 2023 (61st Annual Meeting, Long Papers, pp. 11445-11465)",
   "arxiv": "2212.10773",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 75808,
+  "chars_total": 75808,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Tables 7-8 task lists skimmed"
  },
- "legacy_report": "SOURCE: \"MultiInstruct: Improving Multi-Modal Zero-Shot Learning via Instruction Tuning\". Zhiyang Xu, Ying Shen (equal contribution), Lifu Huang (Virginia Tech). ACL 2023, Long Papers, pp. 11445–11465. Same work as arXiv 2212.10773; the PDF is the ACL camera-ready.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/xu-2023-multiinstruct.pdf\n\nCOVERAGE: I read all 75,859 characters, about 0–75,859. That covers the body, the Limitations section, Appendices A–C (Tables 5–10, the training details and the attention analysis) and the ACL checklist. I skimmed the references (about 39,000–53,000) only to trace where the methods come from. Nothing was skipped.\n\nCLAIMS (most important first)\n\n- claim: The benchmark has 62 multimodal tasks in 10 broad categories, built from 21 open-source datasets, and every task has 5 instructions written by experts.\n  number: 62 tasks / 10 categories / 21 datasets / 5 instructions\n  setup: everything is cast as unified seq-to-seq, English only, vision-language only\n  quote: \"consists of 62 diverse multimodal tasks in a unified seq-to-seq format covering 10 broad categories. The tasks are derived from 21 existing open-source datasets and each task is equipped with 5 expert-written instructions.\"\n  where: p1, abstract (offset ~400)\n\n- claim: 34 tasks were collected from existing work and 28 more were derived from them by recombining inputs and outputs. For example, Visual Grounding produced Grounded Caption Selection and Visual Grounding Selection.\n  number: 34 existing + 28 derived; 5,000 to 5M instances per new task\n  setup: the derived tasks are built from instances of the existing tasks\n  quote: \"we further derived 28 new tasks from the 34 existing tasks.\" / \"Each new task is created with 5,000 to 5M instances.\"\n  where: p3\n\n- claim: The split is 53 training tasks and 9 held-out evaluation tasks. Training tasks are the ones similar to OFA's pre-training tasks. Evaluation tasks overlap neither with OFA's pre-training nor with the training tasks.\n  number: 53 / 9\n  setup: the 9 evaluation tasks come from the Commonsense Reasoning, VQA and Miscellaneous groups\n  quote: \"The complete list of 53 multi-modal tasks\" (Table 7 caption) / \"The complete list of 9 multi-modal tasks\" (Table 9 caption) / \"we ensure that the evaluation tasks in MULTIINSTRUCT do not overlap with either the pre-training tasks in OFA nor the training tasks\"\n  where: pp. 5, 16–18\n\n- claim: The base model is OFA-large with 472M parameters. It was chosen because it was the largest open-source multimodal model at the time.\n  number: 472M\n  setup: OFA was pre-trained on 8 tasks (Table 10)\n  quote: \"we use OFA-large 8 which contains 472M parameters and was trained on 8 tasks shown in Table 10.\"\n  where: p14, Appendix B.3\n\n- claim: How labels and templates are built. An instruction is a template with the placeholders <TEXT>, <REGION> and <OPTION>. Regions become 4 location tokens, quantised over 1,000 bins. Options are marked with \"[Options]\" and separated by \"||||\", and the model generates one of the options as its output. If a task has no image, a black image is fed instead.\n  number: 1,000 bins\n  setup: follows OFA's unified vocabulary (BPE for text, VQ-GAN for target images)\n  quote: \"each location token \"<bin_NUM>\" represents a quantized coordinate obtained by dividing the image into 1,000 bins.\" / \"We concatenate all the options with \" ||||\" in the option field and the model will directly generate one option from them.\"\n  where: pp. 4–5\n\n- claim: Instructions were written in four steps. Each of two annotators drafts 2–3 instructions per task from 10 sampled instances. The annotators then peer-review each other's drafts, reconcile the two sets together, and finally filter out tasks.\n  number: 2-3 per annotator; 10 example instances\n  setup: two NLP experts, unpaid (checklist D2)\n  quote: \"each annotator first writes 2-3 instructions for each task by giving them the specific goals of this task, the format of input data, and 10 example instances randomly sampled from the dataset.\"\n  where: pp. 3–4\n\n- claim: During training, an instruction template is sampled at random for each instance. At evaluation, each task is run 5 times, once per instruction, and the paper reports the max, the mean ± std, and an aggregate.\n  number: 5 runs per task\n  setup: ROUGE-L for generation tasks, accuracy for classification, and IoU-matched accuracy for picking a region\n  quote: \"For each task, we conduct five experiments by evaluating the model using one of the five instructions in each experiment. We report the mean and maximum performance and the standard deviation\"\n  where: pp. 5–6\n\n- claim: Sensitivity is a new metric: the standard deviation of a task's performance across its instructions divided by the mean (a coefficient of variation), averaged over tasks. Lower is better.\n  number: none\n  setup: within-task variation across instructions only\n  quote: \"Sensitivity refers to the model's capability of consistently producing the same results, regardless of slight variations in the wording of instructions, as long as the intended task remains the same.\"\n  where: p6\n\n- claim: Training on 5 instructions per task instead of 1 fixed template raises aggregated performance and cuts sensitivity by more than half.\n  number: 42.81 -> 47.82 aggregated; sensitivity 24.62 -> 10.45\n  setup: OFA_MultiInstruct, unseen evaluation tasks, single run\n  quote: \"1 Instruction 42.81 24.62 / 5 Instructions 47.82 10.45\" (Table 3: \"Effect of Different Number of Instructions.\")\n  where: p8\n\n- claim: Instruction tuning makes the model much less sensitive than raw OFA. Adding Natural Instructions lowers sensitivity further.\n  number: OFA 40.58; the other values extracted are 13.84, 10.45, 10.27\n  setup: averaged over the 9 unseen multimodal tasks\n  quote: \"OFA OFAMultiInstruct OFASeqInstruct OFAMixedInstruct 40.58 13.84 10.45 10.27\" (Figure 4)\n  where: p8. I cannot map values to models with certainty; see PROBLEMS.\n\n- claim: Results for zero-shot on unseen tasks. OFA_MultiInstruct beats raw OFA on every unseen task. The largest gain is on Grounded VQA, where raw OFA scores almost zero because it never outputs region tokens.\n  number: Grounded VQA Acc avg 0.00 -> 47.22 (max 64.32); Text VQA RougeL avg 9.30 -> 26.46; Visual Entailment Acc avg 35.29 -> 53.90\n  setup: OFA-large, zero-shot, avg ± std over 5 instructions\n  quote: \"OFA 15.21 9.30 ± 5.42 0.02 0.00 ± 0.01\" and \"OFAMultiInstruct 27.22 26.46 ± 0.83 64.32 47.22 ± 23.08\" (Table 2)\n  where: p7\n\n- claim: The gain comes from the instructions, not from multi-task training. Fine-tuning on the same tasks with only task names in place of instructions scores almost zero on Grounded VQA.\n  number: OFA_TaskName Grounded VQA 0.00 vs 64.32 max\n  setup: task-name prefix plus the same option tokens\n  quote: \"This suggests that the performance gain of OFAMultiInstruct mainly comes from instructions rather than multi-task training.\"\n  where: p7\n\n- claim: Fine-tuning OFA on text-only Natural Instructions hurts multimodal zero-shot performance. The attention analysis shows text tokens attend less to the image afterwards, most of all in the first two encoder layers.\n  number: Text VQA avg 5.40, Grounded VQA 0.00 for OFA_NaturalInstruct\n  setup: 832 English tasks from Natural Instructions; OFA encoder of 12 layers x 16 heads\n  quote: \"only fine-tuning OFA on NATURAL INSTRUCTIONS actually degrades the model's zero-shot performance on almost all multimodal tasks\"\n  where: p7; Appendix C, p14\n\n- claim: Mixed and sequential transfer from Natural Instructions do not significantly raise the mean. They do lower the standard deviation on most tasks.\n  number: 6 of 9 tasks\n  setup: Mixed = shuffle both datasets together; Seq = Natural Instructions first, then MultiInstruct\n  quote: \"both OFASeqInstruct and OFA MixedInstruct achieve lower standard deviation on 6 out of 9 unseen multimodal tasks compared with OFAMultiInstruct\"\n  where: p7\n\n- claim: Adding task clusters (Img Und 16, Grounding 16, MISC/ITM 14, Relation 6, Region 6, NLP 832) raises mean and max aggregated performance and lowers sensitivity.\n  number: cluster sizes as listed; Figure 3 values cannot be extracted\n  setup: OFA_MixedInstruct\n  quote: \"As we increase the number of task clusters, we observe an improvement in both the mean and maximum aggregated performance and a decrease in sensitivity\"\n  where: p8\n\n- claim: Multimodal instruction tuning also helps the 20 held-out text-only Natural Instructions tasks. Mixed training keeps most of the NLP ability.\n  number: RougeL: OFA 2.25, MultiInstruct 12.18, NaturalInstruct 43.61, Mixed 43.32, Seq 30.79\n  setup: 20 tasks from the default Natural Instructions test split, using the task Definition as the instruction\n  quote: \"OFA 2.25 / OFAMultiInstruct 12.18 / ... OFANaturalInstruct 43.61 / OFAMixedInstruct 43.32 / OFASeqInstruct 30.79\" (Table 4)\n  where: p9\n\n- claim: Training setup: input up to 1024 tokens, target up to 512, 8 A100s, batch size 8 per GPU, learning rate 1e-05, fp16, 3 epochs. Every experiment was run once.\n  number: as listed\n  setup: same for every configuration\n  quote: \"a batch size 8 per GPU, a learning rate of 1e-05, and float16 enabled for 3 epochs for all the setups and datasets. We run all the experiments once.\"\n  where: p14, Appendix B.4\n\n- claim: Training instructions are longer than evaluation instructions.\n  number: 14.67 vs 9.37 tokens; 85.78 vs 58.77 characters; Levenshtein distance 63.63 vs 54.74\n  setup: Table 6\n  quote: \"Average # of Tokens per Instruction 14.67 9.37\"\n  where: p13\n\nLIMITS\n- One seed: \"We run all the experiments once.\" The paper reports spread across instructions, not across seeds, so small gaps such as Mixed vs Seq vs MultiInstruct are not tested for significance.\n- One model at one size, OFA-large (472M). The authors concede: \"it would be interesting to conduct a thorough comparison between models with different sizes.\"\n- English only, vision-language only (no audio or video). They concede \"the number of tasks and associated instructions remains limited.\"\n- Sensitivity only measures variation within a task. The authors list inter-task sensitivity as future work.\n- The comparison of 1 vs 5 instructions is a single pair of runs.\n- Dated: the model predates LLaVA-style decoders built on an LLM. The authors chose OFA because stronger models had no public checkpoints.\n\nBUILDS ON: Instruction tuning setup from Wei et al., 2021 (FLAN). Natural Instructions from Mishra et al., 2022 and Wang et al., 2022d. OFA unified vocabulary and location tokens from Wang et al., 2022a. Sequential tuning inspired by Pre-Finetuning, Aghajanyan et al. (2021). BPE from Sennrich et al., 2016. VQ-GAN from Esser et al., 2021. The motivation that models are sensitive to prompt wording comes from Webson and Pavlick, 2022 and Liu et al., 2022b. Also mentions VL-T5 (Cho et al., 2021) and InstructDial (Gupta et al., 2022).\n\nCODE: There is no code. Example templates worth quoting verbatim (Tables 7–9, pp. 16–18):\n- \"Given the region<REGION> in the image, generate a caption for that region.\" (Grounded Captioning)\n- \"Select a region from options based on the referring expression <TEXT>. <OPTION>\" (Referring Expression Selection)\n- \"Which region is the answer to <QUESTION>? <OPTION>.\" (Grounded VQA, eval)\n- Target format: \"<bin_242> <bin_180> <bin_736> <bin_475>\" (p4)\n\nFIGURES\n- Fig 1, p2, \"Example Instances from MULTIINSTRUCT for Four Tasks.\" Shows filled instruction, options with ||||, and bin-token targets. It is the best single visual for the \"What goes in the labels\" section.\n- Fig 2, p4, the task taxonomy with eval tasks in yellow. Shows the held-out split at a glance.\n- Fig 3, p7, performance and sensitivity against the number of task clusters. Shows the trend.\n- Fig 4, p8, sensitivity bar chart by model.\n- Fig 5, p15, text-to-image attention per layer. Explains why text-only tuning hurts.\n\nPROBLEMS\n- Figure 4 values: the extraction lists labels and values in separate runs (OFA, MultiInstruct, SeqInstruct, MixedInstruct / 40.58, 13.84, 10.45, 10.27). Read in order, MultiInstruct would be 13.84. But Table 3 gives OFA_MultiInstruct with 5 instructions a sensitivity of 10.45. So either the bar order differs from the label order, or the paper is internally inconsistent. Only OFA = 40.58 is safe to cite. Check the rendered figure before citing the others.\n- Table 6 counts do not add up to 53/9: 21 classification + 19 generation = 40 train, 3 + 4 = 7 eval. Existing and created also sum to 19 + 21 = 40 train. The paper does not explain this.\n- Section 6.2 says the transfer methods give no significant gains \"over OFAMixedInstruct\". This is probably a typo for OFA_MultiInstruct.\n- Section 6.1 refers to Grounded VQA as \"zero-short\".\n- Figure 3 has no extractable data values.\n- Table column headers were flattened. I mapped the Avg ± Std columns by position, and the mapping is consistent.\n- The text contains no embedded instructions."
+ "type": "benchmark",
+ "question": "Can instruction tuning improve the zero-shot generalisation of a vision-language pre-trained model to unseen multimodal tasks?",
+ "hypothesis": "Using a diverse set of instructions per task during multimodal instruction tuning improves zero-shot performance on unseen tasks and reduces sensitivity to instruction wording.",
+ "contributions": [
+  "MultiInstruct: first multimodal instruction tuning benchmark, 62 tasks, 10 categories, 21 datasets, 5 expert-written instructions per task",
+  "Instruction tuning OFA, plus Mixed and Sequential transfer from Natural Instructions",
+  "Sensitivity metric for robustness to instruction wording"
+ ],
+ "method": {
+  "summary": "Builds 62 vision-language tasks in a unified seq2seq format with 5 expert-written instructions each, fine-tunes OFA-large on the training tasks, and evaluates zero-shot on 9 held-out multimodal tasks and 20 NLP tasks. Compares task-name prompts, text-only Natural Instructions transfer (mixed and sequential), number of task clusters and number of instructions.",
+  "task": "multimodal instruction tuning, zero-shot evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MultiInstruct",
+    "role": "both",
+    "size": "62 tasks (53 train, 9 eval inferred from 62 minus 9 unseen); new tasks 5,000 to 5M instances each",
+    "split": "train tasks similar to OFA pre-training tasks; eval tasks are challenging and non-overlapping",
+    "source": "21 open-source datasets; 34 existing tasks plus 28 derived",
+    "preprocessing": "Images, text and boxes tokenised into a unified vocabulary (BPE, VQ-GAN, 1,000 location bins); black picture when no input image; options joined by '||||' after '[Options]'"
+   },
+   {
+    "name": "Natural Instructions",
+    "role": "train",
+    "size": "832 English tasks",
+    "split": "all instances for stage 1 of SeqInstruct; default test split (20 tasks) for NLP eval",
+    "source": "Mishra et al. 2022",
+    "preprocessing": "one instruction per task; at test the task Definition is prepended to input"
+   }
+  ],
+  "models": [
+   {
+    "name": "OFA-large",
+    "role": "base",
+    "params": "472M",
+    "architecture": "Transformer encoder-decoder, unified seq2seq",
+    "init_from": "ofa_large.pt checkpoint",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": "inferred: encoder has 12 self-attention layers",
+    "hidden": null,
+    "heads": "16 attention heads per encoder layer",
+    "context": "max input 1024 tokens, max target 512",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: sequence-to-sequence generation loss (not stated explicitly)",
+   "optimizer": null,
+   "lr": "1e-05",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8 per GPU on 8 GPUs",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "1024 input, 512 target",
+   "precision": "float16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 Nvidia A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "all experiments run once",
+   "other": {
+    "instruction_sampling": "one of 5 instructions sampled randomly per instance/batch",
+    "mixing": "training instances of all tasks mixed and shuffled"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 evaluation runs per task, one per instruction; mean, max and std reported",
+   "prompting": "zero-shot instruction with placeholders <TEXT>, <REGION>, <OPTION>",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "region_classification": "pick option with highest IoU to generated region; no intersection counts as wrong"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "classification tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L",
+     "definition": "generation tasks and non-binary classification",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sensitivity",
+     "definition": "mean over tasks of std over instructions divided by mean over instructions of the per-task metric",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "Aggregated performance",
+     "definition": "mean of performance over all multimodal and NLP unseen tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OFA (no fine-tuning)",
+    "OFA_TaskName",
+    "OFA_NaturalInstruct",
+    "OFA_MixedInstruct",
+    "OFA_SeqInstruct"
+   ],
+   "protocol": "Five runs per task, each with one of five instructions; all training run once, no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/VT-NLP/MultiInstruct",
+   "weights": "model checkpoints stated public at same URL",
+   "data": "https://github.com/VT-NLP/MultiInstruct"
+  },
+  "prompts": [
+   {
+    "purpose": "Grounded captioning instruction example",
+    "text": "Given the region <REGION> in the image, generate a caption for that region.",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "Text VQA eval instruction",
+    "text": "There is some text on the image. Answer <QUESTION> based on the text in the image.",
+    "where": "Table 9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training",
+    "quote": "We train the models on 8 Nvidia A100 GPUs with a batch size 8 per GPU, a learning rate of 1e-05, and float16 enabled for 3 epochs for all the setups and datasets. We run all the experiments once.",
+    "where": "Appendix B.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Instruction tuning on one instruction vs five: five instructions raise aggregated performance",
+   "kind": "measured",
+   "source": null,
+   "metric": "aggregated performance",
+   "value": 47.82,
+   "unit": "%",
+   "baseline_value": 42.81,
+   "n": null,
+   "setup": "OFA_MultiInstruct, Table 3, 5 instructions vs 1 fixed instruction per task",
+   "quote": null,
+   "table": "Table 3, row 5 Instructions, column Aggregated Performance",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Five instructions cut sensitivity",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensitivity",
+   "value": 10.45,
+   "unit": "ratio",
+   "baseline_value": 24.62,
+   "n": null,
+   "setup": "OFA_MultiInstruct, 5 vs 1 instruction (24.62)",
+   "quote": null,
+   "table": "Table 3, row 5 Instructions, column Sensitivity",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Original OFA has far higher sensitivity than instruction-tuned models",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensitivity",
+   "value": 40.58,
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaged over unseen multimodal tasks; OFA_MultiInstruct 13.84, SeqInstruct 10.45, MixedInstruct 10.27",
+   "quote": null,
+   "table": "Figure 4 values 40.58, 13.84, 10.45, 10.27",
+   "note": "Values read from Fig 4 text labels in the extraction",
+   "where": "Fig 4"
+  },
+  {
+   "claim": "OFA_MultiInstruct reaches 64.32 max on Grounded VQA where OFA and OFA_TaskName score about zero",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": 64.32,
+   "unit": "%",
+   "baseline_value": 0.02,
+   "n": null,
+   "setup": "Visual7W Grounded VQA, zero-shot, best of 5 instructions",
+   "quote": null,
+   "table": "Table 2, row OFAMultiInstruct, column Grounded VQA Max",
+   "note": "OFA_TaskName 0.00; OFA 0.02 max",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Fine-tuning on Natural Instructions alone degrades multimodal zero-shot, e.g. Visual Entailment avg",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": 2.04,
+   "unit": "%",
+   "baseline_value": 31.17,
+   "n": null,
+   "setup": "Commonsense group Table 1 Visual Entailment Avg for OFA_NaturalInstruct",
+   "quote": null,
+   "table": "Table 1, row OFANaturalInstruct, column Visual Entailment Avg",
+   "note": "base is OFA_MultiInstruct avg 31.17",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Multimodal instruction tuning lifts NLP zero-shot ROUGE-L over OFA",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 12.18,
+   "unit": "%",
+   "baseline_value": 2.25,
+   "n": null,
+   "setup": "20 Natural Instructions test tasks, OFA_MultiInstruct vs OFA 2.25",
+   "quote": null,
+   "table": "Table 4, row OFAMultiInstruct",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "OFA_NaturalInstruct best on NLP tasks; MixedInstruct nearly equal, SeqInstruct lower",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 43.61,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 NLP tasks; Mixed 43.32, Seq 30.79",
+   "quote": null,
+   "table": "Table 4, row OFANaturalInstruct",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Benchmark scale",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks",
+   "value": 62,
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 categories, 21 datasets, 5 instructions each",
+   "quote": "62\ndiverse multimodal tasks in a unified seq-to-\nseq format covering 10 broad categories",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "English only, vision-language only",
+  "Only OFA-large (472M) used; no comparison across model sizes",
+  "Sensitivity measures only intra-task variation across instructions",
+  "Only 62 tasks and 5 instructions per task; authors suggest crowd-sourcing or automatic generation",
+  "Text-only transfer gains over plain MultiInstruct are not significant",
+  "All runs executed once, no significance tests",
+  "Instruction template is sampled per batch in Sec 4.1 and per instance in Sec 4.2"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Sensitivity",
+   "definition": "the model's capability of consistently producing the same results, regardless of slight variations in the wording of instructions, as long as the intended task remains the same",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OFA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base model (Wang et al. 2022a)",
+   "quote": null
+  },
+  {
+   "work": "Natural Instructions",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Mishra et al. 2022, text-only instruction data for transfer",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "instruction tuning setting",
+   "quote": null
+  },
+  {
+   "work": "Muppet pre-finetuning",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires sequential instruction tuning (Aghajanyan et al. 2021)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Effect of Different Number of Instructions.",
+   "page": 8,
+   "why": "The 1 vs 5 instruction ablation in two numbers"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Model Sensitivity on Unseen Evaluation Tasks. Lower is better.",
+   "page": 8,
+   "why": "Sensitivity across fine-tuning strategies"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and 2 cells are flattened by extraction; columns assigned by order",
+  "Table 5 modality check marks are lost; training/eval task counts per modality row not reliable",
+  "Table 6 says 19 existing train tasks, 7 existing eval, while text says 34 existing tasks: not reconciled"
+ ]
 }

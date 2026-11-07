@@ -1,0 +1,436 @@
+{
+ "schema": 1,
+ "key": "1312.6114",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kingma-2013-auto-encoding-variational-bayes.pdf",
+ "bib": {
+  "title": "Auto-Encoding Variational Bayes",
+  "authors": [
+   "Diederik P. Kingma",
+   "Max Welling"
+  ],
+  "first_author": "Kingma",
+  "year": 2013,
+  "venue": "preprint",
+  "arxiv": "1312.6114",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 41458,
+  "chars_total": 41458,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can efficient approximate inference and learning be done in directed probabilistic models with continuous latent variables that have intractable posteriors, on large datasets?",
+ "hypothesis": "A reparameterised variational lower bound can be optimised with standard stochastic gradients, and a learned recognition model gives faster convergence and better bounds than wake-sleep and Monte Carlo EM.",
+ "contributions": [
+  "A reparameterization of the variational lower bound gives a lower bound estimator (SGVB) optimisable with standard stochastic gradient methods.",
+  "For i.i.d. datasets with per-datapoint continuous latents, fit an approximate inference (recognition) model to the intractable posterior using SGVB (AEVB)."
+ ],
+ "method": {
+  "summary": "Trains a VAE: a one-hidden-layer MLP encoder gives a diagonal Gaussian q(z|x), a one-hidden-layer MLP decoder gives Bernoulli or Gaussian p(x|z), with prior N(0,I). Encoder and decoder are trained jointly by Adagrad on the SGVB lower bound with the reparameterization trick, and compared with wake-sleep and Monte Carlo EM on MNIST and Frey Face.",
+  "task": "generative modelling of images with continuous latent variables (variational lower bound and marginal likelihood)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": "Ntrain = 1000 and 50000 in the marginal-likelihood comparison; the full set is used in the lower-bound comparison (size not stated)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Frey Face",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "http://www.cs.nyu.edu/~roweis/data.html",
+    "preprocessing": "continuous data, so Gaussian decoder with means constrained to (0,1) by a sigmoid"
+   }
+  ],
+  "models": [
+   {
+    "name": "AEVB / VAE",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP encoder and MLP decoder, each with a single hidden layer, tanh; Gaussian diagonal q(z|x); Bernoulli (MNIST) or Gaussian (Frey Face) decoder",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer each",
+    "hidden": "500 (MNIST lower bound), 200 (Frey Face), 100 (MNIST marginal likelihood)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "latent_dims": "Nz = 3,5,10,20,200 (MNIST); 2,5,10,20 (Frey Face); 3 for marginal likelihood",
+     "init": "N(0, 0.01)"
+    }
+   },
+   {
+    "name": "Wake-Sleep",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same encoder as AEVB",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Monte Carlo EM (HMC)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "no encoder; samples latents with Hybrid Monte Carlo",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SGVB lower bound (eq. 7/10) plus small weight decay equal to prior p(theta)=N(0,I); approximate MAP",
+   "optimizer": "Adagrad (stochastic gradient ascent)",
+   "lr": "Adagrad global stepsize chosen from {0.01, 0.02, 0.1} by training-set performance in the first few iterations",
+   "lr_schedule": "Adagrad with accompanying annealing schedule (stated for the MCEM comparison)",
+   "warmup": null,
+   "batch_size": "M = 100",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "small, corresponding to p(theta)=N(0,I); value not stated",
+   "dropout": null,
+   "regularisation": "KL term of the bound",
+   "hardware": "Intel Xeon CPU at an effective 40 GFLOPS",
+   "compute": "20-40 minutes per million training samples",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "L": "1 sample per datapoint",
+    "samples_evaluated": "x-axes run to 10^8 (Fig 2) and 60 million (Fig 3)",
+    "MCEM": "10 HMC leapfrog steps with stepsize tuned for 90% acceptance, then 5 weight update steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "marginal likelihood estimated on the first 1000 datapoints of train and test sets, 50 posterior samples each via HMC with 4 leapfrog steps",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "variational lower bound per datapoint",
+     "definition": "estimated average lower bound per datapoint",
+     "unit": "nats (not stated)",
+     "higher_is_better": true
+    },
+    {
+     "name": "estimated marginal log-likelihood",
+     "definition": "MCMC-based estimator of appendix D, 3 latent dims",
+     "unit": "nats (not stated)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Wake-Sleep",
+    "Monte Carlo EM"
+   ],
+   "protocol": "Train and test curves vs number of training samples evaluated; single runs, no seeds or significance tests stated; estimator variance said small (<1) and omitted."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "MNIST and Frey Face (link in footnote)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Minibatches of size M = 100 were used, with L = 1 samples per datapoint.",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AEVB converged considerably faster and reached a better lower bound than wake-sleep in all experiments, for every latent dimensionality.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST (Nz 3-200) and Frey Face (Nz 2-20), one-hidden-layer MLPs, Adagrad, M=100, L=1",
+   "quote": null,
+   "table": null,
+   "note": "Read from curves in Fig 2; no numeric values in text.",
+   "where": "Fig 2"
+  },
+  {
+   "claim": "More latent variables did not cause more overfitting, attributed to the regularizing effect of the bound.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST Nz up to 200, lower bound on train and test",
+   "quote": null,
+   "table": null,
+   "note": "explanation is asserted, not tested",
+   "where": "Sec 5, Fig 2 caption"
+  },
+  {
+   "claim": "One sample per datapoint suffices when the minibatch is large enough.",
+   "kind": "measured",
+   "source": null,
+   "metric": "samples per datapoint L",
+   "value": "1",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "minibatch M = 100",
+   "quote": "we found that the number of samples L per datapoint can be set to 1 as long as the minibatch size M was large enough, e.g. M = 100",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  },
+  {
+   "claim": "The lower-bound estimator variance was small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "estimator variance",
+   "value": "< 1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2 average lower bound per datapoint",
+   "quote": "The estimator variance was small (< 1) and omitted.",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 caption"
+  },
+  {
+   "claim": "Training cost on a CPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "20-40",
+   "unit": "minutes per million training samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intel Xeon CPU at effective 40 GFLOPS",
+   "quote": "Computation took around 20-40 minutes per million training samples with a Intel Xeon CPU running at an effective 40 GFLOPS.",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 caption"
+  },
+  {
+   "claim": "AEVB converged faster than wake-sleep and MCEM on estimated marginal likelihood, for small and large training sets; MCEM cannot be applied efficiently to full MNIST.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, Ntrain 1000 and 50000, 3 latent variables, 100 hidden units",
+   "quote": null,
+   "table": null,
+   "note": "Read from Fig 3; the text only says results are in Fig 3 and that MCEM is not on-line.",
+   "where": "Fig 3"
+  },
+  {
+   "claim": "The marginal likelihood estimator is only reliable for latent spaces under 5 dimensions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "appendix D MCMC estimator",
+   "quote": "as long as the dimensionality of the sampled space is low (less then 5 dimensions)",
+   "table": null,
+   "note": null,
+   "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "No numeric results in the text; all comparisons are curves in Fig 2 and Fig 3.",
+  "Only MNIST and Frey Face, shallow MLPs; hierarchical/convolutional models, time series and full VB on parameters are left to future work.",
+  "Marginal likelihood comparison limited to 3 latent dimensions because estimates get unreliable above that.",
+  "Posterior assumed diagonal Gaussian (stated as a choice, not a limitation of the method); only continuous latents.",
+  "Hidden-unit counts chosen from prior autoencoder literature; no seeds or repeated runs reported.",
+  "Dataset sizes, step counts and weight decay value not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "recognition model",
+   "definition": "an approximation q_phi(z|x) to the intractable true posterior, also called a probabilistic encoder",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "probabilistic decoder",
+   "definition": "p_theta(x|z): given a code z it produces a distribution over the possible corresponding values of x",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "SGVB",
+   "definition": "Stochastic Gradient Variational Bayes: a reparameterized differentiable unbiased estimator of the variational lower bound",
+   "where": "Sec 1"
+  },
+  {
+   "term": "AEVB",
+   "definition": "Auto-Encoding VB: SGVB used to optimise a recognition model for i.i.d. data with per-datapoint continuous latents",
+   "where": "Sec 1"
+  },
+  {
+   "term": "variational auto-encoder",
+   "definition": "AEVB with a neural network as the recognition model",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The wake-sleep algorithm for unsupervised neural networks (Hinton et al. 1995)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on lower bound and marginal likelihood",
+   "quote": null
+  },
+  {
+   "work": "Monte Carlo EM with Hybrid Monte Carlo (Duane et al. 1987)",
+   "year": 1987,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on marginal likelihood",
+   "quote": null
+  },
+  {
+   "work": "Adaptive subgradient methods (Duchi, Hazan, Singer 2010)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Adagrad optimiser",
+   "quote": null
+  },
+  {
+   "work": "Stochastic variational inference (Hoffman et al. 2013)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "related SVI line",
+   "quote": null
+  },
+  {
+   "work": "Variational Bayesian inference with Stochastic Search (Blei, Jordan, Paisley 2012)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "control variates for the high-variance naive gradient",
+   "quote": null
+  },
+  {
+   "work": "Black Box Variational Inference (Ranganath et al.)",
+   "year": 2013,
+   "arxiv": "1401.0118",
+   "relation": "related",
+   "note": "variance reduction for the score-function estimator",
+   "quote": null
+  },
+  {
+   "work": "Stochastic backpropagation and variational inference in deep latent Gaussian models (Rezende et al.)",
+   "year": 2014,
+   "arxiv": "1401.4082",
+   "relation": "related",
+   "note": "independent concurrent work with the same reparameterization",
+   "quote": "Their work was developed independently of ours"
+  },
+  {
+   "work": "Deep autoregressive networks (Gregor et al.)",
+   "year": 2013,
+   "arxiv": "1310.8499",
+   "relation": "related",
+   "note": "DARN, binary latents",
+   "quote": null
+  },
+  {
+   "work": "Deep generative stochastic networks (Bengio and Thibodeau-Laufer)",
+   "year": 2013,
+   "arxiv": "1306.1091",
+   "relation": "related",
+   "note": "GSN",
+   "quote": null
+  },
+  {
+   "work": "Frey Face",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Roweis page",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "digits",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The type of directed graphical model under consideration. Solid lines denote the generative model, dashed lines the variational approximation.",
+   "page": 2,
+   "why": "shows generative vs recognition paths"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of AEVB to the wake-sleep algorithm, in terms of optimizing the lower bound, for different dimensionality of latent space.",
+   "page": 7,
+   "why": "the main evidence: AEVB converges faster and higher"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of AEVB to wake-sleep and Monte Carlo EM on estimated marginal likelihood for different training set sizes.",
+   "page": 8,
+   "why": "shows MCEM comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "eq. 10",
+   "snippet": "L(theta,phi;x) ~ 1/2 sum_j (1 + log(sigma_j^2) - mu_j^2 - sigma_j^2) + 1/L sum_l log p_theta(x|z^(l)), z^(l) = mu + sigma * eps^(l), eps ~ N(0,I)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The Fig 2 and 3 values are not in the text, so results are qualitative.",
+  "Sec 5 text swaps the words encoder/decoder when naming the generative model and variational approximation (printed: 'The generative model (encoder) and variational approximation (decoder)')."
+ ]
+}

@@ -1,0 +1,542 @@
+{
+ "schema": 1,
+ "key": "1301.3781",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mikolov-2013-efficient-estimation-word-representations-vector.pdf",
+ "bib": {
+  "title": "Efficient Estimation of Word Representations in Vector Space",
+  "authors": [
+   "Tomas Mikolov",
+   "Kai Chen",
+   "Greg Corrado",
+   "Jeffrey Dean"
+  ],
+  "first_author": "Mikolov",
+  "year": 2013,
+  "venue": "preprint",
+  "arxiv": "1301.3781",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 38755,
+  "chars_total": 38755,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can high-quality word vectors be learned from billions of words with much lower computational cost than neural network language models?",
+ "hypothesis": "Removing the non-linear hidden layer gives simpler log-linear models that, trained on far more data, yield more accurate vectors for syntactic and semantic regularities.",
+ "contributions": [
+  "Two log-linear architectures, CBOW and Skip-gram",
+  "A Semantic-Syntactic Word Relationship test set (8869 semantic, 10675 syntactic questions)",
+  "Comparison with NNLM, RNNLM and public vectors on accuracy and training cost",
+  "State of the art 58.9% on the Microsoft Sentence Completion Challenge with Skip-gram + RNNLMs"
+ ],
+ "method": {
+  "summary": "CBOW (average of 4 past and 4 future words predicts the middle word) and Skip-gram (a word predicts words within a window, C=10) are trained with hierarchical softmax over a Huffman tree, SGD with Adagrad in DistBelief. Vectors are scored on word analogy questions by cosine nearest neighbour of vec(b)-vec(a)+vec(c).",
+  "task": "word embedding learning, evaluated on word analogy and sentence completion",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Google News corpus",
+    "role": "train",
+    "size": "about 6B tokens",
+    "split": null,
+    "source": "Google News",
+    "preprocessing": "vocabulary restricted to 1 million most frequent words; 30k for the subset experiments in Table 2"
+   },
+   {
+    "name": "LDC corpora (as in Mikolov et al. 2011, ref 18)",
+    "role": "train",
+    "size": "320M words, 82K vocabulary",
+    "split": null,
+    "source": "LDC",
+    "preprocessing": null
+   },
+   {
+    "name": "Microsoft Sentence Completion training text",
+    "role": "train",
+    "size": "50M words",
+    "split": null,
+    "source": "Zweig and Burges 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "Semantic-Syntactic Word Relationship test set",
+    "role": "eval",
+    "size": "8869 semantic + 10675 syntactic questions",
+    "split": "5 semantic and 9 syntactic types",
+    "source": "built by the authors; pairs listed manually, questions formed by connecting two pairs (e.g. 68 US cities gave about 2.5K questions)",
+    "preprocessing": "single-token words only"
+   },
+   {
+    "name": "MSR Word Relatedness (syntactic) test set of Mikolov et al. 2013",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "ref 20, provided by Geoff Zweig",
+    "preprocessing": null
+   },
+   {
+    "name": "Microsoft Sentence Completion Challenge",
+    "role": "eval",
+    "size": "1040 sentences, five choices each",
+    "split": "development and test parts",
+    "source": "Zweig and Burges 2011",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CBOW",
+    "role": "proposed",
+    "params": null,
+    "architecture": "log-linear, no hidden layer, shared projection, hierarchical softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1M (full), 30k (Table 2)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4 history + 4 future words",
+    "other": {
+     "dims_tried": "50, 100, 300, 600, 640, 1000",
+     "Q": "N x D + D x log2(V)"
+    }
+   },
+   {
+    "name": "Skip-gram",
+    "role": "proposed",
+    "params": null,
+    "architecture": "log-linear, predicts words within range C before and after",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1M",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "C = 10, R sampled from 1..C per word",
+    "other": {
+     "dims_tried": "300, 600, 640, 1000",
+     "Q": "C x (D + D x log2(V))"
+    }
+   },
+   {
+    "name": "Feedforward NNLM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "input, projection, hidden, output; hierarchical softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "640 units (Table 3); 20/50/100-d vectors on 6B words (Tables 4, 6)",
+    "heads": null,
+    "context": "8 previous words (Table 3)",
+    "other": {
+     "typical_N": 10
+    }
+   },
+   {
+    "name": "RNNLM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "recurrent, no projection layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "640 (Table 3); 80 and 640 (Table 4)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "previously trained, about 8 weeks on a single CPU"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classify the middle word from context (CBOW) or surrounding words from the current word (Skip-gram), hierarchical softmax over a Huffman tree",
+   "optimizer": "stochastic gradient descent with backpropagation; in DistBelief mini-batch asynchronous gradient descent with Adagrad",
+   "lr": "0.025 starting",
+   "lr_schedule": "linear decay to approach zero at end of last (Tables 2, 4) or only (later) epoch",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "3 for Tables 2 and 4; 1 for later experiments",
+   "tokens": "up to 6B (Google News); 783M and 1.6B subsets",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "CPU only; 50 to 100 DistBelief model replicas, CPU cores an estimate (shared data center)",
+   "compute": "Table 6: NNLM 14 x 180, CBOW 2 x 140, Skip-gram 2.5 x 125 [days x CPU cores]",
+   "wall_clock": "CBOW about a day, Skip-gram about three days on a single CPU on a Google News subset",
+   "seeds": null,
+   "other": {
+    "complexity": "O = E x T x Q, E = 3-50, T up to one billion",
+    "skipgram_sampling": "less weight on distant words by sampling fewer of them"
+   }
+  },
+  "inference": {
+   "decoding": "nearest word by cosine distance to vec(biggest)-vec(big)+vec(small); input question words discarded",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single runs, no seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "MSR sentence completion": "640-d Skip-gram; sentence score is the sum of predictions of surrounding words with the candidate at input; combined with RNNLMs by a weighted combination (weights not given)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "analogy accuracy",
+     "definition": "question correct only if nearest word equals the expected word exactly; synonyms count as mistakes",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sentence Completion accuracy",
+     "definition": "pick the most coherent of five candidates",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "training time",
+     "definition": "days, or days x CPU cores in DistBelief",
+     "unit": "days",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Collobert-Weston NNLM",
+    "Turian NNLM",
+    "Mnih NNLM",
+    "Mikolov RNNLM",
+    "Huang NNLM",
+    "feedforward NNLM (own)",
+    "4-gram",
+    "LSA similarity",
+    "log-bilinear model",
+    "RNNLMs"
+   ],
+   "protocol": "single runs, no variance reported"
+  },
+  "availability": {
+   "code": "single-machine multi-threaded C++ code at code.google.com/p/word2vec (follow-up, section 7)",
+   "weights": "over 1.4 million named entity vectors trained on more than 100 billion words (follow-up)",
+   "data": "test set at www.fit.vutbr.cz/~imikolov/rnnlm/word-test.v1.txt; Google News corpus not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We chose starting learning rate 0.025 and decreased it linearly",
+    "where": "4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Skip-gram reaches 53.3% total accuracy against CBOW 36.1% at 300-d on 783M words, at about 3x the training time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "analogy accuracy",
+   "value": "53.3",
+   "unit": "% total",
+   "baseline_value": "36.1",
+   "n": null,
+   "setup": "Skip-gram vs CBOW, 300-d, 783M Google News words, 3 epochs, Semantic-Syntactic Word Relationship test set",
+   "note": null,
+   "where": "Table 4/5",
+   "table": "Table 5, row 3 epoch Skip-gram, column Total (CBOW 36.1; 1 day vs 3 days)"
+  },
+  {
+   "claim": "Skip-gram semantic accuracy is 50.0% versus CBOW 15.5%; syntactic 55.9% versus 53.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "semantic accuracy",
+   "value": "50.0",
+   "unit": "% semantic",
+   "baseline_value": "15.5",
+   "n": null,
+   "setup": "Skip-gram vs CBOW, 300-d, 783M Google News words, 3 epochs, Semantic-Syntactic Word Relationship test set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows CBOW and Skip-gram, column Semantic"
+  },
+  {
+   "claim": "Skip-gram with 1000-d vectors on 6B words reaches 65.6% total; CBOW 63.7%; NNLM 100-d 50.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "analogy accuracy",
+   "value": "65.6",
+   "unit": "% total",
+   "baseline_value": "50.8",
+   "n": null,
+   "setup": "DistBelief, Google News 6B words, 1000-d, 50-100 replicas",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Skip-gram 1000, column Total (CBOW 63.7; NNLM 50.8)"
+  },
+  {
+   "claim": "CBOW at 1000-d gets the best syntactic accuracy, 68.9%, in 2 days x 140 CPU cores.",
+   "kind": "measured",
+   "source": null,
+   "metric": "syntactic accuracy",
+   "value": "68.9",
+   "unit": "% syntactic",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistBelief, 6B words",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row CBOW 1000, column Syntactic"
+  },
+  {
+   "claim": "Cost: NNLM 100-d took 14 x 180 days x CPU cores versus 2 x 140 for CBOW and 2.5 x 125 for Skip-gram.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "14 x 180",
+   "unit": "days x CPU cores",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistBelief, 6B words",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row NNLM 100, column Training time"
+  },
+  {
+   "claim": "Same-data architecture comparison at 640-d on 320M LDC words: Skip-gram 55% semantic, CBOW 64% syntactic, RNNLM 9/36, NNLM 23/53.",
+   "kind": "measured",
+   "source": null,
+   "metric": "semantic accuracy",
+   "value": "55",
+   "unit": "% semantic",
+   "baseline_value": "24",
+   "n": null,
+   "setup": "LDC corpora, 320M words, 82K vocab, 640-d",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Skip-gram, column Semantic Accuracy [%]"
+  },
+  {
+   "claim": "One epoch on twice the data matches or beats three epochs on the same data (CBOW 1.6B 1 epoch 36.1 vs 783M 3 epochs 36.1; Skip-gram 53.8 vs 53.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "analogy accuracy",
+   "value": "53.8",
+   "unit": "% total",
+   "baseline_value": "53.3",
+   "n": null,
+   "setup": "Skip-gram 300-d, 1 epoch on 1.6B words",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 1 epoch Skip-gram, 300, 1.6B, column Total"
+  },
+  {
+   "claim": "Skip-gram plus RNNLMs sets 58.9% on the Microsoft Sentence Completion Challenge; Skip-gram alone is 48.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "58.9",
+   "unit": "%",
+   "baseline_value": "55.4",
+   "n": null,
+   "setup": "MSR Sentence Completion, 1040 sentences, 640-d Skip-gram trained on 50M words",
+   "note": null,
+   "where": "Table 7",
+   "quote": "a weighted combination\nleads to a new state of the art result 58.9% accuracy (59.2% on the development part of the set and\n58.7% on the test part of the set)"
+  },
+  {
+   "claim": "Highest accuracy at 600-d with 783M words (CBOW, 30k vocab subset) is 50.4%; gains diminish with more dimensions or data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy on subset",
+   "value": "50.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CBOW, vocabulary restricted to 30k, 783M training words",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 600, column 783M"
+  },
+  {
+   "claim": "Test set size: 8869 semantic and 10675 syntactic questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8869 + 10675",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Semantic-Syntactic Word Relationship test set",
+   "note": null,
+   "where": "4.1",
+   "quote": "Overall, there are 8869 semantic and 10675 syntactic questions."
+  },
+  {
+   "claim": "Averaging ten examples to form the relationship vector improves the best models by about 10% absolute on the semantic-syntactic test.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best models; no table",
+   "note": null,
+   "where": "5",
+   "quote": "we have observed improvement\nof accuracy of our best models by about 10% absolutely on the semantic-syntactic test"
+  },
+  {
+   "claim": "Training NNLM with 20-100 d on 6B words: 100-d reaches 50.8% total; far above older public vectors (Collobert-Weston 11.0, Mikolov RNNLM 640-d 24.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "analogy accuracy",
+   "value": "50.8",
+   "unit": "% total",
+   "baseline_value": "24.6",
+   "n": null,
+   "setup": "Full vocabularies, publicly available vectors vs ours",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Our NNLM 100, column Total"
+  }
+ ],
+ "limits": [
+  "Training corpus (Google News 6B) is internal; no variance or seeds reported.",
+  "Exact-match accuracy makes 100% unreachable; no morphology input.",
+  "Batch size, window beyond C=10, subsampling and negative sampling are not covered here (later paper 1310.4546).",
+  "Weights of the Skip-gram + RNNLM combination are not given.",
+  "Table 6 CPU core counts are estimates from shared machines.",
+  "The architectures are compared at different data sizes and dimensions in several tables, so not all rows are like for like."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CBOW",
+   "definition": "continuous bag-of-words: log-linear classifier with four future and four history words at the input, predicting the middle word",
+   "where": "3.1"
+  },
+  {
+   "term": "Skip-gram",
+   "definition": "classifies a word based on another word in the same sentence, predicting words within a range before and after",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Bengio et al. 2003, A neural probabilistic language model",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "feedforward NNLM architecture",
+   "quote": null
+  },
+  {
+   "work": "Mikolov 2007 thesis; Mikolov et al. 2009",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "two-step training with word vectors first",
+   "quote": "The new architectures directly follow those proposed in our earlier work [13, 14]"
+  },
+  {
+   "work": "Mikolov, Yih, Zweig 2013, Linguistic regularities in continuous space word representations",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "analogy evaluation by vector offsets",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. 2010, RNN based language model",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RNNLM",
+   "quote": null
+  },
+  {
+   "work": "Dean et al. 2012, Large Scale Distributed Deep Networks (DistBelief)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "parallel training",
+   "quote": null
+  },
+  {
+   "work": "Duchi et al. 2011, Adagrad",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "adaptive learning rate",
+   "quote": null
+  },
+  {
+   "work": "Morin and Bengio 2005; Mnih and Hinton 2009",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "hierarchical softmax",
+   "quote": null
+  },
+  {
+   "work": "Collobert and Weston 2008; Turian et al. 2010; Mnih; Huang et al. 2012",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "public word vectors, Table 4",
+   "quote": null
+  },
+  {
+   "work": "Zweig and Burges 2011, MSR Sentence Completion Challenge",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Section 4.5",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. 2013, Distributed Representations of Words and Phrases and their Compositionality",
+   "year": 2013,
+   "arxiv": "1310.4546",
+   "relation": "related",
+   "note": "follow-up, cited as upcoming NIPS 2013",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "New model architectures. The CBOW architecture predicts the current word based on the context, and the Skip-gram predicts surrounding words given the current word.",
+   "page": 5,
+   "why": "shows the two architectures side by side"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Comparison of models trained for three epochs on the same data and models trained for one epoch.",
+   "page": 8,
+   "why": "accuracy against training time"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4, 5",
+   "snippet": "CBOW: Q = N x D + D x log2(V); Skip-gram: Q = C x (D + D x log2(V))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text has ligatures (fi as a single glyph) in places; quotes avoid them.",
+  "No embedded instructions found."
+ ]
+}

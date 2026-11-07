@@ -1,19 +1,256 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1802.03426",
  "pdf": "data-science/sources/mcinnes-2018-umap.pdf",
  "bib": {
   "title": "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction",
-  "first_author": "Leland McInnes",
-  "year": "2018",
-  "venue": "arXiv (Cornell University)",
+  "authors": ["Leland McInnes", "John Healy", "James Melville"],
+  "first_author": "McInnes",
+  "year": 2018,
+  "venue": "preprint",
   "arxiv": "1802.03426",
   "doi": "10.48550/arxiv.1802.03426"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 107363,
+  "chars_total": 107363,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction\", Leland McInnes, John Healy, James Melville. Preprint. The PDF is arXiv:1802.03426v3, stamped 18 Sep 2020 (title page: September 21, 2020). No venue is printed.\n\nCOVERAGE: 108,652 of 108,652 chars, all 63 pages including Appendices A-C and references. Nothing skipped. Figures were read by caption only, so curve values in Figures 8-11 are not reported. Pages below are printed page numbers, which match PDF pages.\n\nCLAIMS\nAll numbers are from the paper's own runs, implementation and tuning. Quotes have ligature markers resolved and line-break hyphens rejoined, otherwise verbatim.\n\n1. claim: UMAP had the lowest runtime on every dataset except the smallest.\n   number: UMAP vs FIt-SNE / t-SNE / LargeVis, seconds: Pen Digits 9/48/17/20 (Eigenmaps and Isomap 2s); COIL20 12/75/22/82; COIL100 85/2681/810/3197; scRNA 28/131/258/377; Shuttle 94/108/714/615; MNIST 87/292/1450/1298; F-MNIST 65/278/934/1173; Flow 102/164/1135/1127; Google News 361/652/16906/5392.\n   setup: Table 3, on a \"Macbook Pro with a 3.1 GHz Intel Core i7 and 8GB of RAM\". Subsampled or reduced: Flow 100000x17 (10%), Google News 200000x300, scRNA PCA to 1,000 dims. t-SNE = MulticoreTSNE, whose thread count for Table 3 is not stated. FIt-SNE uses multiple cores. LargeVis uses 8 threads. UMAP is single core (\"these experiments were carried out on a single core version\"). Single timings, no repeats or spread reported.\n   quote: \"MNIST 87s 292s 1450s 1298s 40709s –\"; \"UMAP consistently performs faster than any of the other algorithms aside from on the very small Pendigits dataset, where Laplacian Eigenmaps and Isomap have a small edge.\"\n   where: p36, p38 (single core: p22)\n\n2. claim: The speed gain over FIt-SNE is a constant-factor one and much smaller than over Barnes-Hut t-SNE.\n   number: my ratios from Table 3: 1.15x on Shuttle up to 31.5x on COIL100; 3.4x on MNIST. Prose gives no number.\n   setup: Figure 11, GoogleNews subsamples on a server with Intel Xeon E5-2697v4 and 512GB RAM. MulticoreTSNE and LargeVis single-threaded, with an 8-core t-SNE line also shown.\n   quote: \"Asymptotic scaling of UMAP is comparable to that of FIt-SNE (and LargeVis). On this dataset UMAP demonstrated somewhat faster absolute performance compared to FIt-SNE, and was dramatically faster than LargeVis.\"\n   where: p42\n\n3. claim: The full 3M-vector GoogleNews embedding took about 200 minutes, against days for MulticoreTSNE.\n   number: ~200 minutes; \"several days\"\n   setup: 3M x 300, cosine, the Xeon server. The t-SNE figure is not given as a measured time.\n   quote: \"was completed in around 200 minutes, as compared with several days required for MulticoreTSNE, even using multiple cores.\"\n   where: p42\n\n4. claim: Scale demonstration on integer data, with no comparison method.\n   number: 30,000,000 samples, ~1.8M dims, ~2 weeks\n   setup: sparse binary prime-divisibility vectors, \"large memory SMP\".\n   quote: \"an embedding of 30,000,000 data samples from an ambient space of approximately 1.8 million dimensions. This computation took approximately 2 weeks on a large memory SMP.\"\n   where: p45\n\n5. claim: kNN accuracy on the embedding matches t-SNE at small k and beats it at large k on some datasets. Fashion-MNIST is the exception at small to medium k.\n   number: COIL-20 k=80 UMAP 0.899 vs t-SNE 0.789; k=160 0.803 vs 0.609. Shuttle k=3200 0.957 vs 0.828. MNIST k=3200 0.964 vs 0.946. F-MNIST k=100 0.790 vs 0.818; k=3200 0.730 vs 0.727. PenDigits k=160 0.951 (± 0.085) vs 0.949 (± 0.065), which overlap.\n   setup: Tables 1-2. Stratified 10-fold CV for PenDigits and COIL-20, 10-fold for Shuttle, 20-fold for MNIST and F-MNIST. Also compared: LargeVis, Eigenmaps, PCA. Embedding dimension is not stated in Section 5.2.\n   quote: \"80 0.789 (± 0.118) 0.899 (± 0.058) 0.803 (± 0.100)\"; \"(but notably underperforms on the Fashion-MNIST dataset)\"; \"performs markedly better than t-SNE or LargeVis at non-local scales.\"\n   where: p30-32\n\n6. claim: The global structure claim is hedged, and the paper attributes much of it to initialisation.\n   number: none\n   setup: visual reading of Figure 4 (COIL20, MNIST, F-MNIST, GoogleNews), plus kNN at large k as a proxy.\n   quote: \"arguably preserves more of the global structure\" (p1); \"a significant contributor to UMAP's relative global structure preservation is derived from the Laplacian Eigenmaps initialization\"; \"The authors of that paper demonstrate that t-SNE, with similar initialization, can perform equivalently to UMAP in a particular measure of global structure preservation.\" (p49). The paper also credits the objective: cross-entropy \"is also a significant contributor\".\n   where: p1, p30, p49\n\n7. claim: Embeddings are more stable than t-SNE's under subsampling.\n   number: 5% subsample; t-SNE n_iter raised from 1000 to 1500\n   setup: Flow Cytometry, 1,000,000 x 17, normalized Procrustes distance between a subsample's embedding and the matching part of the full embedding. One dataset. Measures subsampling, not seed-to-seed variation.\n   quote: \"after sub-sampling on 5% of the million data points, the per point error for UMAP was already below any value achieved by t-SNE.\"\n   where: p35-36\n\n8. claim: Runtime stays nearly flat with embedding dimension and with ambient dimension, while t-SNE does not.\n   number: scRNA tested up to the original dataset (20,921 x 26,774 per p25); embedding-dimension detail up to 6 (Figure 9b)\n   setup: Figure 9 PenDigits, comparison to MulticoreTSNE because FIt-SNE cannot exceed 2 dims. Figure 10 Mouse scRNA PCA reductions vs original.\n   quote: \"t-SNE scales worse than exponentially while UMAP and LargeVis scale linearly with a slope so slight to be undetectable at this scale.\"\n   where: p39-42\n\n9. claim: Overall complexity is empirical, inherited from NN-Descent, with no theoretical bound.\n   number: O(N^1.14) overall; O(kN) for optimisation\n   setup: figure reported by the NN-Descent authors, not measured here.\n   quote: \"While no theoretical complexity bounds have been established for Nearest-Neighbor-Descent the authors of the original paper report an empirical complexity of O(N 1.14).\"\n   where: p21-22\n\n10. claim: Hyperparameters: n trades fine against large-scale structure, min-dist is \"essentially aesthetic\", and low n on structureless data creates spurious structure.\n    number: defaults a≈1.929, b≈0.7915; ϵ=0.001\n    setup: Figure 1, uniform 3-D colour cube; Figures 2-3 PenDigits and MNIST.\n    quote: \"Low values will interpret the noise from random sampling as fine scale manifold structure, producing potentially spurious structure\"; \"results in a ≈ 1.929 and b ≈ 0.7915\"\n    where: p23, p57\n\nLIMITS\nThe paper's Section 6 (p45-50) states these:\n- No interpretable axes or loadings. Recommends PCA, NMF or pLSA when interpretability is critical.\n- Noise: \"UMAP can tend to find manifold structure within the noise of a dataset\". It is worse with small samples and \"Detecting when a spurious embedding has occurred is a topic of further research.\"\n- Local over global: \"if global structure is of primary interest then UMAP may not be the best choice\". Suggests MDS or PHATE, which are costlier.\n- Metric structure: \"will not perform as well as some methods on quality measures based on metric structure preservation\".\n- Density is equalised: for a loose region and a dense region, \"UMAP would attempt to put these local areas on an even footing.\"\n- Small data: \"small (less than 500 samples) dataset sizes\" can give suboptimal embeddings.\n\nSection 7 (p50-51) concedes that global structure is \"hampered by the lack clear objective measures, or even definitions\". It also calls an empirical study of the components still needed.\n\nWhat the paper does not show:\n- No evaluation of clustering (HDBSCAN or k-means) on embeddings.\n- No evaluation or algorithm for mapping new points.\n- No direct global distance-preservation metric among its own measures.\n- No seed-to-seed quantification.\n- No false-positive rate for noise.\n- No repeated timings.\n\nDated: \"t-SNE is the current state-of-the-art\" (p2). The authors note the implementation has since been parallelised (p22), so the timings describe a single-core version.\n\nBUILDS ON:\n- Belkin and Niyogi, Laplacian eigenmaps (2002, 2003): theory and initialisation.\n- Spivak, metric realization of fuzzy simplicial sets (2012).\n- Barr (1986), fuzzy sets.\n- Tang et al., LargeVis (2016): edge sampling and optimisation.\n- Mikolov et al. (2013): negative sampling.\n- Dong, Charikar and Li (2011): NN-Descent.\n- van der Maaten and Hinton (2008); van der Maaten (2014).\n- Lee and Verleysen (2011): similar effect to the truncated similarity.\n- Critique cited: Kobak and Linderman, bioRxiv 2019.\n\nCODE: pseudocode only, Algorithms 1-5, p18-21. Worth keeping, cleaned of extraction markers: \"Binary search for σ such that ∑ exp(−(knn-dists_i−ρ)/σ) = log2(n)\" (Algorithm 3, p19). Symmetrisation: \"B = A + A⊤ − A◦A⊤\" (p15). Check the exponent signs in Algorithm 4 against the page image, because the extraction shows D1/2.\n\nFIGURES:\n- Figure 1, p24, hyperparameter grid on the uniform colour cube. Shows spurious structure from low n at a glance, which fits the segmentation note's control.\n- Figure 4, p29, algorithm comparison on four datasets. The evidence behind the global structure claim, and visibly qualitative.\n- Figure 8, p37, Procrustes distance vs subsample size. The stability result.\n- Figure 11, p43, runtime vs GoogleNews sample size. Shows comparable FIt-SNE asymptotics vs Barnes-Hut.\n- Figure 7, p35, Procrustes alignment of UMAP vs t-SNE. Explains the metric visually.\n- Figure 10, p41, ambient dimension scaling.\n\nPROBLEMS:\n- No embedded instructions.\n- Extraction: ligature markers (/T_he, /f_i), damaged equations and small-caps, bold lost in Table 3.\n- The paper itself has an unresolved citation at p22 (\"[?, see]]belkin2002laplacian\").\n- Internal inconsistencies:\n  - scRNA is 20,921 cells at p25 but 21086 rows in Table 3.\n  - p28 says \"angular distance in t-SNE which does support non-metric distances, in contrast to UMAP\", which sits oddly with p22 saying NN-Descent works with \"any valid dissimilarity measure\".\n  - The Section 5.4 list of timed datasets omits rows that Table 3 has (Pen Digits, scRNA, Flow).\n  - \"Pen digits\" is described as 1797 8x8 images (p25), citing [1, 10].\n- Prose vs table: \"markedly better\" at non-local scales is not uniform. PenDigits differences sit inside the ± bounds, and LargeVis exceeds UMAP at k=40 (0.959 vs 0.954).\n\nCOMPARISON WITH THE NOTES\n\nMISMATCH\n- data-science/01-classical-ml/notes/05-unsupervised-learning.md:162, \"it can map new points\", cited to the paper. The paper presents this only as future work: \"allows for the potential development of techniques to add new unseen data points into an existing embedding\" (p50-51), adding \"Experimental versions of some of this work are already available in the referenced implementations.\" It gives no method or evaluation. The citation does not support the flat claim. If the library's `transform` is the basis, it needs its own source; I did not check the library docs.\n\nUNDER-QUALIFIED\n- Same line, \"the faster alternative\". True against Barnes-Hut t-SNE, but it carries no setup. The paper has UMAP only \"somewhat faster\" than FIt-SNE with comparable asymptotics, and slower than Eigenmaps and Isomap on the digits. The note's own digits dataset is the case with the smallest margin over t-SNE among those with a wide margin elsewhere: 9s vs 17s. The note's code uses scikit-learn TSNE, whereas the paper benchmarks MulticoreTSNE and FIt-SNE.\n- Same line, \"a claim to preserve more global structure\". The word \"claim\" fits the paper's \"arguably\". What is missing is the concession at p49 that initialisation is a significant contributor and that t-SNE with similar initialization matched UMAP on one measure, plus the advice to look elsewhere if global structure is the main interest.\n\nTENSIONS\n- data-science/03-nlp/notes/07-llm-embeddings-as-features.md:324. The UMAP citation sits beside \"Distances lose contrast in high dimensions\" and the BERTopic pipeline. The paper supports general use and names clustering as a downstream task (p39), but never evaluates clustering on embeddings. The rationale belongs to BERTopic, not this paper. The same sentence group says HDBSCAN \"finds clusters of varying density\", while the paper says UMAP puts loose and dense regions \"on an even footing\" (p49), so density differences may not survive the reduction. The note does not mention this.\n- 07:329, `min_dist=0.0`. Consistent with p23 (\"Low values... will likely more faithfully represent the manifold structure\"). No mismatch.\n- 07:552, uncited: \"Distances between far-apart clusters... do not carry meaning, and seeds move things around\". The seed half is supported (p31: \"necessarily different from run to run\"). The distance half is not stated by the paper, which reads inter-cluster relations on MNIST as meaningful (p30). It is compatible with the local-over-global axiom at p45, but needs another source if it is to be cited.\n- 07:631, density estimates unreliable at 384 dimensions: not from this paper.\n- data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md:351, heading \"UMAP is for looking\", and :382, \"Keep UMAP for the picture\". This comes from the lab, and it runs against the paper's stated position of \"general purpose dimension reduction\" for ML. Note 07 also uses UMAP as pre-processing. Worth attributing clearly, and the two notes differ in their advice.\n\nVERIFIED\n- Segmentation :361. The quote \"can tend to find manifold structure within the noise of a dataset\" is exact (p45), and the authors and preprint label are correct. Three additions are available:\n  - The paper ties the risk to small noisy samples and says it decreases with more data.\n  - The lab has 400 businesses (its README), under the paper's \"less than 500 samples\" caution at p49.\n  - The lab uses n_neighbors=15 (lab.py:126), so it is not the low-n case from Figure 1.\n- Segmentation :353, \"a relative of t-SNE\", is supported by Appendix C and p13.\n- The year 2018 is the arXiv ID's year. The PDF read is v3 from 2020, and the runtime tables, FIt-SNE comparison and Kobak-Linderman concession all appear in this version. I did not compare v1.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/sources/mcinnes-2018-umap.pdf"
+ "type": "empirical",
+ "question": "Can a dimension reduction algorithm built on Riemannian geometry and fuzzy simplicial sets match t-SNE's visualization quality, keep more global structure, run faster, and embed into any dimension?",
+ "hypothesis": "A topologically grounded k-neighbour graph method (local-connectivity constraint, fuzzy union, cross-entropy layout) gives embeddings comparable to t-SNE locally, better at non-local scales, and much faster scaling.",
+ "contributions": [
+  "A theoretical framework for manifold learning/dimension reduction in terms of fuzzy simplicial sets and Riemannian geometry",
+  "A practical scalable algorithm (UMAP) with no computational restriction on embedding dimension",
+  "Empirical comparison with t-SNE, LargeVis, Laplacian Eigenmaps, PCA and Isomap on quality, stability and runtime",
+  "A reformulation of t-SNE and LargeVis in the same graph-construction plus graph-layout language (Appendix C)"
+ ],
+ "method": {
+  "summary": "UMAP builds a weighted k-nearest-neighbour graph with per-point local-connectivity offset rho_i and bandwidth sigma_i, symmetrises it with the probabilistic t-conorm, initialises with a spectral layout, then minimises edge-wise fuzzy-set cross entropy by SGD with edge sampling and negative sampling. Experiments compare embeddings by kNN-classifier accuracy, Procrustes stability under subsampling, and wall-clock runtime.",
+  "task": "dimension reduction / manifold learning / visualisation",
+  "trains": true,
+  "datasets": [
+   {"name": "Pen digits", "role": "eval", "size": "1797 images, 8x8 (64 dims)", "split": "stratified 10-fold CV for kNN", "source": "Alpaydin and Alimoglu [1]", "preprocessing": "treated as 64-dim Euclidean vectors"},
+   {"name": "COIL 20", "role": "eval", "size": "1440 greyscale images, 20 objects x 72 rotations, 128x128 (16384 dims)", "split": "stratified 10-fold CV for kNN", "source": "Nene et al. [43]", "preprocessing": null},
+   {"name": "COIL 100", "role": "eval", "size": "7200 colour images, 100 objects x 72 rotations (49152 dims)", "split": "runtime only", "source": "Nene et al. [44]", "preprocessing": null},
+   {"name": "Mouse scRNA-seq", "role": "eval", "size": "20,921 cells x 26,774 measurements", "split": "runtime only", "source": "Campbell et al. [11]", "preprocessing": "reduced to 1,000 dims via PCA for Table 3; Table 3 lists 21086x1000"},
+   {"name": "Statlog (Shuttle)", "role": "eval", "size": "58000 points, 9 dims", "split": "10-fold CV for kNN (not stratified)", "source": "UCI [35]", "preprocessing": null},
+   {"name": "MNIST", "role": "eval", "size": "70000 images, 784 dims, 10 classes", "split": "20-fold CV for kNN", "source": "LeCun and Cortes [32]", "preprocessing": null},
+   {"name": "Fashion-MNIST", "role": "eval", "size": "70000 images, 784 dims, 10 classes", "split": "20-fold CV for kNN", "source": "Xiao et al. [63]", "preprocessing": null},
+   {"name": "Flow cytometry", "role": "eval", "size": "1,000,000 samples x 17 measurements", "split": "stability on subsamples; 10% sample for Table 3", "source": "FlowRepository [51, 9]", "preprocessing": "Table 3 lists 100000x17"},
+   {"name": "GoogleNews word vectors", "role": "eval", "size": "3 million words/phrases, 300 dims (word2vec)", "split": "subsampled to 200,000 for Table 3; full set for the 3M run", "source": "Mikolov et al. [41]", "preprocessing": "cosine distance (angular for t-SNE)"},
+   {"name": "Integers as binary prime-divisibility vectors", "role": "eval", "size": "30,000,000 samples, ~1.8 million dims, sparse", "split": null, "source": "Williamson [61]", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "UMAP", "role": "proposed", "params": null, "architecture": "k-NN graph + force-directed layout (no neural network)", "init_from": "spectral embedding of the symmetric normalised Laplacian", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"knn_search": "Nearest-Neighbor-Descent [18]", "sigma_target": "log2(n)", "eps_repulsive": 0.001, "a_default": "~1.929", "b_default": "~0.7915", "implementation": "Python with numba, single core in the experiments"}},
+   {"name": "t-SNE (MulticoreTSNE / Barnes-Hut)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"n_iter": "default 1000, raised to 1500 for flow cytometry stability"}},
+   {"name": "FIt-SNE", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"cores": "multi-core; only 2-D embeddings supported"}},
+   {"name": "LargeVis", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"threads": "default 8 threads on the 4-core machine; single thread in Fig 11", "samples": "n_samples/100 on small datasets"}},
+   {"name": "Laplacian Eigenmaps, Isomap, PCA (scikit-learn)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Minimise fuzzy-set cross entropy C = sum mu log(mu/nu) + (1-mu) log((1-mu)/(1-nu)) between high-dim graph and low-dim graph; only the second sum is optimised",
+   "optimizer": "SGD with probabilistic edge sampling (sample with probability mu) and negative sampling",
+   "lr": "alpha starts at 1.0",
+   "lr_schedule": "linear decay: alpha = 1.0 - e/n-epochs",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "n-epochs is a hyper-parameter; value used in experiments not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Table 3: MacBook Pro 3.1 GHz Intel Core i7, 8GB RAM; large-scale runs: server with Intel Xeon E5-2697v4, 512GB RAM; 30M-integer run: large memory SMP",
+   "compute": null,
+   "wall_clock": "GoogleNews 3M words ~200 minutes; 30M integers ~2 weeks",
+   "seeds": null,
+   "other": {
+    "hyper_parameters": "n (neighbours), d (target dim), min-dist, n-epochs",
+    "n_neg_samples": "named n-neg-samples in Algorithm 5, value not given",
+    "n_neighbors_used_in_experiments": null,
+    "min_dist_used_in_experiments": null,
+    "embedding_dim_for_knn_tables": null,
+    "a_b_fit": "non-linear least squares of Phi=(1+a x^{2b})^-1 against Psi (1 if dist<=min-dist else exp(-(dist-min-dist)))",
+    "complexity": "O(kN) optimisation; overall bounded by NN-Descent, empirically ~O(N^1.14)",
+    "negative_sample_distribution": "uniform approximation of the vertex sampling distribution",
+    "skeleton": "1-skeleton only (no higher simplices)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "kNN accuracy: mean (+- as printed) over 10 folds (Pen digits, COIL-20, Shuttle) or 20 folds (MNIST, Fashion-MNIST); number of runs/seeds per embedding not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "kNN classifier accuracy on the embedding", "definition": "accuracy of a k-nearest-neighbour classifier trained on the embedding, cross-validated; k varied from 10 to 160 (small sets) and 100 to 3200 (large sets)", "unit": "fraction (0-1), mean with +- as printed", "higher_is_better": true},
+    {"name": "Normalized Procrustes distance", "definition": "distance after optimal translation, uniform scaling and rotation between a subsample embedding and the matching subsample of the full-data embedding, after dividing by the average norm of the embedding", "unit": "per-point distance (Fig 8)", "higher_is_better": false},
+    {"name": "Runtime", "definition": "wall-clock time per embedding", "unit": "s", "higher_is_better": false}
+   ],
+   "baselines": ["t-SNE (MulticoreTSNE)", "FIt-SNE", "LargeVis", "Laplacian Eigenmaps", "Isomap", "PCA"],
+   "protocol": "kNN: stratified 10-fold CV (Pen digits, COIL-20), 10-fold CV (Shuttle), 20-fold CV (MNIST, Fashion-MNIST). Stability: flow cytometry subsamples. Runtime: single-core UMAP; parameters of baselines tuned 'where possible'. No significance tests beyond printed +- values."
+  },
+  "availability": {
+   "code": "https://github.com/lmcinnes/umap (Python), https://github.com/jlmelville/uwot (R)",
+   "weights": null,
+   "data": "public datasets cited; integer prime-divisibility data generated following Williamson [61]"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics[0]", "quote": "For MNIST and Fashion-MNIST a 20-fold cross validation was used, producing 20 accuracy scores.", "where": "Section 5.2"},
+   {"field": "models[2].other.cores", "quote": "FIt-SNE makes use of multiple cores.", "where": "Section 5.4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "UMAP is fastest on every dataset in Table 3 except tiny Pen digits, e.g. MNIST in 87 s versus 1450 s for t-SNE.",
+   "kind": "measured", "source": null, "metric": "runtime", "value": 87, "unit": "s", "baseline_value": 1450, "n": null,
+   "setup": "MNIST 70000x784, single-core UMAP vs MulticoreTSNE, MacBook Pro 3.1 GHz i7 8GB",
+   "quote": null, "table": "Table 3, row MNIST (70000x784), columns UMAP 87s and t-SNE 1450s",
+   "note": "FIt-SNE 292s, LargeVis 1298s, Eigenmaps 40709s; Isomap did not finish.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "On GoogleNews (200,000x300) UMAP takes 361 s versus 16906 s for t-SNE.",
+   "kind": "measured", "source": null, "metric": "runtime", "value": 361, "unit": "s", "baseline_value": 16906, "n": null,
+   "setup": "GoogleNews subsampled to 200,000, cosine distance; same machine as Table 3",
+   "quote": null, "table": "Table 3, row Google News (200000x300), columns UMAP 361s and t-SNE 16906s",
+   "note": "FIt-SNE 652s, LargeVis 5392s.", "where": "Table 3"
+  },
+  {
+   "claim": "Embedding all 3 million GoogleNews vectors with UMAP took about 200 minutes versus several days for MulticoreTSNE.",
+   "kind": "measured", "source": null, "metric": "wall-clock", "value": 200, "unit": "minutes", "baseline_value": null, "n": null,
+   "setup": "Full GoogleNews 3M x 300, large-scale server (Xeon E5-2697v4, 512GB), single-core UMAP",
+   "quote": "vectors, as seen in Figure 12, was completed in around 200 minutes",
+   "note": "The t-SNE comparison ('several days, even using multiple cores') is stated without a number.", "where": "Section 5.4.3"
+  },
+  {
+   "claim": "UMAP embedded 30,000,000 sparse prime-divisibility vectors of about 1.8 million dimensions in about 2 weeks.",
+   "kind": "measured", "source": null, "metric": "wall-clock", "value": 2, "unit": "weeks", "baseline_value": null, "n": 30000000, "setup": "Integer binary prime-divisibility vectors, large memory SMP",
+   "quote": "Tis computation took approximately 2 weeks on a large memory SMP.", "note": null, "where": "Section 5.4.3"
+  },
+  {
+   "claim": "On COIL-20 at k=160 UMAP's kNN accuracy is much higher than t-SNE's, while at k=10 t-SNE is slightly higher.",
+   "kind": "measured", "source": null, "metric": "kNN accuracy", "value": 0.803, "unit": "fraction", "baseline_value": 0.609, "n": 10,
+   "setup": "COIL-20 embeddings, 10-fold stratified CV, k=160",
+   "quote": null, "table": "Table 1, section COIL-20, row 160, columns UMAP 0.803 (+-0.138) and t-SNE 0.609 (+-0.067)",
+   "note": "At k=10: t-SNE 0.934 vs UMAP 0.921.", "where": "Table 1"
+  },
+  {
+   "claim": "On Shuttle at k=3200 UMAP's kNN accuracy is far higher than t-SNE's and LargeVis's.",
+   "kind": "measured", "source": null, "metric": "kNN accuracy", "value": 0.957, "unit": "fraction", "baseline_value": 0.828, "n": 10,
+   "setup": "Shuttle embeddings, 10-fold CV, k=3200",
+   "quote": null, "table": "Table 2, section Shuttle, row 3200, columns UMAP 0.957 (+-0.005) and t-SNE 0.828 (+-0.004)",
+   "note": "LargeVis 0.850; at k=100 t-SNE 0.994 vs UMAP 0.993.", "where": "Table 2"
+  },
+  {
+   "claim": "On MNIST UMAP matches or slightly exceeds t-SNE across k=100..3200 (0.967 vs 0.967 at k=100; 0.964 vs 0.946 at k=3200).",
+   "kind": "measured", "source": null, "metric": "kNN accuracy", "value": 0.964, "unit": "fraction", "baseline_value": 0.946, "n": 20,
+   "setup": "MNIST embeddings, 20-fold CV, k=3200",
+   "quote": null, "table": "Table 2, section MNIST, row 3200, columns UMAP 0.964 (+-0.014) and t-SNE 0.946 (+-0.017)",
+   "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On Fashion-MNIST UMAP underperforms t-SNE at small k (0.790 vs 0.818 at k=100) and is comparable only at large k.",
+   "kind": "measured", "source": null, "metric": "kNN accuracy", "value": 0.790, "unit": "fraction", "baseline_value": 0.818, "n": 20,
+   "setup": "Fashion-MNIST embeddings, 20-fold CV, k=100",
+   "quote": null, "table": "Table 2, section Fashion-MNIST, row 100, columns UMAP 0.790 (+-0.013) and t-SNE 0.818 (+-0.012)",
+   "note": "At k=3200: UMAP 0.730 vs t-SNE 0.727.", "where": "Table 2"
+  },
+  {
+   "claim": "UMAP is comparable to t-SNE on PenDigits at k=10..160 (0.973 vs 0.977 at k=10).",
+   "kind": "measured", "source": null, "metric": "kNN accuracy", "value": 0.973, "unit": "fraction", "baseline_value": 0.977, "n": 10,
+   "setup": "PenDigits embeddings, 10-fold stratified CV, k=10",
+   "quote": null, "table": "Table 1, section PenDigits, row 10, columns UMAP 0.973 (+-0.044) and t-SNE 0.977 (+-0.033)",
+   "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "A 5% subsample UMAP embedding of flow cytometry has lower per-point Procrustes error against the full embedding than any t-SNE value.",
+   "kind": "measured", "source": null, "metric": "Procrustes distance", "value": 5, "unit": "% subsample", "baseline_value": null, "n": null,
+   "setup": "Flow cytometry (1M points), t-SNE n_iter raised 1000 to 1500, Fig 8",
+   "quote": "In particular, afer sub-sampling on 5% of the million data points, the",
+   "note": "Continues 'per point error for UMAP was already below any value achieved by t-SNE.' Curve values are only in Fig 8.", "where": "Section 5.3"
+  },
+  {
+   "claim": "Default curve fit gives a about 1.929 and b about 0.7915; a=b=1 recovers the t-SNE Student t kernel.",
+   "kind": "measured", "source": null, "metric": "fitted a", "value": 1.929, "unit": null, "baseline_value": null, "n": null,
+   "setup": "UMAP implementation defaults for min-dist",
+   "quote": "results in a ≈1.929 and b ≈0.7915.", "note": "min-dist value behind the defaults is not stated.", "where": "Appendix C"
+  },
+  {
+   "claim": "Empirical complexity of NN-Descent, and hence overall UMAP, is about O(N^1.14).",
+   "kind": "reported", "source": "Dong, Moses and Li 2011 [18]", "metric": "empirical complexity exponent", "value": 1.14, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Nearest-Neighbor-Descent approximate kNN search",
+   "quote": "of the original paper report an empirical complexity of O(N1.14).", "note": "Optimisation complexity separately stated as O(kN).", "where": "Section 4.2"
+  },
+  {
+   "claim": "Kobak and Linderman show t-SNE with the same spectral-style initialisation can match UMAP on a global-structure measure; the authors concede initialisation is a major source of UMAP's global structure.",
+   "kind": "reported", "source": "Kobak and Linderman 2019 [29]", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Section 6 discussion",
+   "quote": "demonstrate that t-SNE, with similar initialization, can perform equivalently to UMAP", "note": null, "where": "Section 6"
+  },
+  {
+   "claim": "UMAP can give suboptimal embeddings for datasets under 500 samples because of approximate NN search and negative sampling.",
+   "kind": "claim", "source": null, "metric": null, "value": 500, "unit": "samples", "baseline_value": null, "n": null,
+   "setup": "Section 6 weaknesses; no experiment",
+   "quote": "of UMAP for small (less than 500 samples) dataset sizes. In particular the", "note": null, "where": "Section 6"
+  }
+ ],
+ "limits": [
+  "No ablation of algorithmic components or hyper-parameters (authors list a comprehensive empirical study as future work, Section 7).",
+  "Global structure preservation is argued from visual inspection and kNN accuracy at large k; the authors note there are no clear objective measures of global structure (Section 7).",
+  "Hyper-parameters (n, min-dist, n-epochs, embedding dimension) used in the quality and runtime experiments are not stated; baselines were tuned 'where possible'.",
+  "Authors concede Kobak and Linderman found t-SNE with the same initialisation can match UMAP on a global-structure measure.",
+  "UMAP lacks PCA-style interpretability, can find spurious 'constellation' structure in noise, trades metric preservation for topology, and is weaker below ~500 samples.",
+  "Runtimes use single-core UMAP against optimised C++ baselines on different machines per experiment; Table 3 mixes subsampled and PCA-reduced datasets; scRNA is 20,921 cells in text but 21086x1000 in Table 3, Flow is 10% of 1M but 100000x17 in Table 3.",
+  "Isomap did not finish for datasets larger than COIL-20 and Laplacian Eigenmaps failed on GoogleNews.",
+  "No seed counts or repeat runs reported for kNN accuracy; Fashion-MNIST small-k accuracy is worse than t-SNE."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "local-connectivity constraint", "definition": "rho_i = distance to the nearest neighbour; distances are measured beyond it so each point connects to at least one other point with edge weight 1", "where": "Section 2.2, 3.1"},
+  {"term": "min-dist", "definition": "the desired separation between close points in the embedding space; an essentially aesthetic parameter controlling how tightly points pack", "where": "Section 4.3"},
+  {"term": "n (neighbours)", "definition": "the local scale at which the manifold is approximated as roughly flat; trade-off between fine detail and big-picture structure", "where": "Section 4.3"},
+  {"term": "probabilistic t-conorm symmetrisation", "definition": "B = A + A^T - A o A^T, the probability that at least one of the two directed edges exists", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "Laplacian eigenmaps (Belkin and Niyogi)", "year": 2003, "arxiv": null, "relation": "extends", "note": "UMAP builds on its mathematical foundations and uses spectral initialisation", "quote": "UMAP (Uniform Manifold Approximation and Projection) builds upon"},
+  {"work": "Metric realization of fuzzy simplicial sets (Spivak)", "year": 2012, "arxiv": null, "relation": "uses-method", "note": "category-theoretic fuzzy simplicial set machinery", "quote": null},
+  {"work": "Visualizing large-scale and high-dimensional data (LargeVis, Tang et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "edge sampling and negative sampling optimisation followed; compared", "quote": null},
+  {"work": "Visualizing data using t-SNE (van der Maaten and Hinton)", "year": 2008, "arxiv": null, "relation": "baseline", "note": "primary comparison; Barnes-Hut via MulticoreTSNE", "quote": null},
+  {"work": "Efficient algorithms for t-SNE (FIt-SNE, Linderman et al.)", "year": 2017, "arxiv": "1712.09005", "relation": "baseline", "note": "runtime comparison", "quote": null},
+  {"work": "Efficient k-nearest neighbor graph construction (NN-Descent, Dong et al.)", "year": 2011, "arxiv": null, "relation": "uses-method", "note": "approximate kNN search", "quote": null},
+  {"work": "Distributed representations of words and phrases (Mikolov et al.)", "year": 2013, "arxiv": null, "relation": "uses-method", "note": "negative sampling; GoogleNews vectors", "quote": null},
+  {"work": "UMAP does not preserve global structure any better than t-SNE when using the same initialization (Kobak and Linderman)", "year": 2019, "arxiv": null, "relation": "related", "note": "partially contradicts the global-structure claim; authors acknowledge it", "quote": "demonstrate that t-SNE, with similar initialization, can perform equivalently to UMAP"},
+  {"work": "Isomap, Laplacian Eigenmaps, PCA (scikit-learn)", "year": null, "arxiv": null, "relation": "baseline", "note": "compared in quality and runtime", "quote": null},
+  {"work": "Fashion-MNIST (Xiao et al.)", "year": 2017, "arxiv": "1708.07747", "relation": "uses-data", "note": null, "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 3", "caption": "Runtime of several dimension reduction algorithms on various datasets.", "page": 38, "why": "Shows the speed gap across nine datasets in one table"},
+  {"figure": "Fig 4", "caption": "A comparison of several dimension reduction algorithms.", "page": 29, "why": "Visual evidence for the global-structure claim on COIL20, MNIST, Fashion-MNIST, GoogleNews"},
+  {"figure": "Fig 1-3", "caption": "Variation of UMAP hyperparameters n and min-dist result in different embeddings.", "page": 24, "why": "Shows effect of n and min-dist on colour-cube, PenDigits and MNIST"},
+  {"figure": "Fig 9", "caption": "Scaling performance with respect to embedding dimension of UMAP, t-SNE and LargeVis on the Pen digits dataset.", "page": 40, "why": "t-SNE runtime blows up with embedding dimension while UMAP stays flat"}
+ ],
+ "code": [
+  {"where": "Section 3.1", "snippet": "B = A + A^T - A ∘ A^T", "verbatim": true},
+  {"where": "Section 3.1", "snippet": "sum_{j=1..k} exp(-max(0, d(x_i, x_ij) - rho_i) / sigma_i) = log2(k)", "verbatim": false},
+  {"where": "Algorithm 5", "snippet": "alpha <- 1.0 - e/n-epochs", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text has ligature artefacts ('Te' for 'The', 'afer' for 'after'); quotes keep them so they match the cache.",
+  "Reference list has a broken citation key at Section 4.2 ('[?, see]]belkin2002laplacian').",
+  "scRNA cell count 20,921 in Section 5 but 21086 in Table 3; Flow cytometry described as 10% of 1,000,000 but Table 3 says 100000x17."
+ ]
 }

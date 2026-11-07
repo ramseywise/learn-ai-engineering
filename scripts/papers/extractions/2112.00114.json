@@ -1,19 +1,500 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2112.00114",
  "pdf": "ai-engineering/01-prompt-engineering/sources/nye-2021-show-your-work.pdf",
  "bib": {
   "title": "Show Your Work: Scratchpads for Intermediate Computation with Language Models",
+  "authors": [
+   "Maxwell Nye",
+   "Anders Johan Andreassen",
+   "Guy Gur-Ari",
+   "Henryk Michalewski",
+   "Jacob Austin",
+   "David Bieber",
+   "David Dohan",
+   "Aitor Lewkowycz",
+   "Maarten Bosma",
+   "David Luan",
+   "Charles Sutton",
+   "Augustus Odena"
+  ],
   "first_author": "Nye",
   "year": 2021,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2112.00114",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 50161,
+  "chars_total": 50161,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: \"Show Your Work: Scratchpads for Intermediate Computation with Language Models\", Maxwell Nye, Anders Johan Andreassen, Guy Gur-Ari, Henryk Michalewski, Jacob Austin, David Bieber, David Dohan, Aitor Lewkowycz, Maarten Bosma, David Luan, Charles Sutton, Augustus Odena (MIT; Google Research Brain and Blueshift). Preprint, arXiv:2112.00114v1, 30 Nov 2021.\n\nCOVERAGE: 50,465 of 50,465 chars. I read everything: body, limitations, Appendices A to D, and the Figure 7 caption on p16. I only skimmed the references. The extraction is clean.\n\n**Main point for the target note.** The paper never says \"40M\" or any other threshold size in its text. Section 3 only says \"beyond a critical model size\". The size can only be read off the Figure 3 plot, whose x-axis runs over 10^7 to 10^9 parameters. So the note's \"from about 40M\" comes from the survey's reading of the plot, not from a number Nye et al. state. If the note cites Nye directly, phrase it as \"beyond a critical size (around 10^7–10^8 in Fig. 3)\", or keep the 40M attributed to the survey. Also, the scratchpad in the addition experiments is fine-tuned, not prompted. Few-shot scratchpad results exist only for polynomial evaluation and synthetic Python, both on the 137B model.\n\nCLAIMS\n- claim: On fine-tuned long addition, models above a critical size solve the task with a scratchpad. Models without one fail even at the largest size tested, and fail completely on 9–10 digit addition (out of distribution).\n  number: none (the threshold is only shown in Fig. 3)\n  setup: pre-trained decoder-only LMs from 2M to 1B params, fine-tuned on 100k examples of 1–8 digit addition for 5k steps at batch size 32. Test sets: 10k in-distribution examples and 1k for each OOD length.\n  quote: \"beyond a critical model size, models are able to solve the addition task using the scratchpad, while models trained without a scratchpad fail to do so even at the largest tested scale. On the out-of-distribution tasks (9-10 digit addition), we find that models trained without scratchpad completely fail\"\n  where: p4, Sec 3 Results\n- claim: Addition setup details.\n  number: 100k examples, 5k steps, batch 32, 2M–1B params\n  quote: \"The models were fine-tuned on 100k examples for 5k steps with batch size 32. There are 10k in-distribution test examples, and 1k test examples for each out-of-distribution task. We examine the performance as a function of model size, ranging from 2M to 1B parameters.\"\n  where: p4\n- claim: On polynomial evaluation the scratchpad beats direct prediction both few-shot and fine-tuned.\n  number: few-shot 8.8% to 20.1%; fine-tuned 31.8% to 50.7%\n  setup: polynomials of degree 3 or less, inputs in [-10,10], outputs in [-1000,1000], 10k train / 2k test. Few-shot uses the 137B model with n=4 examples. Fine-tuned uses an 8B model for 2000 steps.\n  quote: \"Few-shot Fine-tuning / Direct prediction 8.8% 31.8% / Scratchpad 20.1% 50.7%\" and \"a 137B parameter pre-trained decoder-only model ... We use n = 4 example problems in the few-shot prompt. We also evaluate in the fine-tuning regime with an 8B parameter model fine-tuned for 2000 steps\"\n  where: p4–5, Table 1\n- claim: On synthetic Python programs, scratchpad tracing beats direct execution prediction few-shot and fine-tuned. The few-shot number needed a changed scoring rule; under naive scoring it is about zero.\n  number: few-shot 11% to 26.5%*; fine-tuned 20% to 41.5%\n  setup: 137B model with 1024-token context, 512-token generation limit and greedy decoding (T=0). 400/100/200 programs, 3 inputs each from 0–9. Few-shot prompt has 3 examples.\n  quote: \"Direct prediction 11% 20% / Scratchpad 26.5%* 41.5%\" and \"(Under naive scoring, the few-shot tracing accuracy is roughly zero.)\"\n  where: p6, Table 2, Sec 5.1\n- claim: On real MBPP programs, the best scratchpad model (MBPP-aug + CodeNet + single line) gets the right output on 26.6% of tasks against 10.3% for direct execution trained on MBPP. Greedy decoding gives an exact trace for about 42% of traces.\n  number: 26.6% vs 10.3% per-task; 46.0% vs 22.0% per-example; 41.9% per-example trace exact match\n  setup: 137B model, 212 of the 500 MBPP eval tasks (those whose traces fit the 512-token generation window)\n  quote: \"per-task execution acc: 10.3 5.1 5.1 17.3 26.6 25.2 23.4\" and \"greedily decoding from the best model produces the exact correct trace for almost 42% of all traces.\"\n  where: p8–9, Table 3\n- claim: With very little data (374 MBPP tasks), the scratchpad does worse than direct execution.\n  number: 5% vs 10%\n  quote: \"Neither the scratchpad model or the direct execution model achieve good performance (5% and 10% output accuracy, respectively), and direct execution outperforms the scratchpad model.\"\n  where: p7, Sec 5.2.1\n- claim: Augmenting with model-sampled programs (80 per task at T=0.5, about 17k new programs, executed by an interpreter) more than triples the tasks the scratchpad solves, but hurts direct execution.\n  number: 5.1 to 17.3 (scratchpad); 10.3 to 5.1 (direct)\n  quote: \"While the direct execution approach suffers a decrease in accuracy when trained on this additional data, the performance of the scratchpad model is greatly improved; the model trained on the augmented data solves more than three times the number of tasks\"\n  where: p7\n- claim: Ablation: fine-tuning a scratchpad model afterwards to answer directly gives no significant gain. The benefit is not only from the extra training signal; it comes from using the scratchpad at inference.\n  number: none\n  quote: \"We see no significant benefits from doing any intermediate training using a scratchpad. This indicates that the extra training-time information seen by the scratchpad model does not seem solely responsible for the scratchpad model's improved performance.\"\n  where: p13, App B; Fig 7 p16\n- claim: Tracing fine-tuning costs some synthesis ability.\n  number: 54% vs 62%\n  quote: \"achieved an overall synthesis accuracy of 54%, compared to the 62% accuracy of the original few-shot model in Austin et al. (2021)\"\n  where: p13, App A\n- claim: The authors' reasons it works: adaptive compute time, intermediate state stored in context rather than in activations, states quantized to tokens so errors compound less, and inspectable errors.\n  number: none\n  quote: \"First, the model has adaptive computation time ... Second, the model can store the intermediate state of its computation in the scratch buffer and refer back to it by attending to its context.\"\n  where: p3\n\nLIMITS: The addition results are fine-tuned only, up to 1B. There is no few-shot addition result, so the paper does not show a prompted-CoT scaling threshold. All few-shot results come from one 137B model (the Austin et al. 2021 family, trained on web and dialog data). There are no confidence intervals or repeated seeds. The few-shot synthetic score depends on a changed scoring criterion (App D). The MBPP evaluation drops more than half the tasks, keeping 212 of 500 whose traces fit 512 tokens. The authors concede context and generation window size as a limit (\"we limit our experiments to problems where the scratchpad text fits within the model generation window (512 tokens)\"). They also concede that scratchpads need hand-designed supervision; learning them without supervision, e.g. via RL, is left as future work. Dated: this predates Wei et al. 2022 CoT prompting, and the RL-to-learn-scratchpad idea anticipates later reasoning-model training.\n\nBUILDS ON: Austin et al. (2021), the MBPP and direct execution baseline; Zaremba & Sutskever (2014), learning to execute; Bieber et al. (2020), synthetic programs; Graves et al. (2014) NTM and Graves (2016) ACT; Banino et al. (2021) PonderNet; Dehghani et al. (2018) universal transformers; Kurach et al. (2016); Kaiser & Sutskever (2016); Saxton et al. (2019), polynomial evaluation; Puri et al. (2021), CodeNet; Brown et al. (2020), GPT-3 failing at addition beyond 3 digits.\n\nCODE (Figure 2, p3, the addition scratchpad target):\n```\nInput:\n2 9 + 5 7\nTarget:\n<scratch>\n2 9 + 5 7 , C: 0\n2 + 5 , 6 C: 1 # added 9 + 7 = 6 carry 1\n, 8 6 C: 0 # added 2 + 5 + 1 = 8 carry 0\n0 8 6\n</scratch>\n8 6\n```\nThe comments are not part of the target. Digits are space-separated so each digit is its own token (footnote 2, p4). Figure 4 (p5) has a short polynomial scratchpad: `Evaluate -7*x**2 + 7*x + 5 at x = 1` then `<scratch> -7*x**2: -7 / 7*x: 7 / 5: 5 </scratch> total: 5`.\n\nFIGURES:\n- Fig 3, p4: \"Using a scratchpad significantly improves the performance of pre-trained Transformer-based models on addition, including their ability to generalize out of the training distribution to numbers with more digits. Models were trained on 1-8 digit addition.\" Best candidate. Three accuracy-vs-parameter-count panels (in-distribution, 9 digits, 10 digits) show the critical-size jump and the flat-zero baseline at a glance. It is also the only source of the threshold.\n- Fig 1, p2: direct execution prediction vs scratchpad line-by-line trace. Shows the idea in one picture.\n- Fig 2, p3: addition scratchpad example (above). Makes \"intermediate tokens\" concrete.\n- Fig 7, p16: ablation, scratchpad pre-training then direct answering. Shows that inference-time tokens matter, not just the extra supervision.\n\nPROBLEMS: No embedded instructions. Text extraction is clean, apart from mangled quote glyphs in the Fig 6 single-line examples (\"/quotesingle.Var\"). Table 3's multi-row header extracts flattened. Its columns, left to right, are: Direct MBPP, Direct MBPP-aug, Scratchpad MBPP, Scratchpad MBPP-aug, Scratchpad MBPP-aug+CodeNet+single line, MBPP-aug+CodeNet, MBPP-aug+single line. I matched them to the prose values (26.6, 25.2, 23.4). Plot values in Figs 3 and 7 cannot be quoted as text."
+ "type": "empirical",
+ "question": "Can Transformer language models perform multi-step algorithmic computation if trained or prompted to emit intermediate steps into a scratchpad before the final answer?",
+ "hypothesis": "Single-pass computation limits LMs on algorithmic tasks; letting them emit intermediate tokens gives adaptive compute and improves multi-step accuracy.",
+ "contributions": [
+  "Introduce the scratchpad for Transformers without changing the architecture",
+  "Scratchpads help fine-tuned long addition, including OOD generalisation to more digits",
+  "Scratchpads help polynomial evaluation in few-shot and fine-tuned regimes",
+  "Training on line-by-line program traces with local variables greatly improves predicting execution of Python programs"
+ ],
+ "method": {
+  "summary": "Intermediate algorithm steps are encoded as text in the target between <scratch> tags and the model is trained (or few-shot prompted) to emit them before the answer. Tested on long addition, polynomial evaluation, and Python execution via line-by-line traces with JSON variable states.",
+  "task": "algorithm induction and learning to execute (addition, polynomial evaluation, Python execution prediction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Integer addition (1-8 digits train)",
+    "role": "both",
+    "size": "100k train examples; 10k in-distribution test; 1k each for 9 and 10 digit OOD",
+    "split": "as stated",
+    "source": "generated",
+    "preprocessing": "digits separated by spaces so each digit is one token"
+   },
+   {
+    "name": "Polynomial evaluation",
+    "role": "both",
+    "size": "10,000 train polynomials; 2,000 test",
+    "split": "train/test",
+    "source": "generated, inspired by Saxton et al. 2019; degree<=3, integer coefficients, x in [-10,10], outputs in [-1000,1000]",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic Python programs",
+    "role": "both",
+    "size": "400 train, 100 validation, 200 test programs; 3 random integer inputs each in 0-9",
+    "split": "400/100/200",
+    "source": "modified from Bieber et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "both",
+    "size": "1000 problems, 3 tests each; 374 train tasks (1122 examples); eval split 500 tasks, subset 212 whose traces fit generation window",
+    "split": "374 train; 212 of 500 eval",
+    "source": "Austin et al. 2021",
+    "preprocessing": "discard training examples exceeding context window"
+   },
+   {
+    "name": "MBPP-aug",
+    "role": "train",
+    "size": "17k new programs",
+    "split": null,
+    "source": "80 samples/task from 137B at T=0.5 on the 374 train tasks, outputs recomputed by execution, erroring programs discarded",
+    "preprocessing": null
+   },
+   {
+    "name": "Single-line Python transformations",
+    "role": "train",
+    "size": "roughly 9 million examples",
+    "split": null,
+    "source": "collected by Fraser Greenlee",
+    "preprocessing": "no scratchpad steps"
+   },
+   {
+    "name": "Project CodeNet traces",
+    "role": "train",
+    "size": "670,904 traces extracted",
+    "split": null,
+    "source": "Puri et al. 2021, ~4,000 problems",
+    "preprocessing": "error messages appended to trace then tracing stops"
+   }
+  ],
+  "models": [
+   {
+    "name": "Pre-trained dense decoder-only Transformers (Austin et al. 2021 models)",
+    "role": "base",
+    "params": "2M to 137B (addition: 2M-1B; polynomial fine-tune: 8B; few-shot polynomial and Python: 137B)",
+    "architecture": "decoder-only Transformer",
+    "init_from": "pre-trained on web documents and dialog data",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens for Python experiments, 512 generation tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard likelihood-based supervised training on input plus target (scratchpad plus answer)",
+   "optimizer": null,
+   "lr": "3e-5 (Python fine-tunes unless stated)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 (addition); 8192 tokens (Python fine-tunes)",
+   "steps": "5k (addition); 2000 (8B polynomial); to convergence by validation perplexity (synthetic Python); to convergence on MBPP-aug as second stage",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "staged": "CodeNet and single-line fine-tuned first, then MBPP-aug",
+    "lr_scope": "learning rate and batch size stated for Python experiments only; addition lr not given"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for Python (T=0); test time by beam search or temperature sampling in general",
+   "temperature": "0 (Python); 0.5 when sampling programs for MBPP-aug and synthesis",
+   "top_p": null,
+   "max_tokens": "512 generation tokens",
+   "samples": "80 samples/task at T=0.5 for MBPP-aug generation and synthesis check; single greedy run otherwise",
+   "prompting": "few-shot: n=4 for polynomial evaluation; 3 trace examples for synthetic Python (Appendix C)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (addition, polynomial)",
+     "definition": "exact match of final answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "per-task execution accuracy",
+     "definition": "task correct only if all 3 input-output examples executed correctly; for tracing the value of output in last trace line must semantically match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "per-task trace accuracy",
+     "definition": "exact trace match on all examples: every state and the sequence of code lines match ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "per-example execution/trace accuracy",
+     "definition": "fraction of test examples correct across the dataset",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct prediction without scratchpad (same fine-tuning or few-shot)",
+    "Austin et al. 2021 direct execution"
+   ],
+   "protocol": "Single runs; no seeds or significance tests stated. Python eval limited to tasks whose trace fits the 512-token window."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "single-line dataset by Fraser Greenlee (link not in text)"
+  },
+  "prompts": [
+   {
+    "purpose": "few-shot synthetic Python tracing",
+    "text": "What is the execution trace?",
+    "where": "Appendix C (three worked traces each opened by [BEGIN] and closed by [DONE], then the test function)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "all ﬁne-tuning runs used a batch size of 8192 tokens and a learning rate of 3e-5",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned addition: beyond a critical model size scratchpad models solve addition while no-scratchpad baselines fail even at the largest scale; the critical size is not stated numerically (only in Fig 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pre-trained decoder-only LMs 2M-1B params, fine-tuned on 1-8 digit addition, 100k examples, 5k steps, batch 32",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "beyond a critical model size, models are able to solve the addition task using the scratchpad, while models trained without a scratchpad fail to do so even at the largest tested scale"
+  },
+  {
+   "claim": "On 9-10 digit out-of-distribution addition, baselines fail completely while scratchpad accuracy rises with model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OOD accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above; 1k test examples per OOD length",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "models trained without scratchpad completely fail, while models trained with scratchpad show consistent improvement as a function of model size"
+  },
+  {
+   "claim": "Polynomial evaluation, few-shot, scratchpad vs direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 20.1,
+   "unit": "%",
+   "baseline_value": 8.8,
+   "n": null,
+   "setup": "137B model, 4-shot, 2,000 test polynomials (degree<=3, x in [-10,10], outputs in [-1000,1000])",
+   "note": null,
+   "where": "Sec 4",
+   "table": "Table 1, row Scratchpad, column Few-shot"
+  },
+  {
+   "claim": "Polynomial evaluation, fine-tuned, scratchpad vs direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.7,
+   "unit": "%",
+   "baseline_value": 31.8,
+   "n": null,
+   "setup": "8B model fine-tuned 2000 steps on 10,000 polynomials; 2,000 test",
+   "note": null,
+   "where": "Sec 4",
+   "table": "Table 1, row Scratchpad, column Fine-tuning"
+  },
+  {
+   "claim": "Synthetic Python, few-shot tracing vs direct execution (modified accuracy criterion checks v0 not output; naive scoring is roughly zero).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 26.5,
+   "unit": "%",
+   "baseline_value": 11,
+   "n": null,
+   "setup": "137B, 3-shot, 200 synthetic test programs, 3 inputs each",
+   "note": "Scored on v0 instead of output; 'Under naive scoring, the few-shot tracing accuracy is roughly zero.'",
+   "where": "Sec 5.1",
+   "table": "Table 2, row Scratchpad, column Few-shot"
+  },
+  {
+   "claim": "Synthetic Python, fine-tuned tracing vs direct execution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.5,
+   "unit": "%",
+   "baseline_value": 20,
+   "n": null,
+   "setup": "137B fine-tuned to convergence on 400 synthetic programs; 200 test",
+   "note": null,
+   "where": "Sec 5.1",
+   "table": "Table 2, row Scratchpad, column Fine-tuned"
+  },
+  {
+   "claim": "MBPP, very-low-data (374 tasks): scratchpad per-task execution accuracy is below direct execution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task execution accuracy",
+   "value": 5.1,
+   "unit": "%",
+   "baseline_value": 10.3,
+   "n": null,
+   "setup": "137B fine-tuned on 374 MBPP training tasks; 212 eval tasks whose trace fits in 512 tokens",
+   "note": null,
+   "where": "Sec 5.2.1",
+   "table": "Table 3, row per-task execution acc, column Scratchpad MBPP"
+  },
+  {
+   "claim": "Augmenting with ~17k sampled programs (MBPP-aug) raises scratchpad per-task execution accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task execution accuracy",
+   "value": 17.3,
+   "unit": "%",
+   "baseline_value": 5.1,
+   "n": null,
+   "setup": "As above, fine-tuned on MBPP-aug (80 samples/task at T=0.5, errors discarded)",
+   "note": null,
+   "where": "Sec 5.2.2",
+   "table": "Table 3, row per-task execution acc, column Scratchpad MBPP-aug"
+  },
+  {
+   "claim": "The same augmentation hurts direct execution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task execution accuracy",
+   "value": 5.1,
+   "unit": "%",
+   "baseline_value": 10.3,
+   "n": null,
+   "setup": "Direct execution fine-tuned on MBPP-aug",
+   "note": null,
+   "where": "Sec 5.2.2",
+   "table": "Table 3, row per-task execution acc, column Direct MBPP-aug"
+  },
+  {
+   "claim": "Best model (MBPP-aug + CodeNet + single-line) per-task execution accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task execution accuracy",
+   "value": 26.6,
+   "unit": "%",
+   "baseline_value": 10.3,
+   "n": null,
+   "setup": "Fine-tuned first on 9M single-line plus 670,904 CodeNet traces, then on MBPP-aug; 212 tasks",
+   "note": null,
+   "where": "Sec 5.3",
+   "table": "Table 3, row per-task execution acc, column MBPP-aug+CodeNet+single line"
+  },
+  {
+   "claim": "Best model perfectly traces about a quarter of tasks (all three examples).",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task trace accuracy",
+   "value": 24.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "nearly a quarter of the tasks (24.6%) are traced perfectly for all three examples",
+   "table": "Table 3, row per-task trace acc, column MBPP-aug+CodeNet+single line"
+  },
+  {
+   "claim": "Best model exact trace match per example under greedy decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-example trace accuracy",
+   "value": 41.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above",
+   "note": "Text says 'almost 42%'",
+   "where": "Sec 5.3",
+   "table": "Table 3, row per-example trace acc, column MBPP-aug+CodeNet+single line"
+  },
+  {
+   "claim": "Single-line data alone and CodeNet alone each help over MBPP-aug.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-task execution accuracy",
+   "value": 23.4,
+   "unit": "%",
+   "baseline_value": 17.3,
+   "n": null,
+   "setup": "Single-line only; CodeNet only gives 25.2%",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "Training on either the single-line dataset or the CodeNet dataset alone seem to both provide gains over MBPP-aug (23.4% and 25.2% tasks executed correctly, respectively)"
+  },
+  {
+   "claim": "Tracing fine-tune lowers few-shot synthesis on MBPP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "synthesis accuracy",
+   "value": 54,
+   "unit": "%",
+   "baseline_value": 62,
+   "n": null,
+   "setup": "MBPP-aug+CodeNet+single-line model, 80 samples at T=0.5, solved if any passes all 3 tests",
+   "note": null,
+   "where": "App A",
+   "quote": "achieved an overall synthesis accuracy of 54%, compared to the 62% accuracy of the original few-shot model"
+  }
+ ],
+ "limits": [
+  "Scratchpad must fit in the 512-token generation window; MBPP eval restricted to 212 of 500 tasks",
+  "Scratchpad is supervised; learning it without supervision (RL) is future work",
+  "Few-shot synthetic result uses a relaxed scoring rule (v0 instead of output)",
+  "Tracing fine-tune reduces MBPP synthesis from 62% to 54%",
+  "Addition critical size is only visible in Fig 3, not stated",
+  "No seeds, variance, or optimizer details"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "scratchpad",
+   "definition": "an arbitrary sequence of intermediate tokens the model produces before the final answer",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Program synthesis with large language models (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "extends",
+   "note": "MBPP, direct execution baseline and 137B models",
+   "quote": null
+  },
+  {
+   "work": "Learning to execute programs with instruction pointer attention GNNs (Bieber et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "synthetic Python programs",
+   "quote": null
+  },
+  {
+   "work": "Project CodeNet (Puri et al.)",
+   "year": 2021,
+   "arxiv": "2105.12655",
+   "relation": "uses-data",
+   "note": "trace training data",
+   "quote": null
+  },
+  {
+   "work": "Analysing mathematical reasoning abilities of neural models (Saxton et al.)",
+   "year": 2019,
+   "arxiv": "1904.01557",
+   "relation": "related",
+   "note": "polynomial evaluation subproblem",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "related",
+   "note": "few-shot addition struggles beyond 3 digits",
+   "quote": null
+  },
+  {
+   "work": "Universal Transformers (Dehghani et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adaptive computation time alternative",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of scratchpad approach for predicting code execution vs direct execution prediction",
+   "page": 2,
+   "why": "shows trace format"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Scratchpad improves addition including OOD digits",
+   "page": 4,
+   "why": "only place the critical model size appears"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Models fine-tuned on different datasets evaluated on MBPP",
+   "page": 8,
+   "why": "data-scaling ladder"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 header text is scrambled in extraction; column order inferred from Sec 5.2.1 and 5.3 text (direct MBPP 10.3, direct aug 5.1, scratch MBPP 5.1, scratch aug 17.3, then combined 26.6, CodeNet 25.2, single-line 23.4)",
+  "No embedded instructions found"
+ ]
 }

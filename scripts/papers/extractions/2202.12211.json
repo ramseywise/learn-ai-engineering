@@ -1,0 +1,201 @@
+{
+ "schema": 1,
+ "key": "2202.12211",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/mokady-2022-self-distilled-stylegan.pdf",
+ "bib": {
+  "title": "Self-Distilled StyleGAN: Towards Generation from Internet Photos",
+  "authors": ["Ron Mokady", "Michal Yarom", "Omer Tov", "Oran Lang", "Daniel Cohen-Or", "Tali Dekel", "Michal Irani", "Inbar Mosseri"],
+  "first_author": "Mokady",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2202.12211",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 51959,
+  "chars_total": 51959,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can StyleGAN be adapted to train on raw, uncurated Internet image collections that contain outliers and a multi-modal distribution?",
+ "hypothesis": "A StyleGAN trained with an encoder can filter its own training data by reconstruction quality, and clustering its latent space gives a truncation trick that keeps diversity on multi-modal data.",
+ "contributions": [
+  "Generative-based self-filtering of the dataset: outliers removed by LPIPS reconstruction error of a jointly trained StyleGAN2 and encoder",
+  "Multi-modal truncation: KMeans clusters of latent codes, truncating towards the perceptually nearest cluster center instead of the global mean",
+  "New datasets (SD-Flickr, SD-LSUN) and pre-trained models released"
+ ],
+ "method": {
+  "summary": "Train StyleGAN2 jointly with an encoder on the raw collection, keep images whose LPIPS reconstruction distance is below a threshold (0.36 by default, bounded by an FID and a minimum-size constraint), then retrain StyleGAN2 from scratch on the filtered set. At inference, truncate each latent toward the nearest of 64 KMeans cluster centers (nearest by LPIPS) instead of the global mean.",
+  "task": "unconditional image generation from uncurated Internet photo collections",
+  "trains": true,
+  "datasets": [
+   {"name": "LSUN bicycle, potted-plant, horse", "role": "both", "size": "at least 150,000 images per dataset after cropping", "split": null, "source": "LSUN (Yu et al. 2015)", "preprocessing": "off-the-shelf object detector crops photos around the main object; trained at 256x256"},
+   {"name": "Internet datasets (lions, elephants, dogs, parrots)", "role": "both", "size": "at least 150,000 images per dataset after cropping", "split": null, "source": "simple web crawler using one keyword (e.g. 'parrot', 'dog'); non-proprietary parts re-gathered from Flickr with appropriate licences as SD-Flickr; filtered LSUN released as SD-LSUN", "preprocessing": "object-detector crop; 512x512 except elephants 1024x1024"}
+  ],
+  "models": [
+   {"name": "StyleGAN2 generator + encoder (self-filtering stage)", "role": "proposed", "params": null, "architecture": "StyleGAN2 generator; encoder based on the StyleGAN2 discriminator architecture", "init_from": "from scratch", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"implementation": "own TensorFlow 2.0 StyleGAN2 implementation, hyperparameters as in the official one", "resolution": "lower resolution (e.g. 256x256) for filtering"}},
+   {"name": "StyleGAN2 final generator", "role": "proposed", "params": null, "architecture": "StyleGAN2, native training, no encoder", "init_from": "from scratch on the filtered set", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"resolution": "e.g. 1024x1024"}},
+   {"name": "StyleGAN3", "role": "evaluated", "params": null, "architecture": "StyleGAN3", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "ablation on LSUN-bicycle only"}}
+  ],
+  "training": {
+   "objective": "L = L_GAN + lambda_w L_w + lambda_L1 L_rec,L1 + lambda_LPIPS L_rec,LPIPS; encoder reconstructs real and generated images and the latent w",
+   "optimizer": null,
+   "lr": "0.002 for both encoder and generator",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16",
+   "steps": "250k steps (joint encoder-generator, self-filtering); final generator on filtered set 500K iterations in comparisons and ablations, 1500K iterations for final models",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 Tesla V100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"lambdas": "lambda_w = lambda_L1 = lambda_LPIPS = 0.1", "filter_threshold": "theta_LPIPS = 0.36, subject to FID(Y,X) < FID(G(E(X)),X) and |Y| >= 70K", "batch_size_note": "batch size given only for the encoder-generator training"}
+  },
+  "inference": {
+   "decoding": "multi-modal truncation: w_t = psi*w + (1-psi)*c_i, c_i the nearest cluster center",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID uses 50K randomly sampled images",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"clusters": "N = 64 for all datasets", "kmeans_fit": "60,000 latent codes from the mapping network; sklearn KMeans defaults except init=random", "assignment": "nearest center by LPIPS distance, not Euclidean latent distance", "psi": "varied in Fig 7; for user studies chosen per method to match FID (Table 2 values in brackets); exact psi values not given"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FID", "definition": "FID of 50K generated images w.r.t. the generator's own training set (filtered or unfiltered)", "unit": "FID", "higher_is_better": false},
+    {"name": "% Real (AMT)", "definition": "single image shown 1.5 s, rater decides real or fake; percent judged real", "unit": "%", "higher_is_better": true},
+    {"name": "AMT preference", "definition": "side-by-side triplet or pair, no time limit, rater picks the most realistic; percent favoured", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["StyleGAN2 on unfiltered data", "StyleGAN2 on a random subset of the same size", "global-mean truncation", "no truncation", "clamping to global mean (Kynkaanniemi et al. 2019)", "Euclidean latent cluster assignment", "StyleGAN3 on unfiltered data"],
+   "protocol": "AMT user studies; number of raters, number of images and significance tests not stated; single training run per setting, no seeds reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": "pre-trained models on project website https://self-distilled-stylegan.github.io/",
+   "data": "SD-Flickr and SD-LSUN on the project website"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.parameters.psi", "quote": "we choose the truncation level for each setting such that the truncated generated images under both settings result in the same FID", "where": "Sec 5.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-filtering lowers FID on LSUN-Bicycle versus training on unfiltered data.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "3.66", "unit": "FID", "baseline_value": "5.42", "n": null,
+   "setup": "StyleGAN2, LSUN-Bicycle 256x256, FID vs own training set, 50K samples, no truncation",
+   "table": "Table 1, row LSUN-Bicycle, column Ours FID (w/o filtering 5.42)", "quote": null, "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Self-filtering lowers FID on Internet Dogs.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "15.42", "unit": "FID", "baseline_value": "19.49", "n": null,
+   "setup": "StyleGAN2, Internet Dogs 512x512, FID vs own training set, 50K samples",
+   "table": "Table 1, row Internet Dogs, column Ours FID (w/o filtering 19.49)", "quote": null, "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Humans judge more filtered-model images real on LSUN-Bicycle.",
+   "kind": "measured", "source": null, "metric": "% judged real", "value": "73.8", "unit": "%", "baseline_value": "55.0", "n": null,
+   "setup": "AMT, image shown 1.5 s, real/fake decision, LSUN-Bicycle",
+   "table": "Table 1, row LSUN-Bicycle, column %Real Ours (w/o filtering 55.0)", "quote": null, "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Realism scores with self-filtering reach 60-70% across the tested datasets.",
+   "kind": "measured", "source": null, "metric": "% judged real", "value": "60%-70%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "AMT real/fake study, five datasets of Table 1",
+   "quote": "reaching 60% −70% for all the tested", "table": null, "note": "Table 1 shows a range of 60.1 to 73.8, so the 70% upper figure is approximate", "where": "Sec 5.1"
+  },
+  {
+   "claim": "A random subset of the same size performs like unfiltered data, so the filtering method rather than the dataset size drives the gain.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "5.88", "unit": "FID", "baseline_value": "3.66", "n": null,
+   "setup": "LSUN-bicycle, random subset of the same size as self-filtered set (filtered gives 3.66, unfiltered 5.42)",
+   "table": "Table 3, row LSUN-bicycle, column Random", "quote": null, "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Multi-modal truncation is preferred by raters over mean truncation at matched FID on Dogs.",
+   "kind": "measured", "source": null, "metric": "% raters favouring", "value": "54.2%", "unit": "%", "baseline_value": "37.7%", "n": null,
+   "setup": "AMT triplet side-by-side, Internet Dogs, psi chosen so FID matches (27.37 vs 27.18); no truncation 8.1%",
+   "table": "Table 2, row Internet Dogs, column Multi-modal Truncation", "quote": null, "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Multi-modal truncation preferred on LSUN-Horse at matched FID.",
+   "kind": "measured", "source": null, "metric": "% raters favouring", "value": "55.7%", "unit": "%", "baseline_value": "31.1%", "n": null,
+   "setup": "AMT triplet, LSUN-Horse, FID about 10.6 vs 11.4",
+   "table": "Table 2, row LSUN-Horse, column Multi-modal Truncation", "quote": null, "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Multi-modal truncation gives lower FID than global-mean truncation at equal truncation level, and the gap grows with truncation.",
+   "kind": "measured", "source": null, "metric": "FID vs psi", "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "3 datasets, Fig 7; values only in a plot",
+   "quote": null, "table": null, "note": "no numbers in text", "where": "Fig 7, Sec 5.2"
+  },
+  {
+   "claim": "StyleGAN3 also benefits from filtering on LSUN-bicycle, but remains worse than filtered data would require.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "2.6", "unit": "FID", "baseline_value": "6.5", "n": null,
+   "setup": "StyleGAN3 on LSUN-bicycle, filtered vs unfiltered; StyleGAN2 5.42 and 3.66",
+   "quote": "StyleGAN3 achieves an FID score\nof 6.5 on unﬁltered data and 2.6 on our ﬁltered dataset.", "table": null, "note": null, "where": "Appendix B"
+  },
+  {
+   "claim": "64 clusters perform well on all datasets; Dogs prefers 128 (37.6%) over 32 (26.4%).",
+   "kind": "measured", "source": null, "metric": "% raters favouring (triplet)", "value": "36.0%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "AMT triplet of 32/64/128 clusters, Internet Dogs, 64 clusters",
+   "table": "Table 4, row Internet Dogs, column 64", "quote": null, "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "LPIPS-based cluster assignment beats latent Euclidean assignment in AMT.",
+   "kind": "measured", "source": null, "metric": "% raters favouring", "value": "56.9%", "unit": "%", "baseline_value": "43.1%", "n": null,
+   "setup": "AMT pairwise, Lions",
+   "table": "Table 5, row Latent Assignment vs Ours, column Lions", "quote": null, "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Multi-modal truncation beats clamping toward the global mean at matched FID.",
+   "kind": "measured", "source": null, "metric": "% raters favouring", "value": "69.5%", "unit": "%", "baseline_value": "30.5%", "n": null,
+   "setup": "AMT pairwise, Horses, parameters tuned to equal FID",
+   "table": "Table 5, row Clamping vs Ours, column Horses", "quote": null, "note": null, "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Authors concede the quality/diversity tradeoff remains (improved) and the method still struggles with complicated backgrounds and scenes; fixing it would need architectural changes.",
+  "FID is measured against each generator's own training set (filtered or not), so FID values are not comparable across filtered and unfiltered rows beyond the stated protocol.",
+  "AMT study sizes (raters, images), significance tests, seeds and optimizer are not reported.",
+  "Filtering threshold 0.36 was set by visual inspection; only a few datasets (elephants, horses) hit the size or FID bound.",
+  "Semantic editing claims are qualitative (Fig 9) only; StyleGAN3 disentanglement left unchecked."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "self-filtering", "definition": "generative-based filtering that keeps images whose LPIPS reconstruction by the jointly trained generator and encoder is below a threshold", "where": "Sec 3"},
+  {"term": "multi-modal truncation", "definition": "truncating a latent code toward the nearest of several cluster centers, w_t = psi*w + (1-psi)*c_i, rather than the global mean", "where": "Sec 4"}
+ ],
+ "lineage": [
+  {"work": "StyleGAN2 (Karras et al. 2020)", "year": 2020, "arxiv": null, "relation": "extends", "note": "generator kept intact; base architecture", "quote": null},
+  {"work": "StyleGAN (Karras et al. 2019)", "year": 2019, "arxiv": null, "relation": "extends", "note": "source of the truncation trick that is generalized", "quote": null},
+  {"work": "Explaining in Style (Lang et al. 2021)", "year": 2021, "arxiv": "2104.13369", "relation": "uses-method", "note": "encoder trained jointly on real and synthesized images", "quote": null},
+  {"work": "Alias-free GAN / StyleGAN3 (Karras et al. 2021)", "year": 2021, "arxiv": null, "relation": "evaluates", "note": "ablation in Appendix B", "quote": null},
+  {"work": "Kynkaanniemi et al. 2019, Improved precision and recall", "year": 2019, "arxiv": null, "relation": "baseline", "note": "clamping truncation baseline", "quote": null},
+  {"work": "Averbuch-Elor et al. 2015, Distilled collections from textual image queries", "year": 2015, "arxiv": null, "relation": "related", "note": "closest unsupervised dataset distillation, ignores background", "quote": null},
+  {"work": "LSUN (Yu et al. 2015)", "year": 2015, "arxiv": "1506.03365", "relation": "uses-data", "note": "bicycle, potted-plant, horse", "quote": null},
+  {"work": "FID (Heusel et al. 2017)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "metric and filter bound", "quote": null},
+  {"work": "LPIPS (Zhang et al. 2018)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "reconstruction and cluster-assignment distance", "quote": null},
+  {"work": "BigGAN (Brock et al. 2018)", "year": 2018, "arxiv": null, "relation": "related", "note": "origin of truncation trick use", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Pipeline: self-filtering and multi-modal truncation", "page": 2, "why": "shows both stages at a glance"},
+  {"figure": "Fig 5", "caption": "Global mean vs. multi-modal truncation", "page": 5, "why": "visual contrast showing lost pose/colour under global-mean truncation"},
+  {"figure": "Fig 8", "caption": "The diversity/quality tradeoff: FID(Y,X) vs filtering threshold", "page": 6, "why": "shows how the threshold and the two bounds are chosen"}
+ ],
+ "code": [
+  {"where": "Sec 4", "snippet": "wt = ψ·w + (1 −ψ)·ci", "verbatim": true}
+ ],
+ "problems": ["Ligatures and math in the text cache are partly garbled; quotes avoiding them were preferred.", "Table 2 bracketed values are FIDs of the compared settings."]
+}

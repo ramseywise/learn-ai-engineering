@@ -1,0 +1,352 @@
+{
+ "schema": 1,
+ "key": "2311.07911",
+ "pdf": "generative-ai/05-RL/sources/zhou-2023-instruction-following-evaluation-large-language.pdf",
+ "bib": {
+  "title": "Instruction-Following Evaluation for Large Language Models",
+  "authors": [
+   "Jeffrey Zhou",
+   "Tianjian Lu",
+   "Swaroop Mishra",
+   "Siddhartha Brahma",
+   "Sujoy Basu",
+   "Yi Luan",
+   "Denny Zhou",
+   "Le Hou"
+  ],
+  "first_author": "Zhou",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.07911",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 138921,
+  "chars_total": 138921,
+  "engine": "pymupdf",
+  "skipped": "Appendix prompt list (about 540 prompts) skimmed, not read line by line"
+ },
+ "type": "benchmark",
+ "question": "How can the instruction-following ability of LLMs be evaluated objectively and reproducibly, without human or LLM judges?",
+ "hypothesis": "Restricting to verifiable instructions that simple programs can check gives a clearer, unbiased, automatic evaluation.",
+ "contributions": [
+  "IFEval: 25 verifiable instruction types and 541 prompts, each with one or more verifiable instructions",
+  "Strict and loose accuracy metrics at prompt and instruction level",
+  "Baseline results for GPT-4 and PaLM 2 S, with code and prompts released"
+ ],
+ "method": {
+  "summary": "The authors define 25 verifiable instruction types, synthesize 541 prompts by appending 1-3 random instructions to base prompts, filter and rephrase with few-shot prompting, then hand-edit. Responses are checked by deterministic programs, with a loose variant that applies 8 response transformations.",
+  "task": "instruction-following evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "IFEval prompts",
+    "role": "eval",
+    "size": "541 prompts, 25 instruction types (abstract says around 500)",
+    "split": "all used for evaluation",
+    "source": "constructed by the authors; code and data at github.com/google-research/google-research/tree/master/instruction_following_eval",
+    "preprocessing": "base prompts with 1-3 random verifiable instructions appended; few-shot prompting to drop illogical prompts; few-shot rephrasing; manual check and edit"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "responses scraped": "November 2023 via API"
+    }
+   },
+   {
+    "name": "PaLM 2 Small (S)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "responses scraped": "August 2023 via API"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot: the prompt with its verifiable instructions is sent as is",
+   "retrieval": null,
+   "parameters": {
+    "loose transformations": "8 = every subset of {remove markdown * and **, remove first line, remove last line}, including identity"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Prompt-level strict accuracy",
+     "definition": "percentage of prompts whose verifiable instructions are all followed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inst-level strict accuracy",
+     "definition": "percentage of verifiable instructions followed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Prompt-level loose accuracy",
+     "definition": "prompt-level accuracy where an instruction counts if followed under any of 8 response transformations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inst-level loose accuracy",
+     "definition": "instruction-level accuracy under the loose criterion",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4",
+    "PaLM 2 S"
+   ],
+   "protocol": "one response per prompt, deterministic program verification; no seeds or confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/google-research/tree/master/instruction_following_eval",
+   "weights": null,
+   "data": "same repository"
+  },
+  "prompts": [
+   {
+    "purpose": "example prompt with verifiable instruction",
+    "text": "Write a casual summary of the U.S. maternity leave policy with two sections (Section 1 and Section 2) and at least 25 sentences.",
+    "where": "Figure 1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4 prompt-level strict accuracy on IFEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt-level strict accuracy",
+   "value": 76.89,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, GPT-4 responses scraped Nov 2023",
+   "quote": null,
+   "table": "Table 3, row GPT-4, column Prompt-level strict-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-4 instruction-level strict accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "inst-level strict accuracy",
+   "value": 83.57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, GPT-4",
+   "quote": null,
+   "table": "Table 3, row GPT-4, column Inst-level strict-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-4 prompt-level loose accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt-level loose accuracy",
+   "value": 79.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, GPT-4",
+   "quote": null,
+   "table": "Table 3, row GPT-4, column Prompt-level loose-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-4 instruction-level loose accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "inst-level loose accuracy",
+   "value": 85.37,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, GPT-4",
+   "quote": null,
+   "table": "Table 3, row GPT-4, column Inst-level loose-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PaLM 2 S prompt-level strict accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt-level strict accuracy",
+   "value": 43.07,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, PaLM 2 S responses scraped Aug 2023",
+   "quote": null,
+   "table": "Table 3, row PaLM 2 S, column Prompt-level strict-accuracy",
+   "note": "authors say the two models are not directly comparable due to parameter count",
+   "where": "Table 3"
+  },
+  {
+   "claim": "PaLM 2 S instruction-level strict accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "inst-level strict accuracy",
+   "value": 55.76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, PaLM 2 S",
+   "quote": null,
+   "table": "Table 3, row PaLM 2 S, column Inst-level strict-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PaLM 2 S prompt-level loose accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt-level loose accuracy",
+   "value": 46.95,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, PaLM 2 S",
+   "quote": null,
+   "table": "Table 3, row PaLM 2 S, column Prompt-level loose-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PaLM 2 S instruction-level loose accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "inst-level loose accuracy",
+   "value": 59.11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 541,
+   "setup": "IFEval, PaLM 2 S",
+   "quote": null,
+   "table": "Table 3, row PaLM 2 S, column Inst-level loose-accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "The benchmark has 25 verifiable instruction types and 541 prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompt count",
+   "value": 541,
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IFEval construction",
+   "quote": "Altogether, we create a list of 25 verifiable instructions. We further create a set of 541 prompts, with each prompt containing one or multiple verifiable instructions.",
+   "table": null,
+   "note": "abstract says around 500 prompts",
+   "where": "Section 1"
+  }
+ ],
+ "limits": [
+  "Only two models evaluated, not comparable in size",
+  "Few instructions are 100% verifiable; edge cases remain, so strict has false negatives and loose adds false positives",
+  "Instruction diversity and quantity limited; text only, no multimodal",
+  "No decoding settings, sampling or variance reported",
+  "Per-category results only in figures"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "verifiable instructions",
+   "definition": "instructions amenable to objective verification of compliance",
+   "where": "Section 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "PaLM 2 S evaluated",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "GPT-4 evaluated",
+   "quote": null
+  },
+  {
+   "work": "Sun et al. Evaluating large language models on controlled generation tasks",
+   "year": 2023,
+   "arxiv": "2310.14542",
+   "relation": "related",
+   "note": "counting-related instruction following",
+   "quote": null
+  },
+  {
+   "work": "Zheng et al. Judging LLM-as-a-judge with MT-bench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as human/model evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Instruction-level strict-accuracy of each model, separated by each instruction category.",
+   "page": 5,
+   "why": "shows which instruction groups fail"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Overall instruction following accuracy according to IFEval.",
+   "page": 5,
+   "why": "the headline numbers"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Prompt list truncated in a few places (for example a prompt ending 'offering a 25')"
+ ]
+}

@@ -1,0 +1,477 @@
+{
+ "schema": 1,
+ "key": "2201.03514",
+ "pdf": "generative-ai/05-RL/sources/sun-2022-black-box-tuning-language-model.pdf",
+ "bib": {
+  "title": "Black-Box Tuning for Language-Model-as-a-Service",
+  "authors": [
+   "Tianxiang Sun",
+   "Yunfan Shao",
+   "Hong Qian",
+   "Xuanjing Huang",
+   "Xipeng Qiu"
+  ],
+  "first_author": "Sun",
+  "year": 2022,
+  "venue": "Proceedings of the 39th International Conference on Machine Learning, PMLR 162, 2022",
+  "arxiv": "2201.03514",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 62552,
+  "chars_total": 62552,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can task-specific continuous prompts be optimised when only a PTM inference API (no gradients) is available?",
+ "hypothesis": "Because large PTMs have low intrinsic dimensionality, derivative-free optimisation in a random low-dimensional subspace of the prompt space can work.",
+ "contributions": [
+  "Proposes the Language-Model-as-a-Service (LMaaS) scenario where one learns to prompt PTMs by only accessing inference APIs",
+  "Offers black-box tuning (BBT) for common language understanding tasks without access to parameters or gradients",
+  "Shows DFO can deal with real-world language tasks by prompting large PTMs"
+ ],
+ "method": {
+  "summary": "A continuous prompt p = Az + p0 is prepended to the input; z in R^d (d=500) is optimised with CMA-ES using only forward passes of RoBERTa-Large, with A a fixed random uniform matrix (He et al. 2015 init) and p0 embeddings of random vocabulary tokens (or a prompt pre-trained on MNLI for sentence-pair tasks). Loss is cross entropy on label-word logits at the [MASK] position.",
+  "task": "few-shot language understanding classification (sentiment, topic, NLI, paraphrase) via prompt optimisation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": "train 67k, test 0.9k",
+    "split": "k-shot train + k-shot dev drawn from original train; original dev set as test",
+    "source": "Socher et al. 2013",
+    "preprocessing": "template '<S>. It was [MASK].', label words great, bad"
+   },
+   {
+    "name": "Yelp polarity",
+    "role": "both",
+    "size": "train 560k, test 38k",
+    "split": "as above",
+    "source": "Zhang et al. 2015a",
+    "preprocessing": "template '<S>. It was [MASK].', great, bad"
+   },
+   {
+    "name": "AG's News",
+    "role": "both",
+    "size": "train 120k, test 7.6k",
+    "split": "as above",
+    "source": "Zhang et al. 2015a",
+    "preprocessing": "template '[MASK] News: <S>', World, Sports, Business, Tech"
+   },
+   {
+    "name": "DBPedia",
+    "role": "both",
+    "size": "train 560k, test 70k",
+    "split": "as above",
+    "source": "Zhang et al. 2015a",
+    "preprocessing": "template '[Category: [MASK]] <S>', 14 label words"
+   },
+   {
+    "name": "MRPC",
+    "role": "both",
+    "size": "train 3.7k, test 0.4k",
+    "split": "as above",
+    "source": "Dolan & Brockett 2005",
+    "preprocessing": "template '<S1>? [MASK], <S2>', Yes/No"
+   },
+   {
+    "name": "RTE",
+    "role": "both",
+    "size": "train 2.5k, test 0.3k",
+    "split": "as above",
+    "source": "Wang et al. 2019",
+    "preprocessing": "template '<S1>? [MASK], <S2>', Yes/No"
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "train 549k, test 9.8k",
+    "split": "as above",
+    "source": "Bowman et al. 2015",
+    "preprocessing": "template '<S1>? [MASK], <S2>', Yes/Maybe/No"
+   },
+   {
+    "name": "MNLI",
+    "role": "pretrain",
+    "size": null,
+    "split": "training set",
+    "source": "Williams et al. 2018",
+    "preprocessing": "used to pre-train prompt embedding p0 for sentence-pair tasks"
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa-Large",
+    "role": "base",
+    "params": null,
+    "architecture": "masked LM encoder",
+    "init_from": "pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "1024 (word embedding dim)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": "parameters unchanged"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Minimise cross entropy over candidate label-word logits at [MASK] (hinge loss gamma=2 and negative accuracy compared in ablation); derivative-free CMA-ES over z in [-5,5]^d",
+   "optimizer": "CMA-ES, population lambda=20 (ablation uses 4+3 log d)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "entire k-shot training set in one batch per API call (inferred from: 'we can put all the training data into one batch')",
+   "steps": "Budget 8000 API calls",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max sequence length 47 (SST-2), 107 (AG's News) per Table 4",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single NVIDIA GTX 3090 GPU",
+   "compute": null,
+   "wall_clock": "SST-2 10.1 (6.1 with ONNX) mins; AG's News 21.0 (17.7 ONNX) mins (Table 4)",
+   "seeds": "3 different data splits in Table 3; 3 random seeds in ablations (64-shot, same split)",
+   "other": {
+    "prompt_length": "50",
+    "subspace_dim": "500",
+    "random_projection": "Uniform (He et al. 2015); N(0,1/d) tried, slower; N(0,1) did not work",
+    "init": "p0 = n random vocab token embeddings, or MNLI-pretrained for sentence pair tasks",
+    "early_stopping": "for time comparison, stop if dev acc does not increase after 1000 steps",
+    "dev_set": "|Ddev|=|Dtrain|=k per class"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 splits (Table 3); 3 seeds (ablations)",
+   "prompting": "hybrid: continuous prompt + manual template and label words (Table 1)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (F1 for MRPC)",
+     "definition": "test performance on original dev/test sets",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Prompt Tuning (Adam lr 5e-4, bs 16, 1000 epochs, prompt length 50)",
+    "P-Tuning v2 (length 128/layer, Adam lr 5e-4, bs 32, 2000 epochs)",
+    "Model Tuning (Adam lr 1e-5, bs 16, 200 epochs)",
+    "Manual Prompt (zero-shot)",
+    "In-context Learning (up to 32 samples)",
+    "Feature-MLP / Feature-BiLSTM (Adam lr 3e-4, bs 16, 1000 epochs)"
+   ],
+   "protocol": "mean and std over 3 data splits, 16-shot; ablations in 64-shot with 3 seeds; Adam-vs-CMA-ES ablation uses Adam lr 1e-3 with full-batch"
+  },
+  "availability": {
+   "code": "https://github.com/txsun1997/Black-Box-Tuning",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BBT averages 73.01 over 7 tasks, above Prompt Tuning 63.46 and P-Tuning v2 70.47 but below Model Tuning 78.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average over 7 tasks",
+   "value": 73.01,
+   "unit": "%",
+   "baseline_value": 63.46,
+   "n": null,
+   "setup": "RoBERTa-Large, 16-shot per class, mean over 3 splits, 7 tasks (SST-2, Yelp P., AG's News, DBPedia, MRPC, SNLI, RTE); without pre-trained prompt",
+   "quote": null,
+   "table": "Table 3, row Black-Box Tuning, column Avg.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "With MNLI-pretrained prompt, BBT averages 83.90, above Model Tuning 78.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average",
+   "value": 83.9,
+   "unit": "%",
+   "baseline_value": 78.88,
+   "n": null,
+   "setup": "RoBERTa-Large, 16-shot per class, mean over 3 splits, 7 tasks (SST-2, Yelp P., AG's News, DBPedia, MRPC, SNLI, RTE); pre-trained prompt used on MRPC, SNLI, RTE",
+   "quote": null,
+   "table": "Table 3, row + Pre-trained prompt (under Black-Box Tuning), column Avg.",
+   "note": "Avg for pre-trained rows appears to combine pre-trained results on sentence-pair tasks with non-pretrained results on the first four tasks (inferred).",
+   "where": "Table 3"
+  },
+  {
+   "claim": "On SNLI with pre-trained prompt BBT gets 83.83 vs Model Tuning 54.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 83.83,
+   "unit": "%",
+   "baseline_value": 54.64,
+   "n": null,
+   "setup": "16-shot SNLI, RoBERTa-Large",
+   "quote": null,
+   "table": "Table 3, row + Pre-trained prompt, column SNLI",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "BBT SST-2 accuracy 89.56 vs Model Tuning 85.39.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 89.56,
+   "unit": "%",
+   "baseline_value": 85.39,
+   "n": null,
+   "setup": "16-shot SST-2",
+   "quote": null,
+   "table": "Table 3, row Black-Box Tuning, column SST-2",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Model Tuning is much better than BBT on many-class DBPedia-like tasks (AG's News 86.36 vs 81.51).",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 86.36,
+   "unit": "%",
+   "baseline_value": 81.51,
+   "n": null,
+   "setup": "16-shot AG's News",
+   "quote": null,
+   "table": "Table 3, row Model Tuning, column AG's News",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "In-context learning averages 59.36, below manual prompt 62.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average",
+   "value": 59.36,
+   "unit": "%",
+   "baseline_value": 62.56,
+   "n": null,
+   "setup": "16-shot, up to 32 samples in context",
+   "quote": null,
+   "table": "Table 3, row In-Context Learning, column Avg.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Training time on SST-2 for BBT is 10.1 mins (6.1 with ONNX) on one GTX 3090; BBT needs 6 KB upload and 0.25 KB download per query.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 10.1,
+   "unit": "mins",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2 16-shot split, early stopping",
+   "quote": null,
+   "table": "Table 4, row Black-Box Tuning, column Training Time",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Cross entropy and hinge loss significantly outperform negative accuracy as the loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64-shot ablation, SST-2 and AG's News",
+   "quote": "cross entropy and hinge loss signif-\nicantly outperform the negative accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Loss Functions"
+  },
+  {
+   "claim": "Adam converges faster than CMA-ES in the ablation but gives lower average test performance across seven tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64-shot ablation; Adam lr 1e-3 full batch",
+   "quote": "Adam optimizer\nachieves faster convergence on both SST-2 and AG’s News",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, CMA-ES vs Adam"
+  },
+  {
+   "claim": "Prompt length 50 gives best dev accuracy on SST-2 and AG's News; small subspace d=100 is too small, d=1000 generalises poorly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "64-shot ablation, budgets 2k-8k",
+   "quote": "L = 50 achieves the best accuracy on\nboth SST-2 and AG’s News development sets.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Smaller population size converges faster per API call (population evaluated sequentially).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2",
+   "quote": "smaller population size confers faster convergence in terms of number of API calls",
+   "table": null,
+   "note": null,
+   "where": "App A"
+  }
+ ],
+ "limits": [
+  "Only RoBERTa-Large (encoder, classification with label words) tested; generative PTMs left to future work",
+  "Needs an API that accepts continuous prompt embeddings and returns logits at the mask position",
+  "Model tuning is much better when the number of classes is large (DBPedia)",
+  "Random projection subspace can be sub-optimal; intrinsic dimensionality is only approximate (epsilon-effective)",
+  "Templates and label words handcrafted, so reported performance is 'just a lower bound'",
+  "Experiments use 16-shot with small data; GPT-3-scale APIs not tested; no real hosted API used (simulated locally)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Language-Model-as-a-Service (LMaaS)",
+   "definition": "large PTMs released as a service that users access through black-box APIs, with gradients unavailable",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Intrinsic dimensionality explains the effectiveness of language model fine-tuning (Aghajanyan et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "motivates low-dimensional subspace",
+   "quote": null
+  },
+  {
+   "work": "Qin et al. intrinsic subspace",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "intrinsic subspace under 100 dims with multi-task supervision",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. random embedding for high-dimensional Bayesian optimisation",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "random embedding for DFO",
+   "quote": null
+  },
+  {
+   "work": "Hansen & Ostermeier CMA-ES",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimiser",
+   "quote": null
+  },
+  {
+   "work": "The power of scale for parameter-efficient prompt tuning (Lester et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Prompt Tuning",
+   "quote": null
+  },
+  {
+   "work": "P-Tuning v2 (Liu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "in-context learning",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "Gu et al. PPT prompt pre-training",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-trained prompt embedding on MNLI",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A single iteration of the optimization.",
+   "page": 3,
+   "why": "Shows z -> Az + p0 -> API -> loss -> optimiser loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ablations of loss function, subspace dimensionality, and prompt length.",
+   "page": 5,
+   "why": "Convergence per API call"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Overall comparison on various language understanding tasks.",
+   "page": 5,
+   "why": "Main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "z* = argmin_{z in Z} L(f(Az + p0; X~), Y~)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found."
+ ]
+}

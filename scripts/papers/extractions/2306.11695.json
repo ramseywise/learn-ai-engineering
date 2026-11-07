@@ -1,0 +1,240 @@
+{
+ "schema": 1,
+ "key": "2306.11695",
+ "pdf": "ai-engineering/07-inference-engineering/sources/sun-2023-simple-effective-pruning-approach-large.pdf",
+ "bib": {
+  "title": "A Simple and Effective Pruning Approach for Large Language Models",
+  "authors": ["Mingjie Sun", "Zhuang Liu", "Anna Bair", "J. Zico Kolter"],
+  "first_author": "Sun",
+  "year": 2023,
+  "venue": "ICLR 2024",
+  "arxiv": "2306.11695",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 78016,
+  "chars_total": 78016,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Tables 26-28 (LLaMA-2 per-task zero-shot) not read in detail."
+ },
+ "type": "empirical",
+ "question": "Can pretrained LLMs be pruned to high sparsity without retraining or second-order weight updates, using a cheap importance score?",
+ "hypothesis": "Because LLMs have emergent large-magnitude input features, weight importance should combine weight magnitude with input activation norm, compared per output, which should beat magnitude pruning and match SparseGPT without weight update.",
+ "contributions": [
+  "Wanda: pruning score |W_ij| * ||X_j||_2 compared per output row, no retraining and no weight update",
+  "Evaluation on LLaMA and LLaMA-2 (unstructured 50%, 4:8, 2:4) against magnitude pruning and SparseGPT",
+  "Analysis of fine-tuning, comparison groups, calibration size and weight update"
+ ],
+ "method": {
+  "summary": "For each linear layer, score every weight by |W_ij| times the l2 norm of input feature j over calibration tokens, then zero the lowest-scoring s% of weights within each output row (or N:M groups). Layers are pruned in order, each seeing activations from the already pruned earlier layers, in one forward pass with no weight update.",
+  "task": "post-training pruning of pretrained LLMs (unstructured and N:M sparsity)",
+  "trains": false,
+  "datasets": [
+   {"name": "C4 training set", "role": "dev", "size": "128 sequences of model context length (calibration)", "split": "random sample, same set as SparseGPT", "source": "Raffel et al., 2020", "preprocessing": null},
+   {"name": "WikiText validation", "role": "eval", "size": null, "split": "held-out validation set", "source": "Merity et al., 2016", "preprocessing": null},
+   {"name": "EleutherAI LM Harness: BoolQ, RTE, HellaSwag, WinoGrande, ARC-e, ARC-c, OpenbookQA", "role": "eval", "size": null, "split": null, "source": "Gao et al., 2021", "preprocessing": null},
+   {"name": "MMLU", "role": "eval", "size": null, "split": "5-shot", "source": "Hendrycks et al., 2021", "preprocessing": null},
+   {"name": "ImageNet-1K", "role": "both", "size": "4096 training images as calibration", "split": null, "source": "Deng et al., 2009", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA", "role": "evaluated", "params": "7B/13B/30B/65B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA-2", "role": "evaluated", "params": "7B/13B/70B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "OPT, BLOOM, Pythia", "role": "evaluated", "params": "OPT 125m-13B; BLOOM 560m-7.1B; Pythia-12B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ConvNeXt-B, DeiT-B", "role": "evaluated", "params": null, "architecture": "vision", "init_from": "ImageNet-1K pretrained", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"top1": "83.8% and 81.8%"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Main tables use one fixed calibration set; Table 18 repeats over 5 random calibration seeds (mean, std).",
+   "prompting": "Zero-shot for 7 tasks; 5-shot for MMLU (following Touvron et al., 2023a).",
+   "retrieval": null,
+   "parameters": {
+    "calibration": "128 sequences from C4 train, context-length each (ablated 1 to 2048 in Table 17)",
+    "norm": "l2 on input features; the paper says l2 works better than l1 and l-infinity",
+    "comparison_group": "per output (per row of W)",
+    "layers_pruned": "all linear layers except first embedding layer and final classification head (about 99% of parameters), uniform sparsity",
+    "sparsity_types": "unstructured 50% (also 60%, 80%, 70% in analysis), structured 4:8 and 2:4",
+    "weight_update": "none"
+   },
+   "other": {
+    "fine_tuning_lora": "C4, auto-regressive loss, mask fixed, r=8 on query and value projections, about 0.06% extra parameters, 1 GPU and 12 hours",
+    "fine_tuning_full": "C4, mask fixed, 4 GPU and 3 days",
+    "pruning_speed_hardware": "NVIDIA A6000 GPUs, time for pruning metric only (excludes shared forward pass)",
+    "inference_speed": "NVIDIA CUTLASS GEMM simulation on A6000, LLaMA-65B, batch size 1; end-to-end 1.24x on LLaMA-7B (251ms vs 312ms)",
+    "harness_commit": "df3da98 on main; task version 0 except BoolQ version 1",
+    "fine_tuning_hyperparameters": "learning rate, batch size, optimizer not stated in the text read"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "WikiText perplexity", "definition": "perplexity on WikiText validation set", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Mean zero-shot accuracy", "definition": "mean over 7 EleutherAI harness tasks", "unit": "%", "higher_is_better": true},
+    {"name": "MMLU 5-shot accuracy", "definition": "mean accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "Matmul latency", "definition": "latency of linear-layer matrix multiplication", "unit": "ms", "higher_is_better": false}
+   ],
+   "baselines": ["Magnitude pruning (Han et al., 2015)", "SparseGPT (Frantar & Alistarh, 2023)", "activation-pruning methods (mean, std, correlation, mean squared norm)", "SNIP, BERT-LTH, Movement, Platon, PINS"],
+   "protocol": "One fixed calibration set for main results; 5 random seeds for robustness (Table 18); no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/locuslab/wanda",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Wanda at 50% unstructured sparsity on LLaMA-7B reaches WikiText perplexity far below magnitude pruning, without weight update.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "7.26", "unit": "perplexity", "baseline_value": "17.29", "n": null,
+   "setup": "LLaMA-7B, unstructured 50% sparsity, 128 C4 calibration sequences, no weight update; dense 5.68; SparseGPT 7.22",
+   "quote": "for LLaMA-7B, Wanda is able to find sparse networks with a perplexity of 7.26, significantly better than the magnitude pruning baseline 17.29",
+   "table": null, "note": null, "where": "Sec 4.2, Table 3"
+  },
+  {
+   "claim": "At 50% unstructured sparsity Wanda matches SparseGPT on LLaMA-2-70B perplexity.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "3.98", "unit": "perplexity", "baseline_value": "3.98",
+   "n": null, "setup": "LLaMA-2-70B, 50% unstructured; dense 3.12; magnitude 4.98",
+   "quote": null, "table": "Table 3, rows SparseGPT and Wanda 50%, column LLaMA-2 70B (3.98 both)", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Wanda at 2:4 on LLaMA-7B is worse than SparseGPT in perplexity.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "11.53", "unit": "perplexity", "baseline_value": "11.00",
+   "n": null, "setup": "LLaMA-7B, 2:4 sparsity, no weight update vs SparseGPT",
+   "quote": null, "table": "Table 3, row Wanda 2:4, column LLaMA 7B (11.53); SparseGPT 11.00", "note": "Paper: 'SparseGPT outperforms Wanda on 2:4 sparsity' on smaller models", "where": "Table 3"
+  },
+  {
+   "claim": "Mean zero-shot accuracy of 50% unstructured pruned LLaMA-7B with Wanda, versus dense.",
+   "kind": "measured", "source": null, "metric": "mean zero-shot accuracy (7 tasks)", "value": "54.21", "unit": "%", "baseline_value": "59.99",
+   "n": 7, "setup": "LLaMA-7B, 50% unstructured, no fine-tuning; SparseGPT 54.94; magnitude 46.94",
+   "quote": null, "table": "Table 2, row Wanda 50%, column LLaMA 7B", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Gap to dense shrinks with scale: unstructured 50% LLaMA-65B and LLaMA-2-70B match dense zero-shot accuracy.",
+   "kind": "measured", "source": null, "metric": "mean zero-shot accuracy", "value": "66.67", "unit": "%", "baseline_value": "66.97",
+   "n": 7, "setup": "LLaMA-65B, 50% unstructured Wanda vs dense",
+   "quote": "unstructured 50% sparse LLaMA-65B and LLaMA-2-70B is able to match the zero-shot accuracies of their dense counterparts.",
+   "table": null, "note": "Table 2 gives 66.67 vs 66.97 for LLaMA-65B; the quote says 'match'", "where": "Sec 4.1"
+  },
+  {
+   "claim": "Wanda pruning metric is hundreds of times faster to compute than SparseGPT's.",
+   "kind": "measured", "source": null, "metric": "pruning time", "value": "5.6", "unit": "seconds", "baseline_value": "1353.4",
+   "n": null, "setup": "LLaMA-65B, time to compute pruning metric across layers, NVIDIA A6000, excludes shared forward pass",
+   "quote": null, "table": "Table 4, row Wanda, column 65B (5.6 s) vs SparseGPT 1353.4", "note": "Intro says 'can be 300 times faster'; 7B: 0.54 vs 203.1", "where": "Sec 4.3, Table 4"
+  },
+  {
+   "claim": "Structured 2:4 sparsity speeds up linear-layer matmul by about 1.6x on LLaMA-65B.",
+   "kind": "measured", "source": null, "metric": "matmul speedup", "value": "1.6", "unit": "x", "baseline_value": null,
+   "n": null, "setup": "LLaMA-65B, batch size 1, NVIDIA A6000, CUTLASS GEMM simulation; per layer 1.63x q/k/v/o, 1.61x up/gate, 1.54x down",
+   "quote": "Structured 2:4 sparsity is able to bring notable inference speedup (around 1.6×) for linear layers in LLMs.",
+   "table": null, "note": null, "where": "Sec 4.3, Table 5"
+  },
+  {
+   "claim": "End-to-end latency speedup for 2:4 sparse LLaMA-7B.",
+   "kind": "measured", "source": null, "metric": "end-to-end latency speedup", "value": "1.24", "unit": "x", "baseline_value": null,
+   "n": null, "setup": "LLaMA-7B, 2:4 sparsity, 251ms vs 312ms dense",
+   "quote": "For end to end latency, we observe a speedup of 1.24× on LLaMA-7B (251ms as compared to 312ms).",
+   "table": null, "note": null, "where": "Sec 4.3"
+  },
+  {
+   "claim": "Perplexity of LLaMA-7B at 70% unstructured sparsity without weight update is very poor; weight update helps a lot but still lags dense.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "84.50", "unit": "perplexity", "baseline_value": "5.68",
+   "n": null, "setup": "LLaMA-7B, 70% unstructured, Wanda without weight update; with weight update 29.65",
+   "quote": "where weight update can improve Wanda from 84.50 to 29.65",
+   "table": null, "note": null, "where": "Sec 5, Weight Update"
+  },
+  {
+   "claim": "At 80% sparsity Wanda collapses on LLaMA-7B and SparseGPT does much better, though both are far from dense.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "5e3", "unit": "perplexity", "baseline_value": "2e2",
+   "n": null, "setup": "LLaMA-7B, 80% unstructured; SparseGPT 2e2; best 80% model (LLaMA-2-70B SparseGPT) 25.86",
+   "quote": null, "table": "Table 20, row Wanda 80%, column LLaMA 7B (5e3)", "note": null, "where": "App D.3, Table 20"
+  },
+  {
+   "claim": "Per-output comparison group gives best Wanda perplexity versus per-layer or other groups.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "7.26", "unit": "perplexity", "baseline_value": "7.95",
+   "n": null, "setup": "LLaMA-7B, 50% unstructured; (output,1) 7.26 vs layer 7.95; magnitude metric per layer 17.29",
+   "quote": null, "table": "Table 7, row Wanda, column (output, 1)", "note": null, "where": "Sec 5, Table 7"
+  },
+  {
+   "claim": "Wanda stays robust with very few calibration samples.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "7.66", "unit": "perplexity", "baseline_value": "10.22",
+   "n": 1, "setup": "LLaMA-7B, 50% unstructured, one calibration sample; SparseGPT with 1 sample 10.22 (Table 17: Wanda 7.46 with 1)",
+   "quote": "even with a single sample, pruned networks obtained by Wanda have a perplexity of 7.66",
+   "table": null, "note": "Sec 5 text says 7.66 with a single sample; Table 17 prints 7.46 for 1 sample", "where": "Sec 5, Fig 2; Table 17"
+  },
+  {
+   "claim": "Full-parameter dense fine-tuning recovers most of the zero-shot gap for 50% sparse LLaMA-7B.",
+   "kind": "measured", "source": null, "metric": "mean zero-shot accuracy", "value": "58.15", "unit": "%", "baseline_value": "59.99",
+   "n": 7, "setup": "LLaMA-7B 50% unstructured Wanda, C4 fine-tuning, mask fixed, 4 GPU and 3 days; from 54.21",
+   "quote": "could improve pruned LLaMA-7B from 54.21% to 58.15% in terms of zero-shot accuracy",
+   "table": null, "note": null, "where": "Sec 5, Table 6"
+  },
+  {
+   "claim": "LoRA fine-tuning lifts 2:4 sparse LLaMA-7B above the unstructured 50% model.",
+   "kind": "measured", "source": null, "metric": "mean zero-shot accuracy", "value": "54.46", "unit": "%", "baseline_value": "48.53",
+   "n": 7, "setup": "LLaMA-7B 2:4, LoRA r=8, 1 GPU and 12 hours, C4",
+   "quote": "improves the zero-shot performance of structured 2:4 sparse LLaMA-7B from 48.53% to 54.46%",
+   "table": null, "note": null, "where": "Sec 5, Table 6"
+  },
+  {
+   "claim": "Weight update gives no gain to Wanda at 50% and 4:8, small gain at 2:4.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "10.89", "unit": "perplexity", "baseline_value": "11.53",
+   "n": null, "setup": "LLaMA-7B 2:4, Wanda with sequential weight update vs none",
+   "quote": "the improvement (from 11.53 to 10.89) is marginal",
+   "table": null, "note": null, "where": "Sec 5, Table 8"
+  },
+  {
+   "claim": "Magnitude pruning collapses on OPT-13B at 20% sparsity while Wanda stays near dense.",
+   "kind": "measured", "source": null, "metric": "WikiText perplexity", "value": "10.07", "unit": "perplexity", "baseline_value": "9e3",
+   "n": null, "setup": "OPT-13B, 20% unstructured; dense 10.13",
+   "quote": null, "table": "Table 9, row Wanda, column 20% (OPT-13B)", "note": null, "where": "App B, Table 9"
+  },
+  {
+   "claim": "5-shot MMLU: Wanda competitive with SparseGPT at 50% sparsity.",
+   "kind": "measured", "source": null, "metric": "MMLU 5-shot accuracy", "value": "46.04", "unit": "%", "baseline_value": "45.08",
+   "n": null, "setup": "LLaMA-13B, 50% unstructured; dense 52.92",
+   "quote": null, "table": "Table 21, row Wanda, column LLaMA 13B", "note": "baseline_value is SparseGPT", "where": "App D.4, Table 21"
+  }
+ ],
+ "limits": [
+  "Evaluated mainly on LLaMA and LLaMA-2 families; perplexity and 7 zero-shot tasks plus MMLU only.",
+  "Without fine-tuning there is a noticeable gap to dense; the gap is large at high sparsity (70%, 80%).",
+  "At 80% sparsity SparseGPT beats Wanda; authors suggest a small dense model may be better at extreme sparsity.",
+  "Speedups are measured as matmul simulation (65B) and end-to-end on 7B; not unique to Wanda.",
+  "On OPT, Wanda slightly underperforms SparseGPT; on small models SparseGPT is better at 2:4.",
+  "Per-output comparison advantage did not hold for image classifiers (layer-wise slightly better).",
+  "Fine-tuning budgets were limited (12 hours LoRA, 3 days full); authors say full recovery with more compute remains unknown.",
+  "Fine-tuning learning rate, optimizer and batch size are not stated in the text."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Wanda", "definition": "Pruning by Weights and activations: score |W_ij| * ||X_j||_2 compared per output", "where": "Sec 3"},
+  {"term": "N:M sparsity", "definition": "at most N out of every M contiguous weights to be non-zero", "where": "Sec 3"}
+ ],
+ "lineage": [
+  {"work": "SparseGPT", "year": 2023, "arxiv": "2301.00774", "relation": "baseline", "note": "second-order pruning with weight update; Wanda's metric is a diagonal-Hessian simplification", "quote": null},
+  {"work": "Magnitude pruning (Han et al.)", "year": 2015, "arxiv": null, "relation": "baseline", "note": "main baseline", "quote": null},
+  {"work": "LLM.int8() (Dettmers et al.)", "year": 2022, "arxiv": "2208.07339", "relation": "extends", "note": "emergent outlier features motivate the metric", "quote": null},
+  {"work": "Optimal Brain Surgeon / Optimal Brain Damage", "year": 1993, "arxiv": null, "relation": "related", "note": "Wanda viewed as a renaissance of OBD per neuron", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "evaluates", "note": null, "quote": null},
+  {"work": "LLaMA-2", "year": 2023, "arxiv": "2307.09288", "relation": "evaluates", "note": null, "quote": null},
+  {"work": "LoRA", "year": 2021, "arxiv": "2106.09685", "relation": "uses-method", "note": "fine-tuning pruned models", "quote": null},
+  {"work": "EleutherAI LM Evaluation Harness", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "zero-shot tasks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Illustration of Wanda compared with magnitude pruning; importance is |W| times ||X||_2, compared per output row.", "page": 2, "why": "Shows per-row grouping and why a low-magnitude weight on a large activation channel is kept."},
+  {"figure": "Figure 2", "caption": "Wanda is more robust with less data.", "page": 8, "why": "Perplexity versus number of calibration samples for Wanda and SparseGPT."}
+ ],
+ "code": [
+  {"where": "Algorithm 1", "snippet": "metric = W.abs() * X.norm(p=2, dim=0)\n_, sorted_idx = torch.sort(metric, dim=1)\npruned_idx = sorted_idx[:,:int(C_in * s)]\nW.scatter_(dim=1, index=pruned_idx, src=0)", "verbatim": true}
+ ],
+ "problems": [
+  "Fig 2 text says single-sample Wanda perplexity 7.66 while Table 17 prints 7.46 for 1 sample.",
+  "Table 5 speedups are on LLaMA-65B; end-to-end 1.24x is on LLaMA-7B."
+ ]
+}

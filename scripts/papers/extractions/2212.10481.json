@@ -1,0 +1,486 @@
+{
+ "schema": 1,
+ "key": "2212.10481",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/wang-2023-execution-based-evaluation-open-domain.pdf",
+ "bib": {
+  "title": "Execution-Based Evaluation for Open-Domain Code Generation",
+  "authors": [
+   "Zhiruo Wang",
+   "Shuyan Zhou",
+   "Daniel Fried",
+   "Graham Neubig"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2023",
+  "arxiv": "2212.10481",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 81170,
+  "chars_total": 81170,
+  "engine": "pymupdf",
+  "skipped": "Numeric appendix tables (5-23) skimmed; figures are images. Reference list skimmed."
+ },
+ "type": "benchmark",
+ "question": "How well do code LLMs perform on natural, open-domain (library-using) NL-to-Python queries when judged by executing human-written tests?",
+ "hypothesis": "Prior execution benchmarks are closed-domain, so models may behave differently on open-domain queries (implied; not stated as a formal hypothesis).",
+ "contributions": [
+  "ODEX, first open-domain execution-based NL-to-Python dataset (945 pairs, 79 libraries, 1,707 tests, 4 natural languages)",
+  "Analysis of Codex and CodeGen on open vs closed domain",
+  "Comparison of execution vs five execution-free metrics and ablations on prompts and test counts"
+ ],
+ "method": {
+  "summary": "Annotators wrote tests for 945 NL-code pairs from CoNaLa and MCoNaLa (StackOverflow), wrapping snippets into functions, adding imports, and writing mock/bounding/specialized-equality tests. Codex and CodeGen were evaluated zero-shot with pass@k.",
+  "task": "NL-to-Python code generation with execution-based evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ODEX",
+    "role": "eval",
+    "size": "945 NL-code pairs (439 en, 90 es, 164 ja, 252 ru); 1,707 test cases; 505 open-domain, 440 closed-domain",
+    "split": "all used for evaluation",
+    "source": "CoNaLa and MCoNaLa (StackOverflow); license CC BY-SA 4.0",
+    "preprocessing": "Snippets wrapped into functions named by post ID (f_3844801); library imports added; minimal NL/code corrections by annotators"
+   }
+  ],
+  "models": [
+   {
+    "name": "code-cushman-001 (C1)",
+    "role": "evaluated",
+    "params": "12B",
+    "architecture": "Codex",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-davinci-001 / 002 (D1, D2)",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "GPT-3 based Codex",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CodeGen-mono",
+    "role": "evaluated",
+    "params": "350M, 2.7B, 6.1B (16.1B family member)",
+    "architecture": "autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 4 reports 350M, 2.7B, 6.1B only"
+    }
+   },
+   {
+    "name": "SantaCoder, StarCoderBase, StarCoder",
+    "role": "evaluated",
+    "params": "StarCoder 16B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.8",
+   "top_p": "0.95",
+   "max_tokens": "512 tokens",
+   "samples": "up to 10 samples per problem (pass@1..10); single run; no seeds stated",
+   "prompting": "zero-shot: function context (imports, signature) plus docstring with NL intent; optional 1 or all test cases in docstring; few-shot N in {1,2,3} in ablation",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "function_name": "post ID by default; ablations with constant or 4-word intent summary",
+    "trailing_whitespace": "stripping improves CodeGen",
+    "prompt_text": "No verbatim prompt text in paper; Fig 6 is an image (function context + docstring)."
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "fraction of problems with at least one correct prediction within k samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU, ROUGE-L, METEOR, ChrF, CodeBLEU",
+     "definition": "execution-free similarity to canonical solution",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Codex vs CodeGen families"
+   ],
+   "protocol": "Execute predictions on annotated tests; no significance tests; authors recommend significance testing for users."
+  },
+  "availability": {
+   "code": "released (anonymous link in PDF)",
+   "weights": null,
+   "data": "released, CC BY-SA 4.0"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ODEX has 945 NL-code pairs over 79 libraries with 1,707 human-written test cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems",
+   "value": "945",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ODEX dataset as released",
+   "note": null,
+   "where": "Abstract",
+   "quote": "ODEX has 945 NL-Code pairs spanning 79 diverse libraries, along with 1,707 human-written test cases for execution"
+  },
+  {
+   "claim": "Best Codex model code-davinci-002 reaches 47.15 pass@1 on English problems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "47.15",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ODEX 945 problems, zero-shot docstring prompt, nucleus sampling top-p 0.95, temperature 0.8, max 512 tokens, no finetuning; English subset (439)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row en, DAVINCI-002, column pass@1"
+  },
+  {
+   "claim": "CodeGen-6.1B-mono pass@1 on English is 34.49, while davinci-001 is 33.62, so 6.1B matches the 175B model at pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "34.49",
+   "unit": "%",
+   "baseline_value": "33.62",
+   "n": null,
+   "setup": "ODEX 945 problems, zero-shot docstring prompt, nucleus sampling top-p 0.95, temperature 0.8, max 512 tokens, no finetuning; English subset; not so at higher k (davinci-001 pass@10 67.43 vs 43.05)",
+   "note": "Text says 'similar pass@1 to the 176B CODEX DAVINCI-001'; Sec 4 says 175B.",
+   "where": "Table 4, Sec 5.1",
+   "table": "Table 4, row en, 6.1B vs DAVINCI-001, column pass@1"
+  },
+  {
+   "claim": "Open-closed pass@1 gap for davinci-002 ranges from 4.34 points (Spanish) to 38.57 (Japanese).",
+   "kind": "measured",
+   "source": null,
+   "metric": "open-closed pass@1 gap (max, ja)",
+   "value": "38.57",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ODEX 945 problems, zero-shot docstring prompt, nucleus sampling top-p 0.95, temperature 0.8, max 512 tokens, no finetuning; open = uses any library (built-in or third party), closed = none",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "ranging from 4.34 in Spanish to 38.57 in Japanese on the best DAVINCI-002 model"
+  },
+  {
+   "claim": "Model upgrades C1 to D1 to D2 do not always shrink the gap; it grows in English and Japanese.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codex pass@1, open vs closed",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Gaps slightly shrink in Spanish, but increase in English and Japanese."
+  },
+  {
+   "claim": "CodeGen gaps shrink with scale (about 6.3 points in English from 2.7B to 6.1B) while Codex gaps rise by 4.9 points on average going to davinci-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap reduction en, 2.7B to 6.1B",
+   "value": "6.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeGen-mono 2.7B to 6.1B; Codex to D2",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the gaps reduce by about 6.3 points in English and 1.7 points in Spanish"
+  },
+  {
+   "claim": "CodeGen gaps are smaller than Codex gaps by 6.0 points on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.0",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all languages",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "smaller than CODEX gaps across all languages, by on average 6.0%"
+  },
+  {
+   "claim": "davinci-002 gets about 50% pass@1 on common libraries like random and math but under 10% on matplotlib and tensorflow.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "davinci-002 per-library pass@1 (Fig 8, Table 12)",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "pass@1 can go below 10%"
+  },
+  {
+   "claim": "Adding one test case to the prompt helps clearly; more adds little.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "davinci-002 pass@1, 0/1/all tests in docstring",
+   "note": null,
+   "where": "Sec 7, Fig 11",
+   "quote": "injecting as few as one exemplar test case significantly improves the execution accuracy, yet adding more cases has little bonus"
+  },
+  {
+   "claim": "Evaluating on one random test instead of all tests barely changes davinci-002 pass@1 on the full set (en 48.31 vs 47.15).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 one test",
+   "value": "48.31",
+   "unit": "%",
+   "baseline_value": "47.15",
+   "n": null,
+   "setup": "davinci-002, no tests in prompt, full dataset (avg 1.8 tests per problem)",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, rows 1 vs n, en, column @1"
+  },
+  {
+   "claim": "On examples with 3+ test cases, one random test overstates pass@1: en 60.7 vs 52.7 with all tests, es 64.7 vs 47.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 one test, es",
+   "value": "64.7",
+   "unit": "%",
+   "baseline_value": "47.1",
+   "n": null,
+   "setup": "davinci-002, subset with at least 3 tests (112, 17, 25, 45 examples en/es/ja/ru)",
+   "note": "Sec 7 text says one test 'largely preserves' accuracy; the subset table shows 8 to 17.6 point drops. Subsets are small (17 to 112).",
+   "where": "Table 22",
+   "table": "Table 22, row 1 vs n, columns en, es"
+  },
+  {
+   "claim": "Execution-free metrics rank Codex models differently and BLEU barely separates passed from failed samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "davinci-002 predictions; BLEU, ROUGE-L, METEOR, ChrF, CodeBLEU",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Figure 10 shows negligible variances in BLEU scores of passed and failed groups."
+  },
+  {
+   "claim": "StarCoder (16B) pass@1 on English is 44.67 with open 37.00 vs closed 53.11, a gap also seen in models without SO training data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "44.67",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StarCoder, StarCoderBase, SantaCoder; same zero-shot protocol assumed",
+   "note": "Decoding settings for these models not separately stated; inferred same as main.",
+   "where": "Table 24",
+   "table": "Table 24, row en all, column StarCoder"
+  },
+  {
+   "claim": "Annotators' canonical solutions pass 100% of annotated tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "post-hoc verification",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "the pass rate for all canonical code solutions over their annotated test cases is 100%"
+  },
+  {
+   "claim": "53.4% of problems use at least one library; sample counts are 439 en, 90 es, 164 ja, 252 ru.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "53.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ODEX",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Most samples, 53.4%, use at least one library."
+  },
+  {
+   "claim": "ODEX averages 1.8 test cases per problem, fewer than HumanEval (7.7) or APPS (13.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg test cases",
+   "value": "1.8",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset comparison",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ODEX, column Avg. Test Cases"
+  },
+  {
+   "claim": "davinci-002 error analysis: 16 of 26 failing open-domain cases (61.5%) fail to use the prerequisite libraries.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "61.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "60 random examples (15 per language), top-10 predictions",
+   "where": "App C.2",
+   "quote": "The major error enclosing 16 cases (61.5%) is the"
+  }
+ ],
+ "limits": [
+  "Execution safety needs inspection for open-domain code and tests.",
+  "Language coverage bounded by StackOverflow forums.",
+  "Small dataset (human effort); authors urge significance testing; ODEX suited to downstream evaluation or few-shot.",
+  "Possible train-test overlap of SO posts with closed models; mitigated by edits and StarCoder/SantaCoder check.",
+  "Average 1.8 tests per problem; test sufficiency argument rests on one-vs-all ablation.",
+  "Models are 2022-era Codex/CodeGen; dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "open domain",
+   "definition": "code that entails library usage (both built-in and third-party); closed domain has none",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CoNaLa",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of NL-code pairs",
+   "quote": null
+  },
+  {
+   "work": "MCoNaLa",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multilingual source",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "extends",
+   "note": "pass@k, HumanEval protocol, sampling settings",
+   "quote": null
+  },
+  {
+   "work": "CodeGen (Nijkamp et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "DS-1000 (Lai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared dataset",
+   "quote": null
+  },
+  {
+   "work": "StarCoder (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "no-SO-training check",
+   "quote": null
+  },
+  {
+   "work": "SantaCoder (Allal et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples in the ODEX dataset",
+   "page": 2,
+   "why": "Shows mock and approximate-equality tests"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "CODEX and CODEGEN pass@1 on open- and closed-domain problems",
+   "page": 6,
+   "why": "Shows the domain gap"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 10 row C1 ru '-' repeats the en values (31.91...), conflicting with Table 4 ru C1 (40.00): likely a paper typo.",
+  "Table/figure values are flattened in the text; Fig 7 and 12 values not readable.",
+  "Text says 176B for davinci-001 in Sec 5.1 and 175B in Sec 4."
+ ]
+}

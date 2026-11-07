@@ -1,19 +1,330 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.13814",
  "pdf": "ai-engineering/01-prompt-engineering/sources/shakarian-2023-independent-evaluation-chatgpt-mathematical-word.pdf",
  "bib": {
   "title": "An Independent Evaluation of ChatGPT on Mathematical Word Problems (MWP)",
+  "authors": [
+   "Paulo Shakarian",
+   "Abhinav Koyyalamudi",
+   "Noel Ngu",
+   "Lakshmivihari Mareedu"
+  ],
   "first_author": "Shakarian",
   "year": 2023,
-  "venue": "AAAI Spring Symposium: MAKE 2023",
+  "venue": "AAAI Spring Symposium: MAKE 2023 (CEUR Workshop Proceedings)",
   "arxiv": "2302.13814",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5cfd23c4-1604-4533-96a3-ace4b4e9da63"
+  "at": "2026-11-07",
+  "chars_read": 23086,
+  "chars_total": 23086,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"An Independent Evaluation of ChatGPT on Mathematical Word Problems (MWP)\", Paulo Shakarian, Abhinav Koyyalamudi, Noel Ngu, Lakshmivihari Mareedu (Arizona State University). AAAI 2023 Spring Symposium (AAAI-MAKE 2023), CEUR Workshop Proceedings; arXiv:2302.13814v2, 28 Feb 2023.\n\nCOVERAGE: 23,119 of 23,119 chars read, so the whole paper (7 pages plus references; it has no appendix). I skimmed the references for origins. I also pulled the figure captions with figures.py.\n\nCLAIMS\n- claim: When the prompt forbade ChatGPT from showing its work, it failed on 84% of problems. When it was allowed to show its work, it failed on 20%.\n  number: 84% vs 20% failure\n  setup: The 1,000 problems in DRAW-1K. ChatGPT went through an unofficial CLI wrapper because there was no API then. The no-work condition was run in early January 2023 and again in mid-February 2023, after OpenAI's 30 Jan math update. The show-work condition was run in February 2023 on ChatGPT Plus. \"Failure\" means the model returned \"No Solution\" or gave only wrong answers. Partly correct answers do not count as failures.\n  quote: \"failing 20% of the time when it provides work compared with 84% when it does not\"\n  where: abstract, p1; repeated in Section 3 (\"84% for January and February experiments with no work and 20% for the February experiment with work\")\n- claim: The raw counts behind those rates, with 1,000 problems per run.\n  number: Jan no-work: 831 wrong, 9 \"No Solution\", 135 all correct, 25 partly correct. Feb no-work: 830 / 10 / 134 / 26. Feb show-work: 186 / 14 / 513 / 287.\n  setup: Table 1, same setup as above.\n  quote: \"Returns answers, but none are correct 831 830 186 / Returns “No Solution” 9 10 14 / Returns all answers correctly 135 134 513 / Returns some answers correctly, but not all values 25 26 287\"\n  where: Table 1, p5 (about char 9,500)\n- claim: With work shown, ChatGPT is close to the specialised solver EPT. It is fully correct 51% of the time, or 80% if partly correct answers count, against EPT's reported 59%.\n  number: 51% (80% including partial) vs 59%\n  setup: Feb 2023 show-work run on DRAW-1K. The EPT figure is a reported number from other papers, not a run by these authors.\n  quote: \"ChatGPT obtains performance in line with state-of-the-art models (i.e. EPT [18, 16]) which has a reported 59% accuracy while ChatGPT (when work is shown) has fully correct (or rounded) answers51% of the time, but can be viewed as high as 80% if partially correct answers are included.\"\n  where: Section 3, p5\n- claim: Failure probability rises linearly with the number of addition and subtraction operations in the problem. This held in every run and was strongest when work was shown.\n  number: R² = 0.821 (Jan), 0.870 (Feb no-work), 0.915 (Feb show-work)\n  setup: Operation counts come from DRAW-1K's ground-truth template equations, with 95% confidence intervals (Figure 5).\n  quote: \"we found a strong linear relationship between the number of addition and subtraction operations with the probability of failure (𝑅2 = 0.821 for the January experiment, 𝑅2 = 0.870 for the February experiment and 𝑅2 = 0.915 when work was shown)\"\n  where: Section 3, p5–6\n- claim: Only when work was shown did the number of multiplication and division operations track failure strongly. In the February no-work run this count was not significant, which the authors say may be due to OpenAI's late-January update.\n  number: R² = 0.802\n  setup: Feb 2023 show-work run (Figure 4).\n  quote: \"we found a strong linear relationship (𝑅2 = 0.802) for this relationship in the case where work was shown\"\n  where: Section 3, p5\n- claim: Once work was shown, the number of unknowns stopped raising failure probability above the prior.\n  number: none\n  setup: Factor analysis against the prior, using the lower bound of the 95% confidence interval (Figure 3).\n  quote: \"when the system would be required to show its work, the number of unknowns present no longer seems to increase the probability of failure\"\n  where: Section 3, p5\n- claim: The wording of the answer-only instruction itself changed the results. The original January prompt behaved erratically in February, so it was rewritten.\n  number: none\n  setup: The two no-work prompts are given verbatim (see CODE).\n  quote: \"we found in our third experiment that this addition impacted results\" / \"we found that our original prompt led to more erratic behavior, so we modified the prompt\"\n  where: Section 2, p2–3\n- claim: Classifiers that use features from the ground-truth equations can predict ChatGPT failures better than chance. The authors say they are not good enough for practical use.\n  number: Precision on incorrect answers: RF 0.90 (Jan), 0.94 (Feb no-work), 0.78 (Feb show-work). XGBoost precision 0.95 / 0.98 / 0.77. Feb show-work RF F1: incorrect 0.73, correct 0.78.\n  setup: Random forest (scikit-learn 1.0.2) and XGBoost 1.6.2 with 5-fold cross-validation. The features are counts of operations, unknowns and equations taken from the ground-truth equations, which the authors call \"essentially using an oracle\".\n  quote: \"Feb. RF 0.78 0.69 0.73 0.74 0.82 0.78 (Showing work)\" and \"While these results are likely not suitable for practical use, they do demonstrate that the features extracted provide some amount of signal\"\n  where: Table 2 and Section 4, p7\n- claim: The authors have released ChatGPT's responses to all 1,000 problems.\n  number: 1,000\n  setup: https://github.com/lab-v2/ChatGPT_MWP_eval\n  quote: \"We have released ChatGPT’s responses to the 1,000 DRAW-1K MWP’s for general use\"\n  where: Section 3, p4\n\nLIMITS:\n- The show-work vs no-work comparison is confounded, and the authors do not separate the causes. The no-work condition adds a long, pushy answer-only instruction, and the authors admit that instruction \"impacted results\". The show-work run also used ChatGPT Plus, which they assume is the same model (\"only thought to be an improvement to accessibility and not a different model\"). The 84% to 20% gap may therefore come partly from the restrictive prompt and not only from the reasoning being shown.\n- Each condition was run once. Nondeterminism was not studied; the authors list it as future work. No confidence interval is given for the headline rates.\n- The model is a single, unversioned ChatGPT (GPT-3.5 era, Jan/Feb 2023) on a single dataset, DRAW-1K. The authors note that other datasets are future work. The results are dated and do not transfer to current models.\n- The predictors use ground-truth equations (an oracle). Extracting those features from model output is left to future work.\n- This is not a chain-of-thought study. There were no exemplars and no \"think step by step\" trigger. The show-work condition is just the default prompt without the answer-only suffix. The authors say they examine problem characteristics, not prompting techniques.\n- The 80% \"partially correct\" view is generous: 287 of the 1,000 show-work answers were only partly correct.\n\nBUILDS ON: The DRAW-1K dataset (Upadhyay, Chang, Chang, Yih, EMNLP 2016; Upadhyay & Chang, arXiv 1609.07197). MWPToolkit (Lan et al., AAAI). EPT as the state-of-the-art comparison (Kim, Ki, Lee, Gweon, EMNLP 2020; EPT-X, Kim et al., ACL 2022). Chain-of-thought prompting (Wei et al.) and self-consistency (Wang et al., arXiv 2203.11171), cited as complementary work. Machine-learning introspection (Daftry et al., arXiv 1607.08665; Ramanagopal et al., 2018). Multi-step reasoning failure claims are cited to Fu's notion blog and Hoffmann et al. (2203.15556). The reference list prints these without years.\n\nCODE: These are the verbatim no-work prompt suffixes from Section 2, p2–3.\n- Jan 2023: \"Don’t provide any work/explanation or any extra text. Just provide the final number of answers for the previous question, with absolutely no other text. if there are two or more answers provide them as a comma separated list of numbers.\"\n- Feb 2023: the same text, followed by \"like: ’10, 3, ’ etc; or if there is only 1 answer provide it like ’10’. Absolutely no other text just numbers alone. Just give me the numbers (one or more) alone. No full stops, no spaces, no words, no slashes, absolutely nothing extra except the 1 or more numbers you might have gotten as answers.\"\nThese are useful as a teaching example of answer-only format coercion that hurts accuracy.\n\nFIGURES:\n- Fig 1, p3: \"ChatGPT’s response (Jan. 24, 2023) to MWP One whole number is three times a second...\" The model sets up the correct equations and then makes an algebra slip at Step C, giving 42 and 14 instead of 21 and 7. It shows a single-step slip faster than prose can.\n- Fig 5, p7: probability of an incorrect response vs number of additions, for all three runs, with the prior as a dashed line and the R² values. This is the best figure for \"more steps, more failure\".\n- Fig 2, p5: overall response-type breakdown for the 1,000 problems. It gives the 84% vs 20% headline at a glance. Table 1 holds the same data as numbers.\n- Fig 3, p6: problem factors whose failure rate is above the prior, with 95% confidence intervals.\n- Fig 4, p6: multiplication count vs failure in the show-work run (R² = 0.802).\n\nPROBLEMS:\n- The text contradicts itself on the running example. Section 2 says \"the correct answer, which in this case is 12 and 7\", but the Figure 1 caption says \"instead of 21 and 7\". Working it out (x = 3y, y + 20 = x + 6, so y = 7 and x = 21) gives 21 and 7, so the \"12\" in Section 2 is a typo.\n- Some extraction glitches: \"answers51%\" is missing a space, and \"DRA W-1K\" has a split. Neither changes the meaning.\n- The PDF contains no embedded instructions.\n- Figure contents beyond their captions (Figs 2–5) can't be read from the extracted text. Exact bar values come from Table 1 only."
+ "type": "empirical",
+ "question": "How well does ChatGPT solve math word problems, and which features of a problem predict its failure?",
+ "hypothesis": "Features of the symbolic equations (counts of unknowns and operations) predict whether ChatGPT fails.",
+ "contributions": [
+  "First independent evaluation of ChatGPT on DRAW-1K",
+  "Release of ChatGPT's responses to the 1,000 MWPs",
+  "Factors (unknowns, operation counts) linked to higher failure probability",
+  "Baseline random forest and XGBoost models predicting ChatGPT correctness"
+ ],
+ "method": {
+  "summary": "The 1,000 DRAW-1K problems were entered into ChatGPT through an unofficial CLI wrapper in three runs (Jan no work, Feb no work, Feb showing work). Responses were classified into four types and failure probability was related to template-equation features; RF and XGBoost predict correctness from ground-truth equation features.",
+  "task": "math word problem solving; failure prediction",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "DRAW-1K",
+    "role": "eval",
+    "size": "1,000 MWPs with answers and template equations",
+    "split": "all 1,000 used; five-fold cross-validation for the prediction models",
+    "source": "Upadhyay et al. 2016; Upadhyay and Chang; via MWPToolkit",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT (Jan 2023 and Feb 2023 versions; ChatGPT Plus for the show-work run)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "OpenAI GPT-3.5 series dialogue model; no API at the time"
+    }
+   },
+   {
+    "name": "Random forest (scikit-learn 1.0.2)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XGBoost 1.6.2",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1,000 problems; one run per condition (three runs: Jan no work, Feb no work, Feb show work); nondeterminism listed as future work",
+   "prompting": "Zero-shot. No-work runs append an instruction forcing numbers only; show-work run omits it. Accessed via ChatGPT CLI Python Wrapper (Mahmoud Mabrouk), not an API.",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "interface": "web ChatGPT through unofficial wrapper; Feb show-work run used ChatGPT Plus"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "failure probability",
+     "definition": "share of responses that are 'No Solution' or have no correct answer (cases 3 and 4)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "response type counts",
+     "definition": "all correct (rounding allowed), some correct, No Solution, none correct",
+     "unit": "count of 1,000",
+     "higher_is_better": null
+    },
+    {
+     "name": "R2 of linear fit",
+     "definition": "failure probability vs number of add/subtract (or multiply/divide) operations",
+     "unit": "R2",
+     "higher_is_better": null
+    },
+    {
+     "name": "precision, recall, F1",
+     "definition": "of RF and XGBoost predicting incorrect/correct responses, five-fold CV, averaged",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "EPT (reported 59% accuracy, from other work)",
+    "random (prior) for predictors"
+   ],
+   "protocol": "95% confidence intervals against the prior failure rate; five-fold cross-validation for predictors; features from ground-truth equations (oracle)."
+  },
+  "availability": {
+   "code": "https://github.com/lab-v2/ChatGPT_MWP_eval",
+   "weights": null,
+   "data": "https://github.com/lab-v2/ChatGPT_MWP_eval (ChatGPT responses)"
+  },
+  "prompts": [
+   {
+    "purpose": "January 2023 no-work suffix",
+    "text": "Don’t provide any work/explanation or any extra text. Just provide the final\nnumber of answers for the previous question, with absolutely no other text.\nif there are two or more answers provide them as a comma separated list of\nnumbers.",
+    "where": "Section 2"
+   },
+   {
+    "purpose": "February 2023 no-work suffix",
+    "text": "Don’t provide any work/explanation or any extra text. Just provide the final\nnumber of answers for the previous question, with absolutely no other text.\nif there are two or more answers provide them as a comma separated list\nof numbers like: ’10, 3,’ etc; or if there is only 1 answer provide it like ’10’.\nAbsolutely no other text just numbers alone. Just give me the numbers (one or\nmore) alone. No full stops, no spaces, no words, no slashes, absolutely nothing\nextra except the 1 or more numbers you might have gotten as answers.",
+    "where": "Section 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT failed on 84% of DRAW-1K problems when told to give no work, and 20% when it showed work.",
+   "kind": "measured",
+   "source": null,
+   "metric": "failure rate",
+   "value": "84% vs 20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "DRAW-1K, ChatGPT Jan-Feb 2023, no-work vs show-work",
+   "quote": "failing 20% of the time when it provides work compared with 84% when it does not",
+   "table": null,
+   "note": "Failure = No Solution or none correct",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Counts of response types per run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "response counts",
+   "value": "831/9/135/25 (Jan), 830/10/134/26 (Feb), 186/14/513/287 (Feb work)",
+   "unit": "count",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "order: none correct, No Solution, all correct, some correct",
+   "quote": null,
+   "table": "Table 1, rows by response type, columns Jan No work 831, Feb No work 830, Feb Showing work 186",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "With work shown, ChatGPT fully correct on 51% of problems vs EPT's reported 59%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fully correct",
+   "value": "51%",
+   "unit": "%",
+   "baseline_value": "59%",
+   "n": 1000,
+   "setup": "Feb show-work run; EPT figure reported from other work",
+   "quote": "has fully correct (or rounded) answers 51% of the time, but can be viewed as high as 80% if partially correct answers are included",
+   "table": null,
+   "note": "Paper text omits space before 51%",
+   "where": "Section 3"
+  },
+  {
+   "claim": "Failure probability rises linearly with number of addition and subtraction operations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2",
+   "value": "0.821 / 0.870 / 0.915",
+   "unit": "R2",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Jan no work / Feb no work / Feb show work",
+   "quote": "𝑅2 = 0.821 for the January experiment, 𝑅2 = 0.870 for the February experiment and 𝑅2 = 0.915 when work was shown",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Multiplication/division count linearly related to failure only when work is shown.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2",
+   "value": "0.802",
+   "unit": "R2",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Feb show-work run",
+   "quote": "we found a strong linear relationship (𝑅2 = 0.802) for this relationship in the case where work was shown",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "When work is shown, number of unknowns no longer raises failure probability.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Feb show-work run",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Random forest predicting incorrect answers: precision 0.90 recall 0.88 (Jan no work).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision/recall",
+   "value": "0.90 / 0.88",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Jan no-work data, five-fold CV, ground-truth equation features",
+   "quote": null,
+   "table": "Table 2, row Jan. (No work) RF, columns Incorr. Prec. 0.90, Recall 0.88",
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "Each condition run once; nondeterminism not examined (future work).",
+  "No-work prompt changed between runs and the authors say the added phrase impacted results, so prompt and showing work are confounded.",
+  "Show-work run used ChatGPT Plus, a different access tier.",
+  "Predictors use ground-truth equations (oracle); authors say not suitable for practical use.",
+  "Only DRAW-1K; unofficial wrapper; model has since changed."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "DRAW-1K (Upadhyay and Chang)",
+   "year": 2016,
+   "arxiv": "1609.07197",
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "complementary line",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "related",
+   "note": "complementary line",
+   "quote": null
+  },
+  {
+   "work": "EPT (Kim et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reported 59% accuracy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "ChatGPT's response (Jan. 24, 2023) to an MWP, failing at step C",
+   "page": 2,
+   "why": "Shows a concrete algebra slip"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Number of responses for each ChatGPT Variant",
+   "page": 5,
+   "why": "Raw counts behind 84% and 20%"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions. Figure data (Figs 2-5) not extractable as text."
+ ]
 }

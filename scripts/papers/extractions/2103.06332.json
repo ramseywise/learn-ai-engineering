@@ -1,0 +1,263 @@
+{
+ "schema": 1,
+ "key": "2103.06332",
+ "pdf": "generative-ai/08-eval/sources/krishna-2021-hurdles-progress-long-form-question.pdf",
+ "bib": {
+  "title": "Hurdles to Progress in Long-form Question Answering",
+  "authors": ["Kalpesh Krishna", "Aurko Roy", "Mohit Iyyer"],
+  "first_author": "Krishna",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021",
+  "arxiv": "2103.06332",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 77532,
+  "chars_total": 77532,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Do current long-form question answering systems, datasets (ELI5) and metrics (ROUGE-L, human A/B tests) support meaningful measurement of progress?",
+ "hypothesis": null,
+ "contributions": [
+  "A state-of-the-art ELI5 system: Routing Transformer generator conditioned on passages from a contrastively trained REALM retriever (C-REALM)",
+  "Showing generations are not grounded in retrieved documents (random-retrieval control)",
+  "Showing at least 81% of ELI5 validation questions have a paraphrase in the training set",
+  "Showing ROUGE-L is gameable and uninformative for LFQA, via lower and upper bounds",
+  "Describing the difficulty of human evaluation for LFQA, with suggestions for each issue"
+ ],
+ "method": {
+  "summary": "A C-REALM dense retriever (BERT-base, trained with in-batch contrastive loss against gold answers, batch 12,288) feeds top-7 Wikipedia paragraphs to a 486M Routing Transformer pretrained on PG-19 and fine-tuned on ELI5. The system tops the KILT ELI5 leaderboard, and control experiments (random retrievals, train/validation question overlap, trivial ROUGE-L baselines, human A/B tests) are used to show the evaluation is flawed.",
+  "task": "long-form question answering (ELI5, KILT) with retrieval-augmented generation",
+  "trains": true,
+  "datasets": [
+   {"name": "ELI5 (KILT version)", "role": "both", "size": "272,634 train, 1,507 validation, 600 test examples", "split": "KILT train/validation/test; test answers hidden, scored on EvalAI leaderboard", "source": "Fan et al. 2019, downloaded from the KILT GitHub repository", "preprocessing": "retrievals, questions and answers truncated/padded to 288 subword tokens (PG19 subword tokenizer); loss not computed on padding"},
+   {"name": "PG-19", "role": "pretrain", "size": "about 28,000 Project Gutenberg books, 1.9B tokens, average context 69K words", "split": null, "source": "Rae et al. 2020", "preprocessing": null},
+   {"name": "Wikipedia (KILT knowledge source)", "role": "eval", "size": null, "split": null, "source": "paragraph-length chunks; index size 15B parameters per Table 10 (as printed)", "preprocessing": null},
+   {"name": "CC-News (REALM pretraining)", "role": "pretrain", "size": null, "split": null, "source": "REALM-CCNews checkpoint used to initialise C-REALM", "preprocessing": null},
+   {"name": "Quora Question Paraphrase (GLUE)", "role": "train", "size": null, "split": null, "source": "used to fine-tune a RoBERTa-large paraphrase classifier; 37% of QQP pairs are valid paraphrases", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "C-REALM retriever", "role": "retriever", "params": "110M (Table 10)", "architecture": "BERT-base encoder with final projection to 128-d shared embedding space; shared query/candidate encoders; MIPS with ScaNN", "init_from": "REALM trained on CC-News", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"K": "7 retrieved documents in all experiments"}},
+   {"name": "Routing Transformer (RT) generator", "role": "proposed", "params": "486M", "architecture": "sparse-attention decoder (local attention plus mini-batch k-means routing attention), fine-tuned decoder-only", "init_from": "pretrained on PG-19 (pg19_local_cluster8k configuration)", "tokenizer": "PG19 subword tokenizer", "vocab": "98K subwords", "layers": "22", "hidden": "1032", "heads": null, "context": "8192 tokens maximum sequence length", "other": {"input_format": "[r_K, r_K-1 ... r_1, q, a] with retrieved paragraphs reversed so top-ranked is nearest the answer; special separator symbols", "retriever_gradients": "none, retriever frozen"}},
+   {"name": "T5-base", "role": "baseline", "params": "220M generator", "architecture": "generation-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BART", "role": "baseline", "params": "406M generator", "architecture": "generation-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RAG", "role": "baseline", "params": "406M generator, 220M retriever", "architecture": "retrieval-augmented BART", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"index": "15B"}},
+   {"name": "BART + DPR", "role": "baseline", "params": "406M generator, 220M retriever", "architecture": "BART with DPR retrieval", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"index": "15B"}},
+   {"name": "RoBERTa-large QQP classifier", "role": "judge", "params": null, "architecture": "binary paraphrase classifier", "init_from": "RoBERTa-large fine-tuned on QQP", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Retriever: in-batch softmax contrastive loss pushing question vector toward its gold answer vector and away from other answers in the mini-batch (distant supervision, after Jernite 2020). Generator: next-token prediction of answer tokens given retrievals and question, loss only on last 288 answer tokens.",
+   "optimizer": null,
+   "lr": "5e-5 (generator); retriever lr not stated",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "retriever 12,288 (192 per chip across 64 accelerators); generator 128 QA pairs (332k tokens per mini-batch, 37k loss tokens)",
+   "steps": "retriever 4k steps (best at 1.5k, early stopping on validation with batch 512); generator 100k steps",
+   "epochs": null,
+   "tokens": "generator pretrained on PG-19 1.9B tokens",
+   "seq_len": "288 subword tokens per retrieval/question/answer; model max 8192",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "15% input, attention and ReLU dropout (generator), described as critical to prevent overfitting",
+   "regularisation": null,
+   "hardware": "64 Google Cloud TPUs (v3 chips per A.1 note on BERT-base fitting a TPU v3 chip); retriever validation on P100 GPU",
+   "compute": "final models trained using 64 Google Cloud TPUs for a total of 32 hours",
+   "wall_clock": "retriever 103 minutes for 4k steps (43 minutes to best at 1.5k steps); generator about 30 hours for 100k steps (0.92 steps/second)",
+   "seeds": null,
+   "other": {"framework": "TensorFlow 1.15 and Tensor2Tensor; REALM and Routing Transformer codebases", "hyperparameter_selection": "chosen manually with minimal tuning; no hyperparameter search for final generator", "retriever_init_ablation": "REALM-CCNews init beats ICT init and BERT init; Table 9 text says minibatch 12228 (typo for 12288)"}
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": null,
+   "top_p": "0.6 and 0.9 reported; value tuned from 0.0 to 1.0 in steps of 0.1 on validation performance",
+   "max_tokens": null,
+   "samples": "one generation per question implied; seeds not stated",
+   "prompting": "decoder-only concatenation of retrievals, question and answer (no natural-language prompt)",
+   "retrieval": "C-REALM or REALM, MIPS with ScaNN, K = 7 paragraphs",
+   "parameters": {"random_retrieval_control": "at inference, replace retrieved paragraphs with randomly sampled Wikipedia paragraphs"},
+   "other": {"generation_length": "187.3 tokens on average at p=0.6 (Table 11); 187 words avg. in text; BART demo 59 words avg."}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "ROUGE-L (R-L)", "definition": "maximum overlap of generation with a set of gold answers (about 12 per question)", "unit": "points", "higher_is_better": true},
+    {"name": "unigram F1", "definition": "maximum unigram F1 against gold answers", "unit": "points", "higher_is_better": true},
+    {"name": "R-precision (RPr.)", "definition": "top-1 retrieval matches human-annotated relevant Wikipedia article (KILT)", "unit": "%", "higher_is_better": true},
+    {"name": "Recall@5 (R@5)", "definition": "gold annotation within top-5 retrievals", "unit": "%", "higher_is_better": true},
+    {"name": "KILT R-L (KRL)", "definition": "ROUGE-L but scored 0 whenever the top-1 retrieval does not match the gold annotation", "unit": "points", "higher_is_better": true},
+    {"name": "n-gram overlap with retrievals", "definition": "fraction of generation 1-grams/2-grams (and lemmatized nouns, proper nouns, numbers not in the question) present in retrieved paragraphs", "unit": "%", "higher_is_better": null},
+    {"name": "Human A/B preference", "definition": "annotators pick the better of two answers in random order, or Tie", "unit": "% of ratings", "higher_is_better": true},
+    {"name": "Fleiss kappa", "definition": "agreement of 3 crowd-workers on paraphrase labels", "unit": "kappa", "higher_is_better": true}
+   ],
+   "baselines": ["T5-base", "BART", "RAG", "BART + DPR", "REALM retriever", "trivial lower bounds (copy question 5 times, random training answer)", "upper bounds (longest/best gold answer, best top-K train answer)"],
+   "protocol": "Test on KILT ELI5 leaderboard (EvalAI); analysis on validation set (1,507). Paraphrase study: 300 validation questions, 7 nearest training questions retrieved by C-REALM, 3 AMT workers each (0 no paraphrase, 1 similar topic, 2 approx same question), majority label, manually verified; workers paid 4 cents per pair ($8-12/hr), USA/UK/Australia, 95% approval, 1000+ HITs. A/B tests: 20 volunteer CS graduate students, Wikipedia search allowed, three questions (answers question better, more coherent, more factual), question 1 prioritised, Tie allowed. No significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/martiansideofthemoon/hurdles-longform-qa",
+   "weights": null,
+   "data": "generations released as supplementary HTML files; lower-bound baselines submitted to KILT leaderboard as 'Metrics Test'"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.compute", "quote": "Our ﬁnal models were trained using 64 Google Cloud TPUs for a total of 32 hours.", "where": "Ethical Considerations"},
+   {"field": "training.batch_size", "quote": "We use a minibatch size of 128 QA pairs, which corresponds to 332k tokens per mini-batch", "where": "A.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Replacing retrieved paragraphs with random Wikipedia paragraphs barely changes ROUGE-L, so the system does not use its retrievals.",
+   "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "24.20", "unit": "ROUGE-L", "baseline_value": "24.42", "n": null,
+   "setup": "RT + C-REALM, p = 0.6, ELI5 validation, random vs predicted retrievals at inference",
+   "table": "Table 2, rows Predicted (24.42) and Random (24.20), column R-L", "quote": null,
+   "note": "Table 2 does not name the split; 24.4 matches the validation figure in Table 7.", "where": "Table 2, Section 3.1"
+  },
+  {
+   "claim": "Spearman correlation between generation quality and unigram overlap with retrieved documents is near zero.",
+   "kind": "measured", "source": null, "metric": "Spearman rho", "value": "0.09", "unit": "rho", "baseline_value": null, "n": null,
+   "setup": "p = 0.6 model, ELI5, ROUGE-L vs 1-gram overlap with retrievals",
+   "quote": "there is almost no correlation (Spearman ρ = 0.09) between the Predicted model’s generation quality and the amount of unigram overlap between its outputs and the retrieved documents", "table": null, "note": null, "where": "Section 3.1"
+  },
+  {
+   "claim": "The no-grounding result holds on the roughly 23% of instances where retrieval found the gold document (rho 0.13).",
+   "kind": "measured", "source": null, "metric": "Spearman rho", "value": "0.13", "unit": "rho", "baseline_value": null, "n": null,
+   "setup": "p = 0.6 model, instances where at least one retrieved doc matched gold annotation",
+   "quote": "note a low correlation of ρ = 0.13", "table": null, "note": null, "where": "A.7"
+  },
+  {
+   "claim": "Human A/B preference between predicted and random retrievals is within 7 points at both p values; at p = 0.9 random is slightly preferred.",
+   "kind": "measured", "source": null, "metric": "% prefer predicted (p=0.9)", "value": "31%", "unit": "%", "baseline_value": "37% prefer random", "n": 169,
+   "setup": "p = 0.9, 'answers the question better', 52 vs 63 vs 54 ties; p = 0.6 was 40% (78) vs 33% (64)",
+   "quote": "there is a less than 7% preference for a particular answer type, with humans preferring answers (by 6%) from the Random model for p = 0.9!", "table": null, "note": null, "where": "Table 3, Section 3.1"
+  },
+  {
+   "claim": "At least 81% of 300 sampled validation questions have a paraphrase in the training set and all have a topically similar one.",
+   "kind": "measured", "source": null, "metric": "questions with at least one train paraphrase", "value": "81%", "unit": "%", "baseline_value": null, "n": 300,
+   "setup": "300 KILT ELI5 validation questions vs 7 nearest training questions from C-REALM, 3 AMT raters, majority label, manually verified",
+   "quote": "Table 5 shows that 81% of validation set ques-", "table": "Table 5, row qns with at least one train set paraphrase", "note": "Fleiss kappa 0.29 (fair agreement). Pair-level: 39.5% paraphrases, 47.8% topically similar, 12.7% non-paraphrases.", "where": "Table 5, Section 3.2"
+  },
+  {
+   "claim": "A RoBERTa-large QQP classifier flags far fewer overlaps than humans.",
+   "kind": "measured", "source": null, "metric": "validation questions with a retrieved paraphrase", "value": "43.6%", "unit": "%", "baseline_value": "81% by humans", "n": 1507,
+   "setup": "RoBERTa-large fine-tuned on QQP, applied to full ELI5 validation (46% on the 300 annotated)",
+   "quote": "For 43.6% of the ELI5 validation set,", "table": null, "note": null, "where": "Section 3.2"
+  },
+  {
+   "claim": "Retrieval performance is much better on overlapping questions but generation barely improves.",
+   "kind": "measured", "source": null, "metric": "RPrec / R@5 / F1 / R-L gains (overlap minus no overlap, AMT split)", "value": "6.6 RPrec, 8.1 R@5, 0.8 F1, 0.4 R-L", "unit": "points", "baseline_value": null, "n": 300,
+   "setup": "p = 0.6 model; no-overlap subset of AMT split has only 53 samples; QQP-classifier split used as well",
+   "quote": "we notice large differences of 6.6 RPrec, 8.1 R@5 in retrieval performance favoring the overlap subset, but only a small generation score gain of 0.8 F1, 0.4 R-L", "table": null,
+   "note": "Differences are from the QQP-classifier rows of Table 6 (17.0-10.4=6.6; 25.8-17.7=8.1; 26.0-25.2=0.8; 24.6-24.2=0.4).", "where": "Table 6, Section 3.2"
+  },
+  {
+   "claim": "Copying the best answer among the 7 retrieved training questions gives 28.5 ROUGE-L, above all systems.",
+   "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "28.5", "unit": "ROUGE-L", "baseline_value": "24.4 (RT + C-REALM, validation)", "n": null,
+   "setup": "ELI5 validation, oracle choice of best of top-7 retrieved train answers (upper bound, not a deployable system); test not computable",
+   "quote": "This system gets 28.5 ROUGE-L, outperforming all others.", "table": "Table 7, row best top-7 train answer (↑), columns Validation R-L", "note": null, "where": "Table 7, Section 3.2"
+  },
+  {
+   "claim": "Trivial lower bounds beat RAG on ROUGE-L: copying the question five times scores 20.0 (validation) vs RAG 16.1; a random training answer scores 16.2.",
+   "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "20.0", "unit": "ROUGE-L", "baseline_value": "16.1 (RAG)", "n": null,
+   "setup": "ELI5 validation; test: copy input 16.9, RAG 14.1, random train answer 15.5",
+   "quote": "Both our lower bounds (random training answer, copy input) are quite competitive, outperforming RAG (Lewis et al., 2020c)", "table": "Table 7, row copy input (↓), column Validation R-L", "note": null, "where": "Table 7, Section 3.3"
+  },
+  {
+   "claim": "The system scores higher ROUGE-L than the longest gold answer, yet humans prefer gold answers.",
+   "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "24.4", "unit": "ROUGE-L", "baseline_value": "21.2 (longest gold answer)", "n": null,
+   "setup": "ELI5 validation, p = 0.6; gold upper bound scored against other gold answers (about 12 per question)",
+   "quote": "upper bounds (longest gold answer) perform worse than our system (21.2 vs 24.4)", "table": null, "note": null, "where": "Section 3.3"
+  },
+  {
+   "claim": "Humans prefer gold answers to generations 68% vs 14% at p = 0.6 (72% vs 17% at p = 0.9).",
+   "kind": "measured", "source": null, "metric": "% prefer gold answer", "value": "68%", "unit": "%", "baseline_value": "14% prefer generation", "n": 203,
+   "setup": "A/B test, p = 0.6, 'answers the question better', 138 of 203 ratings; p = 0.9: 72% (203) vs 17% (49)",
+   "quote": "the majority of humans prefer the gold reference answers vs generations (68% vs 14% for", "table": "Table 3, row pred. vs gold ans., p = 0.6", "note": null, "where": "Table 3, Section 3.3"
+  },
+  {
+   "claim": "The system sets a new state of the art on KILT ELI5 combined score (KILT R-L) at p = 0.6 with C-REALM.",
+   "kind": "measured", "source": null, "metric": "KILT R-L (test)", "value": "2.4", "unit": "KRL", "baseline_value": "1.9 (BART + DPR)", "n": 600,
+   "setup": "KILT ELI5 test, RT + C-REALM, p = 0.6; R-L 23.2, RPr. 10.7, R@5 24.6, F1 22.9",
+   "quote": null, "table": "Table 1, row RT + C-REALM (p = 0.6), column KRL", "note": "Paper and Table 1 print ROUGE-L 23.2 for p = 0.6 C-REALM and 21.5 for p = 0.9.", "where": "Table 1"
+  },
+  {
+   "claim": "Generation-only BART beats retrieval-augmented RAG and BART + DPR on ROUGE-L, so retrieval does not help generation on the leaderboard.",
+   "kind": "measured", "source": null, "metric": "test ROUGE-L", "value": "20.6", "unit": "ROUGE-L", "baseline_value": "14.1 (RAG), 17.4 (BART + DPR)", "n": 600,
+   "setup": "KILT ELI5 test, leaderboard entries",
+   "quote": null, "table": "Table 1, row BART, column R-L", "note": null, "where": "Table 1, Section 3.1"
+  },
+  {
+   "claim": "Longer outputs get higher ROUGE-L; truncating to 10% of tokens drops it from 24.4 to 17.4.",
+   "kind": "measured", "source": null, "metric": "ROUGE-L", "value": "17.4", "unit": "ROUGE-L", "baseline_value": "24.4", "n": null,
+   "setup": "p = 0.6 model, first f = 0.1 of tokens (18.2 tokens); repeating the truncation 1/f times gives 18.2, still below the original",
+   "quote": null, "table": "Table 11, row 0.1, column Truncate", "note": null, "where": "Table 11, A.6"
+  },
+  {
+   "claim": "Contrastive retriever training improves with batch size: R-Prec 13.3 at batch 12,288 vs 6.8 at 512.",
+   "kind": "measured", "source": null, "metric": "validation R-Prec", "value": "13.3", "unit": "R-Prec", "baseline_value": "6.8 (batch 512, Jernite 2020)", "n": null,
+   "setup": "C-REALM initialised from REALM-CCNews, validation retrieval; Recall@5 21.2 vs 12.6",
+   "quote": null, "table": "Table 8, row 12288 (Ours), column R-Prec", "note": "Batch 1024 reaches 11.5 R-Prec, 21.0 Recall@5.", "where": "Table 8, A.2"
+  },
+  {
+   "claim": "Initialising C-REALM from a stronger pretrained retriever (REALM) beats ICT: R-Prec 13.3 vs 9.3.",
+   "kind": "measured", "source": null, "metric": "validation R-Prec", "value": "13.3", "unit": "R-Prec", "baseline_value": "9.3 (ICT)", "n": null,
+   "setup": "minibatch 12,288, validation retrieval",
+   "quote": null, "table": "Table 9, row REALM (Guu et al., 2020), column R-Prec", "note": null, "where": "Table 9, A.2"
+  },
+  {
+   "claim": "Retrievals only slightly improve perplexity.",
+   "kind": "measured", "source": null, "metric": "perplexity", "value": "18.1 vs 17.8", "unit": "perplexity", "baseline_value": null, "n": null,
+   "setup": "RT generator fine-tuned on ELI5; which value is with retrieval is not labelled in the sentence",
+   "quote": "Retrievals slightly improve perplexity (18.1 vs 17.8)", "table": null, "note": "Lower is better, so '18.1 vs 17.8' ordering is ambiguous in the text.", "where": "Section 2.2"
+  },
+  {
+   "claim": "Annotators took about 2 minutes per answer pair and were unfamiliar with technical topics, making correctness judgments hard.",
+   "kind": "measured", "source": null, "metric": "annotation time", "value": "2 minutes", "unit": "per answer pair", "baseline_value": null, "n": 20,
+   "setup": "interviews with the volunteer annotators of the A/B tests",
+   "quote": "Annotators reported taking an average of 2 minutes per answer pair", "table": null, "note": null, "where": "Section 3.4"
+  }
+ ],
+ "limits": [
+  "A/B tests give relative preference only, not an absolute quality measure; annotators reported both answers sometimes very good and sometimes very poor (A.5).",
+  "Human raters were 20 mostly computer-science graduate student volunteers, not domain experts; no significance tests; some Table 15 cells have fewer than 50 samples.",
+  "Overlap annotation covers only 300 validation questions; the no-overlap subset has just 53 samples; Fleiss kappa only 0.29.",
+  "The grounding failure is shown for this one system (and indirectly via leaderboard comparisons for others); authors do not test other generators. Explanations (source-reference divergence, train/validation overlap, pretraining on long text) are hypotheses.",
+  "Generator hyperparameters chosen manually with no search; no seeds or variance reported.",
+  "Upper bounds are validation-only because test answers are hidden; the 'best top-K train answer' is an oracle.",
+  "Dated: 2021 models (BART, RAG, T5-base), TensorFlow 1.15; no LLM-judge or faithfulness metrics evaluated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "C-REALM", "definition": "contrastive REALM: REALM-initialised BERT-base dense retriever trained with an in-batch contrastive loss against gold answers", "where": "Section 2.1"},
+  {"term": "KILT R-L", "definition": "ROUGE-L, but assigns a score of 0 whenever the top-1 retrieval does not match the gold annotation", "where": "Section 2.3"},
+  {"term": "lower bound (metric test)", "definition": "trivial baselines used to test the vulnerability of datasets or metrics to simple heuristic strategies that do not actually perform the task", "where": "Section 3.3"}
+ ],
+ "lineage": [
+  {"work": "ELI5: Long form question answering", "year": 2019, "arxiv": "1907.09190", "relation": "uses-data", "note": "ELI5 dataset; TF-IDF overlap removal found insufficient", "quote": null},
+  {"work": "KILT: a benchmark for knowledge intensive language tasks", "year": 2020, "arxiv": "2009.02252", "relation": "uses-data", "note": "ELI5 split, retrieval annotations and KILT R-L metric", "quote": null},
+  {"work": "REALM: Retrieval-augmented language model pre-training", "year": 2020, "arxiv": null, "relation": "extends", "note": "retriever initialisation and K = 7 setup", "quote": null},
+  {"work": "Jernite 2020, Explain anything like I'm five", "year": 2020, "arxiv": null, "relation": "extends", "note": "distantly supervised retriever objective scaled from batch 512 to 12,288", "quote": null},
+  {"work": "Routing Transformer (Roy et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "sparse-attention generator", "quote": null},
+  {"work": "Compressive Transformers / PG-19 (Rae et al.)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "pretraining corpus", "quote": null},
+  {"work": "RAG (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "KILT leaderboard baseline", "quote": null},
+  {"work": "BART (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "generation-only baseline", "quote": null},
+  {"work": "BART + DPR (Petroni et al. 2020)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "KILT retrieval-augmented baseline", "quote": null},
+  {"work": "T5 (Raffel et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "T5-base baseline", "quote": null},
+  {"work": "Question and answer test-train overlap in open-domain QA datasets (Lewis et al.)", "year": 2020, "arxiv": "2008.02637", "relation": "related", "note": "same overlap issue in Natural Questions", "quote": null},
+  {"work": "Evaluation of text generation: A survey (Celikyilmaz et al.)", "year": 2020, "arxiv": "2006.14799", "relation": "related", "note": "cited for need of human evaluation and limits of A/B", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "A summary of the major hurdles (a-d) to progress in long-form question answering with ELI5.", "page": 2, "why": "Shows all four hurdles with a single example (EMP question): paraphrased training questions, random train answer ROUGE-L, random retrievals, annotator difficulty."},
+  {"figure": "Table 3", "caption": "Human evaluation results with exact number of ratings shown in (·).", "page": 5, "why": "Shows no preference between predicted and random retrievals and strong preference for gold answers."},
+  {"figure": "Table 7", "caption": "Upper (↑) and lower (↓) bounds to performance on ELI5.", "page": 8, "why": "Shows trivial baselines near real systems and upper bounds only slightly higher, which is the ROUGE-L argument."}
+ ],
+ "code": [
+  {"where": "Section 2.1", "snippet": "loss = −Σ_{(q_i,a_i)∈B} log [ exp(q_i · a_i) / Σ_{a_j∈B} exp(q_i · a_j) ]", "verbatim": false}
+ ],
+ "problems": [
+  "Table cells from the PDF text were reconstructed from column-by-column dumps; row alignment checked against Table 7 and text numbers.",
+  "Appendix Table 9 text says minibatch 12228 while the rest of the paper says 12,288.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

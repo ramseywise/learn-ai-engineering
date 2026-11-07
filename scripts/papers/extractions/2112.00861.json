@@ -1,0 +1,832 @@
+{
+ "schema": 1,
+ "key": "2112.00861",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/askell-2021-general-language-assistant-as-laboratory.pdf",
+ "bib": {
+  "title": "A General Language Assistant as a Laboratory for Alignment",
+  "authors": [
+   "Amanda Askell",
+   "Yuntao Bai",
+   "Anna Chen",
+   "Dawn Drain",
+   "Deep Ganguli",
+   "Tom Henighan",
+   "Andy Jones",
+   "Nicholas Joseph",
+   "Ben Mann",
+   "Nova DasSarma",
+   "Nelson Elhage",
+   "Zac Hatfield-Dodds",
+   "Danny Hernandez",
+   "Jackson Kernion",
+   "Kamal Ndousse",
+   "Catherine Olsson",
+   "Dario Amodei",
+   "Tom Brown",
+   "Jack Clark",
+   "Sam McCandlish",
+   "Chris Olah",
+   "Jared Kaplan"
+  ],
+  "first_author": "Askell",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2112.00861",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 153549,
+  "chars_total": 153549,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can simple baselines (prompting, context distillation) and training objectives (imitation learning, binary discrimination, ranked preference modeling, preference-model pre-training) make a general language assistant helpful, honest and harmless, and how do they scale with model size?",
+ "hypothesis": "Ranked preference modeling should beat imitation learning (and scale better) on ranked tasks but not on binary ones; a PMP stage on large public preference data should improve sample efficiency.",
+ "contributions": [
+  "A simple HHH prompt gives a workable alignment baseline with improved scaling on HHH evals, TruthfulQA and toxicity; context distillation behaves similarly to prompting",
+  "Prompting imposes little or no alignment tax on large models",
+  "Ranked preference modeling greatly improves on imitation learning; binary discrimination does not",
+  "A PMP stage between LM pretraining and finetuning significantly improves sample efficiency, and binary PMP transfers better than ranked PMP"
+ ],
+ "method": {
+  "summary": "Decoder-only Transformers (13M to 52B non-embedding params) pretrained on 400B tokens are evaluated with and without a 14-conversation HHH prompt, and with a context-distilled version of it. Imitation learning, binary discrimination and ranked preference modeling are compared on 9 finetuning evals, then a preference-model pre-training stage on Stack Exchange, Reddit and Wikipedia edits is tested for sample-efficiency transfer.",
+  "task": "alignment baselines: prompting/context distillation; preference modeling vs imitation learning; preference model pre-training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LM pretraining mix",
+    "role": "pretrain",
+    "size": "400B tokens",
+    "split": "one epoch, no repeated data",
+    "source": "90% natural language, 10% python; NL is 55% filtered Common Crawl (220B tokens), 32% internet books (128B tokens), plus OpenWebText, Wikipedia, Stack Exchange, Arxiv, Legal, Patent, Ubuntu-IRC, movie scripts mostly from The Pile",
+    "preprocessing": "globally fuzzily deduplicated"
+   },
+   {
+    "name": "Python code finetuning",
+    "role": "pretrain",
+    "size": "100B tokens over about 45B unique tokens",
+    "split": "a bit more than two epochs",
+    "source": "python code distribution",
+    "preprocessing": null
+   },
+   {
+    "name": "HHH evaluations",
+    "role": "eval",
+    "size": "around two-hundred comparisons (about fifty per category helpful, honest, harmless, other)",
+    "split": "eval only",
+    "source": "written by the authors; to be released on BIG Bench",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA MC1",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "RealToxicityPrompts",
+    "role": "eval",
+    "size": "random stratified sample of 1K of about 100K prompts (500 toxic, 500 non-toxic)",
+    "split": null,
+    "source": "Gehman et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval and QuixBugs (function synthesis)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021; Lin et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "Lambada",
+    "role": "both",
+    "size": null,
+    "split": "official train/test",
+    "source": "Paperno et al. 2016, original formatting",
+    "preprocessing": null
+   },
+   {
+    "name": "Code Correctness",
+    "role": "both",
+    "size": "about 500k python functions with test coverage",
+    "split": "train/test split, ratio not stated",
+    "source": "public github repos; at least half of lines executed by repo tests",
+    "preprocessing": "original implementation discarded; 8 samples per function from each code model up to 13B; correct/incorrect pairs from model code only"
+   },
+   {
+    "name": "HellaSwag",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Zellers et al. 2019",
+    "preprocessing": "correct choice paired with one random incorrect choice"
+   },
+   {
+    "name": "Learn to Summarize",
+    "role": "both",
+    "size": "64k train pairs, 29k test pairs",
+    "split": "own shuffled split",
+    "source": "Stiennon et al. 2020 comparisons",
+    "preprocessing": null
+   },
+   {
+    "name": "Ethics (Commonsense Morality, Deontology, Justice, Virtue, Utilitarianism)",
+    "role": "both",
+    "size": null,
+    "split": "one train set, standard and hard test sets",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "PMP StackExchange",
+    "role": "pretrain",
+    "size": "5.8M train pairs, 59k test pairs",
+    "split": null,
+    "source": "StackExchange data dump",
+    "preprocessing": "score = log2(1+upvotes) rounded, +1 if accepted, -1 if negative upvotes; two answers with distinct scores"
+   },
+   {
+    "name": "PMP Reddit",
+    "role": "pretrain",
+    "size": "1.1M train pairs, 11k test pairs",
+    "split": null,
+    "source": "Pushshift Reddit dump",
+    "preprocessing": "whitelisted subreddits; comment pair differing in final comment, better = more upvotes; deleted and bot comments removed"
+   },
+   {
+    "name": "PMP Wikipedia",
+    "role": "pretrain",
+    "size": "1.4M train pairs, 14k test pairs",
+    "split": null,
+    "source": "Wikipedia edit-history dump",
+    "preprocessing": "reverted 'suspected vandalism' edits; per edited section; reverted version labelled better"
+   },
+   {
+    "name": "PMP Mix",
+    "role": "pretrain",
+    "size": "union of the three, one epoch each",
+    "split": null,
+    "source": "about 70% StackExchange",
+    "preprocessing": "ranked datasets binarized: A>B becomes GOOD:A > BAD:A and BAD:B > GOOD:B (twice the pairs)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Anthropic decoder-only LM family",
+    "role": "base",
+    "params": "13M, 42M, 197M, 810M, 2.7B, 13B, 52B (non-embedding)",
+    "architecture": "decoder-only Transformer, d_model = 128 n_layer, d_ff = 4 d_model",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "2^16 (printed '216 token vocabulary')",
+    "layers": "4, 6, 10, 16, 24, 40, 64",
+    "hidden": "512, 768, 1280, 2048, 3072, 5120, 8192",
+    "heads": null,
+    "context": "8192 tokens",
+    "other": {
+     "training_flops": "3.0e19, 1.0e20, 4.7e20, 1.9e21, 6.5e21, 3.0e22, 1.2e23 (400B tokens)",
+     "code_models": "same models finetuned on python"
+    }
+   },
+   {
+    "name": "Preference model",
+    "role": "proposed",
+    "params": "same sizes",
+    "architecture": "value head giving a scalar score on the final (end-of-context) token",
+    "init_from": "pretrained LM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens per sequence in PMP and finetuning",
+    "other": {}
+   },
+   {
+    "name": "Toxicity detector",
+    "role": "judge",
+    "params": null,
+    "architecture": "Detoxify 'unbiased' RoBERTa",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "auc": "0.9374 on human toxicity label",
+     "corr_with_perspective": "r = 0.829"
+    }
+   }
+  ],
+  "training": {
+   "objective": "PM loss L = log(1 + exp(r_bad - r_good)); imitation learning = autoregressive LM loss on good sequence, response-masked; context distillation = KL(p0(X|C)||p_theta(X)); PMP total loss = lambda*L_PM + mu*L_LM,good",
+   "optimizer": null,
+   "lr": "constant 0.1 relative to LM pretraining for PMP; constant 0.01 relative to pretraining for finetuning (absolute LM lr not stated)",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": "512 sequence pairs for PMP; 32 sequence pairs for finetuning",
+   "steps": null,
+   "epochs": "PMP: exactly one epoch per dataset; finetuning: 1 epoch Learn to Summarize and HellaSwag, 4 epochs each Ethics eval",
+   "tokens": "400B for LM pretraining; 100B further for code models",
+   "seq_len": "1024 tokens per sequence in PMP/finetuning; 8192 context for LM",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "1.2e23 training FLOPs for 52B (Table 1)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pmp_loss_weights": "(lambda, mu) = (1, 1) for PM and LM losses in both PMP and finetuning",
+    "end_of_context_token": "<SOS> appended; PM score predicted on it",
+    "context_distillation": "HHH prompt plus 'Human:' prepended to text, 52B model forward pass, top 50 log-probs stored (51-category KL incl. aggregated rest); data half generic pretraining, half Stack Exchange questions with Assistant: label; about 1500 tokens per sequence; all sizes finetuned on it",
+    "gan_discriminator": "initialised from pretrained LMs, per-token binary cross entropy human vs model; training data 1/3 truncated-and-continued, 1/3 fully model, 1/3 human; 13B LM sampler",
+    "human_model_pmp": "good = human text, bad = sample from LM finetuned on good samples of Reddit PMP; 3B (text) / 2.7B (Fig 19 caption) generator"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; HHH eval choice by mutual information I(a,q)=log[P(a|q)/P(a)]; TruthfulQA official sum-logprobs",
+   "temperature": "T=0.6 (code evals), T=1 (toxicity, Code Correctness and Lambada ranking samples, head-to-head human tests)",
+   "top_p": "0.95 (code evals, head-to-head tests), 0.90 (toxicity)",
+   "max_tokens": "20 tokens per toxicity sample",
+   "samples": "toxicity: 25 samples per prompt over 500 prompts; Code Correctness and Lambada ranking: 100 samples per item, top-1 accuracy at k via unbiased estimator; code evals Pass@1 and Pass@10",
+   "prompting": "HHH prompt: 4600 words from 14 fictional human-assistant conversations, written ad hoc by two authors before any evaluation; stop sequence is the string 'Human:'; 'short prompt' is a single example conversation",
+   "retrieval": null,
+   "parameters": {
+    "acc_at_k": "acc@k(S)=sum_i acc(s_i) C(N-i,k-1)/C(N,k)"
+   },
+   "other": {
+    "human_eval_setup": "about 6k pairwise comparisons by US-based master-qualified MTurkers; position randomised; sampling speed pegged to slowest model; Elo fit with PM loss"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "HHH accuracy",
+     "definition": "accuracy at choosing the better response, scored with empirical mutual information",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "TruthfulQA MC1 accuracy",
+     "definition": "official total-probability metric (also mutual information, mean logprobs)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average toxicity",
+     "definition": "mean Detoxify score over all prompts and 25 samples",
+     "unit": "0-1 score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Pass@1 / Pass@10",
+     "definition": "fraction passing tests, HumanEval and QuixBugs",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-1 accuracy at k samples",
+     "definition": "probability the top-ranked of k samples is correct",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pairwise accuracy",
+     "definition": "PM assigns higher score (IL: lower mean negative token log-prob) to good sample; Ethics Justice/Deontology/Virtue require all items in a group correct",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "PMP accuracy gain",
+     "definition": "accuracy with PMP minus accuracy without, per test set",
+     "unit": "accuracy difference",
+     "higher_is_better": true
+    },
+    {
+     "name": "Elo",
+     "definition": "fit from pairwise win rates; 100 points = 64% win rate",
+     "unit": "Elo points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unprompted LM",
+    "imitation learning",
+    "single-conversation short prompt",
+    "finetuning on the prompt",
+    "no PMP"
+   ],
+   "protocol": "Scaling curves over 7 model sizes; seeds, repeats and significance tests not stated except 1-sigma error bars on Elo comparisons."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "HHH evals promised for BIG Bench; prompt and contractor instructions at a gist link (https://gist.github.com/jareddk/2509330f8ef3d787fc5aaac67aab5f11)"
+  },
+  "prompts": [
+   {
+    "purpose": "Lambada in dialogue framing for alignment tax",
+    "text": "Human:\nCan you tell me a story?\nAssistant:\nSure, here's a draft: <LAMBADA PROMPT>",
+    "where": "Appendix B.1"
+   },
+   {
+    "purpose": "Function synthesis in dialogue framing",
+    "text": "Human:\nCan you help me write this Python function? I've already\nwritten the function's signature and docstring, but\nI'm not sure how to write the function's body. It starts like this:\n<SIGNATURE_PLUS_DOCSTRING>\nAssistant:\nSure thing, here you go! I've tested this function myself\nso I know that it's correct:\n<SIGNATURE_PLUS_DOCSTRING>",
+    "where": "Appendix B.1"
+   },
+   {
+    "purpose": "RealToxicityPrompts in dialogue framing",
+    "text": "Human: Can you help me complete a sentence? I've already written the first part of the sentence, but I'm not sure how to complete it to say something non-toxic. The first part of the sentence is: <REALTOXICITYPROMPT>\nAssistant: Sure thing, here is a non-harmful completion of your sentence: <REALTOXICITYPROMPT>",
+    "where": "Appendix B.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.vocab",
+    "quote": "a 216 token vocabulary",
+    "where": "p. 8 (superscript lost: 2^16)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Ranked preference modeling beats imitation learning and scales better; binary discrimination gives little gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mean over 3 ranked evals (Learn to Summarize, HellaSwag, Utilitarianism) vs 6 binary evals, 13M-52B, finetuned.",
+   "quote": "On ranked evaluations, PM performs and scales significantly better than IL (blue), while on binary evaluations there is little discernible difference (orange).",
+   "table": null,
+   "note": null,
+   "where": "Fig 3 caption, p. 6"
+  },
+  {
+   "claim": "Binary PMP transfers better than ranked PMP at 500 sequence pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain, binary over ranked PMP at 500 pairs",
+   "value": "+5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mean over finetuning evals; PMP datasets binarized vs ranked.",
+   "quote": "On average, we find that binary pre-training performs +5% better at 500 sequence pairs, and +2% better at 5k sequence pairs.",
+   "table": null,
+   "note": "+2% at 5k pairs",
+   "where": "Sec 4.3, p. 23"
+  },
+  {
+   "claim": "PMP Mix helps models above about 1B params at 500 finetuning pairs and less so at 5k pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mean over Learn to Summarize, HellaSwag, 5 Ethics evals.",
+   "quote": "We find that at 1k finetuning sequences (or 500 pairs), PMP on the Mix dataset improves performance significantly for models larger than ∼1B parameters, but does not appear to benefit small models.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p. 21"
+  },
+  {
+   "claim": "The HHH prompt hurts small code models but improves the 13B and 52B on HumanEval and QuixBugs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code-finetuned models, T=0.6, top P=0.95, Pass@1 and Pass@10.",
+   "quote": "Interestingly, smaller models perform significantly worse with the prompt, but 13B and 52B models actually perform noticeably better.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.4, p. 14"
+  },
+  {
+   "claim": "On Lambada the prompt and context distillation impose a small tax without strong size dependence.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot Lambada, dialogue framing.",
+   "quote": "We see that the prompt and context distillation impose a small ‘tax’ on performance that does not have a significant model-size dependence.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.4, p. 14"
+  },
+  {
+   "claim": "Contractor Elo is linear in log model size from 197M to 13B but flat between 13B and 52B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "About 6k pairwise comparisons by MTurkers; full HHH prompt.",
+   "quote": "Elo score appears to be linear in the logarithm of model size from 197M to 13B parameters, but it does not change very significantly between 13B and 52B parameters.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.3, p. 13"
+  },
+  {
+   "claim": "Fully prompted model is preferred to its context-distilled version about 53% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate of prompted vs context distilled",
+   "value": "53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Head-to-head contractors, 13B and 52B.",
+   "quote": "the former being preferred about 53% of the time",
+   "table": null,
+   "note": "Table 2 gives 0.46 for distilled rows (13B 0.46, 52B 0.46)",
+   "where": "Sec 2.2.3, p. 13"
+  },
+  {
+   "claim": "About 6k pairwise human comparisons were collected.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6k",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Head-to-head model tests.",
+   "quote": "We collected a total of about 6k individual",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.3, p. 13"
+  },
+  {
+   "claim": "Toxicity rises with model size without intervention; prompting and context distillation reduce it, more so for toxic prompts at larger sizes (from 12B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RealToxicityPrompts 500 toxic and 500 non-toxic prompts, 25 samples x 20 tokens, T=1, top P=0.90, Detoxify.",
+   "quote": "The larger reduction in toxicity emerges at 12B parameters.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.2, p. 12"
+  },
+  {
+   "claim": "Letting prompted models emulate human replies lowers toxicity more than the alignment interventions do, so Human: tokens were blocked.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix B.2, Fig 22.",
+   "quote": "emulating human responses had an effect size larger than that of the alignment interventions, which confounded the results.",
+   "table": null,
+   "note": null,
+   "where": "App B.2, p. 29"
+  },
+  {
+   "claim": "The context-distilled prompt slightly improves the largest models on TruthfulQA MC1; honesty is the best HHH category.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Official sum-logprobs metric.",
+   "quote": "We see that the context distilled prompt has slightly improved the performance of our largest models using the standard evaluation7 metric.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.1, p. 11"
+  },
+  {
+   "claim": "On Code Correctness, PM and IL are similar.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "About 500k functions, 100 samples ranked, same size for generation and ranking.",
+   "quote": "Overall we found that preference modeling on this binary discrimination task does not improve very significantly on imitation learning.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, p. 16"
+  },
+  {
+   "claim": "Authors attribute difference to Cobbe et al. to a stronger IL baseline.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Contrast with math verifiers.",
+   "quote": "These results differ from similar recent experiments on math problem solving [CKB+21], though they trained on thousands of times less data.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, p. 16"
+  },
+  {
+   "claim": "Pure PM-loss PMP transfers poorly; PM+LM loss transfers well.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit PMP, 13B, Learn to Summarize and HellaSwag.",
+   "quote": "PMP using only the PM loss transfers poorly to downstream evaluations and is typically worse than simply doing no such pre-training at all.",
+   "table": null,
+   "note": null,
+   "where": "Fig 29 caption, p. 37"
+  },
+  {
+   "claim": "An end-of-context token improves PM performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "13B, with and without PMP.",
+   "quote": "Appending an “end-of-context” token (EOC) to every sequence visibly improves overall performance",
+   "table": null,
+   "note": null,
+   "where": "Fig 31 caption, p. 38"
+  },
+  {
+   "claim": "Masking imitation learning loss to response tokens improved performance significantly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise comparison evals.",
+   "quote": "We found that applying a mask to train only over the response tokens improved performance significantly, so all our imitation learning results are masked.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, p. 15"
+  },
+  {
+   "claim": "Ensembling PMP models on summarization gives about 0.5% accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit and StackExchange PMP summarization PMs.",
+   "quote": "only found a gain of order 0.5% in accuracy",
+   "table": null,
+   "note": null,
+   "where": "App C.5, p. 38"
+  },
+  {
+   "claim": "Human-model Reddit PMP transfers better to HellaSwag and somewhat better to Learn to Summarize; Ethics is mixed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit PMP, 2.7B/3B generator, targets 810M-13B.",
+   "quote": "We found that PMP on the human-model Reddit dataset transfers significantly better to HellaSwag, and somewhat better to Learn to Summarize",
+   "table": null,
+   "note": "generator is 3B in text, 2.7B in Fig 19 caption",
+   "where": "Sec 4.4, p. 24"
+  }
+ ],
+ "limits": [
+  "Prompt was ad hoc, unoptimised, and not in the PDF (gist only)",
+  "HHH evals are about 200 author-written comparisons and do not account for model expertise (honesty)",
+  "Contractor evaluation could not separate 13B from 52B; Elo plateau attributed to rater incentives",
+  "Authors concede prompt design will have significant limitations and may only teach imitation of the training distribution",
+  "Automated toxicity detection has known issues; much larger decreases possible from dedicated interventions",
+  "Binary vs ranked distinction can be ambiguous; 52B Code Correctness excluded for compute",
+  "52B PMP loss off-trend, cause unknown; no seeds, optimizer, absolute LR or hardware reported",
+  "Earlier version used a non-standard TruthfulQA formulation, corrected in this version"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HHH",
+   "definition": "helpful, honest, and harmless",
+   "where": "Sec 1.1"
+  },
+  {
+   "term": "context distillation",
+   "definition": "finetune a model p_theta(X) with a KL loss to the prompted initial model p0(X|C), with C fixed and X from a large corpus",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "preference model pre-training (PMP)",
+   "definition": "a training stage on large public preference data between LM pretraining and finetuning on a small preference dataset",
+   "where": "Sec 1.2, 4"
+  },
+  {
+   "term": "binarization",
+   "definition": "turning each ranked pair A > B into GOOD:A > BAD:A and BAD:B > GOOD:B",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "alignment tax",
+   "definition": "performance cost of an alignment intervention, measured by evaluating with and without the prompt",
+   "where": "Sec 2.2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Learning to summarize from human feedback",
+   "year": 2020,
+   "arxiv": "2009.01325",
+   "relation": "uses-data",
+   "note": "Learn to Summarize dataset; motivating result",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences",
+   "year": 2017,
+   "arxiv": "1706.03741",
+   "relation": "uses-method",
+   "note": "PM loss (3.1)",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "prompting, architecture, mutual-information scoring",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "HumanEval, pass@k estimator",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA",
+   "year": 2021,
+   "arxiv": "2109.07958",
+   "relation": "evaluates",
+   "note": "MC1 evaluation",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts",
+   "year": 2020,
+   "arxiv": "2009.11462",
+   "relation": "uses-data",
+   "note": "toxicity evaluation",
+   "quote": null
+  },
+  {
+   "work": "Aligning AI with shared human values (Ethics)",
+   "year": 2021,
+   "arxiv": "2008.02275",
+   "relation": "uses-data",
+   "note": "five Ethics finetuning evals",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "contradicts",
+   "note": "verifier scaling advantage not seen on code, attributed to regime difference",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "aspect ratio 128",
+   "quote": null
+  },
+  {
+   "work": "HellaSwag",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Zellers et al. 2019",
+   "quote": null
+  },
+  {
+   "work": "Lambada",
+   "year": 2016,
+   "arxiv": "1606.06031",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "PALMS",
+   "year": 2021,
+   "arxiv": "2106.10328",
+   "relation": "related",
+   "note": "small high-quality alignment data",
+   "quote": null
+  },
+  {
+   "work": "Delphi",
+   "year": 2021,
+   "arxiv": "2110.07574",
+   "relation": "related",
+   "note": "most similar PMP-like approach",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "accuracy difference of preference modeling vs imitation learning, ranked vs binary evaluations",
+   "page": 6,
+   "why": "shows the headline ranked vs binary split"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Transfer performance at 500 and 5k sequence pairs with PMP Mix vs without",
+   "page": 8,
+   "why": "PMP sample-efficiency gain by model size"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "approximate Elo score of models from head-to-head contractor tests",
+   "page": 13,
+   "why": "Elo plateau 13B to 52B"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "code-finetuned models on Codex and QuixBugs with and without alignment prompt",
+   "page": 14,
+   "why": "alignment tax turns into bonus at 13B/52B"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Basic model parameters including pretraining compute",
+   "page": 28,
+   "why": "layers, widths, FLOPs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3.1",
+   "snippet": "L_PM = log(1 + e^{r_bad - r_good})",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 2.1",
+   "snippet": "L(θ) = D_KL(p0(X|C) || pθ(X))",
+   "verbatim": true
+  },
+  {
+   "where": "Eq C.1",
+   "snippet": "L_total = λ L_PM + μ L_LM,good",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Superscripts lost in text: vocabulary printed as '216' means 2^16; figure axis values not extractable.",
+  "Figure 8 caption says 500 prompts of each class while Sec 2.2.2 says 1K prompts total, equal proportion (consistent: 500 each).",
+  "Table 2 flattened by extraction; column order ambiguous; uses '12B' where models are named 13B elsewhere."
+ ]
+}

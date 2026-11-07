@@ -1,0 +1,809 @@
+{
+ "schema": 1,
+ "key": "2305.06161",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/li-2023-starcoder.pdf",
+ "bib": {
+  "title": "StarCoder: may the source be with you!",
+  "authors": [
+   "Raymond Li",
+   "Loubna Ben Allal",
+   "Yangtian Zi",
+   "Niklas Muennighoff",
+   "Denis Kocetkov",
+   "Chenghao Mou",
+   "Marc Marone",
+   "Christopher Akiki",
+   "Jia Li",
+   "Jenny Chim",
+   "Qian Liu",
+   "Evgenii Zheltonozhskii",
+   "Terry Yue Zhuo",
+   "Thomas Wang",
+   "Olivier Dehaene",
+   "Mishig Davaadorj",
+   "Joel Lamy-Poirier",
+   "João Monteiro",
+   "Oleh Shliazhko",
+   "Nicolas Gontier",
+   "Nicholas Meade",
+   "Armel Zebaze",
+   "Ming-Ho Yee",
+   "Logesh Kumar Umapathi",
+   "Jian Zhu",
+   "Benjamin Lipkin",
+   "Muhtasham Oblokulov",
+   "Zhiruo Wang",
+   "Rudra Murthy",
+   "Jason Stillerman",
+   "Siva Sankalp Patel",
+   "Dmitry Abulkhanov",
+   "Marco Zocca",
+   "Manan Dey",
+   "Zhihan Zhang",
+   "Nour Fahmy",
+   "Urvashi Bhattacharyya",
+   "Wenhao Yu",
+   "Swayam Singh",
+   "Sasha Luccioni",
+   "Paulo Villegas",
+   "Maxim Kunakov",
+   "Fedor Zhdanov",
+   "Manuel Romero",
+   "Tony Lee",
+   "Nadav Timor",
+   "Jennifer Ding",
+   "Claire Schlesinger",
+   "Hailey Schoelkopf",
+   "Jan Ebert",
+   "Tri Dao",
+   "Mayank Mishra",
+   "Alex Gu",
+   "Jennifer Robinson",
+   "Carolyn Jane Anderson",
+   "Brendan Dolan-Gavitt",
+   "Danish Contractor",
+   "Siva Reddy",
+   "Daniel Fried",
+   "Dzmitry Bahdanau",
+   "Yacine Jernite",
+   "Carlos Muñoz Ferrandis",
+   "Sean Hughes",
+   "Thomas Wolf",
+   "Arjun Guha",
+   "Leandro von Werra",
+   "Harm de Vries"
+  ],
+  "first_author": "Li",
+  "year": 2023,
+  "venue": "Transactions on Machine Learning Research (12/2023)",
+  "arxiv": "2305.06161",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 174065,
+  "chars_total": 174065,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix A regexes, Table B.1 country list and the per-language rows of Tables 1-3 not transcribed."
+ },
+ "type": "empirical",
+ "question": "Can an open-access, permissively-licensed-data, responsibly released 15.5B code LLM match or beat existing open and closed code models across languages and tasks?",
+ "hypothesis": null,
+ "contributions": [
+  "Release StarCoderBase and StarCoder, open-access 15.5B Code LLMs trained on 80+ languages with 8K context, FIM and multi-query attention",
+  "Most comprehensive evaluation of Code LLMs to date: StarCoder beats every open multi-language code LLM, matches or beats code-cushman-001, and beats Python-fine-tuned models when fine-tuned on Python",
+  "Safer release: OpenRAIL-M licence, attribution tracing tool (Bloom-filter membership check plus BM25 index), improved PII redaction with a 12,000-file / 22,950-entity annotated dataset and StarEncoder"
+ ],
+ "method": {
+  "summary": "StarCoderBase (15.5B decoder-only, MQA, FIM, 8K context) is pretrained for 1T tokens on a filtered, near-deduplicated, PII-redacted 86-language subset of The Stack v1.2 plus GitHub issues, Git commits and Jupyter notebooks. StarCoder is StarCoderBase fine-tuned for about 2 epochs (35B tokens) on the Python subset. Both are evaluated on code (HumanEval, MBPP, DS-1000, ODEX, MultiPL-E, FIM, type prediction, docstrings, security) and natural-language benchmarks.",
+  "task": "next-token pretraining with fill-in-the-middle on source code, issues, commits and notebooks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Stack v1.2 subset (86 languages, plus issues, commits, notebooks)",
+    "role": "pretrain",
+    "size": "Table 1/2 total: 305,929,658 files, 815.68 GB after dedup, 799.37 GB after filters and decontamination; ~1T training tokens",
+    "split": "sampled proportionally to volume (natural distribution); JSON and YAML reweighted to 1 GB each, CSS to 3 GB; Python 60.40 GB = 7.875%",
+    "source": "The Stack v1.2 (Kocetkov et al., 2022): permissively licensed GitHub repositories, 44 opt-outs at processing time; Git commits from BigQuery",
+    "preprocessing": "86 of 358 languages kept (>500 MB or top-50 Githut 2.0 / Dec 2022 TIOBE, plus dialects); visual inspection of up to 1,000 files per extension, 18 annotators, 300 extensions, 36 extensions dropped, long-line filter removed for 27; XML filter ('<?xml version=' in first 100 chars); alpha filter (<25% alphabetic removed, checked on top 25 extensions); HTML visible-text >=20% and >=100 chars; YAML 50-5000 chars, avg line <100, max line <1000, >50% alphabetic (removes ~20% files, 90% volume); JSON 50-5000 chars, >50% alphabetic (removes ~70% files, 98% volume); MinHash + LSH near-dedup with 5-grams and Jaccard 0.7 (not applied to Git commits or issues); decontamination removes files with HumanEval/MBPP docstrings or solutions, APPS docstrings, GSM8K questions, DS-1000 prompts (Python worst: 558 files removed); PII redaction"
+   },
+   {
+    "name": "GitHub issues",
+    "role": "pretrain",
+    "size": "~30,900,000 issues, 54.40 GB (7.093% weight)",
+    "split": null,
+    "source": "The Stack v1.2",
+    "preprocessing": "strip email-reply boilerplate, drop messages <200 chars, truncate long comments to 100 lines keeping last 20 (18% of volume removed); drop bot comments (17% of events, 14.7% of issues emptied); keep >=2 users or single-user with <7,000 chars, drop single-user issues with >10 events (14% more removed); fasttext English filter; usernames replaced by participant counters"
+   },
+   {
+    "name": "Git commits",
+    "role": "pretrain",
+    "size": "raw ~4 TB; 7,674,345 commits, 64 GB (32.00 GB weight, 4.172%)",
+    "split": "50% of files sampled then filtered (Table 4)",
+    "source": "BigQuery single-file commits, same licences and extensions as The Stack, opted-out users removed",
+    "preprocessing": "Table 4 filters (>100k chars removed, <=2-line changes kept at 50%, >=200-line changes kept at 10%, empty subjects, bot-like messages, hash messages, data formats 50%); full file used 20% of time, otherwise a window of 0-32 lines around first and last changed line; not near-deduplicated"
+   },
+   {
+    "name": "Jupyter scripts",
+    "role": "pretrain",
+    "size": "1,432,992 scripts initially; Table 1: 914,000 files, 7.12 GB",
+    "split": null,
+    "source": "The Stack notebooks",
+    "preprocessing": "Jupytext conversion; language from metadata, Guesslang (probability >=0.5) cut unidentified notebooks to 6,400 from >30,000"
+   },
+   {
+    "name": "Jupyter structured",
+    "role": "pretrain",
+    "size": "1,045,605 notebooks initially; Table 1: 668,743 files, 6.00 GB",
+    "split": null,
+    "source": "The Stack notebooks marked Python",
+    "preprocessing": "consecutive markdown/code blocks merged into text-code-output chains; <empty_output> token for empty outputs; only last output kept when blocks merged"
+   },
+   {
+    "name": "Annotated PII dataset",
+    "role": "train",
+    "size": "12,000 files (~50 lines each, 31 languages), 22,950 entities; train 7,878 / test 4,000 examples",
+    "split": "7,878 train, 4,000 test, balanced across PII types",
+    "source": "Toloka crowd-workers (1,399 from 35 countries, $7.30/h); 7,100 files pre-filtered with detect-secrets and regexes, 5,100 random",
+    "preprocessing": "IDs excluded for low annotation quality; plus 400 annotated files from Ben Allal et al. (2023) and 18,000 pseudo-labelled files"
+   }
+  ],
+  "models": [
+   {
+    "name": "StarCoderBase",
+    "role": "proposed",
+    "params": "15.5B",
+    "architecture": "decoder-only Transformer, multi-query attention, learned absolute positional embeddings, FlashAttention, same as SantaCoder",
+    "init_from": null,
+    "tokenizer": "byte-level BPE (HF Tokenizers), digit-splitter plus GPT-2 regex pre-tokenizer",
+    "vocab": "49,152 tokens including sentinel tokens",
+    "layers": "40",
+    "hidden": "6144",
+    "heads": "48",
+    "context": "8192 tokens (Max. position embeddings 8192)",
+    "other": {
+     "intermediate_size": "24576",
+     "pretraining_tokens": "1T",
+     "FIM": "character-level, rate 0.5, PSM 0.5 / SPMv2 0.5"
+    }
+   },
+   {
+    "name": "StarCoder",
+    "role": "proposed",
+    "params": "15.5B",
+    "architecture": "same as StarCoderBase",
+    "init_from": "StarCoderBase",
+    "tokenizer": "same",
+    "vocab": "49,152",
+    "layers": "40",
+    "hidden": "6144",
+    "heads": "48",
+    "context": "8192 tokens",
+    "other": {}
+   },
+   {
+    "name": "StarEncoder",
+    "role": "proposed",
+    "params": "≈125M",
+    "architecture": "encoder-only Transformer, multi-head attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "1024 (max position embeddings)",
+    "other": {
+     "intermediate_size": "3072",
+     "objective": "MLM (15% masking) plus NSP",
+     "training": "100,000 steps, global batch 4,096 sequences of max length 1,024, ~400B tokens, ~2 days on 64 A100"
+    }
+   },
+   {
+    "name": "SantaCoder",
+    "role": "baseline",
+    "params": "1.1B",
+    "architecture": "MQA decoder; 24 layers, hidden 2048, 16 heads, 2048 positions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "2048",
+    "heads": "16",
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "CodeGen-16B-Multi / Mono, CodeGeeX-13B, code-cushman-001, code-davinci-001/002, InCoder-6B, LLaMA 7B-65B, PaLM, LaMDA, GPT-NeoX-20B, others",
+    "role": "evaluated",
+    "params": "various",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "causal LM with fill-in-the-middle on code (FIM rate 0.5, PSM/SPMv2 each 0.5, character level); StarEncoder: MLM+NSP",
+   "optimizer": "Adam, beta1=0.9, beta2=0.95, eps=1e-8",
+   "lr": "3e-4 decayed to 3e-5 (StarCoderBase); 5e-5 decayed to 5e-6 (StarCoder fine-tune)",
+   "lr_schedule": "cosine decay after linear warmup",
+   "warmup": "2,000 iterations (StarCoderBase); 1,000 iterations (StarCoder)",
+   "batch_size": "4M tokens (global batch 512 sequences)",
+   "steps": "250k iterations (StarCoderBase); 8,500 steps (StarCoder)",
+   "epochs": "~2 epochs on the Python subset (StarCoder)",
+   "tokens": "1T (StarCoderBase); 35B Python tokens (StarCoder)",
+   "seq_len": "inferred: 8192 (4M tokens / 512 sequences); 8K context stated",
+   "precision": "BF16 (10% lower throughput than FP16, chosen to avoid instabilities)",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "512 A100 80GB GPUs on 64 nodes; 3D parallel: tensor and pipeline parallel rank 4 (16 GPUs per replica), 32-way data parallel, micro-batch 1, 16 accumulation steps, Megatron-LM distributed optimizer",
+   "compute": "320,256 GPU hours (StarCoderBase), 280 W per GPU, 89,671.68 kWh, 16.68 tCO2eq; fine-tune adds 3.5% time, 0.58 tCO2eq",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "metadata_prefix": "<reponame>, <filename>, <gh_stars> (buckets 0, 1-10, 10-100, 100-1000, 1000+), each prefixed independently at random with probability 0.2",
+    "few_restarts": "except for a few restarts, no significant instabilities",
+    "natural_language_share": "Roughly 20% of training tokens: 7% GitHub issues, 10% Markdown, 2% Jupyter notebooks, 4% HTML (as printed; components sum to 23%)",
+    "PII_model_inference": "800 GPU-hours on A100 80GB over 815 GB"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; greedy for return type prediction, docstring generation, GSM8K greedy; nucleus p=0.95 temp 0.7 for majority vote; nucleus p=0.95 for toxicity",
+   "temperature": "0.2 for pass@1, 0.8 for k>1 (HumanEval/MBPP/MultiPL-E); 0.2 for DS-1000 and Asleep at the Keyboard; 0.1 for the E.3 prompt",
+   "top_p": "0.5 for DS-1000; 0.95 for toxicity and maj@k",
+   "max_tokens": "1024 (DS-1000); 128 (toxicity, min 1)",
+   "samples": "n=200 per problem for open-access models (HumanEval/MBPP/MultiPL-E), n=20 for API models; DS-1000 mean pass@1 over 40 samples; Asleep at the Keyboard 25 completions per scenario (1,000 per model); ODEX n not stated",
+   "prompting": "GSM8K 8-shot CoT and PAL; MMLU 5-shot; CoQA zero-shot; docstring generation zero-shot via infilling; technical-assistant HHH-style prompt (Appendix F)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "fraction of problems for which any of k samples passes all tests (Chen et al., 2021)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Insecure rate (Asleep at the Keyboard)",
+     "definition": "fraction of syntactically valid completions containing the tested vulnerability",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Line exact match",
+     "definition": "single-line FIM exact match",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "return type prediction on normalized annotations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU",
+     "definition": "smoothed 4-gram BLEU on first line of docstring",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "on last 1K tokens of 8K chunks with 2K vs 8K window, 10 GPL repos per language",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "StereoSet SS/LMS/ICAT",
+     "definition": "ICAT = lms * min(ss,100-ss)/50",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Toxicity",
+     "definition": "percentage of 10K RealToxicityPrompts responses flagged by RoBERTa classifier (threshold 0.5) or offensive word list",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "CodeGen-16B-Multi",
+    "CodeGen-16B-Mono",
+    "CodeGeeX-13B",
+    "code-cushman-001",
+    "code-davinci-001/002",
+    "InCoder-6B",
+    "SantaCoder-1B",
+    "LLaMA 7B-65B",
+    "PaLM",
+    "LaMDA",
+    "GPT-NeoX-20B"
+   ],
+   "protocol": "Code LM Evaluation Harness (docker execution, data parallel); single runs; no significance tests reported; model checkpoints at every 200B tokens evaluated in 6.3."
+  },
+  "availability": {
+   "code": "open-sourced code repositories on GitHub (bigcode-project) and evaluation harness",
+   "weights": "public under OpenRAIL-M licence (more commercially viable version)",
+   "data": "The Stack public; PII annotations gated; training and eval splits gated access at hf.co/BigCode"
+  },
+  "prompts": [
+   {
+    "purpose": "Prefix that boosts HumanEval pass@1 for StarCoder (temperature 0.1)",
+    "text": "<filename>solutions/solution_1.py\n# Here is the correct implementation of the code exercise",
+    "where": "Appendix E.3"
+   },
+   {
+    "purpose": "Technical assistant dialogue prompt (opening line only; the full multi-dialogue prompt is in Appendix F)",
+    "text": "Below are a series of dialogues between various people and an AI technical assistant.",
+    "where": "Appendix F"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.seq_len",
+    "quote": "global batch size of 512 (equivalent to 4M tokens)",
+    "where": "5.6"
+   },
+   {
+    "field": "training.other.natural_language_share",
+    "quote": "Roughly 20% of its training tokens are natural language data: 7% GitHub issues, 10% Markdown, 2% Jupyter notebooks, and 4% HTML.",
+    "where": "7"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "StarCoder reaches 33.6% pass@1 on HumanEval, highest among open-access models; StarCoderBase 30.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 33.6,
+   "unit": "%",
+   "baseline_value": "33.5 (code-cushman-001); 29.3 (CodeGen-Mono-16B)",
+   "n": null,
+   "setup": "HumanEval, n=200 samples, temp 0.2, StarCoder 15.5B",
+   "quote": null,
+   "table": "Table 12, row StarCoder, column HumanEval",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "StarCoder reaches 52.7% pass@1 on MBPP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MBPP pass@1",
+   "value": 52.7,
+   "unit": "%",
+   "baseline_value": "45.9 (code-cushman-001)",
+   "n": null,
+   "setup": "MBPP, n=200, temp 0.2",
+   "quote": null,
+   "table": "Table 12, row StarCoder, column MBPP",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "StarCoder scores 26.0 overall on DS-1000 completion mode.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DS-1000 pass@1",
+   "value": 26.0,
+   "unit": "%",
+   "baseline_value": "18.1 (code-cushman-001)",
+   "n": null,
+   "setup": "completion, temp 0.2, top_p 0.5, max_length 1024, 40 samples",
+   "quote": null,
+   "table": "Table 13, row Completion StarCoder, column Overall",
+   "note": null,
+   "where": "Table 13"
+  },
+  {
+   "claim": "Adding the file-name prefix prompt lifts StarCoder HumanEval pass@1 from 33.6% to 40.8% at temperature 0.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 40.8,
+   "unit": "%",
+   "baseline_value": 33.6,
+   "n": null,
+   "setup": "StarCoder, prefix '<filename>solutions/solution_1.py # Here is the correct implementation of the code exercise'",
+   "quote": "boosts pass@1 performance on HumanEval to 40.8% (from 33.6% unprompted, Table 12)",
+   "table": null,
+   "note": null,
+   "where": "Appendix E.3"
+  },
+  {
+   "claim": "Same prefix hurts CodeGen-16B-Mono (28.10%) and has negligible effect on StarCoderBase.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1",
+   "value": 28.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeGen-16B-Mono, same prompt without filename, temp 0.1",
+   "quote": "bringing it down to 28.10%",
+   "table": null,
+   "note": null,
+   "where": "Appendix E.3"
+  },
+  {
+   "claim": "StarCoderBase gets 30.35 pass@1 on MultiPL-E Python HumanEval and is competitive with code-cushman-001 on most of 19 languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiPL-E pass@1",
+   "value": 30.35,
+   "unit": "%",
+   "baseline_value": 30.71,
+   "n": null,
+   "setup": "HumanEval translated by MultiPL-E, n=200",
+   "quote": null,
+   "table": "Table 15, row python, column StarCoderBase",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "code-davinci-002 (175B) beats StarCoderBase on every MultiPL-E language; e.g. cpp 48.44 vs 30.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiPL-E pass@1",
+   "value": 30.56,
+   "unit": "%",
+   "baseline_value": 48.44,
+   "n": null,
+   "setup": "cpp, StarCoderBase vs code-davinci-002",
+   "quote": null,
+   "table": "Table D.1, row cpp, column StarCoderBase",
+   "note": null,
+   "where": "Table D.1"
+  },
+  {
+   "claim": "Longer 8K window cuts perplexity, e.g. php 1.73 to 1.43.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 1.43,
+   "unit": "ppl",
+   "baseline_value": 1.73,
+   "n": null,
+   "setup": "StarCoderBase, 10 GPL repos per language, last 1K tokens of 8K chunks",
+   "quote": null,
+   "table": "Table 21, row 8K tokens, column php",
+   "note": null,
+   "where": "Table 21"
+  },
+  {
+   "claim": "Single-line FIM exact match: StarCoder 0.62 on Python vs SantaCoder 0.44.",
+   "kind": "measured",
+   "source": null,
+   "metric": "line exact match",
+   "value": 0.62,
+   "unit": "fraction",
+   "baseline_value": 0.44,
+   "n": null,
+   "setup": "Python single-line infilling (Ben Allal et al. 2023 benchmark)",
+   "quote": null,
+   "table": "Table 17, row StarCoder, column Python",
+   "note": null,
+   "where": "Table 17"
+  },
+  {
+   "claim": "Python return type prediction All F1 of StarCoderBase is 86.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 86.6,
+   "unit": "%",
+   "baseline_value": 46.8,
+   "n": null,
+   "setup": "Fried et al. (2022) adaptation of Pradel et al. (2020), greedy",
+   "quote": null,
+   "table": "Table 18, row StarCoderBase, column All F1",
+   "note": "Baseline is InCoder-6B",
+   "where": "Table 18"
+  },
+  {
+   "claim": "Docstring generation BLEU 21.99 for StarCoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 21.99,
+   "unit": "BLEU",
+   "baseline_value": 18.27,
+   "n": null,
+   "setup": "CodeXGLUE Python code summarization, zero-shot infilling, greedy",
+   "quote": null,
+   "table": "Table 20, row StarCoder, column BLEU",
+   "note": "Baseline InCoder-6B; authors warn of possible train/test overlap",
+   "where": "Table 20"
+  },
+  {
+   "claim": "StarCoderBase generates insecure completions in 39.77% of valid completions (completion mode).",
+   "kind": "measured",
+   "source": null,
+   "metric": "insecure rate",
+   "value": 39.77,
+   "unit": "%",
+   "baseline_value": 42.32,
+   "n": null,
+   "setup": "Asleep at the Keyboard, 40 scenarios, 25 completions each at temp 0.2",
+   "quote": null,
+   "table": "Table 16, row Completion StarCoderBase, column Insecure",
+   "note": "Baseline code-cushman-001",
+   "where": "Table 16"
+  },
+  {
+   "claim": "StarCoderBase PAL beats CoT on GSM8K (21.5 vs 8.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 21.5,
+   "unit": "%",
+   "baseline_value": 8.4,
+   "n": null,
+   "setup": "8-shot, greedy, PAL",
+   "quote": "StarCoder-\nBase performs better with PAL (21.5%) than with CoT (8.4%)",
+   "table": null,
+   "note": null,
+   "where": "7.1"
+  },
+  {
+   "claim": "StarCoderBase MMLU 5-shot accuracy 34.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": 34.2,
+   "unit": "%",
+   "baseline_value": 27.8,
+   "n": null,
+   "setup": "StarCoderBase 15.5B",
+   "quote": "(34.2% to 27.8%)",
+   "table": null,
+   "note": "Baseline CodeGen-16B-Multi; LLaMA-13B 46.9",
+   "where": "7.2"
+  },
+  {
+   "claim": "StarCoderBase has the lowest StereoSet overall stereotype score (55.53) among tested models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "StereoSet stereotype score",
+   "value": 55.53,
+   "unit": "%",
+   "baseline_value": 63.4,
+   "n": null,
+   "setup": "intrasentence, overall",
+   "quote": null,
+   "table": "Table 25, row Overall StarCoderBase, column Stereotype Score",
+   "note": "Baseline LLaMA-13B",
+   "where": "Table 25"
+  },
+  {
+   "claim": "PII detection: NER+pseudo-labels reaches key F1 70.41% vs 6.74% for regex.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 70.41,
+   "unit": "%",
+   "baseline_value": 6.74,
+   "n": null,
+   "setup": "key detection on 4,000-example test set",
+   "quote": null,
+   "table": "Table 8, row + pseudo labels, column Key F1",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Improved email regex raised F1 from 81.8% to 96.83%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 96.83,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "email regex baseline on annotated benchmark",
+   "quote": "This modification boosted the F1 score of the\nregex from 81.8% to 96.83%",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "StarCoderBase training cost 320,256 GPU hours and 16.68 tCO2eq.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": 320256,
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "512 A100 80GB, 1T tokens",
+   "quote": "Based\non the total number of GPU hours that training took (320,256)",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Language dependence: pass@1 improves between 800B and 1000B only for languages with >~1 GB of data; R pass@1 drops.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data size threshold",
+   "value": 1,
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiPL-E checkpoints every 200B tokens",
+   "quote": "performance improves only for languages with large enough amounts of data\n(≳1 GB)",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  }
+ ],
+ "limits": [
+  "Evaluated only on English-language benchmarks.",
+  "Licence detector may misclassify repositories; opt-out works per repository and cannot remove duplicates elsewhere.",
+  "PII detector has false positives and negatives; usernames excluded from redaction because of low performance; model may still emit PII.",
+  "The Stack may contain undetected malicious code; 654 files flagged and removed.",
+  "Attribution tools (Bloom filter, BM25) cover only the training subset, may give false positives and do not separate generic from protected code.",
+  "Return-type and docstring benchmarks may overlap with training data.",
+  "Near-deduplication not applied to Git commits or issues (time constraints); Swift and D omitted from training languages (Swift by human error).",
+  "StarCoder surprisingly beats StarCoderBase on some non-Python languages and authors can only speculate why.",
+  "Training token share of natural language stated as roughly 20% but listed components sum to 23%.",
+  "No seeds, variance or significance tests reported; single training run."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "The Stack",
+   "year": 2022,
+   "arxiv": "2211.15533",
+   "relation": "uses-data",
+   "note": "training corpus (v1.2)",
+   "quote": null
+  },
+  {
+   "work": "SantaCoder",
+   "year": 2023,
+   "arxiv": "2301.03988",
+   "relation": "extends",
+   "note": "same architecture, tokenizer design, dedup pipeline, PII regexes",
+   "quote": null
+  },
+  {
+   "work": "Fill-in-the-Middle (Bavarian et al.)",
+   "year": 2022,
+   "arxiv": "2207.14255",
+   "relation": "uses-method",
+   "note": "FIM transformation",
+   "quote": null
+  },
+  {
+   "work": "Multi-Query Attention (Shazeer)",
+   "year": 2019,
+   "arxiv": "1911.02150",
+   "relation": "uses-method",
+   "note": "fast large-batch inference",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al.)",
+   "year": 2022,
+   "arxiv": "2205.14135",
+   "relation": "uses-method",
+   "note": "enables 8K context",
+   "quote": null
+  },
+  {
+   "work": "Codex / HumanEval (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "pass@k, baseline code-cushman-001",
+   "quote": null
+  },
+  {
+   "work": "CodeGen (Nijkamp et al.)",
+   "year": 2023,
+   "arxiv": "2203.13474",
+   "relation": "baseline",
+   "note": "main open baseline",
+   "quote": null
+  },
+  {
+   "work": "MultiPL-E (Cassano et al.)",
+   "year": 2023,
+   "arxiv": "2208.08227",
+   "relation": "evaluates",
+   "note": "19-language benchmark",
+   "quote": null
+  },
+  {
+   "work": "DS-1000 (Lai et al.)",
+   "year": 2022,
+   "arxiv": "2211.11501",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "InCoder (Fried et al.)",
+   "year": 2022,
+   "arxiv": "2204.05999",
+   "relation": "baseline",
+   "note": "FIM baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "baseline",
+   "note": "natural language comparison",
+   "quote": null
+  },
+  {
+   "work": "PAL (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2211.10435",
+   "relation": "uses-method",
+   "note": "GSM8K evaluation",
+   "quote": null
+  },
+  {
+   "work": "Data Portraits (Marone & Van Durme)",
+   "year": 2023,
+   "arxiv": "2303.03919",
+   "relation": "uses-method",
+   "note": "Bloom-filter membership check",
+   "quote": null
+  },
+  {
+   "work": "HELM (Liang et al.)",
+   "year": 2022,
+   "arxiv": "2211.09110",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Performance (pass@1) of StarCoderBase at several training checkpoints by data size (left) and by programming language (right).",
+   "page": 25,
+   "why": "shows that low-resource languages stop improving or regress when data is below ~1 GB"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Overview of the training data for StarCoder: files and volume after near-dedup and after filtering.",
+   "page": 6,
+   "why": "per-language data volumes and sampling weights"
+  }
+ ],
+ "code": [
+  {
+   "where": "7.3.1 eq 1",
+   "snippet": "ICAT = lms · min(ss, 100 − ss) / 50",
+   "verbatim": true
+  },
+  {
+   "where": "5.1",
+   "snippet": "<reponame>reponame<filename>filename<gh_stars>stars\\ncode<|endoftext|>",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Per-language rows of Tables 1-3 and Table 5 counts were not transcribed into the JSON; the full prompt in Appendix F is shortened to its opening line."
+ ]
+}

@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "2304.08818",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/blattmann-2023-align-your-latents.pdf",
+ "bib": {
+  "title": "Align your Latents: High-Resolution Video Synthesis with Latent Diffusion Models",
+  "authors": [
+   "Andreas Blattmann",
+   "Robin Rombach",
+   "Huan Ling",
+   "Tim Dockhorn",
+   "Seung Wook Kim",
+   "Sanja Fidler",
+   "Karsten Kreis"
+  ],
+  "first_author": "Blattmann",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 28 Dec 2023)",
+  "arxiv": "2304.08818",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 113819,
+  "chars_total": 113819,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a pretrained image latent diffusion model be turned into a high-resolution video generator by training only inserted temporal layers?",
+ "hypothesis": "Freezing pretrained spatial layers and training temporal alignment layers (plus a video-fine-tuned decoder and upsampler) gives temporally consistent high-resolution video efficiently.",
+ "contributions": [
+  "Efficient approach for high-resolution, long-term consistent video generation by inserting temporal layers into pretrained image LDMs",
+  "Temporal fine-tuning of super-resolution DMs",
+  "State-of-the-art on real driving scene videos, multi-minute generation",
+  "Stable Diffusion turned into a text-to-video LDM",
+  "Learned temporal layers combine with other image checkpoints (DreamBooth)"
+ ],
+ "method": {
+  "summary": "Image LDM is pretrained (or Stable Diffusion used), spatial layers frozen, temporal attention and 3D-conv residual layers interleaved with a learned alpha merge are trained on encoded video; decoder gets temporal layers and a video patch discriminator. Prediction (0/1/2 context frames) and interpolation (T to 4T, 4T to 16T) models plus a 4x video-aware upsampler form a cascade.",
+  "task": "video generation (driving scenes, text-to-video)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RDS (in-house real driving scenes)",
+    "role": "train",
+    "size": "683,060 videos of 8 s at 512x1024, up to 30 fps (85,841 at 30 fps, rest 10 fps); plus 100k bbox-annotated frames",
+    "split": "images 1 fps 128x256 for image LDM; 2 fps for key frames",
+    "source": "in-house, not public",
+    "preprocessing": "night/day labels, crowdedness"
+   },
+   {
+    "name": "WebVid-10M",
+    "role": "train",
+    "size": "10.7M video-caption pairs, 52K video hours",
+    "split": null,
+    "source": "Bain et al. 2021",
+    "preprocessing": "resized/center-cropped to 320x512"
+   },
+   {
+    "name": "Mountain Biking (Brooks et al.)",
+    "role": "both",
+    "size": "1,202 clips, >=5 s, 30 fps, max 576x1024",
+    "split": null,
+    "source": "Long Video GAN dataset",
+    "preprocessing": "downsampled and center-cropped to 256x128"
+   },
+   {
+    "name": "UCF-101",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Soomro et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "MSR-VTT",
+    "role": "eval",
+    "size": "test set 2990 examples, 20 descriptions each",
+    "split": null,
+    "source": "Xu et al.",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Video LDM (driving)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LDM, U-Net (Dhariwal), f=8, z 16x32x4, channels 224, VQ autoencoder codebook 16384",
+    "init_from": "own image LDM trained on RDS frames",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "T=10 frames key-frame model",
+    "other": {
+     "upsampler": "pixel-space 4x, 128x256 to 512x1024, 160 channels"
+    }
+   },
+   {
+    "name": "Video LDM (Stable Diffusion text-to-video)",
+    "role": "proposed",
+    "params": "~3.1B (autoencoder + diffusion), ~2.2B trained; temporal layers 649M (SD1.4)/656M (SD2.x); interpolation LDM 1,509M",
+    "architecture": "SD LDM, f=8, z 40x64x4, 320 channels",
+    "init_from": "Stable Diffusion 1.4, 2.0 or 2.1 (spatial layers first fine-tuned on WebVid frames)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "113 frames (sequence length 8 in training)",
+    "other": {
+     "upsampler": "SD 4x latent upscaler, 473M backbone + 449M temporal params trained, 977M total",
+     "text_encoder": "CLIP ViT-L/14 (SD1.4) / OpenCLIP ViT-H (SD2.x), not trained"
+    }
+   },
+   {
+    "name": "Long Video GAN (LVG)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "denoising score matching, v-prediction (driving) or epsilon (text-to-video), loss over temporal layers only (Eq 2); masked variants Eq 3, Eq 5",
+   "optimizer": null,
+   "lr": "1e-4 for temporal layers and image LDM (driving); 1e-5 upsampler image DM; 4.0e-5/5.0e-5 autoencoder fine-tune; 1e-4 SD spatial fine-tune; 1e-6 DreamBooth",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "per GPU, driving key-frame model 9 on 40 A100-40GB; text-to-video key-frame 2 on 8 A100-80GB; interpolation 3 on 256 A100-80GB; see Tables 6-8",
+   "steps": "driving image LDM 73K; key frame temporal 146K; text-to-video interpolation 402K; decoder 41K/35K/78K; see Table 6/8",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "10 frames (driving key frames), 8 (text-to-video), 5 (interpolation/upsampler)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "pdrop 0.1 (image LDM)",
+   "regularisation": null,
+   "hardware": "A100-40GB and A100-80GB, 8 to 256 GPUs depending on model",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "diffusion": "1000 steps, linear noise schedule, beta0 0.0015 betaT 0.0195 (driving)",
+    "alpha_merge": "learned alpha in [0,1] per temporal layer, scalar for text-to-video",
+    "noise_aug_upsampler": "t sampled 0..250 in training; 150 steps (driving) or 30 steps (text-to-video) perturbation at inference",
+    "dreambooth": "256 regularization images, 800 iterations, lr 1e-6, trains U-Net and CLIP text encoder, 8-23 images per subject",
+    "ablation_models": "Table 7: 2 A100-80GB, 60K-78K steps, lr 1e-4"
+   }
+  },
+  "inference": {
+   "decoding": "DDIM",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FVD: 2,048 videos of 16 frames at 30 fps (10k for SD2.1 UCF-101); FID: 10k frames (50k for mountain biking); IS 10k samples; CLIPSIM one random prompt per MSR-VTT example",
+   "prompting": "UCF-101 class names used directly as prompts",
+   "retrieval": null,
+   "parameters": {
+    "steps_eta_guidance": "driving LDM 200 steps eta 1.0 scale 2.0; driving upsampler 50 steps eta 0.0 scale 2.0; text-to-video keyframes 50 steps eta 1.0 scale 8.0 (see Table 6 column order)",
+    "context_guidance": "Eq 4, scale s>=1",
+    "context_frames": "0, 1 or 2; one image frame first then two frames when extending"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FVD",
+     "definition": "I3D features, 2,048 generated vs reference videos (random 16-frame sequences)",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "FID",
+     "definition": "frame-wise Inception features, 10k frames",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "video Inception score with C3D trained on UCF-101, 10k samples",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIPSIM",
+     "definition": "ViT-B/32 CLIP similarity averaged over 47,840 frames",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human preference",
+     "definition": "MTurk pairwise realism, non-forced choice, 100 videos, 4 raters per pair",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Long Video GAN",
+    "CogVideo",
+    "MagicVideo",
+    "Make-A-Video",
+    "GODIVA",
+    "NUWA",
+    "pixel-baseline, end-to-end LDM, attention-only (ablations)"
+   ],
+   "protocol": "Single runs, no seeds or significance tests stated; MTurk workers from English-speaking countries, $0.04 per question."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WebVid-10M and Mountain Biking public; RDS in-house; project page https://research.nvidia.com/labs/toronto-ai/VideoLDM/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Video fine-tuning the first-stage decoder cuts reconstruction FVD on driving videos from 390.88 to 32.94 (FID rises 7.61 to 9.17).",
+   "kind": "measured",
+   "source": null,
+   "metric": "reconstruction FVD",
+   "value": "32.94",
+   "unit": "FVD (reconstruction)",
+   "baseline_value": "390.88",
+   "n": null,
+   "setup": "RDS driving videos, 128x256, 2,048 examples, decoder image-only vs video fine-tuned",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3 right, row FVD, column finetuned"
+  },
+  {
+   "claim": "Video LDM beats Long Video GAN on RDS at 128x256 in FVD (389 vs 478) and FID (31.6 vs 53.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "389",
+   "unit": "FVD",
+   "baseline_value": "478",
+   "n": null,
+   "setup": "RDS 128x256, no upsampler, 2,048 generated videos, unconditional",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 left, row Ours, column FVD"
+  },
+  {
+   "claim": "Conditioning on day/night and crowdedness lowers FVD further to 356 but FID rises to 51.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "356",
+   "unit": "FVD",
+   "baseline_value": "389",
+   "n": null,
+   "setup": "RDS 128x256, conditional model",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1 left, row Ours (cond.), column FVD"
+  },
+  {
+   "claim": "Human raters prefer the conditional Video LDM over LVG 62.03% to 31.65% (6.33% equal).",
+   "kind": "measured",
+   "source": null,
+   "metric": "human preference",
+   "value": "62.03",
+   "unit": "% preferred",
+   "baseline_value": "31.65",
+   "n": null,
+   "setup": "RDS, 100 videos of 4 s, 4 MTurk raters per pair (400 responses), non-forced choice",
+   "note": null,
+   "where": "Table 2, App. G",
+   "table": "Table 2, row Ours (cond.) v.s LVG, column Pref. A"
+  },
+  {
+   "claim": "Video-finetuning the pixel-space upsampler cuts FVD from 165.98 to 45.39 with FID unchanged (19.71 vs 19.85).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "45.39",
+   "unit": "FVD",
+   "baseline_value": "165.98",
+   "n": null,
+   "setup": "RDS, 128x256 30 fps ground truth conditioning, 4x pixel upsampler to 512x1024",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3 left, row Ours Video Upsampler, column FVD"
+  },
+  {
+   "claim": "Ablation: pretraining image LDM matters; End-to-End LDM (no image pretraining) has FVD 1155.10 vs 534.17 for Ours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "534.17",
+   "unit": "FVD",
+   "baseline_value": "1155.10",
+   "n": null,
+   "setup": "Smaller Video LDM on RDS 128x256",
+   "note": null,
+   "where": "Table 1 right",
+   "table": "Table 1 right, row Ours, column FVD"
+  },
+  {
+   "claim": "Ablation: 3D-conv + attention temporal layers beat attention-only (FVD 534.17 vs 704.41, FID 48.26 vs 50.01) at equal trainable parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "534.17",
+   "unit": "FVD",
+   "baseline_value": "704.41",
+   "n": null,
+   "setup": "Smaller Video LDM on RDS",
+   "note": null,
+   "where": "Table 1 right",
+   "table": "Table 1 right, rows Ours and Attention-only, column FVD"
+  },
+  {
+   "claim": "Context guidance lowers FVD to 508.82 at the cost of FID (54.16 vs 48.26).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "508.82",
+   "unit": "FVD",
+   "baseline_value": "534.17",
+   "n": null,
+   "setup": "Smaller Video LDM on RDS",
+   "note": null,
+   "where": "Table 1 right",
+   "table": "Table 1 right, row Ours (context-guided), column FVD"
+  },
+  {
+   "claim": "Zero-shot UCF-101 (SD 2.1 based): IS 33.45, FVD 550.61; FVD trails Make-A-Video (367.23), IS slightly above (33.00).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "550.61",
+   "unit": "FVD",
+   "baseline_value": "367.23",
+   "n": null,
+   "setup": "UCF-101 class names as prompts, 10k samples for FVD and IS, zero-shot, SD 2.1-based Video LDM",
+   "note": null,
+   "where": "Table 4, App. G",
+   "table": "Table 4, row Video LDM (Ours), column FVD"
+  },
+  {
+   "claim": "SD 1.4-based Video LDM on UCF-101 is worse: IS 29.49, FVD 656.49 (only 2,048 samples for FVD).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FVD",
+   "value": "656.49",
+   "unit": "FVD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCF-101 zero-shot, SD 1.4-based",
+   "note": "FVD for SD 1.4 used 2,048 samples vs 10k for SD 2.1, so not strictly comparable.",
+   "where": "Table 9",
+   "table": "Table 9, row Video LDM (SD 1.4) (Ours), column FVD"
+  },
+  {
+   "claim": "Zero-shot MSR-VTT CLIPSIM 0.2929 (SD 2.1), below Make-A-Video 0.3049, above CogVideo (English) 0.2631.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIPSIM",
+   "value": "0.2929",
+   "unit": "CLIPSIM",
+   "baseline_value": "0.3049",
+   "n": null,
+   "setup": "MSR-VTT test set, 2990 videos one random prompt each, 47,840 frames, ViT-B/32",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Video LDM (Ours), column CLIPSIM"
+  },
+  {
+   "claim": "Decoder video fine-tuning also helps on WebVid (FVD 35.82 to 18.66) and Mountain Biking (73.78 to 25.55).",
+   "kind": "measured",
+   "source": null,
+   "metric": "reconstruction FVD",
+   "value": "18.66",
+   "unit": "FVD (reconstruction)",
+   "baseline_value": "35.82",
+   "n": null,
+   "setup": "2,048 examples per dataset",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, column WebVid fine-tuned, row FVD"
+  },
+  {
+   "claim": "Mountain biking: Video LDM beats LVG on FID (7.73 vs 21.1) and human preference (54.2 vs 42.2) but is worse on FVD (118 vs 85.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "7.73",
+   "unit": "FID",
+   "baseline_value": "21.1",
+   "n": null,
+   "setup": "Mountain Biking, 256x128, 50k frames for FID",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Video LDM (ours), column FID"
+  },
+  {
+   "claim": "Adding an image discriminator to decoder fine-tuning worsens reconstruction FVD (51.01 vs 32.94) with FID unchanged, so only a video discriminator is used.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reconstruction FVD",
+   "value": "51.01",
+   "unit": "FVD (reconstruction)",
+   "baseline_value": "32.94",
+   "n": null,
+   "setup": "Main driving Video LDM",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row Additional image discriminator, column Reconstruction FVD"
+  },
+  {
+   "claim": "Training temporal layers barely degrades image quality: FID 47.00 with alpha=1 vs 48.26 with learned temporal layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "48.26",
+   "unit": "FID",
+   "baseline_value": "47.00",
+   "n": null,
+   "setup": "Smaller driving Video LDM",
+   "note": null,
+   "where": "App. I.3.2",
+   "quote": "With αϕ=1, we obtain 47.00 FID; with the learnt parameters, we get 48.26 FID."
+  },
+  {
+   "claim": "SD-based text-to-video LDM has about 3.1B parameters of which about 2.2B are trained; Imagen Video has 11.6B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trained params",
+   "value": "2.2B",
+   "unit": "parameters trained",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SD 2.0/2.1 Video LDM, low-res stage",
+   "note": null,
+   "where": "App. H.2.1",
+   "quote": "Out of this, only around 2.2B parameters are actually trained."
+  },
+  {
+   "claim": "Videos of up to 5 minutes validated on driving data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "video length",
+   "value": "5",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RDS driving, prediction models",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "We validated this for up to 5 minutes"
+  }
+ ],
+ "limits": [
+  "Authors state the models are not suitable for productization (training data internet-scraped, research-only sources).",
+  "Synthesized videos not yet indistinguishable from real; deceptive-realism risk noted.",
+  "Convolutional-in-time generation of long text-to-video is fragile; prediction models for text-to-video left to future work.",
+  "Quantitative text-to-video trails concurrent Make-A-Video on UCF-101 FVD and MSR-VTT CLIPSIM.",
+  "Spatial fine-tuning on WebVid slightly hurts image quality; FVD acknowledged unreliable.",
+  "RDS is in-house, so main results are not reproducible by outsiders; no seeds or optimizer stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "context guidance",
+   "definition": "classifier-free guidance on the context-frame conditioning cS (Eq 4)",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "High-Resolution Image Synthesis with Latent Diffusion Models",
+   "year": 2021,
+   "arxiv": "2112.10752",
+   "relation": "extends",
+   "note": "image LDM and Stable Diffusion backbone",
+   "quote": null
+  },
+  {
+   "work": "Generating long videos of dynamic scenes (Long Video GAN)",
+   "year": 2022,
+   "arxiv": "2206.03429",
+   "relation": "baseline",
+   "note": "main baseline, Mountain Biking data",
+   "quote": null
+  },
+  {
+   "work": "Cascaded diffusion models",
+   "year": 2021,
+   "arxiv": "2106.15282",
+   "relation": "uses-method",
+   "note": "upsampler with noise augmentation",
+   "quote": null
+  },
+  {
+   "work": "Make-A-Video",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent; better UCF FVD and CLIPSIM",
+   "quote": null
+  },
+  {
+   "work": "CogVideo",
+   "year": 2022,
+   "arxiv": "2205.15868",
+   "relation": "baseline",
+   "note": "video fine-tunes text-to-image, autoregressive",
+   "quote": null
+  },
+  {
+   "work": "DreamBooth",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "personalized text-to-video",
+   "quote": null
+  },
+  {
+   "work": "WebVid-10M (Frozen in time)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "video-caption data",
+   "quote": null
+  },
+  {
+   "work": "Diffusion models beat GANs on image synthesis",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "U-Net backbone",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Left: insert temporal layers; Right: batch-as-images reshaped to video, merged with learned alpha.",
+   "page": 4,
+   "why": "Shows the frozen/trainable split and the alpha merge."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Video LDM Stack: key frames, two interpolation steps, decode, upsample.",
+   "page": 4,
+   "why": "Whole cascade at a glance."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "z' <- alpha*z + (1-alpha)*z'  (alpha_phi^i z + (1 - alpha_phi^i) z')",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 cell 'Pixel-baseline' FVD printed as '639,56' (comma) in the PDF text; Table 1 right and Table 6 columns are flattened by extraction, so Table 6 column assignments were read in order and may be misaligned."
+ ]
+}

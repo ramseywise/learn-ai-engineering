@@ -1,0 +1,605 @@
+{
+ "schema": 1,
+ "key": "sha1:3febb2bed886",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/deep-contextualized-word-representations.pdf",
+ "bib": {
+  "title": "Deep contextualized word representations",
+  "authors": [
+   "Matthew E. Peters",
+   "Mark Neumann",
+   "Mohit Iyyer",
+   "Matt Gardner",
+   "Christopher Clark",
+   "Kenton Lee",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Peters",
+  "year": 2018,
+  "venue": "Proceedings of NAACL-HLT 2018",
+  "arxiv": "1802.05365",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 44533,
+  "chars_total": 44533,
+  "engine": "pymupdf",
+  "skipped": "The supplemental material (training details, hyperparameters) is not in the PDF."
+ },
+ "type": "empirical",
+ "question": "Can word representations that are learned functions of a pretrained deep bidirectional language model's internal states capture both syntax/semantics and polysemy, and improve many NLP tasks?",
+ "hypothesis": "Exposing all internal biLM layers lets downstream models mix different semi-supervision signals and beats using only the top layer.",
+ "contributions": [
+  "ELMo: task-specific linear combination of all biLM layers",
+  "State of the art on six NLP tasks with 6-20% relative error reductions as stated",
+  "Analysis showing lower layers capture syntax, higher layers semantics, and that all layers help"
+ ],
+ "method": {
+  "summary": "A 2-layer character-CNN biLSTM language model is pretrained on the 1B Word Benchmark, frozen, and its layers are combined with learned softmax weights and a scalar and concatenated into existing task models for six tasks.",
+  "task": "contextual word representations via biLM pretraining, evaluated on SQuAD, SNLI, SRL, coreference, NER, SST-5",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "1B Word Benchmark",
+    "role": "pretrain",
+    "size": "approximately 30 million sentences",
+    "split": null,
+    "source": "Chelba et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": "100K+ question-answer pairs",
+    "split": "test for Table 1, dev for ablations",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "approximately 550K hypothesis/premise pairs",
+    "split": "test / dev",
+    "source": "Bowman et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "OntoNotes SRL",
+    "role": "both",
+    "size": null,
+    "split": "test / dev",
+    "source": "Pradhan et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "OntoNotes coreference, CoNLL 2012",
+    "role": "both",
+    "size": null,
+    "split": "test",
+    "source": "Pradhan et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "CoNLL 2003 NER",
+    "role": "both",
+    "size": null,
+    "split": "test",
+    "source": "Sang and Meulder 2003",
+    "preprocessing": null
+   },
+   {
+    "name": "SST-5",
+    "role": "both",
+    "size": null,
+    "split": "test",
+    "source": "Socher et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "SemCor 3.0",
+    "role": "train",
+    "size": null,
+    "split": "train, for the WSD 1-NN analysis",
+    "source": "Miller et al. 1994",
+    "preprocessing": null
+   },
+   {
+    "name": "Penn Treebank WSJ",
+    "role": "both",
+    "size": null,
+    "split": "test",
+    "source": "Marcus et al. 1993",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ELMo biLM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "character-CNN input, 2-layer biLSTM LM with residual connection from layer 1 to 2, tied token and softmax parameters across directions",
+    "init_from": null,
+    "tokenizer": "purely character-based",
+    "vocab": null,
+    "layers": "L = 2 biLSTM layers",
+    "hidden": "4096 units with 512 dimension projections",
+    "heads": null,
+    "context": null,
+    "other": {
+     "char_cnn": "2048 character n-gram convolutional filters, two highway layers, linear projection to 512",
+     "derived_from": "halved all embedding and hidden dimensions of CNN-BIG-LSTM (Jozefowicz et al. 2016)",
+     "representations_per_token": "three layers"
+    }
+   },
+   {
+    "name": "task baselines",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Clark and Gardner 2017 (SQuAD), ESIM (SNLI), He et al. 2017 re-implementation (SRL), Lee et al. 2017 (Coref), biLSTM-CRF (NER), BCN (SST-5)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CoVe",
+    "role": "baseline",
+    "params": null,
+    "architecture": "NMT encoder biLSTM (McCann et al. 2017)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "joint maximisation of forward and backward LM log likelihood",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "10 epochs on the 1B Word Benchmark",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "a moderate amount of dropout on ELMo (value not given)",
+   "regularisation": "optional lambda*||w||^2 on ELMo layer weights; lambda=1 or 0.001 compared",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "five seeds for SNLI, NER, SST-5",
+   "other": {
+    "biLM_frozen_downstream": "weights frozen when added to task model",
+    "biLM_finetuning": "in most cases a biLM fine-tuned on domain data was used; details in supplemental material not in this PDF",
+    "layer_norm": "in some cases layer normalization applied per biLM layer before weighting"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "five runs with different seeds for NER and SST-5 (mean and std); SNLI averaged over five seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "ELMo_task_k": "gamma_task * sum_j s_task_j h_k,j, s softmax normalised",
+    "placement": "concatenate [x_k; ELMo] at input; also [h_k; ELMo] at output for SNLI and SQuAD"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "SQuAD, SRL, NER, WSD; average F1 for Coref",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "SNLI, SST-5, POS tagging",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "average of forward and backward biLM perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "previous single-model SOTA per task",
+    "task baselines without ELMo",
+    "CoVe",
+    "GloVe"
+   ],
+   "protocol": "Test sets for Table 1 (mean and std over five seeds for NER and SST-5 because test sets are small); dev sets for ablations; no significance test stated."
+  },
+  "availability": {
+   "code": "http://allennlp.org/elmo",
+   "weights": "trained models publicly available",
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adding ELMo to a SQuAD baseline raises test F1 from 81.1 to 85.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "85.8",
+   "unit": "%",
+   "baseline_value": "81.1",
+   "n": null,
+   "setup": "SQuAD test, single model, Clark and Gardner 2017 baseline (BiDAF + self-attention, GRUs)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SQuAD, columns OUR BASELINE / ELMO + BASELINE"
+  },
+  {
+   "claim": "Relative error reduction on SQuAD is 24.9% over the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative error reduction",
+   "value": "24.9%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD test, single model",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "a 24.9% relative error reduction over the baseline"
+  },
+  {
+   "claim": "Across six tasks, ELMo gives relative error reductions of 6 to 20% over strong baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD, SNLI, SRL, Coref, NER, SST-5 test sets",
+   "note": "The introduction says 'up to 20%'; Table 1 lists 24.9% for SQuAD, so the 6-20% range in the text does not match the table.",
+   "where": "Sec 4",
+   "quote": "with relative error reductions ranging from 6 - 20% over strong base models"
+  },
+  {
+   "claim": "SRL test F1 rises from 81.4 to 84.6 with ELMo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "84.6",
+   "unit": "%",
+   "baseline_value": "81.4",
+   "n": null,
+   "setup": "OntoNotes SRL, re-implementation of He et al. 2017, single model",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SRL, columns OUR BASELINE / ELMO + BASELINE"
+  },
+  {
+   "claim": "Coref average F1 rises from 67.2 to 70.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "70.4",
+   "unit": "%",
+   "baseline_value": "67.2",
+   "n": null,
+   "setup": "OntoNotes CoNLL 2012, Lee et al. 2017 baseline",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Coref"
+  },
+  {
+   "claim": "NER F1 reaches 92.22 averaged over five runs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "92.22",
+   "unit": "%",
+   "baseline_value": "90.15",
+   "n": null,
+   "setup": "CoNLL 2003 NER, biLSTM-CRF, five random seeds",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "achieves 92.22% F1 averaged over ﬁve runs"
+  },
+  {
+   "claim": "SNLI accuracy rises from 88.0 to 88.7 (mean over five seeds).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.7",
+   "unit": "%",
+   "baseline_value": "88.0",
+   "n": null,
+   "setup": "SNLI test, ESIM baseline, five seeds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SNLI, column ELMO + BASELINE"
+  },
+  {
+   "claim": "SST-5 accuracy rises from 51.4 to 54.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54.7",
+   "unit": "%",
+   "baseline_value": "51.4",
+   "n": null,
+   "setup": "SST-5 test, BCN baseline, mean of five seeds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SST-5"
+  },
+  {
+   "claim": "ELMo's SQuAD gain (4.7) is larger than CoVe's (1.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD test, same baseline",
+   "note": "CoVe figure is from McCann et al. 2017.",
+   "where": "Sec 4",
+   "quote": "The increase of 4.7% with ELMo is also signiﬁcantly larger then the 1.8% improvement from adding CoVe to a baseline model"
+  },
+  {
+   "claim": "On SQuAD dev, using all layers (lambda=0.001) beats last layer only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "85.2",
+   "unit": "%",
+   "baseline_value": "84.7",
+   "n": null,
+   "setup": "SQuAD dev F1; baseline 80.8, last only 84.7, all layers lambda=1 85.0, lambda=0.001 85.2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SQuAD, column lambda=0.001"
+  },
+  {
+   "claim": "Including ELMo at input and output helps SQuAD and SNLI but not SRL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "84.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev sets; SRL input only 84.7, input&output 84.3, output only 80.9",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row SRL, column Input Only"
+  },
+  {
+   "claim": "biLM second layer gives 69.0 F1 on all-words fine-grained WSD (1-nearest-neighbour), first layer 67.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "69.0",
+   "unit": "%",
+   "baseline_value": "67.4",
+   "n": null,
+   "setup": "SemCor 3.0 train, Raganato et al. 2017 four test sets; CoVe second layer 64.7, WordNet 1st sense 65.9",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row biLM, Second layer"
+  },
+  {
+   "claim": "For POS tagging the first biLM layer is better than the second.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "97.3",
+   "unit": "%",
+   "baseline_value": "96.8",
+   "n": null,
+   "setup": "PTB WSJ test, linear classifier on frozen representations; CoVe first layer 93.3",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row biLM, First Layer"
+  },
+  {
+   "claim": "SRL baseline needs 486 epochs to reach max dev F1; with ELMo it passes that at epoch 10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative decrease in updates",
+   "value": "98%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SRL dev",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "a 98% relative decrease in the number of updates needed to reach"
+  },
+  {
+   "claim": "SRL with ELMo and 1% of training data matches baseline with 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SRL, training fraction varied 0.1% to 100% (Fig 1)",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "the ELMo model with 1% of the training set has about the same F1 as the baseline model with 10% of the training set"
+  },
+  {
+   "claim": "Biggest share of gain is contextual, not sub-word: replacing GloVe with the biLM character layer gives SQuAD 80.8 to 81.4 F1, full ELMo without GloVe 85.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "85.3",
+   "unit": "%",
+   "baseline_value": "80.8",
+   "n": null,
+   "setup": "SQuAD dev",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row SQuAD, columns GloVe / ELMo type / ELMo"
+  },
+  {
+   "claim": "Adding GloVe to ELMo gives a marginal gain (SRL 84.5 to 84.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SRL dev",
+   "note": null,
+   "where": "Sec 5.7",
+   "quote": "0.2% F1 improvement for SRL from 84.5 to 84.7"
+  },
+  {
+   "claim": "Pretrained biLM average forward/backward perplexity is 39.7 after 10 epochs on 1B Word Benchmark, versus 30.0 for forward CNN-BIG-LSTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "39.7",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B Word Benchmark",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "the average for-\nward and backward perplexities is 39.7, compared\nto 30.0 for the forward CNN-BIG-LSTM"
+  }
+ ],
+ "limits": [
+  "Supplemental material with optimizer, learning rate, batch size, fine-tuning and hardware details is not in this PDF.",
+  "Ablations use dev sets and only SQuAD, SNLI, SRL; NER lambda insensitivity is not shown.",
+  "Authors note fine-tuning the biLM on domain data helped and was used in most cases, so the gains mix frozen and fine-tuned biLMs.",
+  "Fixed-weight feature extraction only; no fine-tuning of the whole model (later superseded by BERT-style fine-tuning)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ELMo",
+   "definition": "Embeddings from Language Models: task-specific combination of intermediate layer representations in the biLM",
+   "where": "Sec 1, 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Semi-supervised sequence tagging with bidirectional language models (TagLM)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "top-layer biLM; ELMo uses all layers",
+   "quote": null
+  },
+  {
+   "work": "Learned in translation: Contextualized word vectors (CoVe)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on tasks and layers",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of language modeling",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "uses-method",
+   "note": "CNN-BIG-LSTM architecture halved",
+   "quote": null
+  },
+  {
+   "work": "Character-aware neural language models",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "char CNN input",
+   "quote": null
+  },
+  {
+   "work": "One billion word benchmark",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "biLM pretraining corpus",
+   "quote": null
+  },
+  {
+   "work": "GloVe",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "static embeddings",
+   "quote": null
+  },
+  {
+   "work": "context2vec",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "biLSTM context encoder",
+   "quote": null
+  },
+  {
+   "work": "Semi-supervised sequence learning",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Dai and Le: pretrain then fine-tune",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of baseline vs. ELMo performance for SNLI and SRL as the training set size is varied from 0.1% to 100%.",
+   "page": 8,
+   "why": "shows sample efficiency"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Visualization of softmax normalized biLM layer weights across tasks and ELMo locations.",
+   "page": 8,
+   "why": "shows which layers each task uses"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Nearest neighbors to play using GloVe and the context embeddings from a biLM.",
+   "page": 7,
+   "why": "polysemy example"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1, Sec 3.2",
+   "snippet": "ELMo_k^task = gamma^task * sum_{j=0..L} s_j^task h_{k,j}^LM",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplemental material referenced in text is not in the PDF.",
+  "SST-5 and NER numbers in Table 1 quoted as printed; Table 1 SNLI baseline 88.0 vs text 'improves accuracy by an average of 0.7%'."
+ ]
+}

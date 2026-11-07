@@ -1,19 +1,611 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2209.11755",
  "pdf": "generative-ai/02-rag-retrieval/sources/dai-2022-promptagator.pdf",
  "bib": {
   "title": "Promptagator: Few-shot Dense Retrieval From 8 Examples",
+  "authors": [
+   "Zhuyun Dai",
+   "Vincent Y. Zhao",
+   "Ji Ma",
+   "Yi Luan",
+   "Jianmo Ni",
+   "Jing Lu",
+   "Anton Bakalov",
+   "Kelvin Guu",
+   "Keith B. Hall",
+   "Ming-Wei Chang"
+  ],
   "first_author": "Dai",
   "year": 2022,
-  "venue": "ICLR 2023",
+  "venue": "preprint (arXiv v1; ICLR 2023 not in PDF text)",
   "arxiv": "2209.11755",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "5f2f0582-f958-4d9c-8469-02f3d5079657"
+  "at": "2026-11-07",
+  "chars_read": 75945,
+  "chars_total": 75945,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
  },
- "legacy_report": "SOURCE: \"Promptagator: Few-shot Dense Retrieval From 8 Examples\", Zhuyun Dai, Vincent Y. Zhao, Ji Ma, Yi Luan, Jianmo Ni, Jing Lu, Anton Bakalov, Kelvin Guu, Keith B. Hall, Ming-Wei Chang (Google Research). The extraction shows arXiv:2209.11755v1, 23 Sep 2022. The ICLR 2023 venue comes from the brief and does not appear in this text.\n\nCOVERAGE: I read all 75,985 of 75,985 chars across pages 1–21: the body, compute section, acknowledgements, Appendices A–D, Tables 4–6 and Figures 4–5. I skimmed the references (pp. 11–16) only to find where the method comes from.\n\nCLAIMS\n- claim: The recipe has three steps. Prompt an LLM with a task description and up to 8 examples, generate queries for each document, then filter by round-trip consistency and train a retriever.\n  number: ≤8 examples; up to 1M docs; 8 queries per doc; temperature 0.7\n  setup: The generator is 137B FLAN with no fine-tuning. Examples are dropped or truncated when they exceed FLAN's input limit. The prompt alternates edoc(di), equery(qi) pairs, e.g. \"Argument:{d}\" and \"Counter Argument:{q}\".\n  quote: \"We use the 137B FLAN checkpoint provided by the authors. During prompt engineering, we use at most 8 examples ... We randomly sample up to 1 million documents from each corpus and generate 8 questions per document using sampling decoding with temperature 0.7.\"\n  where: p.4 (§3.1)\n- claim: The filter uses only generated data. A dual encoder is trained on the unfiltered synthetic pairs, and a query is kept only if its source document ranks top-1. K was tuned on MS MARCO.\n  number: K=1\n  setup: All BEIR datasets\n  quote: \"We ﬁnd setting K to 1 leads to the best results and thus use 1 for all BEIR datasets, i.e. we keep a (q, d) pair only when d is ranked in the top 1 place by the initial dual encoder.\"\n  where: p.6 (§4.1); method on p.4 (§3.2)\n- claim: Filtering helps on most datasets but hurts the smallest ones. Most removed queries were too general or hallucinated, and some good pairs were wrongly removed.\n  number: 8 of 11 datasets; +2.5 nDCG@10 average\n  setup: Few-shot Promptagator with vs without the filter (Fig 2a). It hurt NFCorpus and SciFact, which the authors attribute to possible overfitting.\n  quote: \"ﬁltering improves performance on 8 out of 11 datasets, and leads to 2.5 points improvement on average\"\n  where: p.7 (§4.3)\n- claim: A 110M few-shot dual encoder beats BM25, Contriever, GTR-XXL (6B), SPLADE v2, ColBERT v2, GenQ and GPL on the 11-dataset BEIR average.\n  number: 47.8 vs BM25 41.8, Contriever 34.7, GTR-XXL 44.9, SPLADE v2 46.6, ColBERT v2 46.2, GPL 45.5, GenQ 40.1. Zero-shot Promptagator scores 45.5.\n  setup: nDCG@10 on 11 BEIR sets, excluding MS MARCO, NQ and Quora. Table 1 sizes: Contriever 110M, GTR-XXL 6B, SPLADE/ColBERT 110M.\n  quote: \"BM25 31.5 36.7 65.6 32.5 60.3 31.3 21.3 75.3 66.5 15.8 23.6 41.8\" / \"GTR-XXL ... 44.9\" / \"SPLADE v2 ... 46.6\" / \"ColBERT v2 ... 46.2\" / \"Few-shot 59.4 34.5 75.6 33.4 61.4 38.0 16.8 (24.0 ∗) 77.0 65.0 18.4 46.2 47.8\"\n  where: p.7 (Table 2)\n- claim: Promptagator does not beat BM25 on every dataset. Few-shot BM25 is ahead on TREC-Covid? No: few-shot BM25 is behind on covid, but BM25 is ahead on HotpotQA, SciFact and Climate-FEVER.\n  number: hotpot 61.4 vs BM25 60.3 (Promptagator ahead); scifact 65.0 vs 66.5; climate 16.8 vs 21.3; nfc 33.4 vs 32.5\n  setup: Table 2, retriever only\n  quote: as in the Table 2 rows above\n  where: p.7\n- claim: The biggest gains come on tasks unlike QA, such as argument retrieval.\n  number: Touché 34.5 vs GTR-XXL 25.6; ArguAna 59.4 vs 54.0\n  setup: Table 2\n  quote: \"the biggest improvement is on Touche-2020 (touché), followed by ArguAna (arg)\"\n  where: p.6\n- claim: A 110M reranker trained on the same synthetic data adds about 5 points and beats monoT5-3B.\n  number: 52.8 vs monoT5 (3B) 51.1; UPR (3B) 42.7\n  setup: Reranks the top 200 retrieved passages, trained with 31 sampled negatives.\n  quote: \"Few-shot 63.0 38.1 76.2 37.0 73.6 43.4 20.3 (24.1∗) 86.6 73.1 20.1 49.4 52.8\"; \"monoT5 (3B) ... 51.1\"\n  where: p.7 (Table 2), p.5 (§3.3)\n- claim: Eight examples plus the LLM roughly match 50k labelled MS MARCO pairs for a simple dual encoder.\n  number: 8 vs 50k\n  setup: MS MARCO, simple dual encoder, read off Fig 2b. No exact numbers are given in the text.\n  quote: \"making 8 examples to catch up with 50k labeled examples, when simple dual encoders are used\"\n  where: p.8 (Fig 2 caption)\n- claim: The gain comes from the prompted LLM generator, not the training recipe. Zero-shot Promptagator beats an NQ-trained T5 query generator run through the same pipeline.\n  number: none (Fig 2c only)\n  setup: NQ-QGen used the same filtering, batch sizes and training steps.\n  quote: \"the main contributing factor to PROMPTAGATOR is the prompted LLM query generation, not the speciﬁc training recipe or hype-parameters.\"\n  where: p.8\n- claim: Low-quality few-shot examples hurt. Climate-FEVER few-shot scored below zero-shot until the FEVER prompt was used instead.\n  number: 16.8 few-shot vs 21.4 zero-shot; 24.0 with the FEVER prompt\n  setup: BEIR counts \"not enough info\" pairs as relevant.\n  quote: \"This result provides some evidence that low quality few-shot examples negatively affect PROMPTAGATOR.\"\n  where: p.8\n- claim: A FLAN retrained without NQ and Quora loses a little.\n  number: 48.5 → 47.0 average\n  setup: Table 3. Climate-FEVER uses the FEVER prompt, so this average differs from Table 2's 47.8.\n  quote: \"FLAN original ... 48.5\" / \"FLAN w/o NQ and Quora ... 47.0\"\n  where: p.8\n- claim: Model and training details.\n  number: 768-dimensional embedding; batch size 128 for corpora under 50k docs, 6k otherwise; 5k or 1k fine-tuning steps\n  setup: GTR-style shared T5-base v1.1 encoder (110M), mean pooling. Pretrained with Contriever-style cropping on C4. Loss is in-batch softmax with no hard negatives or distillation.\n  quote: \"project it to a ﬁxed 768-dimensional embedding ... T5-base version 1.1 encoder architecture consisting of 110M parameters\"; \"we use 128 batch size for small datasets and 6k for others\"\n  where: p.6 (§4.1)\n- claim: Few-shot queries match the shape of real queries. On ArguAna they are much longer, and their first words follow the gold distribution, unlike NQ-QGen which mostly produces \"what\" and \"who\" questions.\n  number: average query length 98.2 (few-shot) vs 26.0 (zero-shot) vs 9.7 (NQ-QGen)\n  setup: ArguAna (Table 6)\n  quote: \"ArguAna 98.2 26.0 9.7\"\n  where: p.17\n\nLIMITS\n- Generation cost is reported only in volume. The authors give no FLOPs, GPU-hours or price for querying the 137B model, and FLAN-137B was not public.\n  quote: \"we generated 29.23M queries * 2 prompts = 58.46M queries, for a total of 610M words\"; \"While the distillation process is computationally expensive, it signiﬁcantly reduces cost for inference.\"\n- The authors leave three things open: how many generated pairs a task needs, how sensitive results are to the prompt, and how much headroom distillation has.\n  quote: \"We have not yet explored exactly how many query-document pairs are needed for each task\"\n- There are no variance or seed results, and no runs with different few-shot samples.\n- Some few-shot examples are taken from test sets. Those items are counted as failures when scored.\n- The filter hurts small corpora. Per-query K is left to future work.\n- No open or smaller generator is tested. Only FLAN-137B and the NQ-QGen T5 are compared.\n- Dated: the baselines are from 2022, and modern instruction-tuned embedders are absent.\n\nBUILDS ON: round-trip consistency (Alberti et al., 2019; Lewis et al., 2021); FLAN (Wei et al., 2022a); the GTR dual encoder (Ni et al., 2021); T5 (Raffel et al., 2020); Contriever cropping pretraining (Izacard et al., 2022a); BEIR and GenQ (Thakur et al., 2021); GPL (Wang et al., 2022); InPars, the closest prior work, which used GPT-3 query generation for a reranker (Bonifacio et al., 2022); UPR (Sachan et al., 2022).\n\nCODE\n- Zero-shot prompt, p.5 §3.4: `f’{d} Read the passage and generate a query.’`\n- Per-dataset templates, Table 4, p.17, e.g. \"ArguAna 0 Argument: passage X 1 Counter argument: query X\", \"FEVER 0 passage X 1 Is it true that query X\", \"SciFact 0 passage X 1 Finding: query X\".\n\nFIGURES\n- Fig 2, p.8: (a) per-dataset change in nDCG@10 from filtering, (b) synthetic data against the number of labelled MS MARCO pairs, (c) comparison of query generators. Panel (b) shows \"8 ≈ 50k\" in one glance.\n- Fig 5, p.21: the whole training pipeline (prompt → LLM → filter → dual encoder → reranker) in one diagram.\n- Fig 3, p.9: first-word distributions on ArguAna. They show why task-specific prompts matter better than describing them.\n- Fig 1, p.2: BEIR average bar chart.\n\nPROBLEMS\n- The text extracted cleanly. The \"×\" separators in Table 4 come through as \"X\", and the Figure 4 tables are flattened.\n- The abstract says Promptagator beats ColBERT v2 \"by more than 1.2 nDCG\", but Table 2 gives 47.8 vs 46.2, which is 1.6. The 1.2 matches SPLADE v2 (46.6), which is the \"Supervised (MS MARCO)\" bar in Fig 1.\n- In Fig 4 the DBPedia \"Gold queries\" numbers are identical to FiQA's gold numbers, which looks like a copy error in the paper.\n- No embedded instructions were found.\n\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/dai-2022-promptagator.pdf"
+ "type": "empirical",
+ "question": "Can a handful (<=8) of task-specific examples, amplified by an LLM query generator, produce task-specific dense retrievers that beat retrievers trained on large supervised sets such as MS MARCO?",
+ "hypothesis": "Different retrieval tasks have different search intents and query distributions, so retrievers trained from one or two QA datasets generalise poorly; task-specific prompting can supply the missing intent.",
+ "contributions": [
+  "Analyse differences in search intent and query distribution across retrieval tasks and propose a Few-Shot Retrieval setting for BEIR",
+  "Propose PROMPTAGATOR, a recipe for few-shot retrieval using LLM-generated task-specific training data",
+  "Show 2-8 examples give retrievers better than recent models trained on MS MARCO or NQ with over 500K labels, and reranking adds about 5 points"
+ ],
+ "method": {
+  "summary": "A task description plus up to 8 query-document examples prompts FLAN 137B to write queries for up to 1M corpus documents; a dual encoder trained on those pairs filters them by round-trip consistency (keep a pair only if the document is ranked top-1) and is fine-tuned again on the survivors. A 110M cross-attention reranker (PROMPTAGATOR++) is trained on the same synthetic data.",
+  "task": "few-shot dense retrieval on BEIR",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BEIR (11 public datasets: ArguAna, Touche-2020, TREC-Covid, NFCorpus, HotpotQA, DBPedia-Entity, Climate-FEVER, FEVER, SciFact, SCIDOCS, FiQA)",
+    "role": "eval",
+    "size": "18 datasets in BEIR; 11 used",
+    "split": "test; few-shot examples (2 to 8) sampled from dev when available, otherwise from test and counted as 'failed to retrieve'",
+    "source": "Thakur et al. 2021",
+    "preprocessing": "MS MARCO, NQ and Quora excluded from main evaluation; Climate-FEVER excluded from some comparisons via FEVER prompt (24.0*, not in average)"
+   },
+   {
+    "name": "Synthetic (query, document) pairs",
+    "role": "train",
+    "size": "up to 1M documents per corpus x 8 queries; total 29.23M queries x 2 prompts = 58.46M queries, 610M words",
+    "split": null,
+    "source": "generated by FLAN 137B",
+    "preprocessing": "Outputs lacking the query description are dropped; examples reduced/truncated to FLAN input limit"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "retriever pretraining with Contriever independent cropping",
+    "preprocessing": null
+   },
+   {
+    "name": "MS MARCO",
+    "role": "dev",
+    "size": null,
+    "split": "used as validation set to tune K; also Fig 2b comparison vs supervised data",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FLAN (137B)",
+    "role": "base",
+    "params": "137B",
+    "architecture": "instruction-tuned LM, same pretrained model as LaMDA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Original FLAN training overlapped NQ and Quora; an extra FLAN trained without them was ablated"
+    }
+   },
+   {
+    "name": "PROMPTAGATOR dual encoder",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "shared T5-base v1.1 encoder, mean pooling of top layer, 768-dim embedding (GTR recipe)",
+    "init_from": "T5 checkpoint, then pretrained on C4",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "768-dim embedding",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PROMPTAGATOR++ reranker",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "standard Transformer cross-attention encoder",
+    "init_from": "T5-base encoder checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "inferred: rerank depth": "reranks top 200 from retriever"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over in-batch random negatives (dual encoder); cross-entropy with 31 sampled negatives from top 200 retrieved passages (reranker)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "dual encoder: 128 for small corpora (<50k docs), 6k for others; reranker: 64 for all",
+   "steps": "dual encoder: 5k for large corpora (>500k), 1k for others; reranker: 20k for large, 5k for others",
+   "epochs": "'a set number of epochs' before filtering (not stated)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "query generation: 58.46M queries, 610M words with FLAN 137B; no training compute given",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stages": "C4 independent-cropping pretrain, fine-tune on synthetic pairs, filter with initial encoder, continue fine-tuning on filtered data",
+    "hyperparameters": "mostly follow Ni et al. 2021 (GTR)",
+    "corpus size groups": "small <50k, middle 50k-500k, large >500k"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "8 queries per document; single run per config, no seeds reported",
+   "prompting": "instruction prompt (edoc(d1), equery(q1), ..., edoc(dk), equery(qk), edoc(d)) with k<=8 task examples; zero-shot uses one universal prompt",
+   "retrieval": "dual encoder; PROMPTAGATOR++ reranks top 200",
+   "parameters": {
+    "K (round-trip filter)": "1, tuned on MS MARCO, used for all BEIR datasets",
+    "examples per prompt": "at most 8, fewer if over FLAN input limit (Fig 4: 3 to 8 depending on dataset)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "nDCG@10",
+     "definition": "standard BEIR retrieval metric",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "Contriever",
+    "GTR-XXL",
+    "SPLADE v2",
+    "ColBERT v2",
+    "GenQ",
+    "GPL",
+    "UPR (3B)",
+    "InPars (3B)",
+    "monoT5 (220M)",
+    "monoT5 (3B)",
+    "NQ-QGen (in-house T5)"
+   ],
+   "protocol": "nDCG@10 on 11 BEIR test sets, average over datasets; few-shot examples from test counted as failed; single run, no significance test or seeds reported"
+  },
+  "availability": {
+   "code": "not stated; prompts and few-shot examples promised to be released",
+   "weights": null,
+   "data": "prompts and few-shot examples promised"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot query generation",
+    "text": "{d} Read the passage and generate a query.",
+    "where": "3.4"
+   },
+   {
+    "purpose": "few-shot template ArguAna",
+    "text": "Argument: {passage} / Counter argument: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template HotpotQA",
+    "text": "Evidence: {passage} / Vexed question: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template DBPedia-Entity",
+    "text": "entity: {passage} / query: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template NFCorpus",
+    "text": "Article: {passage} / Query: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template Touche-2020",
+    "text": "{passage} / Debate: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template TREC-Covid",
+    "text": "{passage} / Question: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template SciFact",
+    "text": "{passage} / Finding: {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template SCIDOCS",
+    "text": "{passage} / The passage is about {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template FEVER",
+    "text": "{passage} / Is it true that {query}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "few-shot template FiQA",
+    "text": "{passage} / {query}",
+    "where": "Table 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we use 128 batch size for small datasets and 6k for others",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Few-shot PROMPTAGATOR (110M dual encoder) averages 47.8 nDCG@10 on 11 BEIR datasets, above BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 47.8,
+   "unit": "nDCG@10",
+   "baseline_value": 41.8,
+   "n": null,
+   "setup": "11 BEIR datasets (excl. MS MARCO, NQ, Quora), few-shot 2-8 examples per task, FLAN 137B query generation, 110M T5-base dual encoder",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PROMPTAGATOR (110M) Few-shot, column AVG."
+  },
+  {
+   "claim": "Few-shot PROMPTAGATOR beats SPLADE v2 and ColBERT v2, which use token-level interaction and distillation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 47.8,
+   "unit": "nDCG@10",
+   "baseline_value": 46.6,
+   "n": null,
+   "setup": "11 BEIR datasets (excl. MS MARCO, NQ, Quora), few-shot 2-8 examples per task, FLAN 137B query generation, 110M T5-base dual encoder",
+   "note": "Abstract says ColBERT v2 beaten by more than 1.2 nDCG.",
+   "where": "Table 2",
+   "table": "Table 2, rows SPLADE v2 (46.6) and ColBERT v2 (46.2), column AVG."
+  },
+  {
+   "claim": "Zero-shot PROMPTAGATOR averages 45.5, near MS MARCO-supervised retrievers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 45.5,
+   "unit": "nDCG@10",
+   "baseline_value": 44.9,
+   "n": null,
+   "setup": "Universal prompt 'Read the passage and generate a query.', 11 BEIR datasets",
+   "note": "Baseline is GTR-XXL; GPL 45.5.",
+   "where": "Table 2",
+   "table": "Table 2, row Zero-shot (PROMPTAGATOR), column AVG."
+  },
+  {
+   "claim": "PROMPTAGATOR++ few-shot (110M+110M reranker) reaches 52.8, about 5 points above the retriever.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 52.8,
+   "unit": "nDCG@10",
+   "baseline_value": 51.1,
+   "n": null,
+   "setup": "Reranks top 200 from PROMPTAGATOR; 11 BEIR datasets",
+   "note": "Baseline monoT5 (3B) 51.1.",
+   "where": "Table 2",
+   "table": "Table 2, row PROMPTAGATOR++ Few-shot, column AVG."
+  },
+  {
+   "claim": "Zero-shot PROMPTAGATOR++ averages 49.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 49.9,
+   "unit": "nDCG@10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot prompt, 110M+110M",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PROMPTAGATOR++ Zero-shot, column AVG."
+  },
+  {
+   "claim": "Round-trip filtering improves 8 of 11 datasets and gives +2.5 points on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta nDCG@10",
+   "value": 2.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Few-shot PROMPTAGATOR with vs without filter (Fig 2a)",
+   "note": null,
+   "where": "4.3",
+   "quote": "ﬁltering improves performance on 8 out of 11 datasets, and leads to 2.5 points improvement on average"
+  },
+  {
+   "claim": "Filtering hurt NFCorpus and SciFact, the smallest datasets in generated queries; authors conjecture overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2a",
+   "note": null,
+   "where": "4.3",
+   "quote": "There are nonetheless datasets where ﬁltering hurts model quality such as NFCorpus and SciFact."
+  },
+  {
+   "claim": "Eight examples plus the LLM match about 50k labelled MS MARCO examples for a simple dual encoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50000,
+   "unit": "labelled examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO, dual encoder only, no other components; read from Fig 2b caption",
+   "note": null,
+   "where": "Fig 2 caption",
+   "quote": "making 8 examples to catch up with 50k labeled examples, when simple dual encoders are used"
+  },
+  {
+   "claim": "Biggest gains over baselines are on Touche-2020 then ArguAna; few-shot Touche 34.5 vs BM25 36.7 is not above BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 34.5,
+   "unit": "nDCG@10",
+   "baseline_value": 36.7,
+   "n": null,
+   "setup": "Few-shot PROMPTAGATOR on Touche-2020",
+   "note": "Text says biggest improvement is on Touche over baselines; BM25 scores 36.7 there, higher than 34.5. Gain is relative to the other neural baselines.",
+   "where": "Table 2",
+   "table": "Table 2, row PROMPTAGATOR Few-shot, column touché"
+  },
+  {
+   "claim": "Few-shot ArguAna 59.4 versus zero-shot 53.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 59.4,
+   "unit": "nDCG@10",
+   "baseline_value": 53.8,
+   "n": null,
+   "setup": "ArguAna",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PROMPTAGATOR Few-shot, column arg"
+  },
+  {
+   "claim": "Climate-FEVER is the one dataset where few-shot (16.8) is below zero-shot (21.4); with the FEVER prompt it scores 24.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 16.8,
+   "unit": "nDCG@10",
+   "baseline_value": 21.4,
+   "n": null,
+   "setup": "Climate-FEVER, BEIR pairs include 'not enough info' as relevant",
+   "note": "24.0* uses FEVER prompt and is not in the average.",
+   "where": "Table 2, 4.3",
+   "table": "Table 2, row PROMPTAGATOR Few-shot, column climate (16.8 (24.0*)); Zero-shot 21.4"
+  },
+  {
+   "claim": "Zero-shot PROMPTAGATOR beats NQ-QGen and GenQ query generators by large margins with the same filtering and training recipe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2c",
+   "note": null,
+   "where": "4.3",
+   "quote": "These results indicate that the main contributing factor to PROMPTAGATOR is the prompted LLM query generation, not the speciﬁc training recipe or hype-parameters."
+  },
+  {
+   "claim": "Removing NQ and Quora from FLAN training drops the few-shot average from 48.5 to 47.0, still above prior retrievers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 47.0,
+   "unit": "nDCG@10",
+   "baseline_value": 48.5,
+   "n": null,
+   "setup": "Table 3, FLAN w/o NQ and Quora, retriever",
+   "note": "FLAN original AVG is 48.5 in Table 3 but 47.8 in Table 2; Table 3 uses the Fever model for Climate-FEVER and appears to include it in the average.",
+   "where": "Table 3",
+   "table": "Table 3, row FLAN w/o NQ and Quora, column AVG."
+  },
+  {
+   "claim": "Generation cost: 29.23M queries x 2 prompts = 58.46M queries, 610M words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.46,
+   "unit": "M queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN 137B query generation for all datasets",
+   "note": null,
+   "where": "7",
+   "quote": "we generated 29.23M queries * 2 prompts = 58.46M queries, for a total of 610M words"
+  },
+  {
+   "claim": "Average generated query length: few-shot 17.8 words, zero-shot 13.5, NQ-QGen 9.6; ArguAna few-shot 98.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "query length",
+   "value": 17.8,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row AVG., column Few-shot"
+  }
+ ],
+ "limits": [
+  "Authors: data efficiency unexplored (how many generated pairs are needed per task).",
+  "Authors: sensitivity to the prompt not studied.",
+  "Query-specific K could retain good pairs removed by the K=1 filter (left to future work).",
+  "Low-quality few-shot examples hurt (Climate-FEVER).",
+  "Filtering hurt the smallest datasets (possible overfitting).",
+  "FLAN training overlapped NQ and Quora; ablation shows small drop only.",
+  "Single runs, no seeds or significance tests, no optimizer or learning rate reported; FLAN 137B is not public (checkpoint 'provided by the authors').",
+  "Generation cost is expensive (distillation of a 137B LLM); no wall-clock or hardware stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Few-shot Retrieval",
+   "definition": "each task comes with a short description and a few annotated examples",
+   "where": "Abstract"
+  },
+  {
+   "term": "round-trip consistency",
+   "definition": "a query should be answered by the passage from which the query was generated",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BEIR (Thakur et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark and GenQ baseline",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "137B LLM query generator",
+   "quote": null
+  },
+  {
+   "work": "InPars (Bonifacio et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest work; few-shot GPT-3 generation for a reranker over BM25",
+   "quote": null
+  },
+  {
+   "work": "UPR (Sachan et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "T0 reranking",
+   "quote": null
+  },
+  {
+   "work": "GTR (Ni et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dual encoder architecture and hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "Contriever (Izacard et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "independent cropping pretraining; also baseline",
+   "quote": null
+  },
+  {
+   "work": "Synthetic QA corpora generation with roundtrip consistency (Alberti et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "round-trip filtering idea",
+   "quote": null
+  },
+  {
+   "work": "ColBERT v2 (Santhanam et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SPLADE v2 (Formal et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GPL (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "monoT5 (Nogueira et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Few-shot retrieval with PROMPTAGATOR; average nDCG@10 on 11 BEIR datasets",
+   "page": 2,
+   "why": "Shows the headline comparison"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(a) consistency filter delta, (b) generated vs supervised data on MS MARCO, (c) query generator ablation",
+   "page": 8,
+   "why": "Filter and 8-vs-50k comparisons"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "PROMPTAGATOR++ Training pipeline",
+   "page": 21,
+   "why": "Whole pipeline"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure axis values for Fig 2a/2b are not in the text layer; the 50k claim comes from the caption.",
+  "Table 3 FLAN original AVG (48.5) differs from Table 2 average (47.8)."
+ ]
 }

@@ -1,0 +1,649 @@
+{
+ "schema": 1,
+ "key": "2405.09818",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/team-2024-chameleon.pdf",
+ "bib": {
+  "title": "Chameleon: Mixed-Modal Early-Fusion Foundation Models",
+  "authors": [
+   "Chameleon Team (FAIR at Meta)"
+  ],
+  "first_author": "Chameleon Team",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.09818",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 81290,
+  "chars_total": 81290,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a single token-based transformer trained from scratch on interleaved text and image tokens (early fusion) be trained stably at scale and both understand and generate mixed text-image documents?",
+ "hypothesis": "Quantising images into discrete tokens and training one uniform transformer end to end on all modalities gives strong unimodal and multimodal performance without modality-specific encoders or decoders.",
+ "contributions": [
+  "A family of early-fusion token-based mixed-modal models that reason over and generate interleaved image-text documents.",
+  "Architectural innovations and training techniques for stable, scalable training of early-fusion token-based models.",
+  "State-of-the-art results on vision-language benchmarks while staying competitive on text-only tasks, plus image generation, in one model.",
+  "The first large-scale human evaluation on open-ended mixed-modal reasoning and generation."
+ ],
+ "method": {
+  "summary": "Chameleon-7B and 34B are Llama-2-style decoder transformers trained from scratch on text, code and images, where images are quantised by a VQ tokenizer into 1024 tokens from an 8192 codebook and share one 65,536-token BPE vocabulary. Stability needed QK-norm, z-loss, dropout (7B) and Swin-style norm reordering (34B). Pre-training is followed by light SFT, then human pairwise and absolute evaluation against Gemini Pro and GPT-4V plus text and image-to-text benchmarks.",
+  "task": "mixed-modal next-token pretraining, SFT alignment, mixed-modal generation, captioning, VQA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Text-only pretraining",
+    "role": "pretrain",
+    "size": "2.9 trillion tokens",
+    "split": null,
+    "source": "Llama-2 and CodeLlama pre-training data",
+    "preprocessing": null
+   },
+   {
+    "name": "Text-image pairs",
+    "role": "pretrain",
+    "size": "1.4 billion pairs, 1.5 trillion text-image tokens",
+    "split": null,
+    "source": "publicly available and licensed data",
+    "preprocessing": "resized and center cropped to 512x512; 50% of the time image precedes text"
+   },
+   {
+    "name": "Text/image interleaved",
+    "role": "pretrain",
+    "size": "400 billion tokens",
+    "split": null,
+    "source": "public web sources, no Meta product data, similar to OBELICS",
+    "preprocessing": "same image filtering as text-to-image"
+   },
+   {
+    "name": "Second-stage mix",
+    "role": "pretrain",
+    "size": null,
+    "split": "last 20% of training; first stage data weight lowered by 50%",
+    "source": "higher quality datasets plus filtered train sets of instruction tuning collections",
+    "preprocessing": null
+   },
+   {
+    "name": "Chameleon-SFT",
+    "role": "train",
+    "size": "Text 1.6M samples/940.0M tokens; Code 14.1K/1.1M; Visual Chat 15.6K/19.4M tokens/16.7K images; Image Generation 64.3K/68.0M/64.3K images; Interleaved 16.9K/35.8M/30.7K images; Safety 95.3K/38.6M/1.6K images",
+    "split": null,
+    "source": "Text SFT from Llama-2, Code SFT from CodeLlama, vendor-collected chat and interleaved data, aesthetic-filtered licensed images, safety prompts (Rainbow Teaming, Pick-A-Pic, LLaMa-2-Chat)",
+    "preprocessing": "image generation: aesthetic classifier score >=6, top 64K closest to 512x512; prompt images resized with border padding, answer images center-cropped"
+   },
+   {
+    "name": "Human eval prompt set",
+    "role": "eval",
+    "size": "1,048 prompts (441 mixed-modal, 607 text-only)",
+    "split": null,
+    "source": "third-party crowdsourcing vendor; filtered by 3-annotator majority vote",
+    "preprocessing": null
+   },
+   {
+    "name": "Safety prompts",
+    "role": "eval",
+    "size": "20,000 crowdsourced prompts; 445 red-team interactions",
+    "split": null,
+    "source": "crowdsourced; internal red team",
+    "preprocessing": null
+   },
+   {
+    "name": "PIQA, SIQA, HellaSwag, WinoGrande, ARC-E, ARC-C, OBQA, BoolQ, GSM8K, MATH, MMLU, MS-COCO (Karpathy test), Flickr30k (Karpathy test), VQA-v2 test-dev",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Chameleon-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Llama-2-style decoder transformer, RMSNorm, SwiGLU, RoPE, QK-norm, no GQA",
+    "init_from": "scratch",
+    "tokenizer": "BPE (sentencepiece)",
+    "vocab": "65,536 incl. 8192 image codebook tokens",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {
+     "dropout": "0.1 in pretraining"
+    }
+   },
+   {
+    "name": "Chameleon-34B",
+    "role": "proposed",
+    "params": "34B",
+    "architecture": "as 7B plus GQA and Swin-style norm reordering (h = x + attention_norm(attention(x)); output = h + ffn_norm(feed_forward(h))), no dropout",
+    "init_from": "scratch",
+    "tokenizer": "BPE (sentencepiece)",
+    "vocab": "65,536",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {}
+   },
+   {
+    "name": "Image tokenizer",
+    "role": "base",
+    "params": null,
+    "architecture": "based on Gafni et al. (2022); encodes 512x512 image into 1024 tokens, codebook 8192",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "8192",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training data": "licensed images only; faces up-sampled 2x in pre-training"
+    }
+   },
+   {
+    "name": "GPT-4V, Gemini Pro (+DALL-E 3 for GPT-4V+/Gemini+)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2, Mistral 7B, Mixtral 8x7B, Flamingo-80B, IDEFICS-80B, Llava-1.5",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction over mixed-modal token sequences, plus z-loss; SFT masks loss on prompt tokens",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95, eps 1e-5",
+   "lr": "1.0e-4 (Table 1) for both sizes; SFT 1e-5",
+   "lr_schedule": "linear warm-up then exponential decay to 0; SFT cosine",
+   "warmup": "4000 steps",
+   "batch_size": "7B: 2^23 (~8M) tokens; 34B: 3x2^22 (~12M) tokens; SFT batch size 128",
+   "steps": null,
+   "epochs": "2.1",
+   "tokens": "9.2 trillion tokens seen (Table 1 lists 4.4T unique)",
+   "seq_len": "4k context; SFT up to 4096 tokens",
+   "precision": "inferred: bf16, from the text on leaving bf16's effective range",
+   "weight_decay": "0.1",
+   "dropout": "7B 0.1; 34B 0.0; SFT 0.05",
+   "regularisation": "z-loss 1e-5 log2 Z; global gradient clipping 1.0; QK-norm",
+   "hardware": "NVIDIA A100 80GB; pretraining on Meta RSC (InfiniBand), alignment on other internal clusters (Elastic Fabric)",
+   "compute": "7B: 1024 concurrent GPUs, 856481 GPU hours; 34B: 3072 concurrent GPUs, 4282407 GPU hours",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stages": "first 80% stage 1, last 20% stage 2",
+    "SFT packing": "prompts and answers packed with a delimiter token",
+    "SFT dropout 0.05 and same z-loss as pretraining": true
+   }
+  },
+  "inference": {
+   "decoding": "not stated for generation; benchmark scoring by highest-scoring candidate; GSM8K/MATH maj@N sampling (greedy for N=1)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "captions restricted to 30 tokens",
+   "samples": "maj@1/4/8/32 for math",
+   "prompting": "0-shot commonsense; 8-shot GSM8K; 4-shot MATH; 2-shot captioning/VQA with published prompts of other models",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "inference stack": "standalone PyTorch pipeline with xformers kernels, token masking for modality-constrained generation, streaming"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Win rate",
+     "definition": "1 point per win and 0.5 per tie, over 1,048 prompts, 3 annotators majority vote",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Task fulfillment",
+     "definition": "annotators label fulfills / partially fulfills / does not fulfill",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "pycocoevalcap on Karpathy test splits",
+     "unit": "CIDEr",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "benchmark accuracy; maj@N exact match for GSM8K/MATH",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Unsafe rate",
+     "definition": "annotator safe/unsafe/unsure label per response",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Gemini Pro",
+    "GPT-4V",
+    "Gemini+ (captions rendered by DALL-E 3)",
+    "GPT-4V+",
+    "Llama-2 7B/34B/70B",
+    "Mistral 7B",
+    "Mixtral 8x7B",
+    "Flamingo-80B",
+    "IDEFICS-80B",
+    "Llava-1.5"
+   ],
+   "protocol": "Human pairwise and absolute evaluation by a third-party vendor, three annotators per question, responses in random order; Krippendorff's alpha 0.338 [0.319, 0.356] for task fulfillment. Chameleon-34B vs APIs. No seeds or significance tests for benchmarks."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "augment GPT-4V/Gemini with image captions",
+    "text": "If the question requires an image to be generated, then generate an image caption instead and enclose the caption in a pair of ⟨caption⟩⟨/caption⟩tags.",
+    "where": "Section 4.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "We do 2.1 epochs over our full training dataset for a total",
+    "where": "Sec 2.3 Optimization"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Chameleon-34B is preferred over Gemini+ in pairwise human comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs Gemini+",
+   "value": "60.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,048 prompts, 3 annotators, win=1 tie=0.5, vs Gemini Pro with DALL-E 3 images",
+   "quote": "Overall, Chameleon has win rates of 60.4% and 51.6% over Gemini+ and GPT-4V+, respectively.",
+   "table": null,
+   "note": "Table 11 prints Overall 58.8% (435/362/251); 60.4% is the Table 11 mixed-modal-prompt row. 51.6% matches Table 12 Overall.",
+   "where": "Sec 4.2.2, Tables 11-12"
+  },
+  {
+   "claim": "Chameleon-34B win rate over GPT-4V+.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs GPT-4V+",
+   "value": "51.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same setup, vs GPT-4V with DALL-E 3 images",
+   "quote": "Overall, Chameleon has win rates of 60.4% and 51.6% over Gemini+ and GPT-4V+, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2, Table 12"
+  },
+  {
+   "claim": "Win rates over the text-only original responses are higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs Gemini",
+   "value": "69.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same, vs Gemini and GPT-4V without added images",
+   "quote": "Chameleon's win rates over Gemini and GPT-4V are 69.1% and 61.7%, respectively.",
+   "table": null,
+   "note": "61.7% is vs GPT-4V",
+   "where": "Sec 4.2.2, Tables 13-14"
+  },
+  {
+   "claim": "Chameleon responses fully fulfil more tasks than Gemini+ and GPT-4V+.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fulfills task",
+   "value": "55.2",
+   "unit": "%",
+   "baseline_value": "37.6 (Gemini+), 44.7 (GPT-4V+)",
+   "n": null,
+   "setup": "absolute evaluation, 1,048 prompts",
+   "quote": "55.2% for Chameleon vs. 37.6% of Gemini+ and 44.7% of GPT-4V+.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.1"
+  },
+  {
+   "claim": "Chameleon-34B 2-shot beats 32-shot Flamingo-80B and IDEFICS-80B on COCO CIDEr (pretrained).",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "120.2",
+   "unit": "CIDEr",
+   "baseline_value": "113.8 (Flamingo-80B), 116.6 (IDEFICS-80B), both 32-shot",
+   "n": null,
+   "setup": "MS-COCO Karpathy test, 2-shot pretrained",
+   "quote": null,
+   "table": "Table 7, row Chameleon, column COCO",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Chameleon-34B-SFT reaches COCO CIDEr 140.8 0-shot, above all other fine-tuned models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "140.8",
+   "unit": "CIDEr",
+   "baseline_value": "138.1 (Flamingo-80B-FT)",
+   "n": null,
+   "setup": "MS-COCO Karpathy test, SFT on task",
+   "quote": null,
+   "table": "Table 7, row Chameleon-SFT, column COCO",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Chameleon-34B-MultiTask VQAv2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2",
+   "value": "69.6",
+   "unit": "accuracy",
+   "baseline_value": "77.2 (GPT-4V)",
+   "n": null,
+   "setup": "VQA-v2 test-dev, 2-shot multitask SFT",
+   "quote": null,
+   "table": "Table 7, row Chameleon-MultiTask, column VQAv2",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Text benchmarks: Chameleon-34B beats Llama-2 70B on GSM8K maj@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K maj@1",
+   "value": "61.4",
+   "unit": "%",
+   "baseline_value": "56.8",
+   "n": null,
+   "setup": "GSM8K 8-shot, maj@1",
+   "quote": "Chameleon-34B can outperform Llama2-70B on maj@1 (61.4 vs 56.8)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Chameleon-34B MMLU, short of Mixtral 8x7B and Gemini-Pro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "65.8",
+   "unit": "%",
+   "baseline_value": "70.6 (Mixtral), 71.8 (Gemini-Pro)",
+   "n": null,
+   "setup": "MMLU, pre-trained (not SFT) model",
+   "quote": "Chameleon-34B approaching the performance of Mixtral 8x7B/Gemini-Pro (65.8 vs 70.6/71.8)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "QK-norm and norm reordering needed for stability; without QK-norm 7B diverges.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chameleon-7B ablation",
+   "quote": "the latter diverges after approximately 20% of a training epoch.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, Fig 5b"
+  },
+  {
+   "claim": "Safety: unsafe responses on crowdsourced prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unsafe rate 34B",
+   "value": "0.095",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20,000 crowdsourced prompts, annotator labels",
+   "quote": "with only 78 (0.39%) unsafe responses for the 7B model and 19 (0.095%) for the 30B model.",
+   "table": null,
+   "note": "text says 30B, Table 5 says 34B; Table 5 prints 0.1% for 34B",
+   "where": "Sec 4.4, Table 5"
+  },
+  {
+   "claim": "Red-team unsafe rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unsafe",
+   "value": "1.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "445 prompt-response interactions, 34B",
+   "quote": "7 (1.6%) were considered unsafe and 20 (4.5%) were labeled as unsure.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Pre-training compute for 34B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "4282407",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3072 concurrent A100 80GB GPUs",
+   "quote": null,
+   "table": "Table 2, row 34B, column GPU Hours",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training token count.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens seen",
+   "value": "9.2",
+   "unit": "trillion tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "both models",
+   "quote": "of 9.2 trillion tokens seen during training",
+   "table": null,
+   "note": "Table 1 lists 4.4T tokens at 2.1 epochs",
+   "where": "Sec 2.3"
+  }
+ ],
+ "limits": [
+  "Image tokenizer reconstructs images with much text poorly, upper-bounding OCR-heavy tasks.",
+  "Human eval prompts are crowdsourced rather than from real users, exclude OCR and infographic tasks, and baselines are API text-only models augmented with DALL-E 3 images, not native mixed-modal models.",
+  "Inter-annotator agreement is low (Krippendorff's alpha 0.338 for task fulfillment); about 10% of pairs have no agreement.",
+  "Safety tuning is SFT only; RLHF/RLAIF not applied; red team found 1.6% unsafe and 4.5% unsure.",
+  "Stability recipe found empirically; instabilities appeared late and above 8B params and 1T tokens.",
+  "Code, weights and data availability are not stated in the paper; no seeds or error bars on benchmarks; no image-generation quantitative metric (FID etc.) is reported, only human eval and samples.",
+  "Layer count, hidden size and head count are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "early fusion",
+   "definition": "all modalities are projected into a shared representational space from the start",
+   "where": "Sec 1"
+  },
+  {
+   "term": "QK-Norm",
+   "definition": "applying layer norm to the query and key vectors within the attention",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "extends",
+   "note": "architecture and text data base",
+   "quote": "Our architecture largely follows LLaMa-2"
+  },
+  {
+   "work": "Make-A-Scene (Gafni et al.)",
+   "year": 2022,
+   "arxiv": "2203.13131",
+   "relation": "uses-method",
+   "note": "image tokenizer basis",
+   "quote": null
+  },
+  {
+   "work": "CM3 (Aghajanyan et al.)",
+   "year": 2022,
+   "arxiv": "2201.07520",
+   "relation": "extends",
+   "note": "mixed-modal documents with image tokens",
+   "quote": null
+  },
+  {
+   "work": "CM3Leon / Scaling autoregressive multi-modal models (Yu et al.)",
+   "year": 2023,
+   "arxiv": "2309.02591",
+   "relation": "extends",
+   "note": "autoregressive text-to-image",
+   "quote": null
+  },
+  {
+   "work": "DALL-E (Ramesh et al.)",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "related",
+   "note": "token-based image generation",
+   "quote": null
+  },
+  {
+   "work": "Small-scale proxies for large-scale transformer training instabilities (Wortsman et al.)",
+   "year": 2023,
+   "arxiv": "2309.14322",
+   "relation": "uses-method",
+   "note": "QK-norm, z-loss, logit drift",
+   "quote": null
+  },
+  {
+   "work": "Swin Transformer v1/v2 (Liu et al.)",
+   "year": 2022,
+   "arxiv": "2111.09883",
+   "relation": "uses-method",
+   "note": "norm reordering",
+   "quote": null
+  },
+  {
+   "work": "LIMA",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "uses-method",
+   "note": "light SFT on curated data",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "late-fusion baseline",
+   "quote": null
+  },
+  {
+   "work": "IDEFICS / OBELICS",
+   "year": 2023,
+   "arxiv": "2306.16527",
+   "relation": "baseline",
+   "note": "baseline and interleaved data recipe",
+   "quote": null
+  },
+  {
+   "work": "Mixtral of experts",
+   "year": 2024,
+   "arxiv": "2401.04088",
+   "relation": "baseline",
+   "note": "text baseline",
+   "quote": null
+  },
+  {
+   "work": "Unified-IO 2 (Lu et al.)",
+   "year": 2023,
+   "arxiv": "2312.17172",
+   "relation": "related",
+   "note": "concurrent stabilisation attempts",
+   "quote": "similar attempts at stabilizing multi-modal trainings were concurrently discovered in (Lu et al., 2023)"
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Chameleon represents all modalities as discrete tokens in a uniform transformer trained on ~10T tokens",
+   "page": 2,
+   "why": "shows the single token stream design"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Output norm and training loss curves under various settings",
+   "page": 6,
+   "why": "shows output-norm growth predicts divergence and the QK-norm/dropout ablations"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Performance of Chameleon vs baselines on mixed-modal prompts",
+   "page": 12,
+   "why": "human eval summary"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "Chameleon-34B:\nh = x + attention_norm(attention(x))\noutput = h + ffn_norm(feed_forward(h))\nLlama2:\nh = x + attention(attention_norm(x))\noutput = h + feed_forward(ffn_norm(h))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text says Overall win rate 60.4% vs Gemini+, but Table 11 Overall is 58.8% (60.4% is the mixed-modal row).",
+  "Safety text says 30B model; Table 5 says 34B.",
+  "Table 1 lists 4.4T tokens while text says 9.2T seen over 2.1 epochs.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,483 @@
+{
+ "schema": 1,
+ "key": "2502.03387",
+ "pdf": "generative-ai/05-RL/sources/ye-2025-limo.pdf",
+ "bib": {
+  "title": "LIMO: Less is More for Reasoning",
+  "authors": [
+   "Yixin Ye",
+   "Zhen Huang",
+   "Yang Xiao",
+   "Ethan Chern",
+   "Shijie Xia",
+   "Pengfei Liu"
+  ],
+  "first_author": "Ye",
+  "year": 2025,
+  "venue": "COLM 2025 (arXiv v3)",
+  "arxiv": "2502.03387",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 57741,
+  "chars_total": 57741,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; no appendix exists."
+ },
+ "type": "empirical",
+ "question": "Can sophisticated mathematical reasoning be elicited by SFT on only a few hundred examples instead of tens of thousands?",
+ "hypothesis": "In foundation models whose domain knowledge is comprehensively encoded in pretraining, minimal but strategically designed demonstrations of cognitive processes suffice to elicit complex reasoning (LIMO Hypothesis).",
+ "contributions": [
+  "Establish the LIMO hypothesis.",
+  "Construct the LIMO dataset (800 samples) and SFT Qwen2.5-32B-Instruct, with strong in-domain and OOD results.",
+  "Ablations on chain quality, question difficulty, backbone knowledge, model size and data size.",
+  "Release models, code and datasets."
+ ],
+ "method": {
+  "summary": "Filter millions of math questions to 2,125 hard ones (LIMO-Pool) by difficulty from model solve rates, pick the best of multiple R1-class solutions per question with a rule-based quality score, keep the top 800, and run full-parameter SFT on Qwen2.5-32B-Instruct. Compare against SFT on NuminaMath-100k and OpenThoughts-114k and ablate quality, difficulty, backbone and size.",
+  "task": "Mathematical reasoning with verifiable answers; SFT on long chain-of-thought",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LIMO (800) / LIMO-Pool (2,125)",
+    "role": "train",
+    "size": "800 samples; pool 2,125",
+    "split": "top 800 by quality score",
+    "source": "Pool from NuminaMath-CoT, DeepScaleR (~40,000 pairs), pre-2024 AIME, MATH, Chinese exams; solutions from DeepSeek R1, DeepSeek-R1-Distill-Qwen-32B, QwQ-32B",
+    "preprocessing": "Qwen2.5-Math-7B-Instruct filter (drop problems solved within 4 attempts); R1-Distill-Qwen-32B 32 samples, keep 1-3/32 solved; n-gram dedup against benchmarks; rule-based chain score (length 30%, check/verify words 20%, tentative words 25%, connectives 25%, normalized by text length)"
+   },
+   {
+    "name": "OpenThoughts-114k",
+    "role": "train",
+    "size": "114k",
+    "split": null,
+    "source": "synthetic, R1-generated, math/science/code/puzzles",
+    "preprocessing": null
+   },
+   {
+    "name": "NuminaMath-100k",
+    "role": "train",
+    "size": "100k",
+    "split": "random subset of NuminaMath-CoT",
+    "source": "NuminaMath-CoT",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME24, MATH500, AMC23",
+    "role": "eval",
+    "size": "AIME24, AMC23 under 50 problems each",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "OlympiadBench, CHMath, Gaokao, Kaoyan, GradeSchool, Minerva, GPQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "CHMath, Gaokao, Kaoyan new from 2024 exams; GradeSchool authors' own",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LIMO",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Qwen2.5-32B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: 16,384-token SFT sequence limit; 32,768 max output at eval",
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Instruct 3B/7B/14B/72B",
+    "role": "base",
+    "params": "3B, 7B, 14B, 72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen1.5-32B-Chat",
+    "role": "base",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenAI-o1-preview",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "QwQ-32B-Preview",
+    "role": "evaluated",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning, full-parameter",
+   "optimizer": null,
+   "lr": "5.0e-6",
+   "lr_schedule": "cosine decay",
+   "warmup": "none",
+   "batch_size": "64 examples",
+   "steps": null,
+   "epochs": "15",
+   "tokens": null,
+   "seq_len": "16,384 (limit; all SFT responses are under it)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "DeepSpeed ZeRO-3, FlashAttention-2",
+    "note": "Same recipe is said to be used for ablations and baselines; the paper does not say whether epochs were kept at 15 for the 100k datasets."
+   }
+  },
+  "inference": {
+   "decoding": "greedy single sample for large benchmarks; sampling for AIME24, AMC23, CHMath",
+   "temperature": "0.6 (small benchmarks only)",
+   "top_p": null,
+   "max_tokens": "32,768",
+   "samples": "4 samples per problem for benchmarks under 50 problems (AIME24, AMC23, CHMath), unbiased pass@1; 1 greedy sample otherwise",
+   "prompting": "zero-shot chain-of-thought",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "zero-shot CoT; unbiased pass@1 (Chen et al., 2021) on small sets; rule-based check for numeric answers, LLM-based evaluator for complex formats",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenAI-o1-preview",
+    "QwQ-32B-Preview",
+    "Qwen2.5-32B-Instruct",
+    "OpenThoughts-114k SFT",
+    "NuminaMath-100k SFT"
+   ],
+   "protocol": "Single training run per configuration; no seeds, intervals or significance tests stated. LLM evaluator model not named."
+  },
+  "availability": {
+   "code": "https://github.com/GAIR-NLP/LIMO",
+   "weights": "stated released",
+   "data": "stated released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.seq_len",
+    "quote": "We set as our sequence length limit because all SFT response sequences remain under 16,384 tokens.",
+    "where": "Section 4 (the number is missing from the sentence)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LIMO reaches 63.3% on AIME24 from 800 examples, from base 16.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 63.3,
+   "unit": "%",
+   "baseline_value": 16.5,
+   "n": null,
+   "setup": "Qwen2.5-32B-Instruct full-parameter SFT on 800 LIMO samples, 15 epochs, pass@1 zero-shot CoT, 32,768 max output tokens; AIME24 uses 4 samples at temperature 0.6, unbiased pass@1",
+   "quote": "LIMO achieves 63.3% accuracy, outperforming QwQ-32B-Preview (50.0%) and OpenAI-o1-preview (44.6%)",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "LIMO reaches 95.6% on MATH500.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH500 pass@1",
+   "value": 95.6,
+   "unit": "%",
+   "baseline_value": 79.4,
+   "n": null,
+   "setup": "Qwen2.5-32B-Instruct full-parameter SFT on 800 LIMO samples, 15 epochs, pass@1 zero-shot CoT, 32,768 max output tokens; greedy single sample",
+   "quote": "LIMO achieves a notable 95.6% accuracy, surpassing QwQ-32B-Preview (89.8%) and OpenAI-o1-preview (85.5%)",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "LIMO averages 78.1 across 10 benchmarks versus 58.3 for OpenThoughts-114k and 32.3 for NuminaMath-100k, all on the same backbone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average pass@1 over 10 benchmarks",
+   "value": 78.1,
+   "unit": "%",
+   "baseline_value": 58.3,
+   "n": null,
+   "setup": "Table 1, same Qwen2.5-32B-Instruct backbone; base model averages 49.9",
+   "quote": "LIMO achieves the highest average performance of 78.1% across all benchmarks",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "NuminaMath-100k SFT degrades the base model's average (32.3 vs 49.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average pass@1",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": 49.9,
+   "n": null,
+   "setup": "SFT of Qwen2.5-32B-Instruct on a random 100k subset of NuminaMath-CoT",
+   "quote": "NuminaMath-100k shows significant degradation (32.3% vs. base model’s 49.9%) due to uncurated reasoning chains",
+   "table": null,
+   "note": "Cause (uncurated chains) is asserted, not tested.",
+   "where": "6.2"
+  },
+  {
+   "claim": "Same 800 examples on Qwen1.5-32B-Chat give only 9.2% AIME24, 54.1 points below Qwen2.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 9.2,
+   "unit": "%",
+   "baseline_value": 63.3,
+   "n": null,
+   "setup": "Qwen1.5-32B-Chat vs Qwen2.5-32B-Instruct, identical LIMO SFT",
+   "quote": "a 54.1 percentage point improvement over Qwen1.5’s 9.2%",
+   "table": null,
+   "note": "Figure 5 values; text only",
+   "where": "6.3.3"
+  },
+  {
+   "claim": "Advanced-500 (AIME) questions give AIME24 51.5%, and 91.2% MATH500 with no MATH data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 51.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 problems each of Simple (MATH 1-2), Complex (MATH 3-5), Advanced (AIME), R1-written solutions, SFT of Qwen2.5-32B-Instruct",
+   "quote": "reaching 51.5%",
+   "table": null,
+   "note": "Text says '16% accuracy improvement' without naming the comparison set; read the values in Fig 4.",
+   "where": "6.3.2"
+  },
+  {
+   "claim": "400 samples already lift AIME24 from 16.5 to 57.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 57.5,
+   "unit": "%",
+   "baseline_value": 16.5,
+   "n": null,
+   "setup": "LIMO-400, top 400 by quality score from LIMO-pool",
+   "quote": "increasing AIME24 accuracy from 16.5 to 57.5 and MATH500 accuracy from 79.4 to 94.8",
+   "table": null,
+   "note": null,
+   "where": "6.3.5"
+  },
+  {
+   "claim": "2k samples give 69.6 on AIME24 and 95.8 on MATH500, with diminishing returns beyond 800.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 69.6,
+   "unit": "%",
+   "baseline_value": 63.3,
+   "n": null,
+   "setup": "LIMO-2k, top 2000 of 2,125 pool",
+   "quote": "The highest dataset size (2k) provides the best overall performance (69.6 on AIME24, 95.8 on MATH500)",
+   "table": null,
+   "note": null,
+   "where": "6.3.5"
+  },
+  {
+   "claim": "72B model gets 68.3 on AIME24 vs 63.3 for 32B; 3B gets 2.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 pass@1",
+   "value": 68.3,
+   "unit": "%",
+   "baseline_value": 63.3,
+   "n": null,
+   "setup": "Qwen2.5-Instruct 3B/7B/14B/32B/72B, same SFT on LIMO 800",
+   "quote": "rising from 2.5 for the 3B model to 68.3 for the 72B model",
+   "table": null,
+   "note": null,
+   "where": "6.3.4"
+  },
+  {
+   "claim": "Reasoning-chain quality matters: L5 chains give highest AIME24/MATH500, decreasing with level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "quality levels",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 questions, five quality levels L1-L5 from the rule-based score; values only in Fig 3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "6.3.1"
+  }
+ ],
+ "limits": [
+  "Math only, on one backbone family (Qwen); smaller Qwen sizes show 3B gets 2.5 on AIME24, so the effect depends on the base model.",
+  "Authors concede the lower bound on samples is open.",
+  "Data selection used the AIME-style difficulty signal from R1-distill models, so the 800 depend on stronger teachers.",
+  "Single runs, no seeds or intervals; LLM judge unnamed; hardware, compute and optimizer not stated.",
+  "Baseline datasets differ in domain and curation, so the 'quality over quantity' reading is not isolated beyond the RQ1/RQ2 ablations; the NuminaMath and OpenThoughts failure causes are speculation ('probably due to').",
+  "Later work (cited in the repo notes) finds scale beats hand-curation for general reasoning; this paper does not test that."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LIMO Hypothesis",
+   "definition": "In foundation models where domain knowledge has been comprehensively encoded during pre-training, sophisticated reasoning can emerge through minimal but strategically designed demonstrations of cognitive processes.",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LIMA: Less is more for alignment",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Zhou et al., 2023; extends the 1,000-example idea to reasoning",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "uses-method",
+   "note": "R1 and R1-Distill-Qwen-32B used as solution and difficulty models",
+   "quote": null
+  },
+  {
+   "work": "QwQ-32B",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Solution generator; QwQ-32B-Preview is a baseline",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Base model Qwen2.5-32B-Instruct",
+   "quote": null
+  },
+  {
+   "work": "NuminaMath-CoT",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Question pool and 100k baseline",
+   "quote": null
+  },
+  {
+   "work": "OpenThoughts-114k",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "114k baseline dataset",
+   "quote": null
+  },
+  {
+   "work": "DeepScaleR",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Question pool",
+   "quote": null
+  },
+  {
+   "work": "SFT memorizes, RL generalizes",
+   "year": 2025,
+   "arxiv": "2501.17161",
+   "relation": "contradicts",
+   "note": "Cited with the assumption that SFT mainly memorizes",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The LIMO dataset construction pipeline",
+   "page": 4,
+   "why": "Shows the filtering funnel from millions to 800."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of model performance (pass@1) across various mathematical reasoning benchmarks",
+   "page": 7,
+   "why": "All headline numbers."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Impact of dataset size on model performance",
+   "page": 10,
+   "why": "Sample-efficiency curve, 400 to 2k."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Section 4 sentence on sequence length lost its number ('We set as our sequence length limit'); only the 16,384 bound is stated.",
+  "Fig 3-8 values exist only in figures; text gives a subset.",
+  "Table 1 text is column-flattened; read by order of columns o1-preview, Qwen2.5-32B-Instruct, QwQ, OpenThoughts, NuminaMath, LIMO."
+ ]
+}

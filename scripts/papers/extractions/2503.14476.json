@@ -1,0 +1,476 @@
+{
+ "schema": 1,
+ "key": "2503.14476",
+ "pdf": "generative-ai/05-RL/sources/yu-2025-dapo.pdf",
+ "bib": {
+  "title": "DAPO: An Open-Source LLM Reinforcement Learning System at Scale",
+  "authors": [
+   "ByteDance Seed",
+   "Institute for AI Industry Research (AIR), Tsinghua University",
+   "The University of Hong Kong",
+   "SIA-Lab of Tsinghua AIR and ByteDance Seed",
+   "Qiying Yu (project lead; full list in Contributions)"
+  ],
+  "first_author": "Yu",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2503.14476",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 40595,
+  "chars_total": 40595,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can large-scale RL on a base LLM for long chain-of-thought math reasoning be made to work reproducibly, given that the R1 report omits key details?",
+ "hypothesis": "Naive GRPO suffers from entropy collapse, reward noise and instability; four targeted changes (Clip-Higher, Dynamic Sampling, token-level loss, overlong reward shaping) close the gap to DeepSeek-R1-Zero-Qwen-32B.",
+ "contributions": [
+  "DAPO algorithm with four techniques: Clip-Higher, Dynamic Sampling, Token-Level Policy Gradient Loss, Overlong Reward Shaping",
+  "Open-source training code built on verl",
+  "DAPO-Math-17K dataset of 17K prompts with integer answers",
+  "50 points on AIME 2024 with Qwen2.5-32B base"
+ ],
+ "method": {
+  "summary": "GRPO-style group-normalised policy gradient with no KL term and rule-based +1/-1 reward, modified by decoupled clip ranges (eps_low 0.2, eps_high 0.28), filtering of prompts whose group accuracy is 0 or 1 with oversampling, token-level loss averaging over all tokens in the group, and filtering or length-penalising truncated samples. Trained on Qwen2.5-32B base with the verl framework.",
+  "task": "reinforcement learning for verifiable math reasoning (long CoT)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DAPO-Math-17K",
+    "role": "train",
+    "size": "17K prompts, each with an integer answer",
+    "split": null,
+    "source": "web and official competition homepages via web scraping and manual annotation; answers transformed to integers by an LLM rewriting the question",
+    "preprocessing": "Select and transform answers into integers (e.g. a+sqrt(b)/c becomes a+b+c); LLM uses CoT with four steps: extract answer format, rewrite problem, solve modified problem, give integer answer, with few-shot solutions or guidelines"
+   },
+   {
+    "name": "AIME 2024",
+    "role": "eval",
+    "size": null,
+    "split": "evaluation set repeated 32 times",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-32B",
+    "role": "base",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Zero-Qwen-32B",
+    "role": "baseline",
+    "params": "32B",
+    "architecture": null,
+    "init_from": "Qwen2.5-32B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "number (47) taken from the R1 report"
+    }
+   }
+  ],
+  "training": {
+   "objective": "DAPO objective (Eq. 8/12): token-level clipped surrogate with eps_low 0.2 and eps_high 0.28, group-normalised advantage A=(R-mean)/std, no KL term, constraint 0 < #correct < G; reward +1 if equivalent else -1 plus soft overlong punishment",
+   "optimizer": "AdamW",
+   "lr": "1e-6 (constant)",
+   "lr_schedule": "constant",
+   "warmup": "linear warm-up over 20 rollout steps",
+   "batch_size": "rollout prompt batch 512 with 16 responses per prompt; mini-batch size 512 (16 gradient updates per rollout step)",
+   "steps": "inferred: about 5000 gradient steps for the final run from Fig 1 and 7 axes (Fig 1 axis runs to 10000); not stated in text",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "16,384 expected max + 4,096 soft punish cache = 20,480 max generation tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty removed",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "group_size_G": "16",
+    "soft_overlong_cache_Lcache": "4,096 tokens",
+    "Lmax": "16,384 tokens (expected max length)",
+    "baseline": "naive GRPO with group reward normalization",
+    "framework": "verl",
+    "mu_inner_iterations": "Algorithm 1 mu not given numerically; inferred 16 updates per rollout step from mini-batch note"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1.0",
+   "top_p": "0.7",
+   "max_tokens": "20,480 (generation cap during training)",
+   "samples": "AIME evaluation set repeated 32 times, avg@32; Fig 1 also shows pass@32 and cons@32",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AIME 2024 avg@32",
+     "definition": "accuracy averaged over 32 repeats of the evaluation set",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DeepSeek-R1-Zero-Qwen-32B (47)",
+    "Naive GRPO (30)"
+   ],
+   "protocol": "single training run per configuration as far as stated; no seeds or significance tests reported; ablations are cumulative (Table 1)"
+  },
+  "availability": {
+   "code": "https://github.com/volcengine/verl (training code built on verl; project page https://dapo-sia.github.io/)",
+   "weights": null,
+   "data": "DAPO-Math-17K released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "AdamW [39] optimizer with a constant learning rate of 1 × 10−6",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DAPO reaches 50 on AIME 2024 with Qwen2.5-32B, above DeepSeek-R1-Zero-Qwen-32B",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 avg@32",
+   "value": 50,
+   "unit": "points",
+   "baseline_value": 47,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7)",
+   "quote": "achieves 50 points on AIME 2024 using Qwen2.5-32B base model",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "DeepSeek-R1-Zero-Qwen-32B scores 47, matched using 50% of its training steps",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 47,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1-Zero-Qwen-32B as cited from R1 report",
+   "quote": "DeepSeek-R1-Zero-Qwen-32B [2] (47 points) using 50% training steps",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Naive GRPO baseline reaches only 30 on AIME 2024",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 avg@32",
+   "value": 30,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7)",
+   "quote": null,
+   "table": "Table 1, row Naive GRPO, column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Overlong Filtering added to naive GRPO",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 36,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7); cumulative ablation",
+   "quote": null,
+   "table": "Table 1, row + Overlong Filtering, column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Clip-Higher added",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 38,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7); cumulative ablation",
+   "quote": null,
+   "table": "Table 1, row + Clip-Higher, column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Soft Overlong Punishment added",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 41,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7); cumulative ablation",
+   "quote": null,
+   "table": "Table 1, row + Soft Overlong Punishment, column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Token-level loss added",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 42,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7); cumulative ablation",
+   "quote": null,
+   "table": "Table 1, row + Token-level Loss, column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Dynamic Sampling added gives full DAPO",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7); cumulative ablation",
+   "quote": null,
+   "table": "Table 1, row + Dynamic Sampling (DAPO), column AIME24avg@32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Token-level loss gives less accuracy gain but improves stability and length growth",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B base, DAPO-Math-17K, AIME 2024 avg@32 (32 repeats, temp 1.0, top_p 0.7)",
+   "quote": "although it brings less performance improvement, we find it enhances training stability",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Dynamic sampling raises samples sampled but does not slow overall training; convergence needs fewer steps",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "baseline setting, Fig 6",
+   "quote": "the overall training time is not significantly affected",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Mean up-clipped token probability is below 0.2, supporting that the upper clip restricts low-probability tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean up-clipped probability (upper bound)",
+   "value": 0.2,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3a, training with eps=0.2",
+   "quote": "the mean probability of up-clipped tokens is low: πθ(oi | q) < 0.2",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Worked example: with eps 0.2, tokens at probability 0.01 and 0.9 have upper bounds 0.012 and 1.08",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 0.012,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pi_old 0.01, eps 0.2, A>0",
+   "quote": "are 0.012 and 1.08, respectively",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "Training entropy should rise slowly; length does not always grow and reward on train set correlates little with validation accuracy",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DAPO run, Fig 7",
+   "quote": "we find that the final reward on the training set often",
+   "table": null,
+   "note": null,
+   "where": "4.3"
+  }
+ ],
+ "limits": [
+  "Only math tasks with verifiable integer answers; transfer to other tasks is asserted not shown ('can be readily transferred to other tasks').",
+  "Single model (Qwen2.5-32B), single benchmark (AIME 2024); no seeds, error bars or significance tests; ablation is cumulative so order dependent.",
+  "Number of total training steps, hardware and compute are not stated.",
+  "Comparison to DeepSeek-R1-Zero-Qwen-32B uses the R1 report's number and differing setups.",
+  "Reward on train set poorly correlates with validation accuracy (overfitting) per authors.",
+  "Emergent reflection is shown by one case study, not measured."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Clip-Higher",
+   "definition": "decouple lower and higher clip ranges eps_low and eps_high and raise eps_high to leave room for low-probability tokens",
+   "where": "3.1"
+  },
+  {
+   "term": "Dynamic Sampling",
+   "definition": "over-sample and filter out prompts with accuracy equal to 1 and 0 so every batch has effective gradients",
+   "where": "3.2"
+  },
+  {
+   "term": "Overlong Reward Shaping",
+   "definition": "Overlong Filtering masks loss of truncated samples; Soft Overlong Punishment adds a length-aware penalty in an interval before max length",
+   "where": "3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "baseline",
+   "note": "DeepSeek-R1-Zero-Qwen-32B scores 47 on AIME; DAPO beats it",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "extends",
+   "note": "naive GRPO is the baseline algorithm",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "extends",
+   "note": "clipped surrogate objective",
+   "quote": null
+  },
+  {
+   "work": "GAE",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Schulman et al. advantage estimator",
+   "quote": null
+  },
+  {
+   "work": "HybridFlow (verl)",
+   "year": 2024,
+   "arxiv": "2409.19256",
+   "relation": "uses-method",
+   "note": "training framework",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5 technical report",
+   "year": 2024,
+   "arxiv": "2412.15115",
+   "relation": "evaluates",
+   "note": "Qwen2.5-32B base model",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "AIME 2024 scores of DAPO on the Qwen2.5-32B base model, outperforming the previous SoTA DeepSeek-R1-Zero-Qwen-32B using 50% training steps.",
+   "page": 1,
+   "why": "headline curve"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "AIME accuracy and actor entropy with and without Clip-Higher.",
+   "page": 3,
+   "why": "shows entropy collapse"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Main results of progressive techniques applied to DAPO",
+   "page": 9,
+   "why": "cumulative ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 8/12",
+   "snippet": "J_DAPO = E[ 1/(sum_i |o_i|) sum_i sum_t min(r_it A_it, clip(r_it, 1-eps_low, 1+eps_high) A_it) ] s.t. 0 < |{o_i | is_equivalent(a,o_i)}| < G",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 13",
+   "snippet": "R_length(y) = 0 if |y|<=Lmax-Lcache; ((Lmax-Lcache)-|y|)/Lcache if Lmax-Lcache<|y|<=Lmax; -1 if Lmax<|y|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equation 11 in the text is reproduced with a mislabelled constraint; Eq 8 and 12 text duplicated across extraction.",
+  "No embedded instructions found."
+ ]
+}

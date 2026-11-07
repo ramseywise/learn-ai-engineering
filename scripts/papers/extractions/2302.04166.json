@@ -1,19 +1,592 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.04166",
  "pdf": "generative-ai/08-eval/sources/fu-2023-gptscore.pdf",
  "bib": {
   "title": "GPTScore: Evaluate as You Desire",
+  "authors": [
+   "Jinlan Fu",
+   "See-Kiong Ng",
+   "Zhengbao Jiang",
+   "Pengfei Liu"
+  ],
   "first_author": "Fu",
   "year": 2023,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2302.04166",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 84348,
+  "chars_total": 84348,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Figure 1 LaTeX artwork text ignored."
  },
- "legacy_report": "SOURCE: \"GPTScore: Evaluate as You Desire\", Jinlan Fu, See-Kiong Ng, Zhengbao Jiang, Pengfei Liu (NUS, CMU). The PDF is arXiv 2302.04166v2, dated 13 Feb 2023, and labelled \"Preprint. Under review.\" Nothing in this PDF names a venue. I could not confirm NAACL 2024 from the source, so \"(Fu et al., 2023, preprint)\" in the note matches the version on file. If the course cites NAACL 2024, that needs a separate check against the published version, whose numbers may differ.\n\nCOVERAGE: I read all 98,539 chars, including Tables 1–16 and Appendices A–E. I only skimmed the references. About 13k chars are LaTeX blobs from the Figure 1 artwork, which I filtered out.\n\nAUDIT OF THE NOTE (05-llm-as-judge.md, ~line 135)\n- \"19 models from 80M to 175B, 4 tasks, 22 aspects\". Correct.\n- \"BARTScore's generation-probability idea\". This is a fair description. The paper lists BARTScore (Yuan et al., 2021) in Table 7 as \"BART Generation\", and FED and HolisticEval also appear there as generation-probability metrics. The paper never says outright that it extends BARTScore. It reuses BARTScore's evaluation strategy and its \"MT as paraphrasing\" framing.\n- \"Naming the aspect ... 38.0 to 40.2\". The numbers are correct and the metric is Spearman. Exact setup: Table 3, SummEval, COH aspect, sample-level Spearman. It is the Avg row over the 19 GPTScore variants, VAL (no instruction) vs IST (instruction, no demonstration). One wording problem: IST adds a task description plus an aspect definition, so it does more than name the aspect. \"Only a little\" is fair: the other Table 3 averages are CON 40.4→41.4, FLU 35.8→37.2, REL 31.3→32.2 and COV (RealSumm) 37.4→39.8. Note that the paper's own framing is that instruction \"significantly improves the performance\". Coherence is also not the largest gain.\n- \"text-davinci-003 usually correlated worse than davinci-001 (dialogue-level FED, 13.5 against 54.3)\". The numbers are correct: Table 6, FED dialogue-level, Avg Spearman, d03 = 13.5 and d01 = 54.3. These are GPT3 variants only, with no instruction/demonstration split. \"Usually\" is the paper's own intro claim (\"majority of the evaluation settings\"). It is contradicted in summarization, where the paper says \"GPT3-d03 performs better than GPT3-d01 significantly\". The note should not suggest d03 loses everywhere.\n- \"Correlations stayed around 0.3–0.5\". This is partly wrong. It holds for SummEval, RealSumm, MQM, BAGEL and SFRES (roughly 25–47, with MQM FLU only 10–16). It does not hold for NEWSROOM, where Table 13 shows GPTScore at about 60–74, or for QXSUM, which is about 9–28 and measured in Pearson per §5.1. On FED dialogue-level, d01 reaches 66.9 (DEP) and 62.8 (DIV). The note also mixes scales: tables report ×100 (38.0), while the note's range is 0–1.\n\nCLAIMS\n- claim: The paper tests 19 pre-trained backbones from 80M to 175B on 4 tasks, 22 aspects and 37 datasets.\n  number: 19; 80M–175B; 4; 22; 37\n  setup: GPT3 (a01, b01, c01, d01, d03), OPT (350M–66B), FLAN-T5 (80M–11B), GPT2 (355M–6B). Table 2.\n  quote: \"There are 19 pre-trained models explored in this paper, ranging in size from 80M (e.g., FLAN-T5-small) to 175B (e.g., GPT3). Experimental results on four text generation tasks, 22 evaluation aspects, and corresponding 37 datasets\"\n  where: p1, char 692\n- claim: Adding an instruction raised the average Spearman on SummEval coherence slightly.\n  number: 38.0 → 40.2\n  setup: Table 3, SummEval COH, sample-level Spearman, average over the 19 GPTScore variants, VAL vs IST\n  quote: \"Avg. 38.0 40.2 40.4 41.4 35.8 37.2 31.3 32.2 37.4 39.8\"\n  where: p6, char 40066\n- claim: On FED dialogue-level, d01 far outperformed d03.\n  number: 54.3 vs 13.5\n  setup: Table 6, FED dialogue-level, Avg Spearman over 10 aspects (dataset-level strategy). Baselines on the same row: FED 20.4, DynaEval 39.8.\n  quote: \"Avg. 5.8 -8.5 -14.0 20.4 39.8 25.3 21.3 28.6 54.3 13.5\"\n  where: p8, char 50915\n- claim: On FED turn-level the d01–d03 gap is smaller.\n  number: 38.3 vs 32.8\n  setup: Table 6, FED turn-level, Avg\n  quote: \"Avg. 12.8 5.7 7.7 11.9 25.6 16.1 9.9 25.4 38.3 32.8\"\n  where: p8\n- claim: The prose reverses the gaps that Table 6 shows. The table gives 40.8 at dialogue-level and 5.5 at turn-level.\n  number: 40.8 / 5.5\n  quote: \"The average Spearman correlation of GPT3-d01 outperforms GPT3-d03 by 40.8 on the FED Turn-level dataset, and 5.5 on the FED dialogue-level.\"\n  where: p8, char 48661\n- claim: The paper's headline claim is that the RLHF-tuned d03 is worse than d01 in most settings.\n  number: none\n  quote: \"The performance of GPT3-text-davinci-003, which is tuned based on human feedback, is inferior to GPT3-text-davinci-001 in the majority of the evaluation settings\"\n  where: p2, char 22085\n- claim: In summarization, d03 beats d01.\n  number: none (significance at p<0.05)\n  quote: \"GPT3-d03 performs better than GPT3-d01 significantly.\"\n  where: p6\n- claim: Instruction helps on MT, and instruction plus demonstration helps more.\n  number: MQM 31.0 → 32.1 → 33.3; FLU 10.2 → 11.1 → 16.0\n  setup: Table 4, MQM-2020 zh→en, average over all variants, VAL/IST/IDM\n  quote: \"Avg. 27.4 27.8† 29.7†,‡ 10.2 11.1† 16.0†,‡ 31.0 32.1† 33.3†,‡\"\n  where: p7\n- claim: Demonstration gains level off at around K>4.\n  number: K>4\n  setup: GPT3 variants, MQM-2020 (Fig. 6, Table 9)\n  quote: \"when K>4, the performance of ACC is hard to improve further\"\n  where: p8\n- claim: Folding correlated aspects into the definition raised INT.\n  number: 30.8 → 48.6, best 51.4\n  setup: GPT3-c01, FED-Turn INT\n  quote: \"boosts the performance from 30.8 (at x=1 in Fig. 7-(b)) to 48.6 (at x=3 in Fig. 7-(b)). The best performance of 51.4\"\n  where: p8. Table 10 gives x=1 as 36.9 and x=5 as 51.3, which conflicts with the prose.\n- claim: Small instructed models beat fine-tuned BARTScore+CNN on consistency.\n  number: none\n  quote: \"OPT350m, FT5-small, and FT5-base outperform BARTScore+CNN on the CON aspect when using the instructions.\"\n  where: p6\n\nLIMITS: Datasets were randomly subsampled \"Due to the expensive API cost of GPT3\", and the paper does not give the sample sizes. Dialogue was tested with GPT3 only. Evaluation is English-only, and MT is scored as paraphrase against the reference. The prompts were not explored (\"leave a more comprehensive exploration on prompt engineering as a future work\"). There is no limitations section. The method needs token log-probs, and the GPT3 completion models it relies on (a01–d03) are retired. Internal inconsistencies: 37 vs \"9 datasets\" (Appendix B), the swapped 40.8/5.5 values, and the INT values in Table 10 vs the prose.\n\nBUILDS ON: BARTScore (Yuan et al., 2021); FED (Mehri & Eskénazi, 2020); PRISM (Thompson & Post, 2020); in-context learning (Brown et al., 2020; Min et al., 2022); FLAN instruction tuning (Chung et al., 2022); NaturalInstructions prompts (Wang et al., 2022); evaluation strategy from Yuan et al., 2021 and Zhang et al., 2022a.\n\nCODE:\n- Score definition (p3): \"GPTScore(h|d,a,S) = Σ_{t=1}^{m} w_t log p(h_t|h<t, T(d,a,S), θ)\". Here w_t is the token weight, and \"we treat each token equally\".\n- Example prompt (Table 11, p17): \"COH src->hypo Generate a coherent summary for the following text {src}\\n\\nTl;dr{hypo}\"\n- Dialogue prompts (Table 12) turn each aspect into a yes/no question that ends in \"\\nAnswer: Yes.\" and score the probability of \"Yes\".\n\nFIGURES:\n- Fig. 2 (p2), \"The framework of GPTSCORE\": shows how task specification, aspect definition and demonstrations combine into one template whose likelihood is scored. It is faster to read than the prose.\n- Fig. 6 (p9), \"Results of the GPT3 family models with different numbers of examples (K)\": shows the demonstration plateau at a glance.\n- Fig. 7 (p9): aspect-combination gains for INT.\n\nPROBLEMS: The Figure 1 artwork extracts as long LaTeX base64 blobs, but nothing is lost. Some header labels are inconsistent: Table 13 lists NEWSROOM as COH/CON/FLU/REL, while Table 8 lists FLU/REL/INF/COH. Table 6 bolding did not come through. Page numbers come from per-page extraction. I found no embedded instructions."
+ "type": "empirical",
+ "question": "Can the conditional generation probability of a pre-trained language model, given an instruction describing the task and aspect, serve as a training-free, customizable, multi-aspect text evaluation metric?",
+ "hypothesis": "Higher-quality text of a given aspect is more likely to be generated under the context and instruction than unqualified text, so its conditional probability correlates with human judgement.",
+ "contributions": [
+  "GPTScore, a training-free evaluation framework driven by task and aspect instructions with optional demonstrations",
+  "Study of 19 backbones (80M-175B) on 4 tasks, 22 aspects, 37 datasets",
+  "Observations on instruction, demonstration, aspect combination and text-davinci-003 vs 001"
+ ],
+ "method": {
+  "summary": "The score is the mean-free sum of token log-probabilities of the hypothesis conditioned on a prompt built from a task description, an aspect definition and optional demonstrations, with equal token weights. Computed with GPT2, OPT, FLAN-T5 and GPT3 variants and compared by Spearman correlation with human ratings against ROUGE, BERTScore, MoverScore, PRISM, BARTScore, FED and DynaEval.",
+  "task": "reference-free and reference-based NLG evaluation (summarisation, MT, data-to-text, dialogue)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "FED (turn and dialogue level)",
+    "role": "eval",
+    "size": "124 conversations",
+    "split": "dataset-level correlation",
+    "source": "Mehri & Eskenazi 2020",
+    "preprocessing": "dialogue turned into Yes/No QA prompt"
+   },
+   {
+    "name": "SummEval",
+    "role": "eval",
+    "size": null,
+    "split": "sub-dataset randomly extracted for API cost; sample-level",
+    "source": "Bhandari et al. 2020 (as cited)",
+    "preprocessing": null
+   },
+   {
+    "name": "REALSumm",
+    "role": "eval",
+    "size": null,
+    "split": "sample-level",
+    "source": "Bhandari et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "NEWSROOM",
+    "role": "eval",
+    "size": null,
+    "split": "sample-level",
+    "source": "Grusky et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "QAGS_XSUM",
+    "role": "eval",
+    "size": "239 samples",
+    "split": "sample-level",
+    "source": "Wang et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "BAGEL",
+    "role": "eval",
+    "size": "202 samples",
+    "split": "sample-level",
+    "source": "Mairesse et al. 2010",
+    "preprocessing": "named entities replaced with special tokens such as X and Y"
+   },
+   {
+    "name": "SFRES",
+    "role": "eval",
+    "size": "581 samples",
+    "split": "sample-level",
+    "source": "Wen et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "MQM-2020 (zh->en)",
+    "role": "eval",
+    "size": null,
+    "split": "samples with human scores in ACC, MQM, FLU extracted as far as possible; sample-level",
+    "source": "Freitag et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT3 (text-ada-001, babbage-001, curie-001, davinci-001, davinci-003)",
+    "role": "proposed",
+    "params": "350M, 1.3B, 6.7B, 175B, 175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT",
+    "role": "proposed",
+    "params": "350M, 1.3B, 6.7B, 13B, 66B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FLAN-T5",
+    "role": "proposed",
+    "params": "80M, 250M, 770M, 3B, 11B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT2 (M, L, XL, GPT-J-6B)",
+    "role": "proposed",
+    "params": "355M, 774M, 1.5B, 6B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ROUGE-1/2/L, BERTScore, MoverScore, PRISM, BARTScore, BARTScore+CNN, BARTScore+CNN+Para, FED, DynaEval",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "no generation; forced-decoding log-probability of the hypothesis",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one score per item per variant; no seeds or repeated runs stated",
+   "prompting": "template T(d,a,S) of task description + aspect definition + context + hypothesis; GPT3 uses OpenAI example prompts, instruction-tuned models use NaturalInstruction-style prompts; dialogue cast as Yes/No QA ending 'Answer: Yes.'; demonstrations by repeating the template; K up to 12 (MT ablation)",
+   "retrieval": null,
+   "parameters": {
+    "token_weight_wt": "1 (each token equal)",
+    "scoring_dimension": "src->hypo for FED, SummEval/Newsroom COH/CON/INF, data-to-text, MT; ref<->hypo paraphrase prompts also listed in Table 11",
+    "settings": "VAL (none), IST (instruction), IDM (instruction+demonstration)",
+    "demonstration_K": "0,1,2,4,8,12 in ablation; value used in main tables not stated",
+    "demonstration_selection": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Spearman correlation",
+     "definition": "rank correlation between metric score and human judgement, sample-level (mean over source texts) for summarisation, D2T, MT; dataset-level for dialogue",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson correlation",
+     "definition": "linear correlation; stated as used for QXSUM in Sec 5.1",
+     "unit": "x100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ROUGE-1/2/L",
+    "BERTScore",
+    "MoverScore",
+    "PRISM",
+    "BARTScore (+CNN, +CNN+Para)",
+    "FED",
+    "DynaEval"
+   ],
+   "protocol": "Bootstrap significance test (p<0.05) of IST/IDM vs VAL (dagger) and IDM vs IST (double dagger); no repeated runs reported; sub-datasets randomly drawn due to GPT3 API cost."
+  },
+  "availability": {
+   "code": "https://github.com/jinlanfu/GPTScore",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "summarisation fluency, src->hypo",
+    "text": "Generate a fluent and grammatical summary for the following text: {src}\\n\\nTl;dr{hypo}",
+    "where": "Table 11"
+   },
+   {
+    "purpose": "summarisation coherence, src->hypo",
+    "text": "Generate a coherent summary for the following text: {src}\\n\\nTl;dr{hypo}",
+    "where": "Table 11"
+   },
+   {
+    "purpose": "dialogue turn-level INT",
+    "text": "Answer the question based on the conversation between a human and AI.\\nQuestion: Are the responses of AI interesting? (a) Yes. (b) No.\\nConversation: {History}\\nAnswer: Yes.",
+    "where": "Table 12"
+   },
+   {
+    "purpose": "MT accuracy, ref<->hypo",
+    "text": "Rewrite the following text with its core information and consistent facts:{ref/hypo} In other words, {hypo/ref}",
+    "where": "Table 11"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.token_weight_wt",
+    "quote": "In our work, we treat each token equally.",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adding instruction raises mean SummEval coherence correlation of GPTScore from 38.0 to 40.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 40.2,
+   "unit": "Spearman x100",
+   "baseline_value": "38.0",
+   "n": null,
+   "setup": "SummEval/RealSumm, sample-level Spearman, mean over 19 GPTScore variants (GPT3 x5, GPT2 x4, OPT x5, FLAN-T5 x5), VAL = no instruction, IST = task description + aspect definition, no demonstration; bootstrap significance p<0.05",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Avg., column SummEval COH IST (VAL 38.0)"
+  },
+  {
+   "claim": "Instruction gains on other summarisation aspects are 1-2.4 points (CON 40.4->41.4, FLU 35.8->37.2, REL 31.3->32.2, RealSumm COV 37.4->39.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 39.8,
+   "unit": "Spearman x100",
+   "baseline_value": "37.4",
+   "n": null,
+   "setup": "SummEval/RealSumm, sample-level Spearman, mean over 19 GPTScore variants (GPT3 x5, GPT2 x4, OPT x5, FLAN-T5 x5), VAL = no instruction, IST = task description + aspect definition, no demonstration; bootstrap significance p<0.05",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Avg., column RSumm COV IST (VAL 37.4)"
+  },
+  {
+   "claim": "On FED dialogue-level, GPT3-d01 averages 54.3 Spearman and GPT3-d03 13.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 54.3,
+   "unit": "Spearman x100",
+   "baseline_value": "13.5",
+   "n": null,
+   "setup": "FED dialogue-level (10 aspects), dataset-level Spearman, GPT3 variants only, Yes/No QA prompt, no instruction/demonstration split",
+   "note": "Text says d01 beats d03 'by 40.8 on the FED Turn-level dataset, and 5.5 on the FED dialogue-level'; Table 6 gives 54.3-13.5=40.8 on dialogue-level and 38.3-32.8=5.5 on turn-level, so the text swaps the levels.",
+   "where": "Table 6; Sec 5.4",
+   "table": "Table 6, FED dialogue-level, row Avg., column d01 (d03 13.5)"
+  },
+  {
+   "claim": "On FED turn-level, GPT3-d01 averages 38.3 and GPT3-d03 32.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 38.3,
+   "unit": "Spearman x100",
+   "baseline_value": "32.8",
+   "n": null,
+   "setup": "FED turn-level (8 aspects), dataset-level Spearman, GPT3 variants",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, FED turn-level, row Avg., column d01 (d03 32.8)"
+  },
+  {
+   "claim": "In summarisation GPT3-d03 is reported significantly better than GPT3-d01, the reverse of the dialogue result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SummEval/RealSumm/NEWSROOM/QXSUM, GPT3 variants, p<0.05 bootstrap",
+   "note": null,
+   "where": "Sec 5.1 (3)",
+   "quote": "(b) GPT3-d03 performs better than GPT3-d01 signiﬁcantly."
+  },
+  {
+   "claim": "Instruction plus demonstration (IDM) raises mean MQM-2020 fluency correlation from 10.2 (VAL) to 11.1 (IST) to 16.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 16.0,
+   "unit": "Spearman x100",
+   "baseline_value": "10.2",
+   "n": null,
+   "setup": "MQM-2020 zh->en, sample-level Spearman, mean of 19 GPTScore variants, ref<->hypo paraphrase scoring",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Avg., column FLU IDM (VAL 10.2, IST 11.1)"
+  },
+  {
+   "claim": "Mean MQM-2020 accuracy correlation moves 27.4 (VAL), 27.8 (IST), 29.7 (IDM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 29.7,
+   "unit": "Spearman x100",
+   "baseline_value": "27.4",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Avg., column ACC IDM (VAL 27.4)"
+  },
+  {
+   "claim": "On BAGEL, mean naturalness correlation rises 27.7 (VAL), 29.8 (IST), 33.2 (IDM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 33.2,
+   "unit": "Spearman x100",
+   "baseline_value": "27.7",
+   "n": null,
+   "setup": "BAGEL data-to-text, 202 samples, mean of GPTScore variants",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, BAGEL, row Avg., column NAT IDM (VAL 27.7, IST 29.8)"
+  },
+  {
+   "claim": "On SFRES, instruction does not help informativeness (25.5 VAL vs 24.7 IST) and demonstration lowers it to 24.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 24.0,
+   "unit": "Spearman x100",
+   "baseline_value": "25.5",
+   "n": null,
+   "setup": "SFRES data-to-text, 581 samples, mean of GPTScore variants",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, SFRES, row Avg., column INF IDM (VAL 25.5, IST 24.7)"
+  },
+  {
+   "claim": "Instruction brings no mean gain on NEWSROOM coherence (71.5 vs 71.5) and FLAN-T5 loses (70.1 -> 69.3); NEWSROOM correlations sit near 60-74.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 71.5,
+   "unit": "Spearman x100",
+   "baseline_value": "71.5",
+   "n": null,
+   "setup": "NEWSROOM, overall average over GPTScore variants",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Overall Avg, column COH IST (VAL 71.5)"
+  },
+  {
+   "claim": "QXSUM (factuality) correlations are low: overall average 19.0 VAL, 20.2 IST.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": "20.2",
+   "unit": "Spearman x100",
+   "baseline_value": "19.0",
+   "n": null,
+   "setup": "QAGS_XSUM, 239 samples",
+   "note": "Sec 5.1 says QXSUM uses Pearson, but the Table 13 caption says Spearman.",
+   "where": "Table 13; Sec 5.1",
+   "table": "Table 13, row Overall Avg, column QXSUM IST (VAL 19.0)"
+  },
+  {
+   "claim": "Rewriting the INT definition to combine interesting, specific and engaging lifts FED-turn INT from 30.8 (text) to 48.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 48.6,
+   "unit": "Spearman x100",
+   "baseline_value": "30.8 (text) / 36.9 (Table 10)",
+   "n": null,
+   "setup": "FED turn-level INT, GPT3-c01, definitions composed from correlated aspects",
+   "note": "Text gives x=1 as 30.8 and the best as 51.4 at x=5 (five aspects); Table 10 gives 36.9 at X=1, 51.3 at X=5 and 51.4 at X=7.",
+   "where": "Sec 6.2; Table 10",
+   "table": "Table 10, row X=3 SPE, column Spear (X=1 36.9)"
+  },
+  {
+   "claim": "Best INT score from combined definitions (51.4) exceeds GPT3-d01 with the plain INT definition (50.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 51.4,
+   "unit": "Spearman x100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FED turn-level INT",
+   "note": "Quote is split across a line break in the PDF; 51.4 is in the preceding sentence.",
+   "where": "Sec 6.2",
+   "quote": "which already exceeded 50.1"
+  },
+  {
+   "claim": "Demonstration count K: GPT3-davinci001 MQM-2020 FLU goes 8.6 (K=0) to 17.5 (K=8 and 12); ACC stops improving past about K=4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 17.5,
+   "unit": "Spearman x100",
+   "baseline_value": "8.6",
+   "n": null,
+   "setup": "MQM-2020, GPT3 variants, K in {0,1,2,4,8,12}",
+   "note": null,
+   "where": "Table 9; Sec 6.1",
+   "table": "Table 9, row GPT3-davinci001, column FLU, K=12 (K=0 8.6)"
+  },
+  {
+   "claim": "Small models can degrade with one demonstration: GPT3-ada MQM-2020 ACC 23.7 at K=0 and 22.5 at K=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation x100",
+   "value": 22.5,
+   "unit": "Spearman x100",
+   "baseline_value": "23.7",
+   "n": null,
+   "setup": "MQM-2020, GPT3-ada",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row GPT3-ada, column ACC, K=1 (K=0 23.7)"
+  },
+  {
+   "claim": "The framework covers 19 models from 80M to 175B across 4 tasks, 22 aspects and 37 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole study",
+   "note": "Abstract and Sec 4.1 say 37 datasets; Appendix B says 9 datasets.",
+   "where": "Abstract",
+   "quote": "There are 19 pre-trained models explored in this paper, ranging in size from 80M (e.g., FLAN-T5-small) to 175B (e.g., GPT3)."
+  }
+ ],
+ "limits": [
+  "Evaluation sets are random sub-samples because of GPT3 API cost; sizes of SummEval, RealSumm, NEWSROOM, MQM subsets are not given.",
+  "Only English text evaluated; cross-lingual left to future work (BLOOM).",
+  "No repeated runs or variance beyond a bootstrap test; the demonstration set and K for main tables are not stated.",
+  "Prompt engineering is left as future work; the d03 < d01 result is unexplained ('necessitating deep explorations').",
+  "Needs token log-probabilities; text-davinci-001/003 and ada-curie are retired API models.",
+  "Paper text and tables disagree in places (see results notes and problems)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GPTScore",
+   "definition": "weighted sum of log p(h_t | h_<t, T(d,a,S), theta) over hypothesis tokens",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BARTScore (Yuan et al.)",
+   "year": 2021,
+   "arxiv": "2106.11520",
+   "relation": "baseline",
+   "note": "Generation-probability metric; evaluation strategy and MT-as-paraphrase framing reused",
+   "quote": null
+  },
+  {
+   "work": "FED (Mehri & Eskenazi)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dialogue dataset and baseline metric",
+   "quote": null
+  },
+  {
+   "work": "DynaEval (Zhang et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Dialogue baseline",
+   "quote": null
+  },
+  {
+   "work": "UniEval (Zhong et al.)",
+   "year": 2022,
+   "arxiv": "2210.07197",
+   "relation": "related",
+   "note": "Supervised multi-dimensional evaluator",
+   "quote": null
+  },
+  {
+   "work": "GPT3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "Backbone",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Instruction-tuned GPT3 variants",
+   "quote": null
+  },
+  {
+   "work": "Flan (Chung et al.)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "FLAN-T5 backbone",
+   "quote": null
+  },
+  {
+   "work": "SummEval / REALSumm (Bhandari et al.; Fabbri et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Summarisation human judgements",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The framework of GPTSCORE.",
+   "page": 2,
+   "why": "Shows task spec + aspect definition + demonstrations feeding the scoring prompt."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "(a) Descending order of Spearman correlation between INT and other aspects' human scoring. (b) INT correlation as definition is combined with other aspects.",
+   "page": 9,
+   "why": "Shows aspect-definition combination effect."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "GPTScore(h|d, a, S) = sum_{t=1..m} w_t log p(h_t | h_<t, T(d, a, S), theta)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Paper text 'by 40.8 on the FED Turn-level ... 5.5 on dialogue-level' contradicts Table 6 (levels swapped).",
+  "Datasets: 37 in abstract/Sec 4.1 vs 9 in Appendix B.",
+  "Sec 6.2 text INT x=1 30.8 vs Table 10 36.9; best 51.4 at x=5 in text vs Table 10 51.3 at X=5.",
+  "QXSUM Pearson (Sec 5.1) vs Spearman (Table 13 caption).",
+  "Table 3/6 are flattened by extraction, cell alignment inferred from row order."
+ ]
 }

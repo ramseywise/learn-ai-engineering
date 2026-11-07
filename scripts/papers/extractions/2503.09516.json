@@ -1,0 +1,204 @@
+{
+ "schema": 1,
+ "key": "2503.09516",
+ "pdf": "generative-ai/05-RL/sources/jin-2025-search-r1.pdf",
+ "bib": {
+  "title": "Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning",
+  "authors": ["Bowen Jin", "Hansi Zeng", "Zhenrui Yue", "Jinsung Yoon", "Sercan O. Arik", "Dong Wang", "Hamed Zamani", "Jiawei Han"],
+  "first_author": "Jin",
+  "year": 2025,
+  "venue": "COLM 2025",
+  "arxiv": "2503.09516",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100895,
+  "chars_total": 100895,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM learn, with outcome-only RL, to interleave reasoning with multi-turn calls to a real search engine?",
+ "hypothesis": "Prompting reasoning LLMs to use search is suboptimal; RL with a simple outcome reward and retrieved-token loss masking will teach better search-and-reasoning behaviour than RAG, prompting, SFT or RL without search.",
+ "contributions": [
+  "Analyses the challenges and gives perspectives on RL for reasoning with search engine results.",
+  "Proposes SEARCH-R1: RL with LLM rollouts interleaved with a search engine, retrieved token masking, multi-turn interleaved reasoning and search, and an outcome reward.",
+  "Systematic experiments on seven QA datasets, plus insights on RL method choice, base vs instruct LLMs and response length."
+ ],
+ "method": {
+  "summary": "The search engine is part of the RL environment. The policy writes <think>, <search> and <answer> segments, retrieved passages are inserted between <information> tags and masked out of the PPO or GRPO loss, and the reward is exact match on the final answer. Trained on merged NQ and HotpotQA with Qwen2.5 3B/7B (and 14B in the appendix), with an E5 retriever over 2018 Wikipedia.",
+  "task": "open-domain and multi-hop question answering with a search tool",
+  "trains": true,
+  "datasets": [
+   {"name": "NQ + HotpotQA (merged training sets)", "role": "train", "size": null, "split": "training sets of NQ and HotpotQA merged", "source": "Kwiatkowski et al. 2019; Yang et al. 2018", "preprocessing": null},
+   {"name": "NQ, TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, Musique, Bamboogle", "role": "eval", "size": null, "split": "test or validation sets; NQ and HotpotQA in-domain, other five out-of-domain", "source": "see paper references", "preprocessing": null},
+   {"name": "2018 Wikipedia dump", "role": "eval", "size": null, "split": "retrieval corpus", "source": "Karpukhin et al. 2020", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Qwen2.5-3B (Base/Instruct)", "role": "base", "params": "3B", "architecture": "decoder-only transformer", "init_from": "Qwen2.5 checkpoints", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Qwen2.5-7B (Base/Instruct)", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Qwen2.5 checkpoints", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Qwen2.5-14B (Base/Instruct)", "role": "base", "params": "14B", "architecture": "decoder-only transformer", "init_from": "Qwen2.5 checkpoints", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Appendix C, Table 5 only"}},
+   {"name": "E5", "role": "retriever", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"cite": "Wang et al. 2022"}},
+   {"name": "Value LLM (PPO critic)", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "initialisation not stated"}}
+  ],
+  "training": {
+   "objective": "PPO (default) or GRPO with retrieved-token loss masking; reward = exact match of extracted answer to gold, no format reward, no neural reward model",
+   "optimizer": null,
+   "lr": "PPO: policy 1e-6, value 1e-5; GRPO: policy 1e-6",
+   "lr_schedule": null,
+   "warmup": "warm-up ratio 0.285 (policy) and 0.015 (value) for PPO; 0.285 for GRPO",
+   "batch_size": "total 512, mini-batch 256, micro-batch 64",
+   "steps": "500 (checkpoint every 100 steps; last stable checkpoint used if training diverges)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max sequence length 4,096 tokens; max response length 500; max retrieved content 500 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL coefficient beta 0.001, clip ratio epsilon 0.2",
+   "hardware": "single node, 8 H100 GPUs; gradient checkpointing; FSDP with CPU offloading",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gae": "lambda = 1, gamma = 1",
+    "grpo_group_size": "5 responses per prompt (Verl default); ablation 1, 3, 5",
+    "max_action_budget_B": 4,
+    "rollout": "vLLM, tensor parallel size 1, GPU memory utilisation 0.6"
+   }
+  },
+  "inference": {
+   "decoding": "rollout sampling during training; evaluation decoding not stated",
+   "temperature": "1.0 (rollout sampling)",
+   "top_p": "1.0 (rollout sampling)",
+   "max_tokens": "max response length 500 tokens; max 500 tokens retrieved content",
+   "samples": null,
+   "prompting": "Table 1 template instructing <think>, <search>, <information>, <answer> format",
+   "retrieval": "E5 over 2018 Wikipedia dump, top 3 passages (ablation top-k 1, 3, 5); max 4 actions",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Exact Match (EM)", "definition": "exact string match of final answer to gold, following Yu et al. 2024", "unit": "fraction 0-1", "higher_is_better": true}
+   ],
+   "baselines": ["Direct inference", "CoT", "IRCoT", "Search-o1", "RAG", "SFT", "R1 (RL without search)", "Rejection sampling with search"],
+   "protocol": "single run per setting reported; no seeds, variance or significance tests stated; inference-style baselines use instruct models; rejection sampling generates five candidates per training prompt with instructed LLMs"
+  },
+  "availability": {
+   "code": "https://github.com/PeterGriffinJin/Search-R1",
+   "weights": "model checkpoints stated available",
+   "data": null
+  },
+  "prompts": [
+   {"purpose": "training and inference template", "text": "Answer the given question. You must conduct reasoning inside <think> and </think> first every time you get new information. After reasoning, if you find you lack some knowledge, you can call a search engine by <search> query </search>, and it will return the top searched results between <information> and </information>. You can search as many times as you want. If you find no further external knowledge needed, you can directly provide the answer inside <answer> and </answer> without detailed illustrations. For example, <answer> xxx </answer>. Question: question.", "where": "Table 1, Section 3.3"}
+  ],
+  "evidence": [
+   {"field": "training.other.max_action_budget_B", "quote": "The maximum action budget B is set to 4, and we retrieve the top 3 passages by default.", "where": "Appendix B.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Search-R1 improves average relative performance over RAG baselines by 24% with Qwen2.5-7B and 20% with Qwen2.5-3B.",
+   "kind": "measured", "source": null, "metric": "average relative improvement in EM", "value": 24, "unit": "%", "baseline_value": null, "n": null,
+   "setup": "Seven QA datasets, same retriever, training data and base LLMs, E5 over 2018 Wikipedia, top-3 passages, PPO default.",
+   "quote": "We achieve 24% and 20% average relative improvement with Qwen2.5-7B and Qwen2.5-3B, respectively.",
+   "table": null, "note": "The contributions list says 41% and 20% average relative improvement; the abstract says 24% and 20%.", "where": "Section 4.4; Abstract; Section 1"
+  },
+  {
+   "claim": "Search-R1-base (PPO) on Qwen2.5-7B reaches 0.431 average EM versus 0.304 for RAG.",
+   "kind": "measured", "source": null, "metric": "average EM over seven datasets", "value": 0.431, "unit": "EM", "baseline_value": 0.304, "n": 7,
+   "setup": "Qwen2.5-7B-Base, PPO, trained on NQ+HotpotQA, RAG baseline uses instruct model, top-3 E5 over Wikipedia.",
+   "quote": null, "table": "Table 2, row Search-R1-base (Qwen2.5-7b), column Avg. = 0.431; row RAG column Avg. = 0.304", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Rejection sampling with the same search loop reaches 0.348 average EM at 7B.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.348, "unit": "EM", "baseline_value": 0.431, "n": 7,
+   "setup": "Qwen2.5-7B, five candidates per training prompt, correct trajectories used for fine-tuning.",
+   "quote": null, "table": "Table 2, row Rejection Sampling (Qwen2.5-7b), column Avg.", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Removing retrieved-token loss masking lowers average EM from 0.431 to 0.343.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.343, "unit": "EM", "baseline_value": 0.431, "n": 7,
+   "setup": "Qwen2.5-7B-Base, PPO; at 3B-Base the drop is 0.303 to 0.262.",
+   "quote": null, "table": "Table 4, row SEARCH-R1 w.o. mask, column Avg.", "note": "3B values in Table 6.", "where": "Table 4, Table 6"
+  },
+  {
+   "claim": "PPO reached 0.431 and GRPO 0.350 average EM for Qwen2.5-7B-Base; for 7B-Instruct GRPO 0.396 beat PPO 0.385.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.350, "unit": "EM", "baseline_value": 0.431, "n": 7,
+   "setup": "Qwen2.5-7B-Base, SEARCH-R1 GRPO group size 5, same data and retriever.",
+   "quote": null, "table": "Table 3, row SEARCH-R1-base (GRPO), column Avg.", "note": "Mixed outcome across model variants; the text says final training rewards are comparable.", "where": "Table 3"
+  },
+  {
+   "claim": "GRPO converges faster than PPO but suffers reward collapse over extended training, while PPO stays stable.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Qwen2.5-3B/7B, base and instruct, training reward curves.",
+   "quote": "GRPO leads to reward collapse after training for many steps, whereas PPO remains stable.",
+   "table": null, "note": null, "where": "Section 5.1, Fig 2(a), Fig 5"
+  },
+  {
+   "claim": "Top-k of 3 retrieved passages gives the best average EM (0.431) versus 0.375 for k=1 and 0.400 for k=5.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.431, "unit": "EM", "baseline_value": 0.400, "n": 7,
+   "setup": "Qwen2.5-7B-Base, PPO, evaluated at step 500.",
+   "quote": null, "table": "Table 7, rows topk=1, topk=3, topk=5, column Avg.", "note": null, "where": "Appendix G"
+  },
+  {
+   "claim": "In the GRPO group-size study, group size 1 (REINFORCE) generalises best at 0.410 average EM versus 0.350 for size 5.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.410, "unit": "EM", "baseline_value": 0.350, "n": 7,
+   "setup": "Qwen2.5-7B-Base, GRPO, 500 steps, last valid checkpoint used if collapse.",
+   "quote": null, "table": "Table 8, row size=1, column Avg.", "note": null, "where": "Appendix H"
+  },
+  {
+   "claim": "Qwen2.5-14B Search-R1-base reaches 0.479 average EM, beating all baselines.",
+   "kind": "measured", "source": null, "metric": "average EM", "value": 0.479, "unit": "EM", "baseline_value": null, "n": 7,
+   "setup": "Qwen2.5-14B, same setup as main results.",
+   "quote": null, "table": "Table 5, row Search-R1-base, column Avg.", "note": null, "where": "Appendix C"
+  },
+  {
+   "claim": "Instruct models converge faster and start higher, but final training reward of base and instruct is highly similar.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Qwen2.5-3B and 7B, training reward curves.",
+   "quote": "However, the final training reward of both model types remains highly similar after training.",
+   "table": null, "note": null, "where": "Section 5.2, Fig 2(b), Fig 4"
+  }
+ ],
+ "limits": [
+  "Single run per configuration; no seeds, variance or significance tests reported.",
+  "Training set size, optimizer, precision and wall-clock are not stated.",
+  "Only exact-match outcome reward; format rewards and more complex rewards left to future work.",
+  "Reward collapse with GRPO; checkpoints chosen by the training reward curve when training diverges.",
+  "Authors list extension to broader search strategies, uncertainty-based retrieval, other tools and multimodal reasoning as future work.",
+  "Maximum action budget fixed at 4 turns; Wikipedia 2018 corpus and E5 retriever only."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Loss masking for retrieved tokens", "definition": "ensuring the policy gradient objective is computed only over LLM-generated tokens, excluding retrieved content from the optimization process", "where": "Section 3.1"}
+ ],
+ "lineage": [
+  {"work": "DeepSeek-R1", "year": 2025, "arxiv": "2501.12948", "relation": "extends", "note": "Search-R1 viewed as an extension of DeepSeek-R1 Zero with search-augmented RL training", "quote": null},
+  {"work": "PPO", "year": 2017, "arxiv": "1707.06347", "relation": "uses-method", "note": "default RL algorithm", "quote": null},
+  {"work": "DeepSeekMath (GRPO)", "year": 2024, "arxiv": "2402.03300", "relation": "uses-method", "note": "alternative RL algorithm", "quote": null},
+  {"work": "HybridFlow / Verl", "year": 2024, "arxiv": "2409.19256", "relation": "uses-method", "note": "GRPO implementation", "quote": null},
+  {"work": "Search-o1", "year": 2025, "arxiv": "2501.05366", "relation": "baseline", "note": "inference with retrieval", "quote": null},
+  {"work": "IRCoT", "year": 2022, "arxiv": "2212.10509", "relation": "baseline", "note": "inference with retrieval", "quote": null},
+  {"work": "RAG (Lewis et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "retrieval-augmented generation baseline", "quote": null},
+  {"work": "Qwen2.5", "year": 2024, "arxiv": "2412.15115", "relation": "evaluates", "note": "base models", "quote": null},
+  {"work": "E5", "year": 2022, "arxiv": "2212.03533", "relation": "uses-method", "note": "retriever", "quote": null},
+  {"work": "NQ, HotpotQA, TriviaQA, PopQA, 2Wiki, Musique, Bamboogle", "year": null, "arxiv": null, "relation": "uses-data", "note": "seven evaluation datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Demonstration of PPO and GRPO training with the search engine (SEARCH-R1). During the rollout, LLMs can conduct multi-turn interactions with the search engine.", "page": 4, "why": "Shows where the search engine sits in the rollout loop for both algorithms."},
+  {"figure": "Fig 2", "caption": "(a) PPO vs. GRPO; (b) Base vs. Instruct; (c) Response length; (d) # Valid search.", "page": 9, "why": "Training dynamics: GRPO collapse, response length decrease-increase-stabilize, valid searches rising."},
+  {"figure": "Table 1", "caption": "Template for SEARCH-R1.", "page": 5, "why": "The full prompt used."}
+ ],
+ "code": [
+  {"where": "Eq 4, Section 3.4", "snippet": "r_phi(x, y) = EM(a_pred, a_gold)", "verbatim": true}
+ ],
+ "problems": [
+  "Introduction says 41% and 20% relative improvement; abstract and Section 4.4 say 24% and 20%.",
+  "Appendix I says the case study results are in Table 20, but the R1 vs Search-R1 case study is Table 9.",
+  "Section 4.3 says Table 2 mixes Base/Instruct; Section 3.1 text says responses sampled from the reference policy though the rollout uses the old policy."
+ ]
+}

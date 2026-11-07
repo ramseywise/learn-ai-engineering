@@ -1,0 +1,610 @@
+{
+ "schema": 1,
+ "key": "2309.16588",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/darcet-2023-vision-transformers-need-registers.pdf",
+ "bib": {
+  "title": "Vision Transformers Need Registers",
+  "authors": [
+   "Timothée Darcet",
+   "Maxime Oquab",
+   "Julien Mairal",
+   "Piotr Bojanowski"
+  ],
+  "first_author": "Darcet",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v2)",
+  "arxiv": "2309.16588",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 52888,
+  "chars_total": 52888,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why do large vision transformers produce high-norm artifact tokens in their feature and attention maps, and can extra input tokens remove them?",
+ "hypothesis": "Large, sufficiently trained models learn to recognize redundant patch tokens and use them to store, process and retrieve global information; giving the model explicit extra register tokens should remove the artifacts without hurting quality.",
+ "contributions": [
+  "Identify and characterise high-norm outlier tokens in DINOv2, DeiT-III and OpenCLIP",
+  "Propose appending learnable register tokens to the input sequence, discarded at the output",
+  "Show registers remove the artifacts, set a new self-supervised state of the art on dense prediction, and enable LOST object discovery with larger models"
+ ],
+ "method": {
+  "summary": "Diagnose outlier tokens by output norm in DINOv2 ViT-g, probe their content with linear models, then add N learnable register tokens after the patch embedding (like [CLS], dropped at output) and retrain DeiT-III ViT-B, OpenCLIP ViT-B/16 and DINOv2 ViT-L/14 with and without registers.",
+  "task": "Self-/label-/text-supervised ViT pretraining; frozen-feature evaluation (linear probing, zero-shot, LOST object discovery)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-22k",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "used for DeiT-III ViT-B and DINOv2 ViT-L",
+    "preprocessing": null
+   },
+   {
+    "name": "Shutterstock-based text-image corpus (licensed images and text only)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "OpenCLIP reproduction",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-1k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "linear probing top-1; zero-shot for OpenCLIP",
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "linear segmentation, mIoU",
+    "preprocessing": null
+   },
+   {
+    "name": "NYUd",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "monocular depth, rmse",
+    "preprocessing": null
+   },
+   {
+    "name": "PASCAL VOC 2007, VOC 2012, COCO 20k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "LOST corloc",
+    "preprocessing": null
+   },
+   {
+    "name": "Classification probe sets (Aircraft, CIFAR10, CIFAR100, CUB, Caltech101, Cars, DTD, Flowers, Food, ImageNet-1k, Places205, Pets, SUN, VOC)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Table 1 token probing",
+    "preprocessing": "one random patch token (normal or outlier) per image as representation, logistic regression"
+   }
+  ],
+  "models": [
+   {
+    "name": "DINOv2 ViT-g/14 (analysis)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ViT, 40 layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "outliers appear around layer 15; only ViT-L, H, g show them (Fig 4)"
+    }
+   },
+   {
+    "name": "DINOv2 ViT-L/14 +reg",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-L/14 with 4 registers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "registers": "4 in most experiments; 0, 1, 2, 4, 8 or 16 ablated"
+    }
+   },
+   {
+    "name": "DeiT-III ViT-B +reg",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenCLIP ViT-B/16 +reg",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-B/16 image encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "each method's original objective (DeiT-III supervised, OpenCLIP contrastive, DINOv2 self-supervised)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "recipes": "official repositories of DeiT, open_clip, dinov2 used unchanged apart from registers",
+    "antialiasing": "antialiasing added to position-embedding interpolation for DINOv2 results (App A)",
+    "register init": "learnable values, added after patch embedding"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; no seeds or repeated runs reported for Tables 2-3 (Table 6 gives std over random token choice)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "high_norm_cutoff": "norm > 150 (hand-picked, DINOv2)",
+    "registers": "4"
+   },
+   "other": {
+    "LOST": "values for DeiT/OpenCLIP, keys for DINOv2; bias manually added to gram matrix"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1",
+     "definition": "linear probe on frozen features, protocol of Oquab et al. 2023",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "ADE20k linear segmentation",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "rmse",
+     "definition": "NYUd depth",
+     "unit": "m (unit not printed)",
+     "higher_is_better": false
+    },
+    {
+     "name": "corloc",
+     "definition": "LOST unsupervised object discovery",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Same models trained without registers",
+    "DINO via LOST (61.9 corloc on VOC07, from Siméoni et al. 2021)"
+   ],
+   "protocol": "Single reported value per model; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "High-norm outlier tokens are about 2% of patches in DINOv2 ViT-g",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction with norm>150",
+   "value": 2.37,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DINOv2 ViT-g/14 over a small image dataset",
+   "quote": "We measure the proportion of tokens with norm larger than 150 at 2.37%.",
+   "table": null,
+   "note": null,
+   "where": "Fig 3"
+  },
+  {
+   "claim": "Outliers appear around layer 15 of 40, after one third of training, and only in the three largest models",
+   "kind": "measured",
+   "source": null,
+   "metric": "onset",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DINOv2 ViT-g, Fig 4",
+   "quote": "these high-norm patches seem to differentiate themselves from other patches around layer 15 of this 40-layer ViT",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Outlier patch tokens store less local information than normal ones: position prediction accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "position top-1",
+   "value": 22.8,
+   "unit": "%",
+   "baseline_value": 41.7,
+   "n": null,
+   "setup": "linear probe on DINOv2-g tokens",
+   "quote": null,
+   "table": "Fig 5b (figure text), outlier 22.8 vs normal 41.7, column position top-1 acc",
+   "note": null,
+   "where": "Fig 5b"
+  },
+  {
+   "claim": "Outlier tokens carry global information: ImageNet-1k linear probe on a single outlier token",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 69.0,
+   "unit": "%",
+   "baseline_value": 65.8,
+   "n": null,
+   "setup": "DINOv2-g, one random token as representation; [CLS] gets 86.0",
+   "quote": "outlier\n69.0",
+   "table": "Table 1, row outlier vs normal, column IN1k",
+   "note": "Aircraft: outlier 79.1 vs normal 17.1",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Registers remove outliers in all three models",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-III, OpenCLIP, DINOv2 with registers (Fig 7)",
+   "quote": "we get rid of the artifacts by training models with additional register tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "DINOv2 ViT-L ADE20k mIoU with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": 47.9,
+   "unit": "%",
+   "baseline_value": 46.6,
+   "n": null,
+   "setup": "linear probing on frozen features, DINOv2 ViT-L/14, 4 registers",
+   "quote": null,
+   "table": "Table 2a, row DINOv2+reg, column ADE20k mIoU",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "DINOv2 ViT-L ImageNet linear probe with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 84.8,
+   "unit": "%",
+   "baseline_value": 84.3,
+   "n": null,
+   "setup": "frozen features, 4 registers",
+   "quote": null,
+   "table": "Table 2a, row DINOv2+reg, column ImageNet Top-1",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "DINOv2 NYUd depth rmse with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "rmse",
+   "value": 0.366,
+   "unit": null,
+   "baseline_value": 0.378,
+   "n": null,
+   "setup": "frozen features, linear",
+   "quote": null,
+   "table": "Table 2a, row DINOv2+reg, column NYUd rmse",
+   "note": null,
+   "where": "Table 2a"
+  },
+  {
+   "claim": "DeiT-III ImageNet/ADE20k/NYUd with registers are about unchanged",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU",
+   "value": 39.1,
+   "unit": "%",
+   "baseline_value": 38.9,
+   "n": null,
+   "setup": "DeiT-III ViT-B on IN-22k",
+   "quote": null,
+   "table": "Table 2a, row DeiT-III+reg, column ADE20k mIoU",
+   "note": "ImageNet 84.7 both; rmse 0.511 vs 0.512",
+   "where": "Table 2a"
+  },
+  {
+   "claim": "OpenCLIP NYUd rmse improves with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "rmse",
+   "value": 0.661,
+   "unit": null,
+   "baseline_value": 0.702,
+   "n": null,
+   "setup": "OpenCLIP ViT-B/16 on Shutterstock corpus",
+   "quote": null,
+   "table": "Table 2a, row OpenCLIP+reg, column NYUd rmse",
+   "note": "ImageNet 78.1 vs 78.2; ADE20k 26.7 vs 26.6",
+   "where": "Table 2a"
+  },
+  {
+   "claim": "OpenCLIP zero-shot ImageNet unchanged with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot top-1",
+   "value": 60.1,
+   "unit": "%",
+   "baseline_value": 59.9,
+   "n": null,
+   "setup": "OpenCLIP ViT-B/16",
+   "quote": null,
+   "table": "Table 2b, row OpenCLIP+reg, column Top-1",
+   "note": null,
+   "where": "Table 2b"
+  },
+  {
+   "claim": "LOST corloc on VOC2007 for DINOv2 with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "corloc",
+   "value": 55.4,
+   "unit": "%",
+   "baseline_value": 35.3,
+   "n": null,
+   "setup": "LOST on frozen features; keys for DINOv2",
+   "quote": "the model with registers gets an improvement of 20.1 corloc (55.4 versus 35.3)",
+   "table": null,
+   "note": "DINO reported at 61.9 by Siméoni et al.",
+   "where": "Sec 3.3, Table 3"
+  },
+  {
+   "claim": "LOST corloc on VOC2007 for DeiT-III with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "corloc",
+   "value": 27.1,
+   "unit": "%",
+   "baseline_value": 11.7,
+   "n": null,
+   "setup": "LOST, values used",
+   "quote": null,
+   "table": "Table 3, row DeiT-III+reg, column VOC 2007",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "OpenCLIP gets slightly worse LOST corloc with registers",
+   "kind": "measured",
+   "source": null,
+   "metric": "corloc",
+   "value": 37.1,
+   "unit": "%",
+   "baseline_value": 38.8,
+   "n": null,
+   "setup": "LOST on VOC 2007",
+   "quote": null,
+   "table": "Table 3, row OpenCLIP+reg, column VOC 2007",
+   "note": "VOC12 42.0 vs 44.3; COCO 27.9 vs 31.0",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Registers add under 2% FLOPs with 4 registers; up to 6% with 16",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOP increase",
+   "value": 2,
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 registers",
+   "quote": "for n = 4 registers, the increase in FLOPs stays below 2%.",
+   "table": null,
+   "note": null,
+   "where": "App B"
+  },
+  {
+   "claim": "With registers, high-norm tokens are contained entirely in the registers; register linear probe on Aircraft",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 71.1,
+   "unit": "%",
+   "baseline_value": 73.3,
+   "n": null,
+   "setup": "DINOv2 with 1 register vs outlier patch with 0 registers; [CLS] 85.2 vs 84.6",
+   "quote": null,
+   "table": "Table 4, row 1 register, column register",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "One register removes artifacts; more help ImageNet; dense tasks have an optimum; 4 kept",
+   "kind": "measured",
+   "source": null,
+   "metric": "registers",
+   "value": 4,
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DINOv2 ViT-L/14 with 0,1,2,4,8,16 registers",
+   "quote": "In all our experiments, we kept 4 register tokens.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, Fig 8"
+  }
+ ],
+ "limits": [
+  "Authors could not fully determine which aspects of training cause artifacts: 'we have not been able to fully determine which aspects of the training led to the appearance of artifacts'",
+  "Analysis of mechanism concentrated on DINOv2; hand-picked norm cutoff 150 'can vary across models'",
+  "OpenCLIP LOST gets slightly worse with registers; explanation (outliers in null space of value projection) left to future work",
+  "Register regularisation and quantised register norms left for future work",
+  "No hyperparameters, seeds or compute reported; single runs; training data sizes not given",
+  "Absolute OpenCLIP performance is lower due to the licensed-data corpus",
+  "MAE shows no artifacts but is weak for frozen features (75% linear probe, ViT-L)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "register",
+   "definition": "additional learnable input tokens appended to the sequence after the patch embedding, discarded at output; independent of the input image",
+   "where": "Sec 1, 2.2"
+  },
+  {
+   "term": "high-norm / outlier token",
+   "definition": "output token with norm above a hand-picked cutoff (150 for DINOv2)",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Memory Transformer (Burtsev et al.)",
+   "year": 2020,
+   "arxiv": "2006.11527",
+   "relation": "extends",
+   "note": "the register mechanism was first proposed there for NLP translation",
+   "quote": "This mechanism was first proposed in Memory Transformers (Burtsev et al., 2020)"
+  },
+  {
+   "work": "DINOv2 (Oquab et al.)",
+   "year": 2023,
+   "arxiv": "2304.07193",
+   "relation": "evaluates",
+   "note": "main model studied; evaluation protocol reused",
+   "quote": null
+  },
+  {
+   "work": "DINO (Caron et al.)",
+   "year": 2021,
+   "arxiv": "2104.14294",
+   "relation": "related",
+   "note": "artifact-free attention maps; the exception",
+   "quote": null
+  },
+  {
+   "work": "DeiT III (Touvron et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "supervised recipe",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP (Ilharco et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "text-supervised recipe",
+   "quote": null
+  },
+  {
+   "work": "LOST (Siméoni et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object discovery evaluation",
+   "quote": null
+  },
+  {
+   "work": "Fine-tuning image transformers using learnable memory (Sandler et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memory tokens in fine-tuning; do not transfer across tasks",
+   "quote": null
+  },
+  {
+   "work": "Recurrent memory transformer (Bulatov et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "follow-up to Memory Transformer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Register tokens enable interpretable attention maps in all vision transformers",
+   "page": 1,
+   "why": "before/after attention maps for three models"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Illustration of the proposed remediation and resulting model",
+   "page": 5,
+   "why": "shows where registers sit in the sequence"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Ablation of the number of register tokens used with a DINOv2 model",
+   "page": 7,
+   "why": "artifacts vs number of registers"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 5b and Fig 4 values only exist as figure text; no embedded instructions found"
+ ]
+}

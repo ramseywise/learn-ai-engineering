@@ -1,0 +1,650 @@
+{
+ "schema": 1,
+ "key": "2303.16199",
+ "pdf": "generative-ai/05-RL/sources/zhang-2023-llama-adapter.pdf",
+ "bib": {
+  "title": "LLaMA-Adapter: Efficient Fine-tuning of Large Language Models with Zero-initialized Attention",
+  "authors": [
+   "Renrui Zhang",
+   "Jiaming Han",
+   "Chris Liu",
+   "Aojun Zhou",
+   "Pan Lu",
+   "Yu Qiao",
+   "Hongsheng Li",
+   "Peng Gao"
+  ],
+  "first_author": "Zhang",
+  "year": 2024,
+  "venue": "ICLR 2024 (arXiv v3)",
+  "arxiv": "2303.16199",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 96359,
+  "chars_total": 96359,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can LLaMA be turned into an instruction-following (and multi-modal) model by training only a tiny set of prefix prompts, without destabilising the frozen model?",
+ "hypothesis": "Randomly initialised adaption prompts disturb the pre-trained model early in training; a zero-initialised gate lets instruction signal be injected progressively, giving stability and better final performance.",
+ "contributions": [
+  "LLaMA-Adapter: 1.2M learnable parameters on frozen LLaMA 7B, under one hour on 8 A100 GPUs",
+  "Zero-initialized attention with learnable zero gating",
+  "Extension to image-conditioned instruction following (multi-modal)",
+  "Zero-init attention generalises to ViT, RoBERTa, CLIP fine-tuning"
+ ],
+ "method": {
+  "summary": "Learnable prompts of length K are prefixed to word tokens in the top L layers of a frozen LLaMA; attention scores of the prompt part get a separate softmax multiplied by tanh(g_l), g_l initialised at zero and learned per head. For images, a frozen CLIP encoder feature is projected and added element-wise to the prompts.",
+  "task": "parameter-efficient instruction tuning and visual instruction tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Alpaca self-instruct data",
+    "role": "train",
+    "size": "52K instruction-output pairs",
+    "split": null,
+    "source": "Taori et al. 2023 (GPT-3.5 expanded from 175 seeds)",
+    "preprocessing": null
+   },
+   {
+    "name": "ScienceQA",
+    "role": "both",
+    "size": null,
+    "split": "multi-modal train set for tuning, in-domain test; ablations on validation",
+    "source": "Lu et al. 2022",
+    "preprocessing": "question, textual context and options concatenated in one sentence"
+   },
+   {
+    "name": "LAION-400M image-caption",
+    "role": "train",
+    "size": null,
+    "split": "stage 1 of zero-shot multi-modal training",
+    "source": "Schuhmann et al. 2021",
+    "preprocessing": "raw image-caption data"
+   },
+   {
+    "name": "LLaVA-I",
+    "role": "train",
+    "size": "158K",
+    "split": "stage 2 together with Alpaca 52K",
+    "source": "Liu et al. 2023b",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2 (extra)",
+    "role": "train",
+    "size": "83K sampled, or 204K entire",
+    "split": null,
+    "source": "Goyal et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "MME, MMBench, LVLM-eHub",
+    "role": "eval",
+    "size": "LVLM-eHub 44 datasets",
+    "split": "zero-shot, official procedures",
+    "source": "Fu 2023; Liu 2023c; Xu 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-4 evaluating benchmark",
+    "role": "eval",
+    "size": "80 questions",
+    "split": null,
+    "source": "Chiang et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Open LLM benchmark (ARC, HellaSwag, MMLU, TruthfulQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Beeching et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "VTAB-1k",
+    "role": "both",
+    "size": "19 tasks",
+    "split": null,
+    "source": "Zhai et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD 1.1/2.0, CoNLL03/04/05/12",
+    "role": "both",
+    "size": null,
+    "split": "dev set",
+    "source": "Rajpurkar 2016 etc.",
+    "preprocessing": null
+   },
+   {
+    "name": "Base-to-novel (ImageNet, Caltech101, Flowers102)",
+    "role": "both",
+    "size": null,
+    "split": "train on base classes few-shot, test base and novel",
+    "source": "Zhou et al. 2022b",
+    "preprocessing": null
+   },
+   {
+    "name": "C-VQA",
+    "role": "eval",
+    "size": "2K counterfactual QA pairs",
+    "split": null,
+    "source": "Zhang et al. 2023b",
+    "preprocessing": null
+   },
+   {
+    "name": "POPE",
+    "role": "eval",
+    "size": "500 MSCOCO images, 6 questions each",
+    "split": null,
+    "source": "Li et al. 2023c",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "pre-trained LLaMA, frozen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-Adapter",
+    "role": "proposed",
+    "params": "1.2M tuned (1.8M with visual projection; Table 4 reports 1.79 at L=30)",
+    "architecture": "prefix adaption prompts K=10 in last L=30 layers with zero-init gated attention",
+    "init_from": "LLaMA 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gate": "tanh(g_l), g_l zero-init, one per head",
+     "storage": "4.7M in Table 1, 4.9M in text"
+    }
+   },
+   {
+    "name": "CLIP image encoder",
+    "role": "base",
+    "params": null,
+    "architecture": "CLIP, multi-scale global features, bottleneck MLP projection (0.6M)",
+    "init_from": "pre-trained, frozen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViT-B/16",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": "supervised ImageNet-21k",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-large",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": "pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "fully fine-tuned LLaMA",
+    "init_from": "LLaMA 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca-LoRA",
+    "role": "baseline",
+    "params": "4.2M (rank 8)",
+    "architecture": "LoRA",
+    "init_from": "LLaMA 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token language modelling loss on instruction responses (not stated)",
+   "optimizer": null,
+   "lr": "0.009",
+   "lr_schedule": null,
+   "warmup": "2 epochs",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.02",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 A100 GPUs",
+   "compute": null,
+   "wall_clock": "less than one hour (Alpaca 3 hours, Alpaca-LoRA 1.5 hours)",
+   "seeds": null,
+   "other": {
+    "prompt_length_K": "10",
+    "inserted_layers_L": "30 of N=32",
+    "multimodal_hparams": "same as language instruction model",
+    "stage1": "LAION-400M: tune projection + zero-init attention",
+    "stage2": "freeze projection, tune zero-init attention on Alpaca + LLaVA-I",
+    "scienceqa": "freeze image encoder and LLaMA; train projection and zero-init attention"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "ScienceQA: question, textual context, options concatenated sequentially",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ScienceQA accuracy",
+     "definition": "multiple-choice accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 win count",
+     "definition": "GPT-4 compares two responses on 80 questions",
+     "unit": "wins",
+     "higher_is_better": true
+    },
+    {
+     "name": "MME score",
+     "definition": "official MME perception/cognition scores",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Alpaca",
+    "Alpaca-LoRA",
+    "LLaVA",
+    "MiniGPT-4",
+    "MM-CoT",
+    "GPT-4 CoT",
+    "VPT",
+    "P-tuning v2",
+    "MaPLe",
+    "InstructBLIP",
+    "LLaVA-1.5"
+   ],
+   "protocol": "single run per setting reported; no seeds, no significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/OpenGVLab/LLaMA-Adapter",
+   "weights": "released per abstract ('Code and models are released')",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The warmup epochs, batch size, learning rate, and weight decay are set to 2, 64, 0.009, and 0.02, respectively.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-initialized attention raises ScienceQA validation accuracy by 43.08 points over random init of the same adapter.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Val Acc",
+   "value": "+43.08",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B + adapter (K=10, L=30), ScienceQA val, multi-modal model",
+   "note": "Table 5: Zero-Init 83.85 vs Rand-Init 40.77",
+   "where": "Sec 4.3, Table 5",
+   "quote": "it contributes to a significant +43.08% gain on ScienceQA’s validation set"
+  },
+  {
+   "claim": "Randomly initialised adapter reaches 40.77% on ScienceQA val, about Random Choice (39.83).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Val Acc",
+   "value": "40.77",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above, random init of prompts and gate",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "the randomly initialized baseline only achieves 40.77% accuracy"
+  },
+  {
+   "claim": "Multi-modal LLaMA-Adapter scores 85.19 average on ScienceQA test, above GPT-4 CoT 83.99 and MM-CoT 84.91.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "85.19",
+   "unit": "% accuracy",
+   "baseline_value": "83.99",
+   "n": null,
+   "setup": "ScienceQA test, fine-tuned on ScienceQA train, 1.8M tuned params",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LLaMA-Adapter, column Avg"
+  },
+  {
+   "claim": "Text-only LLaMA-Adapter_T scores 78.31 on ScienceQA; adding visual condition gives +6.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "78.31",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA test, 1.2M tuned params",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "our single-modal ‘LLaMA-AdapterT ’ attains 78.31% accuracy"
+  },
+  {
+   "claim": "Adapter tunes 1.2M parameters and trains in 1 hour on 8 A100, vs Alpaca 7B in 3 hours and Alpaca-LoRA 4.2M in 1.5 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "1 hour",
+   "unit": "time",
+   "baseline_value": "3 hours (Alpaca)",
+   "n": null,
+   "setup": "8 A100, 52K Alpaca data, 5 epochs, LLaMA-7B",
+   "note": "Text says 4.9M storage; Table 1 prints 4.7M",
+   "where": "Table 1",
+   "table": "Table 1, row LLaMA-Adapter, column Training Time"
+  },
+  {
+   "claim": "Layer count ablation: 30 inserted layers gives 83.85 val acc, better than 32 (81.03) and 10 (55.95).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Val Acc",
+   "value": "83.85",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA val, last L layers of LLaMA-7B",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 30, column Val Acc"
+  },
+  {
+   "claim": "Open LLM benchmark average: LLaMA-Adapter 52.2 vs Alpaca 49.23 and Alpaca-LoRA 50.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Open LLM avg",
+   "value": "52.2",
+   "unit": "avg score",
+   "baseline_value": "49.23",
+   "n": null,
+   "setup": "ARC, HellaSwag, MMLU, TruthfulQA; 7B models trained on 52K Alpaca data",
+   "note": "LLaMA-Adapter is below Alpaca-LoRA on MMLU (34.9 vs 37.1).",
+   "where": "Table 18",
+   "table": "Table 18, row LLaMA-Adapter, column Avg"
+  },
+  {
+   "claim": "MME perception score 973 for LLaMA-Adapter vs LLaVA 503 and MiniGPT-4 867.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME P",
+   "value": "973",
+   "unit": "score",
+   "baseline_value": "867",
+   "n": null,
+   "setup": "Zero-shot MME, 2-stage training (LAION-400M then Alpaca+LLaVA-I)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLaMA-Adapter, column MME P"
+  },
+  {
+   "claim": "Alpaca-LoRA at ranks 2/4/8/16 averages 50.9/50.8/50.7/50.8 on Open LLM, all below LLaMA-Adapter 52.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Open LLM avg",
+   "value": "52.2",
+   "unit": "avg score",
+   "baseline_value": "50.9",
+   "n": null,
+   "setup": "Open LLM benchmark, 7B",
+   "note": null,
+   "where": "Table 19",
+   "table": "Table 19, row LLaMA-Adapter, column AVG"
+  },
+  {
+   "claim": "Zero-init attention on ViT-B/16 VTAB-1k: Natural 81.74, Specialized 84.43, Structured 56.75 vs VPT 78.48 / 82.43 / 54.98.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "81.74",
+   "unit": "% top-1",
+   "baseline_value": "78.48",
+   "n": null,
+   "setup": "ViT-B/16 pre-trained on ImageNet-21k, VTAB-1k 19 tasks",
+   "note": "Table 12 gives per-dataset means 81.7 (natural), 84.4 (specialized), 56.8 (structured).",
+   "where": "Table 6",
+   "table": "Table 6, row Zero-init., column Natural"
+  },
+  {
+   "claim": "On SQuAD 2.0 RoBERTa-large, zero-init gets F1 87.2 vs P-tuning v2 85.5 and full 89.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "87.2",
+   "unit": "F1",
+   "baseline_value": "85.5",
+   "n": null,
+   "setup": "RoBERTa-large, SQuAD 2.0 dev",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Zero-init., column SQuAD 2.0 F1"
+  },
+  {
+   "claim": "With 204K VQAv2 added, MME total rises from 1222 to 1618.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME All",
+   "value": "1618",
+   "unit": "score",
+   "baseline_value": "1222",
+   "n": null,
+   "setup": "Instruction tuning with Alpaca + LLaVA-I + VQAv2 (204K)",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row +VQAv2 (204K), column MME All"
+  },
+  {
+   "claim": "GPT-4 judged benchmark: LLaMA-Adapter wins 82 vs Alpaca and 90 vs Alpaca-LoRA in the figure labels (numbers extracted from Fig 5 without labels).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win count",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "80 questions, GPT-4 as judge (Chiang et al. 2023)",
+   "note": "Counts not tied to labels in the text; the text only says 'more win'",
+   "where": "Fig 5"
+  }
+ ],
+ "limits": [
+  "No seeds, variances or significance tests reported.",
+  "Instruction-following quality judged by GPT-4 on only 80 questions; win counts given only in Fig 5 without a text table.",
+  "Optimizer, LR schedule, sequence length, precision not stated.",
+  "Zero-init ablation done on multi-modal ScienceQA val, not on language instruction following.",
+  "Table 4 shows inserting into all 32 layers is worse than 30 (81.03 vs 83.85), but text also says 'simply inserting into all layers is generally a good solution'.",
+  "Lower MMLU than Alpaca-LoRA in Table 18 (34.9 vs 37.1)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "zero-initialized attention",
+   "definition": "learnable gating factor, initialised at zero, that scales the softmaxed attention scores of the adaption prompts",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supplies 52K data and full fine-tuning baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "extends",
+   "note": "frozen base model",
+   "quote": null
+  },
+  {
+   "work": "Alpaca-LoRA / LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "baseline",
+   "note": "concurrent PEFT baseline",
+   "quote": null
+  },
+  {
+   "work": "Prefix-tuning (Li & Liang)",
+   "year": 2021,
+   "arxiv": "2101.00190",
+   "relation": "uses-method",
+   "note": "layer-wise prompts",
+   "quote": null
+  },
+  {
+   "work": "P-tuning v2 (Liu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RoBERTa baseline",
+   "quote": null
+  },
+  {
+   "work": "VPT (Jia et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VTAB baseline",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "different gating (residual, outside LLM layers)",
+   "quote": null
+  },
+  {
+   "work": "LLaVA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent multi-modal LLM; LLaVA-I data used",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "baseline",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "ScienceQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Details of Zero-initialized Attention.",
+   "page": 4,
+   "why": "shows the gated split softmax"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Loss Curves of LLaMA-Adapter with (blue) and without (orange) zero-initialized attention.",
+   "page": 9,
+   "why": "random-init loss plateaus near 0.15 while zero-init converges to zero"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7",
+   "snippet": "S_l^g = [softmax(S_l^K) * tanh(g_l); softmax(S_l^{M+1})]^T",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 'Section ??' in Sec 3 intro.",
+  "Table 8 (CLIP, main text) shows the same numbers as Table 6 in the extracted text; Table 14 holds the real CLIP numbers.",
+  "Text says 4.9M storage; Table 1 says 4.7M.",
+  "Cached text is the ICLR 2024 version (arXiv v3)."
+ ]
+}

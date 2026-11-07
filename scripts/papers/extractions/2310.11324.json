@@ -1,19 +1,695 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.11324",
  "pdf": "ai-engineering/01-prompt-engineering/sources/sclar-2023-quantifying-language-models-sensitivity-spurious.pdf",
  "bib": {
   "title": "Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I learned to start worrying about prompt formatting",
-  "first_author": "Melanie Sclar",
-  "year": "2023",
-  "venue": "ICLR 2024",
+  "authors": [
+   "Melanie Sclar",
+   "Yejin Choi",
+   "Yulia Tsvetkov",
+   "Alane Suhr"
+  ],
+  "first_author": "Sclar",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v2, 1 Jul 2024)",
   "arxiv": "2310.11324",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "60f43d4a-75c6-4377-94dd-2b5d9a2b517f"
+  "at": "2026-11-07",
+  "chars_read": 98120,
+  "chars_total": 98120,
+  "engine": "pymupdf",
+  "skipped": "Plot axis fragments in Figs 22-24 and Table 6 cell text were skimmed, not studied."
  },
- "legacy_report": "SOURCE: \"Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I learned to start worrying about prompt formatting\", Melanie Sclar, Yejin Choi, Yulia Tsvetkov, Alane Suhr. Venue as stated on every page: \"Published as a conference paper at ICLR 2024\". The stamp reads arXiv:2310.11324v2 [cs.CL] 1 Jul 2024. The filename says 2023, but the PDF does not print a v1 date.\n\nCOVERAGE: 98,184 of 98,184 chars, all 29 pages, including Appendices A-C and Table 6. References were skimmed for origins. PDF page numbers equal printed page numbers.\n\nCLAIMS\n- claim: Formatting changes that preserve meaning can move accuracy by up to 76 points, and by about 10 on average.\n  number: 76 points max; ~10 average\n  setup: equivalent formats from the authors' grammar; few-shot, 50+ Super-NaturalInstructions tasks, several open models\n  quote: \"with accuracy varying in up to 76 points for LLaMA-2-13B between equivalent formats, and ∼10 accuracy points on average across 50+ tasks and several models.\"\n  where: p1\n\n- claim: Even 10 random formats give a large spread, and the authors call this a lower bound.\n  number: median 7.5 points; top 20% of tasks at least 15 (LLaMA-2) or 9 (Falcon)\n  setup: 53 tasks (19 multiple-choice, 34 classification), 10 sampled formats per task, 1- and 5-shot, ranking accuracy, datasets assumed size 1,000\n  quote: \"a median spread of 7.5 accuracy points across choices in the model and the number of few-shot examples. 20% of tasks consistently result in a spread of at least 15 accuracy points for all LLaMA-2 settings, and at least 9 points for all Falcon settings.\"\n  where: p5\n\n- claim: Changing only the format can reverse which of two models looks better, often with both results statistically significant.\n  number: probability 0.141 and 0.140 at d = 0.02; both results significant in 76% and 47% of those cases\n  setup: one-sided McNemar tests, p < 0.05, 1000 samples; 53 tasks, 1- and 5-shot (Fig 4). This 76% is not the 76 points above.\n  quote: \"LLaMA-2-13B and -70B reverse trend by at least d = 0.02 with probability 0.141; LLaMA-2-7B and Falcon-7B reverse trend by at least d = 0.02 with probability 0.140.\" / \"statistically significant (p-value < 0.05) on 1000 samples 2: 76% and 47% respectively for the two model comparisons\"\n  where: p5\n\n- claim: A format that wins on one model barely tends to win on another, so the authors conclude no format is inherently good or bad.\n  number: < 0.62 vs 0.5 chance; table values 57.46%, 55.91%, 61.11%\n  setup: format pairs across Llama-2-7b/13b, Llama-2-7b/Falcon, Falcon-7b/7b-Inst\n  quote: \"there is < 0.62 probability that this trend would hold under another model M ′ (random chance is0.5)\"\n  where: p16 (Table 3)\n\n- claim: A single atomic change often moves accuracy by 5 points or more, and more so under exact prefix matching.\n  number: 24% (prefix matching), 11% (probability ranking)\n  setup: 53 tasks, 30 sampled atomic changes each (Fig 6 caption)\n  quote: \"24% of atomic changes have an associated accuracy change of at least 5 points when using exact prefix matching as scoring criteria (11% when using probability ranking).\"\n  where: p6\n\n- claim: Single-constant edits can produce extreme gaps, such as removing separators on task280 or changing casing on task322.\n  number: task280 0.043 to 0.826; task322 0.614 to 0.714\n  setup: probability ranking; Table 2 does not name the model. Selected examples, not typical cases.\n  quote: \"task280 passage:{}\\n answer: {} passage {}\\n answer {} 0.043 0.826 0.783\" / \"task322 COMMENT: {} ANSWER: {} comment: {} answer: {} 0.614 0.714 0.100\"\n  where: p7\n\n- claim: The API-gated GPT-3.5 model also shows spread, at low cost.\n  number: max 56 points, median 6.4, under 10 USD per task\n  setup: 320 formats, 53 tasks, budget 40,000 evaluations, exact prefix matching because full logits are unavailable\n  quote: \"we find a spread up to 56 accuracy points with a median spread of 6.4 accuracy points with GPT3.5 across 320 formats and 53 tasks at a cost of under 10USD on average per task.\"\n  where: p2; detail on p8\n\n- claim: The largest model tested also stays sensitive.\n  number: 1-shot median 0.171, max 0.876; 5-shot top quartile 0.310, max 0.841\n  setup: LLaMA-2-70B, 4-bit quantization, 40,000 evaluations, 320 formats, probability ranking, 53 tasks\n  quote: \"yields a median spread of 0.171 (mean=0.221, std=0.200, using probability ranking across 53 tasks; 25% of tasks had a spread of 0.292 or higher, with a maximum spread of 0.876)\"\n  where: p8\n\n- claim: The scoring metric changes the measured spread, with exact prefix matching giving much higher values.\n  number: median 12 to 28 points\n  setup: exact prefix matching, per model; the authors say degeneration may partly explain it\n  quote: \"with median spread ranging from 12 to 28 accuracy points depending on the model used.\"\n  where: p16\n\n- claim: Format affects whether a model gives any valid answer at all, and accuracy tracks that rate closely.\n  number: correlation 0.639 to 0.962\n  setup: exact prefix accuracy vs \"centered mass\" (share of outputs matching any valid option); 53 tasks, 10 formats, 1000 samples\n  quote: \"falcon-7b-instruct 1 0.962 3.6E-289\" / \"Llama-2-13b 1 0.639 5.8E-61\"\n  where: p18 (Table 5)\n\n- claim: More shots, larger models and instruction tuning do not remove spread; per-task spreads correlate across those settings.\n  number: r=0.83 (7B vs 13B), r=0.43 (Falcon vs Instruct), r=0.82 (1- vs 5-shot); prefix matching r=0.79, 0.32, 0.36\n  setup: same task under each pair of settings, Figs 2 and 13\n  quote: \"there exists significant performance spread regardless of increased model size\"; plot labels \"r=0.83\", \"r=0.43\", \"r=0.82\"\n  where: p5-6; p17 for prefix matching\n\n- claim: The format space is not locally smooth, so local search is a poor fit.\n  number: 32.4% and 33.6% monotonic vs 33.3% by chance\n  setup: 24 tasks, 300 triples each, 250 samples, exact prefix matching\n  quote: \"32.4 and 33.6% of triples were monotonic for multiple-choice and non-multiple-choice tasks respectively. Given that random shuffling within a triple will result in monotonicity 33.3% of the time\"\n  where: p7\n\n- claim: Thompson sampling estimates spread with far less evaluation than exhaustive search and beats naive sampling and UCB.\n  number: within 1 point (Thompson), 4 (naive), 11 (UCB); within 2 points at 5% of the space\n  setup: 320 formats, B = 20, 5 trials over 31 tasks (Fig 9); the 5% figure is for 2,500 test examples and 320 formats\n  quote: \"With a budget of 51,200 evaluations, Thompson sampling results in a spread within 1 accuracy point of the true spread, while naive sampling finds a spread within 4 points, and UCB within 11.\" / \"exploring only 5% of the entire search space for task with 2,500 test examples and 320 plausible formats, we are able to estimate spread within 2 accuracy points of the true spread.\"\n  where: p8; p9\n\n- claim: Sampling more formats raises observed spread, so spread depends on the sample size.\n  number: about 17% of tasks gain at least 5 points going from 10 to 20 formats\n  setup: 500 formats on 250 samples, 31 tasks, 100 trials (Fig 8)\n  quote: \"about 17% of tasks are expected to increase their spread by at least 5 accuracy points when increasing from 10 to 20 sampled formats.\"\n  where: p8\n\n- claim: No single feature reliably predicts performance; separators and number formats have the most individual impact.\n  number: strongly different in S1 22%, Fitem2 10%, C 1%, S2/Fitem1/Fcasing 0%\n  setup: 500 formats, 250 samples each, 31 tasks, 1-shot Llama-2-7B\n  quote: \"S1 0.132 43% 22%\" / \"Fitem2 0.173 45% 10%\"; \"cannot be used to independently predict accuracy changes\"\n  where: p6-7 (Table 1)\n\n- claim: Formats are readable from the prompt embedding, and that separability correlates moderately with spread.\n  number: >=0.98 with top 100 PCs; r = 0.424 (1-shot), 0.555 (5-shot)\n  setup: LLaMA-2-7B, 10 formats, 1000 examples, XGBoost, 31 tasks\n  quote: \"using just the top 100 principal components can result in a classifier with ≥0.98 accuracy in format identification for all 31 tasks analyzed\" / \"(0.424, p = 8.04 · 10−6; 0.555 for the 5-shot setting; using exact prefix matching)\"\n  where: p7\n\n- claim: Spread also appears in open-ended generation, though the metrics are noisier.\n  number: top quartile ROUGE-L 0.098+, BERTScore 0.09+\n  setup: 17 sentence-level tasks, 10 formats, LLaMA-2-7B 5-shot, 50-token limit\n  quote: \"LLaMA-2-7B 5-shot having 25% of tasks with a ROUGE-L spread of 0.098 or higher, and a BERTScore spread of 0.09 or higher.\"\n  where: p19\n\n- claim: Prompt length does not explain spread overall.\n  number: r = 0.228 (prefix), r = -0.022 (ranking); one exception r = 0.559\n  setup: all models and n-shots jointly; the exception is LLaMA-2-7B with prefix matching\n  quote: \"r = 0.228 (p = 1.4 × 10−7) for exact prefix matching metric, and r = −0.022 (p = 0.615) for option ranking metric\"\n  where: p20\n\n- claim: The authors recommend reporting a range, but say one format is fine for many practical systems.\n  number: none\n  setup: benchmarks and model comparisons vs practitioners building on an LLM; they also suggest lower-bound reporting for socially impactful tasks\n  quote: \"choosing a single prompt format that works sufficiently well for use in this larger system is a valid methodological choice.\"\n  where: p9\n\nLIMITS\n- Conceded by the authors (App. C, p29): some formats are less likely to be used by humans, such as <sep> or ::. Parsing choices produce odd strings like \"amet.; Answer\" in \"Less than 20% of cases\", based on 10 formats across 20 tasks. They restrict to short instructions and inputs and leave input length to future work.\n- Conceded elsewhere: spread is only a range (p20). Generation metrics are noisier (p19). Degeneration may inflate prefix-match spread (p16).\n- Selection: tasks were filtered, including removal of those at 0% accuracy on LLaMA-2-7B 1-shot, a cap of 4 tasks per original dataset, and a deliberate search for socially impactful tasks (p15). Formats were added to those tasks when absent.\n- Scope: only descriptor casing, separators, spacing and enumeration change. Wording, instructions and few-shot examples are held fixed. Results are few-shot only, with no zero-shot arm.\n- Comparability: GPT-3.5 uses prefix matching and LLaMA uses ranking, so their medians are not like for like. LLaMA-2-70B was 4-bit quantized.\n- My observations, not the authors': no noise floor or confidence interval is reported on spread. Max minus min grows with sample count, as Fig 8 shows. No output-schema or structured-output conditions are tested.\n- Dated: the models are LLaMA-2, Falcon-7B and GPT-3.5-Turbo.\n- Inconsistency: p9 says embedding separability is \"highly correlated\" with spread, while p7 says \"correlates moderately\" (0.424, 0.555). Prefer p7.\n\nBUILDS ON\n- Bandit method: Chapelle & Li, 2011 (Thompson sampling); Lai et al., 1985 (UCB).\n- UCB setting (c = 2) and gradient-free prompt work: Pryzant et al., 2023; Zhou et al., 2023.\n- Data: Wang et al., 2022 (Super-NaturalInstructions); Honovich et al., 2023 (Instruction Induction).\n- Earlier evidence: Aghajanyan, 2023 (tweet, MMLU 6-10 point jump from (A) vs A); Schick et al., 2021; Lu et al., 2022 (example ordering).\n- Spurious features in other fields: Henderson et al., 2018; Islam et al., 2017; Clark et al., 2011.\n\nCODE\n- Repo, not inspected: \"https://github.com/msclar/formatspread\" (p1, footnote 1).\n- Spread definition (p4): \"We define the performance spread or simply spread as maxi m(pi, D) − mini m(pi, D).\"\n- Thompson update (p4, Algorithm 1): \"Take θ(t)i from Beta(αi + S(t)i , βi + (N (t)i − S(t)i ))\"\n- Prior (p14-15): fixed \"β = 5\" with alpha set from the original format's accuracy. The formula is broken across lines in the extraction, so check it on the page.\n\nFIGURES\n- Fig 1, p2: \"Slight modifications in prompt format templating may lead to significantly different model performance for a given task.\" Five formats on one axis, 0.036 to 0.804, 1-shot LLaMA-2-7B, task280. Shows the effect at a glance.\n- Fig 3, p6: \"Spread across models and n-shots.\" Box plots show the spread does not disappear across settings.\n- Fig 4, p6: probability that M performs worse than M' under another format. Shows reversal against threshold d.\n- Fig 6, p8: probability that an atomic change has a given accuracy impact, for both scorers. Shows the metric effect.\n- Fig 9, p8: distance to true spread against evaluation budget, for three algorithms.\n- Fig 20, p20: accuracy distributions for 30 tasks, showing that a range hides the shape.\n- Non-figures worth considering: Table 2 (p7) and Table 6 (p24-28). In Table 6, task280 is 0.84/0.04 on Llama-70B and 0.85/0.80 on GPT3.5, a compact example of model dependence.\n\nPROBLEMS\n- pypdf warned \"Exceeded 5000 form XObject invocations while extracting text; further form content is skipped.\" Prose and tables on all 29 pages read continuously, and the skip looks confined to plot content, but I could not identify exactly what was skipped.\n- Math is degraded in the grammar (p3), in A.2 (p14, including whitespace values and a dropped index in \"Enumerations are indexed from (i.e.,\") and in the priors (p14-15). Fig 10 and the plot axes extract as fragments.\n- In A.2 the listed S1 and C values appear swapped relative to their definitions: separator-like values sit under C and joiners like \"||\" under S1. Fig 5 and Figs 22-24 suggest this is either a paper error or an extraction error; I did not check the rendered page.\n- Table 3 prints \"Falcon-2-7b\", probably Falcon-7b. The p8 sentence on 5-shot LLaMA-2-70B omits \"or higher\". Fig 9 uses B = 20 while Table 6 uses B = 10.\n- Fig 20 includes task IDs not in the 53-task list (e.g. task1380, task1431, task309, task903, task729), which implies the 31-task analyses used a different set. The paper does not explain this.\n- Spellings \"LLMs\", \"LLaMA\", \"ROUGE-L\", \"BERTScore\" and \"Pryzant\" are reproduced as extracted. Quotes join line breaks with spaces.\n- No embedded instructions were found.\n- Target note: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md does not currently list arXiv 2310.11324 in its sources.\n- PDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/sclar-2023-quantifying-language-models-sensitivity-spurious.pdf"
+ "type": "empirical",
+ "question": "How much does LLM accuracy change under meaning-preserving changes to prompt format, and how can that spread be estimated cheaply?",
+ "hypothesis": "Formatting choices that preserve meaning should not change performance much, but the authors expect (and find) otherwise; they argue single-format reporting is misleading.",
+ "contributions": [
+  "Show open LLMs are very sensitive to prompt formatting in few-shot settings, not removed by model size, shots or instruction tuning",
+  "Propose FormatSpread, a grammar of plausible formats plus Thompson-sampling bandit to estimate the min/max performance without model weights",
+  "Analyses of atomic perturbations, non-monotonic format space and format identifiability from prompt embeddings"
+ ],
+ "method": {
+  "summary": "A manual grammar defines semantically equivalent prompt formats (casing, separators, spaces, enumeration styles). For 53 Super-NaturalInstructions tasks the paper samples formats, scores LLaMA-2, Falcon and GPT-3.5 few-shot, and reports performance spread (max minus min). FormatSpread uses Thompson sampling over formats under an evaluation budget.",
+  "task": "few-shot classification and multiple choice; prompt-format sensitivity",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Super-NaturalInstructions subset",
+    "role": "eval",
+    "size": "53 tasks (19 multiple-choice, 34 classification); datasets assumed size 1,000",
+    "split": "few-shot examples random within each dataset and not used for evaluation; fixed order of evaluation samples",
+    "source": "Wang et al., 2022",
+    "preprocessing": "Tasks filtered: at least 1000 samples, instructions at most 3,000 characters, inputs at most 2,000 characters, at most 20 distinct outputs, not 0% on LLaMA-2-7B 1-shot, at most 4 tasks per source dataset; formats added to socially impactful tasks lacking one"
+   },
+   {
+    "name": "Instruction Induction subset",
+    "role": "eval",
+    "size": "10 tasks",
+    "split": null,
+    "source": "Honovich et al., 2023",
+    "preprocessing": "Format 'Input: {}\\n Output: {}' applied"
+   },
+   {
+    "name": "SuperNaturalInstructions open-ended generation subset",
+    "role": "eval",
+    "size": "17 tasks",
+    "split": null,
+    "source": "Wang et al., 2022",
+    "preprocessing": "Instructions under 1,000 chars, inputs under 5,000 chars; generation limited to 50 tokens and cut at first newline"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-2-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "autoregressive LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "4,096",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "autoregressive LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "autoregressive LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "quantization": "4-bit (Dettmers et al., 2022)"
+    }
+   },
+   {
+    "name": "Falcon-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "autoregressive LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Falcon-7B-Instruct",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "autoregressive LM, instruction tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-Turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "autoregressive LM, API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated beyond 'GPT-3.5-Turbo (Schulman et al., 2022)'"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "not stated for classification; scoring by exact prefix match of output or ranking of options by model probability",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "50 tokens (open-ended generation experiment only)",
+   "samples": "10 random formats per task for Sec 4.2; 500 formats x 250 samples for Sec 4.3 on 31 tasks; 320 formats with E=40,000 evaluations for LLaMA-2-70B and GPT-3.5; 1- and 5-shot; one fixed set and order of few-shot examples per task",
+   "prompting": "inst c p(D1) c ... c p(Dn) c p(Dn+1), spacing '\\n\\n' between instruction and examples; n-shot with n in {1,5}",
+   "retrieval": null,
+   "parameters": {
+    "Thompson prior": "Beta(alpha,beta), beta=5, alpha=max(beta*x/(1-x),1.1), x = original format accuracy",
+    "UCB c": "2",
+    "batch size B": "20 in Fig 9; 10 in Table 6",
+    "budget E": "51,200 (Fig 9 comparison); 40,000 (70B, GPT-3.5)",
+    "formats K": "320 for Fig 9 and Table 6",
+    "search": "E/2 budget for best format then E/2 for worst, second prior reuses counters"
+   },
+   "other": {
+    "format_embedding": "last hidden layer of prompt, 4,096-dim for LLaMA-2-7B; XGBoost on top-n PCA components, 800 vectors per format train, 200 test, 10 formats"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ranking accuracy",
+     "definition": "rate that the expected answer is the highest-ranked valid option by the model's output distribution",
+     "unit": "accuracy (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact prefix matching accuracy",
+     "definition": "output prefix matches expected answer after normalization of casing, spacing, newlines",
+     "unit": "accuracy (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "performance spread",
+     "definition": "max_i m(p_i,D) - min_i m(p_i,D) across plausible formats",
+     "unit": "accuracy points",
+     "higher_is_better": false
+    },
+    {
+     "name": "centered mass",
+     "definition": "ratio of examples where output matched any valid option regardless of correctness",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L, BERTScore",
+     "definition": "generation metrics, [0,1]",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Naive sampling (E/n points per format)",
+    "UCB sampling"
+   ],
+   "protocol": "McNemar one-sided tests (p<0.05) on 1000 samples for model-comparison reversals; 5 trials averaged over 31 tasks for Fig 9; 100 trials for Fig 8; ranking accuracy by default"
+  },
+  "availability": {
+   "code": "https://github.com/msclar/formatspread",
+   "weights": null,
+   "data": "Super-NaturalInstructions (public); 53 task ids listed in App B.1"
+  },
+  "prompts": [
+   {
+    "purpose": "illustrative 1-shot prompt (not from a real task)",
+    "text": "Given a sentence and two words that appear in it, answer which one of the two (A or B) appeared first in the sentence.\n\nThe quick brown fox jumps\nOPTIONS:\nCHOICE (A): fox ; CHOICE (B): brown\nANSWER: B\n\nOver the lazy dog\nOPTIONS:\nCHOICE (A): lazy ; CHOICE (B): dog\nANSWER:",
+    "where": "App A.1.1, p13"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Equivalent formats move accuracy by up to 76 points on LLaMA-2-13B and about 10 on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spread",
+   "value": 76,
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "few-shot, 50+ Super-NaturalInstructions tasks, several models",
+   "quote": "with accuracy varying in up to 76 points for LLaMA-2-13B between equivalent formats, and ∼10 accuracy points on average across 50+ tasks and several models.",
+   "table": null,
+   "note": null,
+   "where": "p1"
+  },
+  {
+   "claim": "Median spread across 10 random formats per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "spread",
+   "value": 7.5,
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "53 tasks, 10 sampled formats, LLaMA-2 and Falcon, 1- and 5-shot, ranking accuracy; lower bound",
+   "quote": "a median spread of 7.5 accuracy points across choices in the model and the number of few-shot examples",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p5"
+  },
+  {
+   "claim": "Probability that a lead of at least 2 points for LLaMA-2-13B over -70B reverses under another format.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reversal probability",
+   "value": 0.141,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=0.02, 53 tasks, 1- and 5-shot",
+   "quote": "LLaMA-2-13B and -70B reverse trend by at least d = 0.02 with probability 0.141",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p5"
+  },
+  {
+   "claim": "Same reversal for LLaMA-2-7B vs Falcon-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reversal probability",
+   "value": 0.14,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=0.02, 53 tasks",
+   "quote": "LLaMA-2-7B and Falcon-7B reverse trend by at least d = 0.02 with probability 0.140",
+   "table": null,
+   "note": null,
+   "where": "p5"
+  },
+  {
+   "claim": "Share of reversal cases where both experiments were significant (13B/70B pair).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one-sided McNemar, p<0.05, 1000 samples; second value 47% for the 7B/Falcon pair",
+   "quote": "76% and 47% respectively for the two model comparisons",
+   "table": null,
+   "note": "76% here is not the 76 points above",
+   "where": "p5"
+  },
+  {
+   "claim": "Pairwise format ordering preserved across models only slightly above chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.46,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-2-7B vs LLaMA-2-13B",
+   "quote": "Llama-2-7b Llama-2-13b 57.46%",
+   "table": "Table 3, row Llama-2-7b / Llama-2-13b, column Performance Relative Ordering Preservation",
+   "note": "Text says < 0.62 probability; Table 3 prints 'Falcon-2-7b' for Falcon-7b",
+   "where": "App B.2"
+  },
+  {
+   "claim": "LLaMA-2-70B 1-shot median spread over 320 formats.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.171,
+   "unit": "accuracy (0-1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "53 tasks, 4-bit quantization, 40,000 evaluations, probability ranking",
+   "quote": "yields a median spread of 0.171 (mean=0.221, std=0.200, using probability ranking across 53 tasks; 25% of tasks had a spread of 0.292 or higher, with a maximum spread of 0.876)",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "LLaMA-2-70B 1-shot maximum spread.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.876,
+   "unit": "accuracy (0-1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above",
+   "quote": "with a maximum spread of 0.876",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "GPT-3.5 median spread over 320 formats, with a spread up to 56 points, under 10 USD per task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.4,
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "53 tasks, exact prefix matching, 320 formats",
+   "quote": "we find a spread up to 56 accuracy points with a median spread of 6.4 accuracy points with GPT3.5 across 320 formats and 53 tasks at a cost of under 10USD on average per task.",
+   "table": null,
+   "note": "p8 gives median 0.064, mean 0.110, max 0.562",
+   "where": "p2"
+  },
+  {
+   "claim": "With 51,200 evaluations Thompson sampling is within 1 point of true spread; naive within 4; UCB within 11.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "320 formats, B=20, 5 trials, 31 tasks",
+   "quote": "With a budget of 51,200 evaluations, Thompson sampling results in a spread within 1 accuracy point of the true spread, while naive sampling finds a spread within 4 points, and UCB within 11.",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "5% of the search space suffices to estimate spread within 2 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "task with 2,500 test examples and 320 formats",
+   "quote": "we are able to estimate spread within 2 accuracy points of the true spread",
+   "table": null,
+   "note": null,
+   "where": "p9"
+  },
+  {
+   "claim": "About 17% of tasks gain at least 5 points of spread going from 10 to 20 formats.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17,
+   "unit": "% of tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 formats x 250 samples, 31 tasks, 100 trials",
+   "quote": "about 17% of tasks are expected to increase their spread by at least 5 accuracy points when increasing from 10 to 20 sampled formats",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "Atomic changes with at least 5 points accuracy change (exact prefix matching).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "53 tasks, 30 sampled atomic changes each",
+   "quote": "24% of atomic changes have an associated accuracy change of at least 5 points when using exact prefix matching as scoring criteria (11% when using probability ranking)",
+   "table": null,
+   "note": null,
+   "where": "p6"
+  },
+  {
+   "claim": "Monotonic triples are no more frequent than chance, so local search is ineffective.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 33.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 tasks, 300 triples each, 250 samples, exact prefix matching",
+   "quote": "32.4 and 33.6% of triples were monotonic for multiple-choice and non-multiple-choice tasks respectively",
+   "table": null,
+   "note": "chance 33.3%",
+   "where": "p7"
+  },
+  {
+   "claim": "Separators S1 strongly differ in 22% of tasks; Fitem2 in 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 22,
+   "unit": "% of tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "31 tasks, 500 formats x 250 samples, 1-shot LLaMA-2-7B",
+   "quote": null,
+   "table": "Table 1, row S1, column Strong Diff.",
+   "note": null,
+   "where": "p6"
+  },
+  {
+   "claim": "Top 100 principal components identify the format with at least 0.98 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.98,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-2-7B prompt embeddings, 10 formats, 31 tasks, XGBoost",
+   "quote": "using just the top 100 principal components can result in a classifier with ≥0.98 accuracy in format identification for all 31 tasks analyzed",
+   "table": null,
+   "note": null,
+   "where": "p7"
+  },
+  {
+   "claim": "Format-identifiability correlates moderately with spread.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.424,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-shot, exact prefix matching; 0.555 for 5-shot",
+   "quote": "(0.424, p = 8.04 · 10−6; 0.555 for the 5-shot setting; using exact prefix matching)",
+   "table": null,
+   "note": "Discussion p9 says 'highly correlated'",
+   "where": "p7"
+  },
+  {
+   "claim": "Exact prefix matching accuracy tracks centered mass for falcon-7b-instruct 1-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.962,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "53 tasks, 10 formats, 1000 samples",
+   "quote": null,
+   "table": "Table 5, row falcon-7b-instruct 1, column correlation",
+   "note": "LLaMA-2-13B 1-shot lowest at 0.639",
+   "where": "App B.2"
+  },
+  {
+   "claim": "Exact prefix matching gives larger median spread than ranking.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "per model, 53 tasks",
+   "quote": "with median spread ranging from 12 to 28 accuracy points depending on the model used",
+   "table": null,
+   "note": "range 12 to 28 points",
+   "where": "p16"
+  },
+  {
+   "claim": "Single-constant edit raises task280 accuracy from 0.043 to 0.826.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.783,
+   "unit": "accuracy difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "probability ranking, model not named in Table 2",
+   "quote": null,
+   "table": "Table 2, row task280, column Diff.",
+   "note": "selected example",
+   "where": "p6"
+  },
+  {
+   "claim": "Prompt length does not explain spread (ranking).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -0.022,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all models and n-shots",
+   "quote": "r = −0.022 (p = 0.615) for option ranking metric",
+   "table": null,
+   "note": null,
+   "where": "p20"
+  },
+  {
+   "claim": "Authors say a single well-working format is acceptable for building systems.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "discussion",
+   "quote": "choosing a single prompt format that works sufficiently well for use in this larger system is a valid methodological choice",
+   "table": null,
+   "note": null,
+   "where": "p9"
+  }
+ ],
+ "limits": [
+  "Equivalent formats are semantically equivalent by the grammar but some are unusual for humans (e.g. <sep>, ::); parsing choices create odd strings in under 20% of cases (App C)",
+  "Only short instructions and inputs; effect of input length left to future work",
+  "Only descriptor casing, separators, spaces, enumeration vary; wording, instructions and examples fixed",
+  "Spread from 10 formats is a lower bound and grows with more formats; no noise floor or confidence interval on spread",
+  "GPT-3.5 uses prefix matching, LLaMA ranking, so medians not comparable; LLaMA-2-70B 4-bit quantized",
+  "Models are LLaMA-2, Falcon-7B, GPT-3.5-Turbo (dated); few-shot only",
+  "The 31-task analyses use a task set not fully named; Fig 20 lists task ids outside the 53"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "performance spread",
+   "definition": "max_i m(p_i, D) - min_i m(p_i, D) across plausible formats",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "centered mass",
+   "definition": "ratio of examples where the model's output matched with any valid option (regardless of correctness)",
+   "where": "App B.2"
+  },
+  {
+   "term": "atomic change",
+   "definition": "change of a single constant (space, separator, casing, item format) in a format",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Super-NaturalInstructions",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "task source (Wang et al.)",
+   "quote": null
+  },
+  {
+   "work": "Instruction Induction",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "10 generation tasks (Honovich et al.)",
+   "quote": null
+  },
+  {
+   "work": "Automatic prompt optimization with gradient descent and beam search",
+   "year": 2023,
+   "arxiv": "2305.03495",
+   "relation": "uses-method",
+   "note": "bandit framing, UCB c=2",
+   "quote": null
+  },
+  {
+   "work": "Large language models are human-level prompt engineers",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gradient-free prompt search as bandit",
+   "quote": null
+  },
+  {
+   "work": "Thompson sampling empirical evaluation",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Chapelle & Li",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "7B, 13B, 70B",
+   "quote": null
+  },
+  {
+   "work": "Falcon-40B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Falcon-7B and Instruct",
+   "quote": null
+  },
+  {
+   "work": "Fantastically ordered prompts",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "example order sensitivity (Lu et al.)",
+   "quote": null
+  },
+  {
+   "work": "Aghajanyan tweet, MMLU (A) formatting",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "anecdotal 6-10 point jump",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Slight modifications in prompt format templating may lead to significantly different model performance for a given task.",
+   "page": 2,
+   "why": "Shows 0.036 to 0.804 on task280 with 1-shot LLaMA-2-7B"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Probability that model M performs worse than M' by at least d when using format p', given that M performed better using p.",
+   "page": 6,
+   "why": "Shows model rankings reverse"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Difference between the true sample spread and each algorithm-found spread with respect to E.",
+   "page": 8,
+   "why": "Compares Thompson, UCB, naive"
+  }
+ ],
+ "code": [
+  {
+   "where": "p4 Algorithm 1",
+   "snippet": "Take θ(t)i from Beta(αi + S(t)i , βi + (N (t)i − S(t)i ))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Math in grammar and A.2 degraded by extraction; S1 and C value lists look swapped",
+  "Table 3 prints 'Falcon-2-7b'; Fig 9 uses B=20, Table 6 B=10; Fig 20 task ids outside the 53 list",
+  "Sec 4.4 says 'highly correlated' in Discussion but 'moderately' in 4.4"
+ ]
 }

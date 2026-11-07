@@ -1,0 +1,932 @@
+{
+ "schema": 1,
+ "key": "2411.15124",
+ "pdf": "generative-ai/05-RL/sources/lambert-2024-tulu-3.pdf",
+ "bib": {
+  "title": "Tülu 3: Pushing Frontiers in Open Language Model Post-Training",
+  "authors": [
+   "Nathan Lambert",
+   "Jacob Morrison",
+   "Valentina Pyatkin",
+   "Shengyi Huang",
+   "Hamish Ivison",
+   "Faeze Brahman",
+   "Lester James V. Miranda",
+   "Alisa Liu",
+   "Nouha Dziri",
+   "Xinxi Lyu",
+   "Yuling Gu",
+   "Saumya Malik",
+   "Victoria Graf",
+   "Jena D. Hwang",
+   "Jiangjiang Yang",
+   "Ronan Le Bras",
+   "Oyvind Tafjord",
+   "Chris Wilhelm",
+   "Luca Soldaini",
+   "Noah A. Smith",
+   "Yizhong Wang",
+   "Pradeep Dasigi",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Lambert",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.15124",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 217000,
+  "chars_total": 250111,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about 33k chars, text lines 4800-5179) only grepped for lineage ids, not read line by line. Everything else read, including all appendices."
+ },
+ "type": "system",
+ "question": "Can a fully open post-training recipe (data, evaluation, SFT, DPO and a new RL stage) on Llama 3.1 base models match or beat the instruct versions of open models and some closed models?",
+ "hypothesis": "Careful data curation and decontamination, on-policy preference data, and an RL stage with verifiable rewards will improve targeted skills (math, precise instruction following) without hurting the others.",
+ "contributions": [
+  "Extensive guidance and tooling for evaluation, decontamination, and recipe design",
+  "Scaled, new synthetic instruction datasets",
+  "Scaling preference data with on-policy generations",
+  "Reinforcement learning with verifiable rewards (RLVR), an RL-based method that only gets a reward if the model's completions are verified to be correct",
+  "Advanced infrastructure, details, and code to facilitate the successful implementation of large models"
+ ],
+ "method": {
+  "summary": "A four-stage post-training pipeline on Llama 3.1 8B/70B/405B base models: prompt curation and decontamination, SFT on about 939k prompts, length-normalized DPO on a synthetic on-policy plus off-policy preference mix (LLM-judge labels from GPT-4o), then PPO with a binary verifiable reward (RLVR) on about 30k GSM8K/MATH/IFEval-style prompts. Evaluated on a development suite and a separate unseen suite (Tülu 3 Eval / OLMES).",
+  "task": "multi-stage LLM post-training: SFT, preference optimisation (DPO), reinforcement learning with verifiable rewards (PPO)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Tülu 3 prompt pool (Table 7)",
+    "role": "train",
+    "size": "23,327,961 prompts in pool; 939,344 used in SFT; 425,145 in DPO prompt pool (not all in both 8B and 70B mixes)",
+    "split": "n/a",
+    "source": "public datasets (WildChat GPT-4 subset, OpenAssistant, No Robots, FLAN v2, UltraFeedback, SciRIFF, TableGPT, OpenMathInstruct 2, NuminaMath-TIR, Evol CodeAlpaca, Aya, CoCoNot, WildJailbreak, WildGuardMix) plus new persona-driven synthetic sets (Persona MATH/GSM/Algebra/Python/IF, IF-augmented, hardcoded)",
+    "preprocessing": "filtered for specific keywords (e.g. OpenAI) and empty messages; decontaminated with 8-gram matching against dev and unseen evals; ShareGPT and HelpSteer2 excluded for provenance"
+   },
+   {
+    "name": "Tülu 3 SFT mix",
+    "role": "train",
+    "size": "939,344 prompts (Table 7 total)",
+    "split": "n/a",
+    "source": "responses kept from human/frontier models, otherwise regenerated with GPT-4o (claude-3-5-sonnet for Persona code)",
+    "preprocessing": "empty responses and responses naming models/developers removed; personas: about 250K from Persona Hub"
+   },
+   {
+    "name": "Tülu 3 preference mix",
+    "role": "train",
+    "size": "354,192 total listed in Table 15; 271,409 (8B mix) and 334,302 (70B mix)",
+    "split": "n/a",
+    "source": "4 responses per prompt from a 22-model pool (Table 38 lists external models) plus Tülu 3 SFT on-policy; GPT-4o-2024-08-06 rates 1-5 on helpfulness, instruction-following, honesty, truthfulness; chosen = highest mean, rejected = random from below-mean",
+    "preprocessing": "binarised following Argilla's mean-rating method; components: SFT reused on-policy 19,444, SFT reused off-policy 96,911, IF-augmented 65,530, WildChat IF 10,792, WildChat reused 17,207, WildChat unused 82,783 (70B only), UltraFeedback cleaned 41,635, Persona IF 19,890 (70B only)"
+   },
+   {
+    "name": "RLVR prompts (Table 22)",
+    "role": "train",
+    "size": "29,946 prompts: GSM8K train 7,473; MATH train 7,500; IF verifiable 14,973",
+    "split": "train splits",
+    "source": "GSM8K, MATH, and IFEval-style constraints appended to Tülu 2 SFT mix prompts",
+    "preprocessing": "GSM8K gets the standard 8-shot prompt, MATH the 3-shot CoT prompt; verification by exact match against extracted answer, or per-constraint verifier functions"
+   },
+   {
+    "name": "Tülu 3 Eval development suite",
+    "role": "dev",
+    "size": null,
+    "split": "MMLU, PopQA, TruthfulQA, BBH, DROP, MATH, GSM8K, HumanEval, HumanEval+, IFEval, AlpacaEval 2, Tülu 3 Safety (6 benchmarks)",
+    "source": "see Table 24",
+    "preprocessing": null
+   },
+   {
+    "name": "Tülu 3 Eval unseen suite",
+    "role": "eval",
+    "size": null,
+    "split": "MMLU-Pro, GPQA, AGIEval English, DeepMind Mathematics, BigCodeBench-Hard (148 of 1140 instances), IFEval-OOD (52 constraints), HREF",
+    "source": "not examined during model development; no unseen safety eval",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 3.1 8B / 70B / 405B base",
+    "role": "base",
+    "params": "8B, 70B, 405B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": "Llama 3 tokenizer",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Tülu 3 8B / 70B / 405B (SFT, DPO, RLVR checkpoints)",
+    "role": "proposed",
+    "params": "8B, 70B, 405B",
+    "architecture": "Llama 3.1",
+    "init_from": "Llama 3.1 base, then SFT -> DPO -> RLVR",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Tülu 3 8B RM",
+    "role": "reward",
+    "params": "8B",
+    "architecture": "Tülu 3 SFT with linear reward head initialised N(0, 1/sqrt(d_model+1)); reward from EOS-token logit",
+    "init_from": "Tülu 3 8B SFT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "initialises the PPO value model for RLVR; trained on the Tülu 3 8B preference mixture; 9 hours on 8 H100"
+    }
+   },
+   {
+    "name": "GPT-4o-2024-08-06",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "preference annotation, persona data generation"
+    }
+   },
+   {
+    "name": "Llama 3.1 Instruct, Qwen 2.5 Instruct, Gemma 2 Instruct, Ministral, Hermes 3, Nemotron Llama 3.1 70B, Magpie, DeepSeek V3, GPT-4o, GPT-4o mini, GPT-3.5 Turbo, Claude 3.5 Haiku",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT: sum-reduced token loss. DPO: length-normalized DPO (Eq. 6) with beta = 5. RLVR: PPO on max E[v(x,y) - beta*KL(pi||pi_ref)] with v = alpha if correct else 0, alpha = 10.",
+   "optimizer": null,
+   "lr": "SFT 5e-6 (8B), 2e-6 (70B and 405B); DPO 5e-7 (8B), 2e-7 (70B and 405B); RM 3e-6; RLVR 3e-7 (8B), 1e-7 (70B, 405B)",
+   "lr_schedule": "linear in all stages",
+   "warmup": "SFT ratio 0.03; DPO ratio 0.1; RLVR 8B omega = 0.0 in final, 70B 0.07 (Table 21 caption) or 0.1 (Sec 6.4 text); 405B RLVR 0.0",
+   "batch_size": "SFT 128 effective (256 for 405B); DPO 128 (256 for 405B); RM 256; PPO 224 (8B), 640 (70B), 1,856 (405B)",
+   "steps": "405B RLVR: 75 steps; 8B/70B RLVR checkpoints chosen every 100 steps (40 for 70B) by dev eval",
+   "epochs": "SFT 2; DPO 1; RM 1; RLVR ablations about 100,000/7,473 = 13 epochs of prompts",
+   "tokens": null,
+   "seq_len": "SFT max 4,096 tokens (405B too); DPO max 2,048; RM 2,048; PPO max token length 2,048, response length 1,024 (RM-PPO) or 2,048 (1,024 for GSM8K only) for RLVR",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "disabled (0) during RM and RL training",
+   "regularisation": "KL penalty: DPO beta = 5; RLVR final 8B beta = 0.05, 70B beta = 0.07 (Table 21 caption) or 0.7 (Sec 6.4 text); 405B beta = 0.05. PPO: gamma 1.0, GAE lambda 0.95, clip 0.2, value coeff 0.1, grad norm 1.0, non-EOS penalty -10, advantage whitening, generation temperature 1.0",
+   "hardware": "SFT 4-16 nodes of 8xH100; 8B SFT 32 GPUs; 70B SFT 64 GPUs; 8B DPO 8 H100; 70B DPO 64 H100; 8B RM 8 H100; 8B RLVR 8 GPUs; 70B RLVR 48 GPUs; 405B RLVR 256 GPUs (32 nodes, 16 GPUs vLLM inference, 240 training)",
+   "compute": "see wall_clock",
+   "wall_clock": "8B SFT 6 hours; 70B SFT 50 hours; 8B DPO 10 hours; 70B DPO 19 hours; 8B RM 9 hours; 8B RLVR 65 hours; 70B RLVR 60 hours; 405B RLVR 46 hours (earlier-than-final checkpoint taken for all RL runs). PPO-vs-DPO ablation: PPO about 28 h on two nodes, DPO about 4 h on one node.",
+   "seeds": "SFT seeds 42/123/456/789/1011 (8B) and 42/123/456 (70B) compared; best single run used. RL/DPO seeds not stated.",
+   "other": {
+    "value_model_init": "from the general RM (Tülu 3 8B RM) for all RLVR runs; best in ablation",
+    "async_RL": "policy trained on second-latest inference data; inference on vLLM with dedicated GPUs; ZeRO stage 3; Ray",
+    "405B_RLVR": "only MATH train prompts (GSM8K saturated, IFEval did not help); 8B value model; weight sync via NCCL; inference about 550 s, weight transfer about 25 s, training about 1,500 s per iteration; 300,000 total episodes in Table 35",
+    "dpo_infra": "cache reference log-probs; separate forward passes for chosen and rejected",
+    "model_soups": "tried with mergekit linear averaging; best soup not better than best single run",
+    "final_checkpoint_selection": "8B final: best overall on MATH and IFEval among checkpoints; ablations use anchored DPO model"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for most dev evals; HumanEval/HumanEval+ sampled at temperature 0.8 with pass@10; AlpacaEval 2 greedy up to 8,192 tokens; generative eval output length 4096",
+   "temperature": "1.0 during PPO rollouts; 0.8 for HumanEval pass@10; greedy otherwise",
+   "top_p": null,
+   "max_tokens": "4096 for generative evals; 8,192 for AlpacaEval 2",
+   "samples": "pass@10 for HumanEval, HumanEval+, BigCodeBench; one greedy sample otherwise; one RM trained once",
+   "prompting": "see Table 24: MMLU 0-shot CoT ('summarize your reasoning'), PopQA 15-shot, TruthfulQA 6-shot MC2, BBH 3-shot CoT, DROP 3-shot, GSM8K 8-shot CoT, MATH 4-shot CoT flex, multiturn ICL where marked; unseen suite 0-shot CoT",
+   "retrieval": null,
+   "parameters": {
+    "alpha_verifiable_reward": "10",
+    "dpo_beta": "5",
+    "rlvr_kl_beta_sweep": "[0.1, 0.05, 0.03, 0.01] (also 0.005, 0.001 in some ablations)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Overall average",
+     "definition": "unweighted mean over all dev evaluations",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "MATH flex EM",
+     "definition": "answer extracted three ways (minerva format, last '<ans>', text between last two '$'); macro average over subsections",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GSM8K EM",
+     "definition": "last number in response",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "IFEval",
+     "definition": "prompt-level accuracy, loose setting (Table 23 labels the column Strict)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval 2 LC win rate",
+     "definition": "length-controlled win rate vs GPT-4 turbo",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Safety (6 task avg.)",
+     "definition": "macro average of accuracy at refusal/compliance over XSTest, HarmBench, DAN, JailbreakTrigger, WildJailbreakTest, WildGuardTest using WildGuard classifier",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HREF win rate",
+     "definition": "win rate vs Llama 3.1 405B Instruct; Llama 3.1 70B Instruct judge, embedding similarity for Open QA and Fact Checking",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama 3.1 Instruct 8B/70B/405B",
+    "Qwen 2.5 7B/72B Instruct",
+    "Nous Hermes 3",
+    "Nemotron Llama 3.1 70B",
+    "Gemma 2 9B Instruct",
+    "Ministral 8B Instruct",
+    "Magpie 8B",
+    "DeepSeek V3",
+    "GPT-4o",
+    "GPT-4o mini",
+    "GPT-3.5 Turbo",
+    "Claude 3.5 Haiku",
+    "Tülu 2 SFT mix"
+   ],
+   "protocol": "Single run per final model; closed-model scores partly taken from model cards (⊤) or imputed with MICE (♢) in Table 2; unseen suite not looked at during development; decontamination with 8-gram match, >50% token overlap per instance, dataset dropped if >2% of an eval overlaps. No significance tests or variance for DPO/RLVR."
+  },
+  "availability": {
+   "code": "allenai/open-instruct (training), allenai/olmes (evaluation), decontamination under open-instruct, allenai/birr (preference inference)",
+   "weights": "allenai/Llama-3.1-Tulu-3-8B, -70B, -405B plus SFT, DPO and RM checkpoints",
+   "data": "tulu-3-datasets collection on Hugging Face: SFT mixture, preference mixtures for 8B/70B/405B, RLVR-GSM-MATH-IF-Mixed-Constraints and subsets"
+  },
+  "prompts": [
+   {
+    "purpose": "persona-driven precise instruction generation",
+    "text": "Create a verifiable instruction that the following persona might ask you to do:\n{persona}\nAn example of verifiable instruction could be: {example}\nNote:\n1. The above example is not tied to any particular persona, but you should create one that is unique and specific to the given persona.\n2. The instruction should contain all the following verifiable constraint(s): {constraints}\n3. Your output should start with \"User instruction:\". Your output should not include an answer to the instruction.",
+    "where": "Figure 30, Appendix C.1"
+   },
+   {
+    "purpose": "preference rating system prompt (LLM-as-a-judge)",
+    "text": "Your role is to evaluate text quality based on given criteria. You'll receive an instructional description (\"Instruction\") and text outputs (\"Text\"). Understand and interpret instructions to evaluate effectively. Provide annotations for each text with a rating and rationale. The texts given are independent, and should be evaluated separately.",
+    "where": "Figure 37, Appendix D"
+   },
+   {
+    "purpose": "MMLU implicit CoT eval prompt",
+    "text": "The following are multiple choice questions about {MMLU subject}. Summarize your reasoning concisely, then conclude with 'Therefore, the answer is: X' where X is one of A, B, C, or D.",
+    "where": "Table 44"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.regularisation",
+    "quote": "the final 70B RLVR model used β = 0.07 and ω = 0.07",
+    "where": "Table 21 caption; Sec 6.4 text says 'β = 0.7' and '0.1 warmup ratio' for 70B"
+   },
+   {
+    "field": "training.lr",
+    "quote": "Learning Rate 5 × 10-6",
+    "where": "Table 11 SFT (8B); RM lr 3e-6 from Table 36"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RLVR on top of the 8B DPO model improves GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K (8 shot, CoT)",
+   "value": 87.6,
+   "unit": "%",
+   "baseline_value": 84.3,
+   "n": null,
+   "setup": "Tülu 3 8B, RLVR final checkpoint vs its DPO starting point, development suite, single run",
+   "table": "Table 23, row GSM8K(8 shot, CoT), columns 8B Tülu 3 RLVR (87.6) and 8B Tülu 3 DPO (84.3)",
+   "note": null,
+   "where": "Table 23, Sec 6.4"
+  },
+  {
+   "claim": "RLVR improves 8B MATH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH (4 shot CoT, Flex)",
+   "value": 43.7,
+   "unit": "%",
+   "baseline_value": 42.0,
+   "n": null,
+   "setup": "Tülu 3 8B RLVR vs DPO, development suite",
+   "table": "Table 23, row MATH(4 shot CoT, Flex), 8B Tülu 3 RLVR 43.7 vs DPO 42.0",
+   "note": null,
+   "where": "Table 23"
+  },
+  {
+   "claim": "RLVR improves 8B IFEval slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IFEval",
+   "value": 82.4,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "Tülu 3 8B RLVR vs DPO; metric is prompt-level loose per Table 24",
+   "table": "Table 23, row IFEval, 8B Tülu 3 RLVR 82.4 vs DPO 81.1",
+   "note": "Table 23 labels the row IFEval(Strict) while Tables 2, 6 and 24 say prompt loose; the numbers are the same (82.4, 81.1).",
+   "where": "Table 23"
+  },
+  {
+   "claim": "The overall dev-suite average gain from RLVR is small at both sizes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. (Table 23 benchmark set)",
+   "value": 64.8,
+   "unit": "points",
+   "baseline_value": 64.4,
+   "n": null,
+   "setup": "8B DPO 64.4 -> RLVR 64.8; 70B DPO 75.9 -> RLVR 76.0 (Table 23)",
+   "table": "Table 23, row Avg., columns 8B Tülu 3 RLVR 64.8, 8B DPO 64.4, 70B DPO 75.9, 70B RLVR 76.0",
+   "note": "Table 6 prints 8B DPO avg 64.7 and final 65.1 and Table 5 prints 70B 76.2 for both DPO and final; Table 23 uses a slightly different row set (e.g. BBH 66.0 vs 69.0), so averages differ between tables.",
+   "where": "Tables 5, 6, 23"
+  },
+  {
+   "claim": "At 70B, RLVR gives only modest gains: MATH rises, GSM8K does not change (already near saturation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH (4 shot CoT, Flex)",
+   "value": 63.0,
+   "unit": "%",
+   "baseline_value": 62.3,
+   "n": null,
+   "setup": "Tülu 3 70B RLVR vs DPO; GSM8K 93.5 both",
+   "table": "Table 23, row MATH, 70B Tülu 3 RLVR 63.0 vs DPO 62.3",
+   "note": null,
+   "where": "Table 23, Sec 6.4"
+  },
+  {
+   "claim": "Some 8B RLVR runs reached higher GSM8K but did worse on other metrics, so the average dropped.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K",
+   "value": 89.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B RLVR runs, development suite; IFEval up to 84.8 in some runs",
+   "quote": "observed that some 8B runs were able to achieve GSM8k scores of up to 89.4% and IFEval scores of up to",
+   "note": null,
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "PPO is far more expensive than DPO in the controlled preference-tuning comparison and reaches slightly lower scores, so DPO was used for preference tuning and PPO only for RLVR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPO runtime",
+   "value": 28,
+   "unit": "hours",
+   "baseline_value": 4,
+   "n": null,
+   "setup": "same prompts and anchored DPO preference mix; RM trained once and not tuned; PPO on two nodes, DPO on one node; baseline_value is DPO hours",
+   "quote": "The PPO runtime is roughly 28 hours using two nodes, whereas",
+   "note": "DPO runtime quoted on the next line: 'the DPO runtime is about 4 hours using a single node.'",
+   "where": "Sec 5.4.1, Figure 16"
+  },
+  {
+   "claim": "Length-normalized DPO was the only preference algorithm that beat the SFT base overall in the ablation on UltraFeedback; plain DPO, SimPO and PPO did not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average Score",
+   "value": 57.3,
+   "unit": "points",
+   "baseline_value": 55.7,
+   "n": null,
+   "setup": "early Tülu 3 SFT checkpoint, UltraFeedback as training data; best DPO-norm row is lr 5e-7, beta 5, 1 epoch, batch 32; SFT base 55.7; DPO 55.2; PPO 55.5; SimPO best 52.9",
+   "table": "Table 18, last row DPO-norm (57.3) vs SFT Base (55.7)",
+   "note": "The final recipe uses beta = 5, lr 5e-7 (8B), 1 epoch, batch 128 (Table 20); the 57.3 row used batch 32 and the older SFT checkpoint.",
+   "where": "Table 18, Sec 5.4.1"
+  },
+  {
+   "claim": "Training on the full Tülu 3 preference mix beats DPO on UltraFeedback alone, more so at 70B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average improvement over UltraFeedback DPO",
+   "value": 3.3,
+   "unit": "points",
+   "baseline_value": 1.8,
+   "n": null,
+   "setup": "70B (+3.3) vs 8B (+1.8); read from Figure 12; baseline_value is the 8B gain",
+   "quote": "The improvement is greater for the 70B model (+3.3 vs. +1.8)",
+   "note": null,
+   "where": "Sec 5.3, Figure 12"
+  },
+  {
+   "claim": "Judge choice matters little: GPT-4o, Llama 3.1 405B and GPT-4 Turbo give near-identical DPO results, GPT-4o slightly ahead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. across dev suite",
+   "value": 57.3,
+   "unit": "points",
+   "baseline_value": 57.2,
+   "n": null,
+   "setup": "DPO on preference annotations from different judges, same 10k randomly sampled UltraFeedback prompts and responses; baseline_value is Llama 3.1 405B",
+   "table": "Table 17, row GPT-4o (57.3) vs LLama 3.1 405B (57.2); GPT-4 Turbo 57.0; GPT-4o Mini 56.9; Llama 3.1 70B 56.6",
+   "note": null,
+   "where": "Table 17"
+  },
+  {
+   "claim": "Scaling preference data by duplicating prompts with new pairs does not help: 383k duplicated-prompt set performs like the 64k set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference set size",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UltraFeedback with 64k unique prompts expanded to 64k, 180k and 383k pairs; average same, slight drops on DROP, GSM8K, AlpacaEval",
+   "note": "Described in Sec 5.3 and Figure 9; sizes only, no numeric score in text.",
+   "where": "Sec 5.3, Figure 9"
+  },
+  {
+   "claim": "Of the three persona preference sets, only Persona IF helps; Persona Math and Persona Code do not improve their target evals and slightly hurt the average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B DPO, added to SFT-reused mix; read from Figure 13",
+   "note": "No numbers in text; Figure 13 only.",
+   "where": "Sec 5.3, Figure 13"
+  },
+  {
+   "claim": "Including on-policy data (responses from the SFT model) improves aggregate DPO performance over a fully off-policy set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B, same SFT-mix prompts, strict on-policy vs off-policy vs mixed; Figure 11",
+   "note": "Direction only; no numeric value in text.",
+   "where": "Sec 5.3, Figure 11"
+  },
+  {
+   "claim": "Final DPO preference mixes are large; the paper counts 354,192 instances in the summary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "preference instances",
+   "value": 354192,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tülu 3 preference mix summary",
+   "quote": "of preference data yields 354,192 instances for preference tuning",
+   "note": "Table 15 lists totals 354,192, 271,409 (8B) and 334,302 (70B); the 8B and 70B mixes are the two smaller figures. Text says more than 270k for 8B and more than 330k for 70B.",
+   "where": "Sec 2.3, Sec 5.3, Table 15"
+  },
+  {
+   "claim": "RLVR reward for a correct answer is set to alpha = 10 from pilot experiments and not tuned.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha",
+   "value": 10,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all RLVR runs",
+   "quote": "We set α = 10 based on pilot experiments and did not tune it",
+   "note": null,
+   "where": "Sec 6, Eq 8"
+  },
+  {
+   "claim": "Initialising the PPO value function from a general reward model gave the best GSM8K test score and higher average scores than initialising from the DPO model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K RLVR, beta sweep [0.1, 0.05, 0.03, 0.01, 0.005, 0.001], anchored DPO start; Figure 21",
+   "note": "No numeric value in text.",
+   "where": "Sec 6.2.1, Figure 21"
+  },
+  {
+   "claim": "Adding reward-model scores on top of the verifiable reward is worse than using only the verifiable reward.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K RLVR, same beta sweep; Figure 22",
+   "note": "Text: 'Training with verifiable rewards with the scores from RM seems to introduce more noise, especially in the average scores.'",
+   "where": "Sec 6.2.1, Figure 22"
+  },
+  {
+   "claim": "Overoptimization: lower KL penalty gives more KL from the initial model and typically lower average scores, with IFEval-constraint runs at beta = 0.01 producing degenerate outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RLVR from anchored DPO, beta in {0.1, 0.05, 0.03, 0.01}; Figures 21, 28, 29",
+   "note": "Exception: in Figure 22 the largest KL corresponds to the highest average score.",
+   "where": "Sec 6.2.1, App B.4"
+  },
+  {
+   "claim": "Starting RLVR from the weaker SFT model reaches the same verifiable reward as from DPO but incurs larger KL at the same beta; stronger start gives better test performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K RLVR, Figure 20",
+   "note": "No numeric value.",
+   "where": "Sec 6.2.1, Figure 20"
+  },
+  {
+   "claim": "The 70B RLVR run stays at very low KL, which the authors attribute to the lower learning rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KL divergence",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B RLVR final run, lr 1e-7",
+   "quote": "our 70B run displays extremely low KL divergence, remaining well below 1 over the duration of run",
+   "note": "A higher learning rate in early exploration let KL explode and dropped average scores (footnote 18).",
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "At 405B, RLVR on MATH alone improved MATH by over 5 points within 25 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH",
+   "value": 5,
+   "unit": "points (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tülu 3 405B, only MATH train set, trained 75 steps then stopped for compute",
+   "quote": "even with as few as 25 RLVR steps, MATH performance improved by over 5 points",
+   "note": "Table 4: 405B MATH 59.9 (DPO) -> 67.3 (RLVR).",
+   "where": "Sec 8.1, Table 4"
+  },
+  {
+   "claim": "Tülu 3 405B RLVR average beats 405B DPO and SFT and rivals leading closed models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg w/o Safety",
+   "value": 80.0,
+   "unit": "points",
+   "baseline_value": 79.0,
+   "n": null,
+   "setup": "Table 4 dev-suite subset; baseline_value is Tülu 3 405B DPO; Llama 3.1 405B Instruct 78.1, DeepSeek V3 79.0, GPT-4o 80.5",
+   "table": "Table 4, row Avg w/o Safety., columns Tülu 3 405B RLVR (80.0) and DPO (79.0)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "The final Tülu 3 8B has the highest average among open models of its size on the dev suite.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. (Table 6)",
+   "value": 65.1,
+   "unit": "points",
+   "baseline_value": 62.9,
+   "n": null,
+   "setup": "dev suite; baseline_value is Llama 3.1 8B Instruct; Qwen 2.5 7B Instruct 66.5 is higher in Table 2",
+   "table": "Table 2/6, row Avg., Tülu 3 8B 65.1 vs Llama 3.1 8B Instruct 62.9",
+   "note": "Table 6 bolding implies Tülu 3 8B best, but Table 2 shows Qwen 2.5 7B Instruct at 66.5, higher than 65.1.",
+   "where": "Tables 2, 6"
+  },
+  {
+   "claim": "Tülu 3 70B average matches or exceeds peer 70B open models and GPT-3.5/GPT-4o mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. (Table 5)",
+   "value": 76.2,
+   "unit": "points",
+   "baseline_value": 74.1,
+   "n": null,
+   "setup": "dev suite; baseline_value is Llama 3.1 70B Instruct; Qwen 2.5 72B Instruct 72.8",
+   "table": "Table 2/5, row Avg., Tülu 3 70B 76.2 vs Llama 3.1 70B Instruct 74.1",
+   "note": null,
+   "where": "Tables 2, 5"
+  },
+  {
+   "claim": "The SFT mix substantially improves over the Tülu 2 mix on the same base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. (Table 9)",
+   "value": 60.1,
+   "unit": "points",
+   "baseline_value": 48.3,
+   "n": null,
+   "setup": "Llama 3.1 8B SFT; 70B: 72.6 vs 63.6",
+   "table": "Table 9, row Tülu 3 8B SFT 60.1 vs Tülu 2 8B SFT 48.3; Tülu 3 70B SFT 72.6 vs Tülu 2 70B SFT 63.6",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Using a sum-reduced loss rather than mean loss with lr 5e-6 worked best for SFT, because it weights tokens equally regardless of gradient accumulation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.0 fine-tuned on the Tülu 2 mixture, loss type and lr sweep, Figures 5-6",
+   "quote": "using a sum loss with a learning rate of 5.00E-06 worked best",
+   "note": null,
+   "where": "Sec 4.3.2"
+  },
+  {
+   "claim": "IFEval performance does not transfer to IFEval-OOD: the Tülu 3 8B final model scores 82.4 on IFEval but 24.3 on IFEval-OOD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IFEval-OOD vs IFEval",
+   "value": 24.3,
+   "unit": "%",
+   "baseline_value": 82.4,
+   "n": null,
+   "setup": "unseen vs development instruction-following eval, Tülu 3 8B final",
+   "table": "Table 31, row Inst. Following (IFEval -> IFEval-OOD), 8B Final Dev. 82.4 / Uns. 24.3",
+   "note": "Authors hypothesise models overfit to the 25 IFEval constraints.",
+   "where": "Table 31, Sec 7.4.2"
+  },
+  {
+   "claim": "The HREF composite evaluation agrees with human judgments about as well as humans agree with each other.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement with humans",
+   "value": 69.4,
+   "unit": "%",
+   "baseline_value": 67,
+   "n": null,
+   "setup": "16 models, four human judgments per pair, majority; baseline is inter-human agreement",
+   "quote": "resulted in an agreement of 69.4% with humans, which is comparable to the inter-human agreement of 67%.",
+   "note": null,
+   "where": "Sec 7.3.2"
+  },
+  {
+   "claim": "Online DPO and rejection sampling were tried and dropped for minimal gains versus compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "online DPO: RM from 82K Skywork pairs, 200K episodes on math prompts, no or little GSM8K improvement and MATH degradation; rejection sampling: minimal gains",
+   "note": "No numbers beyond sizes.",
+   "where": "Sec 8.2"
+  }
+ ],
+ "limits": [
+  "Preference-tuning algorithm ablations (Table 18) use an early SFT checkpoint and UltraFeedback only, with batch size 32, one run each, no variance reported.",
+  "PPO vs DPO comparison is described by the authors as a non-tuned setup: the reward model was trained once and not tuned, so the PPO result could rise with more tuning or compute.",
+  "RLVR covers only math (GSM8K, MATH) and verifiable instruction following; more complex verifiers left to future work; development and RLVR targets overlap with eval benchmarks (GSM8K, MATH, IFEval), and IFEval-OOD shows overfitting to IFEval constraints.",
+  "All final 8B/70B/405B RL checkpoints are earlier than the final saved step; 405B RLVR stopped at 75 steps because of compute and MATH had not saturated.",
+  "No long-context, multi-turn, multilingual, tool-use or agent training (Sec 8.3); English focus; mean 2.4 turns.",
+  "Cannot rule out that closed models trained on the eval suite; some closed-model numbers were imputed (MICE) or taken from model cards.",
+  "Single run per configuration for DPO and RLVR; seed variation shown only for SFT (Table 14), where it was noticeable.",
+  "Internal inconsistency: 70B RLVR KL coefficient and warmup are 0.07/0.07 in the Table 21 caption but 0.7/0.1 in Sec 6.4 text.",
+  "Dev-suite comparisons are dated to Nov 2024 open and closed models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RLVR",
+   "definition": "Reinforcement Learning with Verifiable Rewards: the RLHF objective with the reward model replaced by a verification function v(x,y) that returns alpha if the answer is verifiably correct and 0 otherwise, optimised with PPO after preference tuning.",
+   "where": "Sec 6, Eq 7-8"
+  },
+  {
+   "term": "length-normalized DPO",
+   "definition": "DPO with the log-probability ratios divided by response length, aiding in mitigating length bias.",
+   "where": "Sec 5.1.2, Eq 6"
+  },
+  {
+   "term": "on-policy preference data",
+   "definition": "preference pairs where one response is sampled from the SFT model that will be tuned, and the other from off-policy models.",
+   "where": "Sec 5.2.1"
+  },
+  {
+   "term": "development vs unseen evals",
+   "definition": "development set used to guide training decisions; unseen set only for final models and for checking overfitting to dev evals.",
+   "where": "Sec 2.2, Sec 7"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Proximal Policy Optimization Algorithms (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "PPO is the RL algorithm for RLVR and the PPO baseline",
+   "quote": null
+  },
+  {
+   "work": "Direct Preference Optimization (Rafailov et al.)",
+   "year": 2024,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "DPO and its length-normalized variant used for preference tuning",
+   "quote": null
+  },
+  {
+   "work": "SimPO (Meng, Xia, Chen)",
+   "year": 2024,
+   "arxiv": "2405.14734",
+   "relation": "baseline",
+   "note": "SimPO compared; length-normalized DPO variant taken from it",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback (Cui et al.)",
+   "year": 2023,
+   "arxiv": "2310.01377",
+   "relation": "extends",
+   "note": "synthetic preference pipeline adapted with on-policy data and updated model pool",
+   "quote": null
+  },
+  {
+   "work": "The N+ implementation details of RLHF with PPO (Huang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PPO implementation details (value init from RM, dropout off, EOS penalty, advantage whitening)",
+   "quote": null
+  },
+  {
+   "work": "Camels in a changing climate: Tülu 2 (Ivison et al.)",
+   "year": 2023,
+   "arxiv": "2311.10702",
+   "relation": "extends",
+   "note": "predecessor recipe; Tülu 2 SFT mix is baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling synthetic data creation with 1,000,000,000 personas (Chan et al.)",
+   "year": 2024,
+   "arxiv": "2406.20094",
+   "relation": "uses-method",
+   "note": "persona-driven synthetic prompt generation",
+   "quote": null
+  },
+  {
+   "work": "The Llama 3 herd of models (Dubey et al.)",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "uses-data",
+   "note": "base models and 8-gram decontamination method",
+   "quote": null
+  },
+  {
+   "work": "VinePPO (Kazemnejad et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior binary-reward PPO for GSM8K and MATH math only",
+   "quote": null
+  },
+  {
+   "work": "STaR (Zelikman et al.), TRICE (Hoffman et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ground-truth answers as signal for rationales; RLVR called a simpler form",
+   "quote": null
+  },
+  {
+   "work": "Direct language model alignment from online AI feedback (Guo et al.)",
+   "year": 2024,
+   "arxiv": "2402.04792",
+   "relation": "baseline",
+   "note": "online DPO tried and dropped",
+   "quote": null
+  },
+  {
+   "work": "Asynchronous RLHF (Noukhovitch et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "asynchronous PPO with second-latest inference data",
+   "quote": null
+  },
+  {
+   "work": "OpenRLHF (Hu et al.)",
+   "year": 2024,
+   "arxiv": "2405.11143",
+   "relation": "uses-method",
+   "note": "dedicated inference GPUs and model allocation",
+   "quote": null
+  },
+  {
+   "work": "GRPO / DeepSeekMath (Shao et al.)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "related",
+   "note": "named as a value-model-free alternative for future RLVR work",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.); Stiennon et al. 2020; Ziegler et al. 2019",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "standard RLHF objective and RM setup",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An overview of the Tülu 3 recipe. This includes: data curation targeting general and target capabilities, training strategies and a standardized evaluation suite for development and final evaluation stage.",
+   "page": 5,
+   "why": "shows SFT -> DPO -> RLVR flow with development vs unseen evals"
+  },
+  {
+   "figure": "Figure 18",
+   "caption": "An overview of how Reinforcement Learning with Verifiable Rewards (RLVR) works.",
+   "page": 31,
+   "why": "policy samples completions, deterministic verifier gives reward alpha or 0, PPO update"
+  },
+  {
+   "figure": "Table 18",
+   "caption": "Hyperparameters and algorithms examined for DPO tuning.",
+   "page": 28,
+   "why": "DPO vs SimPO vs PPO vs length-normalized DPO side by side"
+  },
+  {
+   "figure": "Table 21",
+   "caption": "The hyperparameters of PPO used for 1) optimizing against a general RM and 2) optimizing against the verifiable reward function.",
+   "page": 29,
+   "why": "complete PPO/RLVR settings in one place"
+  },
+  {
+   "figure": "Figure 19",
+   "caption": "RLVR's verifiable rewards, KL divergence, and response lengths on GSM8K, MATH and constraints, with downstream test performance.",
+   "page": 33,
+   "why": "beta sweep and reward/KL trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5.1.2, Eq 6",
+   "snippet": "max_{pi_theta} E_{y_c,y_r~D}[ log sigma( (beta/|y_c|) log(pi_theta(y_c|x)/pi_ref(y_c|x)) - (beta/|y_r|) log(pi_theta(y_r|x)/pi_ref(y_r|x)) ) ]",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 6, Eq 7-8",
+   "snippet": "max_{pi_theta} E_{y~pi_theta(x)}[ v(x,y) - beta KL[pi_theta(y|x) || pi_ref(y|x)] ], v(x,y) = alpha if correct, 0 otherwise",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section map from extract.py is out of order (appendix headings listed before body); the text itself reads normally.",
+  "Tables are flattened one cell per line; table cells were matched to columns by order and header position.",
+  "Internal inconsistencies: 70B RLVR beta/warmup 0.07/0.07 (Table 21 caption) vs 0.7/0.1 (Sec 6.4); IFEval labelled Strict in Table 23 but loose elsewhere; averages differ between Table 6 and Table 23.",
+  "chars_read is an estimate; the reference list was skimmed only."
+ ]
+}

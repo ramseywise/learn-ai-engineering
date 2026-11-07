@@ -1,0 +1,445 @@
+{
+ "schema": 1,
+ "key": "1003.0146",
+ "pdf": "generative-ai/05-RL/sources/li-2010-contextual-bandit-news-recommendation.pdf",
+ "bib": {
+  "title": "A Contextual-Bandit Approach to Personalized News Article Recommendation",
+  "authors": [
+   "Lihong Li",
+   "Wei Chu",
+   "John Langford",
+   "Robert E. Schapire"
+  ],
+  "first_author": "Li",
+  "year": 2010,
+  "venue": "WWW 2010 (arXiv v2, 2012)",
+  "arxiv": "1003.0146",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 61878,
+  "chars_total": 61878,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can personalized news article recommendation with a changing article pool be done with a contextual bandit, and how can such a bandit be evaluated offline without bias?",
+ "hypothesis": "Feature-based UCB exploration (LinUCB) beats context-free and epsilon-greedy bandits, especially when data is sparse; hybrid models speed learning by sharing features across arms.",
+ "contributions": [
+  "A new general contextual bandit algorithm, LinUCB, computationally efficient and motivated by learning theory",
+  "An argument that any bandit algorithm can be reliably evaluated offline using previously recorded random traffic",
+  "Application of LinUCB to a Yahoo! Front Page Today Module dataset of over 33 million events, with a 12.5% click lift over a standard context-free bandit"
+ ],
+ "method": {
+  "summary": "LinUCB fits a ridge regression per arm (disjoint) or with shared coefficients (hybrid) and picks the arm with highest upper confidence bound. Algorithms are scored offline with a replay (rejection-sampling) evaluator on events logged under uniform random article choice from Yahoo! Today Module, May 2009.",
+  "task": "personalized news article recommendation as a K-armed contextual bandit",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Yahoo! Today Module random bucket, tuning day",
+    "role": "dev",
+    "size": "about 4.7 million events",
+    "split": "May 01, 2009",
+    "source": "Yahoo! random bucket; articles chosen uniformly at random; only F1 article at story position used",
+    "preprocessing": "user features: support >= 0.1, over 1000 categorical components encoded as binary, unit-length normalised, plus constant 1 (1193 entries); article features 83 entries"
+   },
+   {
+    "name": "Yahoo! Today Module random bucket, evaluation week",
+    "role": "eval",
+    "size": "about 36 million events",
+    "split": "May 03-09, 2009",
+    "source": "same random bucket",
+    "preprocessing": "6-dim features: logistic-regression bilinear model, user features projected, K-means into 5 clusters, soft membership (Gaussian kernel, normalised) plus constant 1; hybrid z = outer product of user and article 6-dim features = 36 dims"
+   },
+   {
+    "name": "Random exploration data, Sept 2008",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Yahoo! random traffic",
+    "preprocessing": "used for conjoint analysis/dimension reduction and to train the warm-start bilinear LR model"
+   }
+  ],
+  "models": [
+   {
+    "name": "LinUCB (disjoint)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "per-arm ridge regression, d=6",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "inputs": "alpha only",
+     "regret": "O~(sqrt(KdT)) for fixed arm set",
+     "complexity": "O(d^2) update"
+    }
+   },
+   {
+    "name": "LinUCB (hybrid)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "shared beta (k=36) plus per-arm theta (d=6)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "complexity": "O(d^2+k^2) per trial with cached inverses"
+    }
+   },
+   {
+    "name": "epsilon-greedy, ucb (UCB1, c=alpha/sqrt(n)), omniscient, random, warm-start and seg variants, epsilon-greedy disjoint/hybrid",
+    "role": "baseline",
+    "params": null,
+    "architecture": "context-free or segment-wise bandits",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "online ridge regression on click payoff (0/1)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "ridge with identity (lambda=1) prior",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single run per setting",
+   "other": {
+    "tuned_values": "epsilon and alpha tuned on the one-day tuning data; chosen values are only in Figure 2, not in the text"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per algorithm on evaluation data; data sparsity levels 100, 30, 20, 10, 5, 1% by random subsampling of data the algorithm learns from (all data still used for evaluation)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "alpha": "LinUCB theory value 1+sqrt(ln(2/delta)/2); tuned empirically, value not printed",
+    "epsilon": "epsilon-greedy parameter, tuned, value not printed"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "relative CTR",
+     "definition": "clicks / steps run, divided by the random policy's CTR, estimated with Algorithm 3 (policy evaluator) on random logged events",
+     "unit": "ratio to random (random = 1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "CTR lift",
+     "definition": "relative CTR gain over epsilon-greedy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random",
+    "epsilon-greedy",
+    "ucb",
+    "omniscient",
+    "epsilon-greedy (warm)",
+    "ucb (warm)",
+    "epsilon-greedy (seg)",
+    "ucb (seg)",
+    "epsilon-greedy (disjoint)",
+    "epsilon-greedy (hybrid)"
+   ],
+   "protocol": "Replay evaluator: step through logged uniform-random events, keep an event when policy chooses the logged arm; unbiased by Theorem 1, expected K*T events needed. Two CTRs: learning bucket (small traffic fraction running the bandit) and deployment bucket (greedy serving from learned estimates). Single run, no significance test; authors argue size of data makes numbers reliable."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Proprietary Yahoo! logs; CTRs reported only relative to random for business confidentiality"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LinUCB (disjoint) gets a 12.5% CTR lift over epsilon-greedy in the deployment bucket at 100% data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CTR lift vs epsilon-greedy",
+   "value": "12.5",
+   "unit": "%",
+   "baseline_value": "1.596",
+   "n": "about 36 million events",
+   "setup": "Evaluation week May 03-09 2009, deployment bucket, 100% data, linucb (disjoint) CTR 1.795 relative to random",
+   "table": "Table 1, row linucb (disjoint), column size=100% deploy",
+   "quote": null,
+   "note": "Abstract says 'a 12.5% click lift compared to a standard context-free bandit'; Table 1 baseline is epsilon-greedy. ucb (also context-free) has 0% in this cell.",
+   "where": "Table 1; abstract"
+  },
+  {
+   "claim": "LinUCB (hybrid) deployment CTR 1.73 at 100% data, lift 8.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CTR lift vs epsilon-greedy",
+   "value": "8.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation week, deployment bucket, 100% data",
+   "table": "Table 1, row linucb (hybrid), column size=100% deploy",
+   "quote": null,
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "In the learning bucket at 100% data, LinUCB (disjoint) lifts CTR by 24.2% and LinUCB (hybrid) by 25.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CTR lift vs epsilon-greedy",
+   "value": "25.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation week, learning bucket, 100% data, linucb (hybrid); disjoint is 24.2%",
+   "table": "Table 1, row linucb (hybrid), column size=100% learn",
+   "quote": null,
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "With 1% of data, LinUCB (hybrid) has the largest deployment lift, 20.1%, and learning-bucket lift, 27%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CTR lift vs epsilon-greedy",
+   "value": "20.1",
+   "unit": "%",
+   "baseline_value": "1.234",
+   "n": null,
+   "setup": "Evaluation week, deployment bucket, 1% data, linucb (hybrid) CTR 1.482",
+   "table": "Table 1, row linucb (hybrid), column size=1% deploy",
+   "quote": null,
+   "note": "Text says 'a 10.3% improvement of linucb (hybrid)'s CTR in the deployment bucket (1.493) over ucb's (1.354)'; Table 1 prints 1.482 for hybrid at 1% (the 10.3% figure appears in Table 1 as the 20%-size hybrid deploy lift). 1.493 vs 1.482 is an internal inconsistency.",
+   "where": "Table 1; Section 5.5.2"
+  },
+  {
+   "claim": "The omniscient context-free policy has CTR 1.615 on the evaluation data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative CTR",
+   "value": "1.615",
+   "unit": "x random",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation week, best fixed article in hindsight",
+   "table": null,
+   "quote": "The CTR of omniscient was 1.615",
+   "note": null,
+   "where": "Section 5.5.2"
+  },
+  {
+   "claim": "One article's CTR was lifted from 1.31 to 3.03 (132%) by a personalized policy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "lifted CTR",
+   "value": "3.03",
+   "unit": "x random",
+   "baseline_value": "1.31",
+   "n": null,
+   "setup": "Figure 3(c), disjoint models, learning bucket, 100% data",
+   "table": null,
+   "quote": "one of the article’s CTR was lifted from 1.31 to 3.03—a 132% improvement",
+   "note": null,
+   "where": "Section 5.5.2, Fig 3"
+  },
+  {
+   "claim": "Using user features gives about 10% CTR lift over epsilon-greedy for seg, disjoint, hybrid variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CTR lift",
+   "value": "10",
+   "unit": "% (approx.)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation week, Table 1",
+   "table": null,
+   "quote": "were able to achieve a CTR lift of around 10%, compared to the baseline ǫ-greedy",
+   "note": null,
+   "where": "Section 5.5.2"
+  },
+  {
+   "claim": "About 85% of users have maximum cluster membership above 0.5 and about 40% above 0.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of users",
+   "value": "85",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5, five user clusters",
+   "table": null,
+   "quote": "the maximum mem-\nbership of about 85% users were higher than 0.5, and about 40% of\nthem were higher than 0.8",
+   "note": "quote spans a line break",
+   "where": "Section 5.5.2"
+  },
+  {
+   "claim": "The replay evaluator is unbiased and needs K*T logged events in expectation to retain T events.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Uniform random logging policy, i.i.d. events (Theorem 1)",
+   "table": null,
+   "quote": null,
+   "note": "Proof given; weaker (any randomised logging) case said to need rejection sampling at lower efficiency, details omitted.",
+   "where": "Section 4"
+  }
+ ],
+ "limits": [
+  "Logging policy must be uniform random and events i.i.d.; the generalisation to other randomised logging is stated but details omitted.",
+  "Single run per setting, no confidence intervals; tuned alpha and epsilon values not printed in text.",
+  "Absolute CTRs withheld; only relative to random, and data is proprietary.",
+  "Hybrid derivation deferred to a full paper; regret bound O~(sqrt(KdT)) is claimed adapted from Auer, not proved here.",
+  "Only 6-dim cluster features tested; authors say more diverse features would be needed to separate linucb (disjoint) from ucb (seg).",
+  "Warm-start variants tuned but dropped from evaluation week because they did not beat online learners on tuning data.",
+  "Ignores user interests changing over time (future work)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "contextual bandit",
+   "definition": "A learning algorithm sequentially selects articles to serve users based on contextual information about the users and articles, while adapting to click feedback.",
+   "where": "Section 1-2"
+  },
+  {
+   "term": "policy evaluator",
+   "definition": "Algorithm 3: retain a logged event only if the evaluated policy picks the logged arm; unbiased when logging is uniform random.",
+   "where": "Section 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chu and Park, Personalized recommendation on dynamic content using predictive bilinear models",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "feature encoding and warm-start bilinear LR model",
+   "quote": null
+  },
+  {
+   "work": "Chu et al., Behavior-driven conjoint analysis on Yahoo! Front Page Today Module",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dimensionality reduction and 5-cluster segmentation",
+   "quote": null
+  },
+  {
+   "work": "Auer, Using confidence bounds for exploitation-exploration trade-offs (LinRel)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "regret analysis adapted",
+   "quote": null
+  },
+  {
+   "work": "Auer, Cesa-Bianchi, Fischer, Finite-time analysis (UCB1)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ucb baseline",
+   "quote": null
+  },
+  {
+   "work": "Langford and Zhang, Epoch-greedy",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "epsilon-greedy disjoint/hybrid are close variants",
+   "quote": null
+  },
+  {
+   "work": "Pavlidis, Tasoulis, Hand, Simulation studies of multi-armed bandits with covariates",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar algorithm with least squares, assumes Gaussian features",
+   "quote": null
+  },
+  {
+   "work": "Walsh et al., Exploring compact RL representations with linear regression",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "confidence bound for ridge regression, Eq. 4",
+   "quote": null
+  },
+  {
+   "work": "Yahoo! Front Page Today Module logs",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "proprietary",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Performance evaluation: CTRs of all algorithms on the one-week evaluation dataset in the deployment and learning buckets",
+   "page": null,
+   "why": "All lift numbers by data size and bucket."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Parameter tuning: CTRs of various algorithms on the one-day tuning dataset.",
+   "page": null,
+   "why": "Inverted-U in alpha/epsilon; only source of tuned values."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "CTRs in evaluation data with varying data sizes.",
+   "page": null,
+   "why": "Shows hybrid advantage as data shrinks."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5",
+   "snippet": "a_t = argmax_a ( x_{t,a}^T theta_hat_a + alpha * sqrt(x_{t,a}^T A_a^{-1} x_{t,a}) ), A_a = D_a^T D_a + I_d",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures not read as images; tuned parameter values only in Fig 2.",
+  "Text says 1.493 for hybrid at 1% but Table 1 prints 1.482."
+ ]
+}

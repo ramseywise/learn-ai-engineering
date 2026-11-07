@@ -1,19 +1,382 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "doi:10.1145/1143844.1143874",
  "pdf": "data-science/sources/davis-2006-relationship-between-precision-recall-roc.pdf",
  "bib": {
-  "title": "The relationship between Precision-Recall and ROC curves",
-  "first_author": "Jesse J. Davis",
-  "year": "2006",
-  "venue": "International Conference on Machine Learning",
+  "title": "The Relationship Between Precision-Recall and ROC Curves",
+  "authors": [
+   "Jesse Davis",
+   "Mark Goadrich"
+  ],
+  "first_author": "Davis",
+  "year": 2006,
+  "venue": "Proceedings of the 23rd International Conference on Machine Learning (ICML), Pittsburgh, PA",
   "arxiv": null,
   "doi": "10.1145/1143844.1143874"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 28988,
+  "chars_total": 28988,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: The Relationship Between Precision-Recall and ROC Curves, Jesse Davis and Mark Goadrich, Proceedings of the 23rd International Conference on Machine Learning (ICML), Pittsburgh, 2006.\n\nCOVERAGE: 29,114 of 29,114 chars, all 8 of 8 pages. Nothing skipped; references skimmed for origins. Figures seen by caption only, not rendered, so nothing below describes their pixels.\n\nQuote conventions: quotes are copied from the extraction, which drops fi/ff ligatures (\"dierence\") and math symbols. I joined line breaks and end-of-line hyphens. \"[sym]\" marks a symbol the extraction lost, and \"6=\" is how it renders \"≠\".\n\nCLAIMS\n\nTheorems and results are ranked first, worked numbers after.\n\n- claim: Theorem 3.1. ROC and PR curves on one dataset are in one-to-one correspondence and contain the same confusion matrices, except at Recall = 0.\n  number: Recall ≠ 0 condition\n  setup: One dataset with fixed positive and negative counts. TN is recoverable from the other three cells only because the totals are fixed. At Recall = 0, FP cannot be recovered.\n  quote: \"For a given dataset of positive and negative examples, there exists a one-to-one correspondence between a curve in ROC space and a curve in PR space, such that the curves contain exactly the same confusion matrices, if Recall 6= 0.\"\n  where: p2, Sec 3; proof p3 (\"If Recall = 0, we are unable to recover F P\")\n\n- claim: Theorem 3.2. One curve dominates another in ROC space if and only if it dominates in PR space.\n  number: none\n  setup: Fixed number of positives and negatives. Dominance means \"all other...curves are beneath it or equal to it\", credited to Provost et al. 1998. Proved by contradiction in both directions. It says nothing about curves that cross.\n  quote: \"For a fixed number of positive and negative examples, one curve dominates a second curve in ROC space if and only if the first dominates the second in Precision-Recall space.\" (the \"fi\" is lost in the extraction: \"xed\", \"rst\")\n  where: p3, Sec 3\n\n- claim: Optimising AUC-ROC does not guarantee optimising AUC-PR. In a constructed counter-example, the two metrics pick opposite curves.\n  number: AUC-ROC 0.813 (I) vs 0.875 (II); AUC-PR 0.514 (I) vs 0.038 (II)\n  setup: Constructed example, 20 positives and 2000 negatives, two overlapping curves that are each a convex hull. Curve I ranks over half the positives high. It is a proof by counter-example, not a measure of how often this happens.\n  quote: \"The AUC-ROC for curve I is 0.813 and the AUC-ROC for curve II is 0.875, so an algorithm optimizing the AUC-ROC and choosing between these two rankings would choose curve II.\" / \"The AUC-PR for curve I is now 0.514 due to the high ranking of over half of the positive examples, while the AUC-PR for curve II is far less at 0.038\"\n  where: p7, Sec 5. Fig 7.\n\n- claim: The reason is that area under the PR curve comes mainly from high precision at low recall.\n  number: none\n  setup: Stated about the same counter-example.\n  quote: \"This is because in PR space the main contribution comes from achieving a lower Recall range with higher Precision.\"\n  where: p7, Sec 5\n\n- claim: Linear interpolation in PR space is a mistake and overestimates performance, because precision does not change linearly with recall.\n  number: none\n  setup: The paper hedges with \"not necessarily\" and \"In these cases\". ROC interpolation is straight because a weighted coin between two classifiers achieves any point on the line.\n  quote: \"As the level of Recall varies, the Precision does not necessarily change linearly due to the fact that F P replaces F N in the denominator of the Precision metric. In these cases, linear interpolation is a mistake that yields an overly-optimistic estimate of performance.\"\n  where: p6, Sec 4\n\n- claim: Correct interpolation works on the counts: compute the local skew, step TP by whole numbers, and raise FP by the skew at each step.\n  number: local skew = (FP_B − FP_A)/(TP_B − TP_A)\n  setup: Expands Goadrich et al. 2004. The paper calls it a \"practical, approximate method\". It holds for 1 ≤ x ≤ TP_B − TP_A. New point = (Recall, Precision) = ((TP_A + x)/TotalPos, (TP_A + x)/(TP_A + x + FP_A + skew·x)).\n  quote: \"We find out how many negative examples it takes to equal one positive, or the local skew\" (the \"fi\" is lost in the extraction: \"nd\")\n  where: p6, Sec 4\n\n- claim: In a worked example, precision falls 0.500, 0.375, 0.318, 0.286, 0.265, 0.250 between A and B, not in a straight line.\n  number: Table 1 (TP/FP/REC/PREC): 5/5/0.25/0.500; 6/10/0.30/0.375; 7/15/0.35/0.318; 8/20/0.40/0.286; 9/25/0.45/0.265; 10/30/0.50/0.250\n  setup: 20 positives, 2000 negatives, local skew of 5. A straight line would give 0.40 at TP = 7 (my arithmetic, not the paper's), against 0.318. I recomputed all six rows and they match.\n  quote: \"Let T PA = 5, F PA = 5, T PB = 10, and F PB = 30.\" / \"Notice how the resulting Precision interpolation is not linear between 0.50 and 0.25.\"\n  where: p6, Table 1\n\n- claim: Linear interpolation inflates AUC-PR most when points are far apart and local skew is high; one curve goes from 0.031 to 0.50.\n  number: AUC-PR 0.031 (correct) vs 0.50 (linear)\n  setup: One point (0.02, 1), extended to endpoints (0, 1) and (1, 0.008), with 433 positives and 56,164 negatives. See PROBLEMS: my recomputation gives about 0.028-0.030 and 0.514, so cite the order of magnitude.\n  quote: \"Interpolating as we have described would have an AUC-PR of 0.031; a linear connection would severely overestimate with an AUC-PR of 0.50.\"\n  where: p6, Sec 4. Fig 6.\n\n- claim: Corollary 3.1. A set of PR points has an \"achievable PR curve\" that dominates all other valid curves. You get it from the ROC convex hull, and it drops exactly the points under that hull.\n  number: none\n  setup: Depends on Theorems 3.1 and 3.2. It is not a true convex hull in PR space, because the interpolation is non-linear.\n  quote: \"The achievable PR curve will exclude exactly those points beneath the convex hull in ROC space.\"\n  where: p5, Sec 3. Algorithm on pp6-7: hull in ROC, translate each hull point by its confusion matrix, then interpolate correctly.\n\n- claim: Building a hull or achievable curve on test data is methodologically wrong, because picking the best points constructs a new classifier. Choose thresholds on a tuning set.\n  number: none\n  setup: Procedure: find candidate thresholds on tuning data, build the hull there, then apply those thresholds to test data. The resulting test curve is not guaranteed to be a hull.\n  quote: \"Therefore it would be methodologically incorrect to construct a convex hull or achievable PR curve by looking at performance on the test data and then constructing a convex hull.\"\n  where: p5, Sec 3\n\n- claim: ROC curves can look too optimistic under large class skew. Large FP changes barely move FPR, while precision compares FP with TP and so exposes them.\n  number: none\n  setup: Argued from Fig 1, the same learned models on a \"highly-skewed cancer detection dataset\" (Davis et al. 2005). The paper gives no counts or AUCs for it. Illustration only.\n  quote: \"Consequently, a large change in the number of false positives can lead to a small change in the false positive rate used in ROC analysis.\"\n  where: p1, Sec 1\n\n- claim: ROC curves stay useful for optimising AUC-PR: find the ROC hull, convert it to PR, and score the area under the achievable curve.\n  number: none\n  setup: Stated as a possibility following from Theorem 3.2. No algorithm was run.\n  quote: \"Nevertheless, based on Theorem 3.2 ROC curves are useful in an algorithm that optimizes AUC-PR.\"\n  where: p7, Sec 5\n\n- claim: AUC-ROC can be computed by trapezoids and equals the Wilcoxon-Mann-Whitney statistic. AUC-PR is approximated by the composite trapezoidal method once the intermediate points are included.\n  number: none\n  setup: The WMW equivalence is credited to Cortes and Mohri 2003, not proved here.\n  quote: \"is equivalent to the Wilcoxon-Mann-Whitney statistic (Cortes & Mohri, 2003)\"\n  where: p6, Sec 4\n\n- claim: Each point on either curve is a specific thresholded classifier, built by sorting examples by predicted probability and cutting where class and probability both change.\n  number: none\n  setup: Applies to algorithms that output a probability.\n  quote: \"Thus each point in ROC space or PR space represents a specific classifier, with a threshold for calling an example positive.\" (the \"fi\" is lost in the extraction: \"specic classier\")\n  where: p5, Sec 3\n\nLIMITS\n- \"PR is more informative on skewed data\" is asserted and illustrated, not proved. The paper says \"Many researchers, ourselves included, argue\" (p5). The only support is Fig 1, and no numbers are given for it.\n- Both theorems need a fixed number of positives and negatives. The paper shows nothing about comparing curves across different base rates or test sets.\n- Dominance covers only curves that do not cross. For crossing curves, the paper offers only the single constructed counter-example.\n- The AUC divergence is one built example, on 20 positives and 2000 negatives. It does not show how often or how far the metrics disagree on real models.\n- The paper has no experiments or benchmark comparison, and it does not test any AUC-ROC optimiser against AUC-PR.\n- Overestimation by linear interpolation is shown by example only, and the text hedges with \"In these cases\". There is no theorem that it always overestimates.\n- The interpolation method is called approximate. Its AUC-PR is a trapezoidal approximation over the interpolated points.\n- Cost curves are set aside: \"discussing them is beyond the scope of this paper\" (p1). Costs and threshold selection for a decision are not treated.\n- The paper covers binary problems only. It also has no sampling uncertainty or confidence intervals on curves or areas.\n- It does not address average precision or any step-wise estimator. It speaks only of AUC-PR with its interpolation, so it does not directly say how scikit-learn's `average_precision_score` behaves.\n- Dated: the code link (http://www.cs.wisc.edu/~richm/programs/AUC/, Java) is from 2006 and I did not check it. I did not assess later literature, since it is outside this source.\n\nBUILDS ON\n- Provost, Fawcett and Kohavi 1998: the case against accuracy, ROC use, the definition of dominance.\n- Goadrich, Oliphant and Shavlik 2004: the PR interpolation method it expands.\n- Cortes and Mohri 2003: AUC-ROC equals WMW; RankBoost suits AUC-ROC.\n- Drummond and Holte 2000, 2004: cost curves as the alternative.\n- Bradley 1997: AUC as a metric.\n- Cormen et al. 1990: convex hull algorithm.\n- Davis et al. 2005: source of the mammography curves in Fig 1.\n- Manning and Schutze 1999; Raghavan et al. 1989: PR in information retrieval.\n- AUC-ROC optimisers listed: Ferri et al. 2002, Joachims 2005, Prati and Flach 2005, Yan et al. 2003, Herschtal and Raskutti 2004, Freund et al. 1998.\n\nCODE: None in the paper. It has only the p6 interpolation formula and the threshold recipe on p5. A Java program is linked on p8 but not reproduced.\n\nFIGURES\n- Fig 1, p2: \"The difference between comparing algorithms in ROC vs PR space\". The same models look near-optimal and comparable in ROC, while PR shows a clear gap and \"vast room for improvement\". The strongest single image for the imbalance point.\n- Fig 7, p7: \"Difference in optimizing area under the curve in each space\". The ROC winner collapses in PR (0.875/0.038 vs 0.813/0.514). Good for showing that metric choice flips model selection.\n- Fig 6, p6: \"The effect of incorrect interpolation in PR space\". Correct and incorrect curves from a single point, showing the area inflation at a glance.\n- Fig 5, p5: \"Convex hull and its PR analog dominate the naïve method for curve construction in each space...\". Shows a hull curve and its curved PR equivalent. Useful if the achievable curve is taught; otherwise optional.\n- Figs 3 and 4, p4: proof cases for Theorem 3.2. Low value for learners. Fig 2, p3, is the confusion matrix and definitions, which the note already has.\n\nRELEVANCE TO THE TARGET NOTES (reported for your decision)\n- 04-model-evaluation.md line 298 already cites this paper. Its summary matches on the three points, but it omits the condition \"for a fixed number of positive and negative examples\", which is the setup the theorem holds under.\n- Line 298 also says \"Never draw a PR curve by connecting a handful of points with lines.\" That matches the paper. The note's stated reason for AP over ROC on imbalance (\"ignores the large pool of true negatives\") is close to the p1 mechanism, but the paper argues it for PR curves and never discusses average precision.\n- 11-choosing-a-metric.md lines 141-151 and 317 (ROC vs PR, base rates) do not cite this paper. Fixed-dataset equivalence bears on them: the theorems link the two spaces only at one base rate, and that note compares two base rates. Line 143's \"each ROC point maps to one PR point\" is Theorem 3.1, but it is attributed to no one there.\n\nPROBLEMS\n- Extraction: ligatures (fi, ff) and math symbols (≥, ≤, ≠, ⇒, −, ⇐) are dropped or garbled, for example \"6=\" and \"F PB  F PA\". I read the proofs around those gaps by their logic. Check any formula against the PDF before reproducing it.\n- Likely printed or extraction error, p3, Claim 2: \"F P R(A) < T P R(B)\" should read FPR(B), since the p4 conclusion says \"F P R(A) < F P R(B)\". I did not compare it against the rendered page.\n- The p6 example does not reproduce exactly. I recomputed it from the printed values, and the exact TP at recall 0.02 is not given. 0.02 × 433 = 8.66, and TP_A of 8 to 9 gives correct-interpolation AUC-PR of 0.028-0.030 against the printed 0.031. Linear gives 0.514 against the printed 0.50. The direction and scale hold, but the printed values look rounded or built from an unstated point. Endpoint precision 433/(433+56164) = 0.0077, consistent with the printed 0.008.\n- The text labels vary: \"Algorithm 1/2\" in Fig 1 and \"Algorithm I and II\" in the prose (p2).\n- No embedded instructions found. The PDF gives no DOI; the one on note line 298 comes from the note, not this source.\n\nFile read: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/sources/davis-2006-relationship-between-precision-recall-roc.pdf"
+ "type": "theory",
+ "question": "How are ROC space and Precision-Recall space related, and what does that imply for curve comparison, interpolation and AUC optimisation on skewed data?",
+ "hypothesis": "A deep connection exists between ROC and PR space even though PR curves look more informative on highly skewed data.",
+ "contributions": [
+  "For any dataset the ROC curve and PR curve for a given algorithm contain the same points; a curve dominates in ROC space iff it dominates in PR space.",
+  "The achievable PR curve, the PR analog of the ROC convex hull, can be computed efficiently via the ROC hull.",
+  "Linear interpolation is insufficient between points in PR space; a correct interpolation is given.",
+  "An algorithm that optimises AUC-ROC is not guaranteed to optimise AUC-PR."
+ ],
+ "method": {
+  "summary": "Theoretical analysis with proofs (Theorems 3.1, 3.2, Corollary 3.1), a local-skew interpolation for PR points, and two constructed numeric examples. No models are trained and no real dataset is run in this paper.",
+  "task": "binary classifier evaluation: ROC vs PR curves",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Constructed example (interpolation, Table 1)",
+    "role": "eval",
+    "size": "20 positives, 2000 negatives",
+    "split": null,
+    "source": "synthetic counts",
+    "preprocessing": null
+   },
+   {
+    "name": "Constructed example (AUC-ROC vs AUC-PR, Fig 7)",
+    "role": "eval",
+    "size": "20 positives, 2000 negatives",
+    "split": null,
+    "source": "synthetic curves",
+    "preprocessing": null
+   },
+   {
+    "name": "Constructed example (incorrect interpolation, Fig 6)",
+    "role": "eval",
+    "size": "433 positives, 56,164 negatives",
+    "split": null,
+    "source": "synthetic single point (0.02, 1)",
+    "preprocessing": null
+   },
+   {
+    "name": "Cancer detection dataset (Fig 1)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "highly-skewed cancer detection dataset from Davis et al. 2005; size not stated",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Algorithm 1 and Algorithm 2 (Fig 1)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not applicable; constructed examples, one curve pair each",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "local_skew": "(FP_B - FP_A)/(TP_B - TP_A); new points at TP_A+x for integer 1<=x<=TP_B-TP_A with FP raised linearly by the local skew",
+    "threshold_construction": "sort test-example probabilities; for each i with class(i)!=class(i+1) and prob(i)<prob(i+1), call every example j>=i+1 positive",
+    "tuning_set_protocol": "find candidate thresholds and the hull on a tuning set, then apply those thresholds to the test data",
+    "auc_roc": "trapezoidal areas between ROC points",
+    "auc_pr": "composite trapezoidal method over the interpolated PR points"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall = TPR",
+     "definition": "TP/(TP+FN)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision",
+     "definition": "TP/(TP+FP)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "FPR",
+     "definition": "FP/(FP+TN)",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "AUC-ROC",
+     "definition": "trapezoidal area under ROC; equivalent to the Wilcoxon-Mann-Whitney statistic",
+     "unit": "area",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUC-PR",
+     "definition": "composite trapezoidal area under the interpolated PR curve",
+     "unit": "area",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "linear interpolation in PR space",
+    "naive curve construction vs convex hull / achievable PR curve (Fig 5)"
+   ],
+   "protocol": "Proofs plus worked numeric examples; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "Java program for the metrics at http://www.cs.wisc.edu/~richm/programs/AUC/",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "For a fixed dataset a ROC curve and a PR curve are in one-to-one correspondence and contain the same confusion matrices, provided Recall is not 0.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fixed numbers of positives and negatives; Theorem 3.1",
+   "quote": "Theorem 3.1. For a given dataset of positive and negative examples, there exists a one-to-one correspon-\ndence between a curve in ROC space and a curve in PR space, such that the curves contain exactly the same\nconfusion matrices, if Recall̸ = 0.",
+   "table": null,
+   "note": null,
+   "where": "p.2"
+  },
+  {
+   "claim": "One curve dominates another in ROC space if and only if it dominates in PR space.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fixed numbers of positives and negatives; Theorem 3.2",
+   "quote": "Theorem 3.2. For a ﬁxed number of positive and neg-\native examples, one curve dominates a second curve in\nROC space if and only if the ﬁrst dominates the second\nin Precision-Recall space.",
+   "table": null,
+   "note": null,
+   "where": "p.2"
+  },
+  {
+   "claim": "Two curves from a constructed 20-positive, 2000-negative domain rank oppositely under AUC-ROC (curve II higher, 0.875 vs 0.813).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "AUC-ROC",
+   "value": 0.875,
+   "unit": "AUC-ROC",
+   "baseline_value": 0.813,
+   "n": null,
+   "setup": "20 positives, 2000 negatives, two overlapping convex-hull curves (Fig 7a); value is curve II, curve I is 0.813",
+   "quote": "The AUC-ROC for curve I is 0.813 and the\nAUC-ROC for curve II is 0.875",
+   "table": null,
+   "note": null,
+   "where": "p.5, Sec 5"
+  },
+  {
+   "claim": "Same two curves under AUC-PR: curve I wins at 0.514 against 0.038 for curve II, the opposite choice.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "AUC-PR",
+   "value": 0.514,
+   "unit": "AUC-PR",
+   "baseline_value": 0.038,
+   "n": null,
+   "setup": "20 positives, 2000 negatives, same curves as Fig 7; value is curve I, curve II is 0.038",
+   "quote": "The AUC-PR for curve I is now 0.514",
+   "table": null,
+   "note": null,
+   "where": "p.5, Sec 5"
+  },
+  {
+   "claim": "Linear interpolation in PR space overestimates AUC-PR: interpolation gives 0.031, a straight line gives 0.50.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "AUC-PR",
+   "value": 0.031,
+   "unit": "AUC-PR",
+   "baseline_value": 0.5,
+   "n": null,
+   "setup": "Single point (0.02, 1) extended to endpoints (0, 1) and (1, 0.008); 433 positives, 56,164 negatives (Fig 6); correct interpolation value shown, linear is 0.50",
+   "quote": "Interpolating as we have described would\nhave an AUC-PR of 0.031; a linear connection would\nseverely overestimate with an AUC-PR of 0.50.",
+   "table": null,
+   "note": null,
+   "where": "p.4"
+  },
+  {
+   "claim": "Correct PR interpolation between A (TP=5, FP=5) and B (TP=10, FP=30) has local skew 5 negatives per positive, and precision falls non-linearly from 0.500 to 0.250.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 5,
+   "unit": "negatives per positive",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset with 20 positives and 2000 negatives; Table 1",
+   "quote": "with the local skew of 5 negatives for",
+   "table": null,
+   "note": "Table 1 intermediate precisions: 0.375, 0.318, 0.286, 0.265 at TP=6..9.",
+   "where": "p.4, Table 1"
+  },
+  {
+   "claim": "In the cancer detection example ROC curves look near optimal while PR curves show Algorithm 2 clearly better than Algorithm 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same learned models on a highly-skewed cancer detection dataset (Davis et al. 2005), Fig 1; no numbers",
+   "quote": "The performances of the algorithms appear to be com-\nparable in ROC space, however, in PR space we can\nsee that Algorithm 2 has a clear advantage over Algo-\nrithm 1.",
+   "table": null,
+   "note": null,
+   "where": "p.1"
+  },
+  {
+   "claim": "The achievable PR curve is obtained by taking the ROC convex hull, mapping its points to PR space and interpolating correctly; it discards exactly the points under the ROC hull.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Corollary 3.1; algorithm in Sec 4",
+   "quote": "Remarkably, when constructing the achievable\nPR curve one discards exactly the same points omit-\nted by the convex hull in ROC space.",
+   "table": null,
+   "note": null,
+   "where": "p.5, Sec 6"
+  }
+ ],
+ "limits": [
+  "Constructed examples only; the paper says nothing about how often AUC-ROC and AUC-PR disagree on real data.",
+  "Theorem 3.1 fails at Recall = 0 (FP cannot be recovered).",
+  "Dominance gives no ranking when curves cross.",
+  "The achievable PR curve is not a true convex hull because interpolation is non-linear.",
+  "Convex hull must be built on a tuning set, not test data, to keep the train/test split; the test curve then need not be a hull.",
+  "Cost curves are mentioned as an alternative and left out of scope.",
+  "The Fig 1 dataset size is not stated here; it comes from Davis et al. 2005.",
+  "The paper treats AUC-PR by trapezoids over interpolated points; average precision is not discussed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dominates",
+   "definition": "all other curves are beneath it or equal to it (Provost et al., 1998)",
+   "where": "Sec 3"
+  },
+  {
+   "term": "achievable PR curve",
+   "definition": "the PR space analog of the ROC convex hull, though it cannot be achieved by linear interpolation",
+   "where": "Sec 3"
+  },
+  {
+   "term": "local skew",
+   "definition": "how many negative examples it takes to equal one positive, (FP_B-FP_A)/(TP_B-TP_A)",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The case against accuracy estimation for comparing induction algorithms",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Provost et al. recommend ROC curves; source defines dominance from it",
+   "quote": null
+  },
+  {
+   "work": "Learning ensembles of first-order clauses for recall-precision curves",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Goadrich et al. proposed the PR interpolation expanded here",
+   "quote": null
+  },
+  {
+   "work": "View learning for statistical relational learning: with an application to mammography",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of Fig 1 curves",
+   "quote": null
+  },
+  {
+   "work": "Explicitly representing expected cost / What ROC curves can't do (Drummond and Holte)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cost curves, an alternative for skew, out of scope",
+   "quote": null
+  },
+  {
+   "work": "Cortes and Mohri, AUC optimization vs. error rate minimization",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AUC-ROC equals Wilcoxon-Mann-Whitney",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The difference between comparing algorithms in ROC vs PR space",
+   "page": 2,
+   "why": "Same models look comparable in ROC and clearly separated in PR"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Correct interpolation between two points in PR space for a dataset with 20 positive and 2000 negative examples",
+   "page": 4,
+   "why": "Shows precision falling non-linearly between two PR points"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "The effect of incorrect interpolation in PR space",
+   "page": 4,
+   "why": "Correct vs linear AUC-PR (0.031 vs 0.50)"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Difference in optimizing area under the curve in each space",
+   "page": 5,
+   "why": "Counterexample where AUC-ROC and AUC-PR choose opposite curves"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4",
+   "snippet": "(TP_A + x)/Total Pos, (TP_A + x)/(TP_A + x + FP_A + (FP_B-FP_A)/(TP_B-TP_A) * x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits equations across lines; the interpolation formula is reconstructed, not verbatim.",
+  "One typo in the paper's Claim 2 proof (FPR(A) < TPR(B)); not recorded as a result."
+ ]
 }

@@ -1,19 +1,547 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1502.03167",
  "pdf": "data-science/sources/ioffe-2015-batch-normalization.pdf",
  "bib": {
   "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift",
-  "first_author": "Sergey Ioffe",
-  "year": "2015",
-  "venue": null,
+  "authors": [
+   "Sergey Ioffe",
+   "Christian Szegedy"
+  ],
+  "first_author": "Ioffe",
+  "year": 2015,
+  "venue": "preprint",
   "arxiv": "1502.03167",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "70f902a8-1aaf-4ec0-aaec-5372123c8401"
+  "at": "2026-11-07",
+  "chars_read": 45520,
+  "chars_total": 45520,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift, Sergey Ioffe and Christian Szegedy (Google). Preprint as printed: arXiv:1502.03167v3, 2 Mar 2015. The PDF prints no venue, so the notes' \"ICML 2015\" cannot be confirmed from it.\n\nCOVERAGE: 45,461 of 45,461 chars, all 11 pages. References were read in full. Nothing skipped.\n\nCLAIMS\n\nQuotes are verbatim, except that line breaks are normalised to spaces. PDF hyphen-breaks are kept. All were checked by script against the extraction.\n\n- claim: BN plus a bundle of training changes reaches the baseline's accuracy in 14x fewer steps.\n  number: 14x (2.1M vs 31.0M steps to 72.2%)\n  setup: ImageNet LSVRC2012, single-crop top-1 validation, authors' own Inception variant (13.6M params), batch 32, momentum SGD, distributed. BN-x5 = BN + LR x5 + no Dropout + L2 /5 + LR decay 6x faster + no LRN + more shuffling + fewer distortions.\n  quote: \"BN-x5 needs 14 times fewer steps than In- ception to reach the 72.2% accuracy\"; \"BN-x5 2.1· 106 73.0%\"; \"Inception 31.0· 106 72.2%\"\n  where: p7\n- claim: BN alone, with no other changes, gives only a bit over 2x.\n  number: 13.3M vs 31.0M steps; max 72.7%\n  setup: BN-Baseline, same LR as Inception\n  quote: \"we match the accuracy of Inception in less than half the num- ber of training steps\"; \"BN-Baseline 13.3· 106 72.7%\"\n  where: p7\n- claim: Adding BN alone does not capture the benefit; the other changes are needed.\n  number: none\n  setup: Sec 4.2.1\n  quote: \"Simply adding Batch Normalization to a network does not take full advantage of our method\"\n  where: p6\n- claim: A 30x learning rate trains slower at first but ends higher.\n  number: 74.8% at 6M steps; 72.2% at 2.7M\n  setup: BN-x30, initial LR 0.045\n  quote: \"It reaches 74.8% after6·106 steps\"; \"BN-x30 2.7· 106 74.8%\"\n  where: p7\n- claim: The x5 learning rate diverges without BN.\n  number: 0.0075\n  setup: original Inception\n  quote: \"The initial learning rate was increased by a factor of 5, to 0.0075. The same learning rate increase with original Inception caused the model pa- rameters to reach machine inﬁnity\"\n  where: p7\n- claim: BN makes a deep sigmoid network trainable.\n  number: 69.8% vs 1/1000\n  setup: BN-x5-Sigmoid vs Inception with sigmoid\n  quote: \"BN-x5-Sigmoid 69.8%\"; \"Without Batch Normalization, Inception with sig- moid never achieves better than 1/1000 accuracy\"\n  where: p7\n- claim: The record result is a 6-network, multicrop ensemble; a single model on a single crop is much weaker.\n  number: 4.9% val, 4.82% test (ensemble); 5.82% (one model, 144 crops); 7.82% (single crop)\n  setup: 224 resolution, 144 crops, 6 BN-x30 variants, some with Dropout at 5% or 10%; 50,000 val images, 100,000 test images\n  quote: \"BN-Inception ensemble 224 144 6 20.1% 4.9%*\"; \"BN-Inception multicrop 224 144 1 21.99% 5.82%\"; \"BN-Inception single crop 224 1 1 25.2% 7.82%\"; \"has reached 4.82% top-5 error on the 100000 images of the test set\"\n  where: p8\n- claim: The nearest prior result was close, on the same test server.\n  number: 4.94% vs 4.82%\n  setup: He et al. 2015 ensemble, ILSVRC server\n  quote: \"The latter reports the top-5 error of 4.94%\"\n  where: p7\n- claim: Better shuffling helped, which the authors read as consistent with BN regularising.\n  number: about 1%\n  setup: within-shard shuffling, one of the BN-x changes\n  quote: \"This led to about 1% improvements in the val- idation accuracy\"\n  where: p6\n- claim: Dropout can be removed or weakened, and L2 reduced.\n  number: L2 /5\n  setup: Modified BN-Inception; no isolated measurement of the regularising effect\n  quote: \"in a batch-normalized network we found that it can be either removed or reduced in strength\"; \"the weight of this loss is reduced by a factor of 5\"\n  where: p5, p6\n- claim: BN helped on a small MNIST sigmoid network, and one activation's distribution was more stable.\n  number: 3 layers of 100; 50,000 steps; batch 60\n  setup: MNIST, sigmoid, small Gaussian init; authors say it is not a state-of-the-art architecture\n  quote: \"3 fully-connected hidden layers with 100 activations each\"; \"We trained the network for 50000 steps, with 60 examples per mini-batch\"; \"for one typical activation from the last hidden layer of each network\"\n  where: p6\n- claim: Inference uses population statistics from training mini-batches on the finished network, with an unbiased variance correction. Moving averages are presented as the alternative for tracking accuracy during training.\n  number: Var[x] = m/(m-1) E_B[σ²_B]\n  setup: Sec 3.1, Alg 2. Training variance in Alg 1 is 1/m.\n  quote: \"using the population, rather than mini-batch, statistics\"; \"Var[x] = mm−1· EB[σ2B]\"; \"Using moving averages in- stead, we can track the accuracy of a model as it trains\"\n  where: p4\n- claim: Convolutional BN normalises per feature map, across batch and spatial locations.\n  number: m' = m·pq\n  setup: one γ, β pair per feature map\n  quote: \"we use the effec- tive mini-batch of size m′ =|B| = m· p q\"\n  where: p5\n- claim: Mechanics: BN goes immediately before the nonlinearity, makes the bias redundant, needs m > 1, and adds two parameters per activation.\n  number: 2; m > 1\n  setup: Secs 3.1, 3.2, 5\n  quote: \"We add the BN transform immediately before the nonlinearity\"; \"Stochastic Gradient Descent with a mini-batch size m > 1\"; \"Batch Normalization adds only two extra parameters per activation\"\n  where: p5, p4, p8\n- claim: The Jacobian account of why BN helps is explicitly a conjecture.\n  number: singular values near 1\n  setup: assumes Gaussian, uncorrelated, linear\n  quote: \"We further conjecture that Batch Normalization may lead the layer Jacobians to have singular values close to 1\"; \"the normalized values are not guaranteed to be Gaussian nor independent\"\n  where: p5\n\nLIMITS\n- Every speedup is in training steps. No wall-clock time or per-step BN overhead is reported.\n- The text mentions no repeated runs, seeds or error bars, including for Fig 3.\n- The 14x comparison is confounded: seven changes move together and there is no ablation.\n- The baseline is the authors' own Inception variant, not published GoogLeNet.\n- Evidence for reduced internal covariate shift (ICS) is one \"typical\" activation on MNIST. ICS was never measured on ImageNet, yet p7 says \"We also veriﬁed that the reduction in internal covari- ate shift allows deep networks\". The paper also hedges with \"takes a step towards re- ducing internal covariate shift\" (p2).\n- Authors concede: \"The precise effect of Batch Normaliza- tion on gradient propagation remains an area of further study\" (p5).\n- No experiment varies initialisation in a controlled way. \"Less careful\" rests on the Sec 3.3 scale argument and a sensitivity remark; the only initialisation change is \"increased initial weights\" in some ensemble members.\n- Not tested: RNNs and domain adaptation (future work), small-batch behaviour, and non-vision tasks other than MNIST and ImageNet.\n- Dated: the \"best published\" 4.9% claim. \"Exceeding human raters\" is against an estimate from Russakovsky et al. 2014.\n\nBUILDS ON\n- Whitening and input normalisation: LeCun et al., 1998b; Wiesler & Ney, 2011.\n- Covariate shift: Shimodaira, 2000.\n- Domain adaptation: Jiang, 2008.\n- Activation-dependent optimisation or reparameterisation: Wiesler et al., 2014; Raiko et al., 2012; Povey et al., 2014; Desjardins & Kavukcuoglu (unpublished).\n- Per-example normalisation: Lyu & Simoncelli, 2008.\n- Closest prior layer: Gülçehre & Bengio, 2013.\n- Base model: Szegedy et al., 2014.\n- Regulariser it displaces: Srivastava et al., 2014.\n- Jacobian argument: Saxe et al., 2013.\n\nCODE: none in the paper. Worth keeping are Alg 1 (p3) and Alg 2 (p4), though their extraction is noisy, so copy from the page rather than the text.\n\nFIGURES\n- Fig 1, p6: MNIST test accuracy, and 15/50/85th percentile sigmoid inputs with and without BN. Shows the stability claim, and how narrow its evidence is.\n- Fig 2, p7: validation accuracy vs steps for all variants. Shows the x5 and x30 trade-off faster than prose.\n- Fig 3, p7: table of steps to 72.2% and max accuracy. Separates BN alone from the full bundle at a glance.\n- Fig 4, p8: table of single-crop, multicrop and ensemble results. Prevents reading 4.9% as a single-model figure.\n- Fig 5, p11: architecture table. Reference only.\n\nCOMPARISON WITH NOTES\n\nGrep of 1502.03167 finds four files:\n- `data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md` (cited at line 128, frontmatter line 15)\n- `data-science/02-deep-learning/references.md` line 30\n- `generative-ai/09-llms-from-scratch/notes/02-makemore.md` (frontmatter line 5; prose at line 293 via PDF link)\n- `generative-ai/09-llms-from-scratch/references.md` line 26\n\nThere are no hits under `programming/`, which only has an unrelated \"BN\" match. I also checked both pillars' decks and uncited mentions.\n\nMismatches\n\n1. Optimisation note line 128, \"reached the same accuracy on a state-of-the-art ImageNet model in 14× fewer steps\". It follows the abstract, but credits BN with what the bundle did. BN alone was under 2.33x (13.3M vs 31.0M). Missing setup: BN-x5 with the Sec 4.2.1 changes, 72.2% single-crop top-1 validation, steps only.\n2. Makemore note line 284, \"unit Gaussian *by construction*\". The paper fixes only mean and variance, and states the values are \"not guaranteed to be Gaussian\". This is a factual overstatement for the cited method. It may come from the lecture.\n3. Makemore note line 280 and deck `generative-ai/09-llms-from-scratch/slides/deck.yaml` line 226 and notes at line 229, \"BatchNorm adds nothing until the model gets deep\" / \"BatchNorm matters for depth\". This generalises from a one-hidden-layer tanh MLP with init already fixed. The paper's smallest test, 3 sigmoid layers of 100 on MNIST with small Gaussian init, did benefit. Paper-backed scope would be \"on this already well-initialised shallow net\". Note line 280 is closer to this than the deck takeaway.\n\nUnder-qualified\n\n4. Line 128, \"4.9% top-5 validation error\": lacks 6 networks and 144 crops. Single-crop single-model was 7.82%, and test error was 4.82%. \"Ensemble\" alone does not convey the crops.\n5. Line 128, \"showed it allows... less careful initialisation\": too strong, as no experiment isolates it. High learning rates are shown (x5 diverges without BN, x30 trains with it), though on one architecture.\n6. Line 128, \"regularises somewhat\": supported only through confounded changes, and the ensemble still used light Dropout in some members. Acceptable if worded as \"the authors found\".\n7. Line 128, \"The paper's explanation, reduced internal covariate shift\": the paper also offers scale invariance (Sec 3.3) and a flagged Jacobian conjecture, so it does not give a single explanation.\n8. Deck `data-science/02-deep-learning/slides/deck.yaml` line 153 notes, \"speeds up training a great deal\": no setup and no steps-only caveat.\n\nUncited claims\n\n9. Line 128, \"is disputed, and the practical benefits are not\", and makemore line 293, \"an explanation later work disputes\". Neither names a source, and this paper cannot support them. Grep finds no \"santurkar\" or 1805.11604 in the four pillars searched (data-science, generative-ai, programming, ai-engineering), and the ledger has no 1805.11604 row. \"Are not\" disputed is a universal claim with nothing behind it. I have read nothing that supports or refutes the dispute.\n\nLesser points\n\n10. Test statistics: line 128 is correct. Line 130 and makemore lines 295 and 696 (\"every BatchNorm layer stores running statistics\") present the EMA as the default and calibration as the later fix. Alg 2 is itself a post-training average over mini-batches, with moving averages as the alternative. That is framework practice, not the paper; the notes do not misattribute it, but the framing hides a useful point.\n11. Variance: the paper uses 1/m in training (Alg 1) and an m/(m-1) correction at inference. Makemore's code uses unbiased `.var`/`.std` in training, and lines 443 and 696 use n-1. So the `nan` at batch 1 (line 696) comes from that implementation. Under Alg 1 the variance would be 0 and ε would prevent the division by zero, though the paper does require m > 1.\n12. Makemore line 293 cites this paper by PDF link only, unlike the `(arXiv:..., Author, venue)` form used elsewhere.\n13. Ledger line 438: `\"status\": \"queued\"` although two notes cite the paper, and `\"note\"` points to `01-neural-networks-fundamentals.md`, which does not cite it (the citing note is 02). Its `\"topic\"` and `\"pillar\"` are `classical-ml`, while the citing notes are in deep learning and LLMs from scratch.\n14. Makemore frontmatter lists 2105.07576 twice (lines 4 and 8 of the sources block).\n15. `data-science/02-deep-learning/README.md` line 56, \"cost 9 points\", omits its setup (digits, batch 32). This is a local run, not the paper.\n\nConfirmed correct\n- Line 128: learned γ, β and identity representation; population statistics at test.\n- Makemore table: regulariser via batch jitter; bias redundant (`bias=False`); placement after the linear layer.\n- Both references rows.\n\nUnused support the caller may want\n- 69.8% vs 1/1000 on sigmoid fits makemore's tanh saturation story.\n- Sec 3.2 (m' = m·pq) is the principle behind the makemore 3-d fix at line 557, reducing over (0, 1).\n\nPROBLEMS\n- Extraction leaves math broken (e.g. \"31.0· 106\" means 31.0·10^6, \"mm−1\" means m/(m-1)) and splits words at line ends. Figure 1 and 2 plots are not text; I read their captions and the axis labels that extracted, not the rendered curves. Stated results come from the prose and Fig 3.\n- pypdf prints fontTools warnings, which are harmless.\n- The first 40,000-char read was followed by a second range to the end.\n- No embedded instructions."
+ "type": "empirical",
+ "question": "Can normalizing layer inputs per mini-batch, as part of the architecture, reduce internal covariate shift and speed up and stabilise deep network training?",
+ "hypothesis": "Fixing the means and variances of layer inputs reduces internal covariate shift and so accelerates training, permits higher learning rates, and regularizes.",
+ "contributions": [
+  "Batch Normalizing Transform (Alg. 1) and its training/inference procedure (Alg. 2)",
+  "Extension to convolutional layers (normalize over batch and spatial locations, per feature map)",
+  "14x fewer training steps than the baseline Inception on ImageNet, and a better single network",
+  "Ensemble of BN networks at 4.9% top-5 validation error (4.82% test)"
+ ],
+ "method": {
+  "summary": "Insert a per-feature normalization (mini-batch mean and variance, then learned scale gamma and shift beta) before each nonlinearity, backpropagating through the batch statistics. Tested on a 3-layer sigmoid MLP on MNIST and on a 13.6M-parameter Inception variant on ImageNet, with a set of training changes that BN allows.",
+  "task": "image classification (MNIST digits; ImageNet LSVRC2012, 1000 classes)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": "held-out test data used for accuracy; split sizes not stated",
+    "source": "LeCun et al., 1998a",
+    "preprocessing": "28x28 binary image input"
+   },
+   {
+    "name": "ImageNet LSVRC2012",
+    "role": "both",
+    "size": null,
+    "split": "trained on LSVRC2012 training data; validation set of 50000 images; test set of 100000 images via the ILSVRC server",
+    "source": "Russakovsky et al., 2014",
+    "preprocessing": "photometric distortions reduced for BN models; within-shard shuffling enabled for BN-x5 and later"
+   }
+  ],
+  "models": [
+   {
+    "name": "MNIST MLP",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 fully-connected hidden layers of 100 sigmoid activations, then 10-way layer with cross-entropy",
+    "init_from": "small random Gaussian weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 hidden + output",
+    "hidden": "100",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inception (baseline)",
+    "role": "baseline",
+    "params": "13.6 · 10^6",
+    "architecture": "GoogLeNet variant: 5x5 convs replaced by two 3x3 convs, 3 inception modules at 28x28, no fully-connected layers except softmax, separable conv depth multiplier 8 on first layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "initial_lr": "0.0015",
+     "dropout": "40%",
+     "lrn": "used",
+     "lr_decay": "exponential"
+    }
+   },
+   {
+    "name": "BN-Baseline",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Inception with BN before each nonlinearity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lr": "same as Inception"
+    }
+   },
+   {
+    "name": "BN-x5",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BN-Inception with the Sec 4.2.1 changes",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "initial_lr": "0.0075"
+    }
+   },
+   {
+    "name": "BN-x30",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Like BN-x5",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "initial_lr": "0.045"
+    }
+   },
+   {
+    "name": "BN-x5-Sigmoid",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Like BN-x5 with sigmoid instead of ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy (MNIST); classification softmax (ImageNet)",
+   "optimizer": "SGD with momentum (Sutskever et al., 2013); momentum value not stated",
+   "lr": "Inception 0.0015; BN-x5 0.0075; BN-x30 0.045; BN-Baseline same as Inception",
+   "lr_schedule": "Inception: exponential decay (rate not stated); BN variants decay 6 times faster",
+   "warmup": null,
+   "batch_size": "60 (MNIST); 32 (ImageNet)",
+   "steps": "MNIST 50000; ImageNet curves to about 30M steps; BN-x30 and ensemble members peak at about 6 · 10^6",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "L2 weight cut by a factor of 5 in BN models (base value not stated)",
+   "dropout": "Inception 40%; BN-x5/x30 none; ensemble members 5% or 10%",
+   "regularisation": "L2 loss; Local Response Normalization removed in BN models; photometric distortions reduced",
+   "hardware": "large-scale distributed architecture similar to Dean et al., 2012; hardware not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "bn_epsilon": null,
+    "bn_placement": "immediately before the nonlinearity, applied to Wu with the bias dropped",
+    "conv_bn": "effective mini-batch m' = m*p*q; gamma, beta per feature map",
+    "inference_stats": "population mean and unbiased variance m/(m-1) * E_B[sigma_B^2]",
+    "ensemble_variation": "increased initial conv weights; Dropout 5% or 10%; per-activation non-convolutional BN on last hidden layers"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no repeated runs reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "ensemble": "6 networks, arithmetic average of class probabilities",
+    "multicrop": "144 crops, details similar to Szegedy et al., 2014"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validation accuracy @1",
+     "definition": "probability of predicting the correct label out of 1000 on a held-out set, single crop per image",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "steps to 72.2%",
+     "definition": "training steps to reach Inception's maximum accuracy",
+     "unit": "steps",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-5 error",
+     "definition": "ILSVRC top-5 error on validation set (50000) or test server (100000)",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Inception",
+    "GoogLeNet ensemble",
+    "Deep Image (Wu et al., 2015)",
+    "He et al., 2015 ensemble (4.94% test)"
+   ],
+   "protocol": "Single run each; no seeds or variance; accuracy tracked as training progresses"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "The model was trained using a version of Stochastic Gradient Descent with mo- mentum (Sutskever et al., 2013), using the mini-batch size of 32.",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BN-x5 reaches Inception's 72.2% accuracy in 14 times fewer steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training steps to 72.2%",
+   "value": "2.1 · 10^6 vs 31.0 · 10^6",
+   "unit": "steps",
+   "baseline_value": "31.0 · 10^6",
+   "n": 1,
+   "setup": "ImageNet LSVRC2012 single-crop validation accuracy @1, BN-x5 (BN + LR x5 + no Dropout + L2/5 + 6x faster decay + no LRN + more shuffling + fewer distortions) vs Inception, batch 32",
+   "quote": "BN-x5 needs 14 times fewer steps than In- ception to reach the 72.2% accuracy.",
+   "table": null,
+   "note": "Figure 3 prints 2.1 · 106 and 31.0 · 106",
+   "where": "Sec 4.2.2, Fig 3"
+  },
+  {
+   "claim": "BN alone (BN-Baseline) matches Inception's accuracy in less than half the steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training steps to 72.2%",
+   "value": "13.3 · 10^6",
+   "unit": "steps",
+   "baseline_value": "31.0 · 10^6",
+   "n": 1,
+   "setup": "ImageNet, BN-Baseline with the same learning rate as Inception, no other changes",
+   "quote": "By only using Batch Normalization (BN-Baseline), we match the accuracy of Inception in less than half the num- ber of training steps.",
+   "table": "Fig 3, row BN-Baseline, column Steps to 72.2%",
+   "note": null,
+   "where": "Sec 4.2.2, Fig 3"
+  },
+  {
+   "claim": "BN-x30 reaches a higher final accuracy than any other model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max single-crop validation accuracy",
+   "value": "74.8%",
+   "unit": "%",
+   "baseline_value": "72.2%",
+   "n": 1,
+   "setup": "ImageNet, BN-x30 initial LR 0.045, 6 · 10^6 steps",
+   "quote": "It reaches 74.8% after 6·106 steps, i.e. 5 times fewer steps than required by Inception to reach 72.2%.",
+   "table": "Fig 3, row BN-x30, column Max accuracy",
+   "note": "Fig 3 gives 2.7 · 10^6 steps to 72.2% for BN-x30",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "BN-x5 max accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max accuracy",
+   "value": "73.0%",
+   "unit": "%",
+   "baseline_value": "72.2%",
+   "n": 1,
+   "setup": "ImageNet BN-x5",
+   "quote": null,
+   "table": "Fig 3, row BN-x5, column Max accuracy",
+   "note": null,
+   "where": "Fig 3"
+  },
+  {
+   "claim": "A 5x learning rate sent the original Inception's parameters to machine infinity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Inception without BN at initial LR 0.0075",
+   "quote": "The same learning rate increase with original Inception caused the model pa- rameters to reach machine inﬁnity.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "A BN sigmoid network trains on ImageNet; Inception with sigmoid does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max accuracy",
+   "value": "69.8%",
+   "unit": "%",
+   "baseline_value": "1/1000 (chance)",
+   "n": 1,
+   "setup": "ImageNet, BN-x5-Sigmoid vs Inception with sigmoid",
+   "quote": "Indeed, BN-x5-Sigmoid achieves the accuracy of 69.8%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Ensemble of 6 BN-Inception networks gets 4.9% top-5 validation error and 4.82% test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "4.9%",
+   "unit": "%",
+   "baseline_value": "4.94% (He et al., 2015, test)",
+   "n": 6,
+   "setup": "ImageNet, 6 networks based on BN-x30, 144 crops, validation set 50000 images",
+   "quote": "Here we report a top-5 validation error of 4.9%, and test error of 4.82% (according to the ILSVRC server).",
+   "table": null,
+   "note": "Abstract prints 4.8% test error; Sec 4.2.3 prints 4.82%",
+   "where": "Sec 4.2.3, Fig 4"
+  },
+  {
+   "claim": "Single BN-Inception model, single crop, top-5 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "7.82%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "ImageNet validation, 224 resolution, 1 crop, 1 model (top-1 error 25.2%)",
+   "quote": null,
+   "table": "Fig 4, row BN-Inception single crop, column Top-5 error",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Single BN-Inception model with 144 crops, top-5 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "5.82%",
+   "unit": "%",
+   "baseline_value": "6.67% (GoogLeNet ensemble of 7)",
+   "n": 1,
+   "setup": "ImageNet validation, 144 crops, 1 model (top-1 error 21.99%)",
+   "quote": null,
+   "table": "Fig 4, row BN-Inception multicrop, column Top-5 error",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "BN trained MNIST sigmoid MLP to higher test accuracy and kept the input distribution to a sigmoid more stable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "MNIST, 3x100 sigmoid MLP, 50000 steps, batch 60, one typical activation of last hidden layer, 15/50/85th percentiles",
+   "quote": "The batch-normalized network enjoys the higher test accuracy.",
+   "table": null,
+   "note": "No accuracy number printed; read from Fig 1a only",
+   "where": "Sec 4.1, Fig 1"
+  },
+  {
+   "claim": "More thorough within-shard shuffling gave about 1% validation accuracy gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation accuracy",
+   "value": "about 1%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet BN-Inception; one of the bundled changes",
+   "quote": "This led to about 1% improvements in the val- idation accuracy",
+   "table": null,
+   "note": "No per-change ablation of the other changes",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "claim": "Scale invariance: BN(Wu)=BN((aW)u), so gradient to W scales by 1/a.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analytical argument, Sec 3.3; the Jacobian singular-value claim is explicitly a conjecture",
+   "quote": "We further conjecture that Batch Normalization may lead the layer Jacobians to have singular values close to 1",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  }
+ ],
+ "limits": [
+  "Speedups come from a bundle of changes (LR x5, no Dropout, L2/5, faster decay, no LRN, shuffling, less distortion); only the BN-Baseline vs BN-x5 contrast exists, no per-change ablation.",
+  "Single runs, no seeds or variance; steps not wall-clock time.",
+  "The internal covariate shift explanation is shown on one activation of a small MNIST net; Jacobian claim is a conjecture ('remains an area of further study').",
+  "Momentum value, L2 weight, decay rate, epsilon, hardware and compute not stated; no code released.",
+  "Authors defer RNNs and domain adaptation to future work.",
+  "Later work questions the covariate-shift explanation (not in this source)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Internal Covariate Shift",
+   "definition": "the change in the distribution of network activations due to the change in network parameters during training",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Going deeper with convolutions (GoogLeNet)",
+   "year": 2014,
+   "arxiv": "1409.4842",
+   "relation": "extends",
+   "note": "Inception variant it normalizes",
+   "quote": null
+  },
+  {
+   "work": "On the importance of initialization and momentum in deep learning",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "momentum SGD",
+   "quote": null
+  },
+  {
+   "work": "Efficient backprop (LeCun et al.)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "whitened inputs converge faster",
+   "quote": null
+  },
+  {
+   "work": "Dropout (Srivastava et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BN reduces need for it",
+   "quote": null
+  },
+  {
+   "work": "Knowledge matters: standardization layer (Gulcehre and Bengio)",
+   "year": 2013,
+   "arxiv": "1301.4083",
+   "relation": "related",
+   "note": "similar layer, applied after nonlinearity",
+   "quote": null
+  },
+  {
+   "work": "Delving Deep into Rectifiers (He et al.)",
+   "year": 2015,
+   "arxiv": "1502.01852",
+   "relation": "baseline",
+   "note": "prior best ensemble, 4.94% top-5",
+   "quote": null
+  },
+  {
+   "work": "Deep Image (Wu et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior ImageNet result",
+   "quote": null
+  },
+  {
+   "work": "ImageNet LSVRC",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Russakovsky et al.",
+   "quote": null
+  },
+  {
+   "work": "MNIST (LeCun et al., 1998a)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Sec 4.1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) test accuracy of the MNIST network with and without BN vs steps; (b,c) evolution of input distributions to a typical sigmoid",
+   "page": 6,
+   "why": "shows the stabilised activation distribution directly"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Single crop validation accuracy of Inception and its batch-normalized variants vs number of training steps",
+   "page": 7,
+   "why": "shows speed and final accuracy of each variant"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Steps to reach Inception's maximum accuracy (72.2%) and maximum accuracy achieved",
+   "page": 7,
+   "why": "the table behind the 14x"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "BN-Inception comparison with previous state of the art on the validation set of 50000 images",
+   "page": 8,
+   "why": "ensemble result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Alg. 1",
+   "snippet": "mu_B = 1/m sum x_i; sigma2_B = 1/m sum (x_i - mu_B)^2; xhat_i = (x_i - mu_B)/sqrt(sigma2_B + eps); y_i = gamma*xhat_i + beta",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits equations across lines; Fig 3 table reads as a table in the text (the PDF labels it Figure 3).",
+  "No embedded instructions found.",
+  "PDF prints no venue; arXiv v3, 2 Mar 2015."
+ ]
 }

@@ -1,0 +1,455 @@
+{
+ "schema": 1,
+ "key": "1808.04444",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/alrfou-2019-character-level-language-modeling-deeper.pdf",
+ "bib": {
+  "title": "Character-Level Language Modeling with Deeper Self-Attention",
+  "authors": [
+   "Rami Al-Rfou",
+   "Dokook Choe",
+   "Noah Constant",
+   "Mandy Guo",
+   "Llion Jones"
+  ],
+  "first_author": "Al-Rfou",
+  "year": 2019,
+  "venue": "AAAI 2019 (arXiv v2, Dec 2018)",
+  "arxiv": "1808.04444",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 37673,
+  "chars_total": 37673,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a deep non-recurrent transformer with fixed context beat RNN variants at character-level language modeling?",
+ "hypothesis": "The transformer's ability to quickly propagate information over arbitrary distances suits long-sequence character modeling, and auxiliary losses make very deep (64-layer) training feasible.",
+ "contributions": [
+  "64-layer causal character transformer trained without state passed between batches, state of the art on text8 and enwik8",
+  "Three auxiliary losses (intermediate positions, intermediate layers, multiple targets) plus per-layer learned positional embeddings",
+  "Ablations and qualitative analysis of long-range copying"
+ ],
+ "method": {
+  "summary": "A 64-layer causal transformer reads 512-byte windows sampled at random positions, with auxiliary losses at all positions, all layers (decayed) and two-step-ahead targets. Trained on text8 and enwik8, with extra runs on lm1b and enwik9.",
+  "task": "character/byte-level language modeling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "text8",
+    "role": "both",
+    "size": "100M characters",
+    "split": "90M train / 5M dev / 5M test",
+    "source": "Mahoney 2009; English Wikipedia",
+    "preprocessing": "27-char vocab (a-z, space); digits spelled out; non-[a-zA-Z] to a space; lowercased"
+   },
+   {
+    "name": "enwik8",
+    "role": "both",
+    "size": "100M bytes",
+    "split": "90M / 5M / 5M",
+    "source": "Mahoney 2009",
+    "preprocessing": "unprocessed Wikipedia text with markup, 205 unique bytes"
+   },
+   {
+    "name": "lm1b",
+    "role": "both",
+    "size": null,
+    "split": "standard train/test split; heldout shard 01 as dev, shard 00 as test",
+    "source": "Chelba et al. 2013",
+    "preprocessing": "preprocessed corpus with OOV words replaced by UNK"
+   },
+   {
+    "name": "enwik9",
+    "role": "both",
+    "size": null,
+    "split": "900M / 50M / 50M train/dev/test",
+    "source": "Mahoney 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T64",
+    "role": "proposed",
+    "params": "235M train / 219M inference",
+    "architecture": "causal transformer, per-layer learned positional embeddings",
+    "init_from": null,
+    "tokenizer": "bytes",
+    "vocab": "256 outputs",
+    "layers": 64,
+    "hidden": "512",
+    "heads": "2",
+    "context": "512",
+    "other": {
+     "filter_size": "2048",
+     "embedding": "512",
+     "positional_embedding_params": "L x N x 512"
+    }
+   },
+   {
+    "name": "T12",
+    "role": "proposed",
+    "params": "44M train / 41M inference",
+    "architecture": "same as T64, 12 layers",
+    "init_from": null,
+    "tokenizer": "bytes",
+    "vocab": "256 outputs",
+    "layers": 12,
+    "hidden": "512",
+    "heads": "2",
+    "context": "512",
+    "other": {
+     "steps": "8M",
+     "dropout": "0.2"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-byte cross-entropy at all positions in all layers plus second-target loss (weight 0.5), intermediate-layer losses dropped on a schedule",
+   "optimizer": "momentum, 0.99 momentum",
+   "lr": "0.003",
+   "lr_schedule": "fixed",
+   "warmup": null,
+   "batch_size": "16 randomly selected sequences",
+   "steps": "4M (T64); best checkpoint at about 2.5M; T12 8M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.55 in attention and ReLU layers (T64); 0.2 T12; 0.1 enwik9; 0 on lm1b",
+   "regularisation": "dropout; auxiliary losses hypothesised as regulariser",
+   "hardware": "single Google Cloud TPU v2",
+   "compute": null,
+   "wall_clock": "175 hours to best model (about 2.5M steps)",
+   "seeds": null,
+   "other": {
+    "intermediate_layer_schedule": "layer l stops contributing after l/(2n) of training; every 62.5K steps (=4M x 1/(2*64)) the next layer's loss is dropped; only final layer after halfway",
+    "multiple_positions_weight": "not decayed",
+    "checkpoint_selection": "best validation bpc, checked roughly every 10,000 steps",
+    "sgd_ablation_lrs": "0.3, 0.1, 0.03, 0.01, 0.003, 0.001; best 0.1"
+   }
+  },
+  "inference": {
+   "decoding": "scoring: final position of final layer given 512 characters, no state passed; generation by sampling",
+   "temperature": "1.0 (generation samples)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 samples shown in Table 6",
+   "prompting": "seed text from enwik9 dev set",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "word_completion_cutoff": "stop at space or cumulative probability below 0.001"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits per character (bpc)",
+     "definition": "negative log2 probability of target per character; for enwik8 reported as bits per byte",
+     "unit": "bits",
+     "higher_is_better": false
+    },
+    {
+     "name": "accuracy",
+     "definition": "next-character prediction accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "word perplexity (lm1b)",
+     "definition": "ppl = 2^(bpb*826189/159658), 826,189 bytes and 159,658 tokens in test set",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "LSTM",
+    "BN-LSTM",
+    "HM-LSTM",
+    "Recurrent Highway",
+    "mLSTM",
+    "mLSTM + dynamic eval",
+    "FS-LSTM-4",
+    "cmix v13",
+    "Jozefowicz et al. 2016 word-level (lm1b)"
+   ],
+   "protocol": "single run per configuration, best dev checkpoint; ablations reuse best-model hyperparameters on text8 dev"
+  },
+  "availability": {
+   "code": "inferred: builds on tensor2tensor library (link given); no release of this model stated",
+   "weights": null,
+   "data": "text8, enwik8, enwik9 (Mahoney 2009), lm1b"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "T64 reaches 1.13 bpc on text8 test, new state of the art",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpc",
+   "value": 1.13,
+   "unit": "bpc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text8, T64 (64 layers, 235M train params), context 512, no dynamic evaluation",
+   "note": null,
+   "where": "Results",
+   "quote": "On the test set, we achieve a new state of the art, 1.13 bpc."
+  },
+  {
+   "claim": "T64 reaches 1.06 bpb on enwik8 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 1.06,
+   "unit": "bpb",
+   "baseline_value": 1.24,
+   "n": null,
+   "setup": "enwik8, T64, same hyperparameters as text8",
+   "note": "baseline is mLSTM 1.24; mLSTM + dynamic eval 1.08",
+   "where": "Table 3",
+   "table": "Table 3, row T64 (ours), column bpb"
+  },
+  {
+   "claim": "T12 reaches 1.18 bpc on text8 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpc",
+   "value": 1.18,
+   "unit": "bpc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text8, T12 (12 layers, 41M inference params), 8M steps, dropout 0.2",
+   "note": null,
+   "where": "Results",
+   "quote": "achieving 1.18 bpc on the test dataset"
+  },
+  {
+   "claim": "Without Multiple Positions loss, T64 dev bpc degrades to 2.482",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpc",
+   "value": 2.482,
+   "unit": "bpc",
+   "baseline_value": 1.062,
+   "n": null,
+   "setup": "text8 dev, context 512, T64 ablation; baseline 1.062",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T64 w/out Multiple Positions, column bpc"
+  },
+  {
+   "claim": "Removing intermediate layer losses costs 0.096 bpc",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta bpc",
+   "value": 0.096,
+   "unit": "bpc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text8 dev, context 512, T64 ablation",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T64 w/out Intermediate Layer Losses, column ∆bpc"
+  },
+  {
+   "claim": "Best text8 test bpc at context 512; 1.34 at context 32",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpc",
+   "value": 1.13,
+   "unit": "bpc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text8 test, T64, context 512",
+   "note": "context 32 test bpc 1.34, 1024 context gave no gain",
+   "where": "Table 2",
+   "table": "Table 2, row 512, column test bpc"
+  },
+  {
+   "claim": "Test accuracy at context 512 is 75.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text8 test, T64, context 512",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 512, column test accuracy"
+  },
+  {
+   "claim": "On lm1b the byte-level T64 has word perplexity 40.6 vs 23.7 for a word-level model",
+   "kind": "measured",
+   "source": null,
+   "metric": "ppl",
+   "value": 40.6,
+   "unit": "ppl",
+   "baseline_value": 23.7,
+   "n": null,
+   "setup": "lm1b test, T64 byte-level, dropout 0",
+   "note": "bpb 1.03",
+   "where": "Table 5",
+   "table": "Table 5, row T64, column ppl"
+  },
+  {
+   "claim": "SGD with learning rate 0.1 gives 1.065 dev bpc, close to momentum",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpc",
+   "value": 1.065,
+   "unit": "bpc",
+   "baseline_value": 1.062,
+   "n": null,
+   "setup": "text8 dev, T64 with SGD",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T64 w/ SGD Optimizer, column bpc"
+  },
+  {
+   "claim": "T64 achieves 0.85 bpb on enwik9 test with dropout 0.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.85,
+   "unit": "bpb",
+   "baseline_value": null,
+   "n": null,
+   "setup": "enwik9 900M/50M/50M split, T64",
+   "note": null,
+   "where": "Generation",
+   "quote": "On the test dataset, T64 achieves 0.85 bpb."
+  },
+  {
+   "claim": "Best model reached after about 2.5M steps, 175 hours on one TPU v2",
+   "kind": "measured",
+   "source": null,
+   "metric": "hours",
+   "value": 175,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T64 text8",
+   "note": null,
+   "where": "Evaluation",
+   "quote": "which takes 175 hours on a single Google Cloud TPU v2"
+  },
+  {
+   "claim": "Model copies a fake name over a distance of 434 characters",
+   "kind": "measured",
+   "source": null,
+   "metric": "distance",
+   "value": 434,
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T64, text8 test seed of 512 characters with corrupted name",
+   "note": null,
+   "where": "Qualitative Analysis",
+   "quote": "434 characters"
+  }
+ ],
+ "limits": [
+  "Evaluation needs the full 512-character context recomputed per character, so inference is expensive",
+  "Byte-level model trails a word-level model on lm1b (40.6 vs 23.7 ppl); authors call it a starting point",
+  "Learned positional embeddings only usable because no longer contexts are needed",
+  "Single runs, no seeds or variance; ablations reuse best-model hyperparameters without retuning",
+  "Model is 5x larger than prior baselines, so comparison is not parameter-matched; T12 added for that",
+  "Compute beyond TPU v2 hours not stated; no code release stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "truncated backpropagation through time",
+   "definition": "RNN training where hidden states pass between sequential batches but gradients do not go beyond a single batch",
+   "where": "Introduction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "transformer layers with causal masking",
+   "quote": null
+  },
+  {
+   "work": "Multiplicative LSTM (Krause et al.)",
+   "year": 2016,
+   "arxiv": "1609.07959",
+   "relation": "baseline",
+   "note": "text8 and enwik8 baseline",
+   "quote": null
+  },
+  {
+   "work": "Dynamic evaluation of neural sequence models (Krause et al.)",
+   "year": 2017,
+   "arxiv": "1709.07432",
+   "relation": "baseline",
+   "note": "not used by this work",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of language modeling (Jozefowicz et al.)",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "baseline",
+   "note": "word-level lm1b comparison",
+   "quote": null
+  },
+  {
+   "work": "text8/enwik8/enwik9 (Mahoney)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Large text compression benchmark",
+   "quote": null
+  },
+  {
+   "work": "One billion word benchmark (Chelba et al.)",
+   "year": 2013,
+   "arxiv": "1312.3005",
+   "relation": "uses-data",
+   "note": "lm1b",
+   "quote": null
+  },
+  {
+   "work": "Sharp nearby, fuzzy far away (Khandelwal et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LSTMs use only about 200 tokens of context",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Our network after adding prediction tasks for the intermediate layers.",
+   "page": 3,
+   "why": "shows the intermediate layer loss schedule"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Evaluation of T64 on text8 dev with context set to 512.",
+   "page": 6,
+   "why": "ablation of each auxiliary loss"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue AAAI 2019 comes from copyright line; arXiv version is v2",
+  "Total compute in FLOPs, seeds, and warmup are not stated"
+ ]
+}

@@ -1,19 +1,518 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2010.03768",
  "pdf": "generative-ai/08-eval/sources/shridhar-2020-alfworld.pdf",
  "bib": {
   "title": "ALFWorld: Aligning Text and Embodied Environments for Interactive Learning",
+  "authors": [
+   "Mohit Shridhar",
+   "Xingdi Yuan",
+   "Marc-Alexandre Côté",
+   "Yonatan Bisk",
+   "Adam Trischler",
+   "Matthew Hausknecht"
+  ],
   "first_author": "Shridhar",
   "year": 2020,
-  "venue": "ICLR 2021",
+  "venue": "ICLR 2021 (arXiv v2)",
   "arxiv": "2010.03768",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 74346,
+  "chars_total": 74346,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"ALFWorld: Aligning Text and Embodied Environments for Interactive Learning\". Shridhar, Yuan, Côté, Bisk, Trischler, Hausknecht (UW, MSR Montréal, CMU, MSR). ICLR 2021, arXiv 2010.03768v2 (14 Mar 2021).\n\nCOVERAGE: All 21 of 21 pages, 74,549 of 74,549 extracted chars. That covers the main text, references (skimmed for origins) and appendices A–K, including the task descriptions (J) and text-game walkthroughs (K). Pages 1–9 are the main paper, 10–13 references, 14–21 appendices. Nothing was skipped.\n\nCLAIMS (ranked)\n\n- claim: The benchmark has six task types, with a train set and held-out \"seen\" and \"unseen\" evaluation sets.\n  number: 3,553 train / 140 seen / 134 unseen\n  setup: A subset of ALFRED that leaves out slicing tasks and portable-container tasks (\"excludes tasks involving slicing objects or using portable container (e.g., bowls)\", fn 2, p3).\n  quote: \"Pick & Place 790 35 24 / Examine in Light 308 13 18 / Clean & Place 650 27 31 / Heat & Place 459 16 23 / Cool & Place 533 25 21 / Pick Two & Place 813 24 17 / All 3,553 140 134 ... Table 1: Six ALFRED task types with heldout seen and unseen evaluation sets.\"\n  where: p2, Table 1\n\n- claim: How the seen/unseen split is designed. \"Seen\" means known task instances in training rooms, with object placement and appearance changed (in-distribution). \"Unseen\" means new task instances, always in rooms not used in training (out-of-distribution).\n  number: 120 rooms\n  setup: Rooms in the THOR simulator.\n  quote: \"the embodied environment includes 120 rooms (30 kitchens, 30 bedrooms, 30 bathrooms, 30 living rooms)\"; \"(1): seen consists of known task instances {task-type, object, receptacle, room} in rooms seen during training, but with different instantiations of object locations, quantities, and visual appearances ... (2): unseen consists of new task instances with possibly known object-receptacle pairs, but always in unseen rooms with different receptacles and scene layouts than in training tasks. The seen set is designed to measure in-distribution generalization, whereas the unseen set measures out-of-distribution generalization.\"\n  where: p3\n\n- claim: Zero-shot transfer from text to the embodied world. On All Tasks, the BUTLER agent drops from 40/35 success in TextWorld to 19/10 in the embodied world (seen/unseen). An oracle perception and navigation upper bound reaches 37/26. With human-written goals it falls to 8/3.\n  number: TextWorld 40/35; Seq2Seq 6(15)/5(14); BUTLER 19(31)/10(20); BUTLER-ORACLE 37(46)/26(37); Human Goals 8(17)/3(12). Figures are success %, with goal-condition success in parentheses.\n  setup: Agents are trained only in TextWorld and evaluated zero-shot in ALFRED/THOR. Per split, the best of 8 seeds is chosen by TextWorld evaluation. Results are averaged over 3 evaluation runs. BUTLER uses a Mask R-CNN detector and an A* navigator. The oracle gets ground-truth detections and teleport navigation.\n  quote: \"All Tasks 40 35 6 (15) 5 (14) 19 (31) 10 (20) 37 (46) 26 (37) 8 (17) 3 (12)\"; \"All successes are averaged across three evaluation runs. Goal-condition success rates (Shridhar et al., 2020) are given in parentheses.\"\n  where: p6, Table 2\n\n- claim: Per task type, Heat & Place transfers best under the oracle, and Examine in Light is near zero on unseen with the real BUTLER pipeline.\n  number: Heat & Place ORACLE 60(66)/60(72); Examine in Light BUTLER 10(26)/0(15)\n  setup: Same as Table 2.\n  quote: \"Heat & Place 88 83 10 (29) 12 (33) 17 (38) 16 (39) 60 (66) 60 (72) 8 (29) 5 (30)\"; \"Examine in Light 69 39 5 (13) 0 (6) 10 (26) 0 (15) 22 (41) 12 (37) 2 (9) 0 (8)\"\n  where: p6, Table 2\n\n- claim: Goal-condition success gives partial credit as the fraction of a task's goal conditions that hold in the end state. The metric comes from ALFRED.\n  number: 1/3 = 0.33\n  setup: Example task \"put a hot potato on the countertop\".\n  quote: \"the task 'put a hot potato on the countertop' is composed of three goal-conditions: (1) heating some object, (2) putting a potato on the countertop, (3) heating a potato and putting it on the countertop. If the agent manages to put any potato on the countertop, then 1/3= 0.33 goal-conditions are satisﬁed\"\n  where: p5, footnote 3\n\n- claim: The world state is a set of PDDL predicates kept by a classical planner. Actions rewrite those predicates, and the text is generated from them. This is the mechanism under state-based outcome grading.\n  number: none\n  setup: TextWorld engine (Appendix C).\n  quote: \"TextWorld Engine uses Fast Downward (Helmert, 2006) ... to maintain and update the current state of the game. A state is represented by a set of predicates which deﬁne the relations between the entities ... All variables, predicates, and rules are deﬁned using the PDDL language.\"\n  where: p16\n  Caveat: the paper does not spell out the success check itself (how goal predicates are tested at episode end). What is shown is the PDDL state, the goal-condition metric from ALFRED, and the text game printing \"You won!\" when the final put action completes the task (p21). The step budget is \"max number of steps per episode to be 50\" (p16).\n\n- claim: Pure TextWorld training generalises better to unseen rooms than pure embodied training, and runs 7x faster. Embodied-only training overfits to seen rooms.\n  number: Embodied-only 21.6/33.6/23.1 at 0.9 eps/s; TW-only 23.1/27.1/34.3 at 6.1 eps/s; Hybrid 11.9/21.4/23.1 at 0.7 eps/s (train/seen/unseen success %, then speed)\n  setup: All Tasks, 50K episodes, oracle state estimator and controller, batch size 10, peak performance reported per split.\n  quote: \"EMBODIED -O NLY 21.6 33.6 23.1 0.9 / TW-O NLY 23.1 27.1 34.3 6.1 / HYBRID 11.9 21.4 23.1 0.7\"; \"TextWorld training is also7× faster\"\n  where: p7, Table 3\n\n- claim: Within TextWorld, unseen rooms usually cause the largest drop. Beam-search recovery and DAgger (interactive imitation) both matter a lot.\n  number: All Tasks BUTLER tn/sn/un 16/40/37; without beam search 16/19/22; Seq2Seq 9/10/9; drops of 21% and 30% on seen\n  setup: TextWorld only, best of 8 seeds, 100K episodes. Table 4 caption: \"tn scores for BUTLER are lower than sn and un as they were computed without beam search.\"\n  quote: \"its ablation causes a performance drop of 21% on the seen split of All Tasks\"; \"causes a bigger performance drop of 30% on seen split of All Tasks\"; \"Training success rate varies from 16-60% depending on the category\"\n  where: p7–8, Table 4\n\n- claim: Vision-only agents overfit to seen rooms, and an action-only agent scores zero.\n  number: BUTLER 18.8/10.1; ResNet18 10.0/6.0; MCNN-FPN 11.4/4.5; Action-only 0.0/0.0\n  setup: All Tasks, 50K episodes, embodied evaluation, peak per split.\n  quote: \"BUTLER 18.8 10.1 / VISION (RESNET 18) 10.0 6.0 / VISION (MCNN-FPN) 11.4 4.5 / ACTION -ONLY 0.0 0.0\"\n  where: p8, Table 5\n\n- claim: Human-written goals contain vocabulary never seen in training, which tests robustness to paraphrase.\n  number: 66 unseen verbs, 189 unseen nouns\n  quote: \"human-annotated ALFRED goals, which contain 66 unseen verbs (e.g., 'wash', 'grab', 'chill') and 189 unseen nouns\"\n  where: p6\n\n- claim: Reinforcement learning with token-by-token action generation failed because a valid action is almost never hit by chance.\n  number: 7.02e-44\n  quote: \"the probability of randomly stumbling upon a grammatically correct and contextually valid action is very low (7.02e-44 for sequence length 10)\"\n  where: p7\n\n- claim: The six task types are Pick & Place, Examine in Light, Clean & Place, Heat & Place, Cool & Place and Pick Two & Place. Each starts by finding an object. All except Pick & Place then require some interaction with it (cleaning, heating, cooling, or using a lamp), and each ends by placing the object at a target. The paper defines each one in Appendix J (p20) and gives two goal templates per type in Table 7 (p19), e.g. \"put a hot {obj} in {recep}.\"\n  number: none\n\nLIMITS\n- The authors list these themselves:\n  - The domain gap between text and embodied worlds causes \"a notable drop in performance from TextWorld to BUTLER-ORACLE\" (p6).\n  - The pre-built grid map \"is a strong prior assumption\" (p5).\n  - The state estimator is template-based (\"preliminary results\", p5).\n  - Results on human goals are \"preliminary\" (p6).\n  - Reinforcement learning failed (p7).\n  - The benchmark is a subset of ALFRED with no slicing or container tasks (p3).\n  - Text actions abstract away physics, e.g. a large pot might not fit in a microwave (p6).\n- Selection and reporting:\n  - Best-of-8-seed selection is done per split, with the seen and unseen splits used for model selection (p5).\n  - Several tables report peak performance.\n  - Evaluation sets are small (140/134 tasks), and the paper gives no confidence intervals.\n- Dated relative to the LLM-agent use. The paper reports no LLM agents. It is a 2020 benchmark of trained imitation agents, and the later prompt-based uses (ReAct, Reflexion, AgentBench) are not in this source. The text-only TextWorld side, with its 134-task unseen set, is what later work picks up, but the paper does not say so.\n\nBUILDS ON\nTextWorld (Côté et al., 2018); ALFRED (Shridhar et al., 2020); THOR/AI2-THOR (Kolve et al., 2017); PDDL (McDermott et al., 1998); Fast Downward (Helmert, 2006); DAgger (Ross et al., 2011); Mask R-CNN (He et al., 2017); pointer softmax (Gulcehre et al., 2016); recurrent aggregator adapted from Yuan et al. (2018); Jericho (Hausknecht et al., 2020).\n\nCODE (verbatim)\n- High-level action space (p3): \"goto {recep} take {obj} from {recep} put {obj} in/on {recep} / open {recep} close {recep} toggle {obj}{recep} / clean {obj} with {recep} heat {obj} with {recep} cool {obj} with {recep}\"\n- PDDL state example (p16): \"st= at(player, microwave)⊗ in(mug, microwave) ⊗ closed(microwave)⊗ openable(microwave)\"\n- Failure feedback (p18): \"Failed actions and actions without any state-changes result in Nothing happens .\"\n- Episode trace ending (p21): \"> put cloth 1 in/on bathtubbasin 1 / You won!\"\n\nFIGURES\n- Best candidate: Figure 1, p1. Caption: \"ALFWorld: Interactive aligned text and embodied worlds. An example with high-level text actions (left) and low-level physical actions (right).\" It shows a whole text episode (goal, observations, actions) next to the same task in the embodied world. A learner sees what an agent trajectory looks like faster than from prose.\n- Alternatives:\n  - Table 1, p2: compact split design, but it is a table, not a figure.\n  - Figure 2, p4: modular agent pipeline.\n  - Figure 6, p17: expert success across environments. Extraction holds no numbers for it, so it can't be quoted.\n\nPROBLEMS\n- pypdf extraction is clean overall. Small caps are split (\"ALFW ORLD\", \"I NTRODUCTION\") and some math is garbled in Appendix A (eq. 7).\n- MuPDF reported colour-space parse errors near p1 and p16 while extracting captions, but the captions still came through.\n- Figure 4 and Figure 6 values are graphical only and could not be read.\n- No embedded instructions found.\n\nSource file: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/shridhar-2020-alfworld.pdf"
+ "type": "benchmark",
+ "question": "Can an agent that learns abstract text policies in an interactive TextWorld mirror of ALFRED generalize zero-shot to visually grounded embodied household tasks better than agents trained directly in the embodied world?",
+ "hypothesis": "Learning to solve tasks in abstract language, free of physical-world particulars, lets agents use semantic priors to complete embodied tasks in novel environments.",
+ "contributions": [
+  "ALFWorld environment: the first parallel interactive text-based and embodied environment.",
+  "BUTLER architecture: an agent that learns high-level language policies that transfer to low-level embodied execution, with modular components.",
+  "Generalization: BUTLER trained in the text domain generalizes better to unseen embodied settings than agents trained from demonstration corpora or from scratch in the embodied world."
+ ],
+ "method": {
+  "summary": "ALFWorld pairs ALFRED (THOR) embodied tasks with PDDL-derived TextWorld text games. BUTLER has a text agent (BRAIN, Transformer Seq2Seq with pointer softmax, trained by DAgger imitation of a rule-based expert in TextWorld), a Mask R-CNN template state estimator (VISION) and an A*/API controller (BODY); it is applied zero-shot to the embodied tasks.",
+  "task": "goal-conditioned interactive household tasks (text games and embodied ALFRED), six task types, goal description only (no step-by-step instructions)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ALFWorld (ALFRED subset, six task types)",
+    "role": "both",
+    "size": "3,553 train / 140 seen / 134 unseen task instances",
+    "split": "train; held-out seen (known task instances, same rooms, different object locations/quantities/appearance); unseen (new instances in unseen rooms)",
+    "source": "built on ALFRED (Shridhar et al., 2020) in THOR; 120 rooms (30 each of kitchens, bedrooms, bathrooms, living rooms); excludes slicing and portable-container tasks",
+    "preprocessing": "each scene converted to PDDL and a TextWorld game; templated goals (two templates per task type sampled equally); human-annotated ALFRED goals used for eval only (66 unseen verbs, 189 unseen nouns); step-by-step instructions omitted"
+   },
+   {
+    "name": "Mask R-CNN fine-tuning images",
+    "role": "train",
+    "size": "50K images, 73 object classes",
+    "split": null,
+    "source": "replayed ALFRED expert demonstrations in THOR, ground-truth instance segmentation",
+    "preprocessing": "images balanced across room types so object-category distribution is uniform"
+   }
+  ],
+  "models": [
+   {
+    "name": "BUTLER::BRAIN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer Seq2Seq encoder/decoder (5 conv layers, single-head self-attention, 2-layer MLP encoder; 3-layer MLP decoder), context-query attention aggregator, GRU, pointer softmax",
+    "init_from": "frozen pre-trained 768-d BERT embeddings (Sanh et al., 2019), tied input/output embeddings",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "encoder: 5 conv layers + self-attention + 2-layer MLP; decoder: 2 attention layers + 3-layer MLP",
+    "hidden": "H = 64 (conv: 64 filters, kernel 5); embeddings 768",
+    "heads": "1 (single head attention)",
+    "context": "observation queue of k=5 most recent unique observations plus o0",
+    "other": {}
+   },
+   {
+    "name": "BUTLER::VISION",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Mask R-CNN (COCO pre-trained) fine-tuned on ALFRED frames, outputs formatted by templates",
+    "init_from": "MSCOCO pre-trained Mask R-CNN",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "4 epochs, batch size 8, lr 5e-4"
+    }
+   },
+   {
+    "name": "BUTLER::BODY",
+    "role": "proposed",
+    "params": null,
+    "architecture": "A* planner over pre-built grid-map with receptacle viewpoints, open-loop motion primitives; ALFRED API with Mask R-CNN masks for manipulation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Seq2Seq",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same agent trained with behavior cloning on pre-recorded expert demonstrations, no DAgger",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BUTLER-ORACLE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BUTLER with ground-truth detections and teleporting controller (upper bound)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VISION (ResNet18) / VISION (MCNN-FPN) / ACTION-ONLY",
+    "role": "baseline",
+    "params": null,
+    "architecture": "unimodal state baselines: ResNet-18 fc7 features, Mask R-CNN FPN features, or no observation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "imitation learning with DAgger on rule-based expert actions (token-level generation); RL tried first and failed",
+   "optimizer": "Adam",
+   "lr": "0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 sampled data points from replay buffer (10 games to collect transitions); recurrent: 4 consecutive transitions, first 2 for state estimate, last 2 for update",
+   "steps": "update every 5 data-collection steps; max 50 steps per episode",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max 20 tokens per action",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient norm clip 5",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "8 random seeds; best seed selected per split",
+   "other": {
+    "episodes": "50,000 episodes (App. B); Section 5.1 says 100K episodes",
+    "replay_buffer": "500K episodes",
+    "expert_assistance": "annealed linearly 100% to 1% over 50K episodes",
+    "embeddings": "frozen",
+    "training_speed_Table3": "EMBODIED-ONLY 0.9, TW-ONLY 6.1, HYBRID 0.7 eps/s, batch size 10"
+   }
+  },
+  "inference": {
+   "decoding": "greedy token-by-token; beam search (width 10, top-5 candidates tried in rank order) only to recover after a failed action",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "20 tokens per action; 50 steps per episode",
+   "samples": "all successes averaged across three evaluation runs (Table 2); best of 8 training seeds selected",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_width": "10",
+    "top_candidates": "5",
+    "observation_queue_k": "5"
+   },
+   "other": {
+    "beam_search_not_used": "during evaluation in training curves, only for reported table scores"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate",
+     "definition": "percentage of episodes in which the goal is completed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "goal-condition success rate",
+     "definition": "fraction of goal conditions satisfied, proposed in ALFRED (e.g. 1/3 for putting any potato on the countertop in a hot-potato task)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Seq2Seq (behavior cloning)",
+    "BUTLER-ORACLE",
+    "EMBODIED-ONLY",
+    "HYBRID",
+    "VISION (ResNet18)",
+    "VISION (MCNN-FPN)",
+    "ACTION-ONLY"
+   ],
+   "protocol": "agent chosen as best of 8 seeds by TextWorld eval per split, then evaluated zero-shot on seen and unseen embodied tasks; three evaluation runs averaged; no significance test"
+  },
+  "availability": {
+   "code": "ALFWorld.github.io",
+   "weights": null,
+   "data": "ALFWorld.github.io"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.episodes",
+    "quote": "BUTLER::BRAIN is trained for 100K episodes using data collected by interacting with",
+    "where": "Section 5.1; Appendix B says 50,000 episodes"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot transfer: BUTLER trained only in TextWorld reaches 19% seen and 10% unseen success on All Tasks in the embodied world.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "19 / 10",
+   "unit": "% (seen/unseen)",
+   "baseline_value": "Seq2Seq 6 / 5",
+   "n": null,
+   "setup": "Table 2, All Tasks, BUTLER, embodied seen/unseen; Mask R-CNN + A*; avg of three runs",
+   "quote": null,
+   "table": "Table 2, row All Tasks, columns BUTLER seen 19 (31), unseen 10 (20)",
+   "note": null,
+   "where": "p6 Table 2"
+  },
+  {
+   "claim": "BUTLER-ORACLE with perfect perception and navigation reaches 37% seen and 26% unseen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "37 / 26",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, All Tasks",
+   "quote": null,
+   "table": "Table 2, row All Tasks, BUTLER-ORACLE seen 37 (46), unseen 26 (37)",
+   "note": null,
+   "where": "p6 Table 2"
+  },
+  {
+   "claim": "Success in pure TextWorld on All Tasks is 40% seen and 35% unseen, higher than any embodied result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "40 / 35",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 TextWorld column",
+   "quote": null,
+   "table": "Table 2, row All Tasks, TextWorld seen 40, unseen 35",
+   "note": null,
+   "where": "p6 Table 2"
+  },
+  {
+   "claim": "Human-annotated goals drop BUTLER to 8% seen and 3% unseen on All Tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "8 / 3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 Human Goals, All Tasks",
+   "quote": null,
+   "table": "Table 2, row All Tasks, Human Goals seen 8 (17), unseen 3 (12)",
+   "note": null,
+   "where": "p6 Table 2"
+  },
+  {
+   "claim": "Seq2Seq behavior cloning from a static corpus gets 6% seen and 5% unseen on All Tasks in embodied transfer, below BUTLER.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "6 / 5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 All Tasks Seq2Seq",
+   "quote": null,
+   "table": "Table 2, row All Tasks, Seq2Seq seen 6 (15), unseen 5 (14)",
+   "note": null,
+   "where": "p6 Table 2"
+  },
+  {
+   "claim": "TW-ONLY training reaches 34.3% unseen embodied success versus 23.1% for EMBODIED-ONLY; EMBODIED-ONLY is higher on seen (33.6 vs 27.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "unseen success",
+   "value": "34.3",
+   "unit": "%",
+   "baseline_value": "EMBODIED-ONLY 23.1",
+   "n": null,
+   "setup": "Table 3, All Tasks, 50K episodes, oracle state-estimator and controller, peak performance per split",
+   "quote": null,
+   "table": "Table 3, row TW-ONLY, column unseen",
+   "note": null,
+   "where": "p7 Table 3"
+  },
+  {
+   "claim": "TextWorld training is about 7x faster than embodied training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train speed",
+   "value": "6.1 vs 0.9",
+   "unit": "eps/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 train speed, batch size 10",
+   "quote": "TextWorld training is also 7× faster4 since it does not require",
+   "table": "Table 3, train speed: TW-ONLY 6.1 vs EMBODIED-ONLY 0.9 eps/s",
+   "note": null,
+   "where": "p7"
+  },
+  {
+   "claim": "Beam search ablation drops seen All Tasks success in TextWorld by 21%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "drop",
+   "value": "21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 All Tasks, BUTLER vs BUTLERg",
+   "quote": "its ablation causes a performance drop of 21% on the seen split of All Tasks",
+   "table": null,
+   "note": null,
+   "where": "p7"
+  },
+  {
+   "claim": "Removing DAgger (Seq2Seq) drops seen All Tasks TextWorld success by 30%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "drop",
+   "value": "30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 All Tasks",
+   "quote": "causes a bigger performance drop of 30% on seen split of",
+   "table": null,
+   "note": null,
+   "where": "p8"
+  },
+  {
+   "claim": "Vision-only baselines overfit: ResNet18 gets 10.0 seen / 6.0 unseen, MCNN-FPN 11.4 / 4.5, ACTION-ONLY 0.0 / 0.0 versus BUTLER 18.8 / 10.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success",
+   "value": "18.8 / 10.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5, All Tasks, 50K episodes, embodied",
+   "quote": null,
+   "table": "Table 5, row BUTLER, columns seen 18.8, unseen 10.1",
+   "note": null,
+   "where": "p8 Table 5"
+  },
+  {
+   "claim": "Human-annotated goals contain 66 unseen verbs and 189 unseen nouns relative to training templates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "66 verbs / 189 nouns",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4.3",
+   "quote": "which contain 66 unseen verbs (e.g., ‘wash’, ‘grab’, ‘chill’) and 189 unseen nouns",
+   "table": null,
+   "note": null,
+   "where": "p6"
+  },
+  {
+   "claim": "RL from scratch with token-by-token generation made no progress; random chance of a valid action of length 10 is 7.02e-44.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "7.02e-44",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 5.1",
+   "quote": "(7.02e-44 for sequence length 10)",
+   "table": null,
+   "note": null,
+   "where": "p7"
+  }
+ ],
+ "limits": [
+  "Subset of ALFRED only: slicing and portable-container tasks excluded.",
+  "Template-based state estimator and pre-built grid map are strong prior assumptions; observations are template text, not learned captions.",
+  "Large TextWorld to embodied gap (40/35 vs 19/10); oracle still only 37/26.",
+  "Human-goal results are preliminary (8/3).",
+  "TW-ONLY beats EMBODIED-ONLY only on unseen; EMBODIED-ONLY is higher on seen (Table 3).",
+  "Hardware, compute and wall-clock for training are not stated; no significance tests; selection of best of 8 seeds per split.",
+  "Section 5.1 says 100K training episodes, Appendix B says 50,000."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "seen / unseen",
+   "definition": "seen: known task instances in rooms seen in training with different instantiations; unseen: new task instances in unseen rooms with different receptacles and layouts",
+   "where": "Section 2"
+  },
+  {
+   "term": "goal-condition success",
+   "definition": "metric from ALFRED measuring partial goal completion",
+   "where": "Section 4.1, footnote 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TextWorld (Côté et al., 2018)",
+   "year": 2018,
+   "arxiv": "1806.11532",
+   "relation": "extends",
+   "note": "text game engine extended with ALFRED-derived PDDL domains",
+   "quote": null
+  },
+  {
+   "work": "ALFRED (Shridhar et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "embodied tasks and THOR simulator the benchmark aligns with",
+   "quote": null
+  },
+  {
+   "work": "AI2-THOR (Kolve et al., 2017)",
+   "year": 2017,
+   "arxiv": "1712.05474",
+   "relation": "uses-method",
+   "note": "embodied simulator",
+   "quote": null
+  },
+  {
+   "work": "DAgger (Ross et al., 2011)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "imitation learning algorithm for BRAIN",
+   "quote": null
+  },
+  {
+   "work": "Mask R-CNN (He et al., 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object detector for state estimation",
+   "quote": null
+  },
+  {
+   "work": "Pointer softmax (Gulcehre et al., 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "decoder mechanism",
+   "quote": null
+  },
+  {
+   "work": "Yuan et al. (2018) recurrent aggregator",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "aggregator adapted",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "ALFWorld: Interactive aligned text and embodied worlds. An example with high-level text actions (left) and low-level physical actions (right).",
+   "page": 1,
+   "why": "shows the aligned text and embodied views of one task"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "BUTLER Agent consists of three modular components.",
+   "page": 4,
+   "why": "brain/vision/body pipeline"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Zero-shot Domain Transfer",
+   "page": 6,
+   "why": "main results across TextWorld, embodied, oracle and human goals"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Two training-episode counts: 100K in Section 5.1, 50,000 in Appendix B.",
+  "Table 2 cells read from flattened table text; mapping to columns relies on order (TextWorld, Seq2Seq, BUTLER, ORACLE, Human Goals; seen then unseen)."
+ ]
 }

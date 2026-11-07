@@ -1,0 +1,579 @@
+{
+ "schema": 1,
+ "key": "1609.03499",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/oord-2016-wavenet.pdf",
+ "bib": {
+  "title": "WaveNet: A Generative Model for Raw Audio",
+  "authors": [
+   "Aäron van den Oord",
+   "Sander Dieleman",
+   "Heiga Zen",
+   "Karen Simonyan",
+   "Oriol Vinyals",
+   "Alex Graves",
+   "Nal Kalchbrenner",
+   "Andrew Senior",
+   "Koray Kavukcuoglu"
+  ],
+  "first_author": "van den Oord",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1609.03499",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46897,
+  "chars_total": 46897,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can autoregressive neural generative models, successful on images and text, generate wideband raw audio waveforms (at least 16,000 samples per second)?",
+ "hypothesis": "Dilated causal convolutions give a large enough receptive field to model raw audio autoregressively, and this yields more natural speech than parametric and concatenative TTS.",
+ "contributions": [
+  "WaveNets generate raw speech with subjective naturalness never before reported in TTS, as assessed by human raters.",
+  "New architectures based on dilated causal convolutions with very large receptive fields.",
+  "A single model conditioned on speaker identity generates different voices.",
+  "The same architecture gives strong results on a small speech recognition dataset and is promising for music."
+ ],
+ "method": {
+  "summary": "A fully convolutional autoregressive model of raw audio: stacked dilated causal convolutions with gated activations, residual and skip connections, and a 256-way softmax over mu-law quantised samples. It is trained by maximum likelihood, with global (speaker) or local (linguistic features, log F0) conditioning, and evaluated on multi-speaker generation, TTS (human MOS and paired preference), music and TIMIT.",
+  "task": "autoregressive raw-audio generation (TTS, multi-speaker speech, music) and TIMIT phoneme recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CSTR VCTK",
+    "role": "train",
+    "size": "44 hours, 109 speakers",
+    "split": null,
+    "source": "Yamagishi 2012",
+    "preprocessing": "speaker ID fed as one-hot vector"
+   },
+   {
+    "name": "Google North American English TTS database",
+    "role": "both",
+    "size": "24.6 hours",
+    "split": "100 test sentences not in training data",
+    "source": "single professional female speaker; Google TTS system data",
+    "preprocessing": "16 kHz, 8-bit mu-law; linguistic features every 5 ms by phone-level forced alignment"
+   },
+   {
+    "name": "Google Mandarin Chinese TTS database",
+    "role": "both",
+    "size": "34.8 hours",
+    "split": "100 test sentences not in training data",
+    "source": "single professional female speaker",
+    "preprocessing": "16 kHz, 8-bit mu-law"
+   },
+   {
+    "name": "MagnaTagATune",
+    "role": "train",
+    "size": "about 200 hours, 29-second clips, 188 tags",
+    "split": null,
+    "source": "Law & Von Ahn 2009",
+    "preprocessing": "tags cleaned by merging similar tags and removing those with too few clips"
+   },
+   {
+    "name": "YouTube piano",
+    "role": "train",
+    "size": "about 60 hours solo piano",
+    "split": null,
+    "source": "YouTube videos",
+    "preprocessing": null
+   },
+   {
+    "name": "TIMIT",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Garofolo et al. 1993",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "WaveNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "dilated causal convolution stack, gated tanh/sigmoid units, residual + skip connections, softmax over 256 values",
+    "init_from": null,
+    "tokenizer": "mu-law companding (mu=255) quantised to 256 values",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "receptive field about 300 ms (multi-speaker), 240 ms (TTS), several seconds (music)",
+    "other": {
+     "dilations": "1, 2, 4, ..., 512 repeated, e.g. three blocks",
+     "block_receptive_field": "1024 samples per 1..512 block",
+     "sample_rate": "16 kHz for TTS",
+     "local_conditioning_upsampling": "transposed convolutions (learned); repeating values worked slightly worse",
+     "TIMIT_head": "mean-pooling to 10 ms frames (160x downsampling) then a few non-causal convolutions"
+    }
+   },
+   {
+    "name": "LSTM-RNN statistical parametric",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM-RNN, Zen et al. 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sampling": "trained at 22.05 kHz, synthesised at 16 kHz via Vocaine resampling"
+    }
+   },
+   {
+    "name": "HMM-driven unit selection concatenative",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Gonzalvo et al. 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "F0 and duration predictors",
+    "role": "base",
+    "params": null,
+    "architecture": "LSTM-RNN phone duration; autoregressive CNN log F0 (200 Hz)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "loss": "MSE"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximise log-likelihood of next-sample categorical distribution; TIMIT adds a frame-classification loss alongside next-sample prediction",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "validation": "hyperparameters tuned on a validation set (sizes not given)"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral sampling, one sample at a time, each fed back as input",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "post_processing": "none applied to WaveNet audio"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MOS naturalness",
+     "definition": "5-point Likert (1 Bad to 5 Excellent), 8 raters per stimulus",
+     "unit": "score 1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Paired preference",
+     "definition": "listeners choose preferred sample or neutral; 8 raters per pair",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "PER",
+     "definition": "phoneme error rate on TIMIT test set",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "LSTM-RNN parametric",
+    "HMM-driven concatenative",
+    "natural speech (8-bit mu-law and 16-bit PCM)"
+   ],
+   "protocol": "Blind, crowdsourced, paid native speakers; each subject up to 8 (English) or 63 (Mandarin) stimuli; ratings without headphones (about 40%) excluded; 100 test sentences; p values in Table 2."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "samples at deepmind.com blog page"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "WaveNet (L+F) beats the best baseline in English MOS naturalness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS",
+   "value": 4.21,
+   "unit": "score 1-5",
+   "baseline_value": 3.86,
+   "n": null,
+   "setup": "North American English TTS, 24.6 h single female speaker, 100 held-out test sentences, crowdsourced MOS, 8 raters per stimulus; WaveNet conditioned on linguistic features and log F0",
+   "quote": "WaveNet (L+F)\n4.21 ± 0.081",
+   "table": "Table 1, row WaveNet (L+F), column North American English",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "WaveNet (L+F) beats the best baseline in Mandarin MOS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS",
+   "value": 4.08,
+   "unit": "score 1-5",
+   "baseline_value": 3.79,
+   "n": null,
+   "setup": "Mandarin TTS, 34.8 h, 100 test sentences, WaveNet (L+F)",
+   "quote": "4.08 ± 0.085",
+   "table": "Table 1, row WaveNet (L+F), column Mandarin Chinese",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Natural 16-bit PCM English speech MOS, the ceiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS",
+   "value": 4.55,
+   "unit": "score 1-5",
+   "baseline_value": null,
+   "n": null,
+   "setup": "North American English TTS, 24.6 h single female speaker, 100 held-out test sentences, crowdsourced MOS, 8 raters per stimulus",
+   "quote": "4.55 ± 0.075",
+   "table": "Table 1, row Natural (16-bit linear PCM), column North American English",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "English baselines: concatenative 3.86, LSTM parametric 3.67.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS",
+   "value": 3.86,
+   "unit": "score 1-5",
+   "baseline_value": null,
+   "n": null,
+   "setup": "North American English TTS, 24.6 h single female speaker, 100 held-out test sentences, crowdsourced MOS, 8 raters per stimulus",
+   "quote": "3.86 ± 0.137",
+   "table": "Table 1, row HMM-driven concatenative, column North American English",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "WaveNet narrows the gap to natural speech by 51% (English) and 69% (Mandarin).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MOS gap to natural",
+   "value": 0.34,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English and Mandarin TTS as above; gap measured against natural speech (16-bit for English)",
+   "quote": "The gap in the MOSs from the best synthetic speech to the natural ones decreased from 0.69 to 0.34\n(51%) in US English and 0.42 to 0.13 (69%) in Mandarin Chinese.",
+   "table": null,
+   "note": "Mandarin natural 8-bit mu-law (4.25) exceeds 16-bit (4.21) in Table 1.",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "TIMIT phoneme error rate with joint next-sample and frame-classification loss, best from a raw-audio model to the authors' knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PER",
+   "value": 18.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TIMIT test set, mean-pooling to 10 ms frames, two loss terms",
+   "quote": "achieved 18.8 PER on the test set",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Multi-speaker model covers all 109 VCTK speakers; adding speakers improved validation performance over a single speaker.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "VCTK, 44 h, one-hot speaker conditioning",
+   "quote": "adding speakers resulted in\nbetter validation set performance compared to training solely on a single speaker",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Receptive field of about 300 ms limits long-range coherence in speech: model remembers the last 2-3 phonemes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "receptive field",
+   "value": 300,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "unconditional-on-text VCTK model",
+   "quote": "receptive ﬁeld (about 300 milliseconds), which means it can only remember the last 2–3 phonemes",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "With a 240 ms receptive field and linguistic features only, WaveNet sometimes stresses wrong words; adding F0 conditioning fixed this.",
+   "kind": "measured",
+   "source": null,
+   "metric": "receptive field",
+   "value": 240,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TTS WaveNet (L)",
+   "quote": "the size of the receptive ﬁeld of the WaveNet, 240\nmilliseconds, was not long enough to capture such long-term dependency",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Music samples need a large receptive field, yet lack long-range consistency even at several seconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MagnaTagATune and YouTube piano; qualitative listening only",
+   "quote": "Even with a receptive ﬁeld of several seconds, the models did not\nenforce long-range consistency",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Each 1..512 dilation block has receptive field 1024.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "receptive field",
+   "value": 1024,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dilation block design",
+   "quote": "each\n1, 2, 4, . . . , 512 block has receptive ﬁeld of size 1024",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Mu-law quantisation to 256 values avoids a 65,536-way softmax.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "softmax size for 16-bit",
+   "value": 65536,
+   "unit": "classes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "raw 16-bit audio",
+   "quote": "a\nsoftmax layer would need to output 65,536 probabilities per timestep",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Gated activation worked significantly better than ReLU in initial experiments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "initial experiments on audio, no numbers",
+   "quote": "this non-linearity worked\nsigniﬁcantly better than the rectiﬁed linear activation function",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  }
+ ],
+ "limits": [
+  "No hyperparameters for training (optimizer, learning rate, batch size, steps, layers, channels, parameter count, hardware) are stated.",
+  "Sampling is sequential, one step per audio sample, so generation is slow; speed is not reported.",
+  "Receptive field of 240-300 ms is too short for prosody and phoneme-level coherence without F0 conditioning; music lacks long-range consistency.",
+  "Music evaluation is subjective listening only; no quantitative metric.",
+  "Evaluation is on single-speaker datasets and 100 sentences; about 40% of ratings dropped for no headphones."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dilated causal convolution",
+   "definition": "a convolution where the filter is applied over an area larger than its length by skipping input values with a certain step, made causal so predictions depend only on past samples",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "global conditioning",
+   "definition": "a single latent representation h that influences the output distribution across all timesteps",
+   "where": "Sec 2.5"
+  },
+  {
+   "term": "local conditioning",
+   "definition": "a second timeseries ht, possibly at lower sampling frequency, upsampled and used in the activation unit",
+   "where": "Sec 2.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pixel recurrent neural networks",
+   "year": 2016,
+   "arxiv": "1601.06759",
+   "relation": "extends",
+   "note": "autoregressive softmax over pixels; WaveNet builds on the PixelCNN",
+   "quote": null
+  },
+  {
+   "work": "Conditional image generation with PixelCNN decoders",
+   "year": 2016,
+   "arxiv": "1606.05328",
+   "relation": "uses-method",
+   "note": "gated activation unit reused",
+   "quote": "We use the same gated activation unit as used in the gated PixelCNN"
+  },
+  {
+   "work": "Exploring the limits of language modeling (Jozefowicz et al.)",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "related",
+   "note": "cited for neural autoregressive text models",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "uses-method",
+   "note": "residual connections",
+   "quote": null
+  },
+  {
+   "work": "Multi-scale context aggregation by dilated convolutions (Yu & Koltun)",
+   "year": 2016,
+   "arxiv": "1511.07122",
+   "relation": "uses-method",
+   "note": "dilated convolutions, exponential receptive field",
+   "quote": null
+  },
+  {
+   "work": "LSTM-RNN statistical parametric TTS (Zen et al.)",
+   "year": 2016,
+   "arxiv": "1606.06061",
+   "relation": "baseline",
+   "note": "parametric baseline",
+   "quote": null
+  },
+  {
+   "work": "HMM-driven unit selection (Gonzalvo et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concatenative baseline",
+   "quote": null
+  },
+  {
+   "work": "CSTR VCTK corpus (Yamagishi)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multi-speaker data",
+   "quote": null
+  },
+  {
+   "work": "TIMIT (Garofolo et al.)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "speech recognition",
+   "quote": null
+  },
+  {
+   "work": "MagnaTagATune (Law & Von Ahn)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "music",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Visualization of a stack of dilated causal convolutional layers.",
+   "page": 3,
+   "why": "shows exponential receptive field growth with dilations 1, 2, 4, 8"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of the residual block and the entire architecture.",
+   "page": 4,
+   "why": "gated unit, residual and skip paths in one picture"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Subjective 5-scale mean opinion scores ...",
+   "page": 6,
+   "why": "main TTS result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "p(x) = prod_{t=1}^T p(x_t | x_1, ..., x_{t-1})",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2",
+   "snippet": "z = tanh(W_{f,k} * x) ⊙ σ(W_{g,k} * x)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.2",
+   "snippet": "f(x_t) = sign(x_t) ln(1 + µ|x_t|) / ln(1 + µ), µ = 255",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 and Fig 5 text extraction scrambles columns; the last result row is only approximately located. No embedded instructions found."
+ ]
+}

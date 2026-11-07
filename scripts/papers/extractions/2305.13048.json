@@ -1,0 +1,743 @@
+{
+ "schema": 1,
+ "key": "2305.13048",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/peng-2023-rwkv.pdf",
+ "bib": {
+  "title": "RWKV: Reinventing RNNs for the Transformer Era",
+  "authors": [
+   "Bo Peng",
+   "Eric Alcaide",
+   "Quentin Anthony",
+   "Alon Albalak",
+   "Samuel Arcadinho",
+   "Stella Biderman",
+   "Huanqi Cao",
+   "Xin Cheng",
+   "Michael Chung",
+   "Xingjian Du",
+   "Matteo Grella",
+   "Kranthi Kiran GV",
+   "Xuzheng He",
+   "Haowen Hou",
+   "Jiaju Lin",
+   "Przemysław Kazienko",
+   "Jan Kocoń",
+   "Jiaming Kong",
+   "Bartłomiej Koptyra",
+   "Hayden Lau",
+   "Krishna Sri Ipsit Mantri",
+   "Ferdinand Mom",
+   "Atsushi Saito",
+   "Guangyu Song",
+   "Xiangru Tang",
+   "Bolun Wang",
+   "Johan S. Wind",
+   "Stanisław Woźniak",
+   "Ruichong Zhang",
+   "Zhenyuan Zhang",
+   "Qihang Zhao",
+   "Peng Zhou",
+   "Qinghua Zhou",
+   "Jian Zhu",
+   "Rui-Jie Zhu"
+  ],
+  "first_author": "Peng",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 11 Dec 2023)",
+  "arxiv": "2305.13048",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 90368,
+  "chars_total": 90368,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can an RNN be trained in parallel like a transformer, scaled to billions of parameters, and match similarly sized transformers while keeping constant-memory, linear-time inference?",
+ "hypothesis": "A linear-attention formulation with channel-wise time decay (RWKV) can combine parallel transformer-style training with RNN inference and perform on par with transformers of the same size and compute.",
+ "contributions": [
+  "The introduction of RWKV, a novel architecture combining RNNs and Transformer advantages while mitigating their limitations.",
+  "Detailed experiments demonstrating RWKV's performance and efficiency on benchmark datasets for large-scale models.",
+  "The release of pretrained models, from 169 million to 14 billion parameters, trained on the Pile."
+ ],
+ "method": {
+  "summary": "RWKV stacks residual blocks of time-mixing (an AFT-like WKV operator with a per-channel decay w and current-token bonus u, plus token shift and sigmoid receptance gating) and channel-mixing (squared ReLU). It runs in time-parallel mode for training and as an RNN for inference. Six models (169M to 14B) were trained one epoch on the Pile (330B tokens) and compared FLOP-matched with Pythia, OPT and BLOOM.",
+  "task": "next-token pretraining of a language model; zero-shot NLP benchmarks; long-context finetuning; LRA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "330B tokens (one epoch); 8043 mini-epochs of 40320 samples",
+    "split": "one pass",
+    "source": "Gao et al., 2020; Biderman et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "ARC Easy/Challenge, BoolQ, COPA, HeadQA, HellaSwag, LAMBADA (OpenAI untokenized), OpenBookQA, PIQA, ReCoRD, SciQ, Winogrande",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "zero-shot",
+    "preprocessing": null
+   },
+   {
+    "name": "Long Range Arena",
+    "role": "eval",
+    "size": "sequences 1,000 to 16,000 tokens",
+    "split": null,
+    "source": "Tay et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Enwik8",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "RTE, WNLI, GoEmotions, PolEmo2, Aggression, Sarcasm, Unhealthy, MathQA, TweetSent",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "zero-shot prompts, following Kocon et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Instruction sets for Raven (Alpaca, CodeAlpaca, Guanaco, GPT4All, ShareGPT, BELLE etc.)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Ethics statement cites them; fine-tuning details not given",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RWKV 169M",
+    "role": "proposed",
+    "params": "1.693e8",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 12,
+    "hidden": 768,
+    "heads": null,
+    "context": "1024 (pretrain)",
+    "other": {
+     "FLOP per token": "2.613e8"
+    }
+   },
+   {
+    "name": "RWKV 430M",
+    "role": "proposed",
+    "params": "4.304e8",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "FLOP per token": "7.573e8"
+    }
+   },
+   {
+    "name": "RWKV 1.5B",
+    "role": "proposed",
+    "params": "1.515e9",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 24,
+    "hidden": 2048,
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "FLOP per token": "2.823e9"
+    }
+   },
+   {
+    "name": "RWKV 3B",
+    "role": "proposed",
+    "params": "2.985e9",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 32,
+    "hidden": 2560,
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "FLOP per token": "5.710e9"
+    }
+   },
+   {
+    "name": "RWKV 7B",
+    "role": "proposed",
+    "params": "7.393e9",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 32,
+    "hidden": 4096,
+    "heads": null,
+    "context": "1024, extended to 8192",
+    "other": {
+     "FLOP per token": "1.437e10"
+    }
+   },
+   {
+    "name": "RWKV 14B",
+    "role": "proposed",
+    "params": "1.415e10",
+    "architecture": "RWKV",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50277",
+    "layers": 40,
+    "hidden": 5120,
+    "heads": null,
+    "context": "1024, extended to 8192",
+    "other": {
+     "FLOP per token": "2.778e10"
+    }
+   },
+   {
+    "name": "RWKV-4-Raven-14B",
+    "role": "evaluated",
+    "params": "14B",
+    "architecture": "RWKV",
+    "init_from": "inferred: RWKV 14B, instruction-finetuned (Ethics statement)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pythia, OPT, BLOOM",
+    "role": "baseline",
+    "params": "various",
+    "architecture": "transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "trained on a similar but not identical token count"
+    }
+   },
+   {
+    "name": "ChatGPT (Feb 2023), GPT-4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy next-token plus PaLM auxiliary loss pushing the softmax normalizer toward zero",
+   "optimizer": "Adam, betas (0.9, 0.99) (printed as epsilon), no weight decay",
+   "lr": "Init LR 6e-4 (169M), 4e-4 (430M), 3e-4 (1.5B), 1.5e-4 (3B), 1.5e-4 (7B), 1e-4 (14B); End LR 1e-5 (7e-6 for 14B)",
+   "lr_schedule": "constant for warmup mini-epochs, then exponential decay to End LR at the last mini-epoch",
+   "warmup": "constant LR for 361/411/443/451/465/544 mini-epochs (169M/430M/1.5B/3B/7B/14B); mini-epoch = 40320 samples",
+   "batch_size": "dynamically switched between 128 or 256 sequences of 1024 tokens",
+   "steps": null,
+   "epochs": "1",
+   "tokens": "330B (Pile); context extension: 10B at 2048, 100B at 4096, 100B at 8192",
+   "seq_len": "1024",
+   "precision": "bfloat16",
+   "weight_decay": "none",
+   "dropout": null,
+   "regularisation": "PaLM auxiliary loss",
+   "hardware": null,
+   "compute": "compute budget in exaFLOP shown only on figure axes (about 1e2 to 1e3)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "extended context finetuning": "1024 to 2048 (10B tokens), 4096 (100B), 8192 (100B), same Pile corpus",
+    "scaling-law study": "45 RWKV models over (dataset, parameters) pairs",
+    "init": "embeddings U(+-1e-4), most weights zero, no biases (App. E)",
+    "compute provider": "StabilityAI (Acknowledgements)",
+    "param formula": "2VD + 13D^2 L + D(11L+4), V=50277",
+    "small init emb ablation": "batch size 400, Fig 9"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot on LM benchmarks; Raven comparisons use prompts chosen for ChatGPT, then a re-ordered RWKV-adapted version",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "speed benchmark": "float32, HuggingFace Transformers, CPU x86 and NVIDIA A100 80GB, all parameters counted"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot accuracy",
+     "definition": "accuracy per benchmark, plotted against compute in exaFLOP",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pile test loss",
+     "definition": "mean test loss vs context length",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "Enwik8 bpc",
+     "definition": "bits per character",
+     "unit": "bpc",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1 Macro / Accuracy",
+     "definition": "per-task on RTE etc.",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LRA accuracy",
+     "definition": "per-task, averaged",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Pythia",
+    "OPT",
+    "BLOOM",
+    "GPT-Neo (speed)",
+    "S4 and other LRA models (cited from Gu et al. 2022; Alam et al. 2023)",
+    "Transformer, Reformer, Synthesizer, Linear Transformer, Performer, AFT-simple (Enwik8)",
+    "ChatGPT, GPT-4"
+   ],
+   "protocol": "FLOP-matched comparison with Pythia/OPT/BLOOM; single runs, no seeds or error bars stated."
+  },
+  "availability": {
+   "code": "https://github.com/BlinkDL/RWKV-LM",
+   "weights": "https://huggingface.co/RWKV (169M to 14B)",
+   "data": "the Pile"
+  },
+  "prompts": [
+   {
+    "purpose": "RTE, ChatGPT-style prompt",
+    "text": "Having premise <here is a premise> judge if the following hypothesis <here is a hypothesis> is logically connected with the premise. Answer \"entailment\" if yes, or \"not_entailment\" if no.",
+    "where": "Appendix L"
+   },
+   {
+    "purpose": "RTE, re-ordered RWKV prompt",
+    "text": "Can you tell me if the hypothesis is entailment or is not entailment to the premise?\npremise: <here is a premise>\nhypothesis: <here is a hypothesis>",
+    "where": "Appendix L"
+   },
+   {
+    "purpose": "MathQA with chain-of-thought",
+    "text": "Write the reasoning and highlight the answer to the question at the end in the format: \"Answer: \". The question is: <here is a question>",
+    "where": "Appendix L"
+   },
+   {
+    "purpose": "MathQA without chain-of-thought",
+    "text": "Write the answer to the math question in the format: \"Answer: \". The question is: <here is a question>",
+    "where": "Appendix L"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "we use ϵ = (0.9, 0.99) without weight decay for the Adam optimizer",
+    "where": "Appendix G"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RWKV scales to 14B parameters, trained for one epoch on the Pile.",
+   "kind": "measured",
+   "source": null,
+   "metric": "params",
+   "value": "14B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RWKV 14B, 40 layers, D=5120, 330B Pile tokens",
+   "quote": "We scale our models as large as 14 billion parameters, by far the largest dense RNN ever trained",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Loss vs compute follows a transformer-style scaling law; Pareto-optimal linear fit has r2 0.994.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r2",
+   "value": "0.994",
+   "unit": null,
+   "baseline_value": null,
+   "n": "45 models",
+   "setup": "45 RWKV models over (dataset, parameters) pairs, loss vs exaFLOP",
+   "quote": "the linear fit to the Pareto optimal points holding an r2 value of 0.994",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Extrapolating the fit one more order of magnitude of compute gives r2 0.875.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r2",
+   "value": "0.875",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same scaling-law fit, extrapolated one order of magnitude",
+   "quote": "we find an extremely good fit with an r2 of 0.875",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "RWKV is competitive with Pythia, OPT and BLOOM on a FLOP-matched basis across twelve zero-shot tasks (read from figures, no table of numbers).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "169M-14B RWKV vs Pythia/OPT/BLOOM; one Pile epoch of 330B tokens; ARC, BoolQ, COPA, HeadQA, HellaSwag, LAMBADA, OBQA, PIQA, ReCoRD, SciQ, Winogrande; zero-shot",
+   "quote": null,
+   "table": null,
+   "note": "Figures 1, 5, 12 only; no numeric table.",
+   "where": "Sec 5.1, Fig 1"
+  },
+  {
+   "claim": "RTE F1 Macro for Raven-14B rises from 44.2 to 74.8 when the prompt is re-ordered.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 Macro",
+   "value": "74.8",
+   "unit": "%",
+   "baseline_value": "44.2",
+   "n": null,
+   "setup": "RWKV-4-Raven-14B, zero-shot RTE, ChatGPT prompt vs re-ordered RWKV prompt",
+   "quote": "F1 Macro increased from 44.2% to 74.8%",
+   "table": null,
+   "note": "ChatGPT 88.1, GPT-4 91.3, SOTA 92.1 (Table 6).",
+   "where": "App L, Table 6"
+  },
+  {
+   "claim": "ChatGPT scores 88.1 F1 Macro on RTE with the same prompt used for RWKV-GPT (44.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 Macro",
+   "value": "88.1",
+   "unit": "%",
+   "baseline_value": "44.2",
+   "n": null,
+   "setup": "RTE, zero-shot, prompts chosen for ChatGPT",
+   "quote": null,
+   "table": "Table 6, row RTE, column ChatGPT",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Raven-14B reaches 5.43% on MathQA with chain-of-thought and 4.13% without; ChatGPT 71.40.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "5.43",
+   "unit": "%",
+   "baseline_value": "71.40",
+   "n": null,
+   "setup": "MathQA, RWKV-4-Raven-14B, CoT template",
+   "quote": "the Raven model achieved a very low accuracy of 5.43%",
+   "table": null,
+   "note": "4.13% without CoT.",
+   "where": "App L"
+  },
+  {
+   "claim": "Raven-14B beats ChatGPT on sarcasm detection (50.96 vs 49.88 F1 Macro) but trails SOTA 53.57.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 Macro",
+   "value": "50.96",
+   "unit": "%",
+   "baseline_value": "49.88",
+   "n": null,
+   "setup": "Sarcasm, zero-shot, RWKV-adapted prompt",
+   "quote": null,
+   "table": "Table 7, row Sarcasm, column RWKV-adapted",
+   "note": "Table 7 SOTA column for Sarcasm is 53.57; the Unhealthy SOTA is 50.96, same digits.",
+   "where": "Table 7"
+  },
+  {
+   "claim": "LRA average accuracy of RWKV is 72.07 versus S4 86.09; RWKV fails Path-X and scores 58.42 on Pathfinder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LRA avg",
+   "value": "72.07",
+   "unit": "%",
+   "baseline_value": "86.09",
+   "n": null,
+   "setup": "Long Range Arena, six tasks; baselines cited from Gu et al. 2022 and Alam et al. 2023",
+   "quote": null,
+   "table": "Table 4, row RWKV, column AVG",
+   "note": "Text says 'second only to S4 in five datasets'.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Enwik8: RWKV-RNN2 (12 layers, d=512, T=1024) test bpc 1.178 vs 1.137 for the 12-layer Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test bpc",
+   "value": "1.178",
+   "unit": "bpc",
+   "baseline_value": "1.137",
+   "n": null,
+   "setup": "Enwik8, L=12, d=512, T=1024; RWKV-RNN2 trained with AdamW wd 0.1, dropout 0.1, batch 16, lr 6e-4 per footnote",
+   "quote": null,
+   "table": "Table 5, row RWKV-RNN2, column Test bpc",
+   "note": "RWKV-RNN1 (6 layers) train bpc 0.720, no test bpc reported.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Context extension: 1024 to 2048 (10B tokens), 4096 (100B), 8192 (100B); Pile test loss falls with context length.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RWKV 7B and 14B, finetuning on the Pile",
+   "quote": null,
+   "table": null,
+   "note": "Fig 6 only.",
+   "where": "Sec 5.2, Fig 6"
+  },
+  {
+   "claim": "Per-token inference time and memory are O(Td) time overall and O(d) space; cumulative generation time grows linearly with length, unlike transformers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "float32, HuggingFace Transformers, CPU x86 and A100 80GB, vs Bloom, OPT, GPT-Neo, Pythia",
+   "quote": null,
+   "table": "Table 1, row RWKV (ours)",
+   "note": "Fig 7/13/14 not numeric.",
+   "where": "Table 1, Sec 6"
+  },
+  {
+   "claim": "RWKV per-layer state is 5DL numbers (4DL without the helper exponent).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix D derivation",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "App D"
+  }
+ ],
+ "limits": [
+  "Linear attention funnels information through one vector, which may hurt recall of minutiae over very long contexts (Limitations).",
+  "Prompt engineering matters more than for transformers; prompt order nearly doubled RTE F1.",
+  "Competitiveness shown on FLOP-matched benchmarks via figures only; no numeric benchmark table, no seeds or error bars.",
+  "Hardware, GPU count and wall clock for pretraining are not stated.",
+  "LRA: far below S4 on Image, Pathfinder, Path-X.",
+  "Raven instruction-tuning details are not given.",
+  "Raven MathQA accuracy was very low (5.43%).",
+  "Quantization left to future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "WKV",
+   "definition": "time-dependent weighted key-value update with channel-wise decay w and current-token bonus u",
+   "where": "Eq 16"
+  },
+  {
+   "term": "token shift",
+   "definition": "linear interpolation between current and previous timestep inputs for R, K, V",
+   "where": "Sec 3.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "An Attention Free Transformer",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "WKV parallels AFT with W as a channel-wise vector",
+   "quote": "Inspired by AFT, RWKV takes a similar approach."
+  },
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "transformer baseline",
+   "quote": null
+  },
+  {
+   "work": "Pythia",
+   "year": 2023,
+   "arxiv": "2304.01373",
+   "relation": "baseline",
+   "note": "FLOP-matched baseline",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "Quasi-Recurrent neural networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most similar prior RNN",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "contradicts",
+   "note": "Kaplan claimed LSTMs do not follow transformer log-log scaling; RWKV does",
+   "quote": "find that RWKV does follow the same general form of the scaling law"
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "uses-method",
+   "note": "auxiliary softmax-normalizer loss",
+   "quote": null
+  },
+  {
+   "work": "Long Range Arena",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "long context benchmark",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT: Jack of all trades, master of none (Kocon et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompts and task set for Appendix L",
+   "quote": null
+  },
+  {
+   "work": "S4 (Gu et al.)",
+   "year": 2022,
+   "arxiv": "2111.00396",
+   "relation": "baseline",
+   "note": "best on LRA",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Average performance of RWKV models compared to transformers across twelve NLP tasks.",
+   "page": 1,
+   "why": "Headline FLOP-matched comparison."
+  },
+  {
+   "figure": "Fig 2/3",
+   "caption": "Elements within an RWKV block; RWKV architecture for language modeling.",
+   "page": 3,
+   "why": "Block structure and state flow."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Scaling laws curves for RWKV models",
+   "page": 4,
+   "why": "Loss vs compute fit."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Cumulative time on text generation for LLMs.",
+   "page": 6,
+   "why": "Linear vs quadratic generation time."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1.1",
+   "snippet": "nn.ZeroPad2d((0,0,1,-1))",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 16",
+   "snippet": "wkv_t = (sum_{i=1}^{t-1} e^{-(t-1-i)w+k_i} ⊙ v_i + e^{u+k_t} ⊙ v_t) / (sum_{i=1}^{t-1} e^{-(t-1-i)w+k_i} + e^{u+k_t})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix G prints the Adam betas as 'ϵ = (0.9, 0.99)'.",
+  "Hardware and wall clock for pretraining are absent.",
+  "Table 5 RWKV-RNN1 has no test bpc."
+ ]
+}

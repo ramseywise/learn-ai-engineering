@@ -1,19 +1,479 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2010.02903",
  "pdf": "generative-ai/08-eval/sources/yao-2020-keep-calm-explore.pdf",
  "bib": {
   "title": "Keep CALM and Explore: Language Models for Action Generation in Text-based Games",
+  "authors": [
+   "Shunyu Yao",
+   "Rohan Rao",
+   "Matthew Hausknecht",
+   "Karthik Narasimhan"
+  ],
   "first_author": "Yao",
   "year": 2020,
-  "venue": "EMNLP (1) 2020",
+  "venue": "EMNLP 2020 (pages 8736-8754)",
   "arxiv": "2010.02903",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-03",
-  "session": "9d482f42-66b5-42d0-8570-406871585b30"
+  "at": "2026-11-07",
+  "chars_read": 82249,
+  "chars_total": 82249,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; letter-spaced trajectory dumps in Figs 10, 15, 16 read but not recorded."
  },
- "legacy_report": "SOURCE: \"Keep CALM and Explore: Language Models for Action Generation in Text-based Games\", Shunyu Yao, Rohan Rao, Matthew Hausknecht, Karthik Narasimhan (Princeton, Microsoft Research). EMNLP 2020, pages 8736–8754 (arXiv 2010.02903).\n\nCOVERAGE: Read all 86,671 of 86,671 chars, including Appendices A–D, Tables 4–5 and Figures 9–16. I only skimmed the references. Figures 10, 15 and 16 are letter-spaced trajectory dumps. I read them and found nothing evaluative beyond what the captions say. File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/yao-2020-keep-calm-explore.pdf\n\nCLAIMS\n- claim: The headline result is a 69% relative improvement in average normalised score over the previous handicap-free best (NAIL). In absolute terms that is 9.4% against 5.6% normalised score. The language model never saw transcripts of the evaluation games.\n  number: 69% relative; 9.4% vs 5.6%\n  setup: 28 Jericho games. CALM (GPT-2, 117M) proposes top-30 actions and a DRRN picks among them. Average of 5 seeds.\n  quote: \"CALM (GPT-2) outperforms CALM (n-gram) and NAIL by 4.4% and 3.8% on absolute normalized scores, respectively. Relatively, this represents almost a 69% improvement over NAIL.\"\n  where: p.8 (§5.2); Table 2 \"avg. norm 9.4% 5.5% 5.6% 10.8% 13.0%\"\n- claim: Normalised score is raw score divided by the game's maximum score, and the paper reports only its average across games, because score scales differ between games.\n  number: none\n  setup: Jericho, all 28 games\n  quote: \"To take into account different score scales across games, we consider both the raw score and the normalized score (raw score divided by maximum score), and only report the average normalized score across games.\"\n  where: p.8 (§5.2)\n- claim: The generalisation holdout is that the language model is trained only on transcripts that do not overlap with the 28 evaluation games.\n  number: 28 games\n  setup: ClubFloyd human transcripts (426 transcripts, 590 games, 223,527 context-action pairs)\n  quote: \"Importantly, both models are trained only on transcripts that do not overlap with the 28 Jericho games we evaluate on.\"\n  where: p.6 (§4.2)\n- claim: When the authors relax the holdout and add 8 transcripts of the evaluation games, the score rises from 9.4% to 10.9%, which beats the handicap-assisted KG-A2C (10.8%). The gains, however, did not come mainly on the games whose transcripts were added.\n  number: 10.9% vs 9.4%; 8 scripts\n  setup: CALM (w/ Jericho) variant, 5 seeds\n  quote: \"Counter-intuitively, we find that the greatest performance gains aren't on games featured in the heldout transcripts.\"; Table 3 \"CALM (w/ Jericho) 10.9%\"; App. D: \"CALM (w/ Jericho) is significantly better than CALM (GPT-2) on the games of Temple and Deephome ... which are not the games with ClubFloyd scripts added. On the other hand, games like 905 and moonlit have scripts added, but do not get improved.\"\n  where: p.9 (§5.3); p.13 (App. D)\n- claim: Each game's score comes from five seeds. The final score of a run is the mean of its last 100 training episodes. The ablations were run once each.\n  number: 5 seeds; 100 episodes; 1 trial for ablations\n  setup: DRRN trained on 8 parallel environments for 10^6 steps\n  quote: \"The final score of a training run is taken to be the average score of the final 100 episodes during training. For each game, we train five independent agents with different random seeds and report the average score. For model variants in § 5.3 we only run one trail.\"\n  where: p.7 (§4.3)\n- claim: Variance across seeds is large on some games. On library the standard deviation is about half the mean.\n  number: library 9.02 (±5.07); zork1 30.39 (±3.01); inhumane 25.73 (±2.93)\n  setup: Table 5, std over 5 trials, only for CALM GPT-2, n-gram and w/ Jericho\n  quote: \"library 9.02 (± 5.07)\"; \"Note that some scores are only based on one trial. CALM (GPT-2), CALM (ngram) and CALM (w/ Jericho) are based on five trails and the standard deviation is given.\"\n  where: p.14 (Table 5)\n- claim: Validation loss and accuracy on held-out human data are not good enough to evaluate an action generator. A state can have many valid actions, and the human actions in the data may be suboptimal or invalid. The authors therefore score candidates against Jericho walkthroughs.\n  number: none\n  setup: ClubFloyd validation set compared with Jericho optimal walkthroughs\n  quote: \"Metrics like validation loss or accuracy on validation set of our ClubFloyd data are not sufficient to evaluate CALM ... This is because: 1) there can be multiple admissible actions in each state, and 2) the human actions in the trajectories are not guaranteed to be optimal or even admissible.\"\n  where: p.7 (§5.1)\n- claim: The standalone evaluation measures precision and recall of admissible actions and recall of the gold action at top-k. At k=15 the candidates cover about 30% of admissible actions. Raising k increases recall but lowers precision, which is the exploration versus exploitation trade-off.\n  number: ~30% at k=15; GPT-2 +10% admissible recall from k=15 to 30; +20% gold recall vs n-gram at k=30\n  setup: walkthroughs of 28 games, metrics averaged per game\n  quote: \"the top k = 15 actions of CALM (GPT-2 and n-gram) are both expected to contain around 30% of all admissible actions in each walkthrough state. However, when k goes from 15 to 30, CALM (GPT-2) can come up with 10% more admissible actions\"; \"the top-30 actions from CALM (GPT-2) contain the gold action in 20% more game states than CALM (n-gram).\"\n  where: p.7 (§5.1), Fig. 4\n- claim: Without the admissible-action handicap, CALM beats both handicapped baselines on 8 of 28 games. The authors offer two guesses why: CALM may filter out useless admissible actions, or it may find actions the handicap's state-change detection misses.\n  number: 8 of 28; inhumane 25.7 vs KG-A2C 3\n  setup: Table 2\n  quote: \"On 8 out of 28 games (underlined in Table 2), CALM (GPT-2) outperforms both DRRN and KG-A2C despite the latter having access to ground-truth admissible actions.\"; \"it is possible that CALM sometimes discover admissible actions even the handicap cannot (due to the imperfection of state change detection).\"\n  where: p.8 (§5.2)\n- claim: The handicap is an oracle that queries simulator internals. It costs about as much as a GPT-2 pass and may not exist outside Jericho.\n  number: none\n  setup: Jericho framework\n  quote: \"testing each action's admissibility by accessing the underlying simulator states and load-and-save functions. As a result, the handicap runs no faster than a GPT-2 inference pass, and could in fact be unavailable for games outside Jericho.\"\n  where: p.6 (§4.1)\n- claim: The final-score metric understates what the agent found. If the RL agent had learned from the best trajectories it saw while exploring, the score would have been 14.7%, higher than every model in the paper.\n  number: 14.7%\n  setup: Fig. 6, CALM (GPT-2)\n  quote: \"If RL can fully exploit and learn from the trajectories experienced under the CALM action space for each game, the average normalized score would be 14.7%, higher than any model in Table 2, both with and without handicaps.\"\n  where: p.8–9 (§5.3)\n- claim: Ablations show the language model alone is weak. A random policy over CALM's candidates scores 1.8%, a GPT-2 without pre-training scores 6.8%, and k=10 scores 5.6%. An off-the-shelf GPT-2 does not produce parseable actions.\n  number: 1.8%; 6.8%; 5.6% (k=10); k=20/40 at 9.6%/9.2%\n  setup: Table 3, one trial each\n  quote: \"CALM (random agent) performs a poor score of 1.8%\"; \"CALM (w/o PT) 6.8%\"; \"CALM (k = 10) 5.6%\"\n  where: p.8–9 (Table 3, §5.3)\n- claim: Scores at k=20, 30 and 40 are similar on average but differ game by game, so an average can hide per-game differences.\n  number: none\n  setup: Table 3/5\n  quote: \"though k = 20, 30, 40 achieve similar overall performance, they achieve different results for different games.\"\n  where: p.9\n- claim: Text games remain far from solved. Even the handicapped DRRN reaches only 13.0% normalised.\n  number: 13.0%\n  setup: Table 2\n  quote: \"From the results in Table 2, it is safe to conclude that text-based games are still far from being solved.\"\n  where: p.9 (§6)\n\nLIMITS:\n- The ablations use one seed each, and standard deviations are given only for three models. The paper runs no significance tests, so the 8-of-28 count and the gaps between ablations are not checked against variance.\n- The authors concede that DRRN does not converge to the best scores seen in exploration (Fig. 6). They also say a different k per game might help.\n- Two observations of mine, which the paper does not draw:\n  - Normalisation divides by the maximum score without subtracting a game's starting score. Advent starts at 36 of 350, so it adds the same ~10% to every method. Many games score 0 for every method.\n  - The \"unseen games\" holdout is at the level of games, not genres or domains.\n- The source is dated. It predates LLM agents, and its baselines (NAIL, KG-A2C, DRRN) are from 2019–2020. The \"69%\" is relative to a 5.6% baseline.\n\nBUILDS ON: Jericho benchmark (Hausknecht et al., 2019a), DRRN (He et al., 2015), NAIL (Hausknecht et al., 2019b), KG-A2C (Ammanabrolu and Hausknecht, 2020), GPT-2 (Radford et al., 2019), separate replay buffer for best trajectories (Narasimhan et al., 2015), FastText admissibility filter (Joulin et al., 2017), TextWorld (Côté et al., 2018), seq2seq action generation (Tao et al., 2018).\n\nCODE: Nothing worth keeping. Code is linked at github.com/princeton-nlp/calm-textgame (p.1 footnote). The evaluation metric definitions (Eq. 7–9, p.7) are short: prec_a(k) = (1/l) Σ |A_t ∩ A_LM(c_t,k)| / k; rec_a(k) = (1/l) Σ |A_t ∩ A_LM| / |A_t|; rec_g(k) = (1/l) Σ |{a_t} ∩ A_LM|.\n\nFIGURES:\n- Fig. 4 (p.6): \"Precision and recall of gold and admissible actions generated by CALM, evaluated on walkthrough trajectories of 28 games... k is the number of actions.\" It shows the precision/recall trade-off as k grows in a single picture.\n- Fig. 6 (p.8): \"Final scores (blue) and maximum scores (normalized) seen during exploration (red) for CALM (GPT-2).\" It shows the gap between final and best-seen scores, which is a metric-design point.\n- Fig. 5 (p.8): per-game difference against NAIL. It shows the average gain is concentrated in a few games (detective, snacktime, inhumane).\n\nPROBLEMS:\n- pypdf printed one FloatObject warning, which is harmless. Text extraction is clean, apart from the letter-spaced appendix figures 10 and 15.\n- The text contradicts itself on game count: 590 games in §1/§4.1 but \"spanning over 500 games\" in App. A. The paper also writes \"trail\" for \"trial\".\n- The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a language model trained on human gameplay transcripts supply a compact set of candidate actions that lets an RL agent play unseen text games without the admissible-action handicap?",
+ "hypothesis": "Linguistic priors and game sense from human play, captured by a language model, can replace the handicap as an action-space reducer and generalise to unseen games.",
+ "contributions": [
+  "A learning-based approach (CALM) for reducing enormous action spaces in text-based games using linguistic knowledge.",
+  "A new dataset of human gameplay transcripts (ClubFloyd), with an evaluation scheme to measure the quality of action generation."
+ ],
+ "method": {
+  "summary": "A GPT-2 (or bigram) language model is trained on ClubFloyd human transcripts to generate top-k action candidates from the last two observations and the last action. A DRRN agent learns Q-values over those candidates on 28 Jericho games; CALM is frozen during RL.",
+  "task": "text-based game playing (Jericho), action-candidate generation plus RL re-ranking",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ClubFloyd transcripts",
+    "role": "train",
+    "size": "426 transcripts, 590 games, 223,527 context-action pairs",
+    "split": "GPT-2: 193,588 samples excluding Jericho games, ordered by transcript, first 90% train, last 10% validation; 50% variant 212 transcripts (94,609 samples); 20% variant 85 transcripts (38,334 samples); w/ Jericho 206,286 samples",
+    "source": "ClubFloyd archive (allthingsjacq.com), crawled; used with the organiser's agreement",
+    "preprocessing": "Removed meta-actions (save, restore) and observations over 256 tokens; removed chat logs, typos; expanded abbreviations (n to north); dropped actions the parser did not recognise; context (o_{t-1}, a_{t-1}, o_t); first example padded with 'You are at the start of your journey' / 'begin journey'."
+   },
+   {
+    "name": "Jericho (28 man-made games)",
+    "role": "eval",
+    "size": "28 games; walkthrough avg length 98; vocab 9,623",
+    "split": "none; ClubFloyd training transcripts exclude these games",
+    "source": "Hausknecht et al. 2019a",
+    "preprocessing": "Observations augmented with 'look' and 'inventory' output."
+   }
+  ],
+  "models": [
+   {
+    "name": "CALM (GPT-2)",
+    "role": "proposed",
+    "params": "117M",
+    "architecture": "decoder-only transformer (GPT-2)",
+    "init_from": "pretrained OpenAI GPT-2 on WebText (Wolf et al. 2019 implementation)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "inferred: 256-token cap on observations",
+    "other": {}
+   },
+   {
+    "name": "CALM (n-gram)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bigram language model, Laplace smoothing, verb phrases x detected nouns",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "current observation only",
+    "other": {
+     "n": "2",
+     "alpha": "0.00073"
+    }
+   },
+   {
+    "name": "DRRN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "separate GRU encoders for observation and action, MLP decoder for Q",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "filter": "FastText admissibility predictor removes candidates predicted inadmissible"
+    }
+   },
+   {
+    "name": "NAIL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "hand-written rules",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "KG-A2C",
+    "role": "baseline",
+    "params": null,
+    "architecture": "knowledge-graph RL agent, uses admissible-action handicap",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over action tokens given context for CALM; TD loss for DRRN; softmax exploration policy",
+   "optimizer": "Adam, epsilon 1e-8 (CALM GPT-2)",
+   "lr": "2e-5 (CALM GPT-2)",
+   "lr_schedule": "linear with warmup",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "DRRN: 10^6 steps total (printed '106' in the text, read as 10^6) on 8 parallel game instances",
+   "epochs": "CALM GPT-2: 3; random-init variant: 10",
+   "tokens": null,
+   "seq_len": "samples over 256 tokens omitted",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "max gradient norm 1",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 independent seeds per game for the main results; one run for each variant in Table 3",
+   "other": {
+    "n_gram_split": "main text: 90/10; Appendix B.2: first 70% train, last 30% validation",
+    "n_gram_perplexity": "validation 863,808, train 17,181 (per action)",
+    "gpt2_loss": "train 0.25, validation 1.98 after 3 epochs",
+    "drrn_replay": "separate buffer of best-scoring trajectories (Narasimhan et al. 2015)",
+    "calm_frozen_in_rl": "CALM is not fine-tuned during RL"
+   }
+  },
+  "inference": {
+   "decoding": "GPT-2: beam search, beam 40, keep top 30; n-gram: enumerate V x B_c plus 13 directional actions, at most 4 actions per object",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "top k=30 actions per unique game state; final score = average of last 100 training episodes; 5 seeds averaged",
+   "prompting": "context = previous observation, previous action, current observation",
+   "retrieval": null,
+   "parameters": {
+    "k": "30 (variants 10, 20, 40)",
+    "context_window": "2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "avg. norm",
+     "definition": "raw score divided by game max score, averaged over 28 games",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "preca / reca / recg",
+     "definition": "precision and recall of admissible actions and recall of the gold action in the top-k set along Jericho walkthroughs",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "NAIL",
+    "DRRN (handicap)",
+    "KG-A2C (handicap)",
+    "CALM (n-gram)"
+   ],
+   "protocol": "Final score of a run is the mean of the last 100 training episodes; mean over 5 seeds; ablations single run; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/calm-textgame",
+   "weights": null,
+   "data": "released with the code (stated as 'Code and data are available')"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "for 106 steps in total",
+    "where": "Sec 4.3 (superscript lost in extraction)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CALM (GPT-2) reaches 9.4% average normalised score on 28 Jericho games without the handicap, versus 5.6% for NAIL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "9.4",
+   "unit": "%",
+   "baseline_value": "5.6",
+   "n": "28 games, 5 seeds",
+   "setup": "Jericho 28 games, CALM (GPT-2) k=30 plus DRRN, final-100-episode mean, seed average",
+   "table": "Table 2, row avg. norm, column CALM (GPT-2)",
+   "quote": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Relative gain over NAIL is almost 69%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative improvement",
+   "value": "69",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as Table 2",
+   "table": null,
+   "quote": "Relatively, this represents almost a 69% improvement over NAIL.",
+   "note": "The text says GPT-2 beats n-gram by 4.4% absolute, but Table 2 gives 9.4% vs 5.5%, a gap of 3.9; 3.8 over NAIL (5.6) is consistent.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "On 8 of 28 games CALM (GPT-2) beats both DRRN and KG-A2C, which use the admissible-action handicap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "games won",
+   "value": "8",
+   "unit": "games of 28",
+   "baseline_value": null,
+   "n": "28",
+   "setup": "Table 2, underlined games",
+   "table": null,
+   "quote": "On 8 out of 28 games (underlined in Table 2), CALM (GPT-2) outperforms both DRRN and KG-A2C",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Handicap-assisted KG-A2C and DRRN average 10.8% and 13.0%, above CALM (GPT-2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "13.0",
+   "unit": "%",
+   "baseline_value": "9.4",
+   "n": "28 games",
+   "setup": "DRRN with ground-truth admissible actions",
+   "table": "Table 2, row avg. norm, column DRRN",
+   "quote": null,
+   "note": "KG-A2C 10.8.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Without pre-training (random-init GPT-2, 10 epochs) the score falls to 6.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "6.8",
+   "unit": "%",
+   "baseline_value": "9.4",
+   "n": "1 run",
+   "setup": "CALM (w/o PT), single run",
+   "table": "Table 3, row CALM (w/o PT)",
+   "quote": null,
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Adding 8 transcripts of the evaluation games raises the score to 10.9%, and the gains are not mainly on those games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "10.9",
+   "unit": "%",
+   "baseline_value": "9.4",
+   "n": "1 run",
+   "setup": "CALM (w/ Jericho), single run",
+   "table": "Table 3, row CALM (w/ Jericho)",
+   "quote": null,
+   "note": null,
+   "where": "Table 3, Sec 5.3"
+  },
+  {
+   "claim": "Action-set size k matters: k=10 gives 5.6%, k=20 9.6%, k=40 9.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "5.6",
+   "unit": "%",
+   "baseline_value": "9.4",
+   "n": "1 run each",
+   "setup": "CALM (k=10)",
+   "table": "Table 3, row CALM (k = 10)",
+   "quote": null,
+   "note": "k=20: 9.6%, k=40: 9.2%.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "A random agent over CALM top-30 actions scores 1.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm",
+   "value": "1.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "1 run",
+   "setup": "CALM (random agent)",
+   "table": "Table 3, row CALM (random agent)",
+   "quote": "CALM (random agent) performs a poor score of 1.8%",
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "If RL fully exploited the maximum scores seen in exploration, the average would be 14.7%, above every model in Table 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg. norm of max score seen",
+   "value": "14.7",
+   "unit": "%",
+   "baseline_value": "9.4",
+   "n": "28 games",
+   "setup": "CALM (GPT-2) max score seen during RL (Fig 6)",
+   "table": null,
+   "quote": "the average normalized score would be 14.7%, higher than any model in Table 2",
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Per-game spread across seeds is large: zork1 30.39 (+/- 3.01), library 9.02 (+/- 5.07).",
+   "kind": "measured",
+   "source": null,
+   "metric": "raw score",
+   "value": "30.39",
+   "unit": "points",
+   "baseline_value": null,
+   "n": "5 seeds",
+   "setup": "CALM (GPT-2)",
+   "table": "Table 5, row zork1, column CALM (GPT-2)",
+   "quote": null,
+   "note": "Table 5 does not say what the +/- denotes; library is 9.02 (+/- 5.07).",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Top-15 CALM actions contain around 30% of admissible actions; gold action is in the top-30 for GPT-2 in 20% more states than n-gram.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall of admissible actions",
+   "value": "30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "28 walkthroughs",
+   "setup": "Jericho walkthrough states, k=15",
+   "table": null,
+   "quote": "the top k = 15 actions of CALM (GPT-2 and n-gram) are both expected to contain around 30% of all admissible actions in each walkthrough state",
+   "note": null,
+   "where": "Sec 5.1, Fig 4"
+  }
+ ],
+ "limits": [
+  "Variant ablations (Table 3) are single runs; no significance test.",
+  "Table 5 plus/minus not defined.",
+  "Authors: DRRN does not stably converge to the maximum scores seen; text games 'are still far from being solved'.",
+  "Authors hypothesise, without testing, that CALM beats the handicap on some games by excluding actions humans never issue.",
+  "ClubFloyd actions are noisy and non-optimal; the main text's 90/10 n-gram split conflicts with the appendix's 70/30.",
+  "Compute, hardware, batch size and DRRN hyperparameters are not stated; 2020 baselines."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "admissible action",
+   "definition": "one that is parseable by the game engine and changes the underlying game state",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Interactive fiction games: A colossal adventure (Jericho)",
+   "year": 2019,
+   "arxiv": "1909.05398",
+   "relation": "uses-data",
+   "note": "benchmark and handicap",
+   "quote": null
+  },
+  {
+   "work": "Deep RL with a natural language action space (DRRN)",
+   "year": 2015,
+   "arxiv": "1511.04636",
+   "relation": "uses-method",
+   "note": "RL agent re-ranking candidates",
+   "quote": null
+  },
+  {
+   "work": "NAIL",
+   "year": 2019,
+   "arxiv": "1902.04259",
+   "relation": "baseline",
+   "note": "handicap-free baseline",
+   "quote": null
+  },
+  {
+   "work": "Graph constrained RL for natural language action spaces (KG-A2C)",
+   "year": 2020,
+   "arxiv": "2001.08837",
+   "relation": "baseline",
+   "note": "handicap-assisted",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initialisation",
+   "quote": null
+  },
+  {
+   "work": "Tao et al. 2018, adaptive action spaces",
+   "year": 2018,
+   "arxiv": "1812.00855",
+   "relation": "related",
+   "note": "most similar prior; seq2seq in synthetic TextWorld",
+   "quote": null
+  },
+  {
+   "work": "ClubFloyd transcripts",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "CALM combined with an RL agent (DRRN) for gameplay.",
+   "page": 3,
+   "why": "Shows the generate-then-rerank loop."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Performance of CALM (GPT-2, n-gram) vs NAIL, KG-A2C, DRRN on Jericho.",
+   "page": 7,
+   "why": "Per-game raw scores and average normalised score."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Final scores and max scores seen during exploration for CALM (GPT-2).",
+   "page": 8,
+   "why": "Gap between final and best-seen score."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Superscripts lost in extraction: '106 steps' is read as 10^6; '6974' in the Fig 1 caption is 697^4.",
+  "Text says 4.4% absolute gain over n-gram; Table 2 gives 3.9.",
+  "Appendix A says 'over 500 games' while body says 590.",
+  "No embedded instructions found."
+ ]
 }

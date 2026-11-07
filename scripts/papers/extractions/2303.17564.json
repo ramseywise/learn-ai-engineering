@@ -1,19 +1,896 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2303.17564",
  "pdf": "generative-ai/01-llm-fundamentals/sources/wu-2023-bloomberggpt.pdf",
  "bib": {
   "title": "BloombergGPT: A Large Language Model for Finance",
-  "first_author": "Shijie Wu",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Shijie Wu",
+   "Ozan İrsoy",
+   "Steven Lu",
+   "Vadim Dabravolski",
+   "Mark Dredze",
+   "Sebastian Gehrmann",
+   "Prabhanjan Kambadur",
+   "David Rosenberg",
+   "Gideon Mann"
+  ],
+  "first_author": "Wu",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2303.17564",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "89326d49-27e6-49ef-9e43-102851f75caa"
+  "at": "2026-11-07",
+  "chars_read": 204404,
+  "chars_total": 204404,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only; figure plots not viewed (captions only)."
  },
- "legacy_report": "SOURCE: BloombergGPT: A Large Language Model for Finance. Wu, Irsoy, Lu, Dabravolski, Dredze, Gehrmann, Kambadur, Rosenberg, Mann. Preprint, arXiv:2303.17564v3, 21 Dec 2023. The PDF prints no venue.\n\nCOVERAGE: 204,766 of 204,766 chars, all 76 pages, read in contiguous ranges. References were read only for origins. To stay near the length limit, per-task rows are omitted for BIG-bench Hard (Table 13, p27), knowledge (Table 14, p28), linguistic tasks (Table 17, p30) and NER (Table 12, p25). Their aggregates are below. I read figure captions only and did not view the plots.\n\nCLAIMS\n\nCorpus, model and training\n- claim: The corpus is about half private finance text and half public text, each deduplicated.\n  number: 363B domain (51.27%) + 345B public (48.73%) = 709B tokens\n  setup: FinPile docs dated 2007-03-01 to 2022-07-31; Web 298B, News 38B, Filings 14B, Press 9B, Bloomberg 5B; public is Pile 184B, C4 138B, Wikipedia 24B; dedup follows Lee et al. (2022a)\n  quote: \"FinPile 175,886 1,017 17,883 4.92 3,635 51.27%\" / \"PUBLIC 50,744 3,314 16,818 4.87 3,454 48.73%\" / \"TOTAL 226,631 1,531 34,701 4.89 7,089 100.00%\" (token column is in units of 1e8)\n  where: Table 1, p6; dates p7\n- claim: Training stopped before one full pass because validation loss had stalled.\n  number: 139,200 steps, about 53 days, 569B of 709B tokens, about 80% of an epoch\n  setup: the run continued to step 146,000; the final checkpoint was chosen by validation loss and downstream evaluations\n  quote: \"We trained for a total of 139,200 steps ( ⁄tildelow53 days) and ended model training after completing ⁄tildelow80% of one epoch through our training data (569B tokens out of the 709B tokens available).\"\n  where: §4, p16\n- claim: The authors concede that longer training might have helped.\n  number: none\n  setup: same run\n  quote: \"although it’s possible that substantially longer training may have yielded further improvements.\"\n  where: §4, p16\n- claim: The model is BLOOM-style, decoder-only and sized at about 50B parameters.\n  number: 50.6B (exact 50,558,868,480); 70 layers, 40 heads, D=7,680, FFN 30,720\n  setup: ALiBi, GELU, tied embeddings, extra LayerNorm after embeddings; the shape comes from the Levine et al. (2020) formula (target D=7510, rounded for head divisibility and multiples of 8)\n  quote: \"Number of Layers 70 / Number of Heads 40 / Vocabulary Size 131,072 / Hidden Dimension 7,680 / Total Parameters 50.6B\" (table rows joined with /)\n  where: Table 4, p11; A.5, p64\n- claim: Hardware was 512 A100s on AWS, using ZeRO stage 3 through a proprietary library.\n  number: 64 × 8 A100 40GB; 32.5 s/step; 102 TFLOPs average; 2.36e23 total FLOPs\n  setup: SageMaker p4d.24xlarge with the SMP library; model sharded across 128 GPUs with 4 copies; activation checkpointing per layer; MiCS; fused kernels gave 4-5 TFLOPs\n  quote: \"We shard a model across 128 GPUs, and we have 4 copies of the model during training.\" and \"Hardware 64 × 8 A100 40GB / Throughput 32.5 sec/step / avg. TFLOPs 102 / total FLOPS 2.36e23\"\n  where: Table 4, p11; §3.4, p14\n- claim: Compute budget and Chinchilla fits put the model near optimal size but short of data.\n  number: 1.3M GPU hours; fits of 52.993B/1111.112B and 49.753B/1175.766B (params/tokens); about 30% buffer\n  setup: 0.75 × 1.3M was plugged in because checkpointing adds 0.33x; FinPile was kept at no less than half of training\n  quote: \"We start with a total compute budget of 1.3M GPU hours on 40GB A100 GPUs.\" and \"leave ⁄tildelow30% of the total compute budget as a buffer for unforeseen failures, retries, and restarts.\"\n  where: §3.2, p12-13\n- claim: Chinchilla laws may not transfer across tokenizers, and the authors leave that open.\n  number: none\n  setup: footnote 1\n  quote: \"The scaling law derived by Chinchilla is tokenizer-specific.\"\n  where: p12\n- claim: They used a Unigram tokenizer with a large vocabulary, trained on the Pile.\n  number: 131,072 tokens (2^17), against about 50,000 standard\n  setup: 5,632 sub-tokenizers (22 domains × 256 chunks, each 65,536 tokens) merged into 7M, then pruned; vocabularies of 25,000-550,000 compared by encoded C4 size, optimum 125,000, rounded up\n  quote: \"This gives us a vocabulary size of 125,000, which we then round up to the nearest power of 2 (217, or 131,072 tokens).\"\n  where: §2.3, p10 (the extraction renders 2^17 as \"217\")\n- claim: The tokenizer needs fewer tokens than competitors on the public data, but not everywhere.\n  number: others use 113-126% as many on public data; BLOOM uses 88% on Wikipedia\n  setup: older FinPile version; the Total row sums public sets only (excludes FinPile)\n  quote: \"Total 390 113% 408 118% 434 126% 345\" and \"Wikipedia 21 88% 23 99% 24 103% 24\"\n  where: Table 3, p10\n- claim: Optimizer and batch recipe.\n  number: AdamW β1 0.9, β2 0.95, weight decay 0.1; LR 6e-5 to 6e-6; 1800-step warmup; batch 1,024 then 2,048; 2,048-token sequences; clip 0.3\n  setup: final v2 configuration; BF16 forward and backward, parameters stored and updated in FP32, loss softmax in FP32\n  quote: \"in the first 7,200 steps, we use a batch size of 1,024 (2.1M tokens), then switch to a batch size of 2,048 (4.2M tokens) for the remainder of training.\"\n  where: §3.3, p13; mixed precision p15\n\nTried and abandoned (Appendix C)\n- claim: v0 ordered data by month as curriculum learning, stalled, and was abandoned without a diagnosis.\n  number: stuck about one week in; little progress after step 20k\n  setup: oldest data first (2007), validation from 2022; replaced by shuffling\n  quote: \"We were unable to ascertain if curriculum learning had a negative impact on training or if the loss plateaued due to other factors\"\n  where: C.0, p67-68\n- claim: In v1.0 gradient norms grew from about 12k steps, and four fix attempts failed.\n  number: about 12k steps (about 4.5 days); LR 1e-4 cut to 8e-5 and 6e-5; clip 1.0 cut to 0.3; FP32 LM head\n  setup: runs v1.1-v1.4, some rolled back to step 10.8k\n  quote: \"the gradient norm showed a steady increase after about 12k steps (⁄tildelow4.5 days of training), with occasional spikes\"\n  where: C.1, p68-69\n- claim: Component-level monitoring isolated the problem to Input LayerNorm at layer 1, and also exposed a weight-decay bug inherited from BERT code.\n  number: elbow at about 12k steps\n  setup: decay was applied to LayerNorm multipliers initialised at 1; the authors say this does not explain the elbow\n  quote: \"Weight decay was applied to all the non-bias parameters, as opposed to skipping the LayerNorm multiplier weight γ since they are initialized at 1.\"\n  where: C.1, p70\n- claim: They restarted from scratch (v2.0) with about ten conservative changes at once and got a stable run, but cannot say which change mattered.\n  number: about 42 days to about 115,500 iterations; one restart at 28 days for a platform job limit\n  setup: LR 6e-5, clip 0.3, FP32 LM head, full shuffle, new seed, LN_em restored, longer warmup, no decay on γ, Megatron init rescaling, query key scaling, batch warmup\n  quote: \"we cannot conclude which of these changes was decisive in leading to a successful training run.\"\n  where: C.2, p71-72\n- claim: After validation loss stalled, runs v2.1-v2.6 varied LR, dropout and weight decay, and none clearly helped.\n  number: v2 flat from 115,500 to 133,200; weight decay 0.01 gave almost the same curve as 0.1\n  setup: rollback of 7 days plus re-shuffling; second validation set val_past added; MMLU and BBH subset used as checks\n  quote: \"We did not observe that any particular change significantly improved the downstream evaluations and validation loss (Table 20).\"\n  where: C.3, p72-75\n- claim: Selected step 139,200 gained little over the pre-intervention checkpoint.\n  number: val_future perplexity 8.30 to 8.14; MMLU 38.79 to 39.02; BBH subset 43.10 to 44.20\n  setup: 105M-token validation sets; the extraction lost run columns, so the run per row is not printed\n  quote: \"115500 8.30 8.43\" / \"139200 8.14 8.32\" / \"115500 38.79 43.10\" / \"139200 39.02 44.20\"\n  where: Table 20, p76\n- claim: A single month of validation data may have misled decisions, as the authors admit.\n  number: roughly 105M tokens\n  setup: val_future is July 2022 only; val_past came from the end of the training set and is not time-held-out\n  quote: \"it was possible that a single month of data was not properly reflective of the model’s abilities\"\n  where: C.3, p73\n\nBenchmarks (BloombergGPT / GPT-NeoX / OPT 66B / BLOOM 176B, plus GPT-3 or PaLM where noted)\n- claim: Public finance tasks: best on four of five, second on NER.\n  number: average 62.51 vs 51.90, 53.01, 54.35; win rate 0.93\n  setup: F1 (FPB, FiQA SA, Headline, NER); exact match (ConvFinQA); 5-shot, NER 20-shot\n  quote: \"ConvFinQA 43.41 30.06 27.88 36.31 / FiQA SA 75.07 50.59 51.60 53.12 / FPB 51.07 44.64 48.67 50.25 / Headline 82.20 73.22 79.41 76.51 / NER 60.82 60.98 57.49 55.56 / All Tasks (avg) 62.51 51.90 53.01 54.35 / All Tasks (WR) 0.93 0.27 0.33 0.47\"\n  where: Table 8, p21\n- claim: Internal aspect sentiment shows the widest gap, except on social media.\n  number: average 62.47 vs 29.23, 35.76, 33.39; win rate 1.00\n  setup: 5-shot weighted F1; up to 1k test examples; private data; the unlabeled text likely occurs in FinPile\n  quote: \"Equity News 79.63 14.17 20.98 19.96 / Equity Social Media 72.40 66.48 71.36 68.04 / Equity Transcript 65.06 25.08 37.58 34.82 / ES News 46.12 26.99 31.44 28.07 / Country News 49.14 13.45 17.41 16.06 / All Tasks (avg) 62.47 29.23 35.76 33.39\"\n  where: Table 10, p23; caveat p22\n- claim: Internal NER: the larger BLOOM wins. Joint NER+NED: BloombergGPT wins on average.\n  number: NER 62.63 vs 59.75, 58.09, 64.83 (WR 0.57 vs BLOOM 0.95); NER+NED 64.83 vs 39.26, 58.79, 45.43 (WR 0.95)\n  setup: seven internal sets, 20-shot F1, 500 test examples each; described as exploratory; NED labels come from a separate entity-linking system\n  quote: \"All Tasks (avg) 62.63 59.75 58.09 64.83 / All Tasks (WR) 0.57 0.29 0.19 0.95\" and \"All Tasks (avg) 64.83 39.26 58.79 45.43 / All Tasks (WR) 0.95 0.00 0.67 0.38\"\n  where: Table 12, p25\n- claim: General benchmarks: beats similar-sized models but trails larger ones or reported GPT-3 on most averages.\n  number: BBH 41.97 vs 40.25, 39.58, 44.91, PaLM 52.3; knowledge 66.50 vs 63.10, 64.95, 67.01; MMLU 39.18 vs 35.95, 35.99, 39.13, GPT-3 43.9; reading 61.22 vs 42.81, 50.21, 49.37, GPT-3 67.0; linguistic 60.63 vs 57.18, 58.59, 58.26, GPT-3 63.4\n  setup: BBH 3-shot; knowledge 1-shot; MMLU 5-shot; reading and linguistic 1-shot; accuracy; GPT-3 and PaLM numbers are reported elsewhere, not rerun\n  quote: \"All Tasks (avg) 41.97 40.25 39.58 44.91 52.3\" / \"All Tasks (avg) 66.50 63.10 64.95 67.01 -\" / \"Average 39.18 35.95 35.99 39.13 43.9\" / \"All Tasks (avg) 61.22 42.81 50.21 49.37 67.0\" / \"All Tasks (avg) 60.63 57.18 58.59 58.26 63.4\"\n  where: Tables 13-17, p27-30\n- claim: The comparison cohort differs in tokens, size and compute.\n  number: 569B/50.6B/1.00× vs NeoX 472/20/0.33×, OPT 300/66/0.69×, BLOOM 366/176/2.24×, GPT-3 300/175/1.82×\n  setup: authors call compute only partly comparable, since BLOOM data is 1/3 English and OPT repeated data\n  quote: \"BloombergGPT 569 50.6 1.00 × / GPT-NeoX 472 20 0.33 × / OPT 300 66 0.69 × / BLOOM 366 176 2.24 × / GPT-3 300 175 1.82 ×\"\n  where: Table 6, p17\n- claim: The authors rank the causes of the results by impact, without an ablation.\n  number: none\n  setup: conclusion\n  quote: \"We attribute this, in decreasing order of impact, to 1. a well-curated internal dataset, 2. our unique choice in tokenizer, and 3. an up-to-date architecture.\"\n  where: §9, p39\n\nLIMITS\n- No ablation: no public-only or finance-only twin, and no same-model run with another tokenizer. The causal ranking above is untested. Tokenizer effects are listed as future work (p39).\n- Neither model nor data is released. Quote: \"While we cannot release FinPile\" (p7). The stated reason is that weight access could expose the data: \"providing access to model weights entails giving access to FinPile\" (p38). The release risk also covers imitation abuse.\n- Internal benchmarks are private, so those results cannot be checked. Likely data overlap with FinPile is conceded for the internal sets (p22).\n- Evaluation choices: the number of shots was chosen for best average across models (p20); the best of three classification methods is reported per model and task (p18). Non-LLM finance models are excluded, so claims cover LLMs only (p20). No error bars or seed counts are printed.\n- Toxicity and bias are unmeasured, \"unknown as yet\" (p39).\n- Not shown: dollar cost and GPU hours actually consumed. Total calendar time across failed runs is also not given.\n- The model never saw all its data. C.3 cites 77% used and budget nearly exhausted (p75).\n- Dated: LLaMA is excluded from comparison for lack of access or third-party results (footnote 2, p18). Training data stops July 2022. Figure 6's footnote shows stale-knowledge risk in another model. Future work lists SwiGLU, RoPE and query/key normalization (p75).\n\nBUILDS ON: BLOOM (Scao et al., 2022; Le Scao et al., 2022); Chinchilla (Hoffmann et al., 2022); Kaplan et al. (2020); Levine et al. (2020); dedup, Lee et al. (2022a); Unigram, Kudo (2018), Kudo and Richardson (2018), Bostrom and Durrett (2020); byte handling, Radford et al. (2019); digit chunks, PaLM (Chowdhery et al., 2022); GPT-3 settings (Brown et al., 2020); AdamW (Loshchilov and Hutter, 2019); ZeRO (Rajbhandari et al., 2020); SMP (Karakus et al., 2021); MiCS (Zhang et al., 2022b); checkpointing (Chen et al., 2016); Megatron-LM (Shoeybi et al., 2019); OPT chronicles (Zhang et al., 2022a); FLUE (Shah et al., 2022); HELM (Liang et al., 2022); BBH (Suzgun et al., 2022).\n\nCODE\n- Pretokenization regex, §2.3, p9: `[ A-Za-z]+|[0-9]|[^A-Za-z0-9]+`\n- Shape rule, §3.2, p13: `D = exp(5.039) exp(0.0555 · L)`\n- Probability-merge rule, p10 (prose): merged \"by taking a weighted average of the probabilities of corresponding tokens\"\n\nFIGURES (pages match printed numbers)\n- Fig 1, p12: \"Kaplan et al. (2020) and Chinchilla scaling laws with prior large language model and BloombergGPT parameter and data sizes.\" Shows the model on the size and token curves at a glance.\n- Fig 2, p15: \"(Smoothed) training and validation losses for BloombergGPT.\" One plot shows the batch-size kink and each late intervention.\n- Fig 3, p19: \"Bits per byte on a heldout test set of each data type in our FinPile.\" Shows the per-source gap, largest for Filings. Values are not printed in the text.\n- Fig 7, p67: \"Learning curve of our first training attempt named v0.\" Shows the curriculum plateau.\n- Fig 8, p68: \"Gradient norms (top) and train & validation loss (bottom) of v1.x runs.\" Shows gradient jumps aligned with loss jumps.\n- Fig 9, p69: \"Rescaled norms for each component in v1.0 run. Input LayerNorm at Layer 1 stood out.\" Shows the diagnostic method.\n- Fig 12, p73: \"Loss values for various runs at the end of v2.\" Shows that every rescue attempt flattens.\n\nPROBLEMS\n- No embedded instructions found.\n- The paper disagrees with itself, and I report rather than resolve these:\n  1. §4 says about 80% of an epoch (569/709); C.3 says \"we had used 77% of our training data\" (p75).\n  2. p23 says \"four internal\" sentiment tasks and gaps of \"at least 25\" points on \"the other three\", but Table 10 has five tasks. ES News beats the next model by only 14.68 (46.12 vs 31.44, my arithmetic).\n  3. p26 says that on social media NER+NED it is second \"behind BLOOM176B\", but Table 12 shows OPT 70.57 first, BloombergGPT 67.34, BLOOM 65.94.\n  4. p26 says \"by a large margin\", yet Filings is 66.67 vs OPT 65.63 and Transcripts 73.15 vs 70.44.\n  5. p4 says forty years of collection, p5 says two decades, and the documents span 2007-2022.\n- Extraction faults: \"~\" renders as \"⁄tildelow\"; spaced headings (\"T raining\"); exponents flatten (\"217\"); Appendix A math is scrambled; the Appendix C heading icons are lost; table columns in Tables 19-20 are collapsed.\n- The target note /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md does not list arXiv:2303.17564 in its sources."
+ "type": "empirical",
+ "question": "Can an LLM trained on a mix of a large private financial corpus and public general-purpose data beat general LLMs on financial tasks without losing general-purpose ability?",
+ "hypothesis": "Training on high-quality finance-specific data (mixed with general data) will yield better results on financial tasks while staying competitive on general benchmarks.",
+ "contributions": [
+  "BloombergGPT, a 50B-parameter decoder-only LLM trained on 363B tokens of finance data (FinPile) plus 345B tokens of public data",
+  "Evaluation on public financial tasks, Bloomberg-internal tasks and standard general LLM benchmarks",
+  "Documentation of modelling choices (Unigram tokenizer, Chinchilla-guided sizing) and the Training Chronicles (Appendix C)"
+ ],
+ "method": {
+  "summary": "A 70-layer BLOOM-style decoder-only model (50.6B parameters) was trained from scratch with a causal LM objective on a 708B-token corpus of about half Bloomberg finance text (FinPile) and half public text (Pile, C4, Wikipedia), for 569B tokens (~80% of one epoch). It was compared with GPT-NeoX 20B, OPT 66B and BLOOM 176B (GPT-3 and PaLM numbers reported from other work) using few-shot standard prompting.",
+  "task": "next-token pretraining (causal LM) of a domain-mixed LLM; few-shot evaluation on finance and general tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FinPile (Web, News, Filings, Press, Bloomberg)",
+    "role": "pretrain",
+    "size": "363B tokens (51.27% of training); Web 298B, News 38B, Filings 14B, Press 9B, Bloomberg 5B",
+    "split": "validation: July 2022 (val_future, ~105M tokens) plus last 105M tokens of training data (val_past)",
+    "source": "Bloomberg archives, dated 2007-03-01 to 2022-07-31; private, not released",
+    "preprocessing": "deduplicated following Lee et al. (2022a); markup, special formatting and templates stripped"
+   },
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "184B tokens (25.9% of training)",
+    "split": null,
+    "source": "Gao et al., 2021",
+    "preprocessing": "deduplicated (Lee et al., 2022a), which shrinks it substantially"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "138B tokens (19.48% of training)",
+    "split": null,
+    "source": "Raffel et al., 2020",
+    "preprocessing": "deduplicated"
+   },
+   {
+    "name": "Wikipedia (English, 1 July 2022 dump)",
+    "role": "pretrain",
+    "size": "24B tokens (3.35% of training)",
+    "split": null,
+    "source": "Wikipedia dump",
+    "preprocessing": "deduplicated; 3.06 characters per token, markup suspected"
+   },
+   {
+    "name": "Public financial tasks (FPB, FiQA SA, Headline, NER, ConvFinQA)",
+    "role": "eval",
+    "size": "FPB 970 test sentences; FiQA SA 235 test; Headline 2,283 test; NER 98 test sentences; ConvFinQA 1,490 conversations / 5,932 questions (dev set used)",
+    "split": "own random splits for FPB, FiQA, Headline; official or dev split otherwise; few-shot examples from train",
+    "source": "Malo 2014; Maia 2018; Sinha and Khandait 2020; Salinas Alvarado 2015; Chen 2022",
+    "preprocessing": "FiQA discretised to negative (-1 <= x < -0.1), neutral, positive (0.1 <= x <= 1); NER drops MISC and sentences without entities"
+   },
+   {
+    "name": "Bloomberg-internal sentiment (5 tasks) and NER / NER+NED (7 datasets each)",
+    "role": "eval",
+    "size": "sentiment: up to 1,000 test examples (800 for Equity Transcript); NER: 4,000 train and 500 test per dataset",
+    "split": "random sample",
+    "source": "Bloomberg internal, annotated by 2 annotators plus a tie-breaker; private",
+    "preprocessing": "NER restricted to ORG, PER, LOC; documents without entities removed"
+   },
+   {
+    "name": "General benchmarks (BBH 23 tasks, ARC, CommonsenseQA, MMLU, PiQA, BoolQ, OpenBookQA, RACE, MultiRC, ReCoRD, RTE, ANLI, CB, COPA, WIC, Winograd, Winogrande, HellaSWAG, StoryCloze)",
+    "role": "eval",
+    "size": "see Table 5: BBH 23, knowledge 5, reading comprehension 5, linguistic 9 tasks",
+    "split": "official test set where labels are public, else dev; 20% test split if no official split",
+    "source": "HELM, SuperGLUE, MMLU, GPT-3 suite",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BloombergGPT",
+    "role": "proposed",
+    "params": "50.6B (50,558,868,480)",
+    "architecture": "decoder-only causal transformer, BLOOM-based, ALiBi, GELU, tied input/output embeddings, extra LayerNorm after embeddings, pre-LN blocks",
+    "init_from": "random init, N(0, sqrt(1/(3D)) = 0.006588); second FFN layer and attention output rescaled by 1/sqrt(2L)",
+    "tokenizer": "Unigram, byte-level, trained on The Pile via 22 domains x 256 chunks merged; pretokenization regex [ A-Za-z]+|[0-9]|[^A-Za-z0-9]+",
+    "vocab": "131,072 (2^17)",
+    "layers": 70,
+    "hidden": 7680,
+    "heads": 40,
+    "context": "2,048 tokens in training (ALiBi allows longer at inference)",
+    "other": {
+     "head_dim": 192,
+     "ffn_dim": "30,720"
+    }
+   },
+   {
+    "name": "GPT-NeoX",
+    "role": "baseline",
+    "params": "20B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tokens": "472B",
+     "compute_vs_BloombergGPT": "0.33x"
+    }
+   },
+   {
+    "name": "OPT",
+    "role": "baseline",
+    "params": "66B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tokens": "300B",
+     "compute_vs_BloombergGPT": "0.69x"
+    }
+   },
+   {
+    "name": "BLOOM",
+    "role": "baseline",
+    "params": "176B",
+    "architecture": "decoder-only, same architecture and software stack",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tokens": "366B",
+     "compute_vs_BloombergGPT": "2.24x"
+    }
+   },
+   {
+    "name": "GPT-3",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "tokens": "300B",
+     "note": "numbers reported from Brown et al. 2020, not rerun"
+    }
+   },
+   {
+    "name": "PaLM",
+    "role": "baseline",
+    "params": "540B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "BBH numbers taken from the BBH paper"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard left-to-right causal language modeling",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95",
+   "lr": "max 6e-5, final 6e-6 (0.1x max)",
+   "lr_schedule": "cosine decay with linear warmup; later manual cuts: x2/3 at step 115,500, x1/2 at 129,900, x1/2 at 137,100",
+   "warmup": "1,800 steps",
+   "batch_size": "1,024 sequences (2.1M tokens) for the first 7,200 steps, then 2,048 sequences (4.2M tokens)",
+   "steps": "139,200 steps for the selected checkpoint (run ended at 146,000)",
+   "epochs": "~0.8 of one epoch",
+   "tokens": "569B of 709B available",
+   "seq_len": "2,048 tokens, documents concatenated with <|endoftext|> and chunked",
+   "precision": "BF16 forward/backward, FP32 parameter storage and update; FP32 for fused softmax, loss softmax and ALiBi matrices (stored BF16)",
+   "weight_decay": "0.1 (not applied to LayerNorm gain; bug fixed in v2.0)",
+   "dropout": "0.0 initially; 0.1 added from step 129,900",
+   "regularisation": "gradient clipping 0.3; query-key layer scaling",
+   "hardware": "64 p4d.24xlarge instances = 512 NVIDIA A100 40GB on AWS SageMaker; ZeRO stage 3 via SageMaker Model Parallelism, MiCS, activation checkpointing per layer, fused masked-causal-softmax kernel; model sharded across 128 GPUs with 4 copies",
+   "compute": "2.36e23 FLOPs total; 102 TFLOPs average per GPU; budget 1.3M A100-40GB GPU hours",
+   "wall_clock": "~53 days for 139,200 steps; 32.5 s/step",
+   "seeds": "inferred: a single final run; v2.0 used a different seed from v1.x, no seed count stated",
+   "other": {
+    "validation_cadence": "validation every 300 steps; training loss logged every 5 steps, smoothed with alpha 0.001",
+    "scaling_fit": "Chinchilla approach 1: 52.993B params / 1111.112B tokens; approach 2: 49.753B / 1175.766B; 0.75 x 1.3M GPU hours used because activation checkpointing adds 0.33x; ~30% of budget kept as buffer",
+    "shape_rule": "D = exp(5.039) exp(0.0555 L) (Levine et al. 2020) gave L=70, D=7510, rounded to 7680 for 40 heads x 192",
+    "tokenizer_vocab_search": "vocab 25,000 to 550,000 compared on encoded C4 size; optimum 125,000 rounded to 2^17",
+    "interventions": "v0 curriculum learning (abandoned), v1.x gradient-norm elbow at ~12k steps (4 failed fixes), v2.0 conservative restart with ~10 changes, then v2.1-v2.6 LR/dropout/weight-decay variants after validation loss stalled at step 115,500"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for generative tasks; likelihood-based classification (regular, calibration, or length normalisation; best per model and task reported) when candidates are given",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Shots resampled per test example to reduce variance; no seeds or repeat runs stated",
+   "prompting": "standard few-shot prompting, no task descriptions, no chain-of-thought; shots: 5 (FPB, FiQA SA, Headline, internal sentiment), 20 (NER, internal NER and NER+NED), 3 (BBH), 1 (knowledge, reading, linguistic, ConvFinQA), 5 (MMLU)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "long_document_loss": "sliding window with half-window context for held-out bits-per-byte; tokens beyond the first 2,048 have at least 1,024 tokens of context"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits per byte",
+     "definition": "held-out loss on a temporally held-out FinPile set",
+     "unit": "bits/byte",
+     "higher_is_better": false
+    },
+    {
+     "name": "weighted F1",
+     "definition": "F1 weighted by label support (sentiment, Headline)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "entity-level F1",
+     "definition": "NER and NER+NED",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact match accuracy",
+     "definition": "ConvFinQA on the dev set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "BBH, knowledge, MMLU, reading comprehension, linguistic tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "win rate (WR)",
+     "definition": "fraction of wins in side-by-side comparisons over individual tasks, following HELM",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-NeoX 20B",
+    "OPT 66B",
+    "BLOOM 176B",
+    "GPT-3 175B (reported)",
+    "PaLM 540B (BBH, reported)"
+   ],
+   "protocol": "Authors run GPT-NeoX, OPT and BLOOM themselves with identical inputs; GPT-3 and PaLM numbers are reported from other papers. Shot counts for public finance tasks were chosen so average performance across models was best. One setup per dataset; no error bars or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": "not released (to avoid leaking FinPile)",
+   "data": "FinPile not released; internal benchmarks private"
+  },
+  "prompts": [
+   {
+    "purpose": "sentiment template",
+    "text": "{sentence}\nQuestion: what is the sentiment?\nAnswer: {negative/neutral/positive}",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "aspect sentiment template",
+    "text": "{sentence}\nQuestion: what is the sentiment on {target}?\nAnswer: {negative/neutral/positive}",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "binary classification template",
+    "text": "{sentence}\nQuestion: {question}?\nAnswer: {Yes/No}",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "QA template",
+    "text": "{context}\nQuestion: {question}?\nAnswer: {answer}",
+    "where": "Table 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "ended model training after completing ~80% of one epoch through our training data (569B tokens out of the 709B tokens available)",
+    "where": "Section 4"
+   },
+   {
+    "field": "datasets total",
+    "quote": "TOTAL 226,631 1,531 34,701 4.89 7,089 100.00%",
+    "where": "Table 1 (tokens column in 1e8, i.e. ~709B; abstract says 363B + 345B)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Training stopped at about 80% of one epoch because held-out loss stopped improving.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training tokens",
+   "value": "569B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BloombergGPT, 50.6B, 512 A100 40GB",
+   "quote": "ended model training after completing ~80% of one epoch through our training data (569B tokens out of the 709B tokens available)",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Training ran 139,200 steps to the selected checkpoint.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps",
+   "value": "139,200",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same run; ended at step 146,000, checkpoint 139,200 selected by validation loss and downstream evals",
+   "quote": "We trained for a total of 139,200 steps (~53 days)",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "The corpus is about half finance and half public text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FinPile tokens",
+   "value": "363B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FinPile 363B vs public 345B tokens",
+   "quote": "We construct a 363 billion token dataset based on Bloomberg’s extensive data sources, perhaps the largest domain-specific dataset yet, augmented with 345 billion tokens from general purpose datasets.",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Chinchilla fit (approach 1) gives a compute-optimal size close to 50B but wants far more tokens than available.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Chinchilla approach 1 optimal params",
+   "value": "52.993B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "budget 0.75 x 1.3M A100-40GB hours",
+   "quote": "Parameters = exp10(log10(FLOPs) · 0.498 −1.004) = 52.993B",
+   "table": null,
+   "note": "Approach 1 tokens 1111.112B, approach 2 49.753B params and 1175.766B tokens",
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Total compute used by the training run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total FLOPs",
+   "value": "2.36e23",
+   "unit": "FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BloombergGPT, selected checkpoint",
+   "quote": null,
+   "table": "Table 4, row total FLOPS",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Average throughput over 512 A100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg TFLOPs per GPU",
+   "value": "102",
+   "unit": "TFLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ZeRO3 + MiCS + activation checkpointing, BF16",
+   "quote": "we achieve 102 TFLOPs on average and each training step takes 32.5 seconds",
+   "table": null,
+   "note": null,
+   "where": "Section 3.4"
+  },
+  {
+   "claim": "Vocabulary size chosen by minimising encoded C4 size, then rounded to a power of 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "vocab size",
+   "value": "131,072",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unigram tokenizer, vocabularies 25,000 to 550,000 tried",
+   "quote": "This gives us a vocabulary size of 125,000, which we then round up to the nearest power of 2",
+   "table": null,
+   "note": null,
+   "where": "Section 2.3"
+  },
+  {
+   "claim": "Average on public finance tasks: BloombergGPT is best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg over 5 tasks",
+   "value": "62.51",
+   "unit": "avg score",
+   "baseline_value": "54.35 (BLOOM176B)",
+   "n": null,
+   "setup": "FPB, FiQA SA, Headline, NER, ConvFinQA; 5-shot (NER 20-shot); vs GPT-NeoX 51.90, OPT66B 53.01, BLOOM176B 54.35",
+   "quote": null,
+   "table": "Table 8, row All Tasks (avg), column BloombergGPT",
+   "note": "win rate 0.93",
+   "where": "Table 8"
+  },
+  {
+   "claim": "ConvFinQA exact match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact match",
+   "value": "43.41",
+   "unit": "% exact match",
+   "baseline_value": "36.31 (BLOOM176B)",
+   "n": null,
+   "setup": "1-shot, dev set; vs BLOOM176B 36.31",
+   "quote": null,
+   "table": "Table 8, row ConvFinQA, column BloombergGPT",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "FiQA SA weighted F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "75.07",
+   "unit": "weighted F1",
+   "baseline_value": "53.12 (BLOOM176B)",
+   "n": null,
+   "setup": "5-shot; vs BLOOM176B 53.12",
+   "quote": null,
+   "table": "Table 8, row FiQA SA, column BloombergGPT",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Public NER: BloombergGPT is second, GPT-NeoX marginally ahead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "entity F1",
+   "value": "60.82",
+   "unit": "F1",
+   "baseline_value": "60.98 (GPT-NeoX)",
+   "n": null,
+   "setup": "20-shot entity-level F1, 98 test sentences",
+   "quote": null,
+   "table": "Table 8, row NER, column BloombergGPT",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Internal aspect sentiment average: very large gap over other models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg weighted F1",
+   "value": "62.47",
+   "unit": "avg weighted F1",
+   "baseline_value": "35.76 (OPT66B)",
+   "n": null,
+   "setup": "5 Bloomberg-internal tasks, 5-shot weighted F1, up to 1k test examples; vs GPT-NeoX 29.23, OPT 35.76, BLOOM 33.39",
+   "quote": null,
+   "table": "Table 10, row All Tasks (avg), column BloombergGPT",
+   "note": "Authors concede unlabeled internal data likely occurs in FinPile (and possibly in other models' data)",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Internal NER average: much larger BLOOM176B is better.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg entity F1",
+   "value": "62.63",
+   "unit": "avg F1",
+   "baseline_value": "64.83 (BLOOM176B)",
+   "n": null,
+   "setup": "7 internal sets, 20-shot F1, 500 test examples each; exploratory",
+   "quote": null,
+   "table": "Table 12, NER block, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Joint NER+NED average: BloombergGPT far ahead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": "64.83",
+   "unit": "avg F1",
+   "baseline_value": "58.79 (OPT66B)",
+   "n": null,
+   "setup": "7 internal sets, 20-shot F1; vs GPT-NeoX 39.26, OPT 58.79, BLOOM 45.43",
+   "quote": null,
+   "table": "Table 12, NER+NED block, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "BIG-bench Hard average: below BLOOM176B and PaLM540B, above NeoX and OPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "41.97",
+   "unit": "avg accuracy",
+   "baseline_value": "44.91 (BLOOM176B)",
+   "n": null,
+   "setup": "23 tasks, 3-shot; BLOOM176B 44.91, PaLM540B 52.3",
+   "quote": null,
+   "table": "Table 13, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 13"
+  },
+  {
+   "claim": "MMLU 5-shot average: roughly equal to BLOOM176B, below GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU avg",
+   "value": "39.18",
+   "unit": "avg accuracy",
+   "baseline_value": "43.9 (GPT-3, reported)",
+   "n": null,
+   "setup": "5-shot; GPT-3 43.9 (reported from Hendrycks 2021)",
+   "quote": null,
+   "table": "Table 15, row Average, column BloombergGPT",
+   "note": null,
+   "where": "Table 15"
+  },
+  {
+   "claim": "Knowledge tasks average: slightly below BLOOM176B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "66.50",
+   "unit": "avg accuracy",
+   "baseline_value": "67.01 (BLOOM176B)",
+   "n": null,
+   "setup": "ARC easy/challenge, CommonsenseQA, PiQA, 1-shot",
+   "quote": null,
+   "table": "Table 14, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "Reading comprehension average: far above other models run by the authors, below GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "61.22",
+   "unit": "avg accuracy",
+   "baseline_value": "67.0 (GPT-3, reported)",
+   "n": null,
+   "setup": "6 scenarios, 1-shot",
+   "quote": null,
+   "table": "Table 16, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 16"
+  },
+  {
+   "claim": "Linguistic tasks average: highest of models run by the authors, below GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "60.63",
+   "unit": "avg accuracy",
+   "baseline_value": "63.4 (GPT-3, reported)",
+   "n": null,
+   "setup": "11 scenarios, 1-shot",
+   "quote": null,
+   "table": "Table 17, row All Tasks (avg), column BloombergGPT",
+   "note": null,
+   "where": "Table 17"
+  },
+  {
+   "claim": "Tokenizer needs fewer tokens than BLOOM, NeoX and OPT tokenizers on public data; the old FinPile is slightly longer under others.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens under BloombergGPT tokenizer",
+   "value": "345",
+   "unit": "B tokens (public total)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "token counts in billions with an older FinPile version",
+   "quote": null,
+   "table": "Table 3, row Total, column BloombergGPT",
+   "note": "BLOOM 390 (113%), NeoX 408 (118%), OPT 434 (126%) for the same data",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Authors rank the sources of the gains without an ablation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "conclusion",
+   "quote": "We attribute this, in decreasing order of impact, to 1. a well-curated internal dataset, 2. our unique choice in tokenizer, and 3. an up-to-date architecture.",
+   "table": null,
+   "note": null,
+   "where": "Section 9"
+  },
+  {
+   "claim": "Curriculum learning (data ordered by month) stalled and was abandoned.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "run v0, Appendix C.0",
+   "quote": "We thus decided to abandon curriculum learning altogether.",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.0"
+  },
+  {
+   "claim": "v1.0 gradient norm rose from about 12k steps; four fix attempts failed; v2.0 restart with many simultaneous changes was stable but cause is unknown.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix C.1-C.2",
+   "quote": "we cannot conclude which of these changes was decisive in leading to a successful training run",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.2"
+  },
+  {
+   "claim": "After step 115,500 validation loss flattened; LR cuts and dropout did not clearly help.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "runs v2.1-v2.6",
+   "quote": "We did not observe that any particular change significantly improved the downstream evaluations and validation loss",
+   "table": null,
+   "note": null,
+   "where": "Appendix C.3"
+  },
+  {
+   "claim": "Held-out finance loss: BloombergGPT lower bits per byte than all baselines, largest gap on Filings.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "temporally held-out FinPile set, deduplicated against training",
+   "quote": "Figure 3 shows that BloombergGPT consistently outperforms other models.",
+   "table": null,
+   "note": "bar values only in the figure, not in text",
+   "where": "Section 5.2 / Fig 3"
+  }
+ ],
+ "limits": [
+  "No ablation: no public-only or finance-only twin and no same-model run with a different tokenizer, so the stated ranking of causes is untested.",
+  "Model weights, FinPile and the internal benchmarks are not released; internal results cannot be checked.",
+  "Internal task text likely appears in FinPile, so the authors concede possible contamination (Section 5.3.2).",
+  "Shot counts for public finance tasks were chosen to maximise average performance across models, and the best of three classification methods is reported per model and task; no error bars or seeds.",
+  "Compute is only partly comparable across the cohort (BLOOM data one-third English, OPT repeated data).",
+  "Toxicity and bias were not measured; effects of the tokenizer on the model left to future work.",
+  "Training ended at ~80% of one epoch, with budget nearly spent; longer training might have helped.",
+  "The Chinchilla law is tokenizer-specific and transfer across tokenizers is open (footnote 1).",
+  "LLaMA could not be compared (no third-party results or weights, footnote 2). Training data ends July 2022."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": "2211.05100",
+   "relation": "extends",
+   "note": "architecture and software stack basis",
+   "quote": "we benefited from existing code developed as part of the BLOOM effort"
+  },
+  {
+   "work": "Training Compute-Optimal Large Language Models (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "approach 1 and 2 scaling fits set the model size",
+   "quote": null
+  },
+  {
+   "work": "Levine et al. depth-to-width scaling",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "layer/hidden shape rule",
+   "quote": null
+  },
+  {
+   "work": "Deduplicating Training Data Makes Language Models Better",
+   "year": 2022,
+   "arxiv": "2107.06499",
+   "relation": "uses-method",
+   "note": "dedup of every dataset",
+   "quote": null
+  },
+  {
+   "work": "Kudo (2018) Unigram tokenizer",
+   "year": 2018,
+   "arxiv": "1804.10959",
+   "relation": "uses-method",
+   "note": "tokenizer type",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2021,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "public data and tokenizer training",
+   "quote": null
+  },
+  {
+   "work": "C4 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "public data",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "reported numbers and training recipe (batch size warmup, templates)",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "baseline",
+   "note": "evaluated as OPT66B; OPT chronicles inspired Appendix C",
+   "quote": null
+  },
+  {
+   "work": "GPT-NeoX-20B",
+   "year": 2022,
+   "arxiv": "2204.06745",
+   "relation": "baseline",
+   "note": "evaluated",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "baseline",
+   "note": "BBH numbers reported; digit-per-chunk tokenization",
+   "quote": null
+  },
+  {
+   "work": "FLUE (Shah et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "four public finance tasks",
+   "quote": null
+  },
+  {
+   "work": "ConvFinQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "numerical reasoning QA",
+   "quote": null
+  },
+  {
+   "work": "BIG-bench Hard (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": "2210.09261",
+   "relation": "evaluates",
+   "note": "23 tasks",
+   "quote": null
+  },
+  {
+   "work": "HELM (Liang et al.)",
+   "year": 2022,
+   "arxiv": "2211.09110",
+   "relation": "uses-method",
+   "note": "win-rate aggregation",
+   "quote": null
+  },
+  {
+   "work": "Galactica",
+   "year": 2022,
+   "arxiv": "2211.09085",
+   "relation": "related",
+   "note": "inspiration for mixing domain and public data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "(Smoothed) training and validation losses for BloombergGPT; colours denote hyperparameter configurations",
+   "page": 16,
+   "why": "shows batch-size warmup and the late LR and dropout interventions"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Breakdown of the full training set",
+   "page": 6,
+   "why": "gives the corpus composition and characters per token"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Summary of hyperparameters",
+   "page": 11,
+   "why": "compact rerun recipe"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Kaplan and Chinchilla scaling laws with prior LLMs and BloombergGPT",
+   "page": 12,
+   "why": "places the 50B / 569B choice against compute-optimal curves"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 2.3 p9",
+   "snippet": "[ A-Za-z]+|[0-9]|[^A-Za-z0-9]+",
+   "verbatim": true
+  },
+  {
+   "where": "Section 3.2 p13",
+   "snippet": "D = exp(5.039) exp(0.0555 · L)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 token column is in units of 1e8, summing to ~709B; abstract text gives 363B + 345B = 708B and Section 4 says 709B available.",
+  "Pymupdf text lost some run columns in Tables 19-20 (which run each value belongs to is unclear).",
+  "No embedded instructions found."
+ ]
 }

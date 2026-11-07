@@ -1,19 +1,515 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2206.05802",
  "pdf": "ai-engineering/05-graph-engineering/sources/saunders-2022-self-critiquing-models-assisting-human.pdf",
  "bib": {
   "title": "Self-critiquing models for assisting human evaluators",
-  "first_author": "SAUNDERS",
+  "authors": [
+   "William Saunders",
+   "Catherine Yeh",
+   "Jeff Wu",
+   "Steven Bills",
+   "Long Ouyang",
+   "Jonathan Ward",
+   "Jan Leike"
+  ],
+  "first_author": "Saunders",
   "year": 2022,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2206.05802",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "fac603a9-e975-4eff-b41e-1a979377bb97"
+  "at": "2026-11-07",
+  "chars_read": 165209,
+  "chars_total": 165209,
+  "engine": "pymupdf",
+  "skipped": "Sample tables 6-35 (appendix F) skimmed by caption and first sample only; they hold examples, no results."
  },
- "legacy_report": "SOURCE: \"Self-critiquing models for assisting human evaluators\", William Saunders, Catherine Yeh, Jeff Wu (equal contribution), Steven Bills, Long Ouyang, Jonathan Ward, Jan Leike (OpenAI). Preprint, arXiv:2206.05802v2, 14 Jun 2022.\n\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/05-graph-engineering/sources/saunders-2022-self-critiquing-models-assisting-human.pdf\n\nCOVERAGE: I read 54 of 54 pages and all 165,161 characters were extracted. I read pp. 1–36 closely: the main text, limitations, Appendices A–E and the F intro. I also read the helpfulness samples (Tables 6–15) and two assistance samples (Tables 16–17). For pp. 41–54 (Tables 18–35, random assistance and refinement samples) I checked the captions and spot-read the text. They hold examples only and no results. I skimmed the references for origins.\n\nFit for graph engineering: this is a fine-tuning and scalable-oversight paper, not a multi-agent orchestration paper. Every role (answer, critique, critiqueability, helpfulness, refine) is played by one jointly trained model. It still gives clean evidence for a generator → critic → refiner loop and a critic-ranking (helpfulness-score) node.\n\nCLAIMS\n- claim: Model critiques shown to human evaluators raise the number of flaws they find by about 50%.\n  number: ~50% more critiques\n  setup: topic-based summarisation on held-out passages of 2048–3840 tokens. Labelers saw 8 model critiques (one each at temperatures 0.0–0.6 and 1.0), de-duplicated and sorted by helpfulness score. Critiques came from the best fine-tuned model. Answers were model-written, human-written or human-misleading.\n  quote: \"Human labelers asked to ﬁnd critiques of (model or human-written) answers ﬁnd about 50% more critiques when given assistance from a critique model.\"\n  where: p.2, §1.2\n- claim: On planted flaws (misleading answers written on purpose), assisted labelers found the intended flaw 45% of the time against 27% unassisted.\n  number: 45±5% vs 27±5%\n  setup: human-misleading answers whose authors wrote down the intended critique. The authors then judged whether other labelers found it.\n  quote: \"With assistance, labelers ﬁnd the intended critiques 45± 5% of the time, whereas without assistance they only ﬁnd it 27± 5% of the time.\"\n  where: p.8, §3.3.1\n- claim: Assistance does not lower the share of critiques the answer's author judges valid. It does raise the number of valid critiques.\n  number: 71% vs 73% valid; 0.96±0.09 vs 0.62±0.07 valid critiques\n  setup: same misleading-answer subset\n  quote: \"The fraction of critiques the author considers valid does not appreciably decrease with assistance (71% with assistance versus 73% without). 3. However, the number of valid critiques is still much higher, 0.96± 0.09 vs. 0.62± 0.07.\"\n  where: p.8\n- claim: Assisted labelers also found more valid critiques that were novel.\n  number: 0.24±0.06 vs 0.18±0.05\n  setup: same subset\n  quote: \"With assistance, labelers also ﬁnd more valid and novel critiques,0.24±0.06 vs. 0.18±0.05.\"\n  where: p.8\n- claim: With assistance, more model answers get flagged and they are rated lower.\n  number: 54%→78% of inputs critiqued; rating 5.6→4.9\n  setup: model answers, 1–7 Likert scale\n  quote: \"on model answers, unassisted labelers found critiques on just 54% of inputs and gave an average rating of 5.6, while assisted labelers found critiques on 78% of inputs and gave an average rating of 4.9.\"\n  where: p.8\n- claim: Labelers mostly accepted model critiques without editing them. This is a rubber-stamping risk for any human-in-the-loop critic.\n  number: 15.3%\n  setup: assist condition\n  quote: \"Only 15.3% of the used critiques were edited further.\"\n  where: p.8\n- claim: Assistance barely changes time spent. Showing 8 critiques beats showing 4.\n  number: 6.27 / 5.82 / 6.26 min; 0.74 / 1.06 / 1.31 critiques\n  setup: an earlier ablation run during the project\n  quote: \"No assistance 6.27± 0.31 0.74± 0.05 / 4 critiques 5.82± 0.27 1.06± 0.07 / 8 critiques 6.26± 0.27 1.31± 0.08\"\n  where: p.35-36, App. E.3\n- claim: Larger models critique their own outputs better, even though their outputs are harder to critique.\n  number: critiqueable outputs about 20% less often for the most capable models\n  setup: 5 pretrained models, with scale measured as fine-tuning loss (nats/token), not parameter count. Self-critique was sampled at the same random temperature as the answer.\n  quote: \"More capable models have critiqueable outputs around 20% less often than the smallest models, ac-cording to labelers. Less than 15% of outputs are uncri-tiqueable for the worst models, and over 30% for the best models.\"\n  where: p.10, Fig. 4a caption\n- claim: Refining with a critique helps only for large models, and only beats direct refinement when the critique is chosen by best-of-N on the helpfulness score. Rejection sampling over direct refinements may be the stronger baseline at equal compute.\n  number: none\n  setup: win rate against the original best-of-1 answer, T=0.5, everything generated by one model\n  quote: \"Conditional reﬁnement appear to outperform direct reﬁnements, but only with critiques selected via best-of-N against helpfulness.\" / \"Both forms of reﬁnement signiﬁcantly outperform the original output for larger models, but have little to no effect for smaller models.\" / \"rejection sampling on direct reﬁnements appears to be a stronger baseline.\"\n  where: p.12, §4.3.1\n- claim: The GDC gap. A model can discriminate (tell an answer is flawed) better than it can critique (articulate the flaw), and on summarisation this critique-discrimination (CD) gap does not shrink with scale.\n  number: none (shown in figures only)\n  setup: best-of-2 against a discriminator (D) or a human-judged critique severity (C), compared with an average sample (G). Applied to summarisation and 4 synthetic tasks (Addition, 3-SAT, Alphabetize, RACE).\n  quote: \"We observe a positive CD gap for topic-based summarization and 3-SAT and negative gap for Addition and RACE. 3. For topic-based summarization, the CD gap is approximately constant across model scale.\"\n  where: p.17, §5.3\n- claim: Their critique model beats InstructGPT zero-shot and few-shot baselines but is still well below humans.\n  number: none\n  setup: helpfulness judged by humans on critiqueable answers\n  quote: \"Overall we ﬁnd our model’s critiques to be helpful more often than the baselines, but still substantially less helpful than human critiques (Figure 3).\"\n  where: p.9\n- claim: Naive 2-step debate, which scores an answer by the helpfulness of its best-of-N critiques with no human involved, never matches a direct critiqueability discriminator at telling honest from misleading answers.\n  number: none\n  setup: largest model, T=0.5, paired honest and misleading answers\n  quote: \"The best-of-N helpfulness score appears to be asymptoting with N→∞ to worse than the critiqueability score. This suggests naive 2-step debate wouldn’t work as well as RLHP for this task.\"\n  where: p.34, App. D\n- claim: Humans reading a slate of 8 critiques judge answers better than humans reading 1 best-of-8 critique, and both beat a single critique. All three still fall short of the discriminator.\n  number: none\n  quote: \"humans evaluating 8 critiques outperforms humans evaluating 1 optimized critique (Ch8 > C8). However, it still seems to fall short of discriminator ability.\"\n  where: p.32\n- claim: Labeler agreement on ranking critiques was about the same as on ranking answers.\n  number: ~75%\n  quote: \"Agreement rate on comparisons of critiques (i.e. helpfulness rankings) were no higher than answer comparisons; both were around 75%.\"\n  where: p.18\n- claim: Training data is over 6,000 topical queries on over 2,000 passages. Helpfulness labels number 41,724 for training. Training was SFT only, one epoch.\n  number: 6,000 / 2,000 / 41,724\n  quote: \"We collected our own dataset of over 6,000 distinct topical queries and summaries, on over 2,000 distinct passages.\"\n  where: p.4; Table 4 p.25\n\nLIMITS\n- The authors concede (§7.2, p.18–19): there is no objective ground truth, and \"Misleading critiques of good outputs may be indistinguishable from good critiques of poor outputs\". The approach assumes reasoning can be put into words. It assumes labelers' preferences can be reconciled. Evaluation is not always easier than generation.\n- The task is easy for humans: \"Humans take up to around ten minutes to do the task, so we do not observe much speed-up\". The authors say this \"might not be reproducible on harder tasks\".\n- Models are \"under-optimized\": SFT only, no RL. The setup is hard to replicate.\n- Critique gains are concentrated in minor and coverage flaws. Fig. 2 shows the increase in accuracy flaws is only \"modest\".\n- The scaling evidence is weak in places. On synthetic tasks \"the story is less clear\", and \"we have no strong reason to believe positive critique scaling to be a fundamental trend\".\n- Model sizes are not given in parameters. Scale is reported as fine-tuning loss, and the models are \"not directly comparable\".\n- Dated: these are 2022 GPT-3-era fine-tuned models, and the InstructGPT baselines are now old. It does not test separate critic and generator agents, prompted (untrained) critics, or tool-using critics.\n\nBUILDS ON\nIterated amplification [CSA18] Christiano, Shlegeris, Amodei 2018. Debate [ICA18] Irving, Christiano, Amodei 2018. Recursive reward modeling [LKE+18] Leike et al. 2018. Scalable oversight [AOS+16] Amodei et al. 2016. RLHP [CLB+17] Christiano et al. 2017. Best-of-N against a reward model [SOW+20] Stiennon et al. 2020. InstructGPT baselines [OWJ+22] Ouyang et al. 2022. Topic-based summarisation [Dan05] Dang 2005 and [ZYY+21] Zhong et al. 2021. Natural-language feedback [SCC+22] Scheurer et al. 2022. Chain of thought [WWS+22b] Wei et al. 2022. Process over outcomes [SB22] Stuhlmüller & Byun 2022. Eliciting latent knowledge [CCX21] Christiano, Cotra, Xu 2021. Interactive proofs [GMR89], [Sha92], [BFL91]. Alex Gray is credited with coining the name \"generator-discriminator gap\".\n\nCODE\nPrompt format for the critique task (App. A.5, p.27). Critiqueability and critique go in one sequence, so the token after the question doubles as a gate.\n```\n{passage}\nQuestion: {question}\nAnswer: {answer}\nAre there any critiques for the above answer? If so, write one\n{binary critiqueability}\n{critique}\n```\nScore definition (p.5): critiqueability and helpfulness scores are \"Pr[Yes]/(Pr[Yes]+Pr[No])\", read from the logits.\n\nTask interfaces (Table 1, p.3). These map well to graph nodes:\n- Base: Q → A\n- Critiqueability: Q, A → {Yes, No}\n- Critique: Q, A → C\n- Helpfulness: Q, A, C → {Yes, No}\n- Conditional refinement: Q, A, C → A\n- Direct refinement: Q, A → A\n\nFIGURES\n- Table 1, p.3: the six task interfaces. It shows a generator/critic/judge/refiner graph at a glance.\n- Fig. 1, p.2: critiques found per condition, with and without assistance. It is the headline result in one chart.\n- Fig. 4, p.10: self-critique helpfulness rising with scale while outputs get harder to critique. It shows two competing trends together.\n- Fig. 6 and 7, p.13: conditional vs direct refinement vs best-of-8 by scale. It shows \"only at scale\" and the compute caveat quickly.\n- Fig. 8, p.14: GDC gaps on summarisation. It is the visual for \"models know more than they say\".\n- Fig. 14, p.34: naive debate (best-of-N critique helpfulness) plateaus below the direct discriminator. It is a caution for critic-only judge nodes.\n\nPROBLEMS\n- The extraction is clean. Some line-break hyphenation and ligatures (ﬁ, ﬂ) remain, and the fraction in the score formula and the expression \"1 − 1/2N\" are flattened in the text.\n- Figures 1–16 are images only, so I could not quote any per-model numbers from the plots. The CD and GD gap claims therefore have no figures beside them.\n- The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can language models fine-tuned to write natural language critiques help human evaluators find flaws in model outputs they would otherwise miss, and how does this scale?",
+ "hypothesis": "Evaluating critiques is easier than evaluating the base task, so critique assistance should help humans evaluate answers on tasks hard to evaluate directly.",
+ "contributions": [
+  "Model-written critiques help humans find flaws they would have missed",
+  "Critique helpfulness scales favorably with model capabilities",
+  "Large models can use critiques to help refine their own answers",
+  "Generator-discriminator-critique gaps methodology",
+  "Release of training datasets and samples from assistance experiments"
+ ],
+ "method": {
+  "summary": "Transformer decoders (GPT-3 style) are jointly fine-tuned by supervised learning (behavioral cloning) on a base task (topic-based summarization) plus critiqueability, critique, helpfulness and refinement tasks, in three rounds of human data collection. Human labelers then write critiques with or without eight model critiques shown. Scaling, refinement and GDC-gap experiments follow, plus four synthetic tasks with oracles.",
+  "task": "topic-based summarization; critique writing; critique assistance for human evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Topic-based summarization (own)",
+    "role": "both",
+    "size": "over 6,000 distinct topical queries on over 2,000 distinct passages; Table 4: base 6235 train / 770 test, critique 15277 / 1944, critiqueability 31279 / 3983, helpfulness 41724 / 5096, refinement 14323 / 1823, question generation 2221 / 264",
+    "split": "train/test by passage (Table 4)",
+    "source": "short stories, Wikipedia articles, web (mostly news) articles; human contractors wrote questions and answers; released",
+    "preprocessing": "most passages under 2,048 GPT-2 tokens; some up to 4,096 tokens used only for test/assistance"
+   },
+   {
+    "name": "Other tasks (QA and summarization mix, auxiliary)",
+    "role": "train",
+    "size": "Table 4: base 43285 train / 5250 test, critiqueability 55042 / 6988, critique 19194 / 2532, refinement 19194 / 2532, corroboration 42058 / 5273",
+    "split": "train/test",
+    "source": "labeler-created QA and summarization tasks",
+    "preprocessing": "50% of refinement tasks converted to direct refinement; 50% of corroboration quotes converted to answer quotes"
+   },
+   {
+    "name": "Synthetic tasks: Addition (6-digit), 3-SAT, Alphabetize (18 words), RACE",
+    "role": "both",
+    "size": "round 1: 100,000 generated base tasks; round 2: 100,000 critiqueability demos (half incorrect answers) and 50,000 critique demos",
+    "split": null,
+    "source": "generated with hand-coded oracles; RACE from Lai et al. 2017",
+    "preprocessing": "answers for round 2 sampled from first model at temperature 0"
+   }
+  ],
+  "models": [
+   {
+    "name": "Fine-tuned critique/base model (best, largest)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "transformer decoder in the style of GPT-3",
+    "init_from": "pre-trained autoregressive LM; five pre-trained models of varying capability, not directly comparable",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: at least 3840 tokens used in assistance experiments; training passages up to 2048 tokens",
+    "other": {
+     "model scale": "measured as fine-tuning validation loss in nats per token, not parameter count",
+     "parameter counts": "not stated"
+    }
+   },
+   {
+    "name": "InstructGPT-style baseline (zero-shot and few-shot)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same pretrained model, InstructGPT-style training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised next-token prediction on human demonstrations; loss masked to all tokens except the demonstration",
+   "optimizer": null,
+   "lr": "tuned per model (only hyperparameter tuned); value not stated",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rounds": "three rounds: base, then critique/critiqueability/refinement, then helpfulness; each round trains jointly on all data so far",
+    "format": "passage, question, answer, critiqueability, critique, helpfulness, refinement; critiqueability Yes and critique merged in one example",
+    "other hyperparameters": "fixed to be similar to pre-training"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; best-of-N against helpfulness or critiqueability score",
+   "temperature": "assistance: 8 critiques at [0.0,0.1,0.2,0.3,0.4,0.5,0.6,1.0]; refinement T=0.5; GDC summarization: random non-zero temperature, same for answer and critique; synthetic: answer T=1, critique T=0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "8 critiques per answer in assistance (deduplicated); best-of-N for N up to 8; GDC primary N=2; 8 to 16 critiques per answer for helpfulness data",
+   "prompting": "Appendix A.5 format; baselines zero-shot instruction and few-shot",
+   "retrieval": null,
+   "parameters": {
+    "critiqueability score": "Pr[Yes]/(Pr[Yes]+Pr[No])",
+    "helpfulness score": "same form on helpfulness task",
+    "random temperature": "uniform from {0,0.1,...,1}"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "critiques found per answer",
+     "definition": "count of critiques a labeler writes",
+     "unit": "count",
+     "higher_is_better": true
+    },
+    {
+     "name": "intended critique found",
+     "definition": "fraction of misleading answers where assisted labelers' critiques cover the author's intended critique",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "helpfulness",
+     "definition": "fraction of critiques judged valid and helpful by labelers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "win rate",
+     "definition": "human preference vs original best-of-1 sample, ties allowed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GD, GC, CD gaps",
+     "definition": "difference in sample quality of best-of-N against discriminator or critique severity vs generator average, N=2",
+     "unit": "win-rate points",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "no assist condition",
+    "InstructGPT zero-shot and few-shot critiques",
+    "human-written critiques",
+    "direct refinement",
+    "best-of-8 answers"
+   ],
+   "protocol": "Six labelers per summary, one per condition (model/human/human-misleading answer x assist/no assist), passages not seen before; error bars bootstrap at passage level or SEM, one standard deviation; labelers agree about 75% on comparisons"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://openaipublic.blob.core.windows.net/critiques/dataset/ (train/test base, critiques, helpfulness) and https://openaipublic.blob.core.windows.net/critiques/assistance.jsonl.gz"
+  },
+  "prompts": [
+   {
+    "purpose": "critique task format",
+    "text": "{passage}\nQuestion: {question}\nAnswer: {answer}\nAre there any critiques for the above answer? If so, write one\n{binary critiqueability}\n{critique}",
+    "where": "Appendix A.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "Our models are trained for one epoch and we tune only the learning rate",
+    "where": "Sec 2.2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Assisted labelers find about 50% more critiques across model, human and human-misleading answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "% more",
+   "baseline_value": null,
+   "n": null,
+   "setup": "topic-based summarization, held-out test passages, best fine-tuned model as critic; passages 2048-3840 tokens; 8 model critiques shown",
+   "quote": "Human labelers asked to ﬁnd critiques of (model or human-written) answers ﬁnd about 50% more critiques when given assistance from a critique model.",
+   "note": null,
+   "where": "p2 Sec 1.2"
+  },
+  {
+   "claim": "On deliberately misleading answers, assisted labelers find the intended flaw 45% of the time against 27% unassisted.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 45,
+   "unit": "%",
+   "baseline_value": "27",
+   "n": null,
+   "setup": "human-misleading answers; authors of the answers judged coverage",
+   "quote": "With assistance, labelers ﬁnd the intended critiques 45 ± 5% of the time, whereas without assistance they only ﬁnd it 27 ± 5% of the time.",
+   "note": null,
+   "where": "p8 Sec 3.3.1"
+  },
+  {
+   "claim": "Valid-critique share did not drop with assistance, but valid critique count rose.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71,
+   "unit": "%",
+   "baseline_value": "73",
+   "n": null,
+   "setup": "same as above",
+   "quote": "The fraction of critiques the author considers valid does not appreciably decrease with assistance (71% with assistance versus 73% without).",
+   "note": null,
+   "where": "p8 Sec 3.3.1"
+  },
+  {
+   "claim": "Valid critiques per answer: 0.96 with assistance vs 0.62 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.96,
+   "unit": "critiques",
+   "baseline_value": "0.62",
+   "n": null,
+   "setup": "same as above",
+   "quote": "However, the number of valid critiques is still much higher, 0.96 ± 0.09 vs. 0.62 ± 0.07.",
+   "note": null,
+   "where": "p8 Sec 3.3.1"
+  },
+  {
+   "claim": "Only 15.3% of used model critiques were edited further.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 15.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "assist condition",
+   "quote": "Only 15.3% of the used critiques were edited further.",
+   "note": null,
+   "where": "p8 Sec 3.3"
+  },
+  {
+   "claim": "On model answers, assisted labelers found critiques on 78% of inputs vs 54% unassisted, and rated answers 4.9 vs 5.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 78,
+   "unit": "% of inputs",
+   "baseline_value": "54",
+   "n": null,
+   "setup": "Likert 1-7, model answers",
+   "quote": "unassisted labelers found critiques on just 54% of inputs and gave an average rating of 5.6, while assisted labelers found critiques on 78% of inputs and gave an average rating of 4.9.",
+   "note": null,
+   "where": "p8 Sec 3.3"
+  },
+  {
+   "claim": "Time per task was about equal: 6.26 min with 8 critiques vs 6.27 unassisted; 4 critiques gave 1.06 critiques vs 1.31 for 8 and 0.74 unassisted.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.26,
+   "unit": "minutes",
+   "baseline_value": "6.27",
+   "n": null,
+   "setup": "earlier ablation in Appendix E.3",
+   "quote": "8 critiques 6.26 ± 0.27 1.31 ± 0.08",
+   "note": "Table in E.3 prints time and count columns; no-assist 6.27 min, 0.74 critiques; 4 critiques 5.82 min, 1.06; 8 critiques 6.26 min, 1.31.",
+   "where": "p35 App E.3"
+  },
+  {
+   "claim": "Fine-tuned critic gives more helpful critiques than InstructGPT baselines but less than humans.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "helpfulness judged by labelers on critiqueable answers",
+   "quote": "Overall we ﬁnd our model’s critiques to be helpful more often than the baselines, but still substantially less helpful than human critiques (Figure 3).",
+   "note": null,
+   "where": "p9 Sec 4.1"
+  },
+  {
+   "claim": "Larger models are better at self-critiquing despite harder-to-critique answers; critique ability improves faster than answer difficulty.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "topic summarization, self-critique, human-judged",
+   "quote": "On topic-based summarization, we ﬁnd that larger models are better at critiquing themselves (Figure 4b), even without ﬁltering for critiqueable answers.",
+   "note": null,
+   "where": "p11 Sec 4.2"
+  },
+  {
+   "claim": "Conditional refinement beats direct refinement only when critiques are chosen best-of-N against helpfulness; small models do not improve.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "win rate vs original best-of-1, T=0.5",
+   "quote": "Conditional reﬁnement appear to outperform direct reﬁnements, but only with critiques selected via best-of-N against helpfulness.",
+   "note": "Authors call results noisy.",
+   "where": "p12 Sec 4.3.1"
+  },
+  {
+   "claim": "Best-of-8 direct refinement appears a stronger baseline than critique-conditioned refinement when controlling for compute.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "quote": "However, rejection sampling on direct reﬁnements appears to be a stronger baseline.",
+   "note": null,
+   "where": "p12 Sec 4.3.1"
+  },
+  {
+   "claim": "CD gap is positive and roughly constant across scale for topic summarization; negative for Addition and RACE, positive for 3-SAT; no clear trend closing it.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GDC gaps, N=2",
+   "quote": "For topic-based summarization, the CD gap is approximately constant across model scale.",
+   "note": null,
+   "where": "p17 Sec 5.3"
+  },
+  {
+   "claim": "Naive 2-step debate (best-of-N helpfulness score) discriminates worse than the critiqueability score.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "misleading vs honest answer pairs, largest model, T=0.5",
+   "quote": "The best-of-N helpfulness score never discriminates as well as the critiqueability score",
+   "note": null,
+   "where": "p34 App D"
+  }
+ ],
+ "limits": [
+  "Topic-based summarization lacks ground truth; labelers may over-trust summaries; misleading critiques of good answers are indistinguishable from good critiques of poor ones.",
+  "Task is not hard for humans (up to about ten minutes), so little speed-up and results may not transfer to harder tasks.",
+  "Supervised fine-tuning only, no RL; model unlikely to output critiques no labeler would write.",
+  "Setup needs large models, much human data and multiple training rounds.",
+  "Parameter counts, optimizer, learning rate, batch size and hardware are not stated, so training is not reproducible from the paper.",
+  "Agreement rate on comparisons of critiques and of answers both around 75%.",
+  "Refinement results are noisy; 2022-era models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "critiqueability",
+   "definition": "the answer discrimination task: whether the answer contains any flaws",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "helpfulness",
+   "definition": "the critique discrimination task: whether a critique points out a legitimate shortcoming of the answer",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "GDC gaps",
+   "definition": "gaps between generator, discriminator and critique performance, measured with best-of-N",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Learning to summarize with human feedback",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "best-of-N against a learned score",
+   "quote": null
+  },
+  {
+   "work": "AI safety via debate",
+   "year": 2018,
+   "arxiv": "1805.00899",
+   "relation": "extends",
+   "note": "scalable oversight motivation",
+   "quote": null
+  },
+  {
+   "work": "Scalable agent alignment via reward modeling",
+   "year": 2018,
+   "arxiv": "1811.07871",
+   "relation": "extends",
+   "note": "recursive reward modeling",
+   "quote": null
+  },
+  {
+   "work": "Supervising strong learners by amplifying weak experts",
+   "year": 2018,
+   "arxiv": "1810.08575",
+   "relation": "related",
+   "note": "iterated amplification",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "baseline",
+   "note": "InstructGPT baseline critics",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPT-3 style decoder architecture",
+   "quote": null
+  },
+  {
+   "work": "RACE",
+   "year": 2017,
+   "arxiv": "1704.04683",
+   "relation": "uses-data",
+   "note": "synthetic task",
+   "quote": null
+  },
+  {
+   "work": "Training language models with natural language feedback",
+   "year": 2022,
+   "arxiv": "2204.14146",
+   "relation": "related",
+   "note": "natural language feedback for refinement",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "related",
+   "note": "corroborates conditioning on own outputs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Assistance from our models reliably causes labelers to find more critiques, on answers generated from all three distributions",
+   "page": 2,
+   "why": "Headline effect of assistance"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Critiques help with refining answers; competitive with direct refinements and best-of-8, only at scale",
+   "page": 13,
+   "why": "Shows the critic-to-refiner loop gains appear only at scale"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "GDC gaps for topic-based summarization, using humans as ground truth",
+   "page": 14,
+   "why": "Shows CD gap constant with scale"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Parameter counts and optimizer settings are not in the paper."
+ ]
 }

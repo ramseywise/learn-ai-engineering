@@ -1,19 +1,485 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2304.15010",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/gao-2023-llama-adapter-v2.pdf",
  "bib": {
   "title": "LLaMA-Adapter V2: Parameter-Efficient Visual Instruction Model",
+  "authors": [
+   "Peng Gao",
+   "Jiaming Han",
+   "Renrui Zhang",
+   "Ziyi Lin",
+   "Shijie Geng",
+   "Aojun Zhou",
+   "Wei Zhang",
+   "Pan Lu",
+   "Conghui He",
+   "Xiangyu Yue",
+   "Hongsheng Li",
+   "Yu Qiao"
+  ],
   "first_author": "Gao",
   "year": 2023,
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2304.15010",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 67154,
+  "chars_total": 67154,
+  "engine": "pymupdf",
+  "skipped": "none; reference list skimmed. Figures 10-11 are images."
  },
- "legacy_report": "SOURCE: \"LLaMA-Adapter V2: Parameter-Efficient Visual Instruction Model\". Authors: Peng Gao, Jiaming Han, Renrui Zhang, Ziyi Lin, Shijie Geng, Aojun Zhou, Wei Zhang, Pan Lu, Conghui He, Xiangyu Yue, Hongsheng Li, Yu Qiao. Shanghai AI Laboratory, CUHK MMLab and Rutgers. Preprint, arXiv:2304.15010v1, 28 Apr 2023.\nPDF: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/08-multimodal-engineering/sources/gao-2023-llama-adapter-v2.pdf\n\nCOVERAGE: I read all 67,388 characters. That covers 15 pages: the body, Tables 1 to 3, the Figure 1 to 11 captions and the full reference list. The paper has no appendix. I skimmed the long sample outputs in Table 2 and Figures 6 to 9 for any claims they make. Figures 10 and 11 are images with no extractable text, so only their captions came through.\n\nANSWER TO THE SPECIFIC QUESTION: The 13B figure for MiniGPT-4 and LLaVA appears in one place only: **Table 1, \"Training Comparison of Different Methods\", page 3**, in its last column, \"Tuning Parameters Size\". The rows are quoted verbatim below. The table note says how they counted: \"we count all the data and tuning parameters needed to convert the pretrained vision model and LLM into a visual instruction model.\" The prose never says MiniGPT-4 tunes 13B. It actually says something different: \"MiniGPT-4 connects a frozen visual encoder and an LLM by pre-training on 134 million image-text pairs\" (p.2). It then contrasts LLaVA with it: \"Different from MiniGPT-4, LLaV A fine-tunes the whole LLM\". So the paper's own text implies MiniGPT-4 does not tune the LLM, which conflicts with the 13B in its table. If the note says MiniGPT-4 tunes 13B, cite it as \"per the authors' Table 1 count\", or drop MiniGPT-4 from that clause. The only other 13B mention is in the Figure 5 caption, and it is about Vicuna.\n\nVERDICT ON THE NOTE'S FOUR CLAIMS:\n(1) \"14M vs 13B\": confirmed in Table 1. The MiniGPT-4 figure carries the caveat above.\n(2) \"LLaMA stays frozen except its norms\": broadly confirmed. Precisely, the norms are unfrozen and each linear layer gets a new bias and scale; all other LLaMA weights stay frozen.\n(3) The joint-training split: confirmed verbatim in Sec 4.2. Caption data trains \"visual projection layers and early zero-initialized attention with gating\". Instruction data trains \"late adaptation prompts together with zero gating, the unfrozen norm, newly added bias and scale factors (or optional low-rank adaption)\".\n(4) \"Lags LLaVA on quality\": the paper says \"lags behind LLaVA in terms of visual understanding capability\". That is narrower than \"quality\", and the paper gives no number for the gap.\n\nCLAIMS\n- claim: Table 1 lists the tuned parameters as 13B for MiniGPT-4, 13B for LLaVA and 14M for LLaMA-Adapter V2.\n  number: 13B / 13B / 14M\n  setup: The parameters needed to turn a pretrained vision model and LLM into a visual instruction model, as the authors counted them.\n  quote: \"MiniGPT-4 [78] ShareGPT [1] Conversation 70K CC-VG-SBU-L400∗ 134M CC+ChatGPT 5K 13B / LLaV A [38] ShareGPT [1] Conversation 70K CC∗ 595K COCO+GPT4 158K 13B / LLaMA-Adapter V2 GPT-4-LLM [50] Single-turn 52K COCO [6] 567K - 0 14M\"\n  where: p.3, Table 1\n- claim: V2 handles open-ended multimodal instructions while adding only 14M parameters to LLaMA.\n  number: 14M\n  setup: The whole method.\n  quote: \"can perform open-ended multi-modal instructions by merely introducing 14M parameters over LLaMA\"\n  where: p.1, abstract\n- claim: The bias, scale and norm parameters alone are about 0.04% of LLaMA, roughly 5M. The other parameters (adapters, projection, early attention) make up the rest of the 14M, but the paper never breaks that down.\n  number: 0.04%, ~5M\n  setup: LLaMA, bias tuning\n  quote: \"the number of newly added parameters only accounts for 0.04% (∼5M) of the entire LLaMA\"\n  where: p.5, Sec 4.1\n- claim: LLaMA stays frozen except its normalisation layers. Each linear layer also gets a new learnable bias, initialised to 0, and a new learnable scale, initialised to 1.\n  number: none\n  setup: Every Transformer linear layer.\n  quote: \"All the parameters in normalization layers, linear layer bias and scale are set to be updated during training, while the remaining parameters in LLaMA are kept frozen.\"\n  where: p.8, Implementation Details. The method is also given on p.5: \"we first unfreeze all the normalization layers in LLaMA. For each linear layer in the Transformer, we add a bias and a scale factor as two learnable parameters.\"\n- claim: Joint training updates two disjoint sets of parameters, which the authors say avoids interference between the two tasks.\n  number: 500K vs 50K, the data imbalance that motivates the split\n  setup: COCO captions plus GPT-4-LLM instructions\n  quote: \"only the visual projection layers and early zero-initialized attention with gating are trained for image-text captioning data, while the late adaptation prompts together with zero gating, the unfrozen norm, newly added bias and scale factors (or optional low-rank adaption [25]) are utilized for learn-ing from the instruction-following data\"\n  where: p.5-6, Sec 4.2. The imbalance is stated as \"data volume difference between 500K image-text pairs and 50K instruction data\".\n- claim: The training data is 52K single-turn GPT-4-LLM instructions plus 567K COCO captions, with no visual instruction data. A separate chatbot was trained on 80K ShareGPT conversations.\n  number: 52K, 567K, 80K\n  setup: Training data for the main model and the chatbot\n  quote: \"we train LLaMA-Adapter V2 on 52K single-turn instruction data from GPT-4-LLM [50] and 567K captioning data from COCO Caption [6]. We do not use any visual instruction data like MiniGPT-4 [78] and LLaV A [38]. Besides, we also train a chatbot system using 80K conversation data collected by ShareGPT [1].\"\n  where: p.7, Sec 5.1\n- claim: On LLaMA-7B, the adaptation prompts go into the last 31 of 32 layers. The visual prompts go into the first layer only, with prompt length 20.\n  number: 31 of 32, length 20\n  setup: LLaMA-7B\n  quote: \"For the LLaMA-7B model with 32 Transformer layers, we insert static adaptation prompts into the last 31 layers. Additionally, we append dynamic visual prompts to the first layer, with a prompt length set to 20.\"\n  where: p.8\n- claim: GPT-4 judged the text-only chatbot against ChatGPT on 80 questions. The authors say V2 beat ChatGPT on total score and on 50 of the 80 questions. The comparison model is 65B, while Vicuna is 13B.\n  number: 50/80. Figure 5 likely shows 681:669, 102%.\n  setup: GPT-4 as judge, the 80 Vicuna questions, LLaMA-65B V2 against a ChatGPT baseline\n  quote: \"we also use GPT4 to assess the response quality, where LLaMA-Adapter V2 even beats ChatGPT on the to-tal scores and 50/80 questions.\" Figure 5 caption: \"We use GPT4 to assess the response quality of different methods on 80 questions [7]. Note that our model is based on LLaMA-65B, while Vicuna is built on LLaMA-13B. But we only fine-tune 14M parameters, while Vi-cuna requires fine-tuning the whole 13B parameters.\"\n  where: p.8, Sec 5.2 and Figure 5\n- claim: On COCO Caption with no pretraining, V2 scores 36.2 BLEU@4 and 122.2 CIDEr. That beats ClipCap at 33.5 / 113.1 and is below BLIP at 40.4 / 136.7 and BLIP2 at 43.7 / 145.3.\n  number: 36.2 / 122.2\n  setup: Fine-tuned on 0.6M COCO pairs only. BLIP and BLIP2 used 14M and 129M pretraining pairs.\n  quote: \"ClipCap [46] 0 0.6M 33.5 113.1 / BLIP [33] 14M 0.6M 40.4 136.7 / BLIP2 [32] 129M 0.6M 43.7 145.3 / LLaMA-Adapter V2 0 0.6M 36.2 122.2\"\n  where: p.8, Table 3\n- claim: The authors admit V2 lags LLaVA on visual understanding and is vulnerable to wrong information from the experts. They give no number for the gap.\n  number: none\n  setup: Conclusion\n  quote: \"it still lags behind LLaV A in terms of visual understanding capability and is suscep-tible to inaccurate information provided by the expert sys-tems\"\n  where: p.11, Conclusion\n- claim: The authors call the model's image understanding weak and add caption, detection or OCR experts at inference, with no extra training. The default caption expert is LLaMA-Adapter V1 trained on COCO.\n  number: none\n  setup: At inference time\n  quote: \"the image understanding ability of our approach is relatively weak, leading to occasional inaccu-rate or unrelated responses\"\n  where: p.6, Sec 4.4\n- claim: The failure on an out-of-distribution cartoon image is put down to having no image-text alignment stage, which LLaVA and MiniGPT-4 do have.\n  number: none\n  setup: The Figure 6 failure case\n  quote: \"The possible reason for this failure is the lack of an image-text alignment stage, which models like MiniGPT-4 and LLaV A have incorpo-rated.\"\n  where: p.9\n- claim: The original LLaMA-Adapter added only 1.2M parameters to a frozen LLaMA.\n  number: 1.2M\n  setup: The V1 baseline\n  quote: \"introduces only an extra lightweight adapter module with 1.2M parameters\"\n  where: p.4, Sec 3\n- claim: The authors contrast their bias tuning with BitFit and SSF, which they say were built at about 80M parameters, while theirs works on 7B to 65B LLMs.\n  number: 80M; 7B-65B\n  setup: Discussion in Sec 4.1\n  quote: \"both BitFit and SSF are designed for comprehension tasks with an 80-million parameter scale, whereas our bias tuning demonstrates its efficiency on large language models ranging from 7 billion to 65 billion pa-rameters\"\n  where: p.5\n\nLIMITS:\n- No compute is reported anywhere: no GPUs, hours, epochs, learning rate or batch size.\n- The visual instruction model is never scored on a benchmark. The evidence is qualitative examples (Figures 6 to 9) plus COCO captioning in Table 3.\n- There is no head-to-head comparison with LLaVA or MiniGPT-4. \"Lags behind LLaVA\" is the authors' own admission, with no number behind it.\n- The only GPT-4 judging covers the text-only 65B chatbot, with ChatGPT as the reference. The visual model was not judged by GPT-4.\n- Table 1 does not say which LLaMA size the visual model uses. The implementation details give 7B.\n- The 14M is never broken down by component.\n- V1 preprint from April 2023. The baselines (LLaVA v1, MiniGPT-4, ChatGPT, Vicuna) have dated.\n- The future work the authors list is fine-tuning on multimodal instruction data, or with LoRA.\n\nBUILDS ON:\n- LLaMA-Adapter, Zhang et al. 2023 [72]: zero-init attention and gating, the base method.\n- LLaMA, Touvron et al. 2023 [63].\n- BitFit, Ben Zaken et al. 2021 [70], and SSF, Lian et al. 2022 [36], which the authors name as similar to their bias tuning.\n- LoRA, Hu et al. 2021/2022 [25, 26].\n- GPT-4-LLM (Instruction tuning with GPT-4), Peng et al. 2023 [50], the instruction data.\n- COCO Captions, Chen et al. 2015 [6].\n- CLIP, Radford et al. 2021 [52], the visual encoder.\n- ShareGPT [1], and Vicuna, Chiang et al. 2023 [7], for the 80 evaluation questions.\n- The baselines: LLaVA, Liu et al. 2023 [38], and MiniGPT-4, Zhu et al. 2023 [78].\n- The caption baselines: ClipCap, Mokady et al. 2021 [46]; BLIP, Li et al. 2022 [33]; BLIP-2, Li et al. 2023 [32].\n\nCODE: Eq. 1 and 2 on p.5: `y = W· x → y = s· (W· x + b), (1)  where b = Init(0), s = Init(1). (2)`. That is the whole bias-tuning method. Table 2's regex examples are not worth keeping.\n\nFIGURES:\n- Figure 2 (p.5), \"Joint Training Paradigm in LLaMA-Adapter V2. We utilize both image-text caption and language-only instruction data to jointly train LLaMA-Adapter V2, optimizing disjoint groups of learnable parameters.\" It shows which parameters each data type trains: projection plus early attention for captions, norm/scale/bias plus late attention for instructions, everything else frozen. This is the direct visual for \"Which layers you reached\".\n- Figure 3 (p.6), \"Early Fusion of Visual Knowledge. Following LLaMA-Adapter, we insert static adaptation prompts into the last L layers. For visual prompts, we insert them in the early stage of LLM, disjointing with adaptation prompts.\" It contrasts early and late placement more clearly than the prose.\n- Figure 5 (p.8), \"Response Quality Comparisons assessed by GPT4.\" Only useful if the note covers LLM-as-judge.\n\nPROBLEMS:\n- The paper contradicts itself on MiniGPT-4: Table 1 says 13B tuned, but the p.2 prose says the LLM is frozen. See the answer above.\n- Figure 5 extracted as numbers separated from their labels. The bar values (613:521 118%, 681:669 102%, 759:759 100%, 649:652 99%, 634:660 96%, 585:704 83%, 502:698 72%) come out in the same order as the labels (GPT4, LLaMA-Adapter V2, ChatGPT, Vicuna, Bard, Alpaca, LLaMA). That reading is likely but I have not confirmed it visually. The win/tie/loss counts came out garbled (\"14 2244\", \"507 23\"). They are probably 14/22/44 for Vicuna and 50/7/23 for V2, but only the text's \"50/80\" is verified.\n- The layer counts conflict. Sec 4.3 says \"K < N − L\" with \"e.g., L=30\". With N=32 and L=31 from the implementation details, K=1 breaks that inequality.\n- Sec 5.3 credits Table 3's captioning score to \"LLaMA-Adapter\", while the table row says \"LLaMA-Adapter V2\".\n- The 0.04% figure is applied loosely. Sec 4.1 uses it for the ~5M bias and scale parameters, but the abstract, intro and related work imply it covers the whole method.\n- The extraction is otherwise clean. The PDF contains no embedded instructions."
+ "type": "empirical",
+ "question": "Can a frozen LLaMA be turned into an open-ended visual instruction model with few trainable parameters and no multi-modal instruction data?",
+ "hypothesis": "Early fusion of visual tokens plus joint training of disjoint parameter groups on captions and text instructions removes the interference between image-text alignment and instruction following.",
+ "contributions": [
+  "Stronger language instruction model via bias tuning and high-quality instruction data, with multi-turn dialog",
+  "Balanced visual instruction tuning by early fusion, without multi-modal instruction data",
+  "Integration of expert systems (caption, OCR) at inference"
+ ],
+ "method": {
+  "summary": "Starts from LLaMA-Adapter (zero-init gated prompts in a frozen LLaMA). Adds learnable norm, bias and scale in every linear layer (y = s(Wx+b)), injects visual tokens only at the first layer, and trains two disjoint parameter groups on COCO captions and GPT-4-LLM instructions. At inference a caption or OCR expert adds a text context.",
+  "task": "visual instruction tuning (parameter-efficient) and language instruction following",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GPT-4-LLM instruction data",
+    "role": "train",
+    "size": "52K single-turn",
+    "split": null,
+    "source": "Peng et al. 2023, arXiv:2304.03277",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO Caption",
+    "role": "train",
+    "size": "567K captions (also written 500K and 0.6M)",
+    "split": null,
+    "source": "Chen et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "ShareGPT conversations",
+    "role": "train",
+    "size": "80K",
+    "split": "used for the chatbot variant only",
+    "source": "sharegpt.com",
+    "preprocessing": null
+   },
+   {
+    "name": "80 Vicuna questions",
+    "role": "eval",
+    "size": "80 questions",
+    "split": null,
+    "source": "Chiang et al. 2023 (Vicuna)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-Adapter V2",
+    "role": "proposed",
+    "params": "14M tuned (0.04%, ~5M of it bias/scale/norm)",
+    "architecture": "frozen LLaMA with zero-init gated adaptation prompts, early visual prompts, bias and scale tuning",
+    "init_from": "LLaMA (7B for the implementation details; 65B for chat and GPT-4 comparison)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 (7B)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "adaptation_prompt_layers": "last 31 of 32 for 7B (text also says L=30 as an example)",
+     "visual_prompt": "concatenated at first layer, prompt length 20",
+     "visual_encoder": "CLIP-style pre-trained encoder, frozen (version not stated)",
+     "optional": "LoRA in place of bias tuning"
+    }
+   },
+   {
+    "name": "LLaMA-Adapter",
+    "role": "baseline",
+    "params": "1.2M",
+    "architecture": "zero-init attention adapters in higher layers",
+    "init_from": "LLaMA",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MiniGPT-4",
+    "role": "baseline",
+    "params": "13B (Table 1 tuning size)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaVA",
+    "role": "baseline",
+    "params": "13B (Table 1 tuning size)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "disjoint_groups": "caption data trains only visual projection layers and early zero-init attention with gating; instruction data trains late adaptation prompts with zero gating, unfrozen norms, new bias and scale (or optional LoRA)",
+    "bias_scale_init": "b = Init(0), s = Init(1)",
+    "frozen": "all other LLaMA parameters"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Visual context + question -> short answer; question + textual context -> detailed answer; optional expert caption/OCR text as textual context",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "caption_expert": "LLaMA-Adapter V1 trained on COCO Caption",
+    "ocr_expert": "from DocVQA example"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU@4",
+     "definition": "COCO Caption",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "COCO Caption",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 total quality score vs ChatGPT",
+     "definition": "GPT-4 scores responses to 80 questions; ratio to ChatGPT total",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ClipCap",
+    "BLIP",
+    "BLIP2",
+    "LLaMA-Adapter",
+    "Vicuna",
+    "ChatGPT",
+    "Bard",
+    "Alpaca",
+    "LLaMA"
+   ],
+   "protocol": "Single runs; GPT-4 judge on 80 questions; visual understanding shown with qualitative examples only; no VQA benchmark."
+  },
+  "availability": {
+   "code": "https://github.com/ZrrSkywalker/LLaMA-Adapter",
+   "weights": "stated available at same URL",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "caption fine-tuned model prompt (V1)",
+    "text": "Generate caption for this image",
+    "where": "Sec 1 and 5.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "13B",
+    "where": "Table 1, last column, rows MiniGPT-4 and LLaVA"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLaMA-Adapter V2 tunes about 14M parameters, versus 13B for MiniGPT-4 and LLaVA in the paper's own comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tuned parameters",
+   "value": "14M",
+   "unit": null,
+   "baseline_value": "13B",
+   "n": null,
+   "setup": "Table 1; counts all data and tuning parameters needed to convert pretrained vision model and LLM",
+   "quote": null,
+   "table": "Table 1, row LLaMA-Adapter V2, column Tuning Parameters Size",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Bias tuning adds 0.04% (~5M) parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "added parameters",
+   "value": "0.04%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "bias, scale and unfrozen norms over the whole LLaMA",
+   "quote": "the number of newly added parameters only accounts for 0.04% (∼5M) of the entire LLaMA",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "On COCO Caption, V2 reaches CIDEr 122.2 after fine-tuning only on COCO (no pretraining), above ClipCap and below BLIP and BLIP2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 122.2,
+   "unit": "points",
+   "baseline_value": "ClipCap 113.1; BLIP 136.7; BLIP2 145.3",
+   "n": null,
+   "setup": "COCO Caption, fine-tune 0.6M, no PT",
+   "quote": null,
+   "table": "Table 3, row LLaMA-Adapter V2, column CIDEr",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "COCO Caption BLEU@4 of V2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU@4",
+   "value": 36.2,
+   "unit": "points",
+   "baseline_value": "ClipCap 33.5; BLIP 40.4; BLIP2 43.7",
+   "n": null,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 3, row LLaMA-Adapter V2, column BLEU@4",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-4 judged V2 (65B base) 118% of ChatGPT on total score, beating it on 50 of 80 questions (7 ties, 23 losses as read from Fig 5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "total quality score ratio",
+   "value": "118%",
+   "unit": null,
+   "baseline_value": "Vicuna 102%; Alpaca 83%; LLaMA 72%",
+   "n": null,
+   "setup": "80 Vicuna questions, GPT-4 as judge, LLaMA-65B based V2 vs 13B Vicuna",
+   "quote": null,
+   "table": "Figure 5(a), row LLaMA-Adapter V2 (613:521 118%)",
+   "note": "Percent read from figure text; win/tie/lost 50/7/23 read from Fig 5b; text says 'beats ChatGPT on the total scores and 50/80 questions'",
+   "where": "Fig 5, Sec 5.2"
+  },
+  {
+   "claim": "V2 admits it lags LLaVA in visual understanding, with no number given.",
+   "kind": "claim",
+   "source": null,
+   "metric": "visual understanding gap",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "conclusion",
+   "quote": "it still lags behind LLaVA in terms of visual understanding capability and is susceptible to inaccurate information provided by the expert systems",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Training data of V2: 52K instructions plus 567K captions, zero visual instruction data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training data size",
+   "value": "567K",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 / Sec 5.1",
+   "quote": "we train LLaMA-Adapter V2 on 52K single-turn instruction data from GPT-4-LLM [50] and 567K captioning data from COCO Caption [6]",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  }
+ ],
+ "limits": [
+  "No visual QA or multimodal benchmark score; visual instruction ability shown only by hand-picked examples (Figs 6-9).",
+  "Failure on out-of-distribution (cartoon) image, attributed to lack of image-text alignment stage.",
+  "Lags LLaVA in visual understanding; sensitive to wrong expert output.",
+  "No optimizer, lr, batch size, epochs, hardware or seeds reported.",
+  "Chat quality judged by GPT-4 on 80 questions; V2 is 65B-based vs 13B Vicuna.",
+  "Table 1 counts data and tuning parameters needed from pretrained LLM, including Vicuna's own ShareGPT tuning in MiniGPT-4 row (the paper does not spell out why MiniGPT-4 is 13B)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "bias tuning",
+   "definition": "y = s·(W·x + b) with b initialised 0 and s initialised 1, plus unfrozen norms",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "early fusion",
+   "definition": "visual tokens concatenated with word tokens at the first Transformer layer rather than added to adaptation prompts in the last L layers",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LLaMA-Adapter",
+   "year": 2023,
+   "arxiv": "2303.16199",
+   "relation": "extends",
+   "note": "predecessor",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base LLM (Touvron et al.)",
+   "quote": null
+  },
+  {
+   "work": "LLaVA (Visual instruction tuning)",
+   "year": 2023,
+   "arxiv": "2304.08485",
+   "relation": "baseline",
+   "note": "compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Instruction Tuning with GPT-4",
+   "year": 2023,
+   "arxiv": "2304.03277",
+   "relation": "uses-data",
+   "note": "52K GPT-4-LLM",
+   "quote": null
+  },
+  {
+   "work": "COCO Captions",
+   "year": 2015,
+   "arxiv": "1504.00325",
+   "relation": "uses-data",
+   "note": "caption data",
+   "quote": null
+  },
+  {
+   "work": "BitFit",
+   "year": 2021,
+   "arxiv": "2106.10199",
+   "relation": "related",
+   "note": "bias tuning precedent",
+   "quote": null
+  },
+  {
+   "work": "SSF",
+   "year": 2022,
+   "arxiv": "2210.08823",
+   "relation": "related",
+   "note": "scale and shift precedent",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "related",
+   "note": "optional alternative",
+   "quote": null
+  },
+  {
+   "work": "ClipCap, BLIP, BLIP2",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Fig 5",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Joint Training Paradigm in LLaMA-Adapter V2",
+   "page": 6,
+   "why": "shows which parameters train on which data"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Early Fusion of Visual Knowledge",
+   "page": 6,
+   "why": "visual prompt at layer 1, adaptation prompts in last L layers"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Training Comparison of Different Methods",
+   "page": 3,
+   "why": "source of 14M vs 13B"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-2",
+   "snippet": "y = W · x → y = s · (W · x + b), where b = Init(0), s = Init(1).",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures 10-11 are images; no text. No embedded instructions found."
+ ]
 }
