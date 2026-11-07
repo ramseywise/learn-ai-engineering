@@ -1,0 +1,203 @@
+{
+ "schema": 1,
+ "key": "sha1:6f5d88fe0e18",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch08-ned-open-llms-ontologies.pdf",
+ "bib": {
+  "title": "8 NED with open LLMs and domain ontologies (Knowledge Graphs and LLMs in Action, ch. 8)",
+  "authors": [
+   "Negro et al. (book authors not printed in the chapter text; name taken from the repo's citations)"
+  ],
+  "first_author": "Negro",
+  "year": 2025,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46521,
+  "chars_total": 46521,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can open LLMs plus a domain ontology (SNOMED) do named entity disambiguation without the domain, update and relationship limits of tools like scispaCy?",
+ "hypothesis": "Combining a general-purpose open LLM with an ontology's relational structure (shortest paths, translated and summarised) disambiguates entities better than a context-word-based linker.",
+ "contributions": [
+  "End-to-end NED pipeline: LLM NER, full-text candidate selection, then candidate disambiguation by shortest paths, path-to-text translation and summarisation",
+  "Local deployment with Ollama and Llama 3.1 8B"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "scispaCy ranks Zika Virus Infection first for the bare mentions 'Zika' (twice) and finds no candidate for 'Zika disease' when cue words are removed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "scispaCy UMLS linker on a 3-sentence Zika passage without 'congenital'/'syndrome' cues",
+   "quote": "The model disambiguates “Zika” as the entity “C0276289 Zika Virus\nInfection” in the first and the third sentences, but it doesn’t detect a target\nentity for the mention in the second sentence.",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.1, Listing 8.2"
+  },
+  {
+   "claim": "Hub filter drops candidates paths through the 350 highest-degree nodes (by GDS degree).",
+   "kind": "measured",
+   "source": null,
+   "metric": "hub node cutoff",
+   "value": "350",
+   "unit": "nodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 8.15 query on SNOMED graph projection 'snomedGraph', paths limited to 1..2 hops",
+   "quote": "ORDER BY degree DESC\n      LIMIT 350",
+   "table": null,
+   "note": null,
+   "where": "Listing 8.15"
+  },
+  {
+   "claim": "SNOMED holds more than 450,000 concepts.",
+   "kind": "reported",
+   "source": null,
+   "metric": "SNOMED concepts",
+   "value": "450,000",
+   "unit": "concepts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNOMED description in chapter",
+   "quote": "encompassing more than 450,000 concepts",
+   "table": null,
+   "note": "Introduced in ch 7; no source named here",
+   "where": "Sec 8.2"
+  },
+  {
+   "claim": "Llama 3.1 8B supports a context length of up to 128,000 tokens.",
+   "kind": "reported",
+   "source": null,
+   "metric": "context length",
+   "value": "128,000",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Description of the model, no citation",
+   "quote": "a context length of up to 128,000 tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.3"
+  },
+  {
+   "claim": "For the sentence about Zika and microcephaly, the pipeline picks Congenital Zika virus infection (762725007) for 'Zika', Micrencephaly and Multiple congenital malformations.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One example sentence, Llama 3.1 8B via Ollama, October 2024; no gold labels or accuracy given",
+   "quote": "\"snomed_id\": \"762725007\"",
+   "table": null,
+   "note": "Single illustrative example; no quantitative evaluation in the chapter",
+   "where": "Listing 8.22"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation: no accuracy, no gold labels, no comparison with scispaCy beyond one worked passage.",
+  "Results obtained in October 2024 with the latest Llama 3.1 version then; model output varies by version.",
+  "LLM struggles to give start/end character offsets, so they are computed in post-processing.",
+  "Candidate selection uses full-text search only; vector search is suggested as an enhancement but not done.",
+  "Prompts shown are simplified; full prompts are in the book's repository."
+ ],
+ "practices": [
+  "Do not use the LLM for candidate selection: retrieve candidates from the ontology by full-text search because the ontology is too large for a prompt and should not rely on model memory (Sec 8.4.2).",
+  "Define NER categories from the ontology (SNOMED first-level nodes propagated through SNOMED_IS_A) and put them in the NER prompt (Sec 8.4.1).",
+  "Compute mention start/end offsets in Python after NER, since LLMs detect them poorly (Sec 8.4.1).",
+  "Restrict full-text candidate search to the labels returned by NER to shrink the search space (Sec 8.4.2).",
+  "Exclude high-degree hub nodes when detecting shortest paths so connections are specific (Sec 8.4.3).",
+  "Translate graph paths to sentences, then summarise them, to cut tokens ('cognitive load') before the final disambiguation prompt (Sec 8.4.3).",
+  "Run models locally with Ollama through its OpenAI-compatible API at temperature 0 (Sec 8.3)."
+ ],
+ "terms": [
+  {
+   "term": "NED",
+   "definition": "named entity disambiguation; here three stages: NER, candidate selection (CS), candidate disambiguation (CD)",
+   "where": "Sec 8.4"
+  },
+  {
+   "term": "Candidate selection",
+   "definition": "identifies relevant entities or concepts that could match the intended meaning of each identified named entity",
+   "where": "Sec 8.4.2"
+  },
+  {
+   "term": "Candidate disambiguation",
+   "definition": "uses contextual information from co-occurring entities, cross-referenced with the ontology, to pick the most accurate match",
+   "where": "Sec 8.4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "scispaCy",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional biomedical NED tool the chapter's approach replaces",
+   "quote": "scispaCy incorporates vocabularies and ontologies"
+  },
+  {
+   "work": "SNOMED CT ontology",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "domain ontology, files dated 20220901",
+   "quote": null
+  },
+  {
+   "work": "Llama 3.1 8B (Meta)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "served locally with Ollama",
+   "quote": null
+  },
+  {
+   "work": "Knowledge Graphs and LLMs in Action ch. 7",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same Zika example and SNOMED ingestion",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 8.2",
+   "caption": "Workflow for a NED system designed to use LLMs and domain-specific ontologies, such as SNOMED, for biomedical text processing.",
+   "page": null,
+   "why": "shows NER, CS, CD stages"
+  },
+  {
+   "figure": "Fig 8.6",
+   "caption": "NED CD steps: (1) detecting the shortest paths ... (2) translating detected paths into natural language sentences; (3) summarizing those sentences",
+   "page": null,
+   "why": "the three-step disambiguation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 8.7",
+   "snippet": "temperature=0,\n            max_tokens=4000,\n            top_p=1,",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures not rendered in the text cache; captions taken from text.",
+  "Chapter text does not print authors; first_author inferred from repo citations.",
+  "Chapter opening says 'Chapter 7 is focused on NED' while being ch. 8 (recap sentence).",
+  "Text is truncated in places (listing lines cut at right margin)."
+ ]
+}

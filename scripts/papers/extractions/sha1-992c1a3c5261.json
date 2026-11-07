@@ -1,0 +1,437 @@
+{
+ "schema": 1,
+ "key": "sha1:992c1a3c5261",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch07-fine-tuning-to-follow-instructions.pdf",
+ "bib": {
+  "title": "Build a Large Language Model (From Scratch), ch. 7: Fine-tuning to follow instructions",
+  "authors": [
+   "Sebastian Raschka"
+  ],
+  "first_author": "Raschka",
+  "year": null,
+  "venue": "book chapter (Manning)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 70482,
+  "chars_total": 70482,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you instruction fine-tune a pretrained GPT-2 model on instruction-response pairs and evaluate it with an LLM judge?",
+ "hypothesis": null,
+ "contributions": [
+  "Worked implementation of supervised instruction fine-tuning: Alpaca-style formatting, custom collate with -100 masking, fine-tuning GPT-2 medium, LLM-judged evaluation with Llama 3 8B via Ollama."
+ ],
+ "method": {
+  "summary": "Instruction-fine-tunes pretrained GPT-2 medium (355M) on a 1,100-pair instruction dataset using the Alpaca prompt style and a custom collate function, then scores test responses with Llama 3 8B Instruct run locally in Ollama.",
+  "task": "supervised instruction fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Book instruction dataset (instruction-data.json)",
+    "role": "both",
+    "size": "1,100 instruction-response pairs (204 KB)",
+    "split": "85% train (935) / 5% validation (55) / 10% test (110), sequential slice",
+    "source": "Created for the book; hosted in the rasbt/LLMs-from-scratch repo",
+    "preprocessing": "Alpaca prompt template, GPT-2 BPE tokenisation (tiktoken), per-batch padding with 50256, -100 mask on padding except first, truncation to 1024"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 medium (355M)",
+    "role": "base",
+    "params": "355M",
+    "architecture": "decoder-only transformer (GPTModel)",
+    "init_from": "OpenAI GPT-2 pretrained weights",
+    "tokenizer": "GPT-2 BPE (tiktoken)",
+    "vocab": "50257",
+    "layers": "24",
+    "hidden": "1024",
+    "heads": null,
+    "context": "1024",
+    "other": {
+     "qkv_bias": true,
+     "drop_rate": 0.0,
+     "smaller option": "gpt2-small 124M for limited hardware"
+    }
+   },
+   {
+    "name": "Llama 3 8B Instruct (Ollama llama3)",
+    "role": "judge",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "num_ctx 2048",
+    "other": {
+     "storage": "4.7 GB",
+     "RAM": "about 16 GB"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross entropy over full formatted sequence (instruction and response), padding masked with -100",
+   "optimizer": "AdamW",
+   "lr": "0.00005",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8 (drop_last=True for train)",
+   "steps": "inferred: about 230+ steps (log shows Ep 2 Step 000230)",
+   "epochs": "2",
+   "tokens": null,
+   "seq_len": "variable per batch, truncated to 1024",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.0",
+   "regularisation": null,
+   "hardware": "NVIDIA A100 GPU",
+   "compute": null,
+   "wall_clock": "0.87 minutes (A100); 0.86 min table; 1.83 min L4; 15.78 min M3 MacBook Air CPU",
+   "seeds": "torch.manual_seed(123)",
+   "other": {
+    "eval_freq": 5,
+    "eval_iter": 5
+   }
+  },
+  "inference": {
+   "decoding": "book generate function; greedy (no temperature or top-k set)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "256 new tokens for test responses (35 for the first check)",
+   "samples": "1 response per test item; single judge run",
+   "prompting": "Alpaca-style prompt; judge prompt: Given the input `...` and correct output `...`, score the model response `...` on a scale from 0 to 100, where 100 is the best score. Respond with the integer number only.",
+   "retrieval": null,
+   "parameters": {
+    "judge_temperature": "0",
+    "judge_seed": "123",
+    "judge_num_ctx": "2048",
+    "eos_id": "50256"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Mean LLM-judge score",
+     "definition": "Llama 3 8B rates each response 0-100 against the reference output; mean over test items",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cross-entropy loss",
+     "definition": "train/val loss",
+     "unit": "nats",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Llama 3 8B base: 58.51",
+    "Llama 3 8B instruct: 82.6",
+    "pretrained GPT-2 medium (qualitative only)"
+   ],
+   "protocol": "Single run on 110 held-out test items; no significance test; author suggests repeating and averaging."
+  },
+  "availability": {
+   "code": "https://github.com/rasbt/LLMs-from-scratch (ch07)",
+   "weights": null,
+   "data": "instruction-data.json in the same repo"
+  },
+  "prompts": [
+   {
+    "purpose": "LLM judge scoring",
+    "text": "Given the input `{format_input(entry)}` and correct output `{entry['output']}`, score the model response `{entry[json_key]}` on a scale from 0 to 100, where 100 is the best score. Respond with the integer number only.",
+    "where": "Listing 7.11"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The instruction dataset has 1,100 instruction-response pairs, created for the book.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "1,100",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Book-specific JSON instruction dataset (204 KB).",
+   "quote": "The dataset consists of 1,100 instruction–re‐",
+   "table": null,
+   "note": null,
+   "where": "7.2"
+  },
+  {
+   "claim": "Split is 85% train, 10% test, 5% validation, giving 935 / 55 / 110 examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "split sizes",
+   "value": "935/55/110",
+   "unit": "train/val/test examples",
+   "baseline_value": null,
+   "n": 1100,
+   "setup": "Sequential slicing (no shuffle) of the 1,100 entries.",
+   "quote": "Training set length: 935",
+   "table": null,
+   "note": "Validation 55, test 110.",
+   "where": "Listing 7.3"
+  },
+  {
+   "claim": "The 124M GPT-2 is judged too small for satisfactory instruction fine-tuning, so the 355M GPT-2 medium is used.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated rationale, no ablation shown.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "7.5"
+  },
+  {
+   "claim": "Fine-tuning for 2 epochs with AdamW (lr 0.00005, weight decay 0.1), batch size 8, takes about 0.87 minutes on an A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "0.87",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 medium 355M, 935 training examples, A100.",
+   "quote": "Training completed in 0.87 minutes.",
+   "table": null,
+   "note": null,
+   "where": "Listing 7.8"
+  },
+  {
+   "claim": "Initial (pre-fine-tuning) training loss on 5 batches is 3.826.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "3.825908660888672",
+   "unit": "cross-entropy",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Pretrained GPT-2 medium, 5 batches.",
+   "quote": "Training loss: 3.825908660888672",
+   "table": null,
+   "note": "Validation 3.7619335651397705.",
+   "where": "7.6"
+  },
+  {
+   "claim": "After 2 epochs train loss reaches 0.300 and val loss 0.657 at step 230.",
+   "kind": "measured",
+   "source": null,
+   "metric": "loss",
+   "value": "0.657",
+   "unit": "val cross-entropy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Last logged step of epoch 2.",
+   "quote": "Ep 2 (Step 000230): Train loss 0.300, Val loss 0.657",
+   "table": null,
+   "note": null,
+   "where": "7.6"
+  },
+  {
+   "claim": "The fine-tuned GPT-2 medium averages 50.32 on the 110-example test set, scored 0-100 by Llama 3 8B Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean LLM-judge score",
+   "value": "50.32",
+   "unit": "score 0-100",
+   "baseline_value": null,
+   "n": 110,
+   "setup": "Ollama llama3 8B, temperature 0, seed 123, num_ctx 2048; prompt gives input, reference output and model response; single run.",
+   "quote": "Average score: 50.32",
+   "table": null,
+   "note": "Text says 'above 50'; Ollama not fully deterministic across OS.",
+   "where": "Listing 7.11"
+  },
+  {
+   "claim": "Reference points under the same method: Llama 3 8B base scores 58.51 and Llama 3 8B instruct 82.6 on the test set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean LLM-judge score",
+   "value": "58.51",
+   "unit": "score 0-100",
+   "baseline_value": "82.6",
+   "n": 110,
+   "setup": "Same judge methodology; no fine-tuning (base) vs general instruction dataset (instruct).",
+   "quote": "achieves an average score of 58.51 on the test set",
+   "table": null,
+   "note": "Instruct figure 82.6. The base model outscores the book's fine-tuned GPT-2; the judge scores are not normalized.",
+   "where": "7.8 note"
+  },
+  {
+   "claim": "Researchers are divided on masking instruction tokens; Shi et al. 2024 found not masking helps; the chapter does not mask.",
+   "kind": "reported",
+   "source": "Shi et al. 2024, Instruction Tuning With Loss Over Instructions (arXiv 2405.14394)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter trains loss over instruction and response tokens, masks only padding.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "7.3"
+  }
+ ],
+ "limits": [
+  "Judge is an 8B local model, not GPT-4; Ollama is not fully deterministic, single run, no repeat averaging reported.",
+  "Test set is the book's own 110 examples; scores not comparable to public benchmarks.",
+  "No ablation of model size, masking, prompt style or epochs; these are left as exercises.",
+  "Preference fine-tuning (DPO) is only pointed to in the repo, not covered; no RLHF or reward model.",
+  "Only 2 epochs; the author says a third may overfit, not tested.",
+  "Split is sequential, not shuffled, and no seed variation."
+ ],
+ "practices": [
+  "Format entries with a prompt template (Alpaca style used; Phi-3 style shown as alternative) (7.2).",
+  "Pad per batch with a custom collate function, to the longest sequence in the batch rather than the dataset (7.3).",
+  "Build targets by shifting inputs one position and mask padding with -100 but keep one end-of-text token so the model learns to stop (7.3).",
+  "Optionally mask instruction tokens so loss covers only the response; evidence is mixed (7.3).",
+  "Truncate to the model context length (allowed_max_length=1024) (7.4).",
+  "Use a model with enough capacity: 355M rather than 124M (7.5).",
+  "Evaluate by combining benchmarks (MMLU), human preference (LMSYS arena) and LLM-judged conversational benchmarks (AlpacaEval); here an LLM judge on a custom test set (7.7).",
+  "Repeat LLM-judge evaluation several times and average because Ollama is non-deterministic (7.8).",
+  "Preference fine-tuning is an optional step after instruction fine-tuning (7.9.1)."
+ ],
+ "terms": [
+  {
+   "term": "Instruction fine-tuning",
+   "definition": "Also known as supervised instruction fine-tuning: training a pretrained model on a dataset of explicit input-output pairs to follow instructions.",
+   "where": "7.1, 7.2"
+  },
+  {
+   "term": "Prompt style",
+   "definition": "The format used to arrange instruction, input and response, e.g. Alpaca or Phi-3.",
+   "where": "7.2"
+  },
+  {
+   "term": "Conversational performance",
+   "definition": "Ability to engage in human-like communication by understanding context, nuance, and intent.",
+   "where": "7.7"
+  },
+  {
+   "term": "ignore_index",
+   "definition": "PyTorch cross_entropy ignores targets labelled -100 by default.",
+   "where": "7.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Alpaca (Stanford)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Prompt style and 52,002-entry dataset (Exercise 7.3).",
+   "quote": null
+  },
+  {
+   "work": "Phi-3 (Microsoft)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Alternative prompt style.",
+   "quote": null
+  },
+  {
+   "work": "Shi et al., Instruction Tuning With Loss Over Instructions",
+   "year": 2024,
+   "arxiv": "2405.14394",
+   "relation": "related",
+   "note": "Not masking instructions helps.",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "related",
+   "note": "Named as multiple-choice evaluation.",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM-as-judge approach is inspired by it.",
+   "quote": null
+  },
+  {
+   "work": "LMSYS chatbot arena",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Human preference comparison.",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 medium (355M)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Base model fine-tuned.",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 8B Instruct (via Ollama)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Judge model.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7.6",
+   "caption": "The five substeps of the batching process",
+   "page": null,
+   "why": "Shows template, tokenise, pad, target, -100 masking in order."
+  },
+  {
+   "figure": "Fig 7.13",
+   "caption": "Optional masking of instruction tokens in the target",
+   "page": null,
+   "why": "Shows which tokens enter the loss."
+  },
+  {
+   "figure": "Fig 7.17",
+   "caption": "Training and validation loss over two epochs",
+   "page": null,
+   "why": "Quick check that training converges."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 7.2",
+   "snippet": "def format_input(entry): ... \"Below is an instruction that describes a task. Write a response that appropriately completes the request.\" + ### Instruction: / ### Input: (omitted if empty) ; response appended as \\n\\n### Response:\\n",
+   "verbatim": false
+  },
+  {
+   "where": "Listing 7.5",
+   "snippet": "targets[indices[1:]] = ignore_index",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Several listings are truncated at line ends by the PDF text extraction; the Fig 7.17 plot and sample outputs are images not read.",
+  "Publication year is not printed in the chapter text."
+ ]
+}

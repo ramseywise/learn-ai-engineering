@@ -1,0 +1,205 @@
+{
+ "schema": 1,
+ "key": "sha1:71828cac3953",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch03-coding-attention-mechanisms.pdf",
+ "bib": {
+  "title": "Build a Large Language Model (From Scratch), chapter 3: Coding attention mechanisms",
+  "authors": ["Sebastian Raschka"],
+  "first_author": "Raschka",
+  "year": 2024,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 74643,
+  "chars_total": 74643,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you code, step by step in PyTorch, the self-attention mechanism of a GPT-like LLM, from simplified attention to causal multi-head attention?",
+ "hypothesis": null,
+ "contributions": [
+  "Simplified self-attention without trainable weights",
+  "Scaled dot-product self-attention with trainable query, key and value matrices",
+  "Causal attention with a mask and dropout",
+  "Multi-head attention as a wrapper over causal heads and as an efficient weight-split class"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Attention scores are divided by the square root of the key dimension to avoid vanishing softmax gradients; the book says GPT-like LLMs typically have embedding dimension above 1,000.",
+   "kind": "claim",
+   "source": null,
+   "metric": "typical embedding dimension of GPT-like LLMs",
+   "value": "greater than 1,000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rationale for scaled dot-product attention, section 3.4.1",
+   "quote": "greater than 1,000 for GPT-like LLMs, large dot products can result in",
+   "table": null,
+   "note": null,
+   "where": "section 3.4.1"
+  },
+  {
+   "claim": "Dropout on attention weights is demonstrated at 50%, with remaining weights rescaled by 2; the book says GPT training later uses 0.1 or 0.2.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "dropout rate",
+   "value": "50%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "6x6 tensor of ones and the causal attention weight matrix, torch.manual_seed(123)",
+   "quote": "In the following code example, we use a dropout rate of 50%, which",
+   "table": null,
+   "note": "Later-chapter rate quoted: 'use a lower dropout rate, such as 0.1 or'",
+   "where": "section 3.5.2"
+  },
+  {
+   "claim": "Surviving weights are scaled by 1/(1-p) after dropout so the average influence is the same in training and inference.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "rescale factor at p=0.5",
+   "value": "1/0.5 = 2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "nn.Dropout(0.5) applied to attention weights",
+   "quote": "ments in the matrix are scaled up by a factor of 1/0.5 = 2. This scaling is",
+   "table": null,
+   "note": null,
+   "where": "section 3.5.2"
+  },
+  {
+   "claim": "Masking future positions with -inf before softmax gives the same masked, renormalized weights as zeroing after softmax and renormalizing, with no leakage from future tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "6-token example 'Your journey starts with one step', d_in=3, d_out=2; second row becomes [0.5517, 0.4483, 0, ...] both ways",
+   "quote": "When negative infinity values ( - ∞) are present in a row, the softmax",
+   "table": null,
+   "note": "Row 2 values 0.5517 and 0.4483 are identical in masked_simple_norm and the -inf version.",
+   "where": "section 3.5.1"
+  },
+  {
+   "claim": "With two heads and d_out=2, the wrapper concatenates head outputs into a four-dimensional context vector per token.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "output dim",
+   "value": "d_out*num_heads=4",
+   "unit": null,
+   "baseline_value": null,
+   "n": 2,
+   "setup": "MultiHeadAttentionWrapper, batch shape [2, 6, 3], dropout 0.0",
+   "quote": "( d_out*num_heads=4 ), as depicted in figure 3.25.",
+   "table": null,
+   "note": null,
+   "where": "section 3.6.1"
+  },
+  {
+   "claim": "The smallest GPT-2 model has 12 attention heads, embedding size 768 and context length 1,024 (117 million parameters as printed).",
+   "kind": "reported",
+   "source": "GPT-2 model sizes, uncited in the chapter",
+   "metric": "parameters",
+   "value": "117 million",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparison with the toy sizes used in the chapter",
+   "quote": "the smallest GPT-2 model (117 million parameters) has",
+   "table": null,
+   "note": "Note 12 and other repo notes call the same model 124M; this chapter prints 117 million. Context length quote: 'Note that the smallest GPT-2 model supports a context length of 1,024 tokens.'",
+   "where": "section 3.6.2"
+  },
+  {
+   "claim": "The largest GPT-2 model has 25 attention heads and embedding size 1,600.",
+   "kind": "reported",
+   "source": "GPT-2 model sizes, uncited in the chapter",
+   "metric": "attention heads",
+   "value": "25",
+   "unit": "heads",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Largest GPT-2 (1.5 billion parameters as printed)",
+   "quote": "largest GPT-2 model (1.5 billion parameters) has 25 attention heads and a",
+   "table": null,
+   "note": null,
+   "where": "section 3.6.2"
+  },
+  {
+   "claim": "Self-attention with trainable weights on the toy input gives context vector z(2) = [0.3061, 0.8210].",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "context_vec_2",
+   "value": "[0.3061, 0.8210]",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "torch.manual_seed(123), W matrices from torch.rand(3,2), requires_grad=False",
+   "quote": "tensor([0.3061, 0.8210])",
+   "table": null,
+   "note": null,
+   "where": "section 3.4.1"
+  },
+  {
+   "claim": "The Bahdanau attention mechanism for RNNs dates from 2014 and the transformer followed three years later.",
+   "kind": "reported",
+   "source": "Bahdanau et al. (appendix B reference)",
+   "metric": null,
+   "value": "2014",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "History of attention",
+   "quote": "RNNs in 2014 (named after the first author of the respective paper; for",
+   "table": null,
+   "note": null,
+   "where": "section 3.2"
+  }
+ ],
+ "limits": [
+  "Toy sizes only (d_in=3, d_out=2, 6 tokens) to keep outputs readable; the author says so for the multi-head class.",
+  "No timing or memory measurements: the efficiency claim for the weight-split MultiHeadAttention over the wrapper is argued, not measured.",
+  "No training in this chapter; weights are random (requires_grad=False)."
+ ],
+ "practices": [
+  "Use softmax for normalising attention scores, not the naive version, because of overflow and underflow (3.3.1).",
+  "Divide scores by sqrt of key dimension before softmax to avoid small gradients (3.4.1).",
+  "Prefer nn.Linear over nn.Parameter(torch.rand) for projections because of its better weight initialisation (3.4.2).",
+  "Mask scores with -inf before softmax instead of masking and renormalising (3.5.1).",
+  "Apply dropout to attention weights after softmax, only during training (3.5.2).",
+  "Use register_buffer for the mask so it moves with the model across devices (3.5.3).",
+  "Compute heads with one projection and a view/transpose split rather than a list of separate heads (3.6.2)."
+ ],
+ "terms": [
+  {"term": "self-attention", "definition": "a mechanism that allows each position in the input sequence to consider the relevancy of, or \"attend to,\" all other positions in the same sequence when computing the representation of a sequence", "where": "3.2"},
+  {"term": "context vector", "definition": "can be interpreted as an enriched embedding vector", "where": "3.3.1"},
+  {"term": "causal attention", "definition": "also known as masked attention; restricts a model to only consider previous and current inputs in a sequence when processing any given token", "where": "3.5"},
+  {"term": "scaled dot-product attention", "definition": "self-attention with trainable query, key and value matrices where scores are divided by the square root of the key embedding dimension", "where": "3.4"}
+ ],
+ "lineage": [
+  {"work": "Bahdanau attention (RNN encoder-decoder attention)", "year": 2014, "arxiv": null, "relation": "related", "note": "motivating prior work; details in appendix B", "quote": null},
+  {"work": "Original transformer architecture (chapter 1)", "year": null, "arxiv": null, "relation": "extends", "note": "implements its scaled dot-product self-attention", "quote": null},
+  {"work": "GPT-2", "year": null, "arxiv": null, "relation": "related", "note": "model sizes used for comparison", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3.19", "caption": "In causal attention, we mask out the attention weights above the diagonal such that for a given input, the LLM can't access future tokens", "page": null, "why": "shows the full and masked 6x6 weight matrices side by side"},
+  {"figure": "Fig 3.26", "caption": "MultiHeadAttentionWrapper with two heads versus MultiHeadAttention with one larger weight matrix split into heads", "page": null, "why": "explains why the weight-split version needs one matmul instead of one per head"}
+ ],
+ "code": [
+  {"where": "Listing 3.3", "snippet": "attn_scores.masked_fill_(self.mask.bool()[:num_tokens, :num_tokens], -torch.inf)", "verbatim": true}
+ ],
+ "problems": [
+  "Table of contents and some figures not in the text; PDF equations and subscripts are scattered across lines.",
+  "The sentence 'The result is...' outputs are truncated in places (e.g. line wraps in tensor prints)."
+ ]
+}

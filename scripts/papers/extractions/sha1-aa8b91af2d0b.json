@@ -1,0 +1,459 @@
+{
+ "schema": 1,
+ "key": "sha1:aa8b91af2d0b",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch07-profiling-tuning-gpu-memory-access-patterns.pdf",
+ "bib": {
+  "title": "Chapter 7. Profiling and Tuning GPU Memory Access Patterns (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly book chapter (AI Systems Performance Engineering), year inferred from notes",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97279,
+  "chars_total": 97279,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do coalescing, vectorized access, shared-memory tiling, bank-conflict avoidance, read-only caches and TMA prefetching change GPU kernel memory behaviour, and how are they profiled?",
+ "hypothesis": null,
+ "contributions": [
+  "Before/after CUDA C++ and PyTorch examples for six memory-access techniques with Nsight Compute metric tables"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Coalescing a stride-2 copy cut kernel time from 4.8 ms to 1.3 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "1.3",
+   "unit": "ms",
+   "baseline_value": "4.8",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; copy of 2^20 floats, 256 threads/block, stride 2 vs stride 1",
+   "quote": null,
+   "table": "Table 7-1, row Kernel execution time (ms), columns Before/After",
+   "note": null,
+   "where": "Table 7-1"
+  },
+  {
+   "claim": "Coalescing raised DRAM throughput from 25% to 90% of peak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DRAM throughput",
+   "value": "90",
+   "unit": "% of peak",
+   "baseline_value": "25",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": "DRAM throughput rises from 25% to 90% of peak, about 3.6× higher.",
+   "table": null,
+   "note": null,
+   "where": "Coalesced vs uncoalesced section"
+  },
+  {
+   "claim": "Coalescing raised Global Memory Load Efficiency from 23% to 99%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Global Memory Load Efficiency",
+   "value": "99",
+   "unit": "%",
+   "baseline_value": "23",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-1, row Global Memory Load Efficiency",
+   "note": null,
+   "where": "Table 7-1"
+  },
+  {
+   "claim": "Uncoalesced warp loads averaged 8.0 sectors per request vs the optimal 4.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average sectors per request",
+   "value": "4.0",
+   "unit": "sectors",
+   "baseline_value": "8.0",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-1, row Average sectors per request",
+   "note": null,
+   "where": "Table 7-1"
+  },
+  {
+   "claim": "Vectorized float4 copy cut kernel time from 4.2 ms to 1.2 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "1.2",
+   "unit": "ms",
+   "baseline_value": "4.2",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; scalar vs float4 copy of 2^20 floats",
+   "quote": null,
+   "table": "Table 7-2, row Kernel execution time, columns Before/After",
+   "note": "Scalar baseline reports 31.8 sectors/request, implausible for an aligned contiguous scalar copy (a warp of 4-byte loads is ~4); vectorization reduces instructions, the chapter also frames it as improving sectors.",
+   "where": "Table 7-2"
+  },
+  {
+   "claim": "Scalar baseline of the vector copy is reported at 31.8 average sectors per request, falling to 4.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average sectors per request",
+   "value": "4.0",
+   "unit": "sectors",
+   "baseline_value": "31.8",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-2, row Average sectors per request",
+   "note": null,
+   "where": "Table 7-2"
+  },
+  {
+   "claim": "Vectorized loads raised Global Memory Load Efficiency from 28% to 97%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Global Memory Load Efficiency",
+   "value": "97",
+   "unit": "%",
+   "baseline_value": "28",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": "Global Memory Load Efficiency jumped from 28% to 97% (~3.5×)",
+   "table": null,
+   "note": null,
+   "where": "Vectorized access section"
+  },
+  {
+   "claim": "Float4 loads reduce per-thread load instructions by 4x.",
+   "kind": "claim",
+   "source": null,
+   "metric": "load instruction reduction",
+   "value": "4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "float4 (16 B) vs scalar 4-byte loads, aligned pointers",
+   "quote": "vector-\nized float4 loads reduce per-thread load instructions by 4×",
+   "table": null,
+   "note": null,
+   "where": "Vectorized memory access"
+  },
+  {
+   "claim": "Shared-memory tiling (32x32) raised throughput from 15 to 170 GFLOPS (about 11x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "floating-point throughput",
+   "value": "170",
+   "unit": "GFLOPS",
+   "baseline_value": "15",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; N = 1,024 FP32 matmul on CUDA cores, 32x32 tiles",
+   "quote": "rises from 15 GFLOPS to 170 GFLOPS, a gain of nearly 11×",
+   "table": null,
+   "note": null,
+   "where": "Table 7-4 discussion"
+  },
+  {
+   "claim": "Tiling cut global memory load sectors from 9,800 to 1,200.",
+   "kind": "measured",
+   "source": null,
+   "metric": "global memory load sectors",
+   "value": "1200",
+   "unit": "32-byte sectors",
+   "baseline_value": "9800",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; N = 1,024",
+   "quote": null,
+   "table": "Table 7-4, row Global memory load sectors",
+   "note": null,
+   "where": "Table 7-4"
+  },
+  {
+   "claim": "Tiling raised achieved occupancy from 42% to 89%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "achieved occupancy",
+   "value": "89",
+   "unit": "%",
+   "baseline_value": "42",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-4, row Achieved occupancy (%)",
+   "note": null,
+   "where": "Table 7-4"
+  },
+  {
+   "claim": "Table 7-4 lists DRAM throughput falling from 90% to 25% of peak after tiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DRAM throughput",
+   "value": "25",
+   "unit": "% of peak",
+   "baseline_value": "90",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-4, row DRAM throughput (% of peak)",
+   "note": "Chapter text says naive moved 10 GB/s and tiled 21 GB/s, which is not 90% of an 8 TB/s device; 15 and 170 GFLOPS imply 1.5 and 8 FLOPS/byte.",
+   "where": "Table 7-4"
+  },
+  {
+   "claim": "Arithmetic intensity went from 1.5 to 8 FLOPS per byte with tiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "arithmetic intensity",
+   "value": "8",
+   "unit": "FLOPS/byte",
+   "baseline_value": "1.5",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": "or 8 FLOPS/byte",
+   "table": null,
+   "note": null,
+   "where": "Tiling section"
+  },
+  {
+   "claim": "Padding shared tile to 33 columns removed bank conflicts (4.8 million to 0) and cut transpose time 4 ms to 1.3 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "1.3",
+   "unit": "ms",
+   "baseline_value": "4",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; 32x32 transpose, N = 1,024, TILE_DIM 32 + PAD 1",
+   "quote": null,
+   "table": "Table 7-5, row Kernel execution time (ms)",
+   "note": null,
+   "where": "Table 7-5"
+  },
+  {
+   "claim": "Shared-memory load bank conflicts fell from 4.8 million to 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "shared-memory load bank conflicts",
+   "value": "0",
+   "unit": "count",
+   "baseline_value": "4.8 million",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": null,
+   "table": "Table 7-5, row Shared-memory load bank conflicts",
+   "note": null,
+   "where": "Table 7-5"
+  },
+  {
+   "claim": "Padding costs about 3% more memory for a 32-wide tile (1 KB).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "padding overhead",
+   "value": "3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32x32 float tile padded to [32][33]",
+   "quote": "~3% more memory for a 32-wide tile",
+   "table": null,
+   "note": null,
+   "where": "Bank-conflict section"
+  },
+  {
+   "claim": "const __restrict__ on a read-only lookup table cut kernel time from 2.5 ms to 1.0 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "1.0",
+   "unit": "ms",
+   "baseline_value": "2.5",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; table T = 1,024 floats, N = 2^20 lookups, 256 threads/block",
+   "quote": null,
+   "table": "Table 7-6, row Kernel execution time (ms)",
+   "note": null,
+   "where": "Table 7-6"
+  },
+  {
+   "claim": "Read-only path cut DRAM throughput from 600 GB/s to 200 GB/s while L2 read throughput rose from 1,500 to 1,800 GB/s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DRAM throughput",
+   "value": "200",
+   "unit": "GB/s",
+   "baseline_value": "600",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'",
+   "quote": "DRAM throughput falls from 600 GB/s to 200 GB/s",
+   "table": null,
+   "note": null,
+   "where": "Read-only cache section"
+  },
+  {
+   "claim": "TMA double buffering cut kernel time from 18 ms to 7 ms (about 2.6x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "7",
+   "unit": "ms",
+   "baseline_value": "18",
+   "n": null,
+   "setup": "Illustrative Nsight Compute metrics on a Blackwell-class GPU (GPU model not named for the tables); the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts'; cuda::memcpy_async + cuda::pipeline, two ping-pong tiles of 1024 floats",
+   "quote": "overall time improves from 18 milliseconds to 7 millisec-",
+   "table": null,
+   "note": "Same figure printed as 'Kernel execution time 18 ms / 7 ms' in Table 7-7.",
+   "where": "Table 7-7"
+  },
+  {
+   "claim": "A warp of float4 loads moves 512 bytes as four 128-byte transactions; 32-byte vectors on Blackwell/CUDA 13 move 1,024 bytes as eight.",
+   "kind": "claim",
+   "source": null,
+   "metric": "bytes per warp load",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hopper 16 B/thread vs Blackwell CUDA 13+ 32 B/thread, aligned",
+   "quote": "A 32-thread warp therefore requests\n1,024 bytes.",
+   "table": null,
+   "note": null,
+   "where": "Vectorized memory access"
+  },
+  {
+   "claim": "Blackwell HBM3e bandwidth per device is up to 8 TB/s.",
+   "kind": "claim",
+   "source": null,
+   "metric": "HBM3e bandwidth",
+   "value": "8",
+   "unit": "TB/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell per device",
+   "quote": "bandwidth is up to 8 TB/s",
+   "table": null,
+   "note": null,
+   "where": "First section"
+  }
+ ],
+ "limits": [
+  "All metrics tables are labelled illustrative; real benchmarks are in the book's GitHub repository.",
+  "GPU model, CUDA version, clocks and run counts for the tables are not stated.",
+  "Several table values are internally inconsistent (31.8 sectors/request for a scalar copy; 90% of peak DRAM at 10 GB/s).",
+  "Examples use FP32 CUDA cores, not Tensor Cores (Chapter 9 covers reduced precision).",
+  "Host-device overlap with pinned memory and streams appears only as a takeaway, with no example or numbers."
+ ],
+ "practices": [
+  "Index so a warp's threads read consecutive 4-byte words, or use SoA, to coalesce (Coalesced section).",
+  "Use float4 (16 B) vectors, or 32 B aligned types on Blackwell with CUDA 13+, and keep pointers aligned (Vectorized section).",
+  "Tile 32x32 into shared memory for reuse; experiment with tile size against shared memory and register budgets (Tiling section).",
+  "Pad shared tiles to [32][33] or swizzle to avoid bank conflicts (Bank-conflict section).",
+  "Use __shfl_down_sync for intra-warp reductions instead of shared memory (Warp shuffle section).",
+  "Mark read-only data const __restrict__ (Read-only cache section).",
+  "Use cuda::memcpy_async with cuda::pipeline and double buffering so TMA overlaps copy with compute (TMA section).",
+  "Allocate pinned host memory and use cudaMemcpyAsync on multiple streams (Key Takeaways).",
+  "Profile with Nsight Compute and Nsight Systems before and after each change (Key Takeaways)."
+ ],
+ "terms": [
+  {
+   "term": "Coalescing",
+   "definition": "Coalescing is achieved when each warp's accesses fall within as few 128-byte cache lines as possible.",
+   "where": "Key Takeaways"
+  },
+  {
+   "term": "Bank conflict",
+   "definition": "If multiple threads in a warp access the same bank, a bank conflict occurs. This forces the memory accesses to serialize",
+   "where": "Avoid Shared-Memory Bank Conflicts"
+  },
+  {
+   "term": "Swizzling",
+   "definition": "Swizzling is a compile-time index transformation that \"scrambles\" the linear index used for shared memory so that sequential threads map to different banks.",
+   "where": "Avoid Shared-Memory Bank Conflicts"
+  },
+  {
+   "term": "Double buffering",
+   "definition": "While TMA streams in the next tile of data, the SM's warps compute on the previous tile (ping-ponging).",
+   "where": "Asynchronous Memory Prefetching and TMA"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fregly, AI Systems Performance Engineering ch. 6",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter 6 supplies the GPU architecture background",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA CUTLASS",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as library using multi-level tiling and swizzling",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA cuBLAS / cuDNN / cuTile",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Libraries implementing the tiling techniques",
+   "quote": null
+  },
+  {
+   "work": "Nsight Compute / Nsight Systems",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Profilers used for every table",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7-1",
+   "caption": "Comparing coalesced versus uncoalesced memory access pattern",
+   "page": null,
+   "why": "Shows warp loads in 128-byte lines vs straddling two lines"
+  },
+  {
+   "figure": "Fig 7-6",
+   "caption": "Avoiding bank conflicts with padding",
+   "page": null,
+   "why": "Shows how the 33rd column shifts rows across banks"
+  },
+  {
+   "figure": "Fig 7-7",
+   "caption": "TMA asynchronously fetching data from global HBM into shared memory",
+   "page": null,
+   "why": "Shows the async copy path"
+  }
+ ],
+ "code": [
+  {
+   "where": "Bank-conflict section, padded transpose",
+   "snippet": "__shared__ float tile[TILE_DIM][TILE_DIM + PAD];",
+   "verbatim": true
+  },
+  {
+   "where": "Warp shuffle section",
+   "snippet": "for (int offset = 16; offset > 0; offset >>= 1) { float other = __shfl_down_sync(mask, val, offset); val += other; }",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Code listings are truncated at right margin in the text extraction.",
+  "Figures are images and not in the text; captions only.",
+  "No embedded instructions found."
+ ]
+}

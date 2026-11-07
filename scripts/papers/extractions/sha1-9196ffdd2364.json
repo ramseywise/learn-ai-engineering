@@ -1,0 +1,250 @@
+{
+ "schema": 1,
+ "key": "sha1:9196ffdd2364",
+ "pdf": "generative-ai/08-eval/sources/huyen-ai-engineering/ch10-ai-engineering-architecture-user-feedback.pdf",
+ "bib": {
+  "title": "Chapter 10. AI Engineering Architecture and User Feedback (in AI Engineering)",
+  "authors": [
+   "Chip Huyen"
+  ],
+  "first_author": "Huyen",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 83047,
+  "chars_total": 83047,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should the components of a foundation-model application be assembled step by step, observed in production, and fed by user feedback?",
+ "hypothesis": null,
+ "contributions": [
+  "A five-step progression for building an AI application architecture: context, guardrails, router and gateway, caches, agent patterns/write actions",
+  "Monitoring and observability guidance (MTTD, MTTR, CFR, metrics, logs, traces, drift detection)",
+  "Orchestration guidance",
+  "Taxonomy of conversational user feedback, design guidance, and limitations of feedback"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Uber average driver rating in 2015 was 4.8, with scores below 4.6 risking deactivation, illustrating leniency bias.",
+   "kind": "reported",
+   "source": "Uber (uncited figure as printed)",
+   "metric": "average driver rating",
+   "value": "4.8",
+   "unit": "stars",
+   "setup": "Uber drivers, 2015, five-star scale",
+   "quote": "According to Uber, in 2015, the average driver’s rating was 4.8, with",
+   "where": "Feedback Limitations, Leniency bias"
+  },
+  {
+   "claim": "Voiceflow reported a 10% performance drop moving from gpt-3.5-turbo-0301 to gpt-3.5-turbo-1106.",
+   "kind": "reported",
+   "source": "Voiceflow",
+   "metric": "performance drop",
+   "value": "10",
+   "unit": "%",
+   "setup": "Voiceflow application, GPT-3.5-turbo-0301 to 1106; metric not defined in chapter",
+   "quote": "Voiceflow reported\na 10% performance drop when switching from the older GPT-3.5-turbo-\n0301 to the newer GPT-3.5-turbo-1106.",
+   "where": "Drift detection, underlying model changes",
+   "note": "quote spans line breaks"
+  },
+  {
+   "claim": "Largest FITS feedback cluster is users clarifying their demand again (26.54%, 3702 items).",
+   "kind": "reported",
+   "source": "Xu et al. 2022 (FITS); clustering by Yuan et al. 2023",
+   "metric": "share of feedback",
+   "value": "26.54",
+   "unit": "%",
+   "setup": "FITS dataset, automatic clustering into 8 groups",
+   "table": "Table 10-1, row Group 1 Clarify their demand again, column %",
+   "where": "Table 10-1"
+  },
+  {
+   "claim": "Showing the feedback request to 1% of a large user base is suggested to limit annoyance, at the cost of more feedback bias.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "% of users",
+   "setup": "Large user base, positive-feedback prompts",
+   "quote": "showing the request to only 1% of users at a time could help gather sufficient feedback",
+   "where": "Feedback Design, When something bad happens"
+  },
+  {
+   "claim": "Chen et al. (2023) saw notable benchmark differences between March and June 2023 versions of GPT-4 and GPT-3.5.",
+   "kind": "reported",
+   "source": "Chen et al. 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "GPT-4 and GPT-3.5 API versions, March vs June 2023",
+   "quote": "Chen et al. (2023)\nobserved notable differences in benchmark scores between the March 2023\nand June 2023 versions of GPT-4 and GPT-3.5.",
+   "where": "Drift detection",
+   "note": "no numbers given"
+  }
+ ],
+ "limits": [
+  "Chapter says the architecture is 'validated at multiple companies' but gives no data.",
+  "Chapter says order of steps follows what the author commonly sees; needs differ per application.",
+  "Author notes it is unclear whether full or partial side-by-side responses give more reliable feedback.",
+  "Rating-option rewrites for Uber are 'not validated' (footnote).",
+  "Tool gateway not covered as not a common pattern as of writing."
+ ],
+ "practices": [
+  "Start with the simplest architecture (query to model) and add components only as needs arise: context, guardrails, router/gateway, caches, agent patterns (Architecture intro).",
+  "Treat context construction like feature engineering for foundation models (Step 1).",
+  "Add input guardrails (PII masking with reverse map) and output guardrails (retry, parallel calls, human fallback); track false refusal rate too (Step 2).",
+  "Guardrails trade reliability against latency and work poorly in stream-completion mode (Guardrail implementation).",
+  "Use a small, fast intent classifier as router; adjust context when routing to models with smaller context limits (Step 3).",
+  "Put a model gateway in front of models for unified interface, access control, cost limits, fallback (Step 3).",
+  "Evaluate efficiency, cost and performance risk before adding a semantic cache; do not cache user-specific or time-sensitive queries (Step 4).",
+  "Make observability integral to design; track MTTD, MTTR and CFR (Monitoring).",
+  "Design metrics around the failure modes you want to catch; correlate metrics with north-star metrics (Metrics).",
+  "Log everything with tags and IDs; inspect production data manually each day (Logs and traces).",
+  "Trace each query step by step so the failing step can be pinpointed (Logs and traces).",
+  "Detect system prompt, user behaviour and underlying model drift (Drift detection).",
+  "Start without an orchestrator; judge orchestrators on integration/extensibility, complex pipelines, ease of use/performance/scalability (Orchestration).",
+  "Feed issues found in monitoring into the evaluation pipeline, and make evaluation metrics translate to monitoring metrics (Monitoring).",
+  "Collect feedback non-intrusively at the start, when something bad happens, and when the model has low confidence (Feedback Design).",
+  "Vary option positions or model position effects to mitigate position bias; inspect rating distributions for leniency bias (Feedback Limitations).",
+  "Be careful using feedback to train models: degenerate loops and sycophancy risk (Feedback Limitations)."
+ ],
+ "terms": [
+  {
+   "term": "MTTD",
+   "definition": "mean time to detection: When something bad happens, how long does it take to detect it?",
+   "where": "Monitoring and Observability"
+  },
+  {
+   "term": "MTTR",
+   "definition": "mean time to response: After detection, how long does it take to be resolved?",
+   "where": "Monitoring and Observability"
+  },
+  {
+   "term": "CFR",
+   "definition": "change failure rate: The percentage of changes or deployments that result in failures requiring fixes or rollbacks.",
+   "where": "Monitoring and Observability"
+  },
+  {
+   "term": "Observability",
+   "definition": "the whole process of instrumentating, tracking, and debugging the system (monitoring is the act of tracking a system's information)",
+   "where": "Monitoring versus observability"
+  },
+  {
+   "term": "Exact caching",
+   "definition": "cached items are used only when these exact items are requested",
+   "where": "Step 4"
+  },
+  {
+   "term": "Semantic caching",
+   "definition": "cached items are used even if they are only semantically similar, not identical, to the incoming query",
+   "where": "Step 4"
+  },
+  {
+   "term": "Model gateway",
+   "definition": "an intermediate layer that allows your organization to interface with different models in a unified and secure manner",
+   "where": "Step 3"
+  },
+  {
+   "term": "Degenerate feedback loop",
+   "definition": "predictions themselves influence the feedback, which, in turn, influences the next iteration of the model, amplifying initial biases",
+   "where": "Feedback Limitations"
+  },
+  {
+   "term": "Explicit vs implicit feedback",
+   "definition": "explicit: info users provide in response to explicit requests; implicit: information inferred from user actions",
+   "where": "Extracting Conversational Feedback"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Xu et al. 2022, FITS (Feedback for Interactive Talk & Search)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Table 10-1 feedback clusters",
+   "quote": null
+  },
+  {
+   "work": "Yuan et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of Table 10-1 clustering results",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2023 (GPT-4/3.5 behaviour change)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "model drift",
+   "quote": null
+  },
+  {
+   "work": "Shankar et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "developers' perceptions of good/bad outputs change with data",
+   "quote": null
+  },
+  {
+   "work": "Sharma et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sycophancy from human feedback",
+   "quote": null
+  },
+  {
+   "work": "Stray 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "training on feedback teaches models to tell users what they want",
+   "quote": null
+  },
+  {
+   "work": "Designing Machine Learning Systems (Huyen 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "monitoring chapter",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 10-1",
+   "caption": "Feedback types derived from automatic clustering the FITS dataset (Xu et al., 2022). Results from Yuan et al. (2023).",
+   "page": null,
+   "why": "Taxonomy of complaint types with frequencies"
+  },
+  {
+   "figure": "Fig 10-10",
+   "caption": "An application architecture that enables the system to perform write actions.",
+   "page": null,
+   "why": "Final assembled architecture (figure image not in text)"
+  }
+ ],
+ "code": [
+  {
+   "where": "Step 3 gateway example",
+   "snippet": "@app.route('/model', methods=['POST'])\ndef model_gateway():\n    data = request.get_json()\n    model_type = data.get(\"model_type\")",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text cache includes web-page chrome after the footnotes (navigation, 'Subscribe now'); ignored. No instructions embedded.",
+  "Gateway code listing is truncated/garbled in the extraction.",
+  "Book-chapter year not printed in PDF; 2025 inferred from the O'Reilly publication, not stated in text."
+ ]
+}

@@ -1,0 +1,363 @@
+{
+ "schema": 1,
+ "key": "sha1:74400f564542",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch10-inference-pipeline-deployment.pdf",
+ "bib": {
+  "title": "Inference Pipeline Deployment (Chapter 10), LLM Engineer's Handbook",
+  "authors": [
+   "Paul Iusztin",
+   "Maxime Labonne"
+  ],
+  "first_author": "Iusztin",
+  "year": 2024,
+  "venue": "Packt (book chapter; read from O'Reilly print, ISBN 9781836200079)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 92806,
+  "chars_total": 92806,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should an LLM inference pipeline be designed and deployed (deployment type, monolith vs microservices, SageMaker, autoscaling)?",
+ "hypothesis": null,
+ "contributions": [
+  "Compares online real-time, asynchronous and offline batch deployment",
+  "Argues for splitting LLM service from business logic",
+  "Walks through deploying a fine-tuned 8B LLM Twin on AWS SageMaker with the Hugging Face TGI DLC and a FastAPI RAG service",
+  "Explains SageMaker autoscaling (scalable target, target-tracking policy, cooldown)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Latency and throughput couple by 1/latency for unbatched serving: 100 ms per request gives 10 RPS, 10 ms gives 100 RPS.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "requests per second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unbatched, sequential processing, illustrative arithmetic",
+   "quote": "if the service takes 100 ms to process requests, this translates to a throughput of 10 re‐ quests per second.",
+   "table": null,
+   "note": null,
+   "where": "Criteria: throughput and latency"
+  },
+  {
+   "claim": "With batching, higher latency can mean higher throughput: 20 requests in 100 ms is 200 RPS.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "200",
+   "unit": "requests per second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batched serving, illustrative",
+   "quote": "if you process 20 batched requests in 100 ms, the latency is 100 ms, while the throughput is 200 requests per second.",
+   "table": null,
+   "note": null,
+   "where": "Criteria: throughput and latency"
+  },
+  {
+   "claim": "60 requests in 200 ms is 300 RPS, so doubling latency raises throughput by half.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "300",
+   "unit": "requests per second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batched serving, illustrative",
+   "quote": "If you process 60 requests in 200 ms, the latency is 200 ms, while the throughput rises to 300 requests per second.",
+   "table": null,
+   "note": null,
+   "where": "Criteria: throughput and latency"
+  },
+  {
+   "claim": "Async queue example: 2 VMs absorb a jump from 10 to 100 RPS without scaling out.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": "requests per second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "E-shop promotion, fictional numbers",
+   "quote": "the number of requests spiked to 100 requests per second. Instead of scaling the number of virtual machines (VMs) by 10, which can add drastic costs, the requests are queued, and the same two VMs can process them in their rhythm without any failures.",
+   "table": null,
+   "note": null,
+   "where": "Asynchronous inference"
+  },
+  {
+   "claim": "Google 2016 study: 53% of visits abandoned if a mobile site takes over three seconds to load.",
+   "kind": "reported",
+   "source": "Google 2016 study (thinkwithgoogle.com mobile site load time statistics)",
+   "metric": null,
+   "value": "53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mobile site load, cited from Think with Google",
+   "quote": "Google found in a 2016 study that 53% of visits are abandoned if a mobile site takes longer than three seconds to load",
+   "table": null,
+   "note": null,
+   "where": "Criteria for choosing deployment types"
+  },
+  {
+   "claim": "An 8B model can run on one Nvidia A10G after quantization; a 30B model needs an A100.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM Twin deployment plan; no memory or latency measurement given",
+   "quote": "if we run an 8B parameter model, the model can run on a single machine with a Nivida A10G GPU after quantization. But if we want to run a 30B model, we can upgrade to an Nvidia A100 GPU.",
+   "table": null,
+   "note": null,
+   "where": "LLM Twin inference strategy"
+  },
+  {
+   "claim": "Deployment default is one ml.g5.xlarge GPU instance; deploy takes 15-30 minutes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SageMaker endpoint with HF LLM DLC (TGI), model mlabonne/TwinLlama-3.1-8B-13, bitsandbytes quantization",
+   "quote": "our default values use a single GPU instance of type ml.g5.xlargeGPU",
+   "table": null,
+   "note": "Time statement: 'this will take up to 15-30 minutes to deploy'.",
+   "where": "Deploying to AWS SageMaker"
+  },
+  {
+   "claim": "Training pipeline for the LLM Twin can cost up to 100 dollars, hence the shared model.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": "dollars",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training pipeline of the book, provider not stated here",
+   "quote": "which can cost up to 100 dollars",
+   "table": null,
+   "note": null,
+   "where": "Tech stack"
+  },
+  {
+   "claim": "Autoscaling illustration: 1 replica idle (or zero), 2 at ~10 RPS, 20 at 100 RPS; stated as fictional.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "20",
+   "unit": "replicas",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figure 10.8, illustrative",
+   "quote": "when the number of requests spikes to 100 per second, the autoscal‐\ning service should spin up to 20 replicas",
+   "table": null,
+   "note": null,
+   "where": "Autoscaling"
+  },
+  {
+   "claim": "Target tracking example: keep GPU utilization around 70 percent.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical example for SageMaker target tracking; the chapter's named metric is SageMakerInferenceComponentInvocationsPerCopy",
+   "quote": "we set a target of keeping GPU utilization around 70 percent",
+   "table": null,
+   "note": null,
+   "where": "Creating a scalable policy"
+  },
+  {
+   "claim": "Autoscaling stress-test example: 100 users per minute average, 10,000 at an outlier event.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "10,000",
+   "unit": "users per minute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical requirement spec used to illustrate stress testing",
+   "quote": "scale up to 10,000 users per minute in case of an",
+   "table": null,
+   "note": null,
+   "where": "Autoscaling pitfalls"
+  },
+  {
+   "claim": "Minimum replica count for an autoscaling target must be at least 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SageMaker Application Auto Scaling for inference components",
+   "quote": "This value must be at least 1",
+   "table": null,
+   "note": null,
+   "where": "Minimum and maximum scaling limits"
+  }
+ ],
+ "limits": [
+  "No benchmarks: all numbers are illustrative arithmetic or fictional scaling figures",
+  "Says WebSockets stream tokens in ChatGPT/Claude, while the DLC section says TGI streams via Server-Sent Events",
+  "FastAPI business service is local only; EKS/ECS deployment is not covered",
+  "Code snippets in the text are truncated by line width in the PDF",
+  "Pinned versions in code (transformers 4.6, pytorch 1.13) and tool lists are dated; chapter says the tool list 'will probably change'",
+  "Cost of ml.g5.xlarge, memory sizes and latency of the deployed model are not stated"
+ ],
+ "practices": [
+  "Decide deployment type from throughput, latency, data and infrastructure requirements (Criteria for choosing deployment types).",
+  "Use real-time inference for chatbots; async for spiky or long jobs; batch when delayed predictions are acceptable (Understanding inference deployment types).",
+  "Use gRPC for internal services and REST for public APIs (Online real-time inference).",
+  "Start monolithic but keep ML and business logic in separate modules or packages so a later split is cheap (Choosing between monolithic and microservices).",
+  "Split the LLM service (GPU) from the business service (CPU) so each scales and uses hardware independently (Microservices architecture).",
+  "Use identical preprocessing and post-processing in training and inference to avoid training-serving skew (The training versus the inference pipeline).",
+  "Create a narrow IAM user and execution role for the deployment instead of using an admin account (Configuring SageMaker roles).",
+  "Delete SageMaker resources after testing to avoid growing costs (Calling the endpoint / FastAPI section).",
+  "Autoscale with target tracking, set min >= 1 and a max, and use cooldowns; avoid over- and under-scaling by stress testing in a dev environment (Autoscaling)."
+ ],
+ "terms": [
+  {
+   "term": "Throughput",
+   "definition": "the number of inference requests a system can process in a given period. It is typically measured in requests per second (RPS).",
+   "where": "Throughput and latency"
+  },
+  {
+   "term": "Latency",
+   "definition": "the time it takes for a system to process a single inference request from when it is received until the result is returned.",
+   "where": "Throughput and latency"
+  },
+  {
+   "term": "Training-serving skew",
+   "definition": "the model’s performance during inference deviates from its performance during training (from discrepancies in pre/post-processing).",
+   "where": "The training versus the inference pipeline"
+  },
+  {
+   "term": "Hugging Face DLC",
+   "definition": "specialized Docker images that come pre-loaded with essential deep-learning frameworks and libraries; the inference DLC is powered by the Text Generation Inference (TGI) engine.",
+   "where": "What are Hugging Face’s DLCs?"
+  },
+  {
+   "term": "TargetTrackingScaling",
+   "definition": "a policy that adjusts the resource’s capacity to maintain a specific target value for a chosen metric.",
+   "where": "Creating a scalable policy"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Text Generation Inference (TGI), Hugging Face",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Serving engine inside the SageMaker DLC",
+   "quote": null
+  },
+  {
+   "work": "Huyen, Designing Machine Learning Systems",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited in references",
+   "quote": null
+  },
+  {
+   "work": "Lakshmanan, Robinson, Munn, Machine Learning design patterns",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited in references",
+   "quote": null
+  },
+  {
+   "work": "Iusztin 2024, Architect LLM & RAG inference pipelines (Decoding ML)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Blog post by the first author on the same architecture",
+   "quote": null
+  },
+  {
+   "work": "Mendoza 2024, Best tools for ML model serving (neptune.ai)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited in references",
+   "quote": null
+  },
+  {
+   "work": "FTI architecture (feature/training/inference), earlier chapters",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapters 4 and 9 supply the RAG retrieval module reused here",
+   "quote": null
+  },
+  {
+   "work": "bitsandbytes, flash-attention, safetensors",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Features listed for the DLC",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10.1",
+   "caption": "The three fundamental architectures of inference deployment types",
+   "page": 4,
+   "why": "Contrasts real-time, async and batch flows"
+  },
+  {
+   "figure": "Fig 10.2",
+   "caption": "Monolithic versus microservices architecture in model serving",
+   "page": 8,
+   "why": "Shows the GPU/CPU split"
+  },
+  {
+   "figure": "Fig 10.4",
+   "caption": "Microservice deployment architecture of the LLM Twin’s inference pipeline",
+   "page": 12,
+   "why": "Full request flow"
+  },
+  {
+   "figure": "Fig 10.8",
+   "caption": "Autoscaling possible use cases",
+   "page": 31,
+   "why": "Replica count vs RPS and the load balancer"
+  }
+ ],
+ "code": [
+  {
+   "where": "hugging_face_deploy_config, p. 23",
+   "snippet": "\"MAX_BATCH_PREFILL_TOKENS\": \"10000\",\n\"HF_MODEL_QUANTIZE\": \"bitsandbytes\",",
+   "verbatim": true
+  },
+  {
+   "where": "InferenceExecutor.execute, p. 27",
+   "snippet": "parameters={\"max_new_tokens\": settings.MAX_NEW_TOKENS_INFERENCE, \"repetition_penalty\": 1.1, \"temperature\": settings.TEMPERATURE_INFERENCE}",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code in PDF is truncated at line width and some blocks (CLI commands, curl) appear out of order",
+  "Page headers/footers from the O'Reilly print are in the text"
+ ]
+}

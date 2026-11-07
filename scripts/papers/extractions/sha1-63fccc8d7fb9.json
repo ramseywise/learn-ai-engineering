@@ -1,0 +1,318 @@
+{
+ "schema": 1,
+ "key": "sha1:63fccc8d7fb9",
+ "pdf": "generative-ai/02-rag-retrieval/sources/building-ai-agents-llms-rag-kgs/ch06-advanced-rag-techniques-information-retrieval-augmentation.pdf",
+ "bib": {
+  "title": "Advanced RAG Techniques for Information Retrieval and Augmentation (Chapter 6, Building AI Agents with LLMs, RAG, and Knowledge Graphs)",
+  "authors": [
+   "Salvatore Raieli",
+   "Gabriele Iuculano"
+  ],
+  "first_author": "Raieli",
+  "year": 2025,
+  "venue": "Packt (book chapter; O'Reilly print 9781835087060)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 106654,
+  "chars_total": 106654,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can naive RAG's retrieval, augmentation and generation failures be fixed with advanced and modular RAG, and what changes when such a system is scaled, secured and extended?",
+ "hypothesis": null,
+ "contributions": [
+  "Catalogue of naive RAG failure modes by pipeline step (Fig 6.1)",
+  "Advanced RAG techniques: hierarchical indexing, hypothetical questions, HyDE, context enrichment, query transformation, hybrid search, routing, reranking, compression, response synthesis (Table 6.1)",
+  "Modular RAG, training-free vs training-based RAG (Table 6.2)",
+  "Toy advanced RAG pipeline code",
+  "Scalability, security/privacy, long-context LLM, multimodal RAG and hallucination discussion"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Hybrid search score is a weighted combination with alpha; alpha 0 is pure vector, 1 pure keyword; typical 0.4 or 0.5.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "0.4 or 0.5",
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hybrid BM25 sparse plus dense transformer embeddings; formula image not in text",
+   "quote": "Typically, the value of α is 0.4 or 0.5 (other",
+   "table": null,
+   "note": null,
+   "where": "Hybrid search section"
+  },
+  {
+   "claim": "Embedding inversion studies recovered more than 70% of the words of the original text from vectors.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "70",
+   "unit": "% of words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Security and privacy section; studies unnamed in the text (Fig 6.20 cites arXiv 2402.16893)",
+   "quote": "they have been able to recover more than 70% of the words in the origi",
+   "table": null,
+   "note": null,
+   "where": "Security and privacy"
+  },
+  {
+   "claim": "Current best embedder context is stated as 32K, so chunks cannot exceed 32K even with a long-context LLM.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "32K",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open questions, long-context LLM discussion; dated claim",
+   "quote": "currently, the maximum context length of an embedder",
+   "table": null,
+   "note": null,
+   "where": "Open questions"
+  },
+  {
+   "claim": "Wang et al. 2024 guideline: best performance with query classification, HyDE, reranking, repacking and summarization; drop HyDE if latency is too high.",
+   "kind": "reported",
+   "source": "Wang 2024, Searching for Best Practices in Retrieval-Augmented Generation",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter reading of Wang 2024 (arXiv 2407.01219), Figs 6.18-6.19; no numbers given in the text",
+   "quote": "The best performance is achieved with the query classification module, HyDE, the reranking module, context repacking, and summarization.",
+   "table": null,
+   "note": null,
+   "where": "Scalability section"
+  },
+  {
+   "claim": "Dosage example: context near the model's prior is adopted, context far from it is ignored (20 vs 30 vs 100).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Worked example on confidence and context; chapter claims larger LLMs prefer their own answer more (no data)",
+   "quote": "the LLM will provide 30 as the output",
+   "table": null,
+   "note": null,
+   "where": "Open questions, hallucinations"
+  },
+  {
+   "claim": "Lost-in-the-middle: best LLM performance when important information is at the beginning or end of context; alternating even/odd reorder is proposed.",
+   "kind": "reported",
+   "source": "Nelson et al. 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Nelson 2023 (arXiv 2307.03172), Fig 6.9",
+   "quote": "a study published in 2023 shows that the best performance for an LLM is when",
+   "table": null,
+   "note": null,
+   "where": "Reranking section"
+  }
+ ],
+ "limits": [
+  "No experiments of its own: all figures come from other work and none of the cited numbers are printed in the chapter text.",
+  "Hierarchical indexing, hypothetical questions and HyDE are described without measured gains; HyDE is said to need cost justification.",
+  "Context-length and embedder limits (100K to 1M tokens, 32K embedder) are as of 2025 and will date.",
+  "Code is a toy pipeline with placeholder logic (query + ' OR related_term', 'specific_keyword'); the repo is needed for the rest.",
+  "Formula for the hybrid score is an image, not in the text; alpha direction is the opposite of Weaviate's."
+ ],
+ "practices": [
+  "Identify which pipeline step a failure comes from before choosing a module (Table 6.1).",
+  "Use reranking: retrieve many chunks, rerank with a second model, give the top k to the LLM (Reranking).",
+  "Reorder retrieved chunks so the strongest sit at start and end, alternating even/odd with wide top-k (Reranking).",
+  "Use hybrid search (BM25 + dense) with alpha around 0.3 to 0.5 for exact terms plus semantics (Hybrid search).",
+  "Use hypothetical questions at index time or HyDE at query time; HyDE averages five generated answers in some variants.",
+  "Keep references to the sources used for generation (Reference citations).",
+  "Route queries by access domain to avoid cross-domain leakage and latency (Query routing).",
+  "Benchmark before production; monitor memory, cost and network as well as accuracy (Scalability).",
+  "Protect embeddings like the source text; defend against prompt injection, poisoning and membership inference; use guardrails such as NeMo Guardrails or Llama Guard (Security).",
+  "Use stricter prompts to force the model to use context (Open questions)."
+ ],
+ "terms": [
+  {
+   "term": "Naive RAG",
+   "definition": "an embedder, a vector database for retrieval, and an LLM for generation",
+   "where": "Intro"
+  },
+  {
+   "term": "Modular RAG",
+   "definition": "an extension of advanced RAG focused on adaptability and versatility, with separate components used sequentially or in parallel",
+   "where": "Modular RAG"
+  },
+  {
+   "term": "HyDE",
+   "definition": "create hypothetical answers to a query, embed them and search chunks with those embeddings",
+   "where": "Hypothetical questions and HyDE"
+  },
+  {
+   "term": "Hypothetical questions",
+   "definition": "an LLM generates one or more questions per chunk; their vectors are searched and mapped back to chunks",
+   "where": "Hypothetical questions and HyDE"
+  },
+  {
+   "term": "Parent document retriever",
+   "definition": "embed small child chunks, return the larger parent when more than n of top-k chunks belong to it",
+   "where": "Context enrichment"
+  },
+  {
+   "term": "Semantic router",
+   "definition": "embeds example queries with their routes and picks the route of the most similar stored query",
+   "where": "Query routing"
+  },
+  {
+   "term": "Contextual hallucination",
+   "definition": "correct facts are in the context but the LLM still generates a wrong output",
+   "where": "Open questions"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the Middle (Nelson et al.)",
+   "year": 2023,
+   "arxiv": "2307.03172",
+   "relation": "related",
+   "note": "basis for chunk reordering",
+   "quote": null
+  },
+  {
+   "work": "Wang, Searching for Best Practices in RAG",
+   "year": 2024,
+   "arxiv": "2407.01219",
+   "relation": "related",
+   "note": "component guidance",
+   "quote": null
+  },
+  {
+   "work": "Gao et al., HyDE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "HyDE named, not cited by id",
+   "quote": null
+  },
+  {
+   "work": "Izacard, Distilling Knowledge from Reader to Retriever",
+   "year": 2020,
+   "arxiv": "2012.04584",
+   "relation": "related",
+   "note": "attention as relevance label for LLM-first training",
+   "quote": null
+  },
+  {
+   "work": "Zeng, Privacy Issues in RAG",
+   "year": 2024,
+   "arxiv": "2402.16893",
+   "relation": "related",
+   "note": "Fig 6.20",
+   "quote": null
+  },
+  {
+   "work": "Zou, PoisonedRAG",
+   "year": 2024,
+   "arxiv": "2402.07867",
+   "relation": "related",
+   "note": "Fig 6.21",
+   "quote": null
+  },
+  {
+   "work": "Wu et al., prior vs context",
+   "year": 2024,
+   "arxiv": "2404.10198",
+   "relation": "related",
+   "note": "Fig 6.25",
+   "quote": null
+  },
+  {
+   "work": "Gao et al., RAG survey",
+   "year": 2023,
+   "arxiv": "2312.10997",
+   "relation": "related",
+   "note": "Figs 6.13, 6.14",
+   "quote": null
+  },
+  {
+   "work": "Chevalier, Adapting LMs to Compress Contexts",
+   "year": 2023,
+   "arxiv": "2305.14788",
+   "relation": "related",
+   "note": "autocompressors",
+   "quote": null
+  },
+  {
+   "work": "Rails: NeMo Guardrails",
+   "year": 2023,
+   "arxiv": "2310.10501",
+   "relation": "related",
+   "note": "Fig 6.22",
+   "quote": null
+  },
+  {
+   "work": "Self-RAG; FLARE; DSP; ColBERT; RankT5; Llama Guard",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "named only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.1",
+   "caption": "Summary of naive RAG issues and identifying different steps in the pipeline where the issues can arise",
+   "page": 2,
+   "why": "maps each failure to a pipeline step"
+  },
+  {
+   "figure": "Fig 6.4",
+   "caption": "Hypothetical questions and HyDE approaches",
+   "page": 6,
+   "why": "index-time vs query-time generation"
+  },
+  {
+   "figure": "Table 6.1",
+   "caption": "Problems and solutions in RAG",
+   "page": 16,
+   "why": "problem to technique lookup"
+  },
+  {
+   "figure": "Fig 6.19",
+   "caption": "Impact of single modules and techniques on accuracy and latency",
+   "page": 29,
+   "why": "cost vs accuracy per module"
+  }
+ ],
+ "code": [
+  {
+   "where": "Implementing an advanced RAG pipeline, p22",
+   "snippet": "expanded_query = query + \" OR related_term\"",
+   "verbatim": true
+  },
+  {
+   "where": "p23",
+   "snippet": "if \"specific_keyword\" in query:\n        return \"textual\"\n    else:\n        return \"vector\"",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Hybrid-score formula is an image and absent from the text.",
+  "Code listings truncated at line ends in the text layer; some code appears out of order.",
+  "Page break in the text: 'sequential training, on the otherRAG:sequential training” hand' is an indexing artefact.",
+  "Several figures cite arXiv ids but the chapter prints no numbers from them."
+ ]
+}

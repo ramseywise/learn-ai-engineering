@@ -1,0 +1,192 @@
+{
+ "schema": 1,
+ "key": "sha1:b85771f08046",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch05-gpu-based-storage-i-o-optimizations.pdf",
+ "bib": {
+  "title": "AI Systems Performance Engineering, Chapter 5. GPU-Based Storage I/O Optimizations",
+  "authors": ["Chris Fregly"],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 66557,
+  "chars_total": 66557,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should storage and input pipelines be tuned so GPUs are never starved of data during large-scale training?",
+ "hypothesis": null,
+ "contributions": [
+  "Storage layout, NVMe and filesystem tuning, GPUDirect Storage, DeepSeek 3FS, distributed filesystems and object stores, data loader and DALI/NeMo Curator tuning, a continuous profiling workflow"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A gdsio read benchmark with GDS (-x 0) gives higher throughput than the CPU-mediated path (-x 2) on the same config.",
+   "kind": "measured",
+   "source": null,
+   "metric": "read throughput",
+   "value": "9.6",
+   "unit": "GB/s",
+   "baseline_value": "8.0",
+   "n": null,
+   "setup": "gdsio, -w 4 workers, -s 10G, -i 1M, -I 0 read, GPU 0, file /mnt/data/large_file; hardware not stated",
+   "quote": "increased read throughput from 8.0 GB/s to 9.6 GB/s and reduced latency from 1.25 ms to 1.00 ms",
+   "table": null,
+   "note": "Single run, no hardware, no variance reported.",
+   "where": "Measuring GDS with gdsio, Table 5-1"
+  },
+  {
+   "claim": "Average I/O latency fell with GDS in the same gdsio run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average latency",
+   "value": "1.00",
+   "unit": "ms",
+   "baseline_value": "1.25",
+   "n": null,
+   "setup": "same gdsio run as above",
+   "quote": "reduced latency from 1.25 ms to 1.00 ms",
+   "table": null,
+   "note": null,
+   "where": "Table 5-1"
+  },
+  {
+   "claim": "VAST Data reported a read-throughput gain from GDS on A100 and a larger one on H100.",
+   "kind": "reported",
+   "source": "VAST Data report (not cited by title)",
+   "metric": "read throughput gain",
+   "value": "20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single A100, sequential reads, vendor report; H100 gave 30%+",
+   "quote": "A report by VAST measured a 20% read-throughput boost",
+   "table": null,
+   "note": "Chapter says 'Validate on your workload and fabric, as uplifts vary'.",
+   "where": "Using NVIDIA GDS, Fig 5-1 text"
+  },
+  {
+   "claim": "DeepSeek 3FS aggregate read throughput on a 68-node cluster, above Ceph.",
+   "kind": "reported",
+   "source": "DeepSeek 3FS benchmark (https://oreil.ly/xD3id for Fig 5-2)",
+   "metric": "aggregate read throughput",
+   "value": "6.6",
+   "unit": "TB/s",
+   "baseline_value": "1.1",
+   "n": null,
+   "setup": "68-node AI-HPC cluster, 10 x 16 TB NVMe SSDs and dual 100 Gb/s per node, plus 1.4 TB/s background load; Ceph ~1.1 TB/s 'on similar hardware'",
+   "quote": "a large 3FS cluster achieved aggregated read",
+   "table": null,
+   "note": "Also states up to 7.3 TB/s in DeepSeek's environment. Unit printed as TB/s.",
+   "where": "DeepSeek's Fire-Flyer File System"
+  },
+  {
+   "claim": "Illustrative: cutting GPU data wait from 30% to 5% is claimed as a 6x steps/s gain.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "training steps per second increase",
+   "value": "6",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hypothetical GPUs waiting 30% then 5% of time for data",
+   "quote": "increase proportionally—6× in this case",
+   "table": null,
+   "note": "6 is the ratio of wait times (30/5); busy time goes 70% to 95%, about 1.36x.",
+   "where": "Monitoring Storage I/O"
+  },
+  {
+   "claim": "8 GPUs giving 5x throughput is 62.5% scaling efficiency.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "scaling efficiency",
+   "value": "62.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hypothetical 8 GPU run",
+   "quote": "8 GPUs giving only a 5× increase in throughput reveals a system that is only 62.5% ef-",
+   "table": null,
+   "note": null,
+   "where": "Continuous Profiling and Tuning Workflow"
+  },
+  {
+   "claim": "An aggregate-bandwidth example for a 72-GPU NVL72 rack at 200 MB/s per GPU.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "aggregate storage throughput",
+   "value": "14-20",
+   "unit": "GB/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "72 Blackwell GPUs, assumed 200 MB/s per GPU",
+   "quote": "this can require 14–20 GB/s of aggregate storage throughput to keep all",
+   "table": null,
+   "note": "72 x 200 MB/s is 14.4 GB/s; the upper end 20 is not derived.",
+   "where": "Fast Storage and Data Locality"
+  },
+  {
+   "claim": "A poorly tuned input pipeline can waste far more GPU time than algorithmic tweaks save.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "no data given",
+   "quote": null,
+   "table": null,
+   "note": "Text: 'could waste 50% of your GPU time, whereas algorithmic optimizations might give only a few percent.'",
+   "where": "Creating High-Quality LLM Datasets with NVIDIA NeMo Curator"
+  }
+ ],
+ "limits": [
+  "Training-centred; inference weight loading is not discussed.",
+  "gdsio benchmark gives no GPU, SSD, filesystem or repeat count; numbers are round and look illustrative.",
+  "The 3FS vs Ceph comparison is quoted without a Ceph source or a hardware match.",
+  "GDS support lists are 'as of this writing' and will date."
+ ],
+ "practices": [
+  "Pack small files into large shards (Arrow, TFRecord, Parquet, WebDataset) and read in about 1 MB chunks rather than 4 KB (Sequential Versus Random Read Patterns).",
+  "Use a none or mq-deadline scheduler on NVMe and raise read_ahead_kb from 128 KB to a few MB for streaming (Tuning NVMe).",
+  "Use multiple DataLoader workers with pin_memory=True, non_blocking=True, persistent_workers=True and a tuned prefetch_factor (default 2).",
+  "Use GDS with O_DIRECT and cuFile where the CPU is the copy bottleneck; it does not remove CPU orchestration.",
+  "A FUSE filesystem cannot provide a GDS path (GDS callout).",
+  "Keep NFS to a few nodes; use rsize/wsize 1 MiB, noatime; prefer parallel filesystems and stripe across OSTs for larger clusters.",
+  "Stage object-store data on local NVMe with parallel tools such as s5cmd, or use multithreaded range GETs.",
+  "Preprocess data offline (NeMo Curator) rather than training on raw text.",
+  "Scale data-loader workers and I/O bandwidth with GPU count.",
+  "Measure with num_workers=0 and CUDA events to separate Python cost from host-to-device copy cost; use nsys --trace=gds.",
+  "Change one or two things at a time and remeasure; keep a continuous profiling workflow.",
+  "Vary batch size with fixed all-reduce volume to tell communication-bound from compute-bound."
+ ],
+ "terms": [
+  {"term": "GPUDirect Storage (GDS)", "definition": "a feature that allows GPUs to read data directly from storage devices, or through the network storage stack, without creating extra copies in CPU memory", "where": "Using NVIDIA GDS"},
+  {"term": "cuda-checkpoint", "definition": "suspends CUDA inside a running process, waits for submitted work to complete, copies device memory to host allocations managed by the driver, and releases GPU resources", "where": "Checkpointing GPU State with cuda-checkpoint"},
+  {"term": "3FS", "definition": "DeepSeek's Fire-Flyer File System: cluster manager, metadata service, storage service and client over RDMA", "where": "DeepSeek's Fire-Flyer File System"}
+ ],
+ "lineage": [
+  {"work": "VAST Data GDS report", "year": null, "arxiv": null, "relation": "related", "note": "source of the 20% / 30%+ GDS gains", "quote": null},
+  {"work": "DeepSeek Fire-Flyer File System (3FS)", "year": 2025, "arxiv": null, "relation": "related", "note": "described and its benchmark quoted", "quote": null},
+  {"work": "NVIDIA gdsio, cuFile, DALI, NeMo Curator, cuda-checkpoint", "year": null, "arxiv": null, "relation": "evaluates", "note": "tools the chapter explains", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 5-1", "caption": "VAST Data's network architecture with GDS versus without GDS", "page": null, "why": "Shows the host bounce buffer removed by GDS."},
+  {"figure": "Fig 5-2", "caption": "Components of DeepSeek's Fire-Flyer File System (3FS)", "page": null, "why": "Four 3FS components and RDMA links."},
+  {"figure": "Table 5-1", "caption": "Throughput and latency before GDS versus after GDS", "page": null, "why": "The only measured comparison in the chapter."}
+ ],
+ "code": [
+  {"where": "Measuring GDS with gdsio", "snippet": "/usr/local/cuda/gds/tools/gdsio -f /mnt/data/large_file -d 0 -w 4 -s 10G -i 1M -I 0 -x 2   # CPU path; -x 0 for GDS", "verbatim": true}
+ ],
+ "problems": [
+  "Code listings and tables are appended at the end of the cached text, out of order. Page numbers not available. Web-page chrome at end of text ignored. No embedded instructions."
+ ]
+}

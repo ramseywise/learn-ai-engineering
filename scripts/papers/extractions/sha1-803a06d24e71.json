@@ -1,0 +1,270 @@
+{
+ "schema": 1,
+ "key": "sha1:803a06d24e71",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/learning-langchain/ch02-rag-indexing-your-data.pdf",
+ "bib": {
+  "title": "Chapter 2. RAG Part I: Indexing Your Data (Learning LangChain)",
+  "authors": [
+   "Mayo Oshin",
+   "Nuno Campos"
+  ],
+  "first_author": "Oshin",
+  "year": null,
+  "venue": "O'Reilly book chapter (Learning LangChain)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56259,
+  "chars_total": 56259,
+  "engine": "pymupdf",
+  "skipped": "Figures 2-1 to 2-6 are images; only captions read. Author names, book title and year are not printed in the chapter text; taken from the task brief (year left null)."
+ },
+ "type": "book-chapter",
+ "question": "How do you preprocess and index private or current documents so an LLM application can retrieve the relevant parts as context?",
+ "hypothesis": null,
+ "contributions": [
+  "Walks the ingestion pipeline: load documents, split into chunks, embed, store in a vector store",
+  "Shows the LangChain indexing API (RecordManager) for syncing changing documents",
+  "Introduces three indexing optimisations: MultiVectorRetriever, RAPTOR and ColBERT"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Embedding models output dense vectors of roughly 100 to 2,000 dimensions.",
+   "kind": "claim",
+   "source": null,
+   "metric": "embedding dimensions (upper bound)",
+   "value": "2,000",
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement about LLM-based embedding models; no specific model measured.",
+   "quote": "2,000 numbers, or dimensions. These are also called dense embeddings, as",
+   "table": null,
+   "note": "Lower bound 100 is on the preceding line: 'usually somewhere between 100 and'.",
+   "where": "LLM-Based Embeddings"
+  },
+  {
+   "claim": "The example Tesla 2022 annual report loads as over 100,000 characters, too long for most context windows, which motivates chunking.",
+   "kind": "claim",
+   "source": null,
+   "metric": "loaded document length",
+   "value": "100,000",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tesla 2022 annual report PDF loaded with PyPDFLoader; no tokenizer or model named.",
+   "quote": "100,000 characters long, so it won’t fit into the context window of the vast",
+   "table": null,
+   "note": null,
+   "where": "Converting Your Documents into Text"
+  },
+  {
+   "claim": "The default splitting example uses 1,000-character chunks with 200 characters of overlap (20%).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "chunk_overlap",
+   "value": "200",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200), separators \\n\\n, \\n, space; no retrieval quality measured.",
+   "quote": "chunk_overlap=200,",
+   "table": null,
+   "note": "Inconsistent inside the chapter: the Python end-to-end embedding example uses chunk_overlap=20 and the Python multi-vector example splits with chunk_overlap=20, while the JS versions use 200 or 20.",
+   "where": "Splitting Your Text into Chunks"
+  },
+  {
+   "claim": "Cosine similarity of pet and dog 'could be' 0.75 versus 0.1 for pet and lion (hypothetical numbers).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "0.75",
+   "unit": null,
+   "baseline_value": "0.1",
+   "n": null,
+   "setup": "Hypothetical three-word illustration, not computed with a model.",
+   "quote": "words here, the cosine similarity between pet and dog could be 0.75, but",
+   "table": null,
+   "note": "Cosine range is stated as -1 to 1 with 0 meaning 'no correlation'.",
+   "where": "Semantic Embeddings Explained"
+  },
+  {
+   "claim": "The MultiVectorRetriever example summarises chunks with gpt-3.5-turbo at temperature 0, batch concurrency 5.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "temperature",
+   "value": "0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Python summarisation chain over 1,000-character chunks; no retrieval results reported.",
+   "quote": "llm = ChatOpenAI(temperature=0, model=\"gpt-3.5-turbo\")",
+   "table": null,
+   "note": "The JS version splits into 10,000-character chunks instead.",
+   "where": "MultiVectorRetriever"
+  },
+  {
+   "claim": "ColBERT example indexes with max_document_length=180 and retrieves k=3 using colbert-ir/colbertv2.0 via RAGatouille.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "max_document_length",
+   "value": "180",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single Wikipedia page (Hayao Miyazaki); no retrieval metrics reported.",
+   "quote": "max_document_length=180,",
+   "table": null,
+   "note": null,
+   "where": "ColBERT: Optimizing Embeddings"
+  }
+ ],
+ "limits": [
+  "No experiments or retrieval-quality measurements: every setting is a tutorial example, not a tuned or evaluated value.",
+  "The chapter says naive splitting 'leads to inconsistent retrieval results and a relatively high occurrence of hallucinations' without evidence.",
+  "RAPTOR and ColBERT get a paragraph each and the RAPTOR section has no code.",
+  "Vector store disadvantages listed (new, learning curve, extra system) are asserted, not measured; pgvector is presented as an option, not a recommendation.",
+  "Code uses 2024-2025 LangChain import paths and a gpt-3.5-turbo model, and contains typos (e.g. db.delete(ids=[1]), JS 'embeddings.embedDocuments' before definition)."
+ ],
+ "practices": [
+  "Embed multiple documents in one embed_documents call rather than one at a time, because it is more efficient (Generating Text Embeddings).",
+  "Never compare or combine embeddings from different models (TIP, LLM-Based Embeddings).",
+  "Store both the original text and its embedding because embeddings are lossy (Embeddings: Converting Text to Numbers).",
+  "Choose a vector store by multitenancy, metadata filtering, performance, cost and scalability (Storing Embeddings in a Vector Store).",
+  "Consider pgvector to avoid running a separate database (Storing Embeddings in a Vector Store).",
+  "Use the indexing API with a RecordManager and a cleanup mode to avoid re-embedding and duplicates when documents change (Tracking Changes to Your Documents).",
+  "Use less chunk overlap for code, which is more structured than prose (Splitting Your Text into Chunks).",
+  "Pass a metadata list to create_documents so each chunk keeps its source (Splitting Your Text into Chunks).",
+  "For documents with tables, embed summaries and keep the raw table in a docstore linked by id (MultiVectorRetriever)."
+ ],
+ "terms": [
+  {
+   "term": "ingestion",
+   "definition": "the process of converting your documents into numbers that computers can understand and analyze, and storing them in a special type of database for efficient retrieval",
+   "where": "intro"
+  },
+  {
+   "term": "embedding",
+   "definition": "representing text as a (long) sequence of numbers; a lossy representation",
+   "where": "Embeddings: Converting Text to Numbers"
+  },
+  {
+   "term": "sparse embeddings (bag-of-words)",
+   "definition": "word-count vectors where most entries are 0, with no awareness of meaning",
+   "where": "Embeddings Before LLMs"
+  },
+  {
+   "term": "dense embeddings",
+   "definition": "lists of floating-point numbers, usually 100 to 2,000 dimensions, where usually all dimensions are non-zero",
+   "where": "LLM-Based Embeddings"
+  },
+  {
+   "term": "cosine similarity",
+   "definition": "dot product of vectors divided by the product of their magnitudes, giving a number between -1 and 1",
+   "where": "Semantic Embeddings Explained"
+  },
+  {
+   "term": "vector store",
+   "definition": "a database designed to store vectors and perform complex calculations like cosine similarity efficiently and quickly",
+   "where": "Storing Embeddings in a Vector Store"
+  },
+  {
+   "term": "context window",
+   "definition": "hard limit on input and output tokens a model can handle, usually applying to their combination",
+   "where": "TIP, Converting Your Documents into Text"
+  },
+  {
+   "term": "knowledge cutoff",
+   "definition": "the date beyond which the LLM has no knowledge of real-world events, usually when the training set was finalized",
+   "where": "intro"
+  },
+  {
+   "term": "RecordManager",
+   "definition": "class that tracks document writes into the vector store: document hash (content and metadata), write time and source ID",
+   "where": "Tracking Changes to Your Documents"
+  },
+  {
+   "term": "RAPTOR",
+   "definition": "recursive abstractive processing for tree-organized retrieval: summarise, embed and cluster documents, then summarise each cluster recursively, indexing summaries and originals together",
+   "where": "RAPTOR"
+  },
+  {
+   "term": "ColBERT",
+   "definition": "per-token contextual embeddings; document score is the sum over query tokens of the maximum similarity to any document token",
+   "where": "ColBERT: Optimizing Embeddings"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neelakantan et al., Text and Code Embeddings by Contrastive Pre-Training",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "footnote 1, cited for LLM-based embeddings (marker 1)",
+   "quote": null
+  },
+  {
+   "work": "Sarthi et al., RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "footnote 2; ICLR 2024",
+   "quote": null
+  },
+  {
+   "work": "Santhanam et al., ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "footnote 3; the example loads colbert-ir/colbertv2.0",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 2-1",
+   "caption": "Four key steps to preprocess your documents for LLM usage",
+   "page": null,
+   "why": "The extract, split, embed, store pipeline in one view."
+  },
+  {
+   "figure": "Figure 2-4",
+   "caption": "Loading, embedding, storing, and retrieving relevant docs from a vector store",
+   "page": null,
+   "why": "Shows index time and query time sharing one vector store."
+  },
+  {
+   "figure": "Figure 2-5",
+   "caption": "Indexing multiple representations of a single document",
+   "page": null,
+   "why": "Summary embedded, original in a docstore."
+  },
+  {
+   "figure": "Figure 2-6",
+   "caption": "Recursively summarizing documents",
+   "page": null,
+   "why": "The RAPTOR tree."
+  }
+ ],
+ "code": [
+  {
+   "where": "Splitting Your Text into Chunks",
+   "snippet": "splitter = RecursiveCharacterTextSplitter(\n    chunk_size=1000,\n    chunk_overlap=200,\n)",
+   "verbatim": true
+  },
+  {
+   "where": "Tracking Changes to Your Documents",
+   "snippet": "index_1 = index(\n    docs,\n    record_manager,\n    vectorstore,\n    cleanup=\"incremental\",  # prevent duplicate documents\n    source_id_key=\"source\",  # use the source field as the source_id\n)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text cache loses some lines: JS snippets are truncated mid-line, Python/JavaScript tab labels are interleaved with code, and the RAPTOR and later code outputs are missing. Figures are images.",
+  "Title, authors, year and venue are not in the chapter text; taken from the task brief.",
+  "No embedded instructions found."
+ ]
+}

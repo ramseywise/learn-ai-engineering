@@ -1,0 +1,455 @@
+{
+ "schema": 1,
+ "key": "sha1:c0aa10f116c8",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch18-advanced-prefill-decode-kv-cache-tuning.pdf",
+ "bib": {
+  "title": "Chapter 18. Advanced Prefill-Decode and KV Cache Tuning (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": null,
+  "venue": "O'Reilly book chapter (AI Systems Performance Engineering)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 86220,
+  "chars_total": 86220,
+  "engine": "pymupdf",
+  "skipped": "Trailing page-chrome (site navigation) ignored; figures are images, only captions read."
+ },
+ "type": "book-chapter",
+ "question": "How can the prefill and decode phases and the KV cache be tuned beyond high-level disaggregation, through decode kernels, KV pooling and reuse, fast KV transfer, per-phase hardware and parallelism, and adaptive scheduling?",
+ "hypothesis": null,
+ "contributions": [
+  "Survey of decode kernels (FlashMLA, ThunderMLA, FlexDecoding), KV pooling/prefix reuse, zero-copy KV transfer, heterogeneous per-phase hardware/parallelism, SLO-aware admission and adaptive scaling."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Collating small KV pages into larger blocks cut a 7,500-token KV transfer from about 20 ms to about 8 ms (LMCache measurement).",
+   "kind": "reported",
+   "source": "LMCache (as cited, no reference given)",
+   "metric": "KV transfer time",
+   "value": "~20 ms -> ~8 ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LMCache, 7.5k-token KV over RDMA, many small transfers (470) vs collated 128-token pages; model not stated",
+   "quote": "LMCache reports ~20 ms → ~8 ms for a 7.5k-token KV after collation on RDMA.",
+   "table": null,
+   "note": "Also stated as 'about 20 milliseconds ... about 8 milliseconds' later in the section.",
+   "where": "Fast KV Cache Transfer"
+  },
+  {
+   "claim": "Splitwise phase-specific hardware gave 2.35x throughput at the same cost and power versus an 8-GPU homogeneous system.",
+   "kind": "reported",
+   "source": "Splitwise",
+   "metric": "throughput (RPS)",
+   "value": "2.35x",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Splitwise study: 4x H100 for prefill plus 4x A100 for decode vs 8 homogeneous GPUs, fixed cost/power",
+   "quote": "they achieved 2.35× more throughput for the same cost and power.",
+   "table": null,
+   "note": "One configuration also gave 1.4x throughput at 20% lower cost.",
+   "where": "Heterogeneous Hardware"
+  },
+  {
+   "claim": "Splitwise: one heterogeneous configuration achieved 1.4x higher throughput at 20% lower cost than a homogeneous baseline.",
+   "kind": "reported",
+   "source": "Splitwise",
+   "metric": "throughput",
+   "value": "1.4x",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Splitwise study, homogeneous baseline; configuration details not given",
+   "quote": "led to one configuration achieving 1.4× higher throughput at 20% lower cost",
+   "table": null,
+   "note": null,
+   "where": "Heterogeneous Hardware"
+  },
+  {
+   "claim": "HexGen-2 reports up to 2x serving throughput (about 1.3x on average) over state-of-the-art systems at the same price.",
+   "kind": "reported",
+   "source": "HexGen-2",
+   "metric": "serving throughput",
+   "value": "up to 2x (~1.3x avg)",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HexGen-2, models like Llama 2 70B, heterogeneous GPUs, same price point",
+   "quote": "HexGen-2 shows up to a 2× improvement in serving throughput (~1.3× on average)",
+   "table": null,
+   "note": null,
+   "where": "Heterogeneous Hardware"
+  },
+  {
+   "claim": "HexGen-2 matches a high-end baseline's throughput at approximately 30% less cost.",
+   "kind": "reported",
+   "source": "HexGen-2",
+   "metric": "cost",
+   "value": "~30%",
+   "unit": "% cost reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HexGen-2, heterogeneous GPUs, Llama 2 70B class",
+   "quote": "using approximately 30% less cost",
+   "table": null,
+   "note": null,
+   "where": "Heterogeneous Hardware"
+  },
+  {
+   "claim": "Arrow reports up to 5.6x higher request serving rate than a non-adaptive system under an extremely shifting workload.",
+   "kind": "reported",
+   "source": "Arrow",
+   "metric": "request serving rate",
+   "value": "up to 5.6x",
+   "unit": "x request rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arrow adaptive instance scaling vs nonadaptive disaggregated system; extremely shifting workload",
+   "quote": "Arrow’s results mention an up to 5.6× higher request serving rate",
+   "table": null,
+   "note": "Typical gains are said to be lower; not quantified.",
+   "where": "Arrow's adaptive instance scaling"
+  },
+  {
+   "claim": "ThunderMLA reports 20-35% faster decode throughput than FlashMLA.",
+   "kind": "reported",
+   "source": "ThunderMLA (Stanford)",
+   "metric": "decode throughput",
+   "value": "20-35%",
+   "unit": "% decode throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ThunderMLA (Stanford) vs FlashMLA, across different workloads; hardware not stated",
+   "quote": "ThunderMLA reports 20– 35% faster decode throughput compared to FlashMLA across different workloads",
+   "table": null,
+   "note": "Quote joins a line break after the en dash.",
+   "where": "ThunderMLA"
+  },
+  {
+   "claim": "POD-Attention can improve attention performance by up to about 29% by colocating prefill and decode on the same SMs.",
+   "kind": "reported",
+   "source": "POD-Attention",
+   "metric": "attention performance",
+   "value": "up to ~29%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POD-Attention SM-aware CTA scheduling; baseline and hardware not stated",
+   "quote": "POD-Attention can improve attention performance by up to about 29% by colocating prefill and",
+   "table": null,
+   "note": null,
+   "where": "Optimized KV Cache Memory Layout"
+  },
+  {
+   "claim": "Worked example: a 70B model, 80 layers, hidden 4,096, FP16, needs about 1.31 MB of KV per token and about 328 GB for a 250,000-token context.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV cache size",
+   "value": "328",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B-parameter transformer, 80 layers, 32 heads x 128 dim, 16-bit, 250,000 tokens; ignores GQA",
+   "quote": "Scaling this to 250,000 tokens pro- duces about 328 GB—just for the KV data!",
+   "table": null,
+   "note": "Quote text as extracted has hyphenated line break 'pro- duces'.",
+   "where": "Disaggregated KV Cache Pool"
+  },
+  {
+   "claim": "Worked example: FP8 KV plus selective-layer caching reduces the 250,000-token KV to maybe 100-150 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV cache size",
+   "value": "100-150",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 250k-token 70B example, FP8 KV and selective-layer caching; hedged ('maybe')",
+   "quote": "we can reduce this footprint down to maybe the 100–150 GB",
+   "table": null,
+   "note": null,
+   "where": "Disaggregated KV Cache Pool"
+  },
+  {
+   "claim": "Rule of thumb: pd_buffer_size of 1 GB holds roughly a FP16 KV of ~4-8k tokens for a 70B, 80-layer, 32-head, 128-dim model; use 2 GB above ~7.5k tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": "transfer buffer size",
+   "value": "1 GB",
+   "unit": "GB buffer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LMCache prefill-decode config, FP16 KV, 70B/80 layers/32 heads/dim 128",
+   "quote": "Use 2 GB if prompts exceed ~7.5k tokens.",
+   "table": null,
+   "note": "Chapter says ~4-8k tokens per 1 GB, yet 2 GB above ~7.5k; consistent only at the upper end.",
+   "where": "Fast KV Cache Transfer"
+  },
+  {
+   "claim": "An overlapped ~5 ms KV transfer adds virtually zero net latency to the first generated token.",
+   "kind": "claim",
+   "source": null,
+   "metric": "KV transfer time",
+   "value": "~5 ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dynamo-style nonblocking overlap with decode on other requests",
+   "quote": "you can overlap a ~5 ms KV transfer with decode computation and add virtually zero net latency",
+   "table": null,
+   "note": null,
+   "where": "Fast KV Cache Transfer"
+  },
+  {
+   "claim": "Using 6 GPUs instead of 8 top-tier GPUs saves roughly 25% on hardware cost for the same traffic.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "hardware cost",
+   "value": "25%",
+   "unit": "% hardware cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative; assumes the same traffic is served by a 6-GPU prefill+decode mix",
+   "quote": "you can save roughly 25% on hardware costs for that ser- vice",
+   "table": null,
+   "note": null,
+   "where": "Heterogeneous Hardware"
+  },
+  {
+   "claim": "GB200 NVL72 (36 Grace CPUs, 72 Blackwell GPUs) offers about 30 TB of unified memory for KV cache.",
+   "kind": "claim",
+   "source": null,
+   "metric": "unified memory",
+   "value": "~30 TB",
+   "unit": "TB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVIDIA GB200 NVL72 rack-scale",
+   "quote": "This hardware, with its ~30 TB of unified mem- ory",
+   "table": null,
+   "note": null,
+   "where": "GPU and CPU-GPU Superchip Improvements"
+  }
+ ],
+ "limits": [
+  "Most numbers are reported from other work (Splitwise, HexGen-2, Arrow, ThunderMLA, POD-Attention, LMCache) with little setup; no experiments of its own.",
+  "Parallelism tables are labelled illustrative values.",
+  "FP4 support is described as still maturing; chapter is time-stamped to its writing.",
+  "KV-size worked example ignores GQA/MQA, which would shrink real 70B KV sizes.",
+  "Hardware for the ThunderMLA and POD-Attention figures and baselines are not stated."
+ ],
+ "practices": [
+  "Evaluate FlashMLA to raise per-token decode throughput without changing higher-level architecture (FlashMLA).",
+  "Prefer torch.compile(mode=\"max-autotune\") for stable latency-critical decode, with a narrow capture boundary (FlexDecoding).",
+  "Prefer the PyTorch NJT layout for ragged batching during decode (FlexDecoding).",
+  "Prefer Transformer Engine FP8 (MXFP8) for prefill and decode; consider NVFP4 only when accuracy permits (FlexDecoding).",
+  "Treat the KV cache as a first-class shared resource: pool it across GPUs/CPU/NVMe and reuse prefixes by hash (Tuning KV Cache).",
+  "Use exact-prefix caching with LRU-style eviction; route requests to the node that holds their prefix (KV Cache Reuse).",
+  "Keep active KV in GPU HBM for latency-critical decode and use Grace LPDDR5X only as a lower tier (Superchip section).",
+  "Use GPUDirect RDMA/NIXL zero-copy transfer, overlapped on a dedicated CUDA stream, and verify overlap with Nsight Systems (Fast KV Cache Transfer).",
+  "Collate KV pages to >=128-token pages per RDMA write; collate 16-token pages into >=128-token slabs (Fast KV Cache Transfer).",
+  "Size pd_buffer_size from 2 x L x N x (H x Dh) x bytes_per_val, start at 1 GB, round up to 256 MB, shrink proportionally for FP8/FP4 KV (Fast KV Cache Transfer).",
+  "Enable CUDA IPC on a single node and RDMA across nodes; set UCX_RNDV_THRESH=16384 and validate with ucx_info -f (Fast KV Cache Transfer).",
+  "Set PYTHONHASHSEED=0 for deterministic KV-chunk routing in multiprocess runs (Fast KV Cache Transfer).",
+  "Benchmark global-queue vs per-request direct-channel connectors under the expected request mix (Connector and Data Path Design).",
+  "Use compute-rich GPUs for prefill and memory-bandwidth-rich, cheaper GPUs for decode (Heterogeneous Hardware).",
+  "Run prefill with high TP/PP and decode with TP_d=1 by default, raising TP_d only if the model does not fit; avoid PP for decode (Tables 18-1, 18-2).",
+  "Route very long or low-priority prompts to CPU prefill workers only as a safety net, monitor how often, and fail fast over SLO (Hybrid Prefill).",
+  "Apply early rejection/admission control and reserve capacity per QoS tier (e.g. 10% premium, 30% standard) (SLO-Aware Request Management).",
+  "Monitor prefill/decode queues and TTFT/TPOT p99 and p99.9 separately, and enforce a minimum role dwell time to avoid flip oscillation (Dynamic Scheduling)."
+ ],
+ "terms": [
+  {
+   "term": "FlashMLA",
+   "definition": "An optimized decoding kernel from DeepSeek focused on the single-token decode step, fusing operations and using the GPU memory hierarchy better.",
+   "where": "Optimized Decode Kernels"
+  },
+  {
+   "term": "ThunderMLA",
+   "definition": "A completely fused attention decode megakernel from Stanford that focuses on decoding and scheduling, reducing launch overhead and tail effects.",
+   "where": "ThunderMLA"
+  },
+  {
+   "term": "FlexDecoding",
+   "definition": "The decoding backend of torch.nn.attention.flex_attention; compiles a specialised kernel for Q_len=1 over a growing KV cache.",
+   "where": "FlexDecoding"
+  },
+  {
+   "term": "Disaggregated KV cache pool",
+   "definition": "Decouples KV storage from individual GPUs, spreading it across cluster GPU memory with CPU DRAM and NVMe as overflow.",
+   "where": "Disaggregated KV Cache Pool"
+  },
+  {
+   "term": "POD-Attention",
+   "definition": "SM-aware CTA scheduling that binds each CTA at runtime to a prefill or decode task so both share an SM in one fused kernel.",
+   "where": "Optimized KV Cache Memory Layout"
+  },
+  {
+   "term": "NIXL",
+   "definition": "NVIDIA Inference Xfer Library, a plugin-based library for zero-copy GPU-to-GPU and GPU-to-storage transfer.",
+   "where": "Zero-Copy GPU-to-GPU Transfer"
+  },
+  {
+   "term": "Early rejection",
+   "definition": "Admission control that fails fast when the system predicts it cannot serve a request within its latency target.",
+   "where": "Early Rejection"
+  },
+  {
+   "term": "Instance flip",
+   "definition": "TetriInfer mechanism in which nodes switch between prefill and decode roles.",
+   "where": "Dynamic resource scaling"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 17, Scaling Disaggregated Prefill and Decode (same book)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter says it builds on Chapter 17.",
+   "quote": "This chapter builds upon Chapter 17"
+  },
+  {
+   "work": "FlashMLA (DeepSeek)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Decode kernel described.",
+   "quote": null
+  },
+  {
+   "work": "ThunderMLA (Stanford)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Fused decode megakernel described.",
+   "quote": null
+  },
+  {
+   "work": "FlexAttention/FlexDecoding (PyTorch)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Decode backend described.",
+   "quote": null
+  },
+  {
+   "work": "POD-Attention",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prefill/decode fused attention.",
+   "quote": null
+  },
+  {
+   "work": "Splitwise",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Heterogeneous phase hardware results.",
+   "quote": null
+  },
+  {
+   "work": "HexGen-2",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Heterogeneous disaggregated scheduling.",
+   "quote": null
+  },
+  {
+   "work": "TetriInfer",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Two-level scheduler, instance flip.",
+   "quote": null
+  },
+  {
+   "work": "Arrow",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Adaptive instance scaling.",
+   "quote": null
+  },
+  {
+   "work": "Mooncake",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Early rejection.",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA Dynamo, vLLM, LMCache, SGLang",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Systems whose KV transfer/scheduling designs are described.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 18-1",
+   "caption": "MLA approaches the compute-bound regime (measured on the NVIDIA Hopper H100 architecture)",
+   "page": 1,
+   "why": "Roofline showing MLA arithmetic intensity vs GQA/MQA"
+  },
+  {
+   "figure": "Fig 18-6",
+   "caption": "Request lifecycle in NVIDIA Dynamo; decode pulls prompts and prefill pushes KV using NIXL",
+   "page": 1,
+   "why": "End-to-end handoff flow"
+  },
+  {
+   "figure": "Fig 18-7",
+   "caption": "Using different parallelism strategies for prefill and decode",
+   "page": 1,
+   "why": "Per-phase TP/PP choice"
+  },
+  {
+   "figure": "Table 18-1",
+   "caption": "Prefill parallelism example",
+   "page": 1,
+   "why": "TP_p=2, PP_p=2, SP=1, CP=1, DP 1 or 2"
+  },
+  {
+   "figure": "Table 18-2",
+   "caption": "Decode parallelism strategy example",
+   "page": 1,
+   "why": "TP_d=1 default, PP_d=1, SP_d=1, DP_d=1"
+  }
+ ],
+ "code": [
+  {
+   "where": "LMCache prefill config",
+   "snippet": "enable_pd: true\ntransfer_channel: \"nixl\"\npd_role: \"sender\"\npd_proxy_port: 7500\npd_buffer_size: 1073741824\npd_buffer_device: \"cuda\"",
+   "verbatim": false
+  },
+  {
+   "where": "Decode worker launch",
+   "snippet": "UCX_RNDV_THRESH=16384\nUCX_MAX_EAGER_RAILS=1\nUCX_TLS=cuda_ipc,rc,rdmacm,cuda_copy,cuda_ipc,tcp",
+   "verbatim": false
+  },
+  {
+   "where": "QoS config",
+   "snippet": "qos_classes: premium reserved_fraction 0.10 priority 100; standard 0.30 priority 50; free 0.60 priority 10",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Code listings appear detached at the end of the extracted text and some lines are truncated; the prose (UCX_TLS=rc,rdmacm,cuda_copy,cuda_ipc,tcp) and listing (cuda_ipc listed twice) differ slightly.",
+  "Year not printed in the chapter text."
+ ]
+}

@@ -1,0 +1,397 @@
+{
+ "schema": 1,
+ "key": "sha1:74c7a0ed7bcc",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch17-scaling-disaggregated-prefill-decode-inference.pdf",
+ "bib": {
+  "title": "Chapter 17. Scaling Disaggregated Prefill and Decode for Inference (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84005,
+  "chars_total": 84005,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should a disaggregated prefill/decode LLM inference system be designed, routed, scaled and protected with QoS at very large scale?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains why separating prefill and decode removes interference and allows phase-specific hardware and parallelism",
+  "Describes prefill and decode worker design, KV cache transfer with NIXL, and decode memory management",
+  "Gives routing policies (threshold, latency-cost, remote-prefill score), Dynamo Planner autoscaling and QoS/early-rejection code"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "DistServe reportedly served 7.4x more requests within strict latency SLOs than a state-of-the-art non-disaggregated baseline.",
+   "kind": "reported",
+   "source": "Zhong et al., DistServe (named, no citation printed)",
+   "metric": "requests within SLO",
+   "value": "7.4",
+   "unit": "x requests within SLO",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistServe evaluation as described in the chapter intro; baseline unspecified beyond 'state-of-the-art'",
+   "quote": "DistServe’s evaluation showed the potential for serving 7.4× more requests within\nstrict latency service-level objectives (SLOs) compared to a state-of-the-art base-\nline without prefill/decode disaggregation.",
+   "table": null,
+   "note": null,
+   "where": "intro"
+  },
+  {
+   "claim": "In the colocated vs 2P1D example, the colocated single GPU sustains goodput of 1.6 RPS (min of ~3 RPS TTFT-bound and 1.6 RPS TPOT-bound).",
+   "kind": "reported",
+   "source": "DistServe paper and blog (Fig 17-2 source)",
+   "metric": "goodput",
+   "value": "1.6",
+   "unit": "RPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Colocated single GPU, SLO P90 TTFT 0.4 s and P90 TPOT 0.04 s, DistServe experiment (Fig 17-2)",
+   "quote": "As such, the goodput of the colocated configuration is only 1.6 RPS since both the TTFT and TPOT la-\ntency SLOs need to be met.",
+   "table": null,
+   "note": null,
+   "where": "Why Prefill-Decode Disaggregation? / Reduced interference"
+  },
+  {
+   "claim": "The 2P1D disaggregated configuration (2 prefill GPUs, 1 decode GPU) reaches 3.3 RPS per GPU goodput.",
+   "kind": "reported",
+   "source": "DistServe paper and blog",
+   "metric": "goodput per GPU",
+   "value": "3.3",
+   "unit": "RPS per GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 prefill workers at ~5.6 RPS each, 1 decode worker at ~10 RPS, same SLOs; 10 RPS / 3 GPUs",
+   "quote": "As such, the goodput for the 2P1D configuration is 3.3 RPS per GPU.",
+   "table": null,
+   "note": "Chapter then asks whether 3x cost is worth 2x improvement; the colocated 1.6 RPS is per 1 GPU, so the ratio is about 2x",
+   "where": "Reduced interference"
+  },
+  {
+   "claim": "MLPerf v5.0 p99 SLOs: Llama2 70B ~450 ms TTFT and 40 ms TPOT.",
+   "kind": "reported",
+   "source": "MLPerf Inference v5.0",
+   "metric": "p99 TTFT",
+   "value": "450",
+   "unit": "ms p99 TTFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLPerf v5.0 (2025) inference benchmark, Llama 2 Chat 70B",
+   "quote": "aimed for p99 (99th percentile) SLOs of ~450 ms TTFT and 40 ms\nTPOT latency",
+   "table": null,
+   "note": null,
+   "where": "Why Prefill-Decode Disaggregation?"
+  },
+  {
+   "claim": "MLPerf v5.0 p99 SLOs for Llama 3.1 405B: ~6 s TTFT and 175 ms TPOT.",
+   "kind": "reported",
+   "source": "MLPerf Inference v5.0",
+   "metric": "p99 TTFT",
+   "value": "6",
+   "unit": "s p99 TTFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLPerf v5.0, Llama 3.1 405B Instruct",
+   "quote": "for ~6 seconds TTFT and 175 ms for TPOT",
+   "table": null,
+   "note": null,
+   "where": "Why Prefill-Decode Disaggregation?"
+  },
+  {
+   "claim": "KV bytes per token = 2 x n_layers x n_kv_heads x head_dim x bytes_per_element; for a 13B MHA model at FP16 with 4,096 tokens KV is ~3.36 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV size",
+   "value": "3.36",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-class 13B, 40 layers, 40 heads, head_dim 128, FP16, 4,096-token context, MHA",
+   "quote": "the KV size is ~0.819 MB/token or ~3.36 GB total",
+   "table": null,
+   "note": "Same example: FP8 KV ~1.68 GB; GQA-8 ~0.671 GB FP16 and ~0.336 GB FP8; MQA ~0.084 GB FP16",
+   "where": "Memory management for the KV cache"
+  },
+  {
+   "claim": "Same 13B model with GQA (8 KV heads) at FP16 and 4,096 tokens needs ~0.671 GB KV.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV size",
+   "value": "0.671",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As above but n_kv_heads = 8",
+   "quote": "the 4,096-token KV is ~0.671 GB at FP16 and ~0.336 GB at FP8",
+   "table": null,
+   "note": null,
+   "where": "Memory management for the KV cache"
+  },
+  {
+   "claim": "Decode GPU memory budget example: 70 GB weights on 180 GB GPU leaves 122 GB for KV.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV budget",
+   "value": "122",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70 GB model weights, 180 GB total GPU memory",
+   "quote": "about 122 GB is left for KV",
+   "table": null,
+   "note": "180 - 70 = 110, so 122 is an arithmetic error in the chapter",
+   "where": "Memory hierarchy in disaggregation"
+  },
+  {
+   "claim": "Example routing threshold: prompts under ~50 tokens may be faster locally on a B200; sample code uses PREFILL_LENGTH_THRESHOLD 256 and config uses prompt_length_threshold 256.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "offload threshold",
+   "value": "256",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pseudo-code and Dynamo-style JSON/YAML; thresholds said to be empirical per hardware",
+   "quote": "PREFILL_LENGTH_THRESHOLD = 256  # see split_policy.prompt_l",
+   "table": null,
+   "note": "Text also says 'such as 50 or 100 tokens' and 'prompts under 50 tokens are faster to compute locally' on B200; 256 appears in code and config",
+   "where": "Example dynamic routing policy in code"
+  },
+  {
+   "claim": "Latency-cost routing weights occupancy 0.7 and active request count 0.3 in the simple form; the composite form uses +3 occupancy, +1 active requests, -10 cache match, +0.5 memory bandwidth, -1 recent prefix.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "cache-match weight",
+   "value": "-10",
+   "unit": "cost weight for cache match",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative weights; chapter says weights should be tuned empirically",
+   "quote": "- 10.0 * int(cache_match_flag)",
+   "table": null,
+   "note": null,
+   "where": "Latency-aware routing / Table 17-3"
+  },
+  {
+   "claim": "Remote-prefill score: prefill_length > 256 votes remote with weight 0.7; queue depth > 10 votes local with weight 0.3; offload if score above 0.5.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "score threshold",
+   "value": "0.5",
+   "unit": "remote_prefill_min_score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dynamo-style YAML example",
+   "quote": "remote_prefill_min_score: 0.5",
+   "table": null,
+   "note": null,
+   "where": "Latency-aware routing"
+  },
+  {
+   "claim": "Throughput-first prefill batching accumulates 8-32 prompts per batch; adaptive batching windows of 2-10 ms at higher load.",
+   "kind": "claim",
+   "source": null,
+   "metric": "batch size",
+   "value": "8-32",
+   "unit": "prompts per batch",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prefill workers, throughput-first policy; no measurement given",
+   "quote": "By accumulating 8–32 prompts into a single batch",
+   "table": null,
+   "note": null,
+   "where": "Optimizing for latency versus throughput"
+  },
+  {
+   "claim": "Padding can account for up to half of all tokens when mixing short and long prompts in a batch.",
+   "kind": "claim",
+   "source": null,
+   "metric": "padding fraction",
+   "value": "50",
+   "unit": "% padding",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixed-length batches, no dataset or measurement given",
+   "quote": "sometimes up to 50% padding\nrelative to the number of tokens",
+   "table": null,
+   "note": null,
+   "where": "Grouping variable-length sequences"
+  }
+ ],
+ "limits": [
+  "No experiments of its own: the numbers are DistServe figures, MLPerf SLOs and illustrative worked examples or config values.",
+  "Routing weights, thresholds and autoscale values are illustrative and the chapter says to set them empirically.",
+  "Chapter text contains an arithmetic slip (180 GB minus 70 GB printed as 122 GB) and says 'TPOT' where prefill throughput is meant (dedicated prefill nodes tuned for 'minimum TPOT').",
+  "Claims about OpenAI, Meta, xAI, Google adopting disaggregation are 'reportedly' and uncited.",
+  "vLLM flags (--max-seq-len-to-capture etc.) and Dynamo config shown may have dated; code shown is truncated in the text extraction."
+ ],
+ "practices": [
+  "Keep prefill and decode in the same data center for realistic SLOs (Disaggregated Prefill and Decode Cluster Pools).",
+  "Use a decode-centric design where the decode worker receives requests and decides whether to prefill locally or offload (cluster pools section).",
+  "Use NIXL / GPUDirect RDMA for zero-copy KV transfer and pre-registered peer memory with large pinned windows; verify overlap in Nsight Systems (KV cache transfer).",
+  "Coalesce multiple PagedAttention blocks into ~128-token payloads before RDMA (Fig 17-4 caption).",
+  "Prefill: use high TP and FP8/FP4 on high-FLOPS GPUs; decode: little or no TP (often TP=1) with fused kernels and high-bandwidth GPUs (Phase-specific optimizations).",
+  "Prefill latency-first: little or no batching; throughput-first: batch 8-32 prompts; use adaptive batching windows of 2-10 ms (Optimizing for latency versus throughput).",
+  "Over-provision prefill capacity to absorb bursts and autoscale on metrics such as prefill queue length.",
+  "Do not offload short prompts or prompts with large prefix-cache hits; use effective length = prompt_length - prefix_cached_length (Routing factors).",
+  "Re-tune offload thresholds like PREFILL_LENGTH_THRESHOLD when hardware changes.",
+  "Set --max-num-seqs and --max-num-batched-tokens explicitly in vLLM and tune with --max-seq-len-to-capture to bound KV memory (Continuous batching).",
+  "Compute KV size from actual n_layers, n_kv_heads, head_dim and KV precision (Memory management).",
+  "Apply early rejection, prioritization and graceful degradation (disable remote prefill for low-priority requests) under saturation (QoS section).",
+  "Track TTFT and ITL/TPOT (p50/p95/p99) separately for prefill and decode nodes (Key Takeaways).",
+  "Prefer FP4 for weights and, where validated, activations; many stacks use FP4 weights with FP8 activations (Phase-specific optimizations)."
+ ],
+ "terms": [
+  {
+   "term": "interference",
+   "definition": "the prefill work for one request delays the decode work of another",
+   "where": "Why Prefill-Decode Disaggregation?"
+  },
+  {
+   "term": "head-of-line blocking",
+   "definition": "long or compute-heavy prefills at the front of the queue will block shorter, lighter requests behind them",
+   "where": "Why Prefill-Decode Disaggregation?"
+  },
+  {
+   "term": "goodput",
+   "definition": "useful throughput under latency constraints",
+   "where": "Conclusion"
+  },
+  {
+   "term": "decode-centric design",
+   "definition": "the system receives a new request on the decode worker, which decides whether to prefill locally or offload",
+   "where": "Cluster pools"
+  },
+  {
+   "term": "2P1D",
+   "definition": "two prefill workers (two GPUs) and a single decode worker (one GPU)",
+   "where": "Reduced interference"
+  },
+  {
+   "term": "early rejection",
+   "definition": "admission control that refuses low-priority queries when the system is saturated",
+   "where": "QoS and early rejection policies"
+  },
+  {
+   "term": "multipath inference (racing)",
+   "definition": "sending the same request to two different model sizes or two different routes and taking the fastest result",
+   "where": "Multipath inference"
+  },
+  {
+   "term": "continuous batching",
+   "definition": "iteration-level batching that gathers all sequences ready for a next token at each step",
+   "where": "Continuous batching"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DistServe",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pioneered disaggregation; source of the Fig 17-2 example and 7.4x claim",
+   "quote": "This idea\nwas pioneered by systems in a paper on DistServe"
+  },
+  {
+   "work": "NVIDIA Dynamo / NIXL / Planner",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Reference implementation for decode-centric ingress, KV transfer, routing and autoscaling",
+   "quote": null
+  },
+  {
+   "work": "vLLM, SGLang, LMCache, TensorRT-LLM, DeepSpeed",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Frameworks named for disaggregation, paged KV and continuous batching",
+   "quote": null
+  },
+  {
+   "work": "MLPerf Inference v5.0",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of the p99 TTFT/TPOT SLO figures",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 17-1",
+   "caption": "Interference caused by colocated prefill and decode running on the same GPU",
+   "page": null,
+   "why": "shows prefill stalling decode in continuous batching"
+  },
+  {
+   "figure": "Fig 17-2",
+   "caption": "Comparison between colocated and disaggregated prefill and decode",
+   "page": null,
+   "why": "goodput of colocated vs 2P1D under the SLO line"
+  },
+  {
+   "figure": "Fig 17-3",
+   "caption": "Prefill worker design: read prefix cache -> compute prefill -> write KV cache for decode",
+   "page": null,
+   "why": "request flow between decode worker, queue and prefill worker"
+  },
+  {
+   "figure": "Fig 17-4",
+   "caption": "Transfer of KV cache data between the prefill and decode workers using NIXL; coalesce multiple PagedAttention blocks into ~128-token payloads before RDMA (note: vLLM defaults to 16 tokens per block on CUDA)",
+   "page": null,
+   "why": "KV handoff path and payload size"
+  },
+  {
+   "figure": "Fig 17-5",
+   "caption": "Managing and reusing KV cache data between requests",
+   "page": null,
+   "why": "KV sharing across requests"
+  },
+  {
+   "figure": "Fig 17-6",
+   "caption": "KV-cache-aware request routing based on data received from KV cache events emitted by the workers",
+   "page": null,
+   "why": "router and event flow"
+  },
+  {
+   "figure": "Fig 17-7",
+   "caption": "NVIDIA's Dynamo GPU Planner decides how to handle incoming requests and allocate GPU workers to prefill and decode based on GPU utilization metrics",
+   "page": null,
+   "why": "dynamic reallocation between phases"
+  },
+  {
+   "figure": "Table 17-2",
+   "caption": "Factors influencing the router's decision to offload a prefill",
+   "page": null,
+   "why": "decision table: length, cache hit, queue, load, SLO"
+  }
+ ],
+ "code": [
+  {
+   "where": "Example dynamic routing policy in code",
+   "snippet": "eff_len = max(0, prompt_length - prefix_cached_length)\nPREFILL_LENGTH_THRESHOLD = 256\nPREFILL_QUEUE_MAX = 10\nDECODE_LOAD_THRESHOLD = 8",
+   "verbatim": true
+  },
+  {
+   "where": "Latency-aware routing",
+   "snippet": "3.0 * occupancy_percent + 1.0 * active_reqs - 10.0 * int(cache_match_flag) + 0.5 * mem_bw_percent - 1.0 * int(recent_prefix_flag)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Code listings, config blocks and the nsys command are truncated at line ends in the text extraction (e.g. 'prefill_available = (prefill_queue_size < PREFILL_QUEUE_MAX').",
+  "Page scrape footer contains website navigation text (O'Reilly learning site); ignored.",
+  "The Dynamo cluster config prose says 'four prefill workers using B200' and the listed YAML is a simplified snippet.",
+  "No embedded instructions found. Page numbers are not available in the cached text."
+ ]
+}

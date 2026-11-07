@@ -1,0 +1,202 @@
+{
+ "schema": 1,
+ "key": "sha1:8933535873a9",
+ "pdf": "ai-engineering/03-harness-engineering/sources/context-engineering-multi-agent-systems/ch04-assembling-context-engine.pdf",
+ "bib": {
+  "title": "Chapter 4: Assembling the Context Engine (Context Engineering for Multi-Agent Systems)",
+  "authors": [
+   "Denis Rothman"
+  ],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt (via O'Reilly), book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 56562,
+  "chars_total": 56562,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you move from a hardcoded chain of agents to an adaptive system that plans and executes multi-step tasks over specialist agents?",
+ "hypothesis": null,
+ "contributions": [
+  "A Context Engine with a Planner, Executor and Tracer, a plan-execute-reflect rhythm",
+  "An Agent Registry whose capability descriptions are the Planner's context",
+  "Context chaining via $$STEP_N_OUTPUT$$ placeholders resolved by resolve_dependencies()"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The Librarian agent retrieves one semantic blueprint per intent query (top_k=1).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "agent_context_librarian, Pinecone NAMESPACE_CONTEXT",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Context Librarian code"
+  },
+  {
+   "claim": "In the worked run the Librarian matched blueprint_suspense_narrative with similarity score 0.66.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "similarity score",
+   "value": "0.66",
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Example 1, Apollo 11 suspense goal, single run",
+   "quote": "[Librarian] Found blueprint 'blueprint_suspense_narrative' (Score: 0.66)",
+   "table": null,
+   "note": null,
+   "where": "Running the engine"
+  },
+  {
+   "claim": "The Researcher retrieves top_k=3 chunks but found 2 relevant chunks in the worked run.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "chunks retrieved",
+   "value": "2",
+   "unit": "chunks",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Example 1, NAMESPACE_KNOWLEDGE",
+   "quote": "[Researcher] Found 2 relevant chunks. Synthesizing...",
+   "table": null,
+   "note": "Code requests top_k=3 and prints how many came back.",
+   "where": "Running the engine"
+  },
+  {
+   "claim": "The book gives no timing, cost or quality measurement for the engine; the single trace is a demonstration.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole chapter",
+   "quote": null,
+   "table": null,
+   "note": "Note 07 cites 148 s and 151 s from ch. 5, not this chapter.",
+   "where": "chapter"
+  }
+ ],
+ "limits": [
+  "No evaluation: one example run, no metrics, no baseline against a hardcoded pipeline.",
+  "Model, temperature and call_llm_robust internals are not shown here (the text names GPT-5 only as an example LLM).",
+  "'MCP' here is a homegrown message envelope (create_mcp_message), though the quiz calls it the Model Context Protocol.",
+  "Chapter says it will be hardened for production (context management, guardrails, error handling) in chapter 5.",
+  "Reflect is named in 'plan, execute, reflect' but no reflection step is built; only Planner, Executor and Tracer exist.",
+  "Hardcoded flow: plan is not re-planned on failure; any step error halts the run."
+ ],
+ "practices": [
+  "Separate planning from execution: the Planner emits a JSON plan, the Executor runs it (Architecting the Context Engine).",
+  "Describe each agent's role, inputs and outputs clearly in the registry, because the description quality sets plan quality (Agent Registry).",
+  "Use a standard message envelope between agents so the Executor passes data without translation (specialist agents).",
+  "Resolve $$STEP_N_OUTPUT$$ placeholders on a deep copy of the inputs, so the plan is not mutated (Executor).",
+  "Validate the plan, accept a dict wrapping {'plan': [...]}, log the raw LLM output on failure and raise to halt (Planner).",
+  "Fall back to a neutral instruction when no blueprint is found so the workflow completes (Librarian).",
+  "Tell the synthesis LLM to focus strictly on provided facts to mitigate hallucination (Researcher).",
+  "Keep a trace of plan, planned input, resolved input and output; return it even on failure (Tracer); explainability is a requirement in some regions, e.g. the European AI Act (Running the engine)."
+ ],
+ "terms": [
+  {
+   "term": "Context Engine",
+   "definition": "a meta-system, an intelligent controller that organizes specialized agents around a high-level goal",
+   "where": "Architecting"
+  },
+  {
+   "term": "context chaining",
+   "definition": "the output of one agent becomes the input for the next, giving a stateful workflow",
+   "where": "Architectural overview"
+  },
+  {
+   "term": "Agent Registry",
+   "definition": "a central directory that turns a collection of agents into a coordinated team",
+   "where": "Agent Registry"
+  },
+  {
+   "term": "Semantic Blueprint",
+   "definition": "a stored instruction (JSON) for how a kind of writing should be structured or styled, retrieved by intent",
+   "where": "Context Librarian agent"
+  },
+  {
+   "term": "ExecutionTrace",
+   "definition": "the Tracer: logs the goal, plan, each step's agent, planned input, resolved context and output, status and duration",
+   "where": "Execution Tracer"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "related",
+   "note": "listed in references",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "listed in references",
+   "quote": null
+  },
+  {
+   "work": "Toolformer (Schick et al.)",
+   "year": 2023,
+   "arxiv": "2302.04761",
+   "relation": "related",
+   "note": "listed in references",
+   "quote": null
+  },
+  {
+   "work": "AutoGen (Wu et al.)",
+   "year": 2023,
+   "arxiv": "2308.08155",
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "Rothman ch. 1 (context chaining) and ch. 3 (dual RAG, Pinecone population)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier chapters of the same book",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4.1",
+   "caption": "The architecture of the Context Engine",
+   "page": 3,
+   "why": "Shows user goal, Planner/Executor/Tracer, registry, specialist agents and external LLM/vector DB in one picture."
+  }
+ ],
+ "code": [
+  {
+   "where": "Executor, resolve_dependencies",
+   "snippet": "if isinstance(value, str) and value.startswith(\"$$\") and value.endswith(\"$$\"):\n    ref_key = value[2:-2]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text is a browser print of the O'Reilly page; code lines are truncated at the right margin and some code blocks are out of order.",
+  "Figure 4.1 image content not in text; only the textual description was read.",
+  "The chapter labels both execution and planning 'phase 1' in the text at the execution step (typo)."
+ ]
+}

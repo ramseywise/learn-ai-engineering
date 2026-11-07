@@ -1,0 +1,168 @@
+{
+ "schema": 1,
+ "key": "sha1:7f594c71c0b8",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch05-extracting-domain-knowledge.pdf",
+ "bib": {
+  "title": "5 Extracting domain-specific knowledge from unstructured data (Knowledge Graphs and LLMs in Action, ch. 5)",
+  "authors": [],
+  "first_author": "Negro",
+  "year": null,
+  "venue": "Manning book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 43366,
+  "chars_total": 43366,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can unstructured domain text (the Rockefeller Archive Center diaries) be turned into entities and relations for a knowledge graph, using LLM prompting rather than traditional NLP pipelines?",
+ "hypothesis": null,
+ "contributions": [
+  "Three iterations of an extraction prompt on one diary paragraph, with the failure at each step",
+  "Prompt engineering guidelines from the RAC project",
+  "Pros and cons of traditional NLP versus LLMs for KG building"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Prompt v1 (generic 'identify entities and relations' plus one example) fragmented relation types for one concept into four.",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct relation types for one concept",
+   "value": "4",
+   "unit": "relation types",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "GPT-4o mini, temperature 0, max_tokens 2000, one Johns Hopkins chemistry diary paragraph, judged by eye, no precision/recall reported",
+   "quote": "but GPT provided\nus with four different types!",
+   "table": null,
+   "note": "Listed as specializes in, is measuring, is interested in, demonstrates.",
+   "where": "5.3.2, after Listing 5.3"
+  },
+  {
+   "claim": "In v1 the four research topics of one professor received three different node labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct entity labels for one concept",
+   "value": "three",
+   "unit": "labels",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Same as v1 run: GPT-4o mini, temperature 0, one paragraph",
+   "quote": "have been assigned three different labels: field , research ,\ntheory",
+   "table": null,
+   "note": "The text says 'three different labels'; the number is spelled out, not a digit.",
+   "where": "5.3.2"
+  },
+  {
+   "claim": "A rerun of v1 with the same prompt and configuration gave different output (theory of Raman spectra and straight calorimetric method missing), so prediction was unstable even at temperature 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 2,
+   "setup": "Two runs, same prompt, GPT-4o mini, temperature 0.; judged by eye",
+   "quote": "the answer was no. For example, in our second round of output, theory of\nRaman spectra, correctly identified in the first run, was missing",
+   "table": null,
+   "note": "Quote line-break differs; see text around 'test prediction stability'.",
+   "where": "5.3.2"
+  },
+  {
+   "claim": "Renaming the entity class Topic to Occupation made otherwise identical prompts give more comprehensive and stable results.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RAC project; no numbers given",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "5.3.3 Naming of entity and relation classes"
+  },
+  {
+   "claim": "OpenAI charged 10 times more for predictions from a custom fine-tuned model at the time of writing.",
+   "kind": "reported",
+   "source": "OpenAI pricing at time of writing",
+   "metric": "prediction price multiple",
+   "value": "10",
+   "unit": "times",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenAI fine-tuned versus base model, date not given",
+   "quote": "OpenAI charges 10 times more for running predictions with a custom model",
+   "table": null,
+   "note": null,
+   "where": "5.3.4"
+  },
+  {
+   "claim": "For fact extraction the authors use temperature 0; code generation around 0.2.",
+   "kind": "claim",
+   "source": null,
+   "metric": "temperature",
+   "value": "0",
+   "unit": "temperature",
+   "baseline_value": "0.2 for code generation",
+   "n": null,
+   "setup": "Guideline for entity and relation extraction with GPT",
+   "quote": "we use temper‐\nature 0",
+   "table": null,
+   "note": null,
+   "where": "5.3.3 LLM configuration"
+  }
+ ],
+ "limits": [
+  "Prompts were tested on GPT-4o mini only; authors say newer models will differ and focus on principles.",
+  "Prompt evaluation is by eye on one paragraph; no precision, recall or F1 is reported. The chapter only recommends computing them per class.",
+  "The final prompt, JSON output format and fine-tuning run are not shown (point to the book's code repository).",
+  "Hallucination is named as the main LLM limitation and an open issue."
+ ],
+ "practices": [
+  "Explore the data first; design for quirks such as full name then initial only (5.3.1).",
+  "Describe the task precisely and add dataset specifics such as abbreviations (5.3.3).",
+  "List the entity and relation classes of interest in the prompt and rename classes that underperform (5.3.3).",
+  "Give one complex, representative example containing every key relation type, with full clean names (5.3.3).",
+  "Use temperature 0 for fact extraction; if non-zero, rerun and measure output overlap (5.3.3).",
+  "Keep a unit-test list of snippets and expected outputs, run in bulk, inspect failures (5.3.3).",
+  "At each prompt milestone, build a mini-KG from a few dozen pages and eyeball it (5.3.3).",
+  "Evaluate with a QA manager marking correct/incorrect/missing, then per-class precision, recall, F1; an LLM judge is an alternative (5.3.3).",
+  "If no schema is known, run a generic extract-all prompt on a sample to get an explorative KG (5.3.3).",
+  "Do a couple of quick iterations then move to fine-tuning rather than endless prompt tuning (5.3.3).",
+  "Keep traditional NLP for security, massive datasets and streaming; LLM preannotation can bootstrap its training data (5.3.4).",
+  "Be consistent in relation direction across documents (5.2.2 note)."
+ ],
+ "terms": [
+  {"term": "named entity recognition (NER)", "definition": "an ML classification system trained to identify mentions of named entities in raw text and assign them to predefined categories", "where": "5.2.1"},
+  {"term": "relation extraction (RE)", "definition": "identifying semantic relations between entity pairs within textual documents", "where": "5.2.2"},
+  {"term": "prompt engineering", "definition": "the iterative process of identifying the most performant prompt for the given task", "where": "5.3.1"},
+  {"term": "prompt milestone", "definition": "when you have aggregated enough prompt improvements to feel you have made significant progress toward the original task", "where": "5.3.3"},
+  {"term": "prediction stability", "definition": "whether the LLM would produce the same output the second time", "where": "5.3.2"}
+ ],
+ "lineage": [
+  {"work": "Rockefeller Archive Center diaries (Warren Weaver)", "year": null, "arxiv": null, "relation": "uses-data", "note": "running example corpus", "quote": null},
+  {"work": "GPT-4o mini", "year": null, "arxiv": null, "relation": "evaluates", "note": "model used for the prompts", "quote": null},
+  {"work": "Transformer architecture [2]", "year": null, "arxiv": null, "relation": "related", "note": "background for LLMs", "quote": null},
+  {"work": "Data-centric paradigm [3]", "year": null, "arxiv": null, "relation": "related", "note": "background on data quality and scaling", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 5.1", "caption": "Path from domain-specific unstructured textual data to structured knowledge.", "page": null, "why": "pipeline overview"},
+  {"figure": "Fig 5.4", "caption": "The two roles of LLMs in KG generation from textual data: the prompt-based approach (upper branch) and the fine-tuning approach (lower branch)", "page": null, "why": "decision flow between prompting and fine-tuning"}
+ ],
+ "code": [
+  {"where": "Listing 5.2", "snippet": "response = client.chat.completions.create(model=OPENAI_MODEL, messages=messages, temperature=0., max_tokens=2000)", "verbatim": false}
+ ],
+ "problems": [
+  "Author names, year and publisher are not printed in the chapter text; authors left empty, year null.",
+  "Listing 5.1/5.6 bodies and Listing 5.3/5.5/5.7 outputs are partly truncated by line wrapping in the text layer.",
+  "No method block: book chapter."
+ ]
+}

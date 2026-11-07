@@ -1,0 +1,237 @@
+{
+ "schema": 1,
+ "key": "sha1:bec5d46696da",
+ "pdf": "ai-engineering/02-context-engineering/sources/context-engineering-multi-agent-systems/ch06-building-summarizer-agent-context-reduction.pdf",
+ "bib": {
+  "title": "Chapter 6: Building the Summarizer Agent for Context Reduction (Context Engineering for Multi-Agent Systems)",
+  "authors": [
+   "Denis Rothman"
+  ],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt (O'Reilly online edition), book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 60900,
+  "chars_total": 60900,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a multi-agent context engine proactively reduce context size and API cost by adding a specialist Summarizer agent without redesigning the core engine?",
+ "hypothesis": null,
+ "contributions": [
+  "A Summarizer agent (agent_summarizer) that reduces text to a summary under a caller-supplied summary_objective",
+  "Registry and capability-description update so the Planner discovers the agent dynamically",
+  "A Writer agent upgrade accepting both {'facts':...} and {'summary':...} inputs",
+  "A single worked demonstration with token counts and a business-value framing"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In the Juno demo the Summarizer cut the Writer's input from 253 to 110 tokens, a 56.5% reduction (single example, count_tokens with tiktoken).",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": "56.5",
+   "unit": "%",
+   "baseline_value": "253 tokens",
+   "n": 1,
+   "setup": "One dense paragraph about the Juno probe, gpt-5 as generation model, Summarizer then Librarian then Writer plan; tokens counted with count_tokens (tiktoken, gpt-4 encoding, cl100k_base fallback).",
+   "quote": "The Summarizer agent achieved a 56.5% reduction in token count.",
+   "table": null,
+   "note": "Original 253 tokens, summary 110 tokens; (1-110/253)=56.5%. One run, LLM output is stochastic (chapter notes this).",
+   "where": "Step 1: Summarizer agent takes the lead"
+  },
+  {
+   "claim": "Original text length in the demo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "253",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Juno paragraph passed as text_to_summarize.",
+   "quote": "Original text ( text_to_summarize ): 253 tokens",
+   "table": null,
+   "note": null,
+   "where": "Step 1"
+  },
+  {
+   "claim": "Summary length in the demo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "110",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Summarizer output bullets.",
+   "quote": "Final summary ( output ): 110 tokens",
+   "table": null,
+   "note": null,
+   "where": "Step 1"
+  },
+  {
+   "claim": "Hypothetical business case: 10,000 reports per day with over 50% token cut on the final generation step could save thousands to tens of thousands of dollars per month in API cost.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical financial-services firm; no pricing, token sizes or measurement given.",
+   "quote": null,
+   "table": null,
+   "note": "No arithmetic shown; the 50% figure is an assumption.",
+   "where": "Translating technical efficiency into business value"
+  },
+  {
+   "claim": "Adding the Summarizer broke the Writer because Researcher emits {'facts'} and Summarizer emits {'summary'}; the Writer was patched to check both keys.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Initial testing of the Planner chaining Summarizer output into Writer.",
+   "quote": "When it received a dictionary with a 'summary' key instead of a 'facts' key, it failed.",
+   "table": null,
+   "note": null,
+   "where": "Reinforcing the Writer agent"
+  },
+  {
+   "claim": "Smaller, focused context is asserted to give faster generation and higher-quality output (no measurement).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Narrative argument only.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Translating technical efficiency into business value"
+  }
+ ],
+ "limits": [
+  "Single example (one 253-token paragraph, one run); no quality evaluation of summaries, no faithfulness check, no latency or dollar measurement.",
+  "Cost and speed benefits and quality gain are asserted, not measured.",
+  "Planner reliably choosing the Summarizer is shown for one goal only; backward-compatibility tests are promised but results are not shown.",
+  "The Summarizer is not applied automatically on a token threshold; count_tokens is used only in post-hoc analysis.",
+  "Prompt texts (system prompt, user prompt, goal) are truncated in the PDF text."
+ ],
+ "practices": [
+  "Write a specific summary_objective (entities, figures, constraints, output form) rather than 'Summarize this text'; this is micro-context engineering (Micro-context engineering).",
+  "Measure token cost with count_tokens before sending text to an LLM, as the basis for proactive context management (Foundation for cost management).",
+  "Place the Summarizer upstream of the most expensive generation agent so it receives the reduced text (Step 3).",
+  "Register new agents and describe inputs/outputs in get_capabilities_description so the Planner discovers them without hardcoding.",
+  "Validate agent inputs and wrap in try/except; return predictable MCP messages with a stable key ('summary').",
+  "Keep data contracts compatible across agents; make consumers accept all producer output shapes (Reinforcing the Writer agent).",
+  "Run backward-compatibility tests after adding capabilities.",
+  "Trace each step (ExecutionTrace, resolved_context) to audit what each agent received."
+ ],
+ "terms": [
+  {
+   "term": "proactive context management",
+   "definition": "the engine can now analyze, measure, and condense information instead of simply processing whatever it is given",
+   "where": "Separation of responsibilities"
+  },
+  {
+   "term": "glass-box system",
+   "definition": "a system deliberately designed for transparency and control, with every action traceable through an ExecutionTrace",
+   "where": "Architecting the glass-box system"
+  },
+  {
+   "term": "micro-context engineering",
+   "definition": "the skill of turning a generic, multi-purpose tool into a specialized, high-precision instrument via a precise summary_objective",
+   "where": "Micro-context engineering"
+  },
+  {
+   "term": "context chaining",
+   "definition": "replacing placeholders such as $$STEP_1_OUTPUT$$ with actual outputs from previous steps",
+   "where": "Step-by-step architectural walkthrough"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 5, Context_Engine_Pre_Production notebook (same book)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Upgrades the hardened engine from ch. 5.",
+   "quote": null
+  },
+  {
+   "work": "AgentVerse (Hao et al.)",
+   "year": 2024,
+   "arxiv": "2405.08722",
+   "relation": "related",
+   "note": "Listed in references.",
+   "quote": null
+  },
+  {
+   "work": "AgentBoard (Chen et al.)",
+   "year": 2024,
+   "arxiv": "2407.03713",
+   "relation": "related",
+   "note": "Listed in references.",
+   "quote": null
+  },
+  {
+   "work": "Dasgupta et al., Geometry of Context Management in Transformers",
+   "year": 2024,
+   "arxiv": "2405.00205",
+   "relation": "related",
+   "note": "Listed in references.",
+   "quote": null
+  },
+  {
+   "work": "Wang et al., Survey on LLM-based Autonomous Agents",
+   "year": 2024,
+   "arxiv": "2308.11432",
+   "relation": "related",
+   "note": "Further reading.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.2",
+   "caption": "The content reduction architecture",
+   "page": 3,
+   "why": "Shows where Summarizer and count_tokens slot into the engine."
+  },
+  {
+   "figure": "Fig 6.5",
+   "caption": "The dynamic discovery loop between the Planner and AgentRegistry",
+   "page": 14,
+   "why": "Explains how the Planner learns of new agents."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.8 count_tokens",
+   "snippet": "def count_tokens(text, model=\"gpt-4\"):\n    try:\n        encoding = tiktoken.encoding_for_model(model)\n    except KeyError:\n        encoding = tiktoken.get_encoding(\"cl100k_base\")\n    return len(encoding.encode(text))",
+   "verbatim": true
+  },
+  {
+   "where": "p.9 agent_summarizer",
+   "snippet": "summary = call_llm_robust(system_prompt, user_prompt, client=client, generation_model=generation_model)\nreturn create_mcp_message(\"Summarizer\", {\"summary\": summary})",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF is a browser print of the O'Reilly page; several code lines and the system prompt, user prompt and goal are truncated at the right margin; poor and strong example objectives are cut off.",
+  "Method block null because book chapter; generation model is gpt-5 and embedding text-embedding-3-small per the config but no temperature or other settings given."
+ ]
+}

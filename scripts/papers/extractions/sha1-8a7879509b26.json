@@ -1,0 +1,189 @@
+{
+ "schema": 1,
+ "key": "sha1:8a7879509b26",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf",
+ "bib": {
+  "title": "Building a QA agent with LangGraph (ch. 15 of Knowledge Graphs and LLMs in Action)",
+  "authors": [
+   "Negro et al."
+  ],
+  "first_author": "Negro",
+  "year": 2025,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 78807,
+  "chars_total": 78807,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you implement the chapter-14 expert-emulating KG question-answering design as a working LangGraph pipeline with a Streamlit front end?",
+ "hypothesis": null,
+ "contributions": [
+  "A LangGraph pipeline of intent detection, schema extraction, text-to-Cypher, query execution (with retry) and summary generation",
+  "A schema provider that turns apoc.meta.schema output into an LLM-friendly schema via a YAML skip list and descriptions",
+  "A question-processing generator that streams pipeline events to a Streamlit app",
+  "A five-step investigative walkthrough on a crime/ANPR-camera KG"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Failed Cypher queries are retried through the text-to-Cypher node with the error fed back, up to three attempts.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter's post_query_execution dynamic edge; retries counter reset to 0 by schema extraction and incremented after each execution; no evaluation data",
+   "quote": "allows up to three attempts to execute the query",
+   "table": null,
+   "note": "Code is `if state[\"retries\"] < 3`, which with an increment after each execution gives three executions in total.",
+   "where": "15.1.5, Post-query execution"
+  },
+  {
+   "claim": "Only graph and map outputs are summarised; tabular output ends the pipeline without a summary.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Routing rule in post_query_execution",
+   "quote": "for tabular results, which are typically self-explanatory, the pipeline can conclude directly",
+   "table": null,
+   "note": null,
+   "where": "15.1.5"
+  },
+  {
+   "claim": "The schema provider calls apoc.meta.schema on the whole database without sampling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "-1",
+   "unit": "sample size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Neo4jSchema.get_schema, Listing 15.4",
+   "quote": "CALL apoc.meta.schema({sample:-1})",
+   "table": null,
+   "note": null,
+   "where": "Listing 15.4"
+  },
+  {
+   "claim": "A demo investigation shows a selection-aware, five-step workflow; no accuracy or latency figures are reported.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Subset crime KG (Crime, ANPRCamera, CameraEvent, Vehicle, Person); qualitative screenshots only",
+   "quote": "Return any ANPR camera node located within 1 km from the selected crime.",
+   "table": null,
+   "note": null,
+   "where": "15.3"
+  },
+  {
+   "claim": "The authors cite studies saying in-context learning underperforms task-specific adaptation even with the same examples, and propose fine-tuning as a future direction.",
+   "kind": "reported",
+   "source": "refs [1], [2] in the chapter (not named in the text)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "No numbers given",
+   "quote": "Studies have shown that in-context learning, although flexible, consistently underperforms compared to task-specific adaptation approaches [1], [2].",
+   "table": null,
+   "note": null,
+   "where": "15.4.3"
+  }
+ ],
+ "limits": [
+  "No evaluation: no accuracy, latency, cost or model identity (LLM, temperature) is stated for the pipeline; the chapter is a demonstration only.",
+  "The authors call it 'a foundation rather than a turnkey solution' and Streamlit a prototyping tool.",
+  "Listing inconsistencies: output_reason vs state key output_type_reason; summary_analisys misspelt; results_error typed list but holds str/None; self.memory never defined in Listing 15.12.",
+  "Only neo4j.exceptions.ClientError is caught, so empty results are not retried."
+ ],
+ "practices": [
+  "Keep prompt templates, KG notes and few-shot examples in a YAML config separate from code (15.1.2).",
+  "Convert the technical schema to a conceptual one with a skip list plus business descriptions, stored in YAML (15.1.3).",
+  "Run the pipeline in stream mode and emit typed (type, payload, state) events so frontends can show progress (15.1.6).",
+  "Route on query errors with a bounded retry, feeding the failed query and error back (15.1.5).",
+  "Ask 'What would an expert do?' when improving the system (15.4).",
+  "Collect complaint-like questions and successful reasoning chains to improve examples (15.4.1).",
+  "Consider schema enrichment agents and multilayer schemas for large KGs (15.4.2)."
+ ],
+ "terms": [
+  {
+   "term": "expert-emulating approach",
+   "definition": "an approach that mimics how human experts interact with graph databases",
+   "where": "Summary"
+  },
+  {
+   "term": "state object",
+   "definition": "a shared memory space that agents can read from and write to",
+   "where": "15.1.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 14 of the same book (expert-emulating QA design, intent detection prompt)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "This chapter implements chapter 14's architecture",
+   "quote": null
+  },
+  {
+   "work": "LangGraph",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Orchestration framework",
+   "quote": null
+  },
+  {
+   "work": "Streamlit",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Frontend",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 15.3",
+   "caption": "LangGraph implementation of the KG querying pipeline.",
+   "page": null,
+   "why": "Shows nodes and the retry/summarize/END conditional edges"
+  },
+  {
+   "figure": "Fig 15.8",
+   "caption": "Post-query execution routing logic in the QA pipeline.",
+   "page": null,
+   "why": "Retry, summarize or finish decision paths"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 15.10",
+   "snippet": "if state[\"results_error\"] is not None:\n    if state[\"retries\"] < 3:\n        return \"retry\"",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section map was empty; read the cached text directly. Figures are images, so figure-only content (generated Cypher in screenshots) was not read.",
+  "No embedded instructions found."
+ ]
+}

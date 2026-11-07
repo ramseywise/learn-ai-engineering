@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "sha1:c190304920ee",
+ "pdf": "generative-ai/05-RL/sources/huyen-ai-engineering/ch07-finetuning.pdf",
+ "bib": {
+  "title": "AI Engineering, Chapter 7: Finetuning",
+  "authors": [
+   "Chip Huyen"
+  ],
+  "first_author": "Huyen",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 114390,
+  "chars_total": 114390,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "When should you finetune a foundation model, and which memory-efficient techniques (PEFT, LoRA, quantization, model merging) and hyperparameters make finetuning practical?",
+ "hypothesis": null,
+ "contributions": [
+  "Framework for finetune vs RAG: finetuning is for form, RAG is for facts",
+  "Memory math for inference and training, numerical formats and quantization",
+  "Overview of PEFT, deep dive on LoRA and QLoRA, model merging, and finetuning tactics"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Finetuning is for form and RAG is for facts; start with RAG when a model has both information and behavior issues.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter's decision framework for finetune vs RAG, after prompting has been maximised.",
+   "where": "When to Finetune / Finetuning and RAG",
+   "note": null,
+   "quote": "In short, finetuning is for form, and RAG is for facts."
+  },
+  {
+   "claim": "On current-events QA, Mistral-7B base + RAG scores far above finetuned variants without RAG.",
+   "kind": "reported",
+   "source": "Ovadia et al. (2024), Fine-Tuning or Retrieval?",
+   "metric": "score",
+   "value": "0.875",
+   "unit": null,
+   "baseline_value": "0.481",
+   "n": null,
+   "setup": "Ovadia et al. (2024) current-events QA; Mistral-7B; scores as printed in Table 7-2.",
+   "where": "Table 7-2",
+   "note": null,
+   "table": "Table 7-2, row Mistral-7B, column Base model + RAG"
+  },
+  {
+   "claim": "Mistral-7B with finetuning plus RAG (FT-reg + RAG) scores below base model + RAG.",
+   "kind": "reported",
+   "source": "Ovadia et al. (2024)",
+   "metric": "score",
+   "value": "0.810",
+   "unit": null,
+   "baseline_value": "0.875",
+   "n": null,
+   "setup": "Same Ovadia et al. experiment; Mistral-7B.",
+   "where": "Table 7-2",
+   "note": "Last column header is truncated in the PDF text as 'FT-pa RAG'.",
+   "table": "Table 7-2, row Mistral-7B, column FT-reg + RAG"
+  },
+  {
+   "claim": "Adding RAG on top of a finetuned model beat RAG alone on MMLU only 43% of the time.",
+   "kind": "reported",
+   "source": "Ovadia et al. (2024)",
+   "metric": null,
+   "value": "43%",
+   "unit": "% of cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ovadia et al. (2024), MMLU, Mistral 7B, Llama 2-7B, Orca 2-7B.",
+   "where": "Finetuning and RAG",
+   "note": null,
+   "quote": "incorporating RAG on top of a finetuned model can boost its performance on the MMLU benchmark 43% of the time"
+  },
+  {
+   "claim": "Zero-shot GPT-4-0314 beat BloombergGPT on FiQA sentiment (weighted F1).",
+   "kind": "reported",
+   "source": "Li et al. (2023)",
+   "metric": "weighted F1",
+   "value": "87.15",
+   "unit": null,
+   "baseline_value": "75.07",
+   "n": null,
+   "setup": "Li et al. (2023) financial benchmarks; BloombergGPT 50B.",
+   "where": "Table 7-1",
+   "note": null,
+   "table": "Table 7-1, row GPT-4-0314 (zero-shot), column FiQA sentiment analysis (weighted F1)"
+  },
+  {
+   "claim": "Zero-shot GPT-4-0314 beat BloombergGPT on ConvFinQA accuracy.",
+   "kind": "reported",
+   "source": "Li et al. (2023)",
+   "metric": "accuracy",
+   "value": "76.48",
+   "unit": null,
+   "baseline_value": "43.41",
+   "n": null,
+   "setup": "Li et al. (2023); BloombergGPT 50B.",
+   "where": "Table 7-1",
+   "note": null,
+   "table": "Table 7-1, row GPT-4-0314 (zero-shot), column ConvFinQA (accuracy)"
+  },
+  {
+   "claim": "BloombergGPT (50B) needed 1.3 million A100 GPU hours, est. $1.3M to $2.6M compute excluding data.",
+   "kind": "reported",
+   "source": "Wu et al. (2023)",
+   "metric": null,
+   "value": "1.3 million",
+   "unit": "A100 GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wu et al. (2023).",
+   "where": "Finetuning Domain-Specific Tasks",
+   "note": null,
+   "quote": "required 1.3 million A100 GPU hours for training"
+  },
+  {
+   "claim": "Grammarly's finetuned Flan-T5 models beat a specialised GPT-3 variant despite being 60 times smaller, using 82,000 pairs.",
+   "kind": "reported",
+   "source": "Grammarly (as reported by Huyen; no citation)",
+   "metric": null,
+   "value": "82,000",
+   "unit": "(instruction, output) pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grammarly text-editing tasks; Flan-T5.",
+   "where": "Reasons to Finetune",
+   "note": null,
+   "quote": "The finetuning process used only 82,000 (instruction, output) pairs"
+  },
+  {
+   "claim": "Full finetuning of a 7B model with Adam in 16 bits needs 56 GB for weights, gradients and optimizer states.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "56 GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B params, 16-bit, Adam (3 values per trainable param), activations excluded.",
+   "where": "Parameter-Efficient Finetuning",
+   "note": null,
+   "quote": "The total memory needed for the model’s weights, gradients, and optimizer states is then 14 GB + 42 GB = 56 GB."
+  },
+  {
+   "claim": "Inference memory for a 13B model at 2 bytes per parameter is 31.2 GB, assuming activations and KV are 20% of weights.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "31.2 GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13B params, 2 bytes, 1.2 factor.",
+   "where": "Memory needed for inference",
+   "note": null,
+   "quote": "The total memory for inference will be 26 GB × 1.2 = 31.2 GB."
+  },
+  {
+   "claim": "Updating all 13B parameters with Adam at 2 bytes per value needs 78 GB for gradients and optimizer states; with 1B trainable it is 6 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "78 GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13B or 1B trainable params, 3 values each, 2 bytes.",
+   "where": "Memory needed for training (equation image text at end of extraction)",
+   "note": "The formula is an image in the PDF; the line appears among the trailing figure text. 1B case: '1 billion × 3 × 2 bytes = 6 GB'.",
+   "quote": "13 billion × 3 × 2 bytes = 78 GB"
+  },
+  {
+   "claim": "Partial finetuning of BERT large needs about 25% of parameters to match full finetuning on GLUE.",
+   "kind": "reported",
+   "source": "Houlsby et al. (2019)",
+   "metric": null,
+   "value": "25%",
+   "unit": "% of parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Houlsby et al. (2019), BERT large, GLUE.",
+   "where": "Parameter-Efficient Finetuning",
+   "note": null,
+   "quote": "you’d need to update approximately 25% of the parameters to achieve performance comparable to that of full finetuning on the GLUE benchmark"
+  },
+  {
+   "claim": "Adapters inserted in BERT reach within 0.4% of full finetuning on GLUE with 3% of the trainable parameters.",
+   "kind": "reported",
+   "source": "Houlsby et al. (2019)",
+   "metric": null,
+   "value": "within 0.4% using 3%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Houlsby et al. (2019), two adapter modules per transformer block.",
+   "where": "Parameter-Efficient Finetuning",
+   "note": null,
+   "quote": "they achieved a performance within 0.4% of full finetuning using only 3% of the number of trainable parameters"
+  },
+  {
+   "claim": "LoRA matches or beats full finetuning of GPT-3 on several tasks with about 4.7M trainable parameters, 0.0027% of full finetuning.",
+   "kind": "reported",
+   "source": "Hu et al. (2021)",
+   "metric": null,
+   "value": "4.7M",
+   "unit": "trainable parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hu et al. (2021), GPT-3 175B.",
+   "where": "LoRA",
+   "note": "Quote is a line-broken fragment; full text: 'comparable or better performance with full finetuning on several tasks while using only ~4.7M trainable parameters, 0.0027% of full finetuning'.",
+   "quote": "~4.7M trainable pa-"
+  },
+  {
+   "claim": "With an 18M trainable-parameter budget on GPT-3 175B, LoRA on all four attention matrices at rank 2 gave the best WikiSQL and MultiNLI results.",
+   "kind": "reported",
+   "source": "Hu et al. (2021)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hu et al. (2021); budget 18M = 0.01% of parameters; options: one matrix r=8, two matrices r=4, four matrices r=2.",
+   "where": "LoRA configurations",
+   "note": "Line-broken in the PDF text; Table 7-5 as extracted has six columns and no all-four, r=2 column, so the chapter text gives no number for that configuration.",
+   "quote": "applying LoRA to all four matrices with rank = 2 yields the best"
+  },
+  {
+   "claim": "WikiSQL accuracy for LoRA on Wq and Wv at rank 4 under the 18M budget.",
+   "kind": "reported",
+   "source": "Hu et al. (2021)",
+   "metric": "WikiSQL accuracy",
+   "value": "73.7",
+   "unit": "%",
+   "baseline_value": "70.4",
+   "n": null,
+   "setup": "Hu et al. (2021), Table 7-5; GPT-3 175B; WikiSQL (± 0.5%).",
+   "where": "Table 7-5",
+   "note": "Baseline 70.4 is the single-matrix r=8 column (first). Column headers for the weight types are subscript-stripped in the PDF text.",
+   "table": "Table 7-5, last column printed (two weight types, r=4), row WikiSQL"
+  },
+  {
+   "claim": "Small LoRA rank (4 to 64) is usually sufficient; increasing r does not necessarily increase quality.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Practitioner reports (LoRA authors, Databricks); Raschka found r = 256 best on his tasks.",
+   "where": "LoRA configurations",
+   "note": null,
+   "quote": "a small r, such as between 4 and 64, is usually sufficient for many use cases"
+  },
+  {
+   "claim": "Serving 100 per-customer models with LoRA kept separate takes 23.3M parameters versus 1.68B when merged.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "23.3M",
+   "unit": "parameters",
+   "baseline_value": "1.68B",
+   "n": null,
+   "setup": "W is 4096 x 4096 (16.8M params); LoRA rank 8 gives 65,536 params for A and B.",
+   "where": "Serving LoRA adapters",
+   "note": null,
+   "quote": "16.8M + 65,536 × 100 = 23.3M parameters."
+  },
+  {
+   "claim": "QLoRA allows a 65B-parameter model to be finetuned on a single 48 GB GPU.",
+   "kind": "reported",
+   "source": "Dettmers et al. (2023), QLoRA",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dettmers et al. (2023); NF4 4-bit weights, BF16 compute, paged optimizers.",
+   "where": "Quantized LoRA",
+   "note": "Line-broken: 'These techniques allow a 65B-parameter model to be finetuned on a single 48 GB GPU.'",
+   "quote": "These techniques al-"
+  },
+  {
+   "claim": "Guanaco 65B scored Elo 1022 versus 1348 for GPT-4 and 966 for ChatGPT (GPT-4 as judge, May 2023).",
+   "kind": "reported",
+   "source": "Dettmers et al. (2023)",
+   "metric": "Elo",
+   "value": "1022 ± 1",
+   "unit": null,
+   "baseline_value": "GPT-4 1348 ± 1; ChatGPT 966 ± 1",
+   "n": null,
+   "setup": "QLoRA paper; Guanaco 65B (41 GB).",
+   "where": "Table 7-7",
+   "note": null,
+   "table": "Table 7-7, row Guanaco 65B, column Elo"
+  },
+  {
+   "claim": "LoRA adapter memory is tiny relative to model weights: 37.7 MB for GPT-3 175B (r=2 on query and key) versus 350 GB of weights.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "37.7 MB",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-bit; 18.87M LoRA params.",
+   "where": "Table 7-6",
+   "note": null,
+   "table": "Table 7-6, row GPT-3 (175B), column LoRA adapter memory (16 bits)"
+  },
+  {
+   "claim": "BitNet b1.58 (1.58 bits per parameter) is comparable to 16-bit Llama LLM up to 3.9B parameters on ARC-e, ARC-c, HellaSwag, BoolQ, OpenBookQA.",
+   "kind": "reported",
+   "source": "Ma et al. (2024)",
+   "metric": "ARC-easy",
+   "value": "61.4",
+   "unit": null,
+   "baseline_value": "62.1",
+   "n": null,
+   "setup": "Ma et al. (2024); Table 7-4, 700M, 1.3B, 3B, 3.9B.",
+   "where": "Table 7-4",
+   "note": null,
+   "table": "Table 7-4, row BitNet b1.58 3B, column ARCe"
+  },
+  {
+   "claim": "Training-set and finetuning learning rate range to try is 1e-7 to 1e-3; a common start is the end-of-pretraining rate times 0.1 to 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb in Finetuning hyperparameters.",
+   "where": "Finetuning hyperparameters",
+   "note": null,
+   "quote": "typically between the range of 1e-7 to 1e-3"
+  },
+  {
+   "claim": "A batch size below eight can make training unstable.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb; the author notes she found no good explanation.",
+   "where": "Finetuning hyperparameters (Batch size)",
+   "note": null,
+   "quote": "such as fewer than eight"
+  },
+  {
+   "claim": "Millions of examples need 1-2 epochs; thousands may improve over 4-10 epochs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb.",
+   "where": "Finetuning hyperparameters (Number of epochs)",
+   "note": null,
+   "quote": "1–2 epochs might be sufficient"
+  },
+  {
+   "claim": "Prompt loss weight defaults to 10%: the model learns some from prompts but mostly from responses.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instruction finetuning.",
+   "where": "Finetuning hyperparameters",
+   "note": null,
+   "quote": "Typically, this weight is set to 10% by default"
+  },
+  {
+   "claim": "SOLAR 10.7B was made by depthwise scaling a 32-layer 7B model to 48 layers by summing 16 layers.",
+   "kind": "reported",
+   "source": "Kim et al. (2023)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kim et al. (2023).",
+   "where": "Layer stacking",
+   "note": null,
+   "quote": "32 × 2 - 16 = 48 layers"
+  }
+ ],
+ "limits": [
+  "The chapter says finetuning needs data, ML talent and maintenance, and that new base models can overtake a finetuned one.",
+  "Model merging techniques are called experimental and may become outdated.",
+  "Written 2024; the author says LoRA does not match full finetuning performance and focuses on attention-matrix LoRA, which later work revised.",
+  "Many tables are reproduced from other papers (Ovadia, Li, Hu, Ma, Dettmers); the chapter runs no experiments except a count of >1,000 open issues in huggingface/peft in October 2024 as a popularity proxy.",
+  "Chapter covers SFT-style and adapter finetuning; preference finetuning/RL is only mentioned in the overview (format: instruction, winning response, losing response)."
+ ],
+ "practices": [
+  "Try prompting first, with systematic prompt experiments, before finetuning (When to Finetune).",
+  "Use finetuning for form and RAG for facts; if both kinds of failure exist, start with RAG, beginning with term-based search such as BM25 (Finetuning and RAG).",
+  "Workflow: prompt, add 1-50 examples, add RAG, then choose embedding retrieval or finetuning by failure mode, then combine both; evaluate at every step (Finetuning and RAG).",
+  "If a finetuned model loses ability on other tasks, finetune on all tasks, use separate models, or merge them (Reasons Not to Finetune).",
+  "Use LoRA first, attempt full finetuning later; with a few hundred examples full finetuning may not beat LoRA (Finetuning methods).",
+  "Start with the most powerful model you can afford, then follow the progression path or the distillation path from OpenAI's guidance (Base models).",
+  "Load a model in the numerical format it was intended for, e.g. BF16 for Llama 2 (Numerical Representations).",
+  "For multi-LoRA serving keep adapters separate; for a single LoRA model merge weights before serving (Serving LoRA adapters).",
+  "Choose alpha so alpha:r is typically between 1:8 and 8:1, and tune the pair (LoRA configurations).",
+  "Raise the learning rate as high as the loss curve stays stable; use gradient accumulation when memory forces small batches (Finetuning hyperparameters).",
+  "Prune task-vector parameters (TIES, DARE) before merging, more so with more models (Pruning redundant task-specific parameters)."
+ ],
+ "terms": [
+  {
+   "term": "transfer learning",
+   "definition": "how to transfer the knowledge gained from one task to accelerate learning for a new, related task",
+   "where": "Finetuning Overview"
+  },
+  {
+   "term": "PEFT",
+   "definition": "parameter-efficient finetuning; achieves performance close to full finetuning while using several orders of magnitude fewer trainable parameters",
+   "where": "Parameter-Efficient Finetuning"
+  },
+  {
+   "term": "LoRA",
+   "definition": "Low-Rank Adaptation; decomposes a weight matrix update into the product of two smaller matrices A and B, updated while W is frozen, then merged back",
+   "where": "LoRA"
+  },
+  {
+   "term": "QLoRA",
+   "definition": "stores weights in 4-bit NF4 and dequantizes to BF16 for forward and backward pass, with paged optimizers",
+   "where": "Quantized LoRA"
+  },
+  {
+   "term": "quantization",
+   "definition": "reducing precision; converting a model from a format with more bits to one with fewer",
+   "where": "Quantization"
+  },
+  {
+   "term": "model merging",
+   "definition": "creating a custom model by combining multiple models, typically by mixing parameters (summing, layer stacking, concatenation)",
+   "where": "Model Merging and Multi-Task Finetuning"
+  },
+  {
+   "term": "task vector",
+   "definition": "the finetuned model minus the base model; captures the essence of the task; also called delta parameters",
+   "where": "Linear combination"
+  },
+  {
+   "term": "gradient checkpointing",
+   "definition": "recomputing activations when needed instead of storing them; also called activation recomputation",
+   "where": "Memory needed for training"
+  },
+  {
+   "term": "gradient accumulation",
+   "definition": "accumulating gradients across several batches and updating weights once",
+   "where": "Batch size"
+  },
+  {
+   "term": "soft prompt",
+   "definition": "continuous trainable vectors fed alongside input tokens, not human-readable",
+   "where": "PEFT techniques"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Houlsby et al. (2019) adapters",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of PEFT; two adapter modules per BERT block",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "main technique covered; Table 7-5 from it",
+   "quote": null
+  },
+  {
+   "work": "QLoRA (Dettmers et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "4-bit NF4 LoRA; Table 7-7",
+   "quote": null
+  },
+  {
+   "work": "Fine-Tuning or Retrieval? (Ovadia et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "evidence that RAG beats finetuning on new knowledge; Table 7-2",
+   "quote": null
+  },
+  {
+   "work": "BloombergGPT (Wu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cautionary tale for domain-specific training",
+   "quote": null
+  },
+  {
+   "work": "Li et al. (2023) financial benchmarks",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GPT-4-0314 vs BloombergGPT; Table 7-1",
+   "quote": null
+  },
+  {
+   "work": "BitNet b1.58 (Ma et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Table 7-4",
+   "quote": null
+  },
+  {
+   "work": "TIES-Merging (Yadav et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "task-vector pruning before merge",
+   "quote": null
+  },
+  {
+   "work": "DARE (Yu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "drop and rescale before merge",
+   "quote": null
+  },
+  {
+   "work": "SOLAR 10.7B (Kim et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "depthwise scaling",
+   "quote": null
+  },
+  {
+   "work": "Sparse Upcycling (Komatsuzaki et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MoE from dense checkpoint",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozière et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fig 7-1 finetuning variants from Llama 2",
+   "quote": null
+  },
+  {
+   "work": "Korthikanti et al. Reducing Activation Recomputation",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fig 7-5 activation memory",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7-3",
+   "caption": "Example application development flows. After simple retrieval, whether to experiment with more complex retrieval or finetuning depends on each application and its failure modes.",
+   "page": null,
+   "why": "The prompt-RAG-finetune decision path at a glance."
+  },
+  {
+   "figure": "Fig 7-11",
+   "caption": "To apply LoRA to a weight matrix W, decompose it into the product of two matrices A and B. During finetuning, only A and B are updated. W is kept intact.",
+   "page": null,
+   "why": "Shows LoRA mechanics."
+  },
+  {
+   "figure": "Fig 7-14",
+   "caption": "Three main approaches to model merging: summing, layer stacking, and concatenation.",
+   "page": null,
+   "why": "Taxonomy of merging."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Equations are images and are missing from the text (memory formulas, LoRA W' = W + (alpha/r)WAB); only the surrounding prose and a trailing block of figure text survive.",
+  "Table 7-5 as extracted lacks the all-four-matrices r=2 column and has subscript-stripped headers (W, W, ...).",
+  "Table 7-2 last header truncated ('FT-pa RAG').",
+  "Text ends with web-page chrome (table of contents, Subscribe now); no embedded instructions found."
+ ]
+}

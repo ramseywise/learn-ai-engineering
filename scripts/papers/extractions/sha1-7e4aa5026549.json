@@ -1,0 +1,113 @@
+{
+ "schema": 1,
+ "key": "sha1:7e4aa5026549",
+ "pdf": "ai-engineering/02-context-engineering/sources/context-engineering-multi-agent-systems/ch10-blueprint-production-ready-ai.pdf",
+ "bib": {
+  "title": "Chapter 10: The Blueprint for Production-Ready AI (Context Engineering for Multi-Agent Systems)",
+  "authors": ["Denis Rothman"],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt book chapter (O'Reilly Learning print, retrieved 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 49359,
+  "chars_total": 49359,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How is the glass-box Context Engine turned into a scalable, observable, guarded production service, and how is its value presented to business stakeholders?",
+ "hypothesis": null,
+ "contributions": [
+  "Productionizing the engine: config and secrets, FastAPI service, async task queue, observability, containers and Kubernetes",
+  "Reframing earlier agents (Summarizer, Researcher, sanitization, moderation, Librarian blueprints) as production guardrails",
+  "A business-value framework: value multiplier flywheel, pillar of trust, knowledge moat"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Illustrative saving: a 40-50% cut in token usage per document from auto-summarizing long inputs yields thousands of dollars saved annually for a team processing hundreds of long reports.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "token usage reduction per document",
+   "value": "40-50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical team processing hundreds of long reports, with a policy to auto-summarize any document over a token threshold; no measurement, model or price given.",
+   "quote": "For a team processing hundreds of long reports, even a 40-50% reduction in to‐\nken usage per document translates into thousands of dollars in direct savings\nannually",
+   "table": null,
+   "note": "Not a measured result.",
+   "where": "Presenting the business value, p. 15-16"
+  },
+  {
+   "claim": "Hypothetical: Librarian and Researcher agents scaled to review 30 contracts in an hour, a day of paralegal work, freeing over 85% of the employee's time.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "employee time freed",
+   "value": "85",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "30 contracts",
+   "setup": "Envisioned future enhancement, not built or measured in the book.",
+   "quote": "we could scale the Librarian and Researcher\nagents to process an initial review of 30 contracts in an hour, a task that would\ntake a paralegal a full day. In that scenario, it would free up over 85% of that em‐\nployee's time",
+   "table": null,
+   "note": "Hypothetical scenario.",
+   "where": "Presenting the business value, p. 16"
+  }
+ ],
+ "limits": [
+  "No experiments or measurements: all numbers are hypothetical illustrations.",
+  "Code is stated to be pseudo-code; tool names (FastAPI, Celery, Pinecone, Prometheus) are illustrations, not prescriptions.",
+  "The endpoint shown still runs the engine in a thread pool and returns 500 on failure; the 202 async path is described but not coded in full.",
+  "Replica counts (3 API, 5 Worker) are examples of a desired state, not tuned values.",
+  "Business value claims (ROI, trust, knowledge moat, fine-tuning smaller models on traces) are assertions without evidence."
+ ],
+ "practices": [
+  "Separate configuration from code with Twelve-Factor environment variables; fail fast if essential API keys are missing (Environment configuration).",
+  "Use a centralized secrets manager (AWS Secrets Manager, Azure Key Vault, Google Secret Manager, HashiCorp Vault) injected via sidecar or init container, not plain env vars or basic Kubernetes Secrets (Environment configuration).",
+  "Expose the engine as a FastAPI service behind an API gateway that handles auth, rate limiting and SSL termination (Building the production API).",
+  "Decouple request handling from execution: API validates and enqueues, returns HTTP 202 Accepted with a trace_id, workers execute, results stored by trace_id, client polls or gets a webhook (Asynchronous execution).",
+  "Emit structured JSON logs carrying trace_id, aggregate them centrally, track system, application and AI-specific metrics (token consumption, LLM call latency, vector DB latency), and use distributed tracing (Centralized logging and observability).",
+  "Package in Docker, run on Kubernetes with Deployments, Services, ConfigMaps/Secrets and Ingress; autoscale workers with HPA on CPU or queue length plus a Cluster Autoscaler (Infrastructure and containerization).",
+  "Make context reduction a production policy: count tokens before a call and invoke the Summarizer first when an input exceeds a predefined budget (Managing operational costs).",
+  "Persist source citations with page numbers in the ExecutionTrace for auditability, verifiability and debuggability (Ensuring trust with high-fidelity RAG).",
+  "Sanitize at ingestion and again at runtime before retrieved context reaches an agent, as defense in depth against data poisoning and prompt injection (Defending the data pipeline).",
+  "Moderate twice: pre-flight on the goal before it enters the task queue, post-flight on output before it is persisted in the result store (Ensuring compliance and safety).",
+  "Keep brand blueprints in a centrally managed, version-controlled ContextLibrary namespace so departments own approved style (Enforcing governance)."
+ ],
+ "terms": [
+  {"term": "Observability", "definition": "its internal reasoning and performance must be visible, measurable, and verifiable at every step", "where": "Centralized logging and observability, p. 7"},
+  {"term": "Knowledge moat", "definition": "a dataset of successful reasoning chains that no competitor can access", "where": "Creating a strategic asset, p. 18-19"},
+  {"term": "Value multiplier flywheel", "definition": "three interlinked segments, Reduce Costs (Summarizer), Increase Productivity (Librarian, Researcher), Accelerate Revenue (Writer)", "where": "Fig 10.2, p. 15"},
+  {"term": "Pillar of trust", "definition": "secure data pipeline foundation, verifiable outputs core, stakeholder trust as outcome", "where": "Fig 10.3, p. 17"}
+ ],
+ "lineage": [
+  {"work": "Wu et al. 2023, AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation Framework", "year": 2023, "arxiv": "2308.08155", "relation": "related", "note": "Listed in References; not discussed in the chapter text.", "quote": null},
+  {"work": "Hsieh et al. 2023, Distilling Step-by-Step", "year": 2023, "arxiv": "2305.02301", "relation": "related", "note": "Listed in References; chapter's fine-tune-smaller-models-on-traces idea is adjacent but the text does not cite it.", "quote": null},
+  {"work": "Zigunov and Charonko 2023, omnidirectional pressure integration", "year": 2023, "arxiv": "2311.16935", "relation": "related", "note": "Listed in References; unrelated to chapter content.", "quote": null},
+  {"work": "Senoner et al. 2024, Explainable AI Improves Task Performance in Human-AI Collaboration", "year": 2024, "arxiv": "2406.08271", "relation": "related", "note": "Further reading.", "quote": null},
+  {"work": "Earlier chapters 1-9 of the same book (Context Engine, Summarizer ch. 6, Researcher/sanitization ch. 7, moderation ch. 8, blueprints ch. 3)", "year": 2025, "arxiv": null, "relation": "extends", "note": "The chapter reframes these as production capabilities.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 10.1", "caption": "The anatomy of a resilient system", "page": 2, "why": "Shows client, API gateway, Kubernetes cluster, FastAPI, Celery/RabbitMQ queue, worker pool, OpenAI and Pinecone, secrets, observability stack and result store in one picture."},
+  {"figure": "Fig 10.2", "caption": "The value multiplier flywheel of the Context Engine", "page": 15, "why": "Maps agents to Reduce Costs, Increase Productivity, Accelerate Revenue."},
+  {"figure": "Fig 10.3", "caption": "Pillar of trust and compliance", "page": 17, "why": "Layers secure pipeline, verifiable outputs and trust."},
+  {"figure": "Fig 10.4", "caption": "Protecting the system with a moat cycle", "page": 18, "why": "Shows how each execution trace is captured as a proprietary asset."}
+ ],
+ "code": [
+  {"where": "p. 4, env config", "snippet": "GENERATION_MODEL = os.environ.get(\"GENERATION_MODEL\", \"gpt-4o\")", "verbatim": true},
+  {"where": "p. 5, FastAPI", "snippet": "@app.post(\"/api/v1/execute\", response_model=ExecutionResponse)", "verbatim": true},
+  {"where": "p. 9, worker", "snippet": "celery -A tasks worker --loglevel=INFO", "verbatim": true}
+ ],
+ "problems": [
+  "PDF is a browser print of the O'Reilly page: headers and footers repeat, some code lines are truncated at the line edge, and code blocks are interleaved with prose.",
+  "References list (AutoGen, Distilling Step-by-Step, a fluid-mechanics paper) does not match the chapter text; the third looks unrelated.",
+  "Text refers to 'secrets mentioned in 1.1.2', a section number that does not exist in this chapter.",
+  "No embedded instructions found."
+ ]
+}

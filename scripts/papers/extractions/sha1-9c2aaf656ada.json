@@ -1,0 +1,182 @@
+{
+ "schema": 1,
+ "key": "sha1:9c2aaf656ada",
+ "pdf": "ai-engineering/02-context-engineering/sources/ai-agents-with-mcp/ch05-building-mcp-servers-providing-tools-prompts.pdf",
+ "bib": {
+  "title": "Chapter 5. Building MCP Servers: Providing Tools, Prompts and Resources to Applications (AI Agents with MCP)",
+  "authors": [],
+  "first_author": "Stratis",
+  "year": null,
+  "venue": "O'Reilly Early Release (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 97047,
+  "chars_total": 97047,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How does a developer build an MCP server in Python that serves tools, prompts and resources, and how should each be designed and how is each used by clients?",
+ "hypothesis": null,
+ "contributions": [
+  "Compares FastMCP and the low-level Python SDK API for building servers",
+  "Design guidance and examples for serving tools, prompts and resources",
+  "Message flows (list/call, prompts/list/get, resources/list/read/subscribe) per primitive"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Compounded tool-choice error: five sequential tool choices at 95% each drop an agent to about 77% success.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "agent success rate",
+   "value": "77",
+   "unit": "%",
+   "baseline_value": "95",
+   "n": null,
+   "setup": "Illustrative: per-choice accuracy 95%, 5 tool choices per action; not measured.",
+   "quote": "if your agent has a 95% success rate of choosing the correct tool for an action, having to choose 5 tools will drop your agent’s success rate to around 77%.",
+   "table": null,
+   "note": "The text has a line break inside this sentence in the PDF",
+   "where": "Antipattern Alert box"
+  },
+  {
+   "claim": "Back-of-envelope estimate: calling 5 tools per action raises token use about 8x and cost nearly 7x.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "token usage factor",
+   "value": "8",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Back-of-the-envelope calculation derived from Chapter 3's simple example server; each turn's input includes prior turns' tokens; no calculation shown.",
+   "quote": "your overall token usage could increase by a factor of around 8x and your cost by nearly 7x",
+   "table": null,
+   "note": "Cost factor is nearly 7x",
+   "where": "Antipattern Alert box"
+  }
+ ],
+ "limits": [
+  "Early Release draft: raw and unedited; several cross-references are '[Link to Come]' or '???'",
+  "Cost and error figures are back-of-envelope, with no calculation or experiment",
+  "Bundled FastMCP in the Python SDK does not support resource annotations; FastMCP 2.11+ or the low-level API is needed",
+  "Version-dependent SDK details (icons parameter undocumented; FastMCP 1.0 vs 2.0)",
+  "Author name is not printed in the PDF text"
+ ],
+ "practices": [
+  "Do not auto-generate MCP servers from REST APIs; use generation only to bootstrap, then 'aggressively curate' tools, or start from scratch using 'agent stories' (Antipattern Alert).",
+  "Design tools as end-to-end actions, not granular composable REST-style ones; keep building blocks as private functions (Designing Tools).",
+  "Give tools distinct action names, descriptive but not verbose descriptions, well-defined inputs/outputs, and an underscore-separated namespace prefix to aid tool choice (Designing Tools).",
+  "Keep the number of exposed tools reasonable, since LLM tool choice accuracy drops off past soft limits (Designing Tools).",
+  "Validate tool inputs, sanitize outputs, add access control and rate limit tool calls (Serving Tools).",
+  "Support stdio where possible; use Streamable HTTP for remote servers, which must implement authorization (OAuth); session resumability via SSE event ids is optional (Transports).",
+  "Prefer FastMCP over the low-level API for nearly all servers (Why FastMCP?).",
+  "Prompts: give direction, specify format, provide examples, evaluate quality across models, divide labor; avoid saying what not to do, use precise descriptions, use separators (Designing Prompts).",
+  "Return UserMessage/AssistantMessage objects or document intended use, since applications may place prompts as user, assistant or system content; there is no SystemMessage class (How Prompts Are Used).",
+  "Resources: keep them lightweight, with no heavy computation or side effects; descriptions strongly recommended; loading is deferred until read (Exposing Resources).",
+  "Use resource templates (URI variables in curly braces) for related resources; the URI is required (Exposing Resources)."
+ ],
+ "terms": [
+  {
+   "term": "tool",
+   "definition": "In the Python SDK, a Python function decorated with @mcp.tool(); controlled by the model",
+   "where": "Serving Tools; Table 5-1"
+  },
+  {
+   "term": "resource",
+   "definition": "Read-only data source providing context to the host's model, identified by a URI; controlled by the application",
+   "where": "Serving Resources; Table 5-1"
+  },
+  {
+   "term": "prompt",
+   "definition": "Interactive template invoked by user choice; a function returning a string or Message objects, decorated with @mcp.prompt()",
+   "where": "Serving Prompts; Table 5-1"
+  },
+  {
+   "term": "resource template",
+   "definition": "A parametrized resource URI with variables in curly braces",
+   "where": "Exposing Resources"
+  },
+  {
+   "term": "agent stories",
+   "definition": "Like user stories, but describing actions an agent might want to take, from the agent's perspective",
+   "where": "Designing Tools"
+  },
+  {
+   "term": "prefilling",
+   "definition": "Leaving the assistant's response partially filled in to control the model's response",
+   "where": "Designing Prompts"
+  },
+  {
+   "term": "transport",
+   "definition": "Carries JSON-RPC messages between client and server; stdio (local) and Streamable HTTP (remote)",
+   "where": "Connecting Servers to Applications Using Transports"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Model Context Protocol specification",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Table 5-1 reproduced with modifications from the MCP spec; transports, annotations, URI schemes",
+   "quote": null
+  },
+  {
+   "work": "FastMCP / MCP Python SDK",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "The SDK and API the examples use",
+   "quote": null
+  },
+  {
+   "work": "Jeremiah Lowin (Prefect), advice on curating generated MCP servers and agent stories",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of 'aggressively curate' and agent stories",
+   "quote": null
+  },
+  {
+   "work": "Phoenix and Taylor, Prompt Engineering for Generative AI (O'Reilly)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Five Principles of Prompting",
+   "quote": null
+  },
+  {
+   "work": "Anthropic tool-description guidance and agency definition",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Detailed tool descriptions, like explaining code to a new hire",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5-1",
+   "caption": "MCP server primitives, controllers, and descriptions, from the MCP server specification",
+   "page": null,
+   "why": "Shows who controls each primitive: model for tools, application for resources, user for prompts"
+  }
+ ],
+ "code": [
+  {
+   "where": "Example 5-1",
+   "snippet": "mcp = FastMCP(name=\"server_name\")\nif __name__ == \"__main__\":\n    mcp.run()",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Author not printed in the PDF text; first_author Stratis comes from repo notes, not the PDF, and authors is left empty",
+  "Code examples are partly truncated in the extracted text",
+  "Figures 5-1..5-4 captions are garbled/duplicated in the text; no embedded instructions found"
+ ]
+}

@@ -1,0 +1,279 @@
+{
+ "schema": 1,
+ "key": "sha1:69acd4e58a8d",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/prompt-engineering-for-generative-ai/ch03-standard-practices-text-generation.pdf",
+ "bib": {
+  "title": "Chapter 3. Standard Practices for Text Generation with ChatGPT (Prompt Engineering for Generative AI)",
+  "authors": [
+   "James Phoenix",
+   "Mike Taylor"
+  ],
+  "first_author": "Phoenix",
+  "year": 2024,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 111371,
+  "chars_total": 111371,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which simple, standard prompting techniques make LLM text output controllable, parseable and useful for common text tasks?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "Asking for a fixed number of items does not guarantee that length; code must validate the count or accept varying lengths.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical article-outline generation with GPT-4; illustrative, no measured rate",
+   "quote": "For example, if you ask for 10 headings, you might receive only 8.",
+   "table": null,
+   "note": "The 8-of-10 case is an illustration, not a measurement.",
+   "where": "Hierarchical List Generation, NOTE"
+  },
+  {
+   "claim": "JSON output commonly arrives wrapped in triple backticks (a json fence) and can be invalid, so the response needs parsing logic.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generating JSON with GPT-4; no frequency given",
+   "quote": "Common errors that you’ll encounter when working with JSON involve invalid payloads, or the JSON being wrapped within triple backticks",
+   "table": null,
+   "note": null,
+   "where": "Generating JSON"
+  },
+  {
+   "claim": "The chapter lists YAML advantages over JSON: no character escaping, readability, and comments.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prompt design for YAML responses with a No Items sentinel",
+   "quote": "Unlike JSON, YAML supports comments",
+   "table": null,
+   "note": null,
+   "where": "YAML"
+  },
+  {
+   "claim": "GPT-4 as judge of a simple conciseness rating matched the known concise/verbose labels in the example run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rating accuracy",
+   "value": "near 100%",
+   "unit": null,
+   "baseline_value": null,
+   "n": 10,
+   "setup": "10 answers to 'What is the meaning of life?' from gpt-3.5-turbo (alternating concise/verbose), rated 1/0 by gpt-4; printed output matches the style on all 10",
+   "quote": "GPT-4 performs with near 100% accuracy",
+   "table": null,
+   "note": "Anecdotal single run; for complex ratings the authors say to evaluate the evaluator by counting false positives and negatives.",
+   "where": "Criteria Evaluation"
+  },
+  {
+   "claim": "LLM-based evaluation costs an order of magnitude less than human evaluation and finishes in minutes rather than days or weeks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic evaluation versus human rating; no data given",
+   "quote": "typical-ly costs an order of magnitude less",
+   "table": null,
+   "note": null,
+   "where": "Criteria Evaluation"
+  },
+  {
+   "claim": "Majority vote over repeated classification calls reduces variance at the price of time and cost.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "gpt-4, same text classified 3 times as Compliment/Complaint/Neutral; expected output Neutral",
+   "quote": "Let’s classify the same piece of text three times, and then take the majority vote",
+   "table": null,
+   "note": null,
+   "where": "Majority Vote for Classification"
+  }
+ ],
+ "limits": [
+  "No experiments: every example is a single GPT-3.5/GPT-4 transcript (2023-24 models) with no sample counts or rates.",
+  "Prompt and output text in the PDF is partly truncated mid-line (columns clipped), and several outputs are shortened with '...'.",
+  "The authors say evidence on LLMs as evaluators is mixed and that GPT-4 judging must be checked for reliability.",
+  "Warns a traditional ML classifier may beat an LLM depending on problem and training data.",
+  "The chapter's evaluator script sends the response as a second system message, as printed."
+ ],
+ "practices": [
+  "Fix list size, format and commentary in the prompt and give an example list; the model otherwise chooses size and adds commentary (Generating Lists).",
+  "Do not assume item counts are met: validate the count or tolerate varying lengths (Hierarchical List Generation NOTE).",
+  "Prefer JSON or YAML over regex once structure gets nested (When to Avoid Using Regular Expressions).",
+  "For JSON, instruct: only return valid JSON, never include backtick symbols, response parsed with json.loads() (Generating JSON).",
+  "Give YAML prompts an explicit 'No Items' outcome and validate the parsed result with yaml.safe_load plus custom exceptions before passing downstream (YAML sections).",
+  "Allow the model to ask for more context by default with 'If you need more context, please specify what would help you to make a better decision.' (Ask for Context).",
+  "Unbundle a style into tone, length, vocabulary and structure and use it to guide new content (Text Style Unbundling).",
+  "Chunk long documents to fit context length, cut cost and keep summaries coherent; do not chunk short, simple or single-topic documents (Chunking Text).",
+  "Use overlapping sliding windows when semantic context matters more than minimising tokens or requests (Sliding Window Chunking).",
+  "Count tokens with tiktoken; max context length is input plus output tokens (Text Chunking with Tiktoken).",
+  "For sentiment, define labels, give an example per label and a one-word output format; handle mixed sentiment explicitly (Sentiment Analysis).",
+  "Use least-to-most chains and evaluate each answer before building on it (Least to Most).",
+  "Put the role in the system message for chat models (Role Prompting).",
+  "Answer only from supplied reference text, with an explicit refusal string, and ask for citations that can be string-matched (Avoiding Hallucinations with Reference).",
+  "Ask the model to solve first before judging a given answer; hide reasoning with an inner-monologue block the app strips (Thinking Time, Inner Monologue).",
+  "Self-eval: ask in the same chat whether the output missed anything and repeat until no refinement is offered (Self-Eval LLM Responses NOTE).",
+  "Use a stronger LLM to evaluate a weaker one, evaluate the evaluator with false-positive/negative test cases, and try programmatic checks such as response length first (Criteria Evaluation).",
+  "Majority vote of several classification calls reduces variance but multiplies API cost and latency (Majority Vote)."
+ ],
+ "terms": [
+  {
+   "term": "chunking",
+   "definition": "the process of breaking down large pieces of text into smaller, more manageable units or chunks",
+   "where": "Chunking Text"
+  },
+  {
+   "term": "sliding window chunking",
+   "definition": "a technique used for dividing text data into overlapping chunks, or windows, based on a specified number of characters, tokens, or words",
+   "where": "Sliding Window Chunking"
+  },
+  {
+   "term": "inner monologue tactic",
+   "definition": "instructs the model to structure parts of the output that should be hidden from the user in a specific format",
+   "where": "The Inner Monologue Tactic"
+  },
+  {
+   "term": "meta prompting",
+   "definition": "a technique that involves the creation of text prompts that, in turn, generate other text prompts",
+   "where": "Meta Prompting"
+  },
+  {
+   "term": "text style unbundling",
+   "definition": "a technique that allows you to extract and isolate specific textual features from a given document, such as tone, length, vocabulary, and structure",
+   "where": "Text Style Unbundling"
+  },
+  {
+   "term": "least to most",
+   "definition": "a chain of prompts where each new prompt is based on the last answer",
+   "where": "Least to Most"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Prompt Engineering for Generative AI, Chapter 1 (five principles)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter tags tactics with ch. 1 principles (give direction, specify format, provide examples, evaluate quality, divide labor); ch. 1 human thumbs-up/down evaluation referenced.",
+   "quote": null
+  },
+  {
+   "work": "OpenAI prompt engineering tactics",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Reference text, thinking time, inner monologue, self-eval tactics are 'recommended by OpenAI'.",
+   "quote": "recommended by OpenAI"
+  },
+  {
+   "work": "AutoGPT",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as multiagent system with a self-evaluation step.",
+   "quote": null
+  },
+  {
+   "work": "tiktoken, spaCy, NLTK",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Tokenizer and sentence-split libraries used in examples.",
+   "quote": null
+  },
+  {
+   "work": "OpenAI GPT-4, GPT-3.5-turbo",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Models used in all examples.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3-1",
+   "caption": "Using an LLM to determine the control flow of an application instead of code",
+   "page": null,
+   "why": "Shows YAML filter prompt replacing branching code."
+  },
+  {
+   "figure": "Figure 3-3",
+   "caption": "The decision process of an LLM while asking for context",
+   "page": null,
+   "why": "Sufficient-context check loop."
+  },
+  {
+   "figure": "Figure 3-4",
+   "caption": "A summarization pipeline that uses text splitting and multiple summarization steps",
+   "page": null,
+   "why": "Chunk-summarize-combine."
+  },
+  {
+   "figure": "Figure 3-6",
+   "caption": "A sliding window, with a window size of 4 and a step size of 1",
+   "page": null,
+   "why": "Overlap vs step size (with Fig 3-7)."
+  },
+  {
+   "figure": "Table 3-1",
+   "caption": "Six chunking strategies highlighting their advantages and disadvantages",
+   "page": null,
+   "why": "Comparison table of sentence/paragraph/topic/complexity/length/token splitting."
+  }
+ ],
+ "code": [
+  {
+   "where": "Example 3-1",
+   "snippet": "heading_pattern = r'\\* (.+)'\nsubheading_pattern = r'\\s+[a-z]\\. (.+)'",
+   "verbatim": true
+  },
+  {
+   "where": "Sliding window",
+   "snippet": "def sliding_window(text, window_size, step_size):\n    if window_size > len(text) or step_size < 1:\n        return []\n    return [text[i:i+window_size] for i\n    in range(0, len(text) - window_size + 1, step_size)]",
+   "verbatim": true
+  },
+  {
+   "where": "Majority vote",
+   "snippet": "def most_frequent_classification(responses):\n    count_dict = {}\n    for classification in responses:\n        count_dict[classification] = count_dict.get(classification, 0) + 1\n    return max(count_dict, key=count_dict.get)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text is a web-page capture; code blocks and prompts are clipped at the right edge (lines truncated) and 'Input:/Output:' labels are separated from their content.",
+  "Trailing page chrome (navigation, 'Table of contents collapsed') is not chapter content; some figure images carry no extractable text.",
+  "A few words are broken by hyphenation artifacts (e.g. 'typical-ly'); the quote for the order-of-magnitude result keeps one.",
+  "Majority-vote snippet marked verbatim=false because the printed line is clipped and was completed from context.",
+  "No embedded instructions found."
+ ]
+}

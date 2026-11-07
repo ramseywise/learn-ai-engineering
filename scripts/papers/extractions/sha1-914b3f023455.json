@@ -1,0 +1,731 @@
+{
+ "schema": 1,
+ "key": "sha1:914b3f023455",
+ "pdf": "ai-engineering/07-inference-engineering/sources/huyen-ai-engineering/ch09-inference-optimization.pdf",
+ "bib": {
+  "title": "AI Engineering, Chapter 9. Inference Optimization",
+  "authors": [
+   "Chip Huyen"
+  ],
+  "first_author": "Huyen",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 86114,
+  "chars_total": 86114,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What limits the speed and cost of AI model inference, and which model-level and service-level techniques address those limits?",
+ "hypothesis": null,
+ "contributions": [
+  "Defines inference bottlenecks (compute-bound vs memory bandwidth-bound) and the metrics TTFT, TPOT, throughput, goodput, MFU and MBU.",
+  "Gives a short overview of AI accelerators (compute, memory hierarchy, power).",
+  "Surveys model-level optimization (compression, speculative and parallel decoding, attention and KV cache, kernels and compilers).",
+  "Surveys service-level optimization (batching, prefill/decode disaggregation, prompt caching, parallelism)."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Batch APIs from Google Gemini and OpenAI cost 50% less than online APIs, with turnaround in hours.",
+   "kind": "reported",
+   "source": "provider pricing as of the book's writing (2024); no citation",
+   "metric": "batch API cost reduction",
+   "value": "50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Google Gemini and OpenAI batch APIs versus their online APIs, as of the book's writing (about 2024).",
+   "quote": "both Google Gemini and OpenAI offer batch APIs at a 50% cost re-",
+   "table": null,
+   "note": null,
+   "where": "Online and batch inference APIs"
+  },
+  {
+   "claim": "A TPOT of about 120 ms is enough for streamed text, because a very fast reader reads 120 ms per token.",
+   "kind": "claim",
+   "source": null,
+   "metric": "TPOT",
+   "value": "120",
+   "unit": "ms/token",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Streaming mode where users read each token as generated.",
+   "quote": "A very fast reader can read 120 ms/token, so a TPOT of around 120",
+   "table": null,
+   "note": "The chapter states 120 ms is '6-8 tokens/second', but 120 ms/token is 8.3 tokens/s.",
+   "where": "Latency, TTFT, and TPOT"
+  },
+  {
+   "claim": "Ten TTFT values with one 3,000 ms outlier average 390 ms, showing why latency should be reported in percentiles.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "mean TTFT",
+   "value": "390",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "Ten requests with TTFT 100, 102, 100, 100, 99, 104, 110, 90, 3,000, 95 ms.",
+   "quote": "The average TTFT value is 390 ms",
+   "table": null,
+   "note": null,
+   "where": "Latency, TTFT, and TPOT"
+  },
+  {
+   "claim": "Hardware at $2/h producing 100 output tokens/s costs about $5.556 per 1M output tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "decode cost per 1M output tokens",
+   "value": "5.556",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "$2/h compute, 100 tokens/s throughput, full utilization assumed.",
+   "quote": "it costs around $5.556 per 1M output tokens",
+   "table": null,
+   "note": "Total for 1K requests at 200 output tokens each: $1.11 decode + $0.33 prefill (100 requests/min) = $1.44.",
+   "where": "Throughput and goodput"
+  },
+  {
+   "claim": "Goodput counts only requests meeting the SLO: 100 requests/min completed but 30 meeting TTFT <= 200 ms and TPOT <= 100 ms gives 30 requests/min.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "goodput",
+   "value": "30",
+   "unit": "requests/min",
+   "baseline_value": "100",
+   "n": 100,
+   "setup": "SLO of TTFT at most 200 ms and TPOT at most 100 ms.",
+   "quote": "only 30 satisfy the",
+   "table": null,
+   "note": null,
+   "where": "Throughput and goodput"
+  },
+  {
+   "claim": "LinkedIn reports it is not uncommon to double or triple throughput if TTFT and TPOT are sacrificed.",
+   "kind": "reported",
+   "source": "LinkedIn (2024), reflection after a year of deploying generative AI products",
+   "metric": "throughput gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batching-style latency/throughput trade-off; no model or hardware given.",
+   "quote": "double or triple the throughput if you’re willing to sacrifice TTFT and TPOT",
+   "table": null,
+   "note": null,
+   "where": "Throughput and goodput"
+  },
+  {
+   "claim": "MBU for a 7B FP16 model at 100 tokens/s on an A100-80GB (2 TB/s) is 70%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "MBU",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B parameters x 2 bytes x 100 tokens/s = 700 GB/s, over 2 TB/s theoretical bandwidth.",
+   "quote": "(700 GB/s) / (2 TB/s) = 70%",
+   "table": null,
+   "note": "The formulas appear only in the extracted text's trailing fragments, not inline.",
+   "where": "Utilization, MFU, and MBU"
+  },
+  {
+   "claim": "PaLM 540B on 6144 TPU v4 reached 46.2% MFU, the highest of four large models listed; GPT-3 175B on V100 reached 21.3%.",
+   "kind": "reported",
+   "source": "Chowdhery et al. 2022, PaLM",
+   "metric": "MFU (training)",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "21.3",
+   "n": null,
+   "setup": "Training MFU. Also Gopher 280B 4096 TPU v3 32.5%; Megatron-Turing NLG 530B 2240 A100 30.2%.",
+   "quote": null,
+   "table": "Table 9-1, row PaLM, column Model FLOP/s utilization (46.2%); row GPT-3 21.3%",
+   "note": "The chapter says an MFU above 50% is generally considered good for training, as of writing.",
+   "where": "Table 9-1"
+  },
+  {
+   "claim": "Peak H100 SXM throughput with sparsity is 3,958 teraFLOP/s at FP8 and 1,979 at FP16/BF16.",
+   "kind": "reported",
+   "source": "NVIDIA H100 SXM spec",
+   "metric": "peak teraFLOP/s with sparsity",
+   "value": "3,958",
+   "unit": "teraFLOP/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP8 Tensor Core; with sparsity. TF32 989, BF16 1,979, FP16 1,979.",
+   "quote": null,
+   "table": "Table 9-2, row FP8 Tensor Core, column teraFLOP/s with sparsity",
+   "note": null,
+   "where": "Table 9-2"
+  },
+  {
+   "claim": "Inference can account for up to 90% of ML costs of deployed AI systems.",
+   "kind": "reported",
+   "source": "Desislavov et al. (2023)",
+   "metric": "inference share of ML cost",
+   "value": "90",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Survey of deployed systems; inference can exceed training cost in commonly used systems.",
+   "quote": "inference accounts for up to 90% of the machine learning costs for deployed AI",
+   "table": null,
+   "note": null,
+   "where": "What's an accelerator?"
+  },
+  {
+   "claim": "An NVIDIA H100 at peak for a year uses about 7,000 kWh, against 10,000 kWh for an average US household.",
+   "kind": "claim",
+   "source": null,
+   "metric": "annual energy",
+   "value": "7,000",
+   "unit": "kWh",
+   "baseline_value": "10,000",
+   "n": null,
+   "setup": "Running at peak for a year; no citation.",
+   "quote": "consumes approxi-",
+   "table": null,
+   "note": "Number appears on the next line: 'mately 7,000 kWh'.",
+   "where": "Power consumption"
+  },
+  {
+   "claim": "Output tokens cost about 2-4 times input tokens across API providers; Anyscale found one output token has the latency impact of about 100 input tokens.",
+   "kind": "reported",
+   "source": "Anyscale experiment (Kadous et al., 2023)",
+   "metric": "output-to-input token cost ratio",
+   "value": "2-4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cross-provider API pricing as of the book's writing; Anyscale latency experiment.",
+   "quote": "providers, an output token costs approximately two to four times an input token",
+   "table": null,
+   "note": "The chapter also states a ratio of 100 input tokens to 1 output token for latency (text and footnote).",
+   "where": "Overcoming the autoregressive decoding bottleneck"
+  },
+  {
+   "claim": "A 4B draft model speeding up Chinchilla-70B generates a token 8x faster (1.8 vs 14.1 ms/token) and cuts response latency by more than half without quality loss.",
+   "kind": "reported",
+   "source": "Chen et al., 2023 (DeepMind)",
+   "metric": "ms/token, draft vs target",
+   "value": "1.8",
+   "unit": "ms/token",
+   "baseline_value": "14.1",
+   "n": null,
+   "setup": "Speculative decoding, Chinchilla-70B target, 4B draft with same architecture. A similar speedup for T5-XXL (Leviathan et al., 2022).",
+   "quote": "ms/token compared to 14.1 ms/token",
+   "table": null,
+   "note": "Full text: 'The draft model can generate a token eight times faster than the target model (1.8 ms/token compared to 14.1 ms/token).'",
+   "where": "Speculative decoding"
+  },
+  {
+   "claim": "Inference with reference achieves about two times generation speedup where context and output overlap heavily.",
+   "kind": "reported",
+   "source": "Yang et al. 2023",
+   "metric": "generation speedup",
+   "value": "two",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Retrieval systems, coding, multi-turn conversations.",
+   "quote": "this technique helps achieve two times generation speedup",
+   "table": null,
+   "note": null,
+   "where": "Inference with reference"
+  },
+  {
+   "claim": "NVIDIA claimed Medusa boosted Llama 3.1 token generation by up to 1.9x on HGX H200 GPUs.",
+   "kind": "reported",
+   "source": "Eassa et al., 2024 (NVIDIA)",
+   "metric": "token generation speedup",
+   "value": "1.9",
+   "unit": "x (up to)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 on HGX H200 with Medusa heads.",
+   "quote": "boost Llama 3.1 token generation by up to 1.9× on their HGX H200",
+   "table": null,
+   "note": null,
+   "where": "Parallel decoding"
+  },
+  {
+   "claim": "KV cache for a 500B+ model with multi-head attention at batch 512 and context 2048 totals 3 TB, three times the model weights.",
+   "kind": "reported",
+   "source": "Pope et al., 2022",
+   "metric": "KV cache size",
+   "value": "3",
+   "unit": "TB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500B+ model, multi-head attention, batch size 512, context length 2048.",
+   "quote": "length 2048, the KV cache totals 3TB (Pope et al., 2022)",
+   "table": null,
+   "note": null,
+   "where": "Attention mechanism optimization"
+  },
+  {
+   "claim": "Unoptimized KV cache for Llama 2 13B at batch 32 and sequence 2,048 in 2-byte values is 54 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV cache size",
+   "value": "54",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Formula 2 x B x S x L x H x M; 40 layers, model dimension 5,120, batch 32, sequence 2,048, 2 bytes.",
+   "quote": "2 × 32 × 2,048 × 40 × 5,120 × 2 = 54 GB",
+   "table": null,
+   "note": null,
+   "where": "Calculating the KV cache size"
+  },
+  {
+   "claim": "Character.AI cut KV cache by over 20 times using three attention designs combined.",
+   "kind": "reported",
+   "source": "Character.AI (2024)",
+   "metric": "KV cache reduction",
+   "value": "20",
+   "unit": "x (over)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-query attention, interleaved local and global attention, and cross-layer attention together; average dialogue history 180 messages.",
+   "quote": "reduce KV cache by over 20",
+   "table": null,
+   "note": "The reduction is for the three designs combined, not for cross-layer attention alone. Full text: 'reduce KV cache by over 20 times'.",
+   "where": "Redesigning the attention mechanism"
+  },
+  {
+   "claim": "Local windowed attention with a 1,000-token window cuts the KV cache 10 times when average sequence length is 10,000.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KV cache reduction",
+   "value": "10",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average sequence length 10,000 tokens, window 1,000 tokens.",
+   "quote": "reduces the KV cache size by 10 times",
+   "table": null,
+   "note": null,
+   "where": "Redesigning the attention mechanism"
+  },
+  {
+   "claim": "Prefill-to-decode instance ratio can be 2:1 to 4:1 for long inputs prioritizing TTFT, and 1:2 to 1:1 for short inputs prioritizing TPOT.",
+   "kind": "claim",
+   "source": null,
+   "metric": "prefill:decode instance ratio",
+   "value": "2:1 to 4:1",
+   "unit": "ratio",
+   "baseline_value": "1:2 to 1:1",
+   "n": null,
+   "setup": "Disaggregated prefill/decode serving; no model or hardware named. A footnote points to 'Llama Inference at Meta' (Meta, 2024) as a talk mentioning such ratios.",
+   "quote": "this ratio can be between 2:1 and 4:1",
+   "table": null,
+   "note": "The text cites DistServe (Zhong et al., 2024) and Inference Without Interference (Hu et al., 2024) for the benefit of disaggregation, and Meta only in a footnote for the ratio.",
+   "where": "Decoupling prefill and decode"
+  },
+  {
+   "claim": "Anthropic prompt caching: chatting with a 100,000-token cached book cuts TTFT from 11.5 s to 2.4 s (-79%) and cost by 90%.",
+   "kind": "reported",
+   "source": "Anthropic (2024)",
+   "metric": "TTFT with caching",
+   "value": "2.4",
+   "unit": "s",
+   "baseline_value": "11.5",
+   "n": null,
+   "setup": "Chat with a book, 100,000-token cached prompt. Many-shot (10,000 tokens): 1.6 s to 1.1 s (-31%), cost -86%. Multi-turn (10 turns, long system prompt): ~10 s to ~2.5 s (-75%), cost -53%.",
+   "quote": null,
+   "table": "Table 9-3, row Chat with a book, column Latency with caching",
+   "note": "2024 vendor figures. Gemini cached input tokens get a 75% discount plus $1.00 per million tokens per hour storage.",
+   "where": "Table 9-3"
+  },
+  {
+   "claim": "A 1,000-token system prompt with one million API calls a day means about one billion repeated input tokens a day that prompt caching avoids.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "repeated input tokens saved per day",
+   "value": "1 billion",
+   "unit": "tokens/day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,000-token system prompt, 1M model API calls per day.",
+   "quote": "just once for the first query",
+   "table": null,
+   "note": "Number is in text as 'approximately one billion repetitive input tokens a day'; quote used locates the passage only.",
+   "where": "Prompt caching"
+  },
+  {
+   "claim": "PyTorch stacked torch.compile, INT8, INT4 and speculative decoding to raise Llama-7B throughput on an A100 80 GB; quality impact was unclear.",
+   "kind": "reported",
+   "source": "PyTorch (2023)",
+   "metric": "throughput",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B on one A100 80GB; steps in order compile, INT8, INT4, speculative decoding. Numeric gains appear only in Figure 9-14, not in the text.",
+   "quote": "It was unclear\nhow these optimization steps impact the model’s output quality.",
+   "table": null,
+   "note": "No throughput numbers in the text; batch size not stated in the text.",
+   "where": "Inference optimization case study from PyTorch"
+  },
+  {
+   "claim": "The most impactful techniques across use cases are quantization, tensor parallelism, replica parallelism and attention mechanism optimization.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's judgement in the chapter summary; no survey of companies is described.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Summary"
+  }
+ ],
+ "limits": [
+  "Prices, batch-API discounts, MFU benchmarks and hardware specs are as of the book's writing (2024) and have dated.",
+  "The author says the techniques are 'still evolving' and the examples illustrate what solutions might look like.",
+  "The PyTorch case study gives no information on output quality after quantization and speculative decoding.",
+  "Hardware design is out of scope; the chapter covers model and service levels only.",
+  "Throughput and speedup figures are mostly quoted from vendors and other papers, not measured by the author.",
+  "Equations for MBU and the numeric values in Figures 9-5 and 9-14 are not in the extracted text (equations render as trailing fragments; figures are images)."
+ ],
+ "practices": [
+  "Identify whether a workload is compute-bound or memory bandwidth-bound before choosing an optimization (Computational bottlenecks).",
+  "Send work without strict latency needs to batch APIs for about 50% lower cost (Online and batch inference APIs).",
+  "Report latency in percentiles (p50, p90, p95, p99), not averages, and plot TTFT against input length (Latency, TTFT, and TPOT).",
+  "Count input and output throughput separately and compare inference servers by cost per request (Throughput and goodput).",
+  "Track goodput (requests meeting the SLO) rather than raw throughput alone (Throughput and goodput).",
+  "Do not use nvidia-smi GPU utilization as an efficiency metric; use MFU and MBU (Utilization, MFU, and MBU).",
+  "If workloads are compute-bound look for chips with more FLOP/s; if memory-bound look for more bandwidth and memory (Selecting accelerators).",
+  "Use weight-only quantization as the default first step because it is easy and effective (Model compression).",
+  "Use speculative decoding when decode is memory bandwidth-bound; it makes less sense if MFU is already maxed out (Speculative decoding, footnote).",
+  "Use continuous batching so finished responses return immediately and new requests fill the slot (Batching).",
+  "Disaggregate prefill and decode onto separate instances to improve volume within latency targets (Decoupling prefill and decode).",
+  "Use prompt caching for long, overlapping system prompts, long documents and multi-turn chat (Prompt caching).",
+  "For strict latency, prefer replica parallelism over pipeline parallelism (Parallelism).",
+  "Evaluate quality after optimizations, since providers' optimizations can change model behavior (Inference Optimization, Figure 9-8)."
+ ],
+ "terms": [
+  {
+   "term": "compute-bound",
+   "definition": "Tasks whose time-to-complete is determined by the computation needed for the tasks.",
+   "where": "Computational bottlenecks"
+  },
+  {
+   "term": "memory bandwidth-bound",
+   "definition": "Tasks constrained by the data transfer rate within the system, such as the speed of data movement between memory and processors.",
+   "where": "Computational bottlenecks"
+  },
+  {
+   "term": "arithmetic intensity",
+   "definition": "The number of arithmetic operations per byte of memory access.",
+   "where": "Computational bottlenecks"
+  },
+  {
+   "term": "TTFT",
+   "definition": "Time to first token: how quickly the first token is generated after users send a query; corresponds to the prefill step.",
+   "where": "Latency, TTFT, and TPOT"
+  },
+  {
+   "term": "TPOT",
+   "definition": "Time per output token: how quickly each output token is generated after the first token.",
+   "where": "Latency, TTFT, and TPOT"
+  },
+  {
+   "term": "time to publish",
+   "definition": "A metric measuring time to the first token users see, used when models generate hidden intermediate steps.",
+   "where": "Latency, TTFT, and TPOT"
+  },
+  {
+   "term": "throughput",
+   "definition": "The number of output tokens per second an inference service can generate across all users and requests.",
+   "where": "Throughput and goodput"
+  },
+  {
+   "term": "goodput",
+   "definition": "The number of requests per second that satisfies the SLO.",
+   "where": "Throughput and goodput"
+  },
+  {
+   "term": "MFU",
+   "definition": "Model FLOP/s Utilization: the ratio of the observed throughput (tokens/s) relative to the theoretical maximum throughput of a system operating at peak FLOP/s.",
+   "where": "Utilization, MFU, and MBU"
+  },
+  {
+   "term": "MBU",
+   "definition": "Model Bandwidth Utilization: the percentage of achievable memory bandwidth used.",
+   "where": "Utilization, MFU, and MBU"
+  },
+  {
+   "term": "speculative decoding",
+   "definition": "Uses a faster but less powerful draft model to generate a sequence of tokens, which are then verified by the target model.",
+   "where": "Speculative decoding"
+  },
+  {
+   "term": "inference with reference",
+   "definition": "Like speculative decoding, but draft tokens are copied from the input instead of generated by a model.",
+   "where": "Inference with reference"
+  },
+  {
+   "term": "KV cache",
+   "definition": "The cache that stores key and value vectors for reuse across decoding steps.",
+   "where": "Attention mechanism optimization"
+  },
+  {
+   "term": "kernel",
+   "definition": "Code optimized for a specific chip.",
+   "where": "Writing kernels for attention computation"
+  },
+  {
+   "term": "lowering",
+   "definition": "Converting a model script into a language compatible with the target hardware.",
+   "where": "Kernels and compilers"
+  },
+  {
+   "term": "static / dynamic / continuous batching",
+   "definition": "Static groups a fixed number of inputs; dynamic adds a maximum time window; continuous returns completed responses immediately and adds new requests in their place.",
+   "where": "Batching"
+  },
+  {
+   "term": "prompt cache",
+   "definition": "Stores overlapping prompt segments for reuse so they are processed once; also called context cache or prefix cache.",
+   "where": "Prompt caching"
+  },
+  {
+   "term": "tensor parallelism",
+   "definition": "Intra-operator parallelism: tensors involved in an operator are partitioned across multiple devices.",
+   "where": "Parallelism"
+  },
+  {
+   "term": "pipeline parallelism",
+   "definition": "Dividing a model's computation into stages and assigning each stage to a different device.",
+   "where": "Parallelism"
+  },
+  {
+   "term": "context parallelism",
+   "definition": "The input sequence itself is split across different devices to be processed separately.",
+   "where": "Parallelism"
+  },
+  {
+   "term": "sequence parallelism",
+   "definition": "Operators needed for the entire input are split across machines (e.g., attention on one, feedforward on another).",
+   "where": "Parallelism"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Roofline (Williams et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Origin of compute-bound vs memory bandwidth-bound.",
+   "quote": "introduced in\nthe paper “Roofline” (Williams et al., 2009)"
+  },
+  {
+   "work": "PaLM: Scaling Language Modeling with Pathways (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of Table 9-1 MFU numbers and the MFU term.",
+   "quote": null
+  },
+  {
+   "work": "Desislavov et al.",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Survey on inference share of ML cost.",
+   "quote": null
+  },
+  {
+   "work": "Fast Inference from Transformers via Speculative Decoding (Leviathan et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as 'Laviathan et al., 2022'; T5-XXL speedup.",
+   "quote": null
+  },
+  {
+   "work": "Accelerating LLM Decoding with Speculative Sampling (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Chinchilla-70B draft model example.",
+   "quote": null
+  },
+  {
+   "work": "Inference with Reference: Lossless Acceleration of Large Language Models (Yang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Two times speedup.",
+   "quote": null
+  },
+  {
+   "work": "Medusa (Cai et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Parallel decoding heads.",
+   "quote": null
+  },
+  {
+   "work": "Lookahead decoding (Fu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Jacobi-style parallel decoding.",
+   "quote": null
+  },
+  {
+   "work": "Blockwise Parallel Decoding for Deep Autoregressive Models (Stern et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of Figure 9-9.",
+   "quote": null
+  },
+  {
+   "work": "Efficiently Scaling Transformer Inference (Pope et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "KV cache 3 TB example.",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fused attention kernel; FlashAttention-3 (Shah et al., 2024) for H100.",
+   "quote": null
+  },
+  {
+   "work": "PagedAttention / vLLM (Kwon et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "KV cache memory management.",
+   "quote": null
+  },
+  {
+   "work": "Orca (Yu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Continuous batching.",
+   "quote": null
+  },
+  {
+   "work": "DistServe (Zhong et al.) and Inference Without Interference (Hu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prefill/decode disaggregation.",
+   "quote": null
+  },
+  {
+   "work": "Prompt Cache (Gim et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Introduced prompt cache in November 2023.",
+   "quote": null
+  },
+  {
+   "work": "Multi-query attention (Shazeer, 2019); Grouped-query attention (Ainslie et al., 2023); Cross-layer attention (Brandon et al., 2024); Longformer-style local attention (Beltagy et al., 2020)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Attention redesigns reducing KV cache.",
+   "quote": null
+  },
+  {
+   "work": "Frankle and Carbin, lottery ticket",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pruning results.",
+   "quote": null
+  },
+  {
+   "work": "Llama 2-70B on Intel Gaudi 2 (Databricks)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of Figure 9-5 MBU.",
+   "quote": null
+  },
+  {
+   "work": "Cerebras Llama provider comparison",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Figure 9-8: quality varies by provider.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9-2",
+   "caption": "The roofline chart can help you visualize whether an operation is compute-bound or memory bandwidth-bound. This graph is on a log scale.",
+   "page": null,
+   "why": "Shows where a workload sits relative to compute and bandwidth ceilings."
+  },
+  {
+   "figure": "Fig 9-4",
+   "caption": "If an inference service can complete 10 RPS but only 3 satisfy the SLO, then its goodput is 3 RPS.",
+   "page": null,
+   "why": "Makes goodput versus throughput concrete."
+  },
+  {
+   "figure": "Fig 9-5",
+   "caption": "Bandwidth utilization for Llama 2-70B in FP16 across three different chips shows a decrease in MBU as the number of concurrent users increases.",
+   "page": null,
+   "why": "Shows decode moving from bandwidth-bound toward compute-bound as concurrency rises."
+  },
+  {
+   "figure": "Fig 9-14",
+   "caption": "Throughput improvement by different optimization techniques in PyTorch.",
+   "page": null,
+   "why": "Holds the only numeric gains for the stacked-optimization case study; not in the text."
+  },
+  {
+   "figure": "Fig 9-16",
+   "caption": "With continuous batching, completed responses can be returned immediately to users, and new requests can be processed in their place.",
+   "page": null,
+   "why": "Shows why continuous batching removes head-of-line blocking."
+  }
+ ],
+ "code": [
+  {
+   "where": "Utilization, MFU, and MBU",
+   "snippet": "parameter count × bytes/param × tokens/s",
+   "verbatim": true
+  },
+  {
+   "where": "Calculating the KV cache size",
+   "snippet": "2 × B × S × L × H × M",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction drops equations and subscripts (MBU formula, token indices in speculative decoding) and leaves them as fragments after the footnotes.",
+  "Footnote markers are lost, so footnote text is detached from its anchor; trailing web-page navigation text ('Table of contents collapsed', 'Explore Skills') is present and ignored.",
+  "No embedded instructions found in the text.",
+  "The chapter states 120 ms/token is 6-8 tokens/s (arithmetically 8.3 tokens/s)."
+ ]
+}

@@ -1,0 +1,267 @@
+{
+ "schema": 1,
+ "key": "sha1:bc8f235e2f70",
+ "pdf": "generative-ai/02-rag-retrieval/sources/context-engineering-multi-agent-systems/ch03-building-context-aware-multi-agent-system.pdf",
+ "bib": {
+  "title": "Building the Context-Aware Multi-Agent System (Chapter 3, Context Engineering for Multi-Agent Systems)",
+  "authors": [
+   "Denis Rothman"
+  ],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt book chapter (read via O'Reilly, printed 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 49674,
+  "chars_total": 49674,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a multi-agent system retrieve both facts and procedural instructions (style/structure) from a vector store instead of simulated data?",
+ "hypothesis": null,
+ "contributions": [
+  "Dual RAG architecture: a KnowledgeStore namespace for facts and a ContextLibrary namespace for semantic blueprints in one Pinecone index",
+  "A Context Librarian agent that retrieves a blueprint by intent",
+  "An Orchestrator that splits a goal into intent_query and topic_query"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Knowledge chunks are cut by token count at 400 tokens with 50 tokens overlap (cl100k_base).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "the program defines a chunk size of 400 tokens and an overlap of 50 tokens",
+   "table": null,
+   "note": null,
+   "where": "ch. 3"
+  },
+  {
+   "claim": "Embeddings are 1,536-dimensional from text-embedding-3-small, index uses cosine.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "It produces 1,536-dimensional vectors, which is plenty for our purposes.",
+   "table": null,
+   "note": null,
+   "where": "ch. 3"
+  },
+  {
+   "claim": "The demo knowledge base was split into just 2 chunks and the context library holds 3 blueprints.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "chunks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "The knowledge base, being small, was split into just 2 chunks",
+   "table": null,
+   "note": null,
+   "where": "ch. 3"
+  },
+  {
+   "claim": "The Librarian retrieves the single best blueprint (top_k=1) and the Researcher the top 3 chunks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "top_k",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "results = query_pinecone(requested_intent, NAMESPACE_CONTEXT, top_k=1)",
+   "table": null,
+   "note": null,
+   "where": "Librarian agent listing"
+  },
+  {
+   "claim": "Embedding calls retry up to 6 attempts with random exponential wait 1 to 60 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "stop=stop_after_attempt(6)",
+   "table": null,
+   "note": null,
+   "where": "ch. 3"
+  },
+  {
+   "claim": "Only the blueprint description is embedded; the JSON blueprint is stored in metadata and not embedded.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "The blueprint will not be embedded.",
+   "table": null,
+   "note": null,
+   "where": "context library section"
+  },
+  {
+   "claim": "The Librarian falls back to a default 'Generate the content neutrally' blueprint when nothing matches.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "Generate the content neutrally",
+   "table": null,
+   "note": null,
+   "where": "Librarian section"
+  },
+  {
+   "claim": "Deleting namespaces can be asynchronous, so the notebook polls vector_count until zero before upserting.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dual RAG demo in the chapter's notebooks, tiny space-exploration corpus, Pinecone serverless, text-embedding-3-small",
+   "quote": "The clearing function can be asynchronous,",
+   "table": null,
+   "note": null,
+   "where": "Initializing the Pinecone index"
+  }
+ ],
+ "limits": [
+  "No measurement of retrieval quality, latency or cost; the corpus is 2 chunks and 3 blueprints.",
+  "The author notes clearing namespaces every run is for teaching only; chunk size and overlap must be tuned per data type.",
+  "Model choice gpt-5 is for continuity; the chapter says the engine is model-agnostic. No score threshold on retrieval is described."
+ ],
+ "practices": [
+  "Keep facts and procedural instructions in separate namespaces so either can be updated independently (Architecting a dual RAG MAS).",
+  "Embed only the blueprint description and store the full JSON in metadata (Data preparation: context library).",
+  "Use the same embedding model for indexing and retrieval (Installation and setup).",
+  "Chunk by token count with overlap rather than characters (Helper functions).",
+  "Wait for an asynchronous namespace delete to finish before upserting (Initializing the Pinecone index).",
+  "Provide a default blueprint fallback and halt gracefully on invalid orchestrator JSON (Librarian, Orchestrator sections).",
+  "Freeze library versions (Installation and setup)."
+ ],
+ "terms": [
+  {
+   "term": "Procedural RAG",
+   "definition": "retrieving procedural instructions, instructions to implement procedural (or dynamic) RAG",
+   "where": "intro"
+  },
+  {
+   "term": "Semantic blueprint",
+   "definition": "Structured instructions, introduced in Chapter 1; stored as JSON and found through an embedded description",
+   "where": "Phase 1"
+  },
+  {
+   "term": "Upserting",
+   "definition": "update if the ID already exists, otherwise insert as new",
+   "where": "Process and upload"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gao et al., RAG for LLMs: A Survey",
+   "year": 2023,
+   "arxiv": "2312.10997",
+   "relation": "related",
+   "note": "reference list",
+   "quote": null
+  },
+  {
+   "work": "Sharma, RAG comprehensive survey",
+   "year": 2024,
+   "arxiv": "2406.00054",
+   "relation": "related",
+   "note": "reference list",
+   "quote": null
+  },
+  {
+   "work": "Barnett et al., survey of RAG in the era of LLMs",
+   "year": 2024,
+   "arxiv": "2404.18023",
+   "relation": "related",
+   "note": "reference list",
+   "quote": null
+  },
+  {
+   "work": "Guu et al., REALM",
+   "year": 2020,
+   "arxiv": "2002.08909",
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "Lewis et al., RAG",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "Rothman ch. 2 MCP multi-agent system",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "replaces simulated dictionary data with Pinecone",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.1",
+   "caption": "The dual RAG MAS architecture",
+   "page": 2,
+   "why": "Shows both phases and namespaces at once"
+  },
+  {
+   "figure": "Fig 3.2",
+   "caption": "Flowchart of the RAG ingestion pipeline",
+   "page": 4,
+   "why": "Ingestion flow"
+  },
+  {
+   "figure": "Fig 3.3",
+   "caption": "Context-aware MAS process",
+   "page": 13,
+   "why": "Orchestrator, agents and services"
+  }
+ ],
+ "code": [
+  {
+   "where": "chunk_text, p.10",
+   "snippet": "def chunk_text(text, chunk_size=400, overlap=50):",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings are truncated with ellipses/line cuts in the PDF text; prompts (writer, researcher, goal analysis) are cut off and not recorded.",
+  "Method block is null (book chapter)."
+ ]
+}

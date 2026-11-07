@@ -1,0 +1,324 @@
+{
+ "schema": 1,
+ "key": "sha1:80f3cd2a585f",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch02-working-with-text-data.pdf",
+ "bib": {
+  "title": "Build a Large Language Model (From Scratch), Chapter 2: Working with text data",
+  "authors": [
+   "Sebastian Raschka"
+  ],
+  "first_author": "Raschka",
+  "year": 2024,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53390,
+  "chars_total": 53390,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How is raw text turned into the input-target token batches and embedding vectors a GPT-like LLM trains on?",
+ "hypothesis": null,
+ "contributions": [
+  "Tokenization: regex word tokenizer, vocabulary, special tokens, then GPT-2 BPE via tiktoken.",
+  "Sliding-window input-target sampling with a PyTorch Dataset/DataLoader.",
+  "Token embedding layers and absolute positional embeddings producing the LLM input."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The BPE tokenizer used for GPT-2, GPT-3 and the original ChatGPT model has a vocabulary of 50,257 tokens, with <|endoftext|> the largest ID.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "BPE vocab size",
+   "value": "50,257",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tiktoken 0.7.0, get_encoding('gpt2')",
+   "quote": "has a total vocabulary size of 50,257, with <|endoftext|> be‐\ning assigned the largest token ID.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5"
+  },
+  {
+   "claim": "<|endoftext|> gets token ID 50256 in the GPT-2 BPE tokenizer.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "token ID",
+   "value": "50256",
+   "unit": "token ID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tiktoken gpt2 encoding",
+   "quote": "namely, 50256",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5"
+  },
+  {
+   "claim": "The largest GPT-3 model (175B) uses an embedding size of 12,288 dimensions.",
+   "kind": "reported",
+   "source": null,
+   "metric": "embedding size",
+   "value": "12,288",
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B, as stated in the text",
+   "quote": "The largest GPT-3 model (175B parameters)\nuses an embedding size of 12,288 dimensions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "The smallest GPT-2 models (117M and 125M parameters) use an embedding size of 768.",
+   "kind": "reported",
+   "source": null,
+   "metric": "embedding size",
+   "value": "768",
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "smallest GPT-2 models, as stated in the text",
+   "quote": "use an embedding size of 768 dimensions",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "The Verdict has 20,479 characters.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "characters",
+   "value": "20479",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "the-verdict.txt (Edith Wharton, public domain)",
+   "quote": "Total number of character: 20479",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "The simple regex tokenizer yields 4690 tokens on The Verdict (no whitespace).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "word-level token count",
+   "value": "4690",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "regex split on punctuation, -- and whitespace",
+   "quote": "This print statement outputs 4690",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "The word-level vocabulary of The Verdict has 1,130 unique tokens; 1,132 after adding <|endoftext|> and <|unk|>.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "vocab size",
+   "value": "1,130",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sorted set of regex tokens",
+   "quote": "vocabulary size is 1,130",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, 2.4"
+  },
+  {
+   "claim": "With the GPT-2 BPE tokenizer The Verdict encodes to 5145 tokens, more than the 4690 word-level tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "BPE token count",
+   "value": "5145",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tiktoken gpt2, whole story",
+   "quote": "Executing this code will return 5145",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.6"
+  },
+  {
+   "claim": "A small embedding layer (vocab 6, dim 3) has a 6x3 weight matrix and acts as a row lookup, equivalent to one-hot times matmul.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "6 x 3",
+   "unit": "matrix shape",
+   "baseline_value": null,
+   "n": null,
+   "setup": "torch.nn.Embedding(6,3), seed 123",
+   "quote": "the weight matrix has six rows\nand three columns",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.7"
+  },
+  {
+   "claim": "Token plus positional embeddings for a batch of 8 sequences of 4 tokens at width 256 give an 8x4x256 tensor.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "8 x 4 x 256",
+   "unit": "tensor shape",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vocab 50,257, output_dim 256, max_length 4, stride 4, batch 8, learned absolute positions",
+   "quote": "torch.Size([8, 4, 256])",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.7-2.8"
+  },
+  {
+   "claim": "Raschka says input sizes of at least 256 are common for LLM training (the demo uses 4).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "256",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "context size remark",
+   "quote": "It is common to train LLMs with input sizes of at least 256.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.6"
+  }
+ ],
+ "limits": [
+  "BPE is only described briefly; implementation is out of scope and tiktoken is used.",
+  "Demo corpus is a single short story (20,479 characters), not realistic scale.",
+  "Embedding weights here are random and untrained; training is deferred to chapter 5.",
+  "Retrieval-augmented generation and sentence embeddings are declared out of scope.",
+  "Code targets tiktoken 0.7.0."
+ ],
+ "practices": [
+  "Do not lowercase text, since capitalization helps the LLM tell proper nouns and sentence structure (Sec 2.2).",
+  "Whether to keep whitespace tokens depends on the application; keep them for whitespace-sensitive text such as Python code (Sec 2.2 note).",
+  "Insert <|endoftext|> between unrelated documents when concatenating training text (Sec 2.4).",
+  "Use a BPE tokenizer so unknown words split into subwords or characters instead of <|unk|> (Sec 2.5).",
+  "Set stride equal to the window size to use the data without overlap, since more overlap could lead to increased overfitting (Sec 2.6).",
+  "Use drop_last=True to drop a short final batch and prevent loss spikes (Listing 2.6).",
+  "Truncate input longer than the supported context length (Sec 2.8).",
+  "With padded batches use an attention mask so the pad token choice is inconsequential (Sec 2.4).",
+  "Batch size is a tradeoff and a hyperparameter: small batches use less memory but give noisier updates (Sec 2.6)."
+ ],
+ "terms": [
+  {
+   "term": "embedding",
+   "definition": "a mapping from discrete objects, such as words, images, or even entire documents, to points in a continuous vector space",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "byte pair encoding",
+   "definition": "builds its vocabulary by iteratively merging frequent characters into subwords and frequent subwords into words",
+   "where": "Sec 2.5"
+  },
+  {
+   "term": "<|endoftext|>",
+   "definition": "token separating unrelated text sources; analogous to [EOS] and also used for padding in GPT",
+   "where": "Sec 2.4"
+  },
+  {
+   "term": "<|unk|>",
+   "definition": "token for words not in the vocabulary (not used by GPT's BPE tokenizer)",
+   "where": "Sec 2.4"
+  },
+  {
+   "term": "stride",
+   "definition": "the number of positions the inputs shift across batches in the sliding window",
+   "where": "Sec 2.6"
+  },
+  {
+   "term": "absolute positional embeddings",
+   "definition": "a unique embedding per position added to the token embedding; GPT models learn them during training",
+   "where": "Sec 2.8"
+  },
+  {
+   "term": "relative positional embeddings",
+   "definition": "emphasis on the relative position or distance between tokens, helping generalise to unseen sequence lengths",
+   "where": "Sec 2.8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Word2Vec",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Earlier word-embedding algorithm; predicts context from target word or vice versa.",
+   "quote": null
+  },
+  {
+   "work": "tiktoken (OpenAI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BPE implementation used, version 0.7.0.",
+   "quote": null
+  },
+  {
+   "work": "The Verdict, Edith Wharton",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Public-domain short story used as the demo corpus.",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 / GPT-3",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BPE tokenizer and learned absolute positions follow these models.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2.19",
+   "caption": "Input text is broken into tokens, converted to token IDs, then embedding vectors to which positional embeddings are added, giving the input embeddings for the LLM layers.",
+   "page": null,
+   "why": "Whole input pipeline on one diagram."
+  },
+  {
+   "figure": "Fig 2.14",
+   "caption": "Sliding an input window across the text; stride 1 shifts by one position, stride equal to window size avoids overlap.",
+   "page": null,
+   "why": "Shows how stride sets batch overlap."
+  },
+  {
+   "figure": "Fig 2.11",
+   "caption": "BPE tokenizers break unknown words into subwords and individual characters.",
+   "page": null,
+   "why": "Why BPE needs no <|unk|>."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 2.5",
+   "snippet": "for i in range(0, len(token_ids) - max_length, stride):\n    input_chunk = token_ids[i:i + max_length]\n    target_chunk = token_ids[i + 1: i + max_length + 1]",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 2.8",
+   "snippet": "input_embeddings = token_embeddings + pos_embeddings",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings are interleaved with prose in the text layer; figures are not extracted."
+ ]
+}

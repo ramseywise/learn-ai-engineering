@@ -1,0 +1,408 @@
+{
+ "schema": 1,
+ "key": "sha1:861db2fa4724",
+ "pdf": "generative-ai/05-RL/sources/winder-reinforcement-learning/ch03-temporal-difference-learning-q-learning-and-n-step-algorithms.pdf",
+ "bib": {
+  "title": "Chapter 3. Temporal-Difference Learning, Q-Learning, and n-Step Algorithms (in Reinforcement Learning: Industrial Applications of Intelligent Agents)",
+  "authors": [
+   "Phil Winder"
+  ],
+  "first_author": "Winder",
+  "year": 2020,
+  "venue": "O'Reilly Media (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54827,
+  "chars_total": 54827,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped. All displayed equations, algorithm boxes and Greek symbols are absent from the text layer (figure and algorithm images), so update rules and Fig 3-2 hyperparameters could not be read."
+ },
+ "type": "book-chapter",
+ "question": "How can an agent learn value functions online by combining Monte Carlo sampling with dynamic-programming bootstrapping, and how do Q-learning, SARSA, n-step methods and eligibility traces differ in practice?",
+ "hypothesis": null,
+ "contributions": [
+  "Derives TD learning from MC and DP updates (Eq 3-1 to 3-4)",
+  "Presents Q-learning (off-policy) and SARSA (on-policy) with pseudocode (Algorithms 3-1, 3-2)",
+  "Compares them on a cliff gridworld and on real-time-bidding environments built from the iPinYou data",
+  "Covers double, delayed and opposition-based Q-learning, n-step SARSA (Algorithm 3-3) and SARSA(lambda) with eligibility traces (Algorithm 3-4), plus Watkins's Q(lambda), fuzzy wipes, speedy Q-learning and accumulating vs replacing traces"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In the cliff gridworld SARSA tends to earn higher and less noisy reward than Q-learning, because it learns the safe path far from the cliff while Q-learning hugs the edge and sometimes falls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "episode reward",
+   "value": 100,
+   "unit": "experiments averaged",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Gridworld with a cliff along one edge: -1 per step, -100 for falling off, 0 at goal; cliff and goal terminal; tabular agents with epsilon-greedy exploration (epsilon, alpha, gamma values for Fig 3-2 are lost in the extracted text); average sum of rewards per episode over 100 parallel experiments, 500 episodes",
+   "quote": "in which the plots show the average sum of rewards over 100 parallel experiments.",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-2, p. 9"
+  },
+  {
+   "claim": "Early in training the reward dips below the random agent's start: episode reward falls to roughly -125 after a few episodes because the agent steers away from the cliff, wastes -1 steps, then falls anyway.",
+   "kind": "measured",
+   "source": null,
+   "metric": "episode reward",
+   "value": -125,
+   "unit": "reward per episode",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gridworld with a cliff along one edge: -1 per step, -100 for falling off, 0 at goal; cliff and goal terminal; tabular agents with epsilon-greedy exploration (epsilon, alpha, gamma values for Fig 3-2 are lost in the extracted text)",
+   "quote": "(approximately −125).",
+   "table": null,
+   "note": "Value printed with a Unicode minus sign; the chapter's own approximate figure, read from the plot.",
+   "where": "Fig 3-2 discussion, p. 9-10"
+  },
+  {
+   "claim": "Static RTB test environment: episode of 100 auctions with budget 10,000; bidding 100 or more always wins, so optimal reward is 100; the plotted agents stay below 100 because of high epsilon exploration, and SARSA slightly overbids and runs out of budget sooner than Q-learning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal episode reward",
+   "value": 100,
+   "unit": "auctions per episode",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tabular Q-learning and SARSA vs random agent; actions change the bid by 50%, 10% or 0%; reward 1 per won auction",
+   "quote": "Each episode is a batch of 100 auctions",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-4, p. 15-16"
+  },
+  {
+   "claim": "Real-data RTB environment (iPinYou) trained for seconds on a limited data subset with the initial bid deliberately set too low; reward rises with episodes as the agent learns to raise its bid.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iPinYou data via the make-ipinyou-data repository; same batch size and actions as the static environment; variable winning price; no numbers given",
+   "quote": "I also limited the amount of data used in training to allow the learning to",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-5, p. 16-17"
+  },
+  {
+   "claim": "n-step SARSA with n = 2 and n = 4 learns optimal trajectories faster than 1-step SARSA on the grid, at the cost of extra computation and memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same gridworld; all other settings as standard SARSA; n treated as a hyperparameter that needs tuning",
+   "quote": "the number of steps to 2 and 4.",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-7, p. 24-25"
+  },
+  {
+   "claim": "Double Q-learning gives a better policy than standard Q-learning on the grid; delayed Q-learning ends with a very good result but with worrying discontinuities and stops learning after a fixed number of updates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same gridworld, averaged rewards",
+   "quote": "The double Q-learning implementation",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-6, p. 19-20"
+  },
+  {
+   "claim": "SARSA(lambda) acts like n-step SARSA: higher lambda tends toward Monte Carlo, lower toward one-step TD; the author advises keeping lambda away from 1 for nontrivial tasks because lambda = 1 makes all first-state actions converge to roughly the same value in the grid.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same gridworld and settings as Fig 3-7",
+   "quote": "Higher values tend toward an MC regime, where",
+   "table": null,
+   "note": null,
+   "where": "Fig 3-8, p. 27-28"
+  },
+  {
+   "claim": "In the container-scaling case study (Rossi, Nardelli, Cardellini 2019), Q-learning and a model-based method both improved utilization by about an order of magnitude over threshold policies at similar latency; the model-based method learned faster with the larger action space but biased toward vertical scaling.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Live Docker Swarm; state = number of containers, CPU utilisation, CPU allocation, quantised into bins; actions add/remove replicas or CPUs; no numeric table in the chapter",
+   "quote": "Both algorithms improved utilization by an or",
+   "table": null,
+   "note": "Source: Rossi et al. 2019 (CLOUD). The 'order of magnitude' is the author's summary, not a measured value in the chapter.",
+   "where": "Case study, p. 12-13"
+  },
+  {
+   "claim": "Q-learning was introduced in 1989 and is credited with kick-starting the excitement in RL.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 1989,
+   "unit": "year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "History statement",
+   "quote": "In 1989, an implementation of TD learning called Q-learning",
+   "table": null,
+   "note": null,
+   "where": "Q-Learning section, p. 5"
+  },
+  {
+   "claim": "Delayed Q-learning, a PAC-based Q-learning variant, appeared in 2006; it buffers rewards and updates the main table only after a set number of visits.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 2006,
+   "unit": "year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "History statement (Strehl et al. 2006)",
+   "quote": "In 2006 mathematicians developed a Q-learning-based",
+   "table": null,
+   "note": null,
+   "where": "Delayed Q-learning, p. 18"
+  },
+  {
+   "claim": "RTB bids typically must be submitted within about 100 ms.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 100,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Real-time bidding auctions",
+   "quote": "within a period of time, where 100 ms is a common limit.",
+   "table": null,
+   "note": null,
+   "where": "RTB section, p. 14"
+  }
+ ],
+ "limits": [
+  "Experiments are single small tabular environments (cliff grid, a toy RTB environment, one real-data RTB set) with no hyperparameter values, seeds or error bars in the text; Fig 3-2 settings are in symbols lost from the text layer.",
+  "Tabular methods only: cannot handle continuous states or actions (author defers to chapters 4 and 5).",
+  "The RTB agent is trained on a limited amount of data so training takes seconds instead of hours, with a deliberately bad initial bid; reward is impression count, not clicks.",
+  "Author's own rule-of-thumb claims (lambda < 1, 'eligibility traces perform better than Q-learning in most cases') are asserted, not shown with numbers.",
+  "Written in 2020: the 'recent research' and 'only recently exploited' off-policy remarks predate DQN-era and LLM RL practice.",
+  "Chapter says importance sampling is not used in its off-policy versions and defers it to a later chapter."
+ ],
+ "practices": [
+  "Prefer Q-learning when the greedy value matters and exploration noise is harmless; prefer SARSA when exploration mistakes are costly (cliff example, p. 10-11).",
+  "Treat n in n-step methods as a tuned hyperparameter; larger n costs computation and memory (p. 24).",
+  "For nontrivial tasks use lambda > 0 but keep it below 1 (p. 28).",
+  "Most practical effort goes to the state representation and reward definition, not the algorithm; tabular methods require simplified, small state spaces (p. 15, 17-18).",
+  "Spread an RTB budget across a batch by putting average affordable bid in the state; add constraints such as error clipping for stability (p. 15, 17).",
+  "Use a model only if it truly represents system dynamics; otherwise it biases the policy (p. 13)."
+ ],
+ "terms": [
+  {
+   "term": "bootstrapping",
+   "definition": "updating an estimate from another estimate (the discounted prediction of the next state) rather than waiting for a full-episode return",
+   "where": "p. 1, 3"
+  },
+  {
+   "term": "temporal-difference (TD) learning",
+   "definition": "a combination of these two approaches [MC and DP]: learns directly from experience by sampling, but also bootstraps",
+   "where": "p. 1"
+  },
+  {
+   "term": "Q-learning",
+   "definition": "off-policy TD control that uses argmax over next-state actions in the TD error",
+   "where": "p. 5-6"
+  },
+  {
+   "term": "SARSA",
+   "definition": "on-policy TD control whose delta uses the next action actually chosen by the policy",
+   "where": "p. 7"
+  },
+  {
+   "term": "tabular method",
+   "definition": "stores an expected-value estimate for each state-action pair in a table, so cannot handle continuous states or actions",
+   "where": "p. 6"
+  },
+  {
+   "term": "eligibility trace",
+   "definition": "a tracer value per state-action pair that marks it as eligible for later updates and decays exponentially",
+   "where": "p. 26-28"
+  },
+  {
+   "term": "n-step return",
+   "definition": "expected return that uses n real rewards then the value estimate n steps ahead",
+   "where": "p. 22-23"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Sutton and Barto, Reinforcement Learning: An Introduction",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Cliff-walking example adapted from it; n-step TD and eligibility-trace proofs referred to it",
+   "quote": null
+  },
+  {
+   "work": "Rossi, Nardelli, Cardellini, Horizontal and Vertical Scaling of Container-Based Applications Using Reinforcement Learning (IEEE CLOUD)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Case study",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al., Real-Time Bidding Benchmarking with iPinYou Dataset",
+   "year": 2014,
+   "arxiv": "1407.7073",
+   "relation": "uses-data",
+   "note": "Source of real bidding data",
+   "quote": null
+  },
+  {
+   "work": "Hasselt, Double Q-Learning",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Double Q-learning extension",
+   "quote": null
+  },
+  {
+   "work": "Strehl et al., PAC Model-Free Reinforcement Learning (ICML)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Delayed Q-learning",
+   "quote": null
+  },
+  {
+   "work": "Oh and Iyengar, Directed Exploration in PAC Model-Free Reinforcement Learning",
+   "year": 2018,
+   "arxiv": "1808.10552",
+   "relation": "related",
+   "note": "Directed delayed Q-learning",
+   "quote": null
+  },
+  {
+   "work": "Tizhoosh, Opposition-Based Reinforcement Learning",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Opposition learning",
+   "quote": null
+  },
+  {
+   "work": "Shokri et al., Adaptive Fuzzy Watkins",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fuzzy wipes",
+   "quote": null
+  },
+  {
+   "work": "Ghavamzadeh et al., Speedy Q-Learning",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Speedy Q-learning",
+   "quote": null
+  },
+  {
+   "work": "Leng et al., Experimental Analysis of Eligibility Traces Strategies in TD Learning",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Accumulating vs replacing traces",
+   "quote": null
+  },
+  {
+   "work": "Lehmann et al., One-Shot Learning and Behavioral Eligibility Traces in Sequential Decision Making",
+   "year": 2017,
+   "arxiv": "1707.04192",
+   "relation": "related",
+   "note": "Humans use eligibility traces",
+   "quote": null
+  },
+  {
+   "work": "Abed-alguni and Ottom, Double delayed Q-learning",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Combined variant",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3-1",
+   "caption": "A depiction of the grid environment with a cliff along one side.",
+   "page": 8,
+   "why": "Defines the cliff-walking task used for every grid comparison"
+  },
+  {
+   "figure": "Fig 3-2",
+   "caption": "A comparison of Q-learning against SARSA for a simple grid problem. The agents were trained upon the environment in Figure 3-1. The rewards for each episode were captured and averaged over 100 trials.",
+   "page": 9,
+   "why": "Shows early dip and SARSA's higher, steadier reward"
+  },
+  {
+   "figure": "Fig 3-3",
+   "caption": "The policies derived by Q-learning and SARSA agents. Q-learning tends to prefer the optimal route. SARSA prefers the safe route.",
+   "page": 11,
+   "why": "Makes on- vs off-policy difference visible"
+  },
+  {
+   "figure": "Fig 3-4",
+   "caption": "The average reward obtained by SARSA, Q-learning, and random agents in a simple, static, real-time bidding environment.",
+   "page": 16,
+   "why": "Sanity check of the RTB setup"
+  },
+  {
+   "figure": "Fig 3-5",
+   "caption": "The average reward obtained by SARSA, Q-learning, and random agents in an environment based upon real data.",
+   "page": 16,
+   "why": "Real-data RTB learning curve"
+  },
+  {
+   "figure": "Fig 3-6",
+   "caption": "A comparison between the averaged rewards of standard, double, and delayed Q-learning on the grid environment.",
+   "page": 20,
+   "why": "Compares Q-learning extensions"
+  },
+  {
+   "figure": "Fig 3-7",
+   "caption": "A comparison between the averaged rewards of standard and n-step SARSA agents on the grid environment.",
+   "page": 25,
+   "why": "n-step learns faster"
+  },
+  {
+   "figure": "Fig 3-8",
+   "caption": "A comparison between the averaged rewards of SARSA and SARSA(lambda) agents on the grid environment.",
+   "page": 27,
+   "why": "Lambda acts like n"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Equations 3-1 to 3-9, algorithm boxes 3-1 to 3-4, Greek symbols and figure plots are not in the text layer; update rules, epsilon/alpha/gamma for Fig 3-2 and plotted values could not be read. No figure values are recorded.",
+  "Text is chapter-only (about 30 pages); quoted figures such as the Rossi et al. result are second-hand.",
+  "No embedded instructions found."
+ ]
+}
