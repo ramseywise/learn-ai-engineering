@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2305.05176
   - https://arxiv.org/abs/1612.03079
   - https://arxiv.org/abs/2406.18665
+  - https://arxiv.org/abs/2504.19720
   - https://arxiv.org/abs/2508.12631
   - https://arxiv.org/abs/2207.00032
   - https://arxiv.org/abs/2310.01889
@@ -86,6 +87,8 @@ Huyen's illustration (*AI Engineering*, ch. 9): with batch size 4 and a 100 ms w
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 16-6*
 
 In the left grid, sequences that finish early leave empty cells until the batch drains. In the right grid, new sequences (S5–S7) take the slots as soon as one ends. Continuous batching is the default in vLLM, SGLang, TGI and TensorRT-LLM. Its limits are memory, solved by PagedAttention ([07](07-prefill-decode-kv-cache.md#pagedattention)), and long prefills stalling decodes, solved by chunked prefill ([07](07-prefill-decode-kv-cache.md#chunked-prefill)).
+
+Continuous batching still admits requests in arrival order, so a 1,000-token generation ahead of a 10-token one costs the short one its whole wait. Zhen et al.'s survey of serving systems sorts the fixes into two lines: schedulers that approximate shortest-job-first or shortest-remaining-time-first from a predicted output length, where the predictor gives an exact token count, a length bin, or a relative ranking among the waiting requests; and FastServe's skip-join multi-level feedback queue, which prioritises short requests, promotes ones that have waited long and preempts long-running ones. The same survey splits cache reuse into lossless (an exact prefix match on the KV cache) and semantic-aware (a similar query, as in GPTCache's reuse of whole outputs and SCALM's query clusters) kinds. It is a taxonomy with no measurements of its own, covering work to about April 2025 ([arXiv:2504.19720](https://arxiv.org/abs/2504.19720) (Zhen et al., 2025-04, preprint survey)).
 
 **A correction on "continuous scheduling".** Fregly describes vLLM "continuous scheduling" as launching one small decode kernel per sequence on separate CUDA streams. He says this is needed because sequences of different lengths "can't simply" be batched into one matrix multiply (*AISPE*, ch. 16). That is not how vLLM or any mainstream engine works. Paged attention kernels handle ragged lengths inside **one batched kernel**, and the linear layers batch trivially, since every sequence contributes one token row per step. Multi-stream concurrency helps when you run *several small models* on one GPU, not for decoding one model's batch.
 

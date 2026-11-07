@@ -7,6 +7,8 @@ sources:
   - https://arxiv.org/abs/2204.02311
   - https://arxiv.org/abs/2211.05102
   - https://arxiv.org/abs/1606.07947
+  - https://arxiv.org/abs/2601.22001
+  - https://arxiv.org/abs/2511.07885
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -49,6 +51,8 @@ LLM inference has one phase on each side of the ridge:
 |---|---|---|---|
 | **Prefill** | Processes all input tokens in parallel and builds the KV cache | Compute | TTFT |
 | **Decode** | Generates one token per step and re-reads all weights plus the KV cache each step | Memory bandwidth | TPOT |
+
+**Agent workloads add a third ceiling: memory capacity.** Zhao and Liu point out that the roofline, and MFU and MBU with it, can both read low at once, because the limit is how many bytes a request must *hold* in HBM, not how fast they move. They name it the capacity footprint: per request, the weights divided by the batch size plus the KV cache, which for a dense model grows as 2 × d × L with context length L. Fitting a dense Llama-3-70B to chatbot, coding, web-use and computer-use token profiles, the agent cases exceed one B200's memory at modest batch while decode operational intensity stays far below the roof, so adding cards buys capacity without raising utilization. The paper is a position piece with analytic plots and no measurements ([arXiv:2601.22001](https://arxiv.org/abs/2601.22001) (Zhao and Liu, 2026-01, preprint)). Sizing the cache is in [07](07-prefill-decode-kv-cache.md#sizing-the-cache).
 
 That asymmetry drives most of this pillar. Batching ([06](06-serving-at-scale.md)) exists to raise decode's arithmetic intensity. Disaggregation ([07](07-prefill-decode-kv-cache.md)) exists because the two phases want different hardware. Speculative decoding ([08](08-adaptive-inference.md)) exists because decode leaves compute idle.
 
@@ -166,6 +170,8 @@ Prefill shows high MFU and low MBU. Decode shows the opposite. Pope et al. measu
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 9-5*
 
 For Llama 2-70B in FP16 on 8-chip nodes, MBU falls from around 33–43% at one user to around 14–19% at 256 users. Huyen reads the fall as the workload moving from bandwidth-bound toward compute-bound as batches grow. That is expected, not a regression. Note also that the H100 node shows *lower* MBU than the A100 node at low concurrency. A faster chip does not guarantee better utilization of it.
+
+Power follows the same curve, which is why energy per query is a batch-size statement. Saad-Falcon, Narayan et al. measure intelligence per watt (mean accuracy over mean accelerator power) and per joule (accuracy over energy per query) for local models on local hardware. On a B200 under vLLM, going from batch 1 to 64 raised accuracy per joule 11.2–19.7× on Qwen3-8B, Qwen3-14B and GPT-OSS-120B, with per-query energy falling 12–20× (Qwen3-8B: 6,449 J to 548 J) while GPU power rose only from 255 W to 883 W. Their headline that a B200 beats an Apple M4 Max by 1.4× per watt and 1.6–2.3× per joule on the same models is measured at batch 1, the cloud chip's worst case. Per-watt efficiency of the best local model on the best local accelerator rose 5.3× from 2023 to 2025, 3.1× from models and 1.7× from hardware, but per joule the hardware share is 5.9×, because faster memory finishes the query sooner. Power is read from the accelerator's own telemetry (NVML, Apple's powermetrics), not at the wall, with a stated 10–15% error, inputs are capped at 32,000 characters, and the model set is as of October 2025 ([arXiv:2511.07885](https://arxiv.org/abs/2511.07885) (Saad-Falcon et al., 2025-11, preprint)).
 
 ---
 

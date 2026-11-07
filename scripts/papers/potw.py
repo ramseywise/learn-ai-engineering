@@ -1232,6 +1232,13 @@ def cmd_mark(args):
                 r["no_citation"] = args.no_citation
     save_ledger(rows)
     print(f"marked {marked} as {args.status}" + (f" in {args.home}" if args.home else ""))
+    if args.status == "integrated":
+        import extract  # here, not at the top: extract imports this module
+        thin = [r["key"] for r in hits if r not in refused and r.get("local_pdf")
+                and (extract.load(r["key"]) or {}).get("schema") != extract.SCHEMA]
+        if thin:
+            print(f"mark: no full extraction for: {', '.join(thin)}. The source-reader writes it; "
+                  f"see `extract.py check`.", file=sys.stderr)
     unknown = set(args.keys) - {r["key"] for r in hits}
     if unknown:
         print(f"mark: no ledger row for: {', '.join(sorted(unknown))}", file=sys.stderr)

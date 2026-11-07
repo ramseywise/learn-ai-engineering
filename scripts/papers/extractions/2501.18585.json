@@ -1,0 +1,515 @@
+{
+ "schema": 1,
+ "key": "2501.18585",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2025-thoughts-all-over-place.pdf",
+ "bib": {
+  "title": "Thoughts Are All Over the Place: On the Underthinking of o1-Like LLMs",
+  "authors": [
+   "Yue Wang",
+   "Qiuzhi Liu",
+   "Jiahao Xu",
+   "Tian Liang",
+   "Xingyu Chen",
+   "Zhiwei He",
+   "Linfeng Song",
+   "Dian Yu",
+   "Juntao Li",
+   "Zhuosheng Zhang",
+   "Rui Wang",
+   "Zhaopeng Tu",
+   "Haitao Mi",
+   "Dong Yu"
+  ],
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2501.18585",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53220,
+  "chars_total": 53220,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for origins only; figure bar values are chart-label numbers without axis context."
+ },
+ "type": "empirical",
+ "question": "Do o1-like reasoning models think deeply enough, or do they abandon promising lines of reasoning too early, and can decoding fix it?",
+ "hypothesis": "Frequent thought switching in incorrect responses reflects underthinking (abandoning correct thoughts) rather than lack of understanding; penalising switch tokens should raise accuracy without fine-tuning.",
+ "contributions": [
+  "Formally define and characterize the underthinking issue in o1-like LLMs",
+  "Introduce a metric of token efficiency in incorrect responses (underthinking score)",
+  "Propose TIP, a decoding thought switching penalty that improves accuracy without fine-tuning"
+ ],
+ "method": {
+  "summary": "Segment long CoT of o1-like models into thoughts at switch phrases such as 'alternatively' using Llama-3.3-70B, judge each thought's correctness with two R1-distilled models, and define an underthinking score from the tokens after the first correct thought. TIP subtracts a constant alpha from logits of switch tokens for beta positions after each thought starts.",
+  "task": "hard math and science QA with long chain-of-thought reasoning models; decoding-time intervention",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MATH500 Level 5 (MATH500-Hard)",
+    "role": "eval",
+    "size": null,
+    "split": "Level 5 problems of MATH500",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA Diamond",
+    "role": "eval",
+    "size": "198 questions",
+    "split": "Diamond subset",
+    "source": "Rein et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME2024",
+    "role": "eval",
+    "size": "30 problems",
+    "split": "full",
+    "source": "MAA",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME2022-23",
+    "role": "both",
+    "size": "60 problems",
+    "split": "development set for grid search over alpha and beta",
+    "source": "MAA",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "QwQ-32B-Preview",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-671B",
+    "role": "proposed",
+    "params": "671B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Preview",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "web interface, 50 messages/day, so only MATH500 and AIME"
+    }
+   },
+   {
+    "name": "R1-Distill-Qwen-32B",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.3-70B",
+    "role": "judge",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "thought segmentation"
+    }
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Llama-70B",
+    "role": "judge",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "thought correctness"
+    }
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-32B",
+    "role": "judge",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "thought correctness"
+    }
+   },
+   {
+    "name": "Qwen-Math-72B and Llama3.3-70B",
+    "role": "baseline",
+    "params": "72B / 70B",
+    "architecture": null,
+    "init_from": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "conventional LLM contrast in Fig 1"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "no training; TIP is decode-time only"
+   }
+  },
+  "inference": {
+   "decoding": "TIP: z_hat = z - alpha for switch tokens while t < Psi + beta",
+   "temperature": "0.7",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "32 samples per problem; Pass@1 computed from the 32",
+   "prompting": "Persistence prompt (context, solving rules, format rules blocks) for the DeepSeek-R1 + PROMPT row; other runs unstated",
+   "retrieval": null,
+   "parameters": {
+    "alpha": "3",
+    "beta": "600",
+    "grid": "alpha in [3,5,10,20,30], beta in [300..700]"
+   },
+   "other": {
+    "best_of_n_trials": "10,000 random draws from the 32 samples"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (Pass@k)",
+     "definition": "Pass@1 from 32 samples per instance; Pass@4/8/16 also reported",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Underthinking score xi_UT",
+     "definition": "mean over incorrect responses of 1 - T_hat/T, T_hat = tokens up to and including the first correct thought (T_hat=T if none)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Weighted UT score",
+     "definition": "mean over 32 samples per instance of xi_UT, 0 for correct samples",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Switching tokens",
+     "definition": "average count of thought-switch tokens per response, plus average interval between them",
+     "unit": "count, tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "vanilla QwQ-32B-Preview, R1-Distill-Qwen-32B, DeepSeek-R1",
+    "DeepSeek-R1 + PROMPT",
+    "Self-Consistency",
+    "Laconic Decoding"
+   ],
+   "protocol": "32 samples per problem; thought correctness by two LLM judges (correct if either gives score 2); judge validated on 90 final thoughts from QwQ (35 correct, 55 incorrect); no significance test reported; weighted UT given as mean±std over samples"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we generated 32 responses with a temperature of 0.7 and a top p value of 0.95",
+    "where": "Table 3 caption, p.10"
+   },
+   {
+    "field": "inference.decoding",
+    "quote": "We selected α = 3 and β = 600 for our subsequent experiments.",
+    "where": "Sec 3.2, p.10"
+   }
+  ],
+  "prompts": []
+ },
+ "results": [
+  {
+   "claim": "Incorrect responses from o1-like models use far more tokens and switch thoughts far more often than correct ones.",
+   "metric": "extra tokens in incorrect vs correct",
+   "value": 225,
+   "unit": "%",
+   "baseline_value": null,
+   "setup": "AIME2024; QwQ-32B-Preview, DeepSeek-R1-Preview, DeepSeek-R1-671B (averaged); conventional LLMs Qwen-Math-72B and Llama3.3-70B show no significant length gap",
+   "quote": "On average, o1-like LLMs consume 225% more tokens in incorrect responses than in correct ones due to 418% more frequent thought-switching behaviors.",
+   "where": "p.2, Intro, Fig 1"
+  },
+  {
+   "claim": "A prompt asking for thought persistence barely changes DeepSeek-R1 accuracy or switching.",
+   "metric": "Pass@1",
+   "value": 72.4,
+   "unit": "%",
+   "baseline_value": 73.8,
+   "setup": "DeepSeek-R1, AIME2024, 32 samples, T=0.7, top-p 0.95; one prompt, one model; switch tokens 13.8 -> 12.0, interval 580.1 -> 520.1; TIP gives 74.8 and 5.7",
+   "quote": "Although prompt engineering (DeepSeek-R1 + PROMPT) provides certain guidance, Table 3 shows only modest changes in switching tokens and overall accuracy compared with TIP.",
+   "where": "p.11, Table 3 p.10"
+  },
+  {
+   "claim": "TIP raises QwQ-32B-Preview accuracy on AIME2024.",
+   "metric": "Pass@1",
+   "value": 44.1,
+   "unit": "%",
+   "baseline_value": 38.3,
+   "setup": "QwQ-32B-Preview, AIME2024, alpha=3, beta=600 tuned on AIME2022-23 with QwQ, 32 samples",
+   "quote": "Clearly, our approach consistently improves accuracy over the vanilla QwQ-32B-Preview in all cases by mitigating the underthinking issues.",
+   "where": "Table 3, p.10"
+  },
+  {
+   "claim": "TIP gives a small gain on DeepSeek-R1 AIME2024 and halves switch tokens.",
+   "metric": "Pass@1",
+   "value": 74.8,
+   "unit": "%",
+   "baseline_value": 73.8,
+   "setup": "DeepSeek-R1, AIME2024, same alpha/beta; switch tokens 13.8 to 5.7, interval 580.1 to 941.6 tokens; Pass@16 unchanged at 89.8",
+   "quote": "the number of thought-switching tokens for DeepSeek- R1 dramatically decreases from 13.8 to 5.7 when using the TIP method, and the average interval increases from 580.1 to 941.6 tokens",
+   "where": "p.10, Table 3"
+  },
+  {
+   "claim": "Gains from TIP on MATH500-Hard and GPQA Diamond are small (about 0.6 and 1.5 points Pass@1).",
+   "metric": "Pass@1",
+   "value": 83.7,
+   "unit": "%",
+   "baseline_value": 83.1,
+   "setup": "QwQ-32B-Preview, MATH500 Level 5; GPQA Diamond 57.6 -> 59.1",
+   "quote": "Clearly, our approach consistently improves accuracy over the vanilla QwQ-32B-Preview in all cases by mitigating the underthinking issues.",
+   "where": "Table 3, p.10"
+  },
+  {
+   "claim": "Over 70% of incorrect responses contain at least one correct thought that was not finished.",
+   "metric": "share of incorrect responses with a correct thought",
+   "value": 70,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "setup": "three models on the three hard test sets; correctness judged by two R1-distilled models",
+   "quote": "We observe that over 70% of incorrect responses contain at least one correct thought. Furthermore, in more than 50% of these responses, over 10% of the thoughts are correct.",
+   "where": "p.6, Fig 6"
+  },
+  {
+   "claim": "The LLM thought-correctness judge agrees with final-answer labels about 82% of the time.",
+   "metric": "judge accuracy on correct / incorrect thoughts",
+   "value": 82.9,
+   "unit": "%",
+   "baseline_value": null,
+   "setup": "90 final thoughts from QwQ-32B-Preview on AIME 2022-24; 35 correct and 55 incorrect, length-matched (278.1 vs 278.3 tokens); incorrect-class accuracy 81.8%",
+   "quote": "Our assessment approach achieves accuracies of 82.9% for correct examples and 81.8% for incorrect examples",
+   "where": "p.6"
+  },
+  {
+   "claim": "Higher accuracy of the larger model does not imply less underthinking: R1-671B has higher UT than QwQ on MATH500-Hard and GPQA but lower on AIME24.",
+   "metric": "UT score",
+   "value": 65.4,
+   "unit": "%",
+   "baseline_value": 58.2,
+   "setup": "MATH500-Hard: R1-671B accuracy 92.5, UT 65.4 vs QwQ 84.3, 58.2; GPQA: 73.2/58.8 vs 59.6/48.3; AIME24: 73.3/37.0 vs 46.7/65.0",
+   "quote": "The larger model's superior capabilities do not uniformly translate to less underthinking across all tasks.",
+   "where": "p.8, Table 1"
+  },
+  {
+   "claim": "TIP combined with Self-Consistency lifts QwQ AIME2024 accuracy at 4 samples.",
+   "metric": "accuracy",
+   "value": 51.4,
+   "unit": "%",
+   "baseline_value": 43.7,
+   "setup": "QwQ-32B-Preview, AIME2024, 4 samples, 10,000 trials over the 32 samples",
+   "quote": "the TIP method enhances the Pass@4 accuracy of QwQ-32B-Preview from 43.7% to 51.4% on the AIME2024 dataset",
+   "where": "p.12, Table 4"
+  },
+  {
+   "claim": "Laconic Decoding (shortest of N) beats Self-Consistency for R1-Distill-Qwen-32B, and TIP adds to it.",
+   "metric": "accuracy",
+   "value": 78.0,
+   "unit": "%",
+   "baseline_value": 74.4,
+   "setup": "R1-Distill-Qwen-32B, AIME2024, 8 samples; UT 8.7 -> 7.3",
+   "quote": "the Pass@4 accuracy of R1-Distill-Qwen-32B increases from 74.4% to 78.0%, while the Underthinking Score decreases from 8.7 to 7.3",
+   "where": "p.12 (text says Pass@4; Table 4 shows these at 8 samples)"
+  },
+  {
+   "claim": "Longer penalty duration at low alpha helps; at high alpha it hurts.",
+   "metric": "accuracy on AIME2022-23",
+   "value": 39.8,
+   "unit": "%",
+   "baseline_value": 35.2,
+   "setup": "QwQ-32B-Preview, alpha=3, beta 300 to 600",
+   "quote": "At a lower penalty strength (α = 3), increasing β from 300 to 600 results in accuracy gains from 35.2% to 39.8%",
+   "where": "p.10, Table 2"
+  }
+ ],
+ "limits": [
+  "Hyperparameters alpha and beta were tuned on AIME2022-23 with QwQ-32B-Preview only, then reused for R1 and R1-Distill-Qwen.",
+  "Persistence prompt tested on one model (DeepSeek-R1) and one prompt on one dataset; the authors say better prompt engineering may do more and that prompt plus decoding could combine.",
+  "Needs logit access to penalise switch tokens; the switch token set is a hand-gathered list from QwQ outputs (e.g. 'alternatively'), so it may not transfer to other model families.",
+  "Thought correctness and segmentation depend on LLM judges validated at about 82% on 90 final thoughts only; Table 4 text says Pass@4 where table rows show other sample counts.",
+  "Gains on MATH500-Hard and GPQA are under 2 points Pass@1; no significance tests reported. Models studied are 2025-era open o1-like models (QwQ-Preview, R1), which have since been superseded.",
+  "Authors call this an initial exploration; claims are about math and science QA only. The paper says Pass@k UT score is infeasible to compute so means are reported."
+ ],
+ "lineage": [
+  {
+   "work": "Do not think that much for 2+3=? On the overthinking of o1-like LLMs",
+   "year": 2024,
+   "arxiv": "2412.21187",
+   "relation": "extends",
+   "note": "overthinking on easy problems; this paper studies the opposite, underthinking on hard ones",
+   "quote": null
+  },
+  {
+   "work": "Modeling coverage for neural machine translation",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "coverage penalty inspires the thought switching penalty",
+   "quote": "Inspired by the success of the coverage penalty in neural machine translation (Tu et al., 2016; Wu et al., 2016)"
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "best-of-N baseline combined with TIP",
+   "quote": null
+  },
+  {
+   "work": "Laconic Decoding (Raoof and Dimakis)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shortest-of-N, built on the same longer-is-wrong observation; cited as a tweet",
+   "quote": null
+  },
+  {
+   "work": "s1: Simple test-time scaling",
+   "year": 2025,
+   "arxiv": "2501.19393",
+   "relation": "related",
+   "note": "extends reasoning by appending Wait; opposite control of length",
+   "quote": null
+  },
+  {
+   "work": "Training language models to reason efficiently",
+   "year": 2025,
+   "arxiv": "2502.04463",
+   "relation": "related",
+   "note": "RL objective for short correct CoT",
+   "quote": null
+  },
+  {
+   "work": "PhD knowledge not required (NPR Sunday Puzzle)",
+   "year": 2025,
+   "arxiv": "2502.01584",
+   "relation": "related",
+   "note": "o1-like models say 'I give up' mid-reasoning; read as underthinking",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1; QwQ; Kimi k1.5",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "models under study",
+   "quote": null
+  },
+  {
+   "work": "MATH dataset (Hendrycks); GPQA (Rein)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the underthinking issue on AIME2024: incorrect answers switch strategies more often (b) and are longer (a)",
+   "page": 1,
+   "why": "shows the token and thought-count gap between correct and incorrect responses for o1-like vs conventional LLMs"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An example of underthinking for QwQ-32B-Preview with 25 reasoning thoughts in one solution",
+   "page": 3,
+   "why": "concrete trace of thought segmentation and early correct thought abandoned"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ratio of correct reasoning thoughts at each index in incorrect responses",
+   "page": 6,
+   "why": "early thoughts are often correct but dropped"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.11 persistence prompt",
+   "snippet": "<solving rules>\n- Try to complete every idea you think of and don't give up halfway\n- Don't skip steps\n- Display solution process clearly\n- Ask for clarification on ambiguity\n</solving rules>"
+  },
+  {
+   "where": "Eq. 2, p.9",
+   "snippet": "z_hat[t,v] = z[t,v] - alpha if v in V_hat and t < Psi + beta else z[t,v]"
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Text cache is 53220 chars; the old schema-0 report said 58,309 (different engine).",
+  "The ledger had no row for the filename key, so `extract.py path` failed; I used key 2501.18585 from the existing file.",
+  "Template awkwardness: no slot for a prompt text (put in code), for unit-bearing sample counts (inference.other), for judge-model usage (models.other), for results that depend on N (Table 4 results have no N field), and for the AIME2022-23 dataset being both dev and eval. 'lineage.relation' has no value for 'tool being evaluated' versus 'data'. Results 'value' is a single number so comparisons need baseline_value plus prose. 'repro' fields for non-training decode methods (alpha, beta) have no slot besides decoding.",
+  "Fig 1 values are bare chart labels; the 225%/418% averages could not be recomputed from them because bar order is ambiguous.",
+  "Table 4 text says Pass@4 for the Laconic example but the 74.4 -> 78.0 values are in the 8 Samples column."
+ ]
+}

@@ -39,9 +39,10 @@ carry the chapter, the verdict is **verified**. Mark it `integrated` either way.
 
 ## Step 2 — Read the chapter
 
-Dispatch one `source-reader` with the chapter PDF and the triage's `note`. It reads the whole chapter and returns claims,
-numbers, setups, verbatim quotes, code and figure candidates, so the raw chapter stays out of this session. Check `COVERAGE`
-in its report. If the agent is unavailable, or a quote looks wrong, extract the text yourself. Chapter PDFs saved from the
+Dispatch one `source-reader` with the chapter PDF and the triage's `note`. It reads the whole chapter, writes the
+chapter's extraction to `scripts/papers/extractions/<key>.json` (type `book-chapter`; a method block only if the chapter
+runs an experiment) and returns claims, numbers, setups, verbatim quotes, code and figure candidates, so the raw chapter
+stays out of this session. Check `COVERAGE` in its report, and that its `EXTRACTION` line says the check passed. If the agent is unavailable, or a quote looks wrong, extract the text yourself. Chapter PDFs saved from the
 O'Reilly reader are often one very tall page, so read by character range, not by page:
 
 ```bash
@@ -116,6 +117,7 @@ from `../librarian/.claude/skills/pillar/references/pillar-layout.md`.
 ## Step 6 — Close out
 
 ```bash
+python3 scripts/papers/extract.py check <key>
 python3 scripts/papers/potw.py mark integrated <key>
 make link-check
 ```

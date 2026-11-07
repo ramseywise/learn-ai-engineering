@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test unit da06-smoke chapter-check chapter-check-all deck-check link-check curriculum crosswalk crosswalk-check manifest-check drill-check review-findings signals learn ledger-check ledger-report papers-figures papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
+.PHONY: help lint test unit da06-smoke chapter-check chapter-check-all deck-check link-check curriculum crosswalk crosswalk-check manifest-check drill-check review-findings signals learn ledger-check ledger-report extract-check extract-status extract-report papers-figures papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -19,7 +19,7 @@ CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science
 LANGUAGE_SUBSET = programming/typescript programming/sql/notes/10-capstone-murder-mystery.md
 
 test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
-	@fail=0; for t in lint link-check crosswalk-check manifest-check chapter-check-all drill-check deck-check deck-graph-check ledger-check unit; do \
+	@fail=0; for t in lint link-check crosswalk-check manifest-check chapter-check-all drill-check deck-check deck-graph-check ledger-check extract-check unit; do \
 		echo "== $$t"; $(MAKE) --no-print-directory $$t || { echo "FAILED: $$t"; fail=1; }; \
 	done; \
 	echo "== curriculum (information only)"; \
@@ -104,6 +104,16 @@ ledger-check:  ## Check the reading ledger against the repo: note paths, homes, 
 
 ledger-report:  ## Write every ledger finding, gated or not, to scripts/papers/reports/ledger-check.md
 	@python3 scripts/papers/check_ledger.py --write-report
+
+extract-check:  ## Validate every extraction in scripts/papers/extractions/ against the schema (KEYS="a b" also checks quotes and numbers against the PDFs)
+	@python3 scripts/papers/extract.py check --all --schema-only --quiet
+	@$(if $(KEYS),uv run -q --with pymupdf --with pypdf python scripts/papers/extract.py check $(KEYS))
+
+extract-status:  ## Extraction coverage per home: full, salvaged (old report, no method), none
+	@python3 scripts/papers/extract.py status
+
+extract-report:  ## Write reports/lineage.md (who extends or contradicts whom) and reports/reproducible.md
+	@python3 scripts/papers/extract.py report
 
 papers-figures:  ## Figures per home: images kept and embedded per 100 integrated readings
 	@python3 scripts/papers/figures.py yield

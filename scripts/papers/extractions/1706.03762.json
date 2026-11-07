@@ -1,0 +1,470 @@
+{
+ "schema": 1,
+ "key": "1706.03762",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf",
+ "bib": {
+  "title": "Attention Is All You Need",
+  "authors": [
+   "Ashish Vaswani",
+   "Noam Shazeer",
+   "Niki Parmar",
+   "Jakob Uszkoreit",
+   "Llion Jones",
+   "Aidan N. Gomez",
+   "Łukasz Kaiser",
+   "Illia Polosukhin"
+  ],
+  "year": 2017,
+  "venue": "31st Conference on Neural Information Processing Systems (NIPS 2017)",
+  "arxiv": "1706.03762",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 39512,
+  "chars_total": 39512,
+  "engine": "pymupdf",
+  "skipped": "Reference list (offsets ~30200-36000) skimmed for lineage only; appendix attention-visualisation figures 3-5 contain only token text, no results."
+ },
+ "type": "empirical",
+ "question": "Can a sequence transduction model built only on attention, with no recurrence or convolution, match or beat recurrent and convolutional encoder-decoders in translation quality while training faster?",
+ "hypothesis": "Self-attention gives constant path length and full parallelism, so it should train faster and learn long-range dependencies more easily than RNNs or CNNs (stated as three desiderata in section 4).",
+ "contributions": [
+  "The Transformer: the first transduction model relying entirely on self-attention, with no sequence-aligned RNNs or convolution",
+  "Scaled dot-product attention and multi-head attention",
+  "Parameter-free sinusoidal positional encoding",
+  "New WMT 2014 EN-DE and EN-FR results at a fraction of the training cost",
+  "Transfer to English constituency parsing"
+ ],
+ "method": {
+  "summary": "An encoder-decoder of 6+6 stacked layers, each built from multi-head self-attention and a position-wise feed-forward network, with residual connections and layer norm. Input and output tokens are learned embeddings plus sinusoidal positional encodings; embedding and pre-softmax weights are shared. Trained on WMT 2014 translation, then applied to WSJ constituency parsing.",
+  "task": "machine translation (WMT 2014 EN-DE, EN-FR) and English constituency parsing",
+  "datasets": [
+   {
+    "name": "WMT 2014 English-German",
+    "role": "both",
+    "size": "about 4.5 million sentence pairs",
+    "split": "train; newstest2013 dev; newstest2014 test",
+    "source": "standard WMT 2014",
+    "preprocessing": "byte-pair encoding, shared source-target vocabulary of about 37000 tokens; batched by approximate length, about 25000 source and 25000 target tokens per batch"
+   },
+   {
+    "name": "WMT 2014 English-French",
+    "role": "both",
+    "size": "36M sentences",
+    "split": "train; newstest2014 test",
+    "source": "standard WMT 2014",
+    "preprocessing": "32000 word-piece vocabulary"
+   },
+   {
+    "name": "Penn Treebank WSJ",
+    "role": "both",
+    "size": "about 40K training sentences",
+    "split": "train; Section 22 dev; Section 23 test",
+    "source": "Marcus et al. 1993",
+    "preprocessing": "16K token vocabulary"
+   },
+   {
+    "name": "High-confidence and BerkleyParser corpora",
+    "role": "train",
+    "size": "approximately 17M sentences",
+    "split": "semi-supervised parsing setting",
+    "source": "Vinyals & Kaiser et al. 2015 [37]",
+    "preprocessing": "32K token vocabulary"
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer (base)",
+    "role": "proposed",
+    "params": "65 x10^6",
+    "architecture": "encoder-decoder transformer, post-norm, sinusoidal positions, tied embeddings",
+    "init_from": null,
+    "layers": "6 encoder + 6 decoder",
+    "hidden": "d_model=512, d_ff=2048",
+    "heads": "8 (d_k=d_v=64)",
+    "context": null,
+    "other": {
+     "P_drop": 0.1,
+     "label_smoothing": 0.1
+    }
+   },
+   {
+    "name": "Transformer (big)",
+    "role": "proposed",
+    "params": "213 x10^6",
+    "architecture": "as base",
+    "init_from": null,
+    "layers": "6 + 6",
+    "hidden": "d_model=1024, d_ff=4096",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "P_drop": "0.3 (0.1 for EN-FR)"
+    }
+   },
+   {
+    "name": "Transformer (4 layers) for parsing",
+    "role": "proposed",
+    "params": null,
+    "architecture": "4-layer transformer",
+    "init_from": null,
+    "layers": "4",
+    "hidden": "d_model=1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "other parameters unchanged from EN-DE base model"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy with label smoothing 0.1 (implied by label smoothing and perplexity; loss not named)",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-9",
+   "lr": "d_model^-0.5 * min(step^-0.5, step*warmup^-1.5)",
+   "lr_schedule": "linear warmup then inverse square root decay",
+   "warmup": "4000 steps",
+   "batch_size": "about 25000 source and 25000 target tokens",
+   "steps": "100,000 (base); 300,000 (big)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 base",
+   "regularisation": "residual dropout on sub-layer outputs and on embedding+positional sums; label smoothing 0.1",
+   "hardware": "one machine with 8 NVIDIA P100 GPUs",
+   "compute": "2.3e19 FLOPs (big, EN-DE) ; 3.3e18 (base)",
+   "wall_clock": "12 hours (base, 0.4 s/step); 3.5 days (big, 1.0 s/step)",
+   "seeds": null,
+   "other": {
+    "checkpoint_averaging": "last 5 (base, 10-minute intervals); last 20 (big)"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 4, length penalty alpha=0.6 (translation); beam 21, alpha=0.3 (parsing)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "input length + 50 (translation), input length + 300 (parsing)",
+   "prompting": null,
+   "retrieval": null,
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "translation quality on newstest2014 (test) / newstest2013 (dev)",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "constituency parsing, WSJ Section 23",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "training cost",
+     "definition": "training time x number of GPUs x sustained single-precision capacity per GPU (2.8, 3.7, 6.0, 9.5 TFLOPS for K80, K40, M40, P100)",
+     "unit": "FLOPs",
+     "higher_is_better": false
+    },
+    {
+     "name": "perplexity",
+     "definition": "per-wordpiece on dev, not comparable to per-word",
+     "unit": "PPL",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ByteNet",
+    "Deep-Att + PosUnk",
+    "GNMT + RL",
+    "ConvS2S",
+    "MoE",
+    "and ensembles of these",
+    "parsers in Table 4"
+   ],
+   "protocol": "single run per configuration reported; no seeds, variance or significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/tensorflow/tensor2tensor",
+   "weights": null,
+   "data": "standard WMT 2014 and Penn Treebank"
+  },
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "We trained our models on one machine with 8 NVIDIA P100 GPUs.",
+    "where": "5.2"
+   },
+   {
+    "field": "training.warmup",
+    "quote": "We used warmup_steps = 4000.",
+    "where": "5.3"
+   },
+   {
+    "field": "datasets[0].size",
+    "quote": "consisting of about 4.5 million sentence pairs",
+    "where": "5.1"
+   },
+   {
+    "field": "inference.decoding",
+    "quote": "We used beam search with a beam size of 4 and length penalty",
+    "where": "6.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The big Transformer set a new EN-DE state of the art, more than 2 BLEU above prior models including ensembles.",
+   "metric": "BLEU",
+   "value": 28.4,
+   "unit": "BLEU",
+   "baseline_value": 26.36,
+   "setup": "WMT 2014 EN-DE newstest2014, big model, 3.5 days on 8 P100, last 20 checkpoints averaged, beam 4; baseline is ConvS2S Ensemble",
+   "quote": "establishing a new state-of-the-art BLEU score of 28.4",
+   "where": "6.1, Table 2"
+  },
+  {
+   "claim": "On EN-FR the big model is a new single-model best, but the paper prints 41.8 in the abstract and Table 2 and 41.0 in section 6.1.",
+   "metric": "BLEU",
+   "value": 41.8,
+   "unit": "BLEU",
+   "baseline_value": 40.56,
+   "setup": "WMT 2014 EN-FR newstest2014, big model with dropout 0.1; baseline is best single model (MoE); ConvS2S ensemble reaches 41.29",
+   "quote": "our big model achieves a BLEU score of 41.0",
+   "where": "abstract; 6.1; Table 2"
+  },
+  {
+   "claim": "The base model already beats all prior EN-DE models and ensembles at 3.3e18 FLOPs, but scores 38.1 on EN-FR, below earlier single models.",
+   "metric": "BLEU",
+   "value": 27.3,
+   "unit": "BLEU",
+   "baseline_value": 26.36,
+   "setup": "WMT 2014 newstest2014, base model, 100K steps / 12 h; FLOPs are an estimate",
+   "quote": "Even our base model surpasses all previously published models and ensembles, at a fraction of the training cost of any of the competitive models.",
+   "where": "6.1, Table 2"
+  },
+  {
+   "claim": "EN-FR big model reached its score at under a quarter of the training cost of the previous state of the art.",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "WMT 2014 EN-FR, big model",
+   "quote": "at less than 1/4 the training cost of the previous state-of-the-art model",
+   "where": "6.1"
+  },
+  {
+   "claim": "Learned positional embeddings give nearly identical results to sinusoids.",
+   "metric": "BLEU",
+   "value": 25.7,
+   "unit": "BLEU",
+   "baseline_value": 25.8,
+   "setup": "EN-DE newstest2013 dev, base model, no checkpoint averaging; row (E) learned vs base sinusoidal",
+   "quote": "observe nearly identical results to the base model",
+   "where": "6.2, Table 3 row (E)"
+  },
+  {
+   "claim": "A single attention head is 0.9 BLEU worse than the best setting, and too many heads also hurts.",
+   "metric": "BLEU",
+   "value": 0.9,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "setup": "EN-DE newstest2013 dev, constant computation, rows (A)",
+   "quote": "single-head attention is 0.9 BLEU worse than the best setting, quality also drops off with too many heads",
+   "where": "6.2, Table 3 (A)"
+  },
+  {
+   "claim": "Reducing key size d_k hurts quality; bigger models and dropout help.",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "EN-DE newstest2013 dev, Table 3 rows (B)-(D)",
+   "quote": "reducing the attention key size dk hurts model quality",
+   "where": "6.2"
+  },
+  {
+   "claim": "A 4-layer Transformer reaches 91.3 F1 on WSJ-only parsing and 92.7 semi-supervised, with little task-specific tuning.",
+   "metric": "F1",
+   "value": 92.7,
+   "unit": "F1",
+   "baseline_value": 92.1,
+   "setup": "WSJ Section 23, semi-supervised with about 17M sentences; baselines McClosky 2006 / Vinyals & Kaiser 2014; WSJ-only score is 91.3",
+   "quote": "Transformer (4 layers)",
+   "where": "6.3, Table 4"
+  },
+  {
+   "claim": "Self-attention layer cost is O(n^2 d) with O(1) sequential ops and O(1) path length, against O(n) for recurrent layers.",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "Table 1; self-attention is cheaper than recurrence when n < d",
+   "quote": "self-attention layers are faster than recurrent layers when the sequence",
+   "where": "4, Table 1"
+  },
+  {
+   "claim": "Dividing dot products by sqrt(d_k) is needed because their variance grows with d_k and pushes softmax into tiny-gradient regions.",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "argument with footnote assuming q,k components independent, mean 0, variance 1; not an ablation",
+   "quote": "has mean 0 and variance dk",
+   "where": "3.2.1, footnote 4"
+  }
+ ],
+ "limits": [
+  "Evidence is two translation tasks and one parsing task; no claim about language modelling or other modalities, which the authors list as future work.",
+  "Single reported run per configuration; no seeds or significance tests.",
+  "The paper gives 41.8 and 41.0 for the EN-FR big model; the two are not reconciled.",
+  "FLOPs are estimates from GPU time and nominal capacity, not measured.",
+  "Perplexities are per-wordpiece and not comparable to per-word numbers.",
+  "Attention-as-interpretability is shown only by hand-picked examples (Figs 3-5).",
+  "Authors name restricted/local attention for long inputs and less sequential generation as open work.",
+  "Dated: post-norm LayerNorm, ReLU FFN, sinusoidal positions and 6-layer scale are not the current default; the note's use should be as origin, not recipe."
+ ],
+ "lineage": [
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "additive attention; Transformer replaces it with scaled dot-product and drops the RNN",
+   "quote": null
+  },
+  {
+   "work": "Convolutional sequence to sequence learning (ConvS2S, Gehring et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "conv baseline; also source of learned positional embeddings",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation in linear time (ByteNet, Kalchbrenner et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "conv baseline",
+   "quote": null
+  },
+  {
+   "work": "Google's neural machine translation system (Wu et al.)",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "baseline",
+   "note": "GNMT+RL baseline; word-piece vocabulary, beam search and length penalty taken from it",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation of rare words with subword units (Sennrich et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "byte-pair encoding for EN-DE",
+   "quote": null
+  },
+  {
+   "work": "Using the output embedding to improve language models (Press & Wolf)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shared embedding and pre-softmax weights",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Layer normalization (Ba et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "normalisation after each residual sub-layer",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "residual connections",
+   "quote": null
+  },
+  {
+   "work": "Outrageously large neural networks (MoE, Shazeer et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MoE baseline in Table 2",
+   "quote": null
+  },
+  {
+   "work": "Grammar as a foreign language (Vinyals & Kaiser et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "parsing baseline and semi-supervised corpora",
+   "quote": null
+  },
+  {
+   "work": "Rethinking the Inception architecture (Szegedy et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "label smoothing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The Transformer - model architecture.",
+   "page": 3,
+   "why": "Shows encoder and decoder stacks, where positional encodings are added and where embeddings enter."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several attention layers running in parallel.",
+   "page": 4,
+   "why": "Shows the QK^T / sqrt(d_k), mask, softmax, V pipeline and the head split."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Maximum path lengths, per-layer complexity and minimum number of sequential operations for different layer types.",
+   "page": 6,
+   "why": "Compact case for self-attention over RNN and CNN."
+  }
+ ],
+ "code": [
+  {
+   "where": "3.2.1, Eq. 1",
+   "snippet": "Attention(Q, K, V ) = softmax(QKT / √dk)V"
+  },
+  {
+   "where": "3.5",
+   "snippet": "PE(pos,2i) = sin(pos/10000^(2i/dmodel)); PE(pos,2i+1) = cos(pos/10000^(2i/dmodel))"
+  },
+  {
+   "where": "5.3, Eq. 3",
+   "snippet": "lrate = d_model^-0.5 · min(step_num^-0.5, step_num · warmup_steps^-1.5)"
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "PyMuPDF text flattens Table 3 into a column of numbers with row labels lost, so per-row values (A)-(E) cannot be quoted as rows; only prose and the row-E line are quotable.",
+  "Quote fields cannot contain equations cleanly (extraction renders sqrt and subscripts on separate lines); code snippets are paraphrased for the equations, not verbatim.",
+  "The extraction output has the Table 2 EN-DE/EN-FR columns unaligned (ByteNet 23.75 has no column marker), so baseline values were assigned from row order."
+ ]
+}

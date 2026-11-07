@@ -38,6 +38,10 @@ sources:
   - https://arxiv.org/abs/2503.24377
   - https://arxiv.org/abs/2411.04330
   - https://arxiv.org/abs/2307.15337
+  - https://arxiv.org/abs/2511.08923
+  - https://arxiv.org/abs/2607.04371
+  - https://arxiv.org/abs/2508.08712
+  - https://arxiv.org/abs/2505.13840
   - https://arxiv.org/abs/2504.12285
 confidence: medium
 cleaned: 2026-11-01
@@ -120,6 +124,10 @@ Two of the Handbook's descriptions are wrong or dated. Its Medusa passage, rough
 
 Diffusion LLMs (dLLMs) drop left-to-right generation altogether. They start from masked positions and unmask several tokens per forward pass. Inception's Mercury Coder Mini runs at 1,109 tokens/s on an H100, measured by Artificial Analysis, with coding quality close to speed-tuned frontier models. The report does not give model size, data or architecture ([arXiv:2506.17298](https://arxiv.org/abs/2506.17298) (Inception Labs, 2025-06, preprint)). LLaDA2.1-Flash (100B) peaks at 892 tokens/s on HumanEval+ in its speed mode, and the authors say a clear speed–accuracy tradeoff remains: the speed mode scores below LLaDA2.0, and speed varies widely by domain ([arXiv:2602.08676](https://arxiv.org/abs/2602.08676) (Bie et al., 2026-02, preprint)). Large headline speedups for dLLM decoders are usually measured against *vanilla dLLM decoding*, not a tuned autoregressive server. Learn2PD's 22.58× (57.51× with a KV cache) is on LLaDA at generation length 1024, and much of it comes from no longer denoising padding after the answer ends ([arXiv:2509.25188](https://arxiv.org/abs/2509.25188) (Bao et al., ICLR 2026)). Elastic-Cache's 8.7× (45.1× on long outputs) comes from not recomputing every layer's KV at every denoising step ([arXiv:2510.14973](https://arxiv.org/abs/2510.14973) (Nguyen-Tri et al., 2025-10, preprint)).
 
+Zhang et al.'s survey puts speculative decoding, multi-token prediction and diffusion on one map, split by training objective: a method is autoregressive if training keeps each token conditioned on the ones before it, however many it emits per step, and non-autoregressive if training treats tokens as conditionally independent or as denoising. Its two useful cautions are that the conditional-independence error grows with the number of tokens unmasked per step, so it "can only be eased by reducing parallelism or adding light dependencies", and that KV caching for diffusion models is approximate and "essentially introduces block-level autoregression". Its speedup ranges (masked generation "up to 32×") are compiled from papers with different models, tasks and baselines, so do not set them beside a served AR number; it ran nothing itself, and covers work to about January 2026 ([arXiv:2508.08712](https://arxiv.org/abs/2508.08712) (Zhang et al., 2025-08, preprint survey)).
+
+TiDAR keeps the autoregressive model and uses diffusion only to draft. One forward pass does two things: it verifies the previous step's draft tokens causally, with the same rejection-sampling rule as speculative decoding, and it pre-drafts the next block by one-step bidirectional diffusion over mask tokens. The drafter is the model itself, and drafting runs inside the verification pass, in the token slots that are free while decode is bandwidth-bound. At batch 1 on one H100, in PyTorch with Flex Attention, TiDAR 1.5B (Qwen2.5 1.5B continued on 50B tokens) averages 7.45 tokens per forward and 4.71× its base model's tokens/s on code and math benchmarks at equal scores; TiDAR 8B (Qwen3 8B, 150B tokens, block size 16) reaches 5.91× at about 3 to 4 points below its base. Unlike speculative decoding it is not lossless against the base model at 8B (the 1.5B scores match), it needs continued pretraining, and its large-batch behaviour is asserted rather than measured ([arXiv:2511.08923](https://arxiv.org/abs/2511.08923) (Liu et al., 2025-11, preprint)).
+
 ---
 
 ## Quantization
@@ -159,6 +167,8 @@ One max value sets the scale for the whole tensor, so a single outlier crushes e
 Two corrections to the Handbook's text. It says LLM.int8's outliers are "extreme weight values (~0.1%)". In the LLM.int8 paper they are **activation** feature dimensions, which is why that method decomposes the matmul by input feature. They appear abruptly at around 6.7B parameters. At that size about 150k outliers per sequence sit in just 6 hidden dimensions, up to 20× larger than the rest, and zeroing those dimensions (0.1% of features) raises perplexity by 600–1000% ([arXiv:2208.07339](https://arxiv.org/abs/2208.07339) (Dettmers et al., NeurIPS 2022)). It also says GPTQ is "limited to 4-bit", but GPTQ supports 2, 3, 4 and 8 bits (*LLM Engineer's Handbook*, ch. 8).
 
 How well a model survives 4 bits depends on what it was trained to do, not just its size. Kyutai's 7B Helium text model, quantized to 4-bit weights and 8-bit activations with blocks of 32, scores 52.97 on MMLU against 54.3 at BF16. The same backbone after speech instruction tuning (Moshi) falls from 49.7 to 42.2 under the same scheme, and blocks of 256 cost both models more ([arXiv:2410.00037](https://arxiv.org/abs/2410.00037) (Défossez et al., 2024-09)). Re-run the eval on the fine-tuned checkpoint you will actually serve.
+
+Re-run it per task, too, because an average hides where 4 bits bite. EfficientLLM's inference table covers nine models from 1.5B to 34B in BF16, FP16 and weight-only INT4 on GH200s (quantization method, engine and batch size unstated). Averaged over six benchmarks, INT4 costs 0.8 to 4.3 points, but on MATH Qwen2.5-14B falls from 0.170 to 0.053 and Qwen2.5-32B from 0.402 to 0.219 while its average moves only from 0.552 to 0.510. Read the table rather than the prose: the abstract's "up to 3.9×" memory and energy saving is a size ratio the paper defines, while measured memory fell 4–34% and tokens/s rose 5–9% ([arXiv:2505.13840](https://arxiv.org/abs/2505.13840) (Yuan et al., 2025-05, preprint)).
 
 ### Low-precision floating point
 
@@ -220,6 +230,8 @@ Three lessons:
 - **Order matters.** At batch 1, launch overhead dominates eager PyTorch, so compiling gives the largest single gain ([05](05-compilers-and-frameworks.md#what-a-compiler-does-for-inference)). After that, each step works on a smaller remaining bottleneck.
 - **The gains multiply but shrink.** That is what happens when one bottleneck after another is removed.
 - **Quality was not measured.** Huyen notes it was unclear how these steps affected output quality. INT4 needs an eval run before you ship it. At large batch the picture changes: compile helps less, and speculation may not help at all.
+
+The same multiplication holds at large batch when the first step is static compression rather than compilation. NVIDIA's Puzzle-75B-A9B is Nemotron-3-Super (120.7B total, 12.8B active) pruned by neural architecture search over expert width, activated experts and Mamba state channels, then healed with about 120B tokens of distillation and a little RL. On 8×B200 at NVFP4, with throughput read off a Pareto sweep over tensor parallelism, expert parallelism and batch size at a floor of 100 tokens/s per user on an 8K-in/64K-out workload, the pruned model alone gives 2.03× the parent's server throughput, the parent's multi-token-prediction draft head alone 3.04×, and the two together 4.63×, at 70.74 against 71.93 average accuracy. On a prefill-heavy 50K-in/2K-out workload the pruning gain falls to 1.60×. Two cautions. The paper's own prose quotes different multipliers (2.18×, 4.85×, 5.14×) from its Table 4, and the figures here are the table's. And a smaller model that answers at greater length can win on tokens/s while losing on requests: the 30B Nano model shows 5.84× the parent's tokens/s but 3.87× its requests per minute once its 1.6× verbosity is counted ([arXiv:2607.04371](https://arxiv.org/abs/2607.04371) (Bercovich et al., 2026-07, preprint)). The models, kernels and benchmark suite are all the vendor's, and no other compression method is compared.
 
 ---
 

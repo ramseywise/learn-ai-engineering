@@ -74,9 +74,12 @@ home that cites it; a paper cited in a second home may need its point made there
 
 For each paper:
 1. Dispatch one `source-reader` per paper with the PDF path and the target note, at most 3 at a time. It reads the
-   whole PDF and returns claims, numbers, setups, verbatim quotes, limits and figure candidates. You keep the judgement
-   and the writing, so the raw PDF stays out of this session. Check `COVERAGE` in its report: a partial read is not a
-   read. If the agent is unavailable, or a quote looks wrong, extract the text yourself
+   whole PDF, writes the paper's extraction to `scripts/papers/extractions/<key>.json` (question, hypothesis, method
+   in numbers, results, limits, lineage) and returns claims, numbers, setups, verbatim quotes, limits and figure
+   candidates. You keep the judgement and the writing, so the raw PDF stays out of this session. Check `COVERAGE` in
+   its report: a partial read is not a read. Check its `EXTRACTION` line says the check passed; if it did not, or the
+   agent ran without writing one, send it back to finish the extraction before you write the note. The extraction's
+   `lineage` and `method` are there when the note needs a training detail or an origin. If the agent is unavailable, or a quote looks wrong, extract the text yourself
    (poppler isn't installed, so the Read tool can't render PDFs):
    ```bash
    uv run -q --with pypdf python -c "import sys,pypdf; r=pypdf.PdfReader(sys.argv[1]); print(len(r.pages),'pages'); print('\n'.join(p.extract_text() for p in r.pages[:int(sys.argv[2])]))" <pdf> 5
@@ -158,10 +161,14 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
 ## Step 5 — Close out
 
 ```bash
+python3 scripts/papers/extract.py check <key> [<key> ...]          # every paper you read has a passing extraction
 python3 scripts/papers/potw.py mark integrated <key> [<key> ...]
 python3 scripts/papers/citegraph.py refs --home <home> --write   # refresh "Where the ideas come from"
 make link-check
 ```
+
+`mark integrated` warns about a key with no full extraction. Do not leave one behind: a paper read without an
+extraction has to be read again later.
 
 `mark integrated` refuses a key with no citation in the home's notes or `references.md`, and sets the row's `note` to
 the citing file. A refusal means the citation was not written: write it, then mark again. `--no-citation "<why>"` is for

@@ -13,6 +13,7 @@ Report only, because each has a backlog a person has to rule on:
   outside-home   integrated and cited, but only outside the row's home
   note-no-cite   `note` is set, but that file does not cite the row (mostly triage's guess at a note)
   dup-title      rows with one title: see DISTINCT_TITLES for those checked and kept apart
+  no-extraction  integrated with a PDF, but no full (schema 1) extraction in extractions/; /extract fills it
 
 A citation is the row's arXiv id, DOI, URL or PDF name, its title, its short name with the author or
 year on the same line, or for a book chapter a references.md row mapping that chapter. citegraph's
@@ -34,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import potw
 
 GATED = ("note-path", "home", "pdf-row", "no-citation", "dup-id")
-REPORT_ONLY = ("no-references", "outside-home", "note-no-cite", "dup-title")
+REPORT_ONLY = ("no-references", "outside-home", "note-no-cite", "dup-title", "no-extraction")
 REPORT = "scripts/papers/reports/ledger-check.md"
 ORIGINS = re.compile(r"<!-- citegraph:origins start -->.*?<!-- citegraph:origins end -->", re.S)
 ARXIV = re.compile(r"(?<![\d.])(\d{4}\.\d{4,5})(?:v\d+)?(?!\d)")
@@ -284,6 +285,14 @@ def check(rows, corpus=None):
     out["dup-title"] = [f"{t}: {', '.join(keys)}" + (f" (kept apart: {DISTINCT_TITLES[t]})" if t in DISTINCT_TITLES else "")
                         for t, keys in sorted(by_title.items()) if len(keys) > 1]
     out["dup-id"] = [f"{i}: {', '.join(keys)}" for i, keys in sorted(by_id.items()) if len(set(keys)) > 1]
+
+    import extract  # here, not at the top: extract imports potw, which imports this module lazily
+    for r in live:
+        if r.get("status") == "integrated" and r.get("local_pdf") and (potw.REPO / r["local_pdf"]).is_file():
+            x = extract.load(r["key"])
+            if not x or x.get("schema") != extract.SCHEMA:
+                out["no-extraction"].append(f"{r['key']} ({r.get('pillar') or 'no home'}): "
+                                            + ("salvaged report only" if x else "none"))
     return out
 
 

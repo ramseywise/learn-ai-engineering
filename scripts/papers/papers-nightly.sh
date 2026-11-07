@@ -13,6 +13,8 @@
 # A run rarely clears a big home, so each home and tier repeats until its ready count stops falling.
 # Stops starting new runs at STOP_HOUR (STOP_HOUR=24 never stops), or as soon as a run hits
 # the usage limit, whichever pass it is in.
+# After the integration tiers, an /extract pass backfills structured extractions for PDFs read before
+# every read left one (scripts/papers/extractions/). EXTRACT=0 skips it.
 
 set -uo pipefail
 
@@ -26,6 +28,7 @@ export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0
 
 STOP_HOUR="${STOP_HOUR:-8}"
 read -ra TIERS <<< "${TIERS:-1 2 3 4 5 6}"  # TIERS="1 2" limits a run
+EXTRACT="${EXTRACT:-1}"
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
 cd "$REPO" || exit 1
@@ -39,7 +42,7 @@ trap 'rmdir "$LOCK"' EXIT
 # shellcheck source=scripts/papers/nightly-lib.sh
 source "$REPO/scripts/papers/nightly-lib.sh"
 
-PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. \`potw.py mark integrated\` refuses a key no note or references.md in its home cites, so write the citation first; use --no-citation only for a real exception, with the reason. Do not commit or push; stage with git add only if the repo rules say so."
+PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Every PDF read must leave a passing extraction in scripts/papers/extractions/ (the source-reader writes it); check it before marking the paper integrated. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. \`potw.py mark integrated\` refuses a key no note or references.md in its home cites, so write the citation first; use --no-citation only for a real exception, with the reason. Do not commit or push; stage with git add only if the repo rules say so."
 
 LIMIT_HIT=0
 # session LABEL PROMPT: one headless claude session; sets LIMIT_HIT if it ended on a usage limit
@@ -97,6 +100,19 @@ papers() {
     done
 }
 
+# Backfill extractions, best first, until the backlog stops shrinking. Notes are not touched.
+extractions() {
+    local n left
+    while ! stop_now; do
+        n="$(python3 scripts/papers/extract.py next --count)"
+        [ "$n" -gt 0 ] || { echo "$(date '+%F %T') /extract: nothing left"; return; }
+        echo "$(date '+%F %T') /extract ($n left)"
+        session "/extract" "/extract 12"
+        left="$(python3 scripts/papers/extract.py next --count)"
+        [ "$left" -lt "$n" ] || break  # no progress: what's left needs a person
+    done
+}
+
 python3 scripts/papers/potw.py tier
 
 first=1
@@ -108,4 +124,6 @@ for tier in "${TIERS[@]}"; do
         first=0
     fi
 done
+[ "$EXTRACT" = "1" ] && ! stop_now && extractions
 python3 scripts/papers/potw.py status
+python3 scripts/papers/extract.py status | tail -2

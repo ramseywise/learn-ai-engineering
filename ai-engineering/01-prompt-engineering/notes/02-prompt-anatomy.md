@@ -12,6 +12,7 @@ sources:
   - https://arxiv.org/abs/2411.10541
   - https://arxiv.org/abs/2307.11760
   - https://arxiv.org/abs/2312.16171
+  - https://arxiv.org/abs/2507.22887
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -192,6 +193,8 @@ The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, t
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-4, reproducing Liu et al. (2023)*
 
 **Test your own model.** A needle-in-a-haystack (NIAH) test inserts one fact at different depths of a long prompt and asks for it back. RULER (Hsieh et al., 2024) is a harder synthetic suite. You can also build a realistic version from your own data, such as the patient's blood type in a long visit transcript. Use **private** facts, so the model can't answer from its training data instead of the context (*AI Engineering*, ch. 5). Where the task description works best is model-specific too: GPT-4 did better with it at the start, Llama 3 at the end. The sandwich below covers both cases.
+
+Few-shot demos obey the same rule: the one placement to avoid is after the query. Cobbina and Zhou moved a fixed five-demo block between the start and end of the system prompt and the start and end of the user message. On MMLU, averaged over ten open-weight models from 1.5B to 72B on 200 sampled questions, the three before-the-query slots lifted accuracy from 33.6% zero-shot to about 69%, while demos after the question reached 45.2%, not significant, and flipped over 30% of predictions on QA tasks. **Put demos before the question; which earlier slot wins is model-specific**: the smallest models preferred the system prompt, Llama 3 70B the user message, and the gap shrank with scale. Five demos, eight English tasks, no CoT demos ([arXiv:2507.22887](https://arxiv.org/abs/2507.22887) (Cobbina and Zhou, 2025-07, preprint)).
 
 **The default skeleton:**
 

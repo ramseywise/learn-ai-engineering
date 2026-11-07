@@ -8,6 +8,8 @@ the repo**. It is not a library: PDFs live in their home's `sources/`. It covers
 | `ledger.jsonl` | One row per reading, repo-wide: DAIR AI Papers of the Week (2023 onward) and every PDF found in the repo. The single source of truth for what we have, where it lives, and whether it has been worked into the notes. |
 | `blurbs/<year>.jsonl` | A summary per ledger row, used only as triage input. The DAIR summary for papers, the first-page text for PDFs. Split by year to stay under the pre-commit size limit. |
 | `inbox/` | Drop a new PDF here. `route` moves it to its home's `sources/` once triage gives it one. |
+| `extractions/<key>.json` | What each PDF says, recorded when it is read: question, hypothesis, method in numbers, results, limits, lineage. See *Extractions* below. |
+| `extraction-template.json` | The schema the source-reader fills. |
 
 A PDF does not stay here. Once triage gives it a home, `route` moves it into that home's
 `sources/` folder, where the notes that use it live.
@@ -82,6 +84,47 @@ its row, and duplicate titles. Duplicates merge by marking the loser `skipped` w
 
 `potw.py mark integrated` uses the same search, so it refuses a key its home does not cite (`--no-citation "<why>"` for
 an exception) and sets `note` to the citing file. `potw.py scan --offline` registers new PDFs without calling arXiv.
+
+## Extractions
+
+Every PDF the pipeline reads leaves `extractions/<key>.json` (the name comes from `extract.py path <key>`). The
+`source-reader` agent writes it during `/papers`, `/chapter` and `/extract`, from the template in
+`extraction-template.json`:
+
+- **question**, **hypothesis** and **contributions**.
+- **method**, in numbers: datasets with sizes and splits, models with parameter counts and what they start from, the
+  training recipe (objective, optimizer, learning rate and schedule, batch size, steps, sequence length, precision,
+  hardware, compute, seeds), inference settings, and each eval metric with its definition and unit. A value the source
+  does not give is `null`. The nulls are the point: they show what a paper leaves out. Work that trains nothing sets
+  `trains: false` and records what a rerun needs instead: samples or runs, the method's own parameters, and the
+  verbatim prompts.
+- **results**, one number each, with its setup and a verbatim quote or a table reference whose number must occur in
+  the text; **limits**; **lineage**, the earlier work it extends, replicates, contradicts, evaluates, uses as a
+  baseline or takes data from.
+
+The ledger does not record extraction state; the file and its `schema` do. `schema: 1` is a full extraction.
+`schema: 0` is an older source-reader text report recovered from session transcripts by `extract.py salvage`
+(2026-11-07: 768 readings). It has claims, limits and builds-on but no method block, so `/extract` still reads that PDF;
+the old report is the reader's map.
+
+```bash
+uv run -q --with pymupdf --with pypdf python scripts/papers/extract.py text <key>   # cached text + section/table offsets
+uv run -q --with pymupdf --with pypdf python scripts/papers/extract.py check <key>  # schema, quotes, method numbers vs the PDF
+python3 scripts/papers/extract.py status                                          # coverage per home (make extract-status)
+python3 scripts/papers/extract.py next --n 10                                     # the backlog, best first
+python3 scripts/papers/extract.py report                                          # reports/lineage.md, reports/reproducible.md
+```
+
+`check` fails on a missing field, a result quote not found in the PDF text, or a file whose name does not match its
+key. It warns on a method number that does not occur in the text: derived or misread. `make test` runs the schema part
+on every file. `reports/lineage.md` lists each paper's relations and every recorded disagreement;
+`reports/reproducible.md` scores each empirical paper 0 to 3 on how much of a rerun it states, with what is missing.
+Training work is scored on the 11 training fields, work with `trains: false` on 8 rerun fields.
+The PDF text cache, `.textcache/`, is gitignored.
+
+The backlog is filled by `/extract` (reads and records, never edits notes) and by the nightly run's last pass.
+`check_ledger.py` reports `no-extraction` (information only) until it is cleared; then it becomes gated and
+`mark integrated` refuses a reading without one. Today `mark integrated` warns.
 
 ## Status lifecycle
 
@@ -194,6 +237,7 @@ python3 scripts/papers/citegraph.py export --html                # reports/graph
 | `/readings` | Work the inbox: status, route, and pick what to integrate next. |
 | `/chapter` | One book chapter into the notes of its home: prose, code and figures. |
 | `/papers` | One paper into a `references.md` row and a sentence or paragraph in a note. |
+| `/extract` | Backfill: one checked extraction per PDF read before extractions existed. Never edits notes. |
 | `/pillar` | Bring a pillar folder to the standard layout (`notes/`, `sources/`, `references.md`). |
 | `/slides` | One pillar's notes into a lecture deck, kept as `.pptx` and `.pdf`. |
 | `/weekly` | Report only: tests, reviewer decisions, signals, backlog, stale decks. Changes no content. |

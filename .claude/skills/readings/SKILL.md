@@ -27,6 +27,7 @@ standards, vendor documentation or current facts, dispatch `web-researcher`, and
 python3 scripts/papers/potw.py status
 python3 scripts/papers/potw.py status --list queued | python3 -c "import sys,json,collections; c=collections.Counter((r['pillar'], 'chapter' if '/ch' in (r.get('pdf') or '') or '/appendix-' in (r.get('pdf') or '') else 'paper') for r in map(json.loads,sys.stdin)); [print(f'{n:4} {h:18} {k}') for (h,k),n in sorted(c.items())]"
 find scripts/papers/inbox -name '*.pdf' -newer scripts/papers/ledger.jsonl
+python3 scripts/papers/extract.py status | tail -2
 ```
 
 The last command lists PDFs added since the ledger was last written. They need a scan and
@@ -84,5 +85,6 @@ Recommend one concrete next command, then one or two alternatives:
 - Otherwise prefer the home with the most queued relevance-3 rows: `/papers <home>`.
 - Prefer homes whose notes are thin (few notes, or no references.md) over well-covered ones.
 - When a pillar's notes changed a lot since its deck was built, suggest `/slides <pillar>`.
+- When nothing is queued, or a home is fully integrated but its extractions lag, suggest `/extract <home>`.
 
 Report the counts as a short table, what you routed, and the recommendation. Do not commit.
