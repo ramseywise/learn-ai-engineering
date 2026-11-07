@@ -1,0 +1,614 @@
+{
+ "schema": 1,
+ "key": "2601.05242",
+ "pdf": "generative-ai/05-RL/sources/liu-2026-gdpo.pdf",
+ "bib": {
+  "title": "GDPO: Group reward-Decoupled Normalization Policy Optimization for Multi-reward RL Optimization",
+  "authors": [
+   "Shih-Yang Liu",
+   "Xin Dong",
+   "Ximing Lu",
+   "Shizhe Diao",
+   "Peter Belcak",
+   "Mingjie Liu",
+   "Min-Hung Chen",
+   "Hongxu Yin",
+   "Yu-Chiang Frank Wang",
+   "Kwang-Ting Cheng",
+   "Yejin Choi",
+   "Jan Kautz",
+   "Pavlo Molchanov"
+  ],
+  "first_author": "Liu",
+  "year": 2026,
+  "venue": "preprint",
+  "arxiv": "2601.05242",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 75426,
+  "chars_total": 75426,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is GRPO suitable for multi-reward RL, and if not, what normalisation preserves the differences between reward combinations?",
+ "hypothesis": "Summing rewards before group normalisation collapses distinct reward combinations into identical advantages; normalising each reward separately restores resolution and improves convergence.",
+ "contributions": [
+  "Analysis of GRPO reward collapse in multi-reward RL",
+  "GDPO: group-wise decoupled normalisation of each reward, then batch-wise advantage normalisation",
+  "A systematic overview of reward weighting and conditioned reward functions for priority variation",
+  "Experiments on tool calling, math reasoning and coding reasoning showing GDPO beats GRPO"
+ ],
+ "method": {
+  "summary": "GDPO normalises each reward separately within the rollout group (Eq. 4), sums the per-reward advantages (Eq. 5, optionally weighted, Eq. 7), then normalises that sum over the batch (Eq. 6). Compared with GRPO on summed reward in verl across tool calling (2 rewards), math (2 rewards) and coding (2 and 3 rewards).",
+  "task": "multi-reward RL fine-tuning of LLMs (policy optimisation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ToolRL training set (ToolACE 2k, Hammer 1k, xLAM 1k)",
+    "role": "train",
+    "size": "4k samples",
+    "split": null,
+    "source": "as ToolRL [12]",
+    "preprocessing": null
+   },
+   {
+    "name": "BFCL-v3",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Berkeley Function Call Leaderboard",
+    "preprocessing": null
+   },
+   {
+    "name": "DeepScaleR-Preview",
+    "role": "train",
+    "size": "40k competition-level math problems",
+    "split": null,
+    "source": "DeepScaleR [22]",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME-24, AMC 2022/2023, MATH, Minerva, OlympiadBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Eurus-2-RL (coding)",
+    "role": "train",
+    "size": "24k coding problems with multiple test cases",
+    "split": null,
+    "source": "PRIME [28]",
+    "preprocessing": null
+   },
+   {
+    "name": "PRIME validation set: Apps, CodeContests, Codeforces, Taco",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-Instruct-1.5B",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Instruct-3B",
+    "role": "base",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-1.5B",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen3-4B-Instruct",
+    "role": "base",
+    "params": "4B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "GRPO/GDPO clipped policy-gradient (Eq. 3) with decoupled per-reward advantages (Eq. 4-6); KL term used (kl_coef 0.001 tool, kl_loss_coef 0.0005 math/code)",
+   "optimizer": null,
+   "lr": "1.00E-06",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512 prompts; ppo_mini_batch_size 128 (tool calling), 64 (math/coding)",
+   "steps": "100 (tool calling), 500 (math), 400 (coding)",
+   "epochs": "trainer.total_epochs 15 (tool calling, Table 6)",
+   "tokens": null,
+   "seq_len": "max response 1024 (tool calling), 8000 (math/coding); max_prompt_length 2048 (tool calling), 1024 (math/coding)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty (see objective)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 runs for tool calling (median + IQR curves); runs for math and coding not stated",
+   "other": {
+    "rollouts_per_prompt": "4 (tool calling), 16 (math/coding)",
+    "clip_ratio": "low 0.2, high 0.28 (math/coding)",
+    "dynamic_sampling": "filter_groups enabled, metric seq_reward",
+    "ppo_epochs": "1 (math/coding)",
+    "rollout_temperature": "1 (math/coding training)",
+    "kl_loss_type": "mse (math/coding)",
+    "loss": "token-mean from DAPO (math)",
+    "framework": "verl",
+    "length_target_l": "4000 tokens",
+    "coding_config": "same hyperparameters as math",
+    "weights": "w_correct=1, w_length in {0.25,0.5,0.75,1.0} in priority study",
+    "epsilon_in_batch_norm": "epsilon, value not stated"
+   }
+  },
+  "inference": {
+   "decoding": "vLLM sampling",
+   "temperature": "0.6",
+   "top_p": "0.95",
+   "max_tokens": "32k tokens (math/coding eval)",
+   "samples": "16 samples per question, average pass@1",
+   "prompting": "DeepSeek-R1 prompt format for math; ToolRL system prompt for tool calling (Appendix B)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BFCL-v3 Avg Acc",
+     "definition": "average of Live, Multi-Turn and Non-Live overall accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Correct Format",
+     "definition": "average format correctness on BFCL-v3",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@1 Acc",
+     "definition": "mean over 16 samples per question",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exceed",
+     "definition": "percentage of responses exceeding 4000 tokens, averaged over 16 samples",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Pass (coding)",
+     "definition": "average test case pass rate",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bug",
+     "definition": "proportion of generated code with runtime or compilation error",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GRPO (summed reward)",
+    "GRPO w/o std",
+    "untrained base models"
+   ],
+   "protocol": "Tool calling averaged over five runs; math and coding runs not stated; no significance tests."
+  },
+  "availability": {
+   "code": "Implementations listed in HF-TRL, verl, Nemo-RL (links not in extracted text)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "ToolRL system prompt (tool-calling training)",
+    "text": "You are a helpful dialogue assistant capable of leveraging tool calls to solve user tasks and provide structured chat responses.",
+    "where": "Appendix B (first line only; format requires <think>, <tool_call>, <response>)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "actor_rollout_ref.actor.optim.lr",
+    "where": "Tables 6 and 7, value 1.00E-06"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GDPO beats GRPO on average BFCL-v3 accuracy for Qwen2.5-Instruct-1.5B (5-run mean).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL-v3 Avg Acc",
+   "value": 32.81,
+   "unit": "%",
+   "baseline_value": 30.18,
+   "n": 5,
+   "setup": "Qwen2.5-Instruct-1.5B, 100 steps, 4 rollouts, 5 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Qwen2.5-Instruct-1.5B GDPO row, column Avg Acc (GRPO 30.18%)"
+  },
+  {
+   "claim": "GDPO format correctness on 1.5B tool calling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Correct Format",
+   "value": 80.66,
+   "unit": "%",
+   "baseline_value": 76.33,
+   "n": 5,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, 1.5B GDPO row, column Correct Format"
+  },
+  {
+   "claim": "GDPO beats GRPO on 3B tool calling average accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL-v3 Avg Acc",
+   "value": 40.87,
+   "unit": "%",
+   "baseline_value": 39.2,
+   "n": 5,
+   "setup": "Qwen2.5-Instruct-3B, 5 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 2/1, 3B GDPO row, column Avg Acc; Table 1"
+  },
+  {
+   "claim": "GRPO without std normalisation learns no output format (0% correct format) though correctness reward is similar to GDPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Correct Format",
+   "value": 0,
+   "unit": "%",
+   "baseline_value": 76.33,
+   "n": 5,
+   "setup": "Qwen2.5-1.5B-Instruct tool calling, 5 runs",
+   "note": null,
+   "where": "Sec 4.1.1, Table 2 (GRPO 76.33%)",
+   "quote": "This failure results in a correct format ratio of 0% on BFCL-v3"
+  },
+  {
+   "claim": "DeepSeek-R1-1.5B AIME accuracy: GRPO falls below base, GDPO roughly matches base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Acc",
+   "value": 29.4,
+   "unit": "%",
+   "baseline_value": 23.1,
+   "n": null,
+   "setup": "DeepSeek-R1-1.5B, length target 4000 tokens, 500 steps; base 29.8, GRPO 23.1",
+   "note": "GDPO 29.4 is below untrained base 29.8; GRPO 23.1",
+   "where": "Table 3",
+   "table": "Table 3, DeepSeek-R1-1.5B, AIME Acc, GDPO column"
+  },
+  {
+   "claim": "AIME exceed ratio for DeepSeek-R1-1.5B falls from 91.5% base to 6.5% with GDPO (GRPO 10.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Exceed",
+   "value": 6.5,
+   "unit": "%",
+   "baseline_value": 10.8,
+   "n": null,
+   "setup": "DeepSeek-R1-1.5B",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, DeepSeek-R1-1.5B, AIME Exceed, GDPO column"
+  },
+  {
+   "claim": "DeepSeek-R1-7B AIME accuracy: base 55.4, GRPO 50.2, GDPO 53.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Acc",
+   "value": 53.1,
+   "unit": "%",
+   "baseline_value": 50.2,
+   "n": null,
+   "setup": "DeepSeek-R1-7B, 500 steps",
+   "note": "Both below base 55.4",
+   "where": "Table 3",
+   "table": "Table 3, DeepSeek-R1-7B, AIME Acc, GDPO column"
+  },
+  {
+   "claim": "Qwen3-4B-Instruct AIME: base 63.7, GRPO 54.6, GDPO 56.9; exceed 0.1% vs 2.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Acc",
+   "value": 56.9,
+   "unit": "%",
+   "baseline_value": 54.6,
+   "n": null,
+   "setup": "Qwen3-4B-Instruct, 500 steps",
+   "note": "Both below base 63.7",
+   "where": "Table 3",
+   "table": "Table 3, Qwen3-4B-Instruct, AIME Acc, GDPO column"
+  },
+  {
+   "claim": "Conditioned length reward with GDPO on DeepSeek-R1-7B gives higher AIME accuracy than GRPO with the same reward.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Acc",
+   "value": 57.7,
+   "unit": "%",
+   "baseline_value": 53.3,
+   "n": null,
+   "setup": "DeepSeek-R1-7B, conditioned length reward, weight 1.0",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, AIME Acc, column GDPO with conditioned length reward (GRPO 53.3%)"
+  },
+  {
+   "claim": "GDPO with conditioned length reward cuts AIME exceed ratio versus GRPO with the same reward.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME Exceed",
+   "value": 12.3,
+   "unit": "%",
+   "baseline_value": 29.2,
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, AIME Exceed"
+  },
+  {
+   "claim": "Coding, 2 rewards: GDPO raises Taco pass rate over GRPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Taco Pass",
+   "value": 48.4,
+   "unit": "%",
+   "baseline_value": 45.1,
+   "n": null,
+   "setup": "DeepSeek-R1-7B, Eurus-2-RL, 400 steps, Rpass + conditioned Rlength",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Taco Pass, GDPO 2-obj"
+  },
+  {
+   "claim": "Coding, 3 rewards: GDPO lowers Codeforces exceed ratio and bug ratio vs GRPO at similar pass rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Codeforces Bug",
+   "value": 1.8,
+   "unit": "%",
+   "baseline_value": 2.5,
+   "n": null,
+   "setup": "3-objective setting",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Codeforces Bug, GDPO 3-obj (GRPO 3-obj 2.5%)"
+  },
+  {
+   "claim": "Without batch-wise normalisation GDPO occasionally fails to converge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "convergence",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tool calling, 100 steps (Fig 8)",
+   "note": null,
+   "where": "Sec 3.1, App A",
+   "quote": "where removing batch-wise normalization occasionally leads to convergence failures."
+  },
+  {
+   "claim": "Reducing length weight to 0.75 or 0.5 barely changes length exceed ratio; weights do not reliably set priority when difficulties differ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME exceed shift (GRPO, w 0.75)",
+   "value": 0.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1-7B",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "which shifts by only 0.4% and 0.2% for GRPO on AIME and by 1.3% and 0.6% for GDPO"
+  },
+  {
+   "claim": "In the 2-binary-reward, 2-rollout example GRPO gives six combinations only two distinct advantage groups; GDPO gives three.",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct advantage groups",
+   "value": 3,
+   "unit": "groups",
+   "baseline_value": 2,
+   "n": null,
+   "setup": "worked example",
+   "note": "Worked example; 3 for GDPO from Fig 2 caption: 'retains three distinct groups'",
+   "where": "Sec 2, Fig 2",
+   "quote": "only two unique advantage groups emerge after applying group-wise reward normal-"
+  }
+ ],
+ "limits": [
+  "Only three task families, models up to 7B, all with verl; no seeds stated for math and coding runs, no significance tests.",
+  "Both GRPO and GDPO lose AIME accuracy relative to the untrained model in the length-constrained math setting (Table 3).",
+  "The conditioned length reward is borrowed from prior work (DLER, others), not new here.",
+  "Batch-norm epsilon, optimizer type, hardware and compute are not stated.",
+  "GRPO collapse after ~400 steps is shown on training curves of one run family; only 1.5B curve is discussed in text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GDPO",
+   "definition": "Group reward-Decoupled Normalization Policy Optimization: normalise each reward within the group separately, sum, then batch-normalise",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "conditioned reward",
+   "definition": "r_k is kept only if r_l >= t, else 0",
+   "where": "Eq. 8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "baseline",
+   "note": "GRPO is the baseline being modified",
+   "quote": null
+  },
+  {
+   "work": "ToolRL",
+   "year": 2025,
+   "arxiv": "2504.13958",
+   "relation": "uses-method",
+   "note": "tool-calling setup, data and hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "DLER",
+   "year": 2025,
+   "arxiv": "2510.15110",
+   "relation": "uses-method",
+   "note": "math recipe, conditioned length reward",
+   "quote": null
+  },
+  {
+   "work": "DAPO",
+   "year": 2025,
+   "arxiv": "2503.14476",
+   "relation": "uses-method",
+   "note": "dynamic sampling, clip-higher, token-mean loss",
+   "quote": null
+  },
+  {
+   "work": "Dr.GRPO",
+   "year": 2025,
+   "arxiv": "2503.20783",
+   "relation": "related",
+   "note": "removes std normalisation; tested as GRPO w/o std",
+   "quote": null
+  },
+  {
+   "work": "verl / HybridFlow",
+   "year": 2024,
+   "arxiv": "2409.19256",
+   "relation": "uses-method",
+   "note": "training framework",
+   "quote": null
+  },
+  {
+   "work": "DeepScaleR-Preview",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "math training data",
+   "quote": null
+  },
+  {
+   "work": "Eurus-2-RL / PRIME",
+   "year": 2025,
+   "arxiv": "2502.01456",
+   "relation": "uses-data",
+   "note": "coding training data and validation",
+   "quote": null
+  },
+  {
+   "work": "BFCL",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "tool-calling benchmark (Patil et al.)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of GRPO and GDPO advantage computation in a two-binary-reward, two-rollout example.",
+   "page": 4,
+   "why": "Shows the collapse of reward combinations into identical advantages."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Training behavior of GRPO and GDPO on DeepSeek-R1-1.5B across correctness reward, length reward, and maximum batch response length.",
+   "page": 9,
+   "why": "GRPO correctness declines after ~400 steps; GDPO keeps improving."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 4-6",
+   "snippet": "A_k = (r_k - mean_group r_k)/std_group r_k ; A_sum = sum_k w_k A_k ; A_hat = (A_sum - mean_batch)/(std_batch + eps)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 header 'Live Ocerall Acc' typo in source; Table 3 has '38.41.%'; Table 2 caption notes 1.5B only (3B GRPO w/o std not shown).",
+  "Text extraction flattens tables; column assignment inferred from order.",
+  "No embedded instructions found."
+ ]
+}

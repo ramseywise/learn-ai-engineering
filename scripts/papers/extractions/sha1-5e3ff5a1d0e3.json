@@ -1,0 +1,381 @@
+{
+ "schema": 1,
+ "key": "sha1:5e3ff5a1d0e3",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch09-increasing-cuda-kernel-efficiency-arithmetic-intensity.pdf",
+ "bib": {
+  "title": "Chapter 9. Increasing CUDA Kernel Efficiency and Arithmetic Intensity (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly Media (book)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 74413,
+  "chars_total": 74413,
+  "engine": "pymupdf",
+  "skipped": "Trailing page-chrome lines (table of contents, nav) ignored. Figures not seen as images; no captions in text beyond references."
+ },
+ "type": "book-chapter",
+ "question": "How can a CUDA kernel do more useful work per byte moved so it becomes compute-bound on modern (Blackwell) GPUs?",
+ "hypothesis": null,
+ "contributions": [
+  "Tiling, thread block clusters, kernel fusion, structured sparsity, recomputation, mixed precision and Tensor Core techniques for raising arithmetic intensity",
+  "CUTLASS as the default route to Tensor Core performance",
+  "Inline PTX/SASS as a last-resort microoptimization"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Unfused L2-normalize pipeline of 4 kernels, each 1 FLOP per 12 bytes, has arithmetic intensity 0.083 FLOPS/byte.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "arithmetic intensity",
+   "value": "0.083",
+   "unit": "FLOPS/byte",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Worked example: L2-normalize each row of [batch, hidden] tensor, 4 naive kernels, FP32, assumed 1 FLOP per kernel",
+   "note": null,
+   "where": "Kernel Fusion",
+   "quote": "or 0.083 FLOPS/byte."
+  },
+  {
+   "claim": "Fused L2-norm kernel is placed at a conservative ~0.25 FLOPs/byte, still memory-bound.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "arithmetic intensity",
+   "value": "0.25",
+   "unit": "FLOPs/byte",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same example, one fused kernel, ~12 bytes per element global traffic",
+   "note": "Text also says 'perhaps 4 FLOPS for 12 bytes' fused vs '4 FLOPS for 36 bytes' unfused, and calls the naive version both 4 kernels and a three-kernel pipeline; the chapter is not self-consistent.",
+   "where": "Kernel Fusion",
+   "quote": "≈3 FLOPs / 12 bytes ≈ 0.25 FLOPs/byte"
+  },
+  {
+   "claim": "A 2x2 thread block cluster using TMA multicast can cut global memory traffic up to 4x.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 x 2 cluster of four CTAs reusing one tile via multicast",
+   "note": null,
+   "where": "Tiling with Thread Block Clusters",
+   "quote": "can reduce global memory traffic by up to 4× in a 2 × 2"
+  },
+  {
+   "claim": "2:4 structured sparsity on Sparse Tensor Cores can approach 2x speedup over dense.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inference, large batches and large matmuls; accuracy assumed kept by fine-tuning after pruning",
+   "note": null,
+   "where": "Structured Sparsity",
+   "quote": "can approach up to a 2× speedup over their dense counterparts"
+  },
+  {
+   "claim": "FP8 matmuls with FP32 or TF32 accumulation reach 2-3x BF16/FP16 TFLOPS.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-3",
+   "unit": "x BF16 TFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumes quantization accuracy loss is acceptable",
+   "note": "Peak dense ratio is 2x (per the mapped note, not the chapter).",
+   "where": "BF16/FP16, FP8, and FP4 Reduced Precision",
+   "quote": "achieve 2–3× the BF16/FP16 TFLOPS"
+  },
+  {
+   "claim": "FP32 dense peak on Blackwell B200 is about 80 teraFLOPS, against 10 petaFLOPS dense NVFP4.",
+   "kind": "reported",
+   "source": "vendor figures, uncited",
+   "metric": null,
+   "value": null,
+   "unit": "teraFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell B200, dense",
+   "note": null,
+   "where": "BF16/FP16, FP8, and FP4 Reduced Precision",
+   "quote": "while FP32 peak is about 80 teraFLOPS (dense)"
+  },
+  {
+   "claim": "Blackwell B300 (Ultra) NVFP4 dense compute is 15 petaFLOPS, 50% above B200.",
+   "kind": "reported",
+   "source": "vendor figures, uncited",
+   "metric": null,
+   "value": "15",
+   "unit": "petaFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B300, NVFP4, dense",
+   "note": null,
+   "where": "BF16/FP16, FP8, and FP4 Reduced Precision",
+   "quote": "B200 at 15 petaFLOPS (dense)"
+  },
+  {
+   "claim": "INT8 weights cut weight memory traffic by 75% versus FP32.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "INT8 (1 byte) vs FP32 (4 bytes) per weight",
+   "note": null,
+   "where": "INT8 Reduced Precision and DP4A",
+   "quote": "memory traffic for weights drops by 75%."
+  },
+  {
+   "claim": "With FP8 or 2:4 sparsity, batch 1 sees little benefit while batch 128 or 256 uses the TMEM pipeline near peak.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP8 or 2:4 sparsity on Blackwell",
+   "note": null,
+   "where": "Mixed Precision and Utilizing Tensor Cores",
+   "quote": "a batch size of 128 or"
+  },
+  {
+   "claim": "A 256 x 512 FP16 tile fills the 256 KiB per-SM TMEM budget.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "tile size in TMEM",
+   "value": "256",
+   "unit": "KiB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256 x 512 elements at 2 bytes",
+   "note": "Prints 256 KiB and 256 KB in adjacent sentences.",
+   "where": "Using CUTLASS",
+   "quote": "256 × 512 elements × 2 bytes per element = 256 KiB"
+  },
+  {
+   "claim": "Hand-tuned MMA and CUTLASS GEMM both reach 98% Tensor Core utilization (illustrative).",
+   "kind": "reported",
+   "source": null,
+   "metric": "Tensor Core utilization",
+   "value": "98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP16 inputs, FP32 accumulation; Book states metrics tables are illustrative, not measured benchmarks",
+   "note": "Table footnote: 'The numeric values in all metrics tables are illustrative'.",
+   "where": "Table 9-1",
+   "table": "Table 9-1, row Tensor Core utilization, columns Hand-tuned MMA kernel and CUTLASS GEMM"
+  },
+  {
+   "claim": "CUTLASS matches or exceeds a hand-tuned MMA kernel within about 2%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP16 inputs, FP32 accumulation; illustrative table",
+   "note": null,
+   "where": "Using CUTLASS",
+   "quote": "CUTLASS matches or exceeds hand-tuned MMA performance within about 2%"
+  },
+  {
+   "claim": "CUTLASS can reach 96-98% Tensor Core utilization on supported shapes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "96-98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Standard GEMM or fused attention, supported shapes",
+   "note": null,
+   "where": "Using CUTLASS",
+   "quote": "achieve 96%–98% Tensor Core utilization"
+  },
+  {
+   "claim": "Hand-tuned inline PTX on an already optimized kernel gave 1.07 ms to 1.00 ms, about 7%.",
+   "kind": "reported",
+   "source": null,
+   "metric": "kernel time",
+   "value": "7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical before/after, tight loop with index math and loads; mad.wide.u32 plus ld.global.cg",
+   "note": "Table 9-2 is described in the text as hypothetical.",
+   "where": "Table 9-2",
+   "quote": "about a 7% speedup in that kernel from 1.07 ms down to 1.0 ms",
+   "table": "Table 9-2, row Hand-tuned PTX, column Speedup"
+  },
+  {
+   "claim": "Inline PTX in a memory-bound kernel may give maybe 5-10%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5-10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two independent load streams in PTX",
+   "note": null,
+   "where": "Inline PTX and SASS Tuning",
+   "quote": "see maybe a 5%– 10% speedup"
+  }
+ ],
+ "limits": [
+  "Metrics tables (9-1, 9-2) are stated to be illustrative, not benchmarks.",
+  "Fused L2-norm example miscounts kernels (4 vs three) and byte totals.",
+  "Text names Blackwell-specific features (TMEM, tcgen05) as written for 2025 hardware; vendor peak figures are uncited.",
+  "Unified-memory and prefetch advice is hardware-generation specific; SASS is not forward compatible."
+ ],
+ "practices": [
+  "Raise FLOPs per byte with tiling, on-chip reuse, fusion and larger batches; verify on the Nsight Compute roofline (Intro).",
+  "Use multilevel tiling: shared-memory tile, then register micro-tiles with float4/half2; coalesce loads and pad/swizzle (Multilevel Microtiling).",
+  "Double-buffer with asynchronous loads (cuda::memcpy_async, TMA) to overlap transfers with compute (Software Prefetching, Feeding Tensor Cores).",
+  "Profile fused kernels: too much fusion raises register pressure, lowers occupancy and may spill (Kernel Fusion).",
+  "Apply tiling, coalescing and fusion before 2:4 structured sparsity; use sparsity for inference only, and fine-tune after pruning (Structured Sparsity).",
+  "Recompute cheap values instead of loading them when bandwidth is the bottleneck (Recomputation).",
+  "Prefer fused PyTorch ops, torch.compile and nested tensors; verify backend selection for SDPA (PyTorch and Arithmetic Intensity).",
+  "Prefer BF16 over FP16 for training; use FP8/NVFP4 only after calibration and per-model accuracy validation (BF16/FP16, FP8, FP4).",
+  "Keep batch or tile size large enough that FP8/FP4/sparse paths amortize overhead (Mixed Precision).",
+  "Use CUTLASS and libraries built on it for standard GEMM and fused attention; hand-write MMA only for unusual layouts or fusions (Using CUTLASS).",
+  "Use inline PTX/SASS last, isolated, documented and re-profiled per GPU generation (Inline PTX and SASS Tuning)."
+ ],
+ "terms": [
+  {
+   "term": "arithmetic intensity",
+   "definition": "Also called operational intensity: how many floating-point operations are performed per byte of data transferred from memory, or FLOPS per byte.",
+   "where": "Intro"
+  },
+  {
+   "term": "memory bound",
+   "definition": "Performance limited by memory transfers.",
+   "where": "Intro"
+  },
+  {
+   "term": "compute bound",
+   "definition": "Performance limited by ALU throughput.",
+   "where": "Intro"
+  },
+  {
+   "term": "2:4 structured sparsity",
+   "definition": "Exactly two out of every four consecutive weights are nonzero; accelerated by Sparse Tensor Cores and cuSPARSELt.",
+   "where": "Structured Sparsity"
+  },
+  {
+   "term": "TMEM",
+   "definition": "A 256 KB per-SM SRAM buffer used by Tensor Core instructions for operands and accumulators; not allocated by the programmer.",
+   "where": "Feeding Tensor Cores with TMEM and TMA"
+  },
+  {
+   "term": "PTX",
+   "definition": "A low-level parallel-thread execution virtual machine that CUDA C++ compiles to; translated into native instructions (SASS).",
+   "where": "Inline PTX and SASS Tuning"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 7 of this book (tiling, coalescing)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Builds on the shared-memory tiling shown there",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA CUTLASS",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Recommended library; hand MMA vs CUTLASS compared in illustrative Table 9-1",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek DeepEP",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Example of undocumented ld.global.nc.l1::no_allocate.l2::256b PTX",
+   "quote": null
+  },
+  {
+   "work": "PyTorch TorchInductor / torch.compile",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Automatic fusion and mixed precision",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9-1",
+   "caption": "Example Roofline model (GFLOP/s versus arithmetic intensity in FLOPs/byte)",
+   "page": null,
+   "why": "Shows memory vs compute roofs"
+  },
+  {
+   "figure": "Fig 9-2",
+   "caption": "Multilevel tiling between global memory (DRAM), shared memory (SMEM), and registers",
+   "page": null,
+   "why": "Reuse hierarchy"
+  },
+  {
+   "figure": "Fig 9-5",
+   "caption": "2:4 structured sparsity",
+   "page": null,
+   "why": "Sparse weight layout"
+  },
+  {
+   "figure": "Table 9-1",
+   "caption": "Hand-tuned MMA versus CUTLASS kernel performance and resource usage",
+   "page": null,
+   "why": "CUTLASS parity"
+  },
+  {
+   "figure": "Table 9-2",
+   "caption": "Optimized CUDA C++ versus hand-written PTX with manual scheduling and cache hints",
+   "page": null,
+   "why": "Scale of PTX gains"
+  }
+ ],
+ "code": [
+  {
+   "where": "Kernel Fusion",
+   "snippet": "float norm = sqrtf(sdata[0]);\nfloat inv = rsqrtf(sdata[0]); // prefer inverse",
+   "verbatim": true
+  },
+  {
+   "where": "TF32 and AMP",
+   "snippet": "torch.set_float32_matmul_precision('high')\nwith torch.amp.autocast(\"cuda\", dtype=torch.bfloat16):\n    output = model(input)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figures not in text; figure captions only partial.",
+  "Code listings truncated at line ends in the text layer.",
+  "fusedL2Norm listing computes both sqrtf and rsqrtf of sdata[0] and ignores epsilon."
+ ]
+}

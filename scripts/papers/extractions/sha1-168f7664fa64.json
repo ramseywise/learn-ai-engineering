@@ -1,0 +1,228 @@
+{
+ "schema": 1,
+ "key": "sha1:168f7664fa64",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf",
+ "bib": {
+  "title": "9 Machine learning on knowledge graphs: A primer approach (Knowledge Graphs and LLMs in Action)",
+  "authors": [
+   "Negro et al. (inferred: from repo notes; the chapter text carries no byline)"
+  ],
+  "first_author": "Negro",
+  "year": 2025,
+  "venue": "Manning book chapter (year inferred from repo notes)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46270,
+  "chars_total": 46270,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What machine learning tasks exist on knowledge graphs, and how do you turn graph data into features for them?",
+ "hypothesis": "Feature engineering, especially domain-informed features such as homophily, matters more than generic embeddings for graph ML.",
+ "contributions": [
+  "Taxonomy of node-focused and graph-focused ML tasks",
+  "Karate club worked example comparing degree, Node2Vec and homophily-degree features",
+  "Louvain community detection example"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Degree-only node features give weighted F1 of about 0.43 on karate-club faction prediction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted f-score",
+   "value": "0.42857142857142855",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "14 test nodes",
+   "setup": "Karate club, 34 nodes, 60/40 split (random_state=0), weighted precision/recall/F1, standardised features + LogisticRegressionCV (liblinear, ovr, max_iter=1000); degree-only embedding",
+   "quote": "f-score: 0.42857142857142855",
+   "table": null,
+   "note": null,
+   "where": "Listing 9.7"
+  },
+  {
+   "claim": "Node2Vec (64-d) features give weighted F1 of about 0.64 on the same task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted f-score",
+   "value": "0.6446886446886447",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "14 test nodes",
+   "setup": "Karate club, 34 nodes, 60/40 split (random_state=0), weighted precision/recall/F1, standardised features + LogisticRegressionCV (liblinear, ovr, max_iter=1000); Node2Vec dimensions=64, walk_length=30, num_walks=200, window=10",
+   "quote": "f-score: 0.6446886446886447",
+   "table": null,
+   "note": null,
+   "where": "Listing 9.7"
+  },
+  {
+   "claim": "Hand-built homophily features (total degree, Mr. Hi degree, Officer degree) give weighted F1 of about 0.93.",
+   "kind": "measured",
+   "source": null,
+   "metric": "weighted f-score",
+   "value": "0.9274255156608098",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "14 test nodes",
+   "setup": "Karate club, 34 nodes, 60/40 split (random_state=0), weighted precision/recall/F1, standardised features + LogisticRegressionCV (liblinear, ovr, max_iter=1000); 3-element degree vector",
+   "quote": "f-score: 0.9274255156608098",
+   "table": null,
+   "note": "Text then says results are 'very stable and always close to 100%', which is looser than the printed 0.927; no repeated-run numbers given.",
+   "where": "Listing 9.9"
+  },
+  {
+   "claim": "Repeated runs of the degree and Node2Vec setups fluctuate widely, between 30% and 70% F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "f-score range",
+   "value": "30% to 70%",
+   "unit": null,
+   "baseline_value": null,
+   "n": "14 test nodes",
+   "setup": "Karate club, 34 nodes, 60/40 split (random_state=0), weighted precision/recall/F1, standardised features + LogisticRegressionCV (liblinear, ovr, max_iter=1000); degree and Node2Vec setups, multiple executions",
+   "quote": "with f-scores fluctuating widely between 30% and 70%",
+   "table": null,
+   "note": "Number of runs not stated; not stated what varies between runs (split is fixed in listing 9.6).",
+   "where": "after Listing 9.7"
+  },
+  {
+   "claim": "Louvain (seed=123) on the karate club graph finds four communities, all but one pure in club membership (one spurious node, number 8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "communities found",
+   "value": "4",
+   "unit": "communities",
+   "baseline_value": null,
+   "n": "14 test nodes",
+   "setup": "networkx louvain_communities(G, seed=123) on karate club graph",
+   "quote": "This code identifies four communities, as shown in figure 9.13.",
+   "table": null,
+   "note": null,
+   "where": "Listing 9.10, Fig 9.13"
+  },
+  {
+   "claim": "Node classification breaks the i.i.d. assumption because nodes are interconnected, so models must use both node features and network relationships.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement, no data",
+   "quote": "node classification shatters this i.i.d. assumption",
+   "table": null,
+   "note": null,
+   "where": "9.2.1"
+  }
+ ],
+ "limits": [
+  "Single 34-node graph, 14 test nodes, no repeated-split statistics; F1 differences are weakly supported.",
+  "Homophily features use neighbours' club labels (Mr. Hi / Officer), which are the target labels, so they leak labels; chapter does not discuss this.",
+  "Node2Vec p and q are not given; only 'requires careful tuning' and an exercise with lower walk_length/num_walks is offered, no tuned result.",
+  "Chapter text says Louvain was discussed in chapter 4; GNNs deferred to chapters 10-12.",
+  "Prose says Node2Vec 'considers 10 nodes before and after' and walks 'each visiting 30 nodes'; per-node walk count not stated in text."
+ ],
+ "practices": [
+  "Use the same featurization at training and prediction time (Note after Fig 9.8).",
+  "Standardise features (StandardScaler) before distance-sensitive models (9.3.1).",
+  "Express domain knowledge such as homophily as features before reaching for embeddings (9.3.1).",
+  "Tune autonomous embeddings such as Node2Vec; do not assume defaults are good (9.3.1)."
+ ],
+ "terms": [
+  {
+   "term": "node-focused tasks",
+   "definition": "The entire dataset is represented as one graph, with nodes and relationships as the data points.",
+   "where": "9.2"
+  },
+  {
+   "term": "graph-focused tasks",
+   "definition": "The data consists of a set of graphs, and each data point is an entire graph.",
+   "where": "9.2"
+  },
+  {
+   "term": "link prediction",
+   "definition": "Predicting the existence of a connection between two nodes; relationship prediction also predicts the type.",
+   "where": "9.2.2"
+  },
+  {
+   "term": "label propagation algorithm (LPA)",
+   "definition": "A fast method for detecting communities that propagates labels through the network; nodes with the same label end in the same community; non-deterministic.",
+   "where": "9.3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Node2Vec",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding baseline, cited as [25]",
+   "quote": null
+  },
+  {
+   "work": "Zachary karate club",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "cited as [24]",
+   "quote": null
+  },
+  {
+   "work": "Label propagation algorithm",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as [20]",
+   "quote": null
+  },
+  {
+   "work": "Louvain",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "introduced in chapter 4 of the book",
+   "quote": null
+  },
+  {
+   "work": "previous book by the same authors [1]",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "chapters 9-12 extend it with GNNs and LLMs",
+   "quote": "We’ll extend our previ‐"
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9.1",
+   "caption": "Node-focused and graph-focused tasks are represented in terms of expected input and output during training and prediction.",
+   "page": null,
+   "why": "Splits the task taxonomy"
+  },
+  {
+   "figure": "Fig 9.7/9.8",
+   "caption": "Training and prediction flow for node classification and link prediction.",
+   "page": null,
+   "why": "Shows featurization shared by both phases"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 9.8",
+   "snippet": "embeddings = [[degree[i], mr_hi_degree[i], officer_degree[i]] for i in G.nodes()]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No byline, year or venue in the chapter text; bib fields are inferred from repo notes.",
+  "Figure pages not captured; PDF text is flattened (code indentation and some lines broken).",
+  "Listing 9.9 result text says 'always close to 100%' but the single printed run is 0.927."
+ ]
+}

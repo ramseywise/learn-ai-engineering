@@ -1,0 +1,616 @@
+{
+ "schema": 1,
+ "key": "1802.09127",
+ "pdf": "generative-ai/05-RL/sources/riquelme-2018-deep-bayesian-bandits.pdf",
+ "bib": {
+  "title": "Deep Bayesian Bandits Showdown: An Empirical Comparison of Bayesian Deep Networks for Thompson Sampling",
+  "authors": [
+   "Carlos Riquelme",
+   "George Tucker",
+   "Jasper Snoek"
+  ],
+  "first_author": "Riquelme",
+  "year": 2018,
+  "venue": "ICLR 2018 (conference paper)",
+  "arxiv": "1802.09127",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 116281,
+  "chars_total": 116281,
+  "engine": "pymupdf",
+  "skipped": "Tables 4-8 and 10 (per-algorithm numeric cells) were read only in part (headers, first rows, selected rows); Table 1/6/9 read for the rows cited."
+ },
+ "type": "empirical",
+ "question": "How does the quality of an approximate posterior (from different Bayesian deep-network methods) affect Thompson Sampling performance in contextual bandits?",
+ "hypothesis": "Implied: good posterior approximations should give good Thompson Sampling decisions, but partially optimised/slowly converging uncertainty estimates may hurt in the online setting.",
+ "contributions": [
+  "A benchmark of approximate-posterior methods under Thompson Sampling on contextual bandits (real-data and synthetic wheel bandit).",
+  "Finding that methods that couple representation and uncertainty (VI, BB alpha-divergence, SGLD-type MCMC) suffer from partial optimisation online.",
+  "Finding that Bayesian linear regression on the last-layer representation (NeuralLinear) is robust and easy to tune."
+ ],
+ "method": {
+  "summary": "Eight real-data contextual bandits plus a synthetic Wheel bandit are used to compare about 15 posterior-approximation families (linear, NeuralLinear, RMS greedy, BBB, black-box alpha-divergence, dropout, SGFS, constant SGD, bootstrap, parameter noise, GP), each in a default and two Bayesian-optimised hyperparameter versions. All neural methods share one 2x100 ReLU MLP. Cumulative and simple regret are reported relative to a Uniform policy over 50 shuffled runs.",
+  "task": "contextual bandits with Thompson Sampling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Mushroom",
+    "role": "eval",
+    "size": "n = 50000",
+    "split": null,
+    "source": "Schlimmer 1981; 22 attributes, two classes; reward +5 safe, +5 w.p. 1/2 else -35 poisonous, 0 if not eaten",
+    "preprocessing": null
+   },
+   {
+    "name": "Statlog (Shuttle)",
+    "role": "eval",
+    "size": "n = 43500, d = 9, k = 7",
+    "split": null,
+    "source": "UCI (Asuncion & Newman 2007); reward 1 if correct; one action optimal ~80% of cases",
+    "preprocessing": null
+   },
+   {
+    "name": "Covertype",
+    "role": "eval",
+    "size": "n = 150000, d = 54, k = 7",
+    "split": null,
+    "source": "UCI",
+    "preprocessing": null
+   },
+   {
+    "name": "Financial",
+    "role": "eval",
+    "size": "n = 3713, d = 21, k = 8",
+    "split": null,
+    "source": "authors' own: stock prices of 21 NYSE/Nasdaq companies, 14 years; arms are synthetic linear combinations (portfolios)",
+    "preprocessing": "context = price difference between start and end of session per stock"
+   },
+   {
+    "name": "Jester",
+    "role": "eval",
+    "size": "n = 19181 users, d = 32, k = 8",
+    "split": null,
+    "source": "Goldberg et al. 2001; complete subset of users rating all 40 jokes",
+    "preprocessing": "d = 32 ratings as context, k = 8 as arms (following Riquelme et al. 2017)"
+   },
+   {
+    "name": "Adult",
+    "role": "eval",
+    "size": "n = 45222, d = 94, k = 14",
+    "split": null,
+    "source": "UCI; arms are occupations",
+    "preprocessing": "many covariates binarised"
+   },
+   {
+    "name": "Census (US 1990)",
+    "role": "eval",
+    "size": "n = 250000, d = 389, k = 9",
+    "split": null,
+    "source": "UCI; predict occupation",
+    "preprocessing": "binary dummies for categoricals"
+   },
+   {
+    "name": "Song (YearPredictionMSD)",
+    "role": "eval",
+    "size": "n = 250000 songs, d = 90, k = 10",
+    "split": null,
+    "source": "Million Song Dataset subset",
+    "preprocessing": "years 1922-2011 split into 10 equal-count buckets; decreasing Gaussian reward by bucket distance"
+   },
+   {
+    "name": "Wheel bandit (synthetic)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "d = 2, k = 5, delta from 0.5 to 0.99 (Tables 9, 10); contexts uniform in unit circle; mu1 = 1.2, mu2 = 1.0, mu3 = 50.0, sigma = 0.01",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Shared MLP (RMS/NeuralLinear/BBB/dropout/bootstrap/etc.)",
+    "role": "base",
+    "params": null,
+    "architecture": "fully connected, 2 hidden layers of 100 units, ReLU; input dim d, k outputs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 hidden",
+    "hidden": "100",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NeuralLinear",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RMS2 network; exact Bayesian linear regression (inverse-gamma noise, Gaussian beta) per action on last-hidden-layer output; regression updated every step, network every tf steps, forward pass over all data after retrain",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "defaults": "a0=3,b0=3,lambda=0.25,ts=20,tf=20"
+    }
+   },
+   {
+    "name": "Linear posterior family (LinPost, LinFullPost, Diag, PrecisionDiag variants)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "closed-form Bayesian linear regression per action",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GP",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multi-task GP, Matern 3/2 x linear x task kernel; inputs stop after 1000 observations; sparse variational GP with 300 inducing points tried but not reported",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Uniform",
+    "role": "baseline",
+    "params": null,
+    "architecture": "random action",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Per method: MSE-style regression on observed action for RMS-based nets; ELBO for BBB; black-box alpha-divergence; SGLD-type updates (SGFS, constant SGD); only loss of the observed action is used",
+   "optimizer": "RMSProp for RMS-based networks (RMS1 lr 0.01 fixed; RMS2 decaying, reset each period; RMS3 decaying, not reset, starts at 1); SGFS/constSGD use their own updates",
+   "lr": "method-specific, see Table 2 (e.g. RMS initial lr 1.0, decay 0.55)",
+   "lr_schedule": "RMS2/RMS3 decay; BBB and alpha-divergence ts linearly decayed from 10000 over first 100 times",
+   "warmup": "each action pulled s = 3 times round-robin initially",
+   "batch_size": "512",
+   "steps": "default ts = 20 or 100 mini-batches every tf = 20 timesteps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "p = 0.8 default (Dropout), 0.95 (Dropout-SL)",
+   "regularisation": "no data buffer (catastrophic forgetting observed); all observations sampled uniformly into mini-batches",
+   "hardware": null,
+   "compute": "relative elapsed time only (Table 8, normalised to RMS = 100)",
+   "wall_clock": null,
+   "seeds": "50 reshuffles of context order",
+   "other": {
+    "hyperparameter_versions": "default guess, plus -MR (Bayesian optimisation on Mushroom) and -SL (on Statlog)",
+    "bayes_opt_budget": null
+   }
+  },
+  "inference": {
+   "decoding": "Thompson Sampling: sample model from approximate posterior, act greedily",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50 independent runs with reshuffled context order",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "bootstrap": "q in {5,10}, p in {0.8,1.0} mainly tested; final q=10,p=1.0 (default), q=2,p=0.95 (MR), q=3,p=0.92 (SL)",
+    "paramnoise": "layer norm; default sigma 0.01, eps 0.01",
+    "epsgreedy": "eps0 0.01 x 0.999 per context (default)",
+    "dropout_default": "p = 0.8 chosen after trying 0.5 and 0.8"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Cumulative regret",
+     "definition": "E[r* - r], r* = reward of optimal policy over n rounds; reported normalised to Uniform = 100",
+     "unit": "% of Uniform",
+     "higher_is_better": false
+    },
+    {
+     "name": "Simple regret",
+     "definition": "mean cumulative regret over the last 500 time-steps, proxy for final policy quality",
+     "unit": "% of Uniform",
+     "higher_is_better": false
+    },
+    {
+     "name": "Mean rank",
+     "definition": "rank across the suite of bandit problems",
+     "unit": "rank",
+     "higher_is_better": false
+    },
+    {
+     "name": "Elapsed time",
+     "definition": "normalised to RMS (ts=100, tf=20) = 100",
+     "unit": "% of RMS",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Uniform",
+    "RMS (greedy NN)",
+    "eps-greedy RMS",
+    "LinGreedy",
+    "exact Bayesian linear posteriors"
+   ],
+   "protocol": "50 trials with context order reshuffled; mean and standard error of the mean; rewards deterministic for most real datasets so regret uses best realised reward."
+  },
+  "availability": {
+   "code": "promised open-source in Python/TensorFlow at sites.google.com/site/deepbayesianbandits/",
+   "weights": null,
+   "data": "public UCI/Jester/Million Song datasets; Financial dataset is authors' own"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The size of each mini-batch was 512.",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On the Wheel bandit at delta=0.99, NeuralLinear has cumulative regret about half of Uniform's while RMS and its spinoffs are near or above Uniform.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "52.64",
+   "unit": "% of Uniform",
+   "baseline_value": "RMS 104.23",
+   "n": null,
+   "setup": "Wheel bandit, delta = 0.99, cumulative regret normalised to Uniform=100, mean over 50 trials",
+   "quote": null,
+   "table": "Table 9, row NeuralLinear, column delta = 0.99",
+   "note": "SGFS is lower at 45.55 in the same column; NeuralLinear-MR 49.63.",
+   "where": "Table 9"
+  },
+  {
+   "claim": "SGFS has the lowest listed cumulative regret in the delta=0.99 Wheel column among the rows read, below NeuralLinear.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "45.55",
+   "unit": "% of Uniform",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wheel bandit delta=0.99",
+   "quote": null,
+   "table": "Table 9, row SGFS, column delta = 0.99",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "On easy Wheel setting delta=0.5 NeuralLinear is near-optimal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "1.10",
+   "unit": "% of Uniform",
+   "baseline_value": "RMS 25.10",
+   "n": null,
+   "setup": "Wheel bandit delta=0.5",
+   "quote": null,
+   "table": "Table 9, row NeuralLinear, column delta = 0.5",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "NeuralLinear nearly solves Statlog, which needs non-linearity, where linear approaches fail.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "0.91",
+   "unit": "% of Uniform",
+   "baseline_value": "LinPost 7.64; RMS 2.85",
+   "n": null,
+   "setup": "Statlog bandit, n=43500, cumulative regret normalised to Uniform",
+   "quote": null,
+   "table": "Table 1, row NeuralLinear, column Statlog",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "NeuralLinear on Mushroom beats the RMS network it is built on.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "2.22",
+   "unit": "% of Uniform",
+   "baseline_value": "RMS 6.68",
+   "n": null,
+   "setup": "Mushroom bandit, n=50000",
+   "quote": null,
+   "table": "Table 1, row NeuralLinear, column Mushroom",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On Jester NeuralLinear is no better than RMS (worse).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative regret",
+   "value": "75.43",
+   "unit": "% of Uniform",
+   "baseline_value": "RMS 69.93",
+   "n": null,
+   "setup": "Jester bandit",
+   "quote": null,
+   "table": "Table 1, row NeuralLinear, column Jester",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "By mean rank over the datasets, NeuralLinear (22) is behind the exact linear methods (LinFullPost 13.9, LinFullDiagPrecPost 14.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rank",
+   "value": "13.9",
+   "unit": "rank",
+   "baseline_value": "NeuralLinear 22",
+   "n": null,
+   "setup": "Mean rank, Table 1 (5 datasets listed)",
+   "quote": null,
+   "table": "Table 1, row LinFullPost, column Mean Rank",
+   "note": "Mean rank is over the whole suite per Fig 5 and Table 1; lower is better.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Tuned parameter noise improves average rank over the RMS learner it is based on.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rank",
+   "value": "20.9",
+   "unit": "rank",
+   "baseline_value": "28.7",
+   "n": null,
+   "setup": "Table 1 mean rank",
+   "quote": "20.9 compared to RMS at 28.7 (Table 1)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Direct Noise Injection"
+  },
+  {
+   "claim": "Hyperparameter search for BootstrappedNN chose only 2 and 3 networks, versus 10 in the manual version, without losing performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BootstrappedNN-MR and -SL vs q=10",
+   "quote": "decided to use only q = 2 and q = 3 networks respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Bootstrap"
+  },
+  {
+   "claim": "For BBB on a linear model, more training epochs per step slowly improve regret but never match the exact mean-field solution (PrecisionDiag).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4: linear data d=10, k=6, and Statlog; BBB with epochs 20-1000, fixed noise sigma=0.75",
+   "quote": "As the number of training epochs increases, BBB improves performance, but is always outperformed by PrecisionDiag.",
+   "table": null,
+   "note": null,
+   "where": "Fig 4 caption"
+  },
+  {
+   "claim": "Diagonalising the precision matrix (mean-field) performs dramatically better than diagonalising the covariance in linear Thompson Sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "linear bandits k=20, d=15 and 30, real data",
+   "quote": "diagonalizing the precision matrix (as in mean-ﬁeld Variational Inference) performs dramatically better than",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Linear Methods"
+  },
+  {
+   "claim": "NeuralLinear is fast computationally relative to others.",
+   "kind": "measured",
+   "source": null,
+   "metric": "elapsed time",
+   "value": "137.23",
+   "unit": "% of RMS",
+   "baseline_value": "RMS 100.00; BootstrappedNN 1032.55",
+   "n": null,
+   "setup": "Table 8, time normalised to RMS=100",
+   "quote": null,
+   "table": "Table 8, row NeuralLinear, column Mushroom",
+   "note": "Roughly 1.4 to 2.4 times RMS across datasets; text calls it fast.",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Wheel bandit problem is set up so that exploration need grows with delta.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wheel bandit",
+   "quote": "We set µ1 = 1.2, µ2 = 1.0, µ3 = 50.0, and σ = 0.01.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Overall conclusion: slowly converging uncertainty estimates are a problem online; decoupling representation from uncertainty helps.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all benchmarks",
+   "quote": "We found that the most robust meth-",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "Authors concede they did not add a baseline with dropout only during training, so exploration vs training benefit is not disentangled.",
+  "Hyperparameters tuned on Mushroom or Statlog (MR/SL) so these versions are not independent of the eval sets.",
+  "Only contextual bandits, not full RL; authors suggest trying NeuralLinear in complex RL domains.",
+  "GP limited to first 1000 observations; sparse GP not reported.",
+  "Mean rank favours exact linear methods over NeuralLinear on several datasets; the NeuralLinear-best claim is qualitative and strongest on Wheel (where SGFS is lower at delta 0.99).",
+  "Weak claim of reason for NeuralLinear success ('We suspect') is untested.",
+  "Code was promised 'will be available'; no hardware or compute stated.",
+  "Datasets are small (Financial n=3713) and Thompson Sampling ignores horizon."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NeuralLinear",
+   "definition": "Bayesian linear regression on the last-hidden-layer representation of a neural network, used for Thompson Sampling; network and regression updated at different time-scales.",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Simple regret",
+   "definition": "approximated as the mean cumulative regret in the last 500 time-steps",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Thompson (1933)",
+   "year": 1933,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Thompson Sampling",
+   "quote": null
+  },
+  {
+   "work": "Snoek et al. 2015, Scalable Bayesian optimization using deep neural networks",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "NeuralLinear is similar to Bayesian linear regression on last-layer features",
+   "quote": null
+  },
+  {
+   "work": "Blundell et al. 2015, Weight uncertainty in neural network (Bayes By Backprop)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "VI baseline; Mushroom bandit setup also from it",
+   "quote": null
+  },
+  {
+   "work": "Hernandez-Lobato et al. 2016, Black-box alpha divergence minimization",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Gal & Ghahramani 2016, Dropout as a Bayesian approximation",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Mandt et al. 2016, A variational analysis of stochastic gradient algorithms",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "SGFS and constant SGD",
+   "quote": null
+  },
+  {
+   "work": "Plappert et al. 2017, Parameter space noise for exploration",
+   "year": 2017,
+   "arxiv": "1706.01905",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Osband et al. 2016, Deep exploration via bootstrapped DQN",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "bootstrap approach",
+   "quote": null
+  },
+  {
+   "work": "Elmachtoub et al. 2017, practical contextual bandits with decision trees",
+   "year": 2017,
+   "arxiv": "1706.04687",
+   "relation": "uses-data",
+   "note": "Statlog, Covertype, Adult, Census bandits",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The impact on regret of different approximated posteriors (actual linear, Diag, PrecisionDiag).",
+   "page": 8,
+   "why": "shows diagonal-covariance approximation degrading with d while precision-diagonal does not"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Wheel bandits for increasing values of delta.",
+   "page": 9,
+   "why": "shows how the exploration difficulty is parameterised"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Cumulative regret for Bayes By Backprop applied to a linear model vs exact mean field PrecisionDiag.",
+   "page": 11,
+   "why": "isolates partial optimisation as the cause of VI's poor performance"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-2, Sec 3",
+   "snippet": "Σt = (XᵀX + Λ0)^-1, µt = Σt(Λ0µ0 + XᵀY); at = a0 + t/2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains ligature glyphs; one quote uses them verbatim.",
+  "Table 1 and Table 6 share the same numbers; Table 6 adds Adult, Song, Census columns."
+ ]
+}

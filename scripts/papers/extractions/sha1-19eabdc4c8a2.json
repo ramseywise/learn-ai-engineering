@@ -1,0 +1,318 @@
+{
+ "schema": 1,
+ "key": "sha1:19eabdc4c8a2",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/appendix-ai-systems-performance-checklist-175-items.pdf",
+ "bib": {
+  "title": "Appendix. AI Systems Performance Checklist (175+ Items)",
+  "authors": ["Chris Fregly"],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly, AI Systems Performance Engineering (book appendix)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 105772,
+  "chars_total": 105772,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which process-level and low-level practices should an AI systems performance engineer check when profiling and tuning training and inference on NVIDIA GPU systems?",
+ "hypothesis": null,
+ "contributions": [
+  "A checklist of about 175+ tips in 18 categories, from tuning mindset and OS settings to CUDA, precision, networking, serving and power."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Mixed precision (AMP) gives roughly a 1.5-3.5x speedup with minimal accuracy loss.",
+   "kind": "claim",
+   "source": null,
+   "metric": "speedup",
+   "value": "1.5-3.5x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FP16/BF16 mixed-precision training with Tensor Cores; no model, GPU or dataset named; depends on model and kernel mix.",
+   "quote": "This often gives about a 1.5–3.5× speedup",
+   "table": null,
+   "note": null,
+   "where": "Arithmetic Optimizations, Use mixed-precision training"
+  },
+  {
+   "claim": "torch.compile typically gives about 10-40% once warmed up.",
+   "kind": "claim",
+   "source": null,
+   "metric": "speedup",
+   "value": "10%-40%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PyTorch torch.compile (TorchInductor), after warm-up; no model or hardware named.",
+   "quote": "Typical gains of",
+   "table": null,
+   "note": "The same item next states 20%-50% on many models, so the book gives two ranges for one technique.",
+   "where": "GPU Programming, Use the PyTorch compiler"
+  },
+  {
+   "claim": "torch.compile has produced 20-50% speedups on many models.",
+   "kind": "claim",
+   "source": null,
+   "metric": "speedup",
+   "value": "20%-50%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PyTorch torch.compile, 'many models'; none named.",
+   "quote": "(e.g., 20%–50% on many models)",
+   "table": null,
+   "note": "Conflicts with the 10%-40% in the preceding sentence of the same item.",
+   "where": "GPU Programming, Use the PyTorch compiler"
+  },
+  {
+   "claim": "Autotuning custom CUDA kernel launch parameters can give 20-30% improvements over static settings.",
+   "kind": "claim",
+   "source": null,
+   "metric": "improvement",
+   "value": "20%-30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Custom CUDA kernels, block/tile size, unroll factors tuned per GPU generation; no kernel or GPU named.",
+   "quote": "This can easily yield 20%–30% improvements that",
+   "table": null,
+   "note": null,
+   "where": "Advanced Tuning Strategies, Autotune kernel parameters"
+  },
+  {
+   "claim": "2:4 structured sparsity lets GEMMs run about 2x faster for the pruned layers.",
+   "kind": "claim",
+   "source": null,
+   "metric": "GEMM speedup",
+   "value": "~2x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Layers pruned to the 2:4 pattern on modern NVIDIA GPUs with sparse Tensor Cores; per layer, not end-to-end; often needs retraining.",
+   "quote": "your GEMMs can",
+   "table": null,
+   "note": "Text reads 'your GEMMs can run ~2× faster for those layers'; the line break splits it.",
+   "where": "Arithmetic Optimizations, Exploit structured sparsity"
+  },
+  {
+   "claim": "Going from a 100% to an 80% power limit yields nearly the same speed at 20% less power for some models.",
+   "kind": "claim",
+   "source": null,
+   "metric": "power at near-equal speed",
+   "value": "20% less power at 80% power limit",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "'For some models'; nvidia-smi -pl power limit; the item is about workloads that are often memory-bound; no model, GPU or metric named; decode is not mentioned.",
+   "quote": "For some models, going from a 100% to 80% power limit yields",
+   "table": null,
+   "note": null,
+   "where": "Power and Thermal Management, Optimize for perf/watt"
+  },
+  {
+   "claim": "INT8 inference quantization can give 2-4x speedups over FP16 with negligible accuracy drop for many transformers.",
+   "kind": "claim",
+   "source": null,
+   "metric": "speedup",
+   "value": "2-4x",
+   "unit": "x",
+   "baseline_value": "FP16",
+   "n": null,
+   "setup": "TensorRT or similar INT8 quantization with calibration; no model or GPU named.",
+   "quote": "The speedups can be 2–4× over FP16.",
+   "table": null,
+   "note": null,
+   "where": "Arithmetic Optimizations, Use custom quantization for inference"
+  },
+  {
+   "claim": "FP8 Tensor Cores give roughly double the math throughput of FP16/BF16 on compute-bound kernels.",
+   "kind": "claim",
+   "source": null,
+   "metric": "throughput",
+   "value": "~2x",
+   "unit": "x",
+   "baseline_value": "FP16/BF16",
+   "n": null,
+   "setup": "Compute-bound kernels on modern NVIDIA GPUs; end-to-end speedup said to depend on kernel mix, bandwidth and calibration.",
+   "quote": "FP8 Tensor Cores provide roughly double the math",
+   "table": null,
+   "note": null,
+   "where": "Arithmetic Optimizations, Exploit FP8, novel precisions, and scaling techniques"
+  },
+  {
+   "claim": "Fixing the data pipeline often lifts GPU utilization from about 70% to above 95% on the same hardware.",
+   "kind": "claim",
+   "source": null,
+   "metric": "GPU utilization",
+   "value": "~70% to >95%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Removing I/O stalls by tuning prefetch, buffers and storage; no workload named.",
+   "quote": "these optimizations raise GPU utilization from ~70% to > 95% on the same",
+   "table": null,
+   "note": "Text reads 'Often, these optimizations raise GPU utilization from ~70% to > 95% on the same hardware'.",
+   "where": "I/O Optimization, Measure throughput and eliminate bottlenecks"
+  },
+  {
+   "claim": "Keep end-to-end data-pipeline overhead under 10% of ideal, measured by comparing synthetic and real data iteration time.",
+   "kind": "claim",
+   "source": null,
+   "metric": "pipeline overhead",
+   "value": "<10%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training iteration time with synthetic versus real data.",
+   "quote": "Aim for less than 10% over-",
+   "table": null,
+   "note": "Text reads 'Aim for less than 10% overhead from ideal'.",
+   "where": "Data Processing Pipelines, Focus on end-to-end throughput"
+  },
+  {
+   "claim": "NVLink 5 provides up to 1.8 TB/s bidirectional GPU-to-GPU bandwidth, over 14x PCIe Gen5.",
+   "kind": "claim",
+   "source": null,
+   "metric": "GPU-to-GPU bandwidth",
+   "value": "1.8 TB/s",
+   "unit": "TB/s",
+   "baseline_value": "PCIe Gen5",
+   "n": null,
+   "setup": "NVLink 5, GB200/GB300 NVL72; vendor figure restated, not measured.",
+   "quote": "1.8 TB/s bidirectional GPU-to-GPU bandwidth (over 14× PCIe Gen5)",
+   "table": null,
+   "note": "Elsewhere the same section says 900 GB/s per GPU in each direction.",
+   "where": "System Architecture, Leverage high-bandwidth interconnects"
+  },
+  {
+   "claim": "Profile on a few nodes before scaling out: an all-reduce already taking 20% of an iteration on 8 GPUs will worsen at scale.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "all-reduce share of iteration",
+   "value": "20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative example on 8 GPUs; not a measurement.",
+   "quote": "taking 20% of an itera-",
+   "table": null,
+   "note": "Text reads 'taking 20% of an iteration on 8 GPUs'.",
+   "where": "Conclusion"
+  }
+ ],
+ "limits": [
+  "Almost every number is an unsourced rule of thumb with no model, GPU, dataset or run count; the book's own conclusion says the list is not exhaustive and not every item applies.",
+  "The torch.compile gain is given as two different ranges (10%-40% and 20%-50%) in one item.",
+  "Hardware advice targets NVIDIA Grace Blackwell (GB200/GB300 NVL72) and mentions Vera Rubin; it will date as hardware changes.",
+  "Mostly training and cluster advice; inference items are two sections (Efficient Inference and Serving, Multinode Inference and Serving).",
+  "Item count: the title says 175+; the text states no exact count."
+ ],
+ "practices": [
+  "Optimize the biggest runtime/cost contributor first and profile before and after every change (Mindset).",
+  "Pin versions and configs in source control and run performance regression benchmarks in CI (Reproducibility).",
+  "Match CPU cores (about one per GPU), DRAM and storage to GPU feed rates; keep tightly coupled jobs within one NVLink domain (System Architecture, Multi-GPU).",
+  "Pin processes to the local NUMA node, set THP to always or madvise (madvise if latency-critical and jittery), raise memlock, enable GPU persistence mode, keep driver/CUDA identical across nodes (OS and Driver).",
+  "Keep ECC on for data-center GPUs; use MPS/MIG to raise utilization of small jobs and keep persistence on with MIG (GPU Resource Management).",
+  "Use parallel data loaders, pinned memory, async transfers and fast NVMe/GDS to keep GPUs fed (I/O Optimization).",
+  "Use Nsight Systems/Compute, NVTX and DCGM to classify the job as compute, memory, I/O or network bound, and keep a regression benchmark set (Profiling).",
+  "Prefer BF16 over FP16, TF32 for easy FP32 speedups, FP8 first for inference and NVFP4 only after calibration (Arithmetic).",
+  "Use torch.compile (reduce-overhead mode), CUDA Graphs, fused kernels, FlashAttention and Triton for hotspots (CUDA tuning, Advanced Tuning).",
+  "For serving: continuous batching, specialized runtimes (vLLM, SGLang, TensorRT-LLM, Dynamo), NIXL for KV transfer, KV offload, warm-up, tail-latency (p99) monitoring (Efficient Inference).",
+  "Disaggregate prefill and decode, shard oversized models by tensor/pipeline parallelism, offload memory for long contexts (Multinode Inference).",
+  "Monitor thermals (throttling near 85 C in some cases), test power limits with nvidia-smi -pl, and consolidate workloads onto busy GPUs (Power and Thermal)."
+ ],
+ "terms": [
+  {
+   "term": "goodput",
+   "definition": "useful work per dollar/watt, rather than raw FLOPS",
+   "where": "System Architecture and Hardware Planning"
+  },
+  {
+   "term": "NIXL",
+   "definition": "NVIDIA Inference Xfer Library; streams KV cache from a prefill GPU to a decode GPU in a disaggregated cluster over GPUDirect RDMA without involving the CPU",
+   "where": "Efficient Inference and Serving, Leverage NIXL for distributed inference"
+  },
+  {
+   "term": "continuous batching",
+   "definition": "dynamically merging and splitting sequences of tokens across requests in real time so the GPU stays at high occupancy",
+   "where": "Multinode Inference and Serving"
+  },
+  {
+   "term": "persistent kernel",
+   "definition": "a kernel launched once that stays active, reusing threads to handle many units of work in a loop instead of launching a fresh kernel per unit",
+   "where": "Kernel Scheduling and Execution"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AI Systems Performance Engineering (earlier chapters of the same book)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Appendix distils the book's chapters into a checklist; refers back to 'earlier chapters' and the H800 versus H100 discussion.",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek 3FS (Fire-Flyer File System)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as a distributed dataset-sharding filesystem example; 'multiterabyte-per-second throughput'.",
+   "quote": null
+  },
+  {
+   "work": "SuperOffload",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Superchip-optimized offload algorithms (speculation-then-validation, ARM-based CPU optimizer).",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended memory-efficient attention.",
+   "quote": null
+  },
+  {
+   "work": "ZeRO / DeepSpeed / Megatron-LM",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Optimizer sharding recommendation.",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "Arithmetic Optimizations, Use TF32 for easy speedup",
+   "snippet": "torch.set_float32_matmul_precision(\"high\")",
+   "verbatim": true
+  },
+  {
+   "where": "OS and Driver Optimizations, Use the latest NVIDIA driver and CUDA stack",
+   "snippet": "nvidia-smi -pm 1",
+   "verbatim": true
+  },
+  {
+   "where": "Distributed Training, Optimize NCCL environment variables",
+   "snippet": "NCCL_NTHREADS (default 4 -> 8 or 16); NCCL_BUFFSIZE (default 1 MB -> 4 MB or more); NCCL_COLLNET_ENABLE=1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache has hyphenation and line breaks mid-phrase and trailing site chrome (index, search, subscribe) after the Conclusion; no embedded instructions found.",
+  "The PDF is a web-capture of the appendix; no figures or tables."
+ ]
+}

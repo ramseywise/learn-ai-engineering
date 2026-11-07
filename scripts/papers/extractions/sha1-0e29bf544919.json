@@ -1,0 +1,495 @@
+{
+ "schema": 1,
+ "key": "sha1:0e29bf544919",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch06-preference-alignment.pdf",
+ "bib": {
+  "title": "Fine-Tuning with Preference Alignment (LLM Engineer's Handbook, ch. 6)",
+  "authors": [
+   "Paul Iusztin",
+   "Maxime Labonne"
+  ],
+  "first_author": "Iusztin",
+  "year": 2024,
+  "venue": "Packt (book chapter, read via O'Reilly)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 58136,
+  "chars_total": 58136,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build a preference dataset and use DPO to align an SFT model to a target writing style?",
+ "hypothesis": null,
+ "contributions": [
+  "Preference-dataset structure, size guidance and generation/evaluation methods",
+  "A pipeline building a 1,467-pair style preference set from blog extracts vs GPT-4o-mini generations",
+  "RLHF vs DPO overview and a Unsloth/TRL DPO run on TwinLlama-3.1-8B"
+ ],
+ "method": {
+  "summary": "Builds a 1,467-pair preference dataset (blog extracts as chosen, GPT-4o-mini generations as rejected) and DPO-fine-tunes TwinLlama-3.1-8B with Unsloth/TRL and LoRA.",
+  "task": "preference optimisation (DPO) for writing-style imitation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "mlabonne/llmtwin-dpo",
+    "role": "train",
+    "size": "1,467 pairs (2,970 before filtering)",
+    "split": "95% train / 5% test",
+    "source": "built from cleaned_documents.json blog articles; chosen = extracts, rejected = GPT-4o-mini output; on Hugging Face Hub",
+    "preprocessing": "chunks of 1,000 to 2,000 chars split at sentence ends; filters: chosen >= 100 chars, uppercase start and ends in . ! ?; Alpaca template on prompt, EOS appended to answers"
+   }
+  ],
+  "models": [
+   {
+    "name": "TwinLlama-3.1-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": "Llama 3.1 decoder-only, SFT from ch. 5",
+    "init_from": "Llama-3.1-8B (SFT in ch. 5)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max_seq_length 2048",
+    "other": {}
+   },
+   {
+    "name": "gpt-4o-mini",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates instructions, rejected answers and extracted answers; JSON mode, temperature 0.7, max_tokens 2000"
+    }
+   }
+  ],
+  "training": {
+   "objective": "DPO (binary cross-entropy on preferred vs rejected, KL-anchored to reference)",
+   "optimizer": "adamw_8bit",
+   "lr": "2e-6",
+   "lr_schedule": "linear",
+   "warmup": "10 steps",
+   "batch_size": "inferred: per_device_train_batch_size 2 x gradient_accumulation_steps 8 = 16 (single device not stated)",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": "inferred: max_length and max_prompt_length are each max_seq_length//2 with max_seq_length = 2048",
+   "precision": "bf16 if supported else fp16; LoRA (QLoRA optional via load_in_4bit)",
+   "weight_decay": "0.01",
+   "dropout": "lora_dropout 0",
+   "regularisation": "beta 0.5 against reference (original model without adapters, ref_model=None)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "seed=0",
+   "other": {
+    "lora_rank_alpha": "prose says 64; printed code shows r=32, lora_alpha=32",
+    "target_modules": "all linear modules (q,k,v,up,down,o shown)",
+    "eval": "eval_strategy steps, eval_steps 0.2, eval batch size 2",
+    "logging": "Comet ML"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "max_new_tokens=256 (sanity check)",
+   "samples": "one qualitative sample",
+   "prompting": "Alpaca template",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Training/validation loss, rewards, margins, accuracies",
+     "definition": "rewards = mean difference of log probabilities of trained and reference models; margins = chosen minus rejected rewards; accuracies = % of times chosen identified",
+     "unit": "as logged",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "SFT TwinLlama-3.1-8B (qualitative)"
+   ],
+   "protocol": "one qualitative sanity-check prompt; no benchmark scores"
+  },
+  "availability": {
+   "code": "https://github.com/PacktPublishing/LLM-Engineering",
+   "weights": "https://huggingface.co/mlabonne/TwinLlama-3.1-8B-DPO",
+   "data": "https://huggingface.co/datasets/mlabonne/llmtwin-dpo"
+  },
+  "prompts": [
+   {
+    "purpose": "LLM-as-a-judge pairwise ranking",
+    "text": "You are an answer judge. Your goal is to compare answer A and answer B. I want to know which answer does a better job of answering the instruction in terms of relevance, accuracy, completeness, clarity, structure, and conciseness.\nInstruction: {instruction}\nAnswer A: {answer_a}\nAnswer B: {answer_b}\nExplain your reasoning step by step and output the letter of the best answer using the following structure:\nReasoning: (compare the two answers)\nBest answer: (A or B)",
+    "where": "Table 6.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.lora_rank_alpha",
+    "quote": "We increase the rank ( r ) and lora_alpha from 32 (as it was in",
+    "where": "Implementing DPO step 6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Task-specific alignment (style, refusals) can use 100 to 10,000 preference pairs.",
+   "kind": "reported",
+   "source": "authors' practice, uncited",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General guidance from the authors, no experiment",
+   "quote": "These alignments can often be achieved with smaller datasets, ranging from 100 to 10,000 preference pairs, depending on the task’s complexity.",
+   "table": null,
+   "note": null,
+   "where": "Data quantity"
+  },
+  {
+   "claim": "Open-source community uses 10,000 to 100,000 preference samples to improve models.",
+   "kind": "reported",
+   "source": "authors' practice, uncited",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-source community practice",
+   "quote": "the open-source community uses datasets ranging",
+   "table": null,
+   "note": null,
+   "where": "Data quantity"
+  },
+  {
+   "claim": "An identity task (state who trained the model) needs about 200 to 500 pairs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rejected answers claim other providers; chosen claim you",
+   "quote": "A relatively small dataset of 200 to 500 pairs can be enough for",
+   "table": null,
+   "note": null,
+   "where": "Data quantity"
+  },
+  {
+   "claim": "The pipeline generated 2,970 raw samples, filtered to 1,467.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size after filtering",
+   "value": "1,467",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blog extracts of 1,000-2,000 chars, GPT-4o-mini generated 5 triples per extract, filtered by length (>=100 chars) and format",
+   "quote": "The create_preference_dataset() function generated 2,970 samples.",
+   "table": null,
+   "note": "Text says 'only retain 1,467 samples'; the filter description in the text ('start with an uppercase letter or end with a period') is garbled versus the code",
+   "where": "Creating our own preference dataset"
+  },
+  {
+   "claim": "DPO run used beta 0.5 rather than the usual 0.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "beta",
+   "value": "0.5",
+   "unit": "beta",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B DPO fine-tune on mlabonne/llmtwin-dpo (blog-style imitation)",
+   "quote": "A standard value of 0.1 works well in most scenarios, but we decided to",
+   "table": null,
+   "note": null,
+   "where": "Implementing DPO"
+  },
+  {
+   "claim": "DPO learning rate 2e-6 vs 3e-4 for the SFT run, 1 epoch instead of 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "learning rate",
+   "value": "2e-6",
+   "unit": "learning rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B DPO fine-tune on mlabonne/llmtwin-dpo (blog-style imitation)",
+   "quote": "The learning rate is also lower (from 3e-4 for SFT to 2e-6 here). We train",
+   "table": null,
+   "note": null,
+   "where": "Implementing DPO"
+  },
+  {
+   "claim": "Over 20 models were trained to pick hyperparameters, compared on qualitative outputs on a set of questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "models trained in search",
+   "value": "20",
+   "unit": "models",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B DPO fine-tune on mlabonne/llmtwin-dpo (blog-style imitation)",
+   "quote": "To find the best hyperparameters, we trained over 20",
+   "table": null,
+   "note": "Selection was by reading outputs, no metric",
+   "where": "Implementing DPO"
+  },
+  {
+   "claim": "Train/test split of the DPO data is 95%/5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "95%/5%",
+   "unit": "split",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B DPO fine-tune on mlabonne/llmtwin-dpo (blog-style imitation)",
+   "quote": "Finally, we create a train/test split with a 95%/5% ratio.",
+   "table": null,
+   "note": null,
+   "where": "Implementing DPO"
+  },
+  {
+   "claim": "PPO-inspired methods keep a higher performance ceiling for runs with millions of preference samples.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' judgement, no data",
+   "quote": "PPO-inspired methods still",
+   "table": null,
+   "note": null,
+   "where": "Direct Preference Optimization"
+  },
+  {
+   "claim": "Author-observed (no data): DPO makes models more verbose and formal.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experimental observation, no numbers given",
+   "quote": "experimentally, DPO tends to make models",
+   "table": null,
+   "note": null,
+   "where": "Creating our own preference dataset"
+  },
+  {
+   "claim": "The DPO model's sample answer is judged more accurate and less formal than the SFT answer's (single qualitative example).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One prompt, 'Write a paragraph to introduce supervised fine-tuning'; no metric",
+   "quote": "The DPO model provides an answer that is both more accurate and closer",
+   "table": null,
+   "note": null,
+   "where": "Implementing DPO"
+  }
+ ],
+ "limits": [
+  "The DPO outcome is one qualitative sample on one prompt; no quantitative evaluation in this chapter (stated: automating style evaluation is 'not the purpose of this chapter').",
+  "Prose says r and lora_alpha are raised to 64, but the printed code shows r=32, lora_alpha=32.",
+  "Dataset text describes the format filter inconsistently (start uppercase or end with punctuation) vs code (both required).",
+  "Multi-turn preference data unsupported by major libraries 'at the time of writing' (2024).",
+  "Only DPO is implemented; the RLHF/PPO comparison is asserted without citations to results.",
+  "Data sizes (100 to 10k etc.) are uncited rules of thumb."
+ ],
+ "practices": [
+  "Apply the same quality principles as instruction data (accuracy, diversity, complexity) to preference data (Understanding preference datasets).",
+  "Keep the rejected answer meaningful; it encodes the behavior to remove (Preference data).",
+  "Prefer pairwise ranking over absolute scoring for LLM judges; add a ground-truth answer or grading note and chain of thought (Evaluating preferences).",
+  "Mitigate judge bias by randomizing A/B order, few-shot balanced examples and a multi-model jury (Evaluating preferences).",
+  "When a ground-truth human text exists, use it as chosen and an LLM output as rejected, skipping a judge (Creating our own preference dataset).",
+  "Use light DPO for style imitation: low learning rate, few epochs, higher beta (Implementing DPO).",
+  "With LoRA/QLoRA use ref_model=None so only one model is loaded (Implementing DPO).",
+  "Monitor training loss, validation loss, gradient norm, chosen/rejected rewards, margins and accuracies; 100% accuracy early signals easy pairs (Implementing DPO).",
+  "Iterate on the generation prompt with manual evaluation (Creating our own preference dataset)."
+ ],
+ "terms": [
+  {
+   "term": "Preference alignment",
+   "definition": "techniques to fine-tune models on preference data",
+   "where": "Preference alignment"
+  },
+  {
+   "term": "Preference data",
+   "definition": "a collection of responses to a given instruction, ranked by humans or language models",
+   "where": "Preference data"
+  },
+  {
+   "term": "Margins",
+   "definition": "the difference between chosen and rejected rewards",
+   "where": "Implementing DPO"
+  },
+  {
+   "term": "Rewards (DPO)",
+   "definition": "the mean difference between the log probabilities output by the trained and reference models",
+   "where": "Implementing DPO"
+  },
+  {
+   "term": "Accuracies (DPO)",
+   "definition": "the percentage of times the model correctly identifies the chosen answers",
+   "where": "Implementing DPO"
+  },
+  {
+   "term": "Grading note",
+   "definition": "a description of the expected answer, generated when no ground truth exists",
+   "where": "Evaluating preferences"
+  },
+  {
+   "term": "Position / length / family bias",
+   "definition": "LLM judges favor the first answer / longer answers / answers from themselves or their model family",
+   "where": "Evaluating preferences"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2023,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "DPO is the implemented algorithm",
+   "quote": null
+  },
+  {
+   "work": "A Survey of Reinforcement Learning from Human Feedback (Kaufmann et al.)",
+   "year": 2023,
+   "arxiv": "2312.14925",
+   "relation": "related",
+   "note": "RLHF background",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences (Christiano et al.)",
+   "year": 2017,
+   "arxiv": "1706.03741",
+   "relation": "related",
+   "note": "reward models from human preferences",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "RLHF",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization Algorithms (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "PPO shown in Fig 6.4",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize from human feedback (Stiennon et al.)",
+   "year": 2020,
+   "arxiv": "2009.01325",
+   "relation": "uses-data",
+   "note": "named preference dataset",
+   "quote": null
+  },
+  {
+   "work": "Anthropic HH-RLHF",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "named preference dataset",
+   "quote": null
+  },
+  {
+   "work": "Akrour et al. and Cheng et al., preference-based RL",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of PbRL",
+   "quote": null
+  },
+  {
+   "work": "Unsloth, TRL",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DPO training libraries",
+   "quote": null
+  },
+  {
+   "work": "mlabonne/orpo-dpo-mix-40k, Intel/orca_dpo_pairs, argilla/Capybara-Preferences",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "example preference datasets",
+   "quote": null
+  },
+  {
+   "work": "LLM Engineer's Handbook ch. 5 (TwinLlama-3.1-8B SFT)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DPO applied to the ch. 5 model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 6.1",
+   "caption": "Example of sample from the mlabonne/orpo-dpo-mix-40k dataset",
+   "page": 2,
+   "why": "shows instruction, chosen, rejected"
+  },
+  {
+   "figure": "Table 6.2",
+   "caption": "Example of LLM-as-a-judge prompt for pairwise ranking",
+   "page": 7,
+   "why": "judge prompt"
+  },
+  {
+   "figure": "Fig 6.4/6.5",
+   "caption": "High-level view of PPO / DPO for preference alignment",
+   "page": 14,
+   "why": "contrasts RLHF pipeline with DPO"
+  },
+  {
+   "figure": "Fig 6.6",
+   "caption": "Experiment tracking in Comet ML with DPO metrics",
+   "page": 20,
+   "why": "what healthy DPO curves look like"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Code listings are truncated at line ends in the PDF (cut-off lines), so some arguments are unreadable.",
+  "Printed code shows LoRA r=32, lora_alpha=32 while the prose says 64.",
+  "Figures (6.1-6.6) are images; only captions read."
+ ]
+}

@@ -1,0 +1,161 @@
+{
+ "schema": 1,
+ "key": "2510.04618",
+ "pdf": "ai-engineering/02-context-engineering/sources/zhang-2025-agentic-context-engineering.pdf",
+ "bib": {
+  "title": "AGENTIC CONTEXT ENGINEERING: EVOLVING CONTEXTS FOR SELF-IMPROVING LANGUAGE MODELS",
+  "authors": ["Qizheng Zhang", "Changran Hu", "Shubhangi Upasani", "Boyuan Ma", "Fenglu Hong", "Vamsidhar Kamanuru", "Jay Rainton", "Chen Wu", "Mengmeng Ji", "Hanchen Li", "Urmish Thakker", "James Zou", "Kunle Olukotun"],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "Published as a conference paper at ICLR 2026 (arXiv:2510.04618v3, 29 Mar 2026)",
+  "arxiv": "2510.04618",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100550,
+  "chars_total": 111560,
+  "engine": "pymupdf",
+  "skipped": "Reference list pages (lines 820-984 of the text cache, about 11,000 chars) skimmed only for lineage; everything else read."
+ },
+ "type": "empirical",
+ "question": "How can an LLM's input context be adapted over time, offline or online, without losing detail to brevity bias or context collapse?",
+ "hypothesis": "Contexts should act as comprehensive, evolving playbooks updated by small incremental deltas rather than rewritten as concise summaries, and this will beat prompt optimizers and monolithic-rewrite memory methods.",
+ "contributions": [
+  "ACE: a Generator, Reflector, Curator framework that treats context as an evolving playbook of itemized bullets",
+  "Incremental delta updates merged by non-LLM logic, plus a grow-and-refine step (dedup by embeddings, lazy or proactive pruning)",
+  "Gains of 10.6% on agents and 8.6% on domain-specific benchmarks over strong baselines, with and without ground-truth labels",
+  "Lower adaptation latency, rollouts and token cost than GEPA and Dynamic Cheatsheet"
+ ],
+ "method": {
+  "summary": "ACE keeps context as a playbook of bullets (id, helpful/harmful counters, content). A Generator produces trajectories and marks which bullets helped, a Reflector (up to 5 refinement rounds) distills lessons, and a Curator emits ADD delta operations that are merged deterministically into the playbook; embedding dedup and pruning keep it compact. Evaluated offline (optimize on train split, test on test) and online (predict, then update, sequentially on shuffled test split) against ICL, MIPROv2, GEPA and Dynamic Cheatsheet, mostly with DeepSeek-V3.1 as every role.",
+  "task": "context adaptation (system prompt optimisation and test-time agent memory) on agent tasks (AppWorld) and domain reasoning (FiNER, Formula, DDXPlus, BIRD-SQL)",
+  "trains": false,
+  "datasets": [
+   {"name": "AppWorld", "role": "both", "size": "test-normal and test-challenge splits; offline cost study used 90 training queries and 160 eval queries", "split": "original train/validation/test; test-normal and test-challenge", "source": "Trivedi et al., 2024", "preprocessing": null},
+   {"name": "FiNER", "role": "both", "size": "139 fine-grained XBRL entity types", "split": "original train/validation/test", "source": "Loukas et al., 2022", "preprocessing": null},
+   {"name": "Formula", "role": "both", "size": null, "split": "original train/validation/test", "source": "Wang et al., 2025a (XBRL numerical reasoning)", "preprocessing": null},
+   {"name": "DDXPlus (StreamBench)", "role": "both", "size": "1372 train/val examples in total; 1000 random train examples for ACE and GEPA, 372 for GEPA validation", "split": "offline, non-streaming", "source": "Fansi Tchango et al., 2022 via StreamBench (Wu et al., 2024)", "preprocessing": null},
+   {"name": "BIRD-SQL (StreamBench)", "role": "both", "size": "1000 random train examples for ACE and GEPA; 500 for GEPA validation", "split": "offline, non-streaming", "source": "Li et al., 2023 via StreamBench", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "DeepSeek-V3.1", "role": "base", "params": "671B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"mode": "non-thinking, used for Generator, Reflector and Curator in main results"}},
+   {"name": "GPT-OSS-120B", "role": "base", "params": "120B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "all three ACE roles switched to it in A.1"}},
+   {"name": "GPT-5.1", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "also used for prompt-caching study and as a stronger Reflector"}},
+   {"name": "Llama-3.3-70B-Instruct", "role": "base", "params": "70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4o-mini", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "LLM-as-a-judge for BIRD-SQL"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "null: runs, seeds and repeats are not stated; one shuffled test order shared across methods",
+   "prompting": "AppWorld: official ReAct implementation with a 3-shot example; ACE playbook inserted between PLAYBOOK_BEGIN and PLAYBOOK_END. FiNER: JSON output with reasoning, bullet_ids, final_answer.",
+   "retrieval": null,
+   "parameters": {
+    "batch_size": "1 (one delta context per sample)",
+    "max_reflector_refinement_rounds": "5",
+    "max_epochs_offline": "5",
+    "dedup": "semantic-embedding comparison of bullets; sensitivity tested at 50%, 70%, 90% threshold (Table 20)",
+    "pruning_trigger": "maximum context length; tested 10K, 50K, 100K tokens (Table 21); refinement proactive (after each delta) or lazy (when window exceeded)",
+    "cost_study_setting": "1 epoch and 1 reflector round (A.3)",
+    "baseline_ICL": "all training samples if they fit, else window filled with as many demonstrations as possible",
+    "baseline_MIPROv2_GEPA": "official DSPy implementation, auto=\"heavy\"",
+    "baseline_DC": "official implementation, cumulative mode DC-CU"
+   },
+   "other": {"temperature_and_decoding": "not stated", "code_for_merge": "deterministic non-LLM logic, not specified in the paper"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "TGC (Task Goal Completion)", "definition": "official AppWorld metric per task", "unit": "%", "higher_is_better": true},
+    {"name": "SGC (Scenario Goal Completion)", "definition": "official AppWorld metric per scenario", "unit": "%", "higher_is_better": true},
+    {"name": "Accuracy (FiNER, Formula, DDXPlus)", "definition": "proportion of predicted answers that exactly match the ground truth", "unit": "%", "higher_is_better": true},
+    {"name": "BIRD-SQL accuracy", "definition": "GPT-4o-mini as LLM-as-a-judge", "unit": "%", "higher_is_better": true},
+    {"name": "Adaptation latency", "definition": "wall-clock time of context adaptation", "unit": "s", "higher_is_better": false},
+    {"name": "Rollouts and token dollar cost", "definition": "count of rollouts; $ for token ingestion and generation", "unit": "count, $", "higher_is_better": false}
+   ],
+   "baselines": ["Base LLM (ReAct)", "ICL", "MIPROv2", "GEPA", "Dynamic Cheatsheet (DC-CU)"],
+   "protocol": "Offline: optimise on train split, report pass@1 on test. Online: sequential predict-then-update on the same shuffled test split. Deltas in tables are relative to the base LLM. No seeds, repeats or significance tests reported. IBM CUGA is a rough contextual reference only, not a baseline."
+  },
+  "availability": {"code": "github.com/ace-agent/ace; project page ace-agent.github.io", "weights": null, "data": "public benchmarks"},
+  "prompts": [
+   {"purpose": "ACE Generator prompt on FiNER (Fig 12)", "text": "You are an analysis expert tasked with answering questions using your knowledge, a curated playbook of strategies and insights and a reflection that goes over the diagnosis of all previous mistakes made while answering the question.", "where": "Appendix F, Fig 12 (full prompts for AppWorld Generator, Reflector, Curator and the ICL, DC, GEPA baselines are in Figs 6-14, pp 24-32; not copied in full)"},
+   {"purpose": "ACE Curator instruction (Fig 11 / Fig 14)", "text": "You are a master curator of knowledge. Your job is to identify what new insights should be added to an existing playbook based on a reflection from a previous attempt.", "where": "Appendix F, Figs 11 and 14; operations limited to ADD with section and content"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.max_reflector_refinement_rounds", "quote": "We set the maximum number of Reflector refinement rounds and the maximum", "where": "Sec 4.2"}
+  ]
+ },
+ "results": [
+  {"claim": "Average gain of ACE over selected baselines on agent tasks.", "kind": "measured", "source": null, "metric": "average gain over baselines", "value": "10.6", "unit": "% (accuracy points; the paper prints %)", "baseline_value": null, "n": null, "setup": "AppWorld, DeepSeek-V3.1 as Generator/Reflector/Curator, offline and online adaptation, averaged over ICL, GEPA and DC comparisons", "quote": "yielding average gains of 10.6% on agents", "table": null, "note": "Text says ACE beats ICL and GEPA by 12.3% and 11.9% but Table 1 averages give 59.4 - 46.0 = 13.4 and 59.4 - 46.4 = 13.0; the derivation of 10.6 from 12.3, 11.9 and 7.6 matches only the text figures.", "where": "Sec 1, Table 1 caption"},
+  {"claim": "Average gain on domain-specific (finance) benchmarks.", "kind": "measured", "source": null, "metric": "average gain over baselines", "value": "8.6", "unit": "%", "baseline_value": null, "n": null, "setup": "FiNER and Formula, DeepSeek-V3.1, offline and online", "quote": "8.6% on domain-specific benchmarks", "table": null, "note": "Abstract says '+8.6% on finance'.", "where": "Sec 1"},
+  {"claim": "Context collapse: a full LLM rewrite shrank the context to 122 tokens.", "kind": "measured", "source": null, "metric": "context tokens", "value": "122", "unit": "tokens", "baseline_value": "18,282", "n": null, "setup": "AppWorld case study with Dynamic Cheatsheet; step 60 to step 61", "quote": "collapsed to just 122 tokens", "table": null, "note": "Shown through Dynamic Cheatsheet, not ACE; the paper says the issue is not specific to that method.", "where": "Sec 2.2, Fig 2"},
+  {"claim": "Accuracy fell below the no-context baseline after the collapse.", "kind": "measured", "source": null, "metric": "AppWorld accuracy", "value": "57.1", "unit": "%", "baseline_value": "63.7 without adaptation; 66.7 just before collapse", "n": null, "setup": "same case study as above", "quote": "with accuracy dropping to 57.1", "table": null, "note": null, "where": "Sec 2.2"},
+  {"claim": "Offline ACE with GT labels on AppWorld reaches 59.4 average vs 42.4 for ReAct.", "kind": "measured", "source": null, "metric": "AppWorld average (TGC/SGC over test-normal and test-challenge)", "value": "59.4", "unit": "%", "baseline_value": "42.4", "n": null, "setup": "DeepSeek-V3.1, offline adaptation, GT labels available to Reflector", "quote": null, "table": "Table 1, row ReAct + ACE (GT labels yes), column Average", "note": null, "where": "Table 1"},
+  {"claim": "Offline ACE without GT labels still reaches 57.2 average.", "kind": "measured", "source": null, "metric": "AppWorld average", "value": "57.2", "unit": "%", "baseline_value": "42.4", "n": null, "setup": "DeepSeek-V3.1, offline, no GT labels (execution feedback only)", "quote": null, "table": "Table 1, row ReAct + ACE (GT labels no, offline), column Average", "note": null, "where": "Table 1"},
+  {"claim": "Online ACE on AppWorld beats Dynamic Cheatsheet (59.5 vs 51.9 average).", "kind": "measured", "source": null, "metric": "AppWorld average", "value": "59.5", "unit": "%", "baseline_value": "51.9 (DC-CU)", "n": null, "setup": "DeepSeek-V3.1, online, no GT labels", "quote": null, "table": "Table 1, row ReAct + ACE (online), column Average", "note": "Table 3 shows the identical 59.5 row is labelled 'ACE + offline warmup'; without warmup online ACE is 56.1.", "where": "Table 1, Table 3"},
+  {"claim": "ACE with DeepSeek-V3.1 matches the top AppWorld leaderboard agent, IBM CUGA (GPT-4.1).", "kind": "measured", "source": null, "metric": "AppWorld leaderboard average", "value": "59.4", "unit": "%", "baseline_value": "60.3", "n": null, "setup": "leaderboard as of 20 Sep 2025; paper says CUGA is a rough reference, not a baseline", "quote": "ReAct + ACE (59.4% average) matches the top-1-ranked IBM CUGA (60.3%)", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "Offline ACE with GT labels on finance: 81.9 average vs 69.1 base and 72.5 GEPA.", "kind": "measured", "source": null, "metric": "FiNER/Formula average accuracy", "value": "81.9", "unit": "%", "baseline_value": "69.1", "n": null, "setup": "DeepSeek-V3.1, offline, GT labels", "quote": null, "table": "Table 2, row ACE (GT labels yes, offline), column Average", "note": null, "where": "Table 2"},
+  {"claim": "Without reliable feedback, online ACE on FiNER drops below the base model.", "kind": "measured", "source": null, "metric": "FiNER accuracy", "value": "67.3", "unit": "%", "baseline_value": "70.7", "n": null, "setup": "DeepSeek-V3.1, online, no GT labels; DC (CU) also falls to 68.3", "quote": null, "table": "Table 2, row ACE (GT labels no, online), column FiNER", "note": null, "where": "Table 2, Sec 4.4"},
+  {"claim": "Removing incremental delta updates cuts offline AppWorld test-normal average from 70.3 to 56.9.", "kind": "measured", "source": null, "metric": "test-normal average (TGC, SGC)", "value": "56.9", "unit": "%", "baseline_value": "70.3 with delta updates; 53.3 ReAct", "n": null, "setup": "AppWorld, DeepSeek-V3.1, offline, test-normal only", "quote": null, "table": "Table 18, row ReAct + ACE (no incremental update), column Average", "note": "Appendix C.2 quotes the drop as '-11.7% TGC and -27.8% SGC'. Table 19 (5 rounds) shows test-normal average 67.6 for what should be the same configuration as Table 18's 70.3.", "where": "Appendix A.5, Table 18"},
+  {"claim": "Ablation: dropping both Reflector and multi-epoch gives 55.1 average vs 59.4 full.", "kind": "measured", "source": null, "metric": "AppWorld average", "value": "55.1", "unit": "%", "baseline_value": "59.4", "n": null, "setup": "DeepSeek-V3.1, offline, GT labels", "quote": null, "table": "Table 3, row ReAct + ACE w/o Reflector or multi-epoch, column Average", "note": "w/o multi-epoch only: 56.8.", "where": "Table 3"},
+  {"claim": "Average adaptation latency reduction.", "kind": "measured", "source": null, "metric": "adaptation latency reduction", "value": "86.9", "unit": "%", "baseline_value": null, "n": null, "setup": "average of 82.3% vs GEPA (AppWorld offline) and 91.5% vs DC (FiNER online)", "quote": "reducing adaptation latency by 86.9% on average", "table": null, "note": null, "where": "Sec 4 intro"},
+  {"claim": "Offline AppWorld adaptation latency vs GEPA.", "kind": "measured", "source": null, "metric": "latency", "value": "9517", "unit": "s", "baseline_value": "53898 (GEPA)", "n": null, "setup": "AppWorld offline, DeepSeek-V3.1; rollouts 357 vs 1434", "quote": null, "table": "Table 4(a), row ReAct + ACE, column Latency (s)", "note": null, "where": "Table 4"},
+  {"claim": "Online FiNER adaptation token cost vs DC.", "kind": "measured", "source": null, "metric": "token cost", "value": "2.9", "unit": "$", "baseline_value": "17.7 (DC-CU)", "n": null, "setup": "FiNER online; latency 5503 s vs 65104 s", "quote": null, "table": "Table 4(b), row ACE, column Token Cost ($)", "note": null, "where": "Table 4"},
+  {"claim": "At evaluation time ACE uses more input tokens than GEPA because the playbook is longer.", "kind": "measured", "source": null, "metric": "total input tokens increase vs GEPA", "value": "117.4", "unit": "%", "baseline_value": null, "n": 160, "setup": "AppWorld eval stage, 160 eval queries", "quote": "58,623,267 (+117.4%)", "table": null, "note": null, "where": "Table 14"},
+  {"claim": "Prompt caching serves most ACE input tokens from cache, cutting billed input cost.", "kind": "measured", "source": null, "metric": "billed input-token cost reduction", "value": "82.6", "unit": "%", "baseline_value": null, "n": null, "setup": "OpenAI API with GPT-5.1, evaluation stage; 91.8% of input tokens cached", "quote": "which reduces billed input-token cost by 82.6% relative to counting raw context tokens", "table": null, "note": null, "where": "Sec 4.7"},
+  {"claim": "A much weaker Reflector (GPT-OSS-120B) still gives a gain on FiNER.", "kind": "measured", "source": null, "metric": "FiNER accuracy", "value": "76.6", "unit": "%", "baseline_value": "70.7 base; 78.3 with DeepSeek-V3.1 Reflector", "n": null, "setup": "offline, Generator and Curator DeepSeek-V3.1", "quote": "76.6 (+5.9)", "table": null, "note": null, "where": "Table 16"},
+  {"claim": "A harmful Reflector injected every iteration drives FiNER below base; every 5 iterations it still helps.", "kind": "measured", "source": null, "metric": "FiNER accuracy", "value": "66.7", "unit": "%", "baseline_value": "70.7", "n": null, "setup": "offline FiNER; harmful reflection every X steps; X=5 gives 76.1", "quote": "66.7 (-4.0)", "table": null, "note": null, "where": "Table 17"},
+  {"claim": "ACE generalises to GPT-5.1 on AppWorld test-normal (online).", "kind": "measured", "source": null, "metric": "test-normal average", "value": "65.8", "unit": "%", "baseline_value": "54.2", "n": null, "setup": "GPT-5.1 for all roles; test-normal only", "quote": null, "table": "Table 6, row ReAct + ACE (online), column Average", "note": null, "where": "Table 6"},
+  {"claim": "On Llama-3.3-70B-Instruct, GEPA falls below base on FiNER while ACE gains.", "kind": "measured", "source": null, "metric": "FiNER accuracy", "value": "64.9", "unit": "%", "baseline_value": "62.5 base; GEPA 59.41", "n": null, "setup": "offline, GT labels", "quote": null, "table": "Table 9, row ACE (GT labels yes), column FiNER", "note": null, "where": "Table 9"},
+  {"claim": "Medical reasoning: ACE lifts DDXPlus accuracy by 15 points.", "kind": "measured", "source": null, "metric": "DDXPlus accuracy", "value": "90.2", "unit": "%", "baseline_value": "75.2", "n": null, "setup": "DeepSeek-V3.1, offline, 1000 train examples; GEPA 76.4", "quote": "rising from 75.2 to 90.2", "table": null, "note": null, "where": "Appendix A.2"},
+  {"claim": "Text-to-SQL: modest gain, GEPA stronger on Moderate and Challenging.", "kind": "measured", "source": null, "metric": "BIRD-SQL average", "value": "52.9", "unit": "%", "baseline_value": "47.8 base; GEPA 52.2", "n": null, "setup": "DeepSeek-V3.1, offline", "quote": "achieving better overall average (52.9, +5.1)", "table": null, "note": null, "where": "Appendix A.2, Table 11"},
+  {"claim": "Reflection rounds: 5 best of 1/3/5/10 on test-normal average.", "kind": "measured", "source": null, "metric": "test-normal average", "value": "67.6", "unit": "%", "baseline_value": "53.3 without ACE; 3 rounds 65.8; 10 rounds 65.2", "n": null, "setup": "AppWorld offline, DeepSeek-V3.1", "quote": null, "table": "Table 19, row 5, column Average", "note": "Dedup threshold is non-monotonic (50%: 77.0, 70%: 73.9, 90%: 78.6); pruning trigger 10K to 100K stable (78.6 to 78.3).", "where": "Appendix A.6"}
+ ],
+ "limits": [
+  "Authors concede ACE relies on a reasonably strong Reflector; with no reliable feedback (no GT labels or execution signal) both ACE and DC can degrade below the base model (Table 2).",
+  "Not all tasks need rich contexts: HotPotQA and Game of 24 benefit from concise instructions.",
+  "No seeds, repeats, variance or significance tests are reported; decoding temperature and max tokens are not stated.",
+  "Headline numbers use one backbone (DeepSeek-V3.1) with the same model in all roles; gains on Llama-3.3-70B are small (+1.1 to +2.4).",
+  "Longer contexts cost more raw input tokens at evaluation (+117.4% vs GEPA); the cost claim depends on KV/prompt caching.",
+  "IBM CUGA is only a rough contextual reference; authors disclaim direct comparison.",
+  "Context collapse is demonstrated in a single case study (one run, via Dynamic Cheatsheet), not measured across runs.",
+  "Table 18 and Table 19 give different test-normal averages (70.3 vs 67.6) for what appears to be the same 5-round offline setup.",
+  "Leaderboard snapshot dated 09/2025 and has likely dated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "context adaptation", "definition": "methods that improve model behavior by constructing or modifying inputs to an LLM, rather than altering its weights", "where": "Sec 2.1"},
+  {"term": "brevity bias", "definition": "the tendency of optimization to collapse toward short, generic prompts", "where": "Sec 2.2"},
+  {"term": "context collapse", "definition": "arises when an LLM is tasked with fully rewriting the accumulated context at each adaptation step; the model compresses it into much shorter, less informative summaries", "where": "Sec 2.2"},
+  {"term": "playbook", "definition": "context as a collection of structured, itemized bullets (metadata with id and helpful/harmful counters, plus content) that accumulates strategies", "where": "Sec 3.1"},
+  {"term": "grow-and-refine", "definition": "bullets with new identifiers are appended, existing bullets updated in place, then a de-duplication step prunes redundancy by comparing bullets via semantic embeddings, proactively or lazily", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "Dynamic Cheatsheet (Suzgun et al., 2025)", "year": 2025, "arxiv": null, "relation": "extends", "note": "ACE is inspired by its agentic memory design and adds a dedicated Reflector and delta updates; also the main online baseline (DC-CU)", "quote": "Inspired by the agentic design of Dynamic Cheatsheet"},
+  {"work": "GEPA (Agrawal et al., 2025)", "year": 2025, "arxiv": "2507.19457", "relation": "baseline", "note": "prompt optimizer, offline baseline; paper argues it has brevity bias", "quote": null},
+  {"work": "MIPROv2 (Opsahl-Ong et al., 2024)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "DSPy auto=heavy", "quote": null},
+  {"work": "Many-Shot In-Context Learning (Agarwal et al., 2024)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "ICL baseline", "quote": null},
+  {"work": "Reflexion (Shinn et al., 2023); TextGrad (Yuksekgonul et al., 2025)", "year": 2023, "arxiv": null, "relation": "related", "note": "natural-language-feedback context adaptation", "quote": null},
+  {"work": "A-MEM (Xu et al., 2025); AgentFly; AWM; Agentic Plan Caching", "year": 2025, "arxiv": null, "relation": "related", "note": "agent memory work in Appendix B.1", "quote": null},
+  {"work": "The Prompt Alchemist (Gao et al., 2025)", "year": 2025, "arxiv": "2501.01329", "relation": "related", "note": "source for the brevity-bias observation", "quote": null},
+  {"work": "AppWorld (Trivedi et al., 2024)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "agent benchmark and official ReAct implementation", "quote": null},
+  {"work": "FiNER (Loukas et al., 2022); Formula (Wang et al., 2025a); StreamBench DDXPlus and BIRD-SQL", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "domain benchmarks", "quote": null},
+  {"work": "IBM CUGA (Marreed et al., 2025)", "year": 2025, "arxiv": null, "relation": "related", "note": "top AppWorld leaderboard agent used as context reference only", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Context Collapse. Monolithic rewriting of context by an LLM can collapse it into shorter, less informative summaries, leading to sharp performance drops.", "page": 3, "why": "Shows 18,282 tokens at 66.7 accuracy falling to 122 tokens at 57.1 in one step."},
+  {"figure": "Fig 4", "caption": "The ACE Framework. Inspired by Dynamic Cheatsheet, ACE adopts an agentic architecture with three specialized components: a Generator, a Reflector, and a Curator.", "page": 5, "why": "Loop of query, trajectory, insights, delta context items merged into the playbook."},
+  {"figure": "Table 4", "caption": "Cost and Speed Analysis. We measure the context adaptation latency, number of rollouts, and dollar costs of ACE against GEPA (offline) and DC (online).", "page": 10, "why": "Gives the latency and cost reductions in one view."},
+  {"figure": "Fig 3", "caption": "Example ACE-Generated Context on the AppWorld Benchmark (partially shown).", "page": 4, "why": "Shows what a playbook looks like (image content not extractable as text)."}
+ ],
+ "code": [],
+ "problems": [
+  "Fig 3 and Fig 5 are images; their content is not in the text.",
+  "The Curator prompt examples show 'Response:' with blank bodies for Examples 1 and 2 in the text extraction (likely lost in extraction).",
+  "No embedded instructions found in the PDF text."
+ ]
+}

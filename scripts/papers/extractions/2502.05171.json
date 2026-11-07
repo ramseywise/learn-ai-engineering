@@ -1,0 +1,165 @@
+{
+ "schema": 1,
+ "key": "2502.05171",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/geiping-2025-scaling-up-test-time-compute.pdf",
+ "bib": {
+  "title": "Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach",
+  "authors": ["Jonas Geiping","Sean McLeish","Neel Jain","John Kirchenbauer","Siddharth Singh","Brian R. Bartoldson","Bhavya Kailkhura","Abhinav Bhatele","Tom Goldstein"],
+  "first_author": "Geiping",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2502.05171",
+  "doi": null
+ },
+ "read": {"by":"source-reader","at":"2026-11-07","chars_read":77300,"chars_total":133017,"engine":"pymupdf",
+  "skipped":"Body, tables, Appendix A (implementation, Table 6) read in full. Reference list (from ~offset 63684) skimmed; Appendix B latent-space figure pages (axis numbers only) and Appendix C dataset tables 7-8 skimmed (dataset names/licences, not individually recorded)."},
+ "type": "empirical",
+ "question": "Can a language model with a weight-shared recurrent block, trained at multi-billion-parameter scale with random iteration counts, improve its reasoning by running more iterations in latent space at test time?",
+ "hypothesis": "Training with a randomly sampled number of recurrent iterations lets the model use extra test-time recurrence to improve on reasoning tasks, without chain-of-thought data or longer context.",
+ "contributions": [
+  "A depth-recurrent transformer (prelude, recurrent core, coda) with input injection and random initial state, trained with randomly sampled iteration counts and truncated backpropagation",
+  "A single large-scale run: 3.5B parameters, about 800B tokens on 4096 AMD MI250X GPUs on Frontier",
+  "Benchmark evidence that performance rises with test-time recurrence, up to a compute load equivalent to 50B parameters",
+  "Zero-shot per-token adaptive compute, KV-cache sharing, continuous CoT and self-speculative decoding",
+  "Latent-space trajectory analysis (convergence, orbits, sliders, path independence)",
+  "Release of model, code, data and intermediate checkpoints"
+ ],
+ "method": {
+  "summary": "A decoder-only transformer split into prelude (2 layers), a 4-layer recurrent core iterated r times with the embedded input re-injected each step from a random initial state, and a 2-layer coda. Trained once at 3.5B parameters for about 795-800B tokens with r drawn per micro-batch from a log-normal Poisson distribution (mean 32 plus 1) and gradients through only the last 8 iterations. Evaluated at r from 1 to 64 on lm-eval-harness, math and code benchmarks.",
+  "task": "language-model pretraining with recurrent depth; test-time compute scaling",
+  "trains": true,
+  "datasets": [
+   {"name":"Pretraining mixture (public sources, Appendix C Tables 7-8)","role":"pretrain","size":"about 800B tokens seen (795B stated); mixture shares: generic-text 28.71%, code 25.36%, scientific-text 18.73%, synthetic-text 8.14%, longform-text 7.50%, math 6.14%, generic-instruct 2.09%, Q&A-text 1.58%, math-instruct 1.51%, writing-instruct 0.12%, misc-reasoning 0.11%","split":null,"source":"all publicly available; instruction data mixed directly into pretraining","preprocessing":"BPE tokenizer (65536 vocab) trained on the instruction-data split; documents packed to sequences of 4096; document ends lacking previous context discarded except some long math sources; <|begin_text|> token at document start"},
+   {"name":"Fixed validation set","role":"dev","size":null,"split":"held out; perplexity at r in [1,4,8,16,32,64]","source":null,"preprocessing":null},
+   {"name":"lm-eval-harness tasks (ARC-E/C, HellaSwag, MMLU, OBQA, PiQA, SciQ, WinoGrande), GSM8K, GSM8K CoT, Minerva MATH, MathQA, MBPP, HumanEval, MT-Bench","role":"eval","size":null,"split":null,"source":"standard public benchmarks; code via bigcode-bench","preprocessing":null}
+  ],
+  "models": [
+   {"name":"Huginn-0125","role":"proposed","params":"3.5B (about 1.5B prelude and head, 1.5B recurrent core, 0.5B tied embedding)","architecture":"decoder-only transformer, shape (l_P,l_R,l_C)=(2,4,2), sandwich RMSNorm, RoPE base 50000, gated SiLU MLP, adapter on concat(s_i,e)","init_from":"scratch (Takase et al. 2024 init, variance 2/(5h), out-projections 1/(5hl))","tokenizer":"BPE, trained on instruction split","vocab":"65536","layers":"2 prelude + 4 recurrent + 2 coda = 8 real; effective depth 2+4r+2 = 132 at r=32","hidden":"5280","heads":"55 heads of size 96","context":"4096 tokens (packed sequence length)","other":{"mlp_inner_dim":"17920","rmsnorm_eps":"1e-6","biases":"learnable on queries and keys only","embedding_scale":"sqrt(h)","s0":"truncated normal, variance 2/5","mean_recurrence_train":"32","materialized_params_at_r":"3.6B (r=1) to 103B (r=64), Fig 1 axis"}},
+   {"name":"Fixed-depth baseline (same architecture, one pass through core)","role":"baseline","params":"3.5B","architecture":"same, r=1","init_from":"scratch","tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{"tokens":"180B","hardware":"256 nodes, batch size 2 per GPU"}},
+   {"name":"Small test models","role":"proposed","params":null,"architecture":"shape (1,4,1), h=1024","init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":"1024","heads":null,"context":null,"other":{"tokens":"up to 10B"}},
+   {"name":"Amber, Pythia (2.8b/6.9b/12b), OLMo-1B, OLMo-7B, OLMo-7B-0424, OLMo-7B-0724, OLMo-2-1124-7B, starcoder2-3b/7b","role":"evaluated","params":"1B-12B","architecture":"fixed-depth transformers","init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}}
+  ],
+  "training": {
+   "objective": "next-token cross-entropy, expectation over data and random recurrence count r ~ log-normal Poisson: tau ~ N(log(rbar)-sigma^2/2, sigma), r ~ Poisson(e^tau)+1, with sigma=1/2",
+   "optimizer": "Adam with decoupled weight decay (beta1=0.9, beta2=0.95), update clipping, epsilon removed; gradient clipping at 1",
+   "lr": "5e-4 stated in optimizer paragraph; final main run used peak 4e-5 (failed run 1 used 4e-4)",
+   "lr_schedule": "warm-up then constant; never cooled down",
+   "warmup": "4096 steps",
+   "batch_size": "16M tokens per step (1 sequence per GPU x 4096 GPUs)",
+   "steps": "47000 (main checkpoint)",
+   "epochs": null,
+   "tokens": "795B scheduled (main), about 800B stated; baseline 180B",
+   "seq_len": "4096",
+   "precision": "bfloat16 mixed precision",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "truncated backpropagation through last k=8 iterations; locked-step sampling of one r per micro-batch synchronised across workers",
+   "hardware": "Frontier (ORNL), AMD MI250X, 4096 GPUs (512 nodes), data parallel with ZeRO-1 optimizer sharding and per-iteration gradient checkpointing",
+   "compute": "52-64 TFLOP/s per GPU (41-51% AFU), 1-1.2M tokens/s; single node 108.75 TFLOP/s (87% AFU, 57% MFU); about 212-262 exaFLOP/s per segment",
+   "wall_clock": "21 segments of up to 12 hours, mostly early December 2024",
+   "seeds": "single run (one large-scale run)",
+   "other": {"lr_discrepancy":"Section 4.1 prints eta = 5e-4, Section 4.3 says the successful run dropped peak LR to 4e-5; the text does not reconcile these","small_scale_checks":"trained reliably up to 10B tokens before the main run","ema":"EMA over last 75 checkpoints, beta 0.9, dilation 7, applied post hoc"}
+  },
+  "inference": {
+   "decoding": "recurrence r set at test time (1-64); benchmark protocol follows lm-eval-harness; decoding settings for generation not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per setting; arithmetic study averages 50 trials per measurement",
+   "prompting": "zero-shot for most lm-eval tasks; GSM8K CoT 8-way few-shot as multiturn with chat template; HellaSwag and HumanEval zero-shot no chat template; Table 2 reports with and without a system prompt",
+   "retrieval": null,
+   "parameters": {"adaptive_exit":"stop iterating when KL between successive steps < 5e-4","kv_cache_budget":"entry i mod k, tested k in {4, 8, 16}","continuous_cot":"warm-start s0 with last state of previous token","path_independence_check":"re-initialise from multiple s0","limit_state_for_plots":"s* at r=128"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name":"lm-eval-harness accuracy","definition":"zero-shot, normalized accuracy when provided","unit":"%","higher_is_better":true},
+    {"name":"GSM8K / GSM8K CoT","definition":"flexible / strict extract match","unit":"%","higher_is_better":true},
+    {"name":"Minerva MATH","definition":"extract match under Minerva rules","unit":"%","higher_is_better":true},
+    {"name":"MBPP, HumanEval","definition":"pass@1","unit":"%","higher_is_better":true},
+    {"name":"MT-Bench first turn","definition":"1-turn score with standard error","unit":"score","higher_is_better":true}
+   ],
+   "baselines": ["Amber","Pythia","OLMo 1 and 2 variants","starcoder2","non-recurrent twin trained 180B tokens"],
+   "protocol": "lm-eval harness and bigcode-bench; no seeds or significance tests except MT-Bench standard errors; one training run"
+  },
+  "availability": {
+   "code": "github.com/seal-rg/recurrent-pretraining",
+   "weights": "huggingface.co/tomg-group-umd/huginn-0125",
+   "data": "all training data released (github link above)"
+  },
+  "prompts": [
+   {"purpose":"arithmetic study system prompt","text":"You are a helpful assistant that is capable of helping users with mathematical reasoning.","where":"Figure 14 caption"},
+   {"purpose":"arithmetic study user turn","text":"What is the result of ' + '.join(map(str, digits))?","where":"Figure 14 caption"}
+  ],
+  "evidence": [
+   {"field":"training.lr","quote":"warming up to our maximal learning rate within the first 4096 steps","where":"Sec 4.1"},
+   {"field":"models[0].layers","quote":"it unfolds to an effective depth of 2+4r +2 = 132 layers","where":"Sec 3.2"}
+  ]
+ },
+ "results": [
+  {"claim":"The model keeps improving with test-time recurrence up to a compute load equal to a 50B-parameter fixed-depth transformer.","kind":"measured","source":null,"metric":"equivalent compute","value":"50B","unit":"parameters","baseline_value":null,"n":null,"setup":"Huginn 3.5B, recurrence up to 64","quote":"up to a computation load equivalent to 50 billion parameters","table":null,"note":"Sec 5.1 words it as up to FLOP budgets equivalent to a standard 50B parameter fixed-depth transformer; Fig 1 axis reaches 103B materialized parameters at r=64","where":"Abstract"},
+  {"claim":"At 0.8T tokens, GSM8K CoT (8-shot, chat template, with system prompt) rises from 0.00/0.00 at r=1 to 34.80/42.08 at r=32 (strict/flexible-style pair).","kind":"measured","source":null,"metric":"GSM8K CoT","value":"34.80/42.08","unit":"%","baseline_value":"0.00/0.00 (r=1)","n":null,"setup":"Huginn r=32 vs r=1, 0.8T tokens","quote":null,"table":"Table 4, row Ours, (r = 32) 0.8T, column GSM8K CoT; r=1 row 0.00/0.00","note":"Table 2 prints the same 34.80/42.08 for 'w/ sys. prompt'; the order of the pair is as printed (strict/flexible per caption 'flexible and strict' wording is ambiguous)","where":"Tables 2 and 4"},
+  {"claim":"Recurrent model at 180B tokens is about 5 times better than the fixed-depth baseline on GSM8K.","kind":"measured","source":null,"metric":"GSM8K CoT","value":"9.02/10.24","unit":"%","baseline_value":"1.82/2.20","n":null,"setup":"180B-token checkpoint r=32 vs fixed-depth baseline trained identically","quote":"the 180B recurrent model is already 5 times better than the baseline","table":"Table 4, rows Fixed-Depth Baseline and Ours early ckpt (r = 32), column GSM8K CoT","note":null,"where":"Sec 5.3, Table 4"},
+  {"claim":"On ARC-C the final model scores 38.23 at r=32 versus 23.72 early checkpoint r=1 and 24.06 final r=1.","kind":"measured","source":null,"metric":"ARC-C normalized acc","value":"38.23","unit":"%","baseline_value":"24.06 (r=1, 0.8T)","n":null,"setup":"Huginn 0.8T tokens, zero-shot","quote":null,"table":"Table 4, row Ours, (r = 32), column ARC-C; row Ours, (r = 1) 0.8T: 24.06","note":null,"where":"Tables 1 and 4"},
+  {"claim":"Run with r=1 effectively stops improving between 180B and 800B tokens; later gains are encoded in the recurrence.","kind":"measured","source":null,"metric":"qualitative","value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Table 4, r=1 rows at 0.18T and 0.8T","quote":"effectively stops im-\nproving between the early 180B checkpoint and the 800B\ncheckpoint","table":null,"note":null,"where":"Sec 5.3"},
+  {"claim":"Huginn r=32 reaches GSM8K 28.05/28.20 without a system prompt and Minerva MATH 12.58, behind only OLMo-2-1124-7B (66.72/66.79 GSM8K, 19.08 MATH) among compared models in math.","kind":"measured","source":null,"metric":"GSM8K","value":"28.05/28.20","unit":"%","baseline_value":"66.72/66.79 (OLMo-2-1124-7B)","n":null,"setup":"r=32, no system prompt","quote":null,"table":"Table 2, row Our w/o sys. prompt (r = 32), column GSM8K","note":"OLMo-7B-0724 has 28.66/28.73, slightly above the no-system-prompt figure","where":"Table 2"},
+  {"claim":"Code: Huginn r=32 gets 24.80 MBPP and 23.17 HumanEval pass@1, beating general-purpose open models but not StarCoder2.","kind":"measured","source":null,"metric":"pass@1","value":"24.80 (MBPP), 23.17 (HumanEval)","unit":"%","baseline_value":"43.00 / 31.09 (starcoder2-3b)","n":null,"setup":"r=32, 0.8T tokens","quote":null,"table":"Table 3, row Ours (r = 32), columns MBPP, HumanEval","note":null,"where":"Table 3"},
+  {"claim":"On zero-shot lm-eval tasks Huginn r=32 is roughly comparable to OLMo-7B and above Pythia but behind later OLMo models.","kind":"measured","source":null,"metric":"MMLU","value":"31.38","unit":"%","baseline_value":"60.56 (OLMo-2-1124)","n":null,"setup":"r=32, 3.5B params, 0.8T tokens","quote":null,"table":"Table 1, row Ours, (r = 32), column MMLU","note":null,"where":"Table 1"},
+  {"claim":"EMA of the last 75 checkpoints improves GSM8K at r=64.","kind":"measured","source":null,"metric":"GSM8K flexible","value":"47.23","unit":"%","baseline_value":null,"n":null,"setup":"EMA beta 0.9, dilation 7, r=64","quote":"further improves GMS8k performance\nto 47.23% flexible (38.59% strict), when tested at r = 64","table":null,"note":null,"where":"Sec 5.4"},
+  {"claim":"Giving OpenBookQA a relevant fact raises Huginn from 38.2 to 49.2 (+11.0), nearly closing the gap to OLMo-2.","kind":"measured","source":null,"metric":"OBQA","value":"49.2","unit":"%","baseline_value":"38.2 (closed)","n":null,"setup":"r=32; OLMo-2-1124 open 53.4","quote":null,"table":"Table 5, row Ours (r = 32), column Open","note":"Table 1 prints 38.80 for OBQA closed at r=32; Table 5 prints 38.2","where":"Table 5"},
+  {"claim":"Saturation in recurrence depends on context: ARC-C saturates around 8-12 iterations with no few-shot examples, around 20 with one, and around 32 with 25-50.","kind":"measured","source":null,"metric":"saturation recurrence","value":"8-12","unit":"iterations","baseline_value":null,"n":null,"setup":"ARC-C un-normalized accuracy","quote":"saturates in com-\npute around 8-12 iterations","table":null,"note":null,"where":"Sec 5.3, Fig 9"},
+  {"claim":"Zero-shot KL-based early exit does not significantly hurt MT-Bench.","kind":"measured","source":null,"metric":"MT-Bench first turn","value":"5.56","unit":"score","baseline_value":"5.63","n":null,"setup":"exit threshold 5e-4, standard error about 0.39","quote":"(standard: 5.63, early exits: 5.56","table":null,"note":"Table 6 prints baseline 32 iterations as 5.662 and KL exit as 5.562","where":"Sec 6.1, Table 6"},
+  {"claim":"KV-cache sharing with budget 4 does not reduce MT-Bench score.","kind":"measured","source":null,"metric":"MT-Bench first turn","value":"5.86","unit":"score","baseline_value":"5.693 (64 iterations)","n":null,"setup":"cache budget s=4","quote":"cache budget of 4: 5.86","table":null,"note":"Table 6: 5.856","where":"Sec 6.2"},
+  {"claim":"Per-token exit steps vary by category: about 3.5 more steps on moral scenarios than high school mathematics; continuous CoT cuts mean steps by 1-2.","kind":"measured","source":null,"metric":"steps to exit","value":"3.5","unit":"steps","baseline_value":null,"n":"first 50 questions per MMLU category","setup":"KL threshold 5e-4, free-form chat","quote":"taking on av-\nerage 3.5 steps more on moral scenarios","table":null,"note":null,"where":"Sec 6.1, Fig 10"},
+  {"claim":"Training throughput of 52-64 TFLOP/s per GPU on 4096 GPUs.","kind":"measured","source":null,"metric":"throughput","value":"52-64","unit":"TFLOP/s per GPU","baseline_value":"108.75 TFLOP/s single node","n":null,"setup":"Frontier, 41%-51% AFU, 1-1.2M tokens/s","quote":"we achieve 52-64\nTFLOP/s per GPU","table":null,"note":null,"where":"Sec 4.2"},
+  {"claim":"A first run with parameter-free norms, no embedding scale, simple adapter and LR 4e-4 collapsed; a second with pre-norm learned to ignore the state (same perplexity at r=1 and r=32); sandwich norm with LR 4e-5 worked.","kind":"measured","source":null,"metric":"qualitative","value":null,"unit":null,"baseline_value":null,"n":null,"setup":"large-scale first 10000 steps, Fig 5","quote":"validation per-\nplexity is the same whether 1 or 32 recurrences are used","table":null,"note":null,"where":"Sec 4.3"},
+  {"claim":"Multi-operand addition improves with recurrence for single-digit numbers; multi-digit needs more than 16 recurrences; 4-5 operands rarely solved.","kind":"measured","source":null,"metric":"addition accuracy","value":null,"unit":null,"baseline_value":null,"n":"50 trials per point","setup":"chat template with system prompt, recurrence 1 to 64, correct sum as substring in output","quote":"performance improves steadily as\na function of recurrence","table":null,"note":null,"where":"Appendix A.1, Fig 14"}
+ ],
+ "limits": [
+  "Proof of concept: one large run, no seeds, mixture untested and not ablated; learning rate never cooled down and only 47000 steps.",
+  "Trained on 800B tokens, far below industrial models; lags later OLMo models on most lm-eval tasks.",
+  "No comparison against chain-of-thought-trained reasoning models; the only matched baseline is a 180B-token non-recurrent twin.",
+  "Fewer memorised facts: closed-book OBQA is weaker than reasoning-in-context OBQA.",
+  "Latent reasoning is less inspectable than verbalized CoT (oversight concern, Appendix A).",
+  "Several features (self-speculative decoding, continuous CoT) shown qualitatively or only with MT-Bench; self-speculative decoding has no number.",
+  "Post-training, RL and the interaction with MoE or linear attention are left as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term":"recurrent depth","definition":"a transformer with a weight-shared core block iterated a variable number of times, unrolling to arbitrary depth at test time","where":"Abstract, Sec 3"},
+  {"term":"AFU (Achievable Flop Utilization)","definition":"fraction of the 125 TFLOP/s measured peak matrix-multiply speed actually reached","where":"Sec 4.2"},
+  {"term":"locked-step sampling","definition":"sampling a single depth r per micro-batch, synchronised across workers","where":"Sec 4.1"},
+  {"term":"path independence","definition":"trajectories reach similar behaviour regardless of the random initial state s0 (Anil et al. 2022)","where":"Sec 7"}
+ ],
+ "lineage": [
+  {"work":"Schwarzschild et al. 2021b (deep thinking, randomized unrolling)","year":2021,"arxiv":null,"relation":"extends","note":"random iteration counts during training","quote":null},
+  {"work":"Bansal et al. 2022 (input injection)","year":2022,"arxiv":null,"relation":"uses-method","note":"inject e at every step; adapter","quote":null},
+  {"work":"Anil et al. 2022 (path independence)","year":2022,"arxiv":null,"relation":"uses-method","note":"random initial state, path independence","quote":null},
+  {"work":"Dehghani et al. 2019 (Universal Transformers)","year":2019,"arxiv":null,"relation":"related","note":"recurrent depth for transformers","quote":null},
+  {"work":"Hao et al. 2024 (continuous chain of thought)","year":2024,"arxiv":null,"relation":"related","note":"finetunes fixed-depth models for latent reasoning; this work pretrains from scratch","quote":null},
+  {"work":"Takase et al. 2024 (initialization)","year":2024,"arxiv":null,"relation":"uses-method","note":"init variance","quote":null},
+  {"work":"Allen-Zhu and Li 2024","year":2024,"arxiv":null,"relation":"uses-method","note":"mix instruction data into pretraining","quote":null},
+  {"work":"Deep equilibrium models (Bai et al. 2019)","year":2019,"arxiv":null,"relation":"related","note":"contrast in training objective: truncated unrolling vs fixed-point","quote":null},
+  {"work":"OLMo, Pythia, Amber, StarCoder2","year":null,"arxiv":null,"relation":"baseline","note":"compared models","quote":null},
+  {"work":"lm-eval harness, bigcode-bench, GSM8K, MATH, MathQA, MBPP, HumanEval, MT-Bench","year":null,"arxiv":null,"relation":"uses-data","note":"benchmarks","quote":null}
+ ],
+ "figures": [
+  {"figure":"Fig 1","caption":"We train a 3.5B parameter language model with depth recurrence. At test time, the model can iterate longer to use more compute and improve its performance.","page":1,"why":"accuracy versus recurrence on ARC, GSM8K CoT, OpenBookQA"},
+  {"figure":"Fig 2","caption":"A visualization of the Architecture","page":3,"why":"prelude, recurrent block with input injection, coda"},
+  {"figure":"Fig 5","caption":"Plots of the initial 10000 steps for the first two failed attempts and the final, successful run","page":6,"why":"shows hidden-state collapse and why norms and init matter"},
+  {"figure":"Fig 7","caption":"Performance on GSM8K CoT, HellaSwag, HumanEval versus recurrence","page":8,"why":"task-dependent saturation"},
+  {"figure":"Fig 9","caption":"Saturation point on ARC challenge correlated with few-shot count","page":8,"why":"more context uses more recurrence"},
+  {"figure":"Fig 10","caption":"Histograms of zero-shot per-token adaptive exits based on KL difference","page":10,"why":"adaptive compute differs by task"}
+ ],
+ "code": [
+  {"where":"Sec 3.1","snippet":"e = P(x); s0 ~ N(0, sigma^2 I_{n*h}); s_i = R(e, s_{i-1}) for i in {1..r}; p = C(s_r)","verbatim":false},
+  {"where":"Sec 3.3 Eq 1-2","snippet":"tau ~ N(log(rbar) - sigma^2/2, sigma); r ~ Poisson(e^tau) + 1","verbatim":false}
+ ],
+ "problems": [
+  "Learning rate printed as 5e-4 in Sec 4.1 but the successful run is said to use 4e-5 in Sec 4.3; unreconciled.",
+  "Tokens: 795B scheduled vs 800B stated; Fig 3 mean 33.0 = rbar+1.",
+  "Appendix says 57% MFU, main text only AFU.",
+  "Table 2 flexible/strict ordering for the pair is ambiguous in the extracted text (caption says flexible and strict; EMA text says 47.23% flexible, 38.59% strict).",
+  "Table cells were extracted one value per line; row mapping checked by order."
+ ]
+}

@@ -1,0 +1,323 @@
+{
+ "schema": 1,
+ "key": "sha1:08448db1071a",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch04-implementing-a-gpt-model.pdf",
+ "bib": {
+  "title": "Build a Large Language Model (From Scratch), ch. 4: Implementing a GPT model from scratch to generate text",
+  "authors": [
+   "Sebastian Raschka"
+  ],
+  "first_author": "Raschka",
+  "year": 2024,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 63238,
+  "chars_total": 63238,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do the layer norm, GELU feed-forward, shortcut connections and transformer block assemble into a GPT-2 small model that maps token IDs to next-token logits?",
+ "hypothesis": null,
+ "contributions": [
+  "Placeholder DummyGPTModel, LayerNorm, GELU, FeedForward, shortcut demo, TransformerBlock, GPTModel, generate_text_simple",
+  "Parameter and memory counting for GPT-2 small, including the weight-tying discrepancy"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The GPT-2 small config used throughout has 50,257 vocab, 1,024 context, 768 emb, 12 heads, 12 layers, dropout 0.1, no QKV bias.",
+   "kind": "measured",
+   "metric": "config",
+   "value": "124M config",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT_CONFIG_124M, Listing in section 4.1",
+   "quote": "\"vocab_size\": 50257,     # Vocabulary size",
+   "table": null,
+   "note": null,
+   "where": "4.1",
+   "source": null
+  },
+  {
+   "claim": "Built module by module with a separate output head and no weight tying, the model has 163,009,536 parameters, not 124M.",
+   "kind": "measured",
+   "metric": "total parameters",
+   "value": "163,009,536",
+   "unit": "parameters",
+   "baseline_value": "124M",
+   "n": null,
+   "setup": "GPTModel(GPT_CONFIG_124M), untied out_head, qkv_bias False",
+   "quote": "Total number of parameters: 163,009,536",
+   "table": null,
+   "note": null,
+   "where": "4.6",
+   "source": null
+  },
+  {
+   "claim": "Removing the output head's parameters (weight tying) gives the GPT-2 small count of 124,412,160.",
+   "kind": "measured",
+   "metric": "trainable parameters with weight tying",
+   "value": "124,412,160",
+   "unit": "parameters",
+   "baseline_value": "163,009,536",
+   "n": null,
+   "setup": "total minus out_head parameters",
+   "quote": "Number of trainable parameters considering weight tying: 124,412,160",
+   "table": null,
+   "note": null,
+   "where": "4.6",
+   "source": null
+  },
+  {
+   "claim": "The 163M-parameter model needs 621.83 MB in float32.",
+   "kind": "measured",
+   "metric": "model size",
+   "value": "621.83",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "163,009,536 params x 4 bytes / (1024*1024)",
+   "quote": "Total size of the model: 621.83 MB",
+   "table": null,
+   "note": null,
+   "where": "4.6",
+   "source": null
+  },
+  {
+   "claim": "Author reports that separate token-embedding and output layers gave better training and model performance than weight tying, so the implementation keeps them separate.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "author experience, no data given",
+   "quote": "ken embedding and output layers results in better training and model",
+   "table": null,
+   "note": null,
+   "where": "4.6",
+   "source": null
+  },
+  {
+   "claim": "Without shortcut connections the mean absolute gradient shrinks from 0.00505 at layers.4 to 0.000202 at layers.0 (vanishing gradient).",
+   "kind": "measured",
+   "metric": "mean absolute gradient layers.0",
+   "value": "0.00020173587836325169",
+   "unit": null,
+   "baseline_value": "0.005049646366387606 (layers.4)",
+   "n": 1,
+   "setup": "5-layer GELU net, layer_sizes [3,3,3,3,3,1], input [1,0,-1], target 0, MSE loss, seed 123",
+   "quote": "layers.0.0.weight has gradient mean of 0.00020173587836325169",
+   "table": null,
+   "note": null,
+   "where": "4.4",
+   "source": null
+  },
+  {
+   "claim": "With shortcut connections layers.0 keeps a gradient of 0.2217 versus 1.3259 at layers.4.",
+   "kind": "measured",
+   "metric": "mean absolute gradient layers.0",
+   "value": "0.22169792652130127",
+   "unit": null,
+   "baseline_value": "1.3258541822433472 (layers.4)",
+   "n": 1,
+   "setup": "same net with use_shortcut=True, seed 123",
+   "quote": "layers.0.0.weight has gradient mean of 0.22169792652130127",
+   "table": null,
+   "note": null,
+   "where": "4.4",
+   "source": null
+  },
+  {
+   "claim": "An untrained GPT-2 small generates gibberish with greedy decoding ('Hello, I am Featureiman Byeswickattribute argue').",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "generate_text_simple, max_new_tokens=6, random init, seed 123",
+   "quote": "Hello, I am Featureiman Byeswickattribute argue",
+   "table": null,
+   "note": null,
+   "where": "4.7",
+   "source": null
+  },
+  {
+   "claim": "The feed-forward layer expands 768 to 3,072 (factor 4) and contracts back.",
+   "kind": "measured",
+   "metric": "expansion factor",
+   "value": "4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FeedForward, emb_dim 768",
+   "quote": "the inputs\nexpand by a factor of 4 from 768 to 3,072 values",
+   "table": null,
+   "note": null,
+   "where": "Fig 4.10",
+   "source": null
+  },
+  {
+   "claim": "Pre-LayerNorm (norm before attention and FFN) is used; the original transformer's Post-LayerNorm often leads to worse training dynamics.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "no experiment shown",
+   "quote": "known as Post-LayerNorm, which often leads to worse training dynamics.",
+   "table": null,
+   "note": null,
+   "where": "4.5",
+   "source": null
+  },
+  {
+   "claim": "Training GPT-3 would take 355 years on one V100, per Lambda Labs.",
+   "kind": "reported",
+   "source": "Lambda Labs",
+   "metric": "training time",
+   "value": "355",
+   "unit": "years",
+   "baseline_value": "665 years on RTX 8000",
+   "n": null,
+   "setup": "GPT-3 on a single V100 datacenter GPU",
+   "quote": "it would take 355 years to train GPT-3 on a\nsingle V100 datacenter GPU",
+   "table": null,
+   "note": null,
+   "where": "4.1 sidebar"
+  }
+ ],
+ "limits": [
+  "Chapter implements the architecture only; the model is untrained and outputs gibberish, training is in chapter 5.",
+  "Parameter-count discrepancy is explained by weight tying; the book keeps untied heads for training.",
+  "Gradient demo is one toy 5-layer net, one seed, one input.",
+  "Text says figure 4.18 where it means 4.8 (ReLU corner); text says weights loaded in chapter 6 (book's own numbering)."
+ ],
+ "practices": [
+  "Apply LayerNorm before attention and before the feed-forward layer (Pre-LayerNorm), with a shortcut around each (4.5).",
+  "Use GELU (tanh approximation, as GPT-2 did) in the feed-forward layer, expanding the hidden size 4x then contracting (4.3).",
+  "Use unbiased=False in LayerNorm variance for compatibility with GPT-2 TensorFlow weights (4.2 sidebar).",
+  "Keep qkv_bias False by default; revisit when loading OpenAI GPT-2 weights (4.1).",
+  "Call model.eval() before generation to disable dropout (4.7).",
+  "Count parameters with sum(p.numel()) and memory as params x 4 bytes for float32 (4.6).",
+  "Keep separate token-embedding and output layers for training; the author finds they train better than weight tying (4.6)."
+ ],
+ "terms": [
+  {
+   "term": "weight tying",
+   "definition": "the original GPT-2 architecture reuses the weights from the token embedding layer in its output layer",
+   "where": "4.6"
+  },
+  {
+   "term": "shortcut connection",
+   "definition": "also known as skip or residual connections; add the inputs of a layer to its outputs, creating an alternate path that bypasses certain layers",
+   "where": "4.4"
+  },
+  {
+   "term": "logits",
+   "definition": "the model outputs, unnormalized next-token scores of shape [batch, num_tokens, vocab_size]",
+   "where": "4.1, 4.6"
+  },
+  {
+   "term": "greedy decoding",
+   "definition": "the model generates the most likely next token (argmax of the softmax output)",
+   "where": "4.7"
+  },
+  {
+   "term": "layer normalization",
+   "definition": "adjusts the activations of a layer to have a mean of 0 and a variance of 1, across the feature dimension",
+   "where": "4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Models Are Unsupervised Multitask Learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture implemented; 124M corrected from 117M in the report",
+   "quote": "Radford et al."
+  },
+  {
+   "work": "GPT-3",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "same architecture scaled to 175B; weights unavailable",
+   "quote": null
+  },
+  {
+   "work": "Residual networks (shortcut connections)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shortcut idea originally from computer-vision residual networks",
+   "quote": null
+  },
+  {
+   "work": "GELU / SwiGLU",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "activation functions used in LLMs",
+   "quote": null
+  },
+  {
+   "work": "Lambda Labs GPT-3 training cost estimate",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "355 V100-years",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4.15",
+   "caption": "An overview of the GPT model architecture showing the flow of data through the GPT model.",
+   "page": null,
+   "why": "Whole architecture on one page"
+  },
+  {
+   "figure": "Fig 4.12",
+   "caption": "A comparison between a deep neural network consisting of five layers without (left) and with shortcut connections (right).",
+   "page": null,
+   "why": "Shows gradient flow difference"
+  },
+  {
+   "figure": "Fig 4.13",
+   "caption": "An illustration of a transformer block.",
+   "page": null,
+   "why": "Block layout"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 4.2",
+   "snippet": "norm_x = (x - mean) / torch.sqrt(var + self.eps)\nreturn self.scale * norm_x + self.shift",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 4.3",
+   "snippet": "0.5 * x * (1 + torch.tanh(torch.sqrt(torch.tensor(2.0 / torch.pi)) * (x + 0.044715 * torch.pow(x, 3))))",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 4.8",
+   "snippet": "idx_cond = idx[:, -context_size:]\nlogits = logits[:, -1, :]\nprobas = torch.softmax(logits, dim=-1)\nidx_next = torch.argmax(probas, dim=-1, keepdim=True)\nidx = torch.cat((idx, idx_next), dim=1)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings in the extracted text are separated from their captions and a few lines are truncated (e.g. pos_emb Embedding line)."
+ ]
+}

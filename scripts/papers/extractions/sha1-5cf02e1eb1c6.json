@@ -1,0 +1,175 @@
+{
+ "schema": 1,
+ "key": "sha1:5cf02e1eb1c6",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch12-dynamic-scheduling-cuda-graphs-device-initiated.pdf",
+ "bib": {
+  "title": "Chapter 12. Dynamic Scheduling, CUDA Graphs, and Device-Initiated Kernel Orchestration (AI Systems Performance Engineering)",
+  "authors": ["Chris Fregly"],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84187,
+  "chars_total": 84187,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can kernel launch, scheduling and multi-GPU communication be orchestrated on the device so the GPU never idles waiting for the CPU?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "A warp-batched atomic work queue halves runtime of an imbalanced kernel versus static per-thread assignment.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel time",
+   "value": "~200 ms static vs ~100 ms dynamic",
+   "unit": "ms",
+   "baseline_value": "200",
+   "n": null,
+   "setup": "Microbenchmark, N = 1<<20, per-thread work = idx % 256 (sin/cos loop); GPU model, runs and repeats not stated.",
+   "quote": "the statically assigned kernel took about 200 ms, whereas the dynamic-queue version ran in roughly 100 ms",
+   "note": "Gain stated as 10%-20% for moderate imbalance in the body, but 'typically between 10% and 30%' in Key Takeaways.",
+   "where": "Atomic Queues"
+  },
+  {
+   "claim": "Illustrative: capturing a 3-kernel pipeline in a CUDA Graph cuts iteration latency by 25%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "end-to-end iteration latency",
+   "value": "~1.00 ms to ~0.75 ms",
+   "unit": "ms",
+   "baseline_value": "1.00",
+   "n": null,
+   "setup": "Table 12-1, 100 iterations of A->B->C; baseline uses 300 launches and 300 cudaDeviceSynchronize calls; chapter says values are illustrative.",
+   "quote": "The numeric values in all metrics tables are illustrative to explain the concepts.",
+   "table": "Table 12-1, row End-to-end iteration latency",
+   "note": "Key Takeaways generalise to 'often a 20%-30% latency reduction'.",
+   "where": "CUDA Graphs"
+  },
+  {
+   "claim": "Device-initiated graph launches have roughly 2x lower launch latency than host-side graph launches, flat in graph size.",
+   "kind": "claim",
+   "source": null,
+   "metric": "launch latency",
+   "value": "2x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "No benchmark, hardware or source given.",
+   "quote": "have shown roughly 2× lower launch latency compared to equivalent host-side graph launches",
+   "note": null,
+   "where": "Device-Initiated CUDA Graph Launch"
+  },
+  {
+   "claim": "Illustrative: device-launched child kernels (dynamic parallelism) cut runtime by about 25% and idle by about 35 points versus host launches.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "overall execution time",
+   "value": "1.00 ms to 0.75 ms",
+   "unit": "ms",
+   "baseline_value": "1.00",
+   "n": null,
+   "setup": "Table 12-2, parent plus 2 children; host launches 3 vs 1; per-launch overhead ~20 us vs ~25 us; GPU idle ~40% vs ~5%.",
+   "quote": "reduces total runtime by about 25%",
+   "table": "Table 12-2, row Overall execution time",
+   "note": null,
+   "where": "Dynamic Parallelism"
+  },
+  {
+   "claim": "Default pending device-launch limit for dynamic parallelism is 2,048, configurable.",
+   "kind": "claim",
+   "source": null,
+   "metric": "pending launches",
+   "value": "2,048",
+   "unit": "launches",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CUDA default; raise with cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, ...).",
+   "quote": "By default, CUDA allows 2,048 outstanding device launches at one time.",
+   "note": null,
+   "where": "Dynamic Parallelism"
+  },
+  {
+   "claim": "A graph can have up to 120 fire-and-forget graphs and 255 pending tail launches; only one pending self-tail-launch.",
+   "kind": "claim",
+   "source": null,
+   "metric": "launch limits",
+   "value": "120 / 255",
+   "unit": "graphs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Device-initiated CUDA Graph launch.",
+   "quote": "You can have up to 255 pending tail launches enqueued in a CUDA Graph.",
+   "note": "The 120 limit: 'A graph can have up to 120 total fire-and-forget graphs during the course of its execution.'",
+   "where": "Device-Initiated CUDA Graph Launch"
+  },
+  {
+   "claim": "Batching atomics (8 or 16 per grab) removes most contention; atomic_transactions_per_request near 1.0 means no contention.",
+   "kind": "claim",
+   "source": null,
+   "metric": "batch size",
+   "value": "8 or 16",
+   "unit": "items",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L2-cache atomics on modern GPUs; no measurement given.",
+   "quote": "modest batch size of 8 or 16 can eliminate most contention due to the high L2 bandwidth",
+   "note": null,
+   "where": "Atomic Counters"
+  }
+ ],
+ "limits": [
+  "All metrics tables are illustrative, not measured; real benchmarks are in the book's GitHub repository.",
+  "Microbenchmark gives no GPU model, repeats or variance.",
+  "Chapter says PyTorch has no API for conditional graph nodes or device-side work distribution; custom C++ needed.",
+  "Device launch overhead is about the same as host launch, so DP may lose for small kernels."
+ ],
+ "practices": [
+  "Batch atomicAdd per warp (one leader atomic, __shfl_sync broadcast) to cut L2 contention (Atomic Counters).",
+  "Use a persistent warp-level atomic work queue when profiling shows idle SMs from uneven per-task runtimes (Atomic Queues).",
+  "Capture fixed pipelines in CUDA Graphs; preallocate memory, warm up before capture, keep static addresses (CUDA Graphs).",
+  "Capture one graph per batch size and pad inputs, as vLLM and TensorRT-LLM do (PyTorch, Inference Engines, and CUDA Graphs).",
+  "Capture at maximum size and use cudaGraphExecUpdate for changed parameters instead of recapturing (Dynamic Graph Update).",
+  "Use tail launch when the parent needs the graph's results; fire-and-forget for side tasks (Device-Initiated CUDA Graph Launch).",
+  "Use conditional graph nodes (IF/IF-ELSE/WHILE/SWITCH) to keep branching on the GPU; set the condition from one thread (Conditional Graph Nodes).",
+  "Use dynamic parallelism only when new work emerges from data at runtime; otherwise prefer device-launched graphs (Dynamic Parallelism).",
+  "Always overlap communication with compute; use NVSHMEM fine-grained signals rather than nvshmem_barrier_all (Orchestrate Across Multiple GPUs).",
+  "Capture NCCL collectives in graphs only with identical sequence and communicator on all ranks (Capturing Multi-GPU Collectives).",
+  "Choose by roofline: memory-bound gets overlap and lower precision; compute-bound with overhead gets fusion, persistent kernels, graphs; in-between gets concurrency (Roofline-Guided Scheduling)."
+ ],
+ "terms": [
+  {"term": "Atomic work queue", "definition": "A global atomic counter with atomicAdd used to hand out work dynamically across warps.", "where": "Atomic Queues"},
+  {"term": "Fire-and-forget launch", "definition": "The child graph begins executing immediately and concurrently with the launching parent kernel.", "where": "Device-Initiated CUDA Graph Launch"},
+  {"term": "Tail launch", "definition": "Defers execution of the graph until the launching kernel reaches a synchronization point or completes.", "where": "Device-Initiated CUDA Graph Launch"},
+  {"term": "Sibling launch", "definition": "A variation of fire-and-forget in which the launched graph executes as a peer to the parent graph, in the parent's stream environment.", "where": "Device-Initiated CUDA Graph Launch"},
+  {"term": "Conditional graph node", "definition": "Embeds control flow (IF, IF/ELSE, WHILE, SWITCH) in a CUDA Graph, decided on the GPU from a condition handle.", "where": "Conditional Graph Nodes"},
+  {"term": "Dynamic parallelism (DP)", "definition": "Lets a running parent kernel decide on the fly how many child kernels to launch.", "where": "Dynamic Parallelism"},
+  {"term": "NVSHMEM", "definition": "NVIDIA library treating each GPU as a processing element in a partitioned global address space, with one-sided device-initiated put/get.", "where": "Fine-Grained GPU-to-GPU Memory Sharing with NVSHMEM"}
+ ],
+ "lineage": [
+  {"work": "CUDA Graphs / dynamic parallelism / NVSHMEM / NCCL (NVIDIA documentation, not cited by title)", "year": null, "arxiv": null, "relation": "related", "note": "The chapter describes these NVIDIA features without formal citations.", "quote": null},
+  {"work": "vLLM and TensorRT-LLM", "year": null, "arxiv": null, "relation": "evaluates", "note": "Named as engines that capture per-batch-size CUDA Graphs.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 12-3", "caption": "Kernel-launch timeline without (top) and with (bottom) CUDA Graphs", "page": null, "why": "Shows launch gaps closing."},
+  {"figure": "Fig 12-6", "caption": "Tail launches enqueued by a given graph will execute one at a time, in order of when they were enqueued", "page": null, "why": "Tail-launch ordering."},
+  {"figure": "Fig 12-17", "caption": "Arithmetic intensity with two hardware ceilings: memory bound and compute bound", "page": null, "why": "Basis for the roofline-guided choice."}
+ ],
+ "code": [
+  {"where": "Atomic Counters", "snippet": "int start = atomicAdd(&queue_head, batchSize);\nfor (int i = start; i < start + batchSize && i < N; ++i) { process(data[i]); }", "verbatim": true},
+  {"where": "Capturing a CUDA Graph", "snippet": "cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal);", "verbatim": true}
+ ],
+ "problems": [
+  "Cache text hyphen-breaks some words across lines.",
+  "Code listings are truncated at line width in the cache.",
+  "The cache ends with web-page navigation residue (table of contents, 'Start Learning'); not instructions."
+ ]
+}

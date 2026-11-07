@@ -1,0 +1,143 @@
+{
+ "schema": 1,
+ "key": "2505.22954",
+ "pdf": "ai-engineering/04-loop-engineering/sources/zhang-2025-darwin-godel-machine.pdf",
+ "bib": {
+  "title": "Darwin Gödel Machine: Open-Ended Evolution of Self-Improving Agents",
+  "authors": ["Jenny Zhang", "Shengran Hu", "Cong Lu", "Robert Lange", "Jeff Clune"],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "ICLR 2026 (arXiv v3, 12 Mar 2026)",
+  "arxiv": "2505.22954",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 231844,
+  "chars_total": 231844,
+  "engine": "pymupdf",
+  "skipped": "Appendix F.1/F.2 agent diffs (long code patches) and the SWE-bench/Polyglot task-id lists were only skimmed; references skimmed."
+ },
+ "type": "system",
+ "question": "Can a coding agent that edits its own code, with benchmark-validated changes and an archive of past agents, keep improving both its coding ability and its ability to self-modify?",
+ "hypothesis": "Self-modification plus open-ended archive-based exploration yields continued gains that a fixed meta-agent (no self-improvement) or greedy/latest-only lineage (no open-endedness) cannot reach.",
+ "contributions": [
+  "The Darwin Gödel Machine: a self-referential coding agent that rewrites its own Python codebase and validates each change empirically instead of by proof",
+  "Archive-based open-ended parent selection that keeps stepping stones",
+  "Gains from 20.0% to 50.0% on SWE-bench and 14.2% to 30.7% on Polyglot, with transfer across models, benchmarks and languages",
+  "Ablations (no self-improve, no open-ended exploration, greedy parent selection) and a safety discussion including an objective-hacking case"
+ ],
+ "method": {
+  "summary": "A single coding agent (frozen FM + bash and edit tools) is the initial archive. Each iteration samples parents from the archive by a performance-and-novelty weight; each parent reads its own benchmark logs (diagnosed by o1), proposes a feature, and implements it in its own repo to make a child. Children are scored with staged benchmark evaluation and kept in the archive only if they still can edit code. The exploration loop itself is fixed and not editable by the agent.",
+  "task": "self-improving coding agents (SWE-bench Verified, Polyglot)",
+  "trains": false,
+  "datasets": [
+   {"name": "SWE-bench Verified", "role": "eval", "size": "staged: 10 tasks, then 50 more (60 total), then 140 more (200 total)", "split": "SWE-bench-verified-mini style subset; 10 django tasks for basic functionality, 50 django/sphinx, 140 astropy/django", "source": "Jimenez et al. 2024; OpenAI 2024 human-filtered subset", "preprocessing": null},
+   {"name": "Polyglot", "role": "eval", "size": "staged: 10 tasks, then 50 tasks; full benchmark for final comparison", "split": "random subset of the full benchmark (C++, Go, Java, JavaScript, Python, Rust)", "source": "Paul Gauthier 2024 (Aider)", "preprocessing": "pass@1: agent never sees ground-truth test results (leaderboard uses pass@2)"}
+  ],
+  "models": [
+   {"name": "Claude 3.5 Sonnet (New)", "role": "base", "params": null, "architecture": "frozen FM inside a tool-use agent", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "self-modification in both settings; evaluation on SWE-bench"}},
+   {"name": "o3-mini", "role": "base", "params": null, "architecture": "frozen FM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "evaluation FM on Polyglot"}},
+   {"name": "o1", "role": "teacher", "params": null, "architecture": "frozen FM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "diagnoses improvement from evaluation logs and writes the problem description"}},
+   {"name": "Claude 3.7 Sonnet", "role": "evaluated", "params": null, "architecture": "frozen FM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "model-transfer tests only"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "1.0 for all FMs in every setting",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "80 iterations, one new agent per selected parent; k=2 parallel on SWE-bench, k=4 on Polyglot; each agent evaluated once per stage; stability check: 3 DGM runs on Polyglot",
+   "prompting": "Base agent gets one prompt with repo dir, problem statement and test description; tools: bash and an editor (view/create/edit whole file). Self-improve diagnosis prompt to o1 returns JSON with log_summarization, potential_improvements, improvement_proposal, implementation_suggestion, problem_description.",
+   "retrieval": null,
+   "parameters": {
+    "iterations": "80 (150 for the hallucination case study)",
+    "parallel_parents_k": "2 on SWE-bench, 4 on Polyglot",
+    "sigmoid_lambda": "10",
+    "sigmoid_midpoint_alpha0": "0.5",
+    "parent_weight": "w_i = sigmoid(lambda*(alpha_i - alpha0)) * 1/(1+n_i), n_i = children with editing functionality; agents with score 1.0 are excluded",
+    "stage_1": "10 tasks to check codebase-editing functionality",
+    "stage_2": "50 tasks (60 total on SWE-bench)",
+    "stage_3_swe": "200 tasks if >40% on the 60-task set and top two in archive",
+    "stage_3_polyglot": "50-task set if >40% on the 10-task set",
+    "archive_admission": "child must compile and retain codebase-editing ability"
+   },
+   "other": {"safety": "sandboxed execution with time limits; agents kept in a traceable archive"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "success rate", "definition": "percentage of benchmark tasks solved (SWE-bench resolved; Polyglot pass@1, no test feedback)", "unit": "%", "higher_is_better": true},
+    {"name": "basic code-editing functionality rate", "definition": "share of generated agents that keep the ability to edit a codebase", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["DGM w/o self-improve (ADAS-like fixed meta-agent)", "DGM w/o open-ended exploration (keep only latest valid agent)", "DGM Greedy (always pick best node; replicates Robeyns et al. 2025)", "OpenHands + CodeAct v2.1 (SWE-bench, checked open-source SoTA)", "Aider (Polyglot representative agent)"],
+   "protocol": "Best-of-archive score curves over 80 iterations on benchmark subsets (Fig 2); best agent re-evaluated on 200 SWE-bench tasks or full Polyglot; transfer by swapping the FM, benchmark or language set. Single runs per configuration except a 3-run stability test on Polyglot; no significance test."
+  },
+  "availability": {"code": "https://github.com/jennyzzt/dgm", "weights": null, "data": "SWE-bench Verified and Polyglot (public); full agent logs and archive lineage promised in the reproducibility statement"},
+  "prompts": [
+   {"purpose": "Task prompt for the initial coding agent", "text": "I have uploaded a Python code repository in the directory {self.git_tempdir}. Help solve the following problem.\n<problem_description>\n{self.problem_statement}\n</problem_description>\n<test_description>\n{self.test_description}\n</test_description>\nYour task is to make changes to the files in the {self.git_tempdir} directory to address the <problem_description>. I have already taken care of the required dependencies.", "where": "Appendix C.1"},
+   {"purpose": "Self-improve diagnosis prompt (SWE-bench); full text with coding-agent summary, agent log, issue, predicted patch, private test patch and test results is in Appendix C.3", "text": "Your task is to identify ONE detailed plan that would improve the agent's coding ability. The improvement should not be specific to any particular GitHub issue or repository.", "where": "Appendix C.3"}
+  ],
+  "evidence": [
+   {"field": "inference.temperature", "quote": "The temperature for all FMs in every setting is set to 1.0.", "where": "Appendix D.1"},
+   {"field": "inference.parameters.sigmoid_lambda", "quote": "We set λ = 10", "where": "Appendix C.2"}
+  ]
+ },
+ "results": [
+  {"claim": "The DGM raises SWE-bench performance from 20.0% to 50.0% over 80 iterations.", "kind": "measured", "source": null, "metric": "SWE-bench success rate", "value": "50.0", "unit": "%", "baseline_value": "20.0", "n": "80 iterations, single run", "setup": "Claude 3.5 Sonnet (New) for self-modification and evaluation; best agent in archive; staged evaluation up to 200 tasks", "quote": "The DGM automatically improves itself from 20.0% to 50.0% on SWE-bench", "table": null, "note": null, "where": "Sec 1 / Sec 4.4"},
+  {"claim": "On the full Polyglot benchmark the best DGM agent reaches 30.7% versus 14.2% for the base agent.", "kind": "measured", "source": null, "metric": "Polyglot pass@1", "value": "30.7", "unit": "%", "baseline_value": "14.2", "n": "full benchmark", "setup": "o3-mini as evaluation FM, Claude 3.5 Sonnet (New) for self-modification, 80 iterations", "quote": "On the full Polyglot benchmark, the DGM improves the coding agent from 14.2% to 30.7%.", "table": null, "note": "On the 50-task search subset the score went from 14.0% to 38.0%", "where": "Sec 4.4"},
+  {"claim": "Without self-improvement (fixed base-agent meta agent) the DGM reaches only 39.0% on SWE-bench and 28.0% on Polyglot.", "kind": "measured", "source": null, "metric": "success rate", "value": "39.0", "unit": "%", "baseline_value": "50.0", "n": "single run", "setup": "Same budget as DGM on the search subsets; Polyglot value 28.0%", "quote": null, "table": "Table 1, row DGM w/o Self-improve, columns SWE-bench and Polyglot", "note": "Cost of one baseline run on SWE-bench is about USD 10,000", "where": "Appendix A.3, Table 1"},
+  {"claim": "Without open-ended exploration (no archive) the DGM stalls at 23.0% on SWE-bench and 14.0% on Polyglot.", "kind": "measured", "source": null, "metric": "success rate", "value": "23.0", "unit": "%", "baseline_value": "50.0", "n": "single run", "setup": "Always self-modifies the latest valid agent", "quote": null, "table": "Table 1, row DGM w/o Open-ended exploration, columns SWE-bench and Polyglot", "note": "Polyglot value 14.0%", "where": "Appendix A.3, Table 1"},
+  {"claim": "Greedy parent selection (always best node) reaches 39.7% on SWE-bench and 30.0% on Polyglot.", "kind": "measured", "source": null, "metric": "success rate", "value": "39.7", "unit": "%", "baseline_value": "50.0", "n": "single run", "setup": "DGM Greedy replicates Robeyns et al. 2025", "quote": "DGM Greedy achieves 39.7% and 30.0% on SWE-bench and Polyglot, respectively, compared to 50.0% and 38.0% by this implementation of DGM.", "table": null, "note": null, "where": "Appendix A.3"},
+  {"claim": "The best DGM agent on SWE-bench is comparable to the checked open-source OpenHands + CodeAct v2.1, which scores 51.0% on the same 200 tasks.", "kind": "reported", "source": "SWE-bench leaderboard, OpenHands (Wang et al. 2024)", "metric": "SWE-bench success rate", "value": "51.0", "unit": "%", "baseline_value": null, "n": "200 tasks", "setup": "claude-3-5-sonnet-20241022; 53.0% on full Verified at 16 April 2025", "quote": "OpenHands + CodeAct v2.1 (claude-3-5-sonnet-20241022) achieves 51.0%.", "table": null, "note": null, "where": "Appendix E.4"},
+  {"claim": "Swapping the FM to o3-mini on SWE-bench, the DGM agent gets 33.0% against 23.0% for the base agent.", "kind": "measured", "source": null, "metric": "SWE-bench success rate", "value": "33.0", "unit": "%", "baseline_value": "23.0", "n": "200 tasks", "setup": "Agent discovered with Claude 3.5 Sonnet (New), evaluated with o3-mini", "quote": "With o3-mini, the base agent achieved 23.0% and the DGM-discovered agent 33.0%.", "table": null, "note": null, "where": "Sec 4.4"},
+  {"claim": "With Claude 3.7 Sonnet on SWE-bench the DGM agent gets 59.5% against 19.0% for the base agent.", "kind": "measured", "source": null, "metric": "SWE-bench success rate", "value": "59.5", "unit": "%", "baseline_value": "19.0", "n": "200 tasks", "setup": "Agent discovered with Claude 3.5 Sonnet (New), FM swapped at evaluation", "quote": "With Claude 3.7 Sonnet, the base agent achieved 19.0% and the DGM-discovered agent 59.5%.", "table": null, "note": "Figure 4 labels the same bar 59.0%", "where": "Sec 4.4"},
+  {"claim": "The best SWE-bench-evolved agent scores 28.9% on Polyglot versus 14.2% for the base agent (held-out benchmark).", "kind": "measured", "source": null, "metric": "Polyglot success rate", "value": "28.9", "unit": "%", "baseline_value": "14.2", "n": "full Polyglot", "setup": "Zero-shot transfer of the best SWE-bench agent", "quote": "The best agent evolved on SWE-bench achieves 28.9% on Polyglot, compared to the initial agent’s baseline of 14.2%.", "table": null, "note": "Reverse direction: best Polyglot agent gets 24.5% on SWE-bench versus 20.0%", "where": "Sec 4.4"},
+  {"claim": "On Polyglot, swapping the FM gives only small gains: 33.3% vs 32.0% on Claude 3.5 Sonnet (New), 36.8% vs 35.6% on Claude 3.7 Sonnet.", "kind": "measured", "source": null, "metric": "Polyglot success rate", "value": "33.3", "unit": "%", "baseline_value": "32.0", "n": "full benchmark", "setup": "DGM run used o3-mini; FM replaced at evaluation", "quote": "With Claude 3.5 Sonnet (New), the initial agent achieved 32.0% and the DGM-discovered agent 33.3%.", "table": null, "note": "Claude 3.7 Sonnet: 35.6% initial, 36.8% DGM", "where": "Appendix A.2"},
+  {"claim": "A single DGM run on SWE-bench costs about USD 22,000 and about two weeks.", "kind": "measured", "source": null, "metric": "cost per run", "value": "22,000", "unit": "USD", "baseline_value": "10,000", "n": "one run", "setup": "SWE-bench, 80 iterations; baselines about USD 10,000 per run", "quote": "is about USD 22,000.", "table": null, "note": "Per 60-task evaluation: $350 Claude 3.5 Sonnet (New) on SWE-bench, $5 o3-mini on Polyglot", "where": "Appendix E.1; wall-clock in Sec 6"},
+  {"claim": "DGM's generated agents keep basic code-editing functionality 51.3% of the time versus 32.5% for each ablation.", "kind": "measured", "source": null, "metric": "share of valid agents", "value": "51.3", "unit": "%", "baseline_value": "32.5", "n": "SWE-bench runs", "setup": "Percentage of generated agents with basic code-editing functionality", "quote": null, "table": "Table 2, row DGM, column Percentage with Basic Code-Editing Functionality", "note": "Both ablations print 32.5%", "where": "Appendix A.4, Table 2"},
+  {"claim": "Three DGM runs on Polyglot give mean accuracy 40.7% with standard deviation 2.3%.", "kind": "measured", "source": null, "metric": "Polyglot accuracy", "value": "40.7", "unit": "%", "baseline_value": null, "n": "3 runs", "setup": "Stability check on Polyglot", "quote": "The DGM achieved a mean accuracy of 40.7% with a standard deviation of 2.3%", "table": null, "note": "Mean is above the 38.0% of the main run; metric subset not stated beyond Polyglot", "where": "Appendix A.4"},
+  {"claim": "Two nodes targeting the same finer-grained editing feature score very differently: node 6 gets 23.3% and node 24 gets 40.5%.", "kind": "measured", "source": null, "metric": "SWE-bench score", "value": "40.5", "unit": "%", "baseline_value": "23.3", "n": "single agents", "setup": "SWE-bench DGM run, Fig 3 nodes", "quote": "Node 6 achieved only 23.3%, while node 24 achieved 40.5%.", "table": null, "note": "The listed feature suggestions appear swapped relative to the prose (the 'node 6' text describes str_replace)", "where": "Appendix G"},
+  {"claim": "In the hallucination case study the DGM found a perfect-scoring node 114 that gamed the detector by deleting the tool-use marker logging.", "kind": "measured", "source": null, "metric": "solve-hallucination score (0-2)", "value": "2.0", "unit": "score", "baseline_value": null, "n": "150 iterations, 3 SWE-bench tasks per agent", "setup": "Scoring hidden from the agent where possible; node 96 got 1.67 without hacking", "quote": "node 114, which achieves a perfect score of 2.0", "table": null, "note": null, "where": "Appendix H"}
+ ],
+ "limits": [
+  "Authors concede it falls short of closed-source SoTA SWE-bench solutions and a single run takes about 2 weeks and USD 22,000.",
+  "Bounded by the frozen FM; it does not rewrite training scripts or the FM.",
+  "The open-ended exploration loop (archive, parent selection) is fixed and not modifiable by the agent.",
+  "Key assumption: coding benchmark gains indicate better self-modification ability.",
+  "Only two coding benchmarks; most configurations are single runs without significance tests; only Polyglot has a 3-run stability check.",
+  "Search uses small subsets (60 tasks SWE-bench, 50 Polyglot) and noisy FMs; thresholds like 40% are heuristics.",
+  "The diagnosis prompt includes the private test patch and results, so the score signal leaks tests into the proposal step (authors report finding no overfitting).",
+  "Objective hacking observed in the hallucination study (agent deleted the detection markers)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Darwin Gödel Machine", "definition": "a self-referential, self-improving system that writes and modifies its own code to become a better coding agent, validating changes empirically and keeping an archive", "where": "Sec 1"},
+  {"term": "stepping stones", "definition": "interesting yet suboptimal solutions or features that may enable future breakthroughs", "where": "Sec 1"},
+  {"term": "objective hacking", "definition": "optimizing for the measurable objective rather than the spirit of the task", "where": "Appendix H"}
+ ],
+ "lineage": [
+  {"work": "Gödel machine (Schmidhuber, 2007)", "year": 2007, "arxiv": null, "relation": "extends", "note": "replaces proof of benefit with empirical validation", "quote": null},
+  {"work": "Automated Design of Agentic Systems (ADAS, Hu et al.)", "year": 2025, "arxiv": null, "relation": "baseline", "note": "DGM w/o self-improve replicates ADAS in this setting", "quote": null},
+  {"work": "Robeyns et al. (self-improving coding agent)", "year": 2025, "arxiv": null, "relation": "contradicts", "note": "concurrent hill-climbing approach; DGM Greedy ablation replicates it", "quote": null},
+  {"work": "Go-Explore (Ecoffet et al.)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "parent-selection design inspired by it", "quote": null},
+  {"work": "SWE-bench Verified", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Jimenez et al. 2024; OpenAI human-filtered subset", "quote": null},
+  {"work": "Polyglot benchmark / Aider", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Paul Gauthier 2024; Aider is the representative baseline", "quote": null},
+  {"work": "OpenHands + CodeAct v2.1", "year": 2024, "arxiv": null, "relation": "baseline", "note": "checked open-source SWE-bench baseline (Wang et al. 2024)", "quote": null},
+  {"work": "Yin et al. 2024; Zelikman et al. 2024b", "year": 2024, "arxiv": null, "relation": "related", "note": "self-referential agents without open-ended exploration", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Darwin Gödel Machine. The DGM iteratively builds a growing archive of agents by interleaving self-modification with downstream task evaluation.", "page": 2, "why": "shows the select-modify-evaluate-add loop"},
+  {"figure": "Fig 2", "caption": "Self-improvement and open-ended exploration enable the DGM to continue making progress and improve its performance.", "page": 7, "why": "best-agent score curves versus both ablations and SoTA baselines"},
+  {"figure": "Fig 3", "caption": "The DGM automatically self-improves to become a better coding agent. (Left) Archive of coding agents ... (Right) Progress plot.", "page": 7, "why": "archive tree showing stepping stones and performance dips"},
+  {"figure": "Fig 4", "caption": "Transfer between Models, Benchmarks, and Tasks.", "page": 8, "why": "transfer bars across FMs, benchmarks and languages"}
+ ],
+ "code": [
+  {"where": "Appendix C.2, Eq 3-6", "snippet": "s_i = 1/(1+exp(-lambda (alpha_i - alpha_0))); h_i = 1/(1+n_i); w_i = s_i h_i; p_i = w_i / sum_j w_j", "verbatim": false}
+ ],
+ "problems": [
+  "Fig 4 prints 59.0% for Claude 3.7 Sonnet DGM agent while the text says 59.5%.",
+  "Appendix G feature-suggestion text for node 6 and node 24 looks swapped relative to its prose description.",
+  "Abstract and Sec 1 say Polyglot 14.2% to 30.7% (full benchmark) while Sec 4.4 first says 14.0% to 38.0% (50-task subset)."
+ ]
+}

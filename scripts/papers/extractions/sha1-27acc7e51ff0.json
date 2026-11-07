@@ -1,0 +1,386 @@
+{
+ "schema": 1,
+ "key": "sha1:27acc7e51ff0",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch03-os-docker-kubernetes-tuning-gpu-based.pdf",
+ "bib": {
+  "title": "Chapter 3. OS, Docker, and Kubernetes Tuning for GPU-Based Environments (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly book chapter (AI Systems Performance Engineering), ch. 3",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 107497,
+  "chars_total": 107497,
+  "engine": "pymupdf",
+  "skipped": "Trailing O'Reilly page navigation text; code listings are truncated at line width in the text layer."
+ },
+ "type": "book-chapter",
+ "question": "How should the operating system, GPU driver, container runtime and Kubernetes be tuned so GPUs are not starved by host-side bottlenecks?",
+ "hypothesis": null,
+ "contributions": [
+  "Checklist of host OS tuning (NUMA, pinning, hugepages, swap, scheduler, C-states, allocators)",
+  "GPU driver/runtime settings (persistence, MPS, MIG, clocks, ECC, OOM)",
+  "Container and Kubernetes tuning (Container Toolkit, GPU Operator, Topology Manager, host networking, QoS)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Local NUMA memory access latency was about 80 ns versus about 139 ns remote, roughly 75% higher.",
+   "kind": "reported",
+   "source": null,
+   "metric": "memory access latency",
+   "value": "80 ns local vs 139 ns remote",
+   "unit": "ns",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One experiment on a dual-socket system; the chapter does not name the CPU or give method.",
+   "quote": "local NUMA node memory\naccess latency is ~80 ns compared to remote (cross-node) memory access latency\nof ~139 ns",
+   "table": null,
+   "note": "Source experiment not cited; 'many dual-socket systems' is the only generalisation.",
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Pinning processes and removing cross-NUMA traffic and core migrations can give 5-10% training throughput improvement.",
+   "kind": "claim",
+   "source": null,
+   "metric": "throughput gain",
+   "value": "5%-10%",
+   "unit": "% training throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training; 'it's possible to see'; no workload, hardware or baseline given.",
+   "quote": "it’s possible to see 5%–10% training\nthroughput improvements just by eliminating cross-NUMA traffic and CPU core\nmigrations",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Copying from pinned host memory to GPU can be 2-3x faster than from pageable memory.",
+   "kind": "claim",
+   "source": null,
+   "metric": "H2D copy speed",
+   "value": "2-3x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Host-to-device copy; no hardware or size stated.",
+   "quote": "Copying data from\npinned host memory to GPU can be 2–3× faster than from regular pageable mem-\nory",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "pin_memory=True in PyTorch DataLoader can improve performance up to 10-20%.",
+   "kind": "claim",
+   "source": null,
+   "metric": "performance gain",
+   "value": "10%-20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anecdotal ('many practitioners have noticed'); PyTorch DataLoader.",
+   "quote": "can improve performance up to 10%–20% by reducing data transfer bottlenecks",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Transparent hugepages typically give about 3-5% throughput improvement.",
+   "kind": "claim",
+   "source": null,
+   "metric": "throughput gain",
+   "value": "3%-5%",
+   "unit": "% throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "No workload or hardware stated; THP compaction can add latency pauses for inference.",
+   "quote": "often on the order of ~3%–5%\nthroughput improvement",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Persistence mode avoids a GPU initialisation cost of the order of a second or two per cold start.",
+   "kind": "claim",
+   "source": null,
+   "metric": "GPU init time",
+   "value": "1-2 s",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Driver spin-up when a GPU was idle; no GPU model given.",
+   "quote": "This\ncan take on the order of a second or two for the driver to spin everything up.",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Two processes each using 40% of a GPU might reach 80-90% GPU utilisation with MPS.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "GPU utilisation",
+   "value": "80%-90%",
+   "unit": "% utilisation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative, MPS enabled, jobs leave slack; no measurement.",
+   "quote": "if two processes each\nuse 40% of a GPU, with MPS you might see the GPU at 80%–90% utilization serving\nboth",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "GPU performance in a properly configured container is virtually identical (<2% difference) to bare metal.",
+   "kind": "claim",
+   "source": null,
+   "metric": "container overhead",
+   "value": "<2%",
+   "unit": "% difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Latest NVIDIA Container Toolkit, properly configured; no benchmark data given beyond a mention of MLPerf Inference v5.0 using OpenShift and Kubernetes.",
+   "quote": "virtually identical (< 2% difference) to run-\nning the code directly on the bare-metal host outside of the container",
+   "table": null,
+   "note": "Elsewhere the chapter says 'only a couple percent difference'.",
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Minimum Linux host driver branch is R580 for CUDA 13.x and R525 for CUDA 12.x.",
+   "kind": "reported",
+   "source": null,
+   "metric": "min driver",
+   "value": "R580 (CUDA 13), R525 (CUDA 12)",
+   "unit": "driver branch",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Container CUDA runtime vs host driver.",
+   "quote": "For CUDA 13.x, the minimum required Linux host driver branch is R580 or\nnewer. For CUDA 12.x, the minimum required Linux host driver branch is R525 or\nnewer.",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "A 1g MIG profile is about 19 SMs on a 132-SM GPU; MIG allows up to seven instances.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "MIG slice size",
+   "value": "~19 SMs per 1g",
+   "unit": "SMs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumes a GPU with 132 SMs.",
+   "quote": "1g represents ~19 SMs, 2g represents ~38 SMs",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Two nvidia.com/mig-2g.45gb slices are computed as ~76 SMs and 45 GB total memory.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "pod allocation",
+   "value": "~76 SMs, 45 GB",
+   "unit": "SMs, GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pod requests two 2g.45gb instances on one GPU; 132 SMs assumed.",
+   "quote": "the pod is allocating a total of ~76 SMs. The total memory\nallocation is 45 GB of GPU RAM.",
+   "table": null,
+   "note": "Table 3-1 gives 2g.45gb as 45 GB per instance, so two instances would be 90 GB; the chapter's 45 GB total looks wrong.",
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "On NVL72 (NVLink 5) the combined bandwidth is about 130 TB/s (72 GPUs x 1.8 TB/s).",
+   "kind": "reported",
+   "source": null,
+   "metric": "NVLink domain bandwidth",
+   "value": "~130 TB/s",
+   "unit": "TB/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GB200 NVL72 rack.",
+   "quote": "~130 TB/s throughput inside the rack (72 GPUs * 1.8 TB/s per GPU)",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "NVLink-C2C links Grace to its GPU at up to ~900 GB/s.",
+   "kind": "reported",
+   "source": null,
+   "metric": "NVLink-C2C bandwidth",
+   "value": "~900 GB/s",
+   "unit": "GB/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GH200/GB200 superchips.",
+   "quote": "up to ~900 GB/s be-\ntween Grace and its paired accelerator",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Disabling ECC gains typically only a few percent while removing memory-error protection; keep ECC on.",
+   "kind": "claim",
+   "source": null,
+   "metric": "ECC overhead",
+   "value": "a few percent",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVIDIA data center GPUs including Hopper and Blackwell.",
+   "quote": "but typically just a few\npercent",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  },
+  {
+   "claim": "Placing a 4-GPU job without topology awareness can cut inter-GPU bandwidth in half.",
+   "kind": "claim",
+   "source": null,
+   "metric": "inter-GPU bandwidth",
+   "value": "half",
+   "unit": "bandwidth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-GPU server with two NVLink groups of 4; no measurement.",
+   "quote": "This can cut your inter-\nGPU bandwidth in half.",
+   "table": null,
+   "note": null,
+   "where": "Ch. 3"
+  }
+ ],
+ "limits": [
+  "Almost all speedup figures are unsourced ranges ('it's possible to see') with no hardware, workload or baseline.",
+  "Chapter is training-centred; inference is addressed only in side remarks (THP, persistence, MIG).",
+  "Says MIG changes need a reset in one place and 'without rebooting' in another.",
+  "Says 'As of this writing' for MIG disabling P2P/NVLink and Kubernetes lacking I/O isolation; these may date.",
+  "MIG example arithmetic (45 GB for two 2g.45gb slices) conflicts with Table 3-1."
+ ],
+ "practices": [
+  "Pin each process and its memory to the GPU's NUMA node with numactl --cpunodebind/--membind or taskset, and reapply in DataLoader workers (NUMA section).",
+  "Use pinned memory (pin_memory=True, non_blocking=True) and raise ulimit -l to unlimited for large pinned buffers.",
+  "Enable THP for throughput-bound training; disable it (transparent_hugepage=never) or use madvise for latency-sensitive inference.",
+  "Set vm.swappiness=0 and keep swap at zero; use cgroups v2 for memory and CPU pinning.",
+  "Set CPU governor to performance and limit deep C-states.",
+  "Pin device interrupts to cores on the device's NUMA node; disable or customise irqbalance.",
+  "Tune jemalloc or tcmalloc through MALLOC_CONF / TCMALLOC_* variables.",
+  "Enable persistence mode (nvidia-persistenced) on all GPUs at boot.",
+  "Use MPS for several small jobs that leave slack, MIG for isolation, and neither for large multi-GPU jobs.",
+  "Lock clocks (nvidia-smi -lgc) only for benchmarking; otherwise leave auto-boost on.",
+  "Keep ECC enabled for serious AI workloads.",
+  "Keep the driver and MIG configuration loaded across jobs.",
+  "Match host driver to container CUDA version (R580 for CUDA 13.x, R525 for 12.x); use NGC base images.",
+  "Use bind mounts rather than the overlay filesystem for datasets and checkpoints.",
+  "Enable Kubernetes Topology Manager (best-effort, restricted or single-numa-node) and the latest device plugin and GPU Operator.",
+  "Use hostNetwork: true for performance-sensitive multinode jobs; install RDMA device plugin and enable GPUDirect RDMA.",
+  "Request whole nodes; set requests == limits for Guaranteed QoS, or avoid tight memory limits to dodge the OOM killer.",
+  "Do not use MIG for large distributed training or inference spanning GPUs."
+ ],
+ "terms": [
+  {
+   "term": "NUMA node",
+   "definition": "a logical grouping of CPUs, GPUs, network interface controllers (NICs), and memory that are physically close to one another",
+   "where": "NUMA Awareness and CPU Pinning"
+  },
+  {
+   "term": "MPS",
+   "definition": "a feature that creates a sort of umbrella under which multiple processes can run on the GPU concurrently and without strict time-slicing",
+   "where": "MPS"
+  },
+  {
+   "term": "MIG",
+   "definition": "Modern GPUs can be partitioned at the hardware level into multiple instances",
+   "where": "MIG"
+  },
+  {
+   "term": "Persistence mode",
+   "definition": "keeps the GPU driver loaded and the hardware in a ready state even when no application is active",
+   "where": "GPU Persistence Mode"
+  },
+  {
+   "term": "Bubbles",
+   "definition": "periods of time when the GPU is waiting for the CPU to resume data processing",
+   "where": "CPU Frequency and C-states"
+  },
+  {
+   "term": "CUBIN",
+   "definition": "the binary produced by nvcc using the -cubin option; contains compiled SASS for a given NVIDIA architecture",
+   "where": "CUDA Forward and Backward Compatibility"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MLPerf Inference v5.0",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited as showing Red Hat OpenShift and Kubernetes do not compromise efficiency.",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA MIG user guide (B200 profiles)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of Table 3-1 (oreil.ly/FsPEx).",
+   "quote": null
+  },
+  {
+   "work": "Slinky (SLURM on Kubernetes)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Open source hybrid scheduler mentioned.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3-1",
+   "caption": "MIG Profiles for Blackwell B200",
+   "page": null,
+   "why": "Fixed MIG profile fractions of memory, SMs, L2, copy engines and instance counts."
+  },
+  {
+   "figure": "Fig 3-4",
+   "caption": "Eight GPUs in a node, with four GPUs connected to NUMA node 0 and the other four to NUMA node 1",
+   "page": null,
+   "why": "Shows why a process must be pinned to the GPU's NUMA node."
+  },
+  {
+   "figure": "Fig 3-6/3-7",
+   "caption": "GPU time-slicing idle gaps vs MPS overlap",
+   "page": null,
+   "why": "Shows how MPS fills idle gaps."
+  }
+ ],
+ "code": [
+  {
+   "where": "NUMA section",
+   "snippet": "numactl --cpunodebind=1 --membind=1 \\\n    python train.py --gpu 4",
+   "verbatim": true
+  },
+  {
+   "where": "Persistence mode",
+   "snippet": "systemctl enable nvidia-persistenced",
+   "verbatim": true
+  },
+  {
+   "where": "MIG pod",
+   "snippet": "resources:\n  limits:\n    nvidia.com/mig-2g.45gb: \"2\"",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings are cut at line width in the text layer.",
+  "Contains no instructions aimed at the reader/agent."
+ ]
+}

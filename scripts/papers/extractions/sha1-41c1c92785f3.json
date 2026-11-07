@@ -1,0 +1,230 @@
+{
+ "schema": 1,
+ "key": "sha1:41c1c92785f3",
+ "pdf": "generative-ai/02-rag-retrieval/sources/context-engineering-multi-agent-systems/ch07-high-fidelity-rag-defense-nasa-inspired.pdf",
+ "bib": {
+  "title": "Chapter 7: High-Fidelity RAG and Defense: The NASA-Inspired Research Assistant (Context Engineering for Multi-Agent Systems)",
+  "authors": [
+   "Denis Rothman"
+  ],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt book chapter (read via O'Reilly, printed 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 71640,
+  "chars_total": 71640,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a plan-and-execute multi-agent context engine give cited, verifiable RAG answers and be protected against data poisoning and prompt injection from its knowledge base?",
+ "hypothesis": null,
+ "contributions": [
+  "Ingestion pipeline separated from the engine, storing source filename as metadata on every chunk",
+  "helper_sanitize_input regex gateway between retrieval and synthesis",
+  "Citation-aware Researcher agent that appends sources programmatically",
+  "Backward-compatibility validation of the engine on the Chapter 5 and 6 examples, with a function inventory and mind maps"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Retrieval returns the top 3 chunks per researcher query.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "agent_researcher calls query_pinecone with top_k=3 on namespace KnowledgeStore; embedding model text-embedding-3-small, generation model gpt-5",
+   "quote": null,
+   "table": null,
+   "note": "top_k=3 appears in code listing; a number in code, not a measurement",
+   "where": "Part 2, agent_researcher listing"
+  },
+  {
+   "claim": "The Planner produced a six-step plan (Librarian, Researcher x2, Librarian, Writer x2) for the Juno query; one run, no metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "plan steps",
+   "value": 6,
+   "unit": "steps",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Single run of the NASA research query on two small documents (Juno, Perseverance), gpt-5, Pinecone index genai-mas-mcp-ch3",
+   "quote": "the Planner agent pro‐\nduced a surprisingly sophisticated six-step plan",
+   "table": null,
+   "note": null,
+   "where": "Deconstructing the high-fidelity trace and output"
+  },
+  {
+   "claim": "The sanitizer is a basic static pattern list that the author says must be extended extensively; model-based safety systems are recommended in production.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six regex patterns, case-insensitive, raises ValueError on first match; the agent drops the chunk and continues",
+   "quote": "Naturally, we need to augment the malicious injection pattern list exten‐\nsively in a continuous battle against poisoned data.",
+   "table": null,
+   "note": null,
+   "where": "Implementing helper_sanitize_input"
+  },
+  {
+   "claim": "On an Apollo 11 query against a knowledge base holding only Juno and Perseverance documents, the Researcher reported absence of information instead of fabricating.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Chapter 5 backward-compatibility test, single run, gpt-5; qualitative",
+   "quote": "Instead of fabricating data, the Researcher agent truthfully reports the\nabsence of relevant information.",
+   "table": null,
+   "note": null,
+   "where": "Chapter 5 test case"
+  },
+  {
+   "claim": "The researcher output lists both juno_mission_overview.txt and perseverance_rover_tools.txt as sources although it cites only [1], because all unique retrieved sources are appended.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Trace output of the Juno query; sources taken from retrieved chunk metadata, not from the LLM",
+   "quote": "- juno_mission_overview.txt\n        - perseverance_rover_tools.txt",
+   "table": null,
+   "note": "The chapter calls this proof that high-fidelity RAG works; it does not remark that the second source is unused.",
+   "where": "Trace output listing"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation: two toy documents, single runs, no retrieval or citation accuracy metrics",
+  "Sanitizer is regex only; author concedes it is basic and must be extended",
+  "Appending all retrieved sources records what was retrieved, not what was used",
+  "LLM output is stochastic and may vary between runs (author note)",
+  "Chapter says a production system should add moderation APIs, guardrails or prompt shielding"
+ ],
+ "practices": [
+  "Separate the data ingestion pipeline from the context engine, as a data management department would (Architecting section).",
+  "Store the source document name in each chunk's metadata at ingestion so every claim can be traced (Part 1).",
+  "Verify after ingestion that the metadata is stored and retrieved, with a probe query (Verification).",
+  "Sanitize retrieved text before it reaches the synthesis LLM and drop failing chunks (Part 2).",
+  "Use a citation-aware prompt and append the unique sources programmatically so the list stays complete if the LLM omits one (Part 2).",
+  "Instruct the agent to answer only from the provided sources so that it reports missing information (Chapter 5 test case).",
+  "Run backward-compatibility tests of earlier chapters' workflows after each upgrade; keep agent output contracts readable by the consumer (trilingual Writer).",
+  "Keep a complete function inventory and mind map of the engine (Validation section).",
+  "Offer the user a choice between strict context adherence and general model help on a negative result (Chapter 5 test case)."
+ ],
+ "terms": [
+  {
+   "term": "prompt injection",
+   "definition": "an attack where malicious instructions, hidden within the data retrieved by the RAG system, are used to trick or hijack the final language model into performing an unintended action.",
+   "where": "Part 2, note box"
+  },
+  {
+   "term": "data poisoning",
+   "definition": "an attacker first manages to get malicious text into the vector database (stage 1 of a two-stage attack, followed by prompt injection via RAG)",
+   "where": "Part 2"
+  },
+  {
+   "term": "high-fidelity RAG",
+   "definition": "a technique that goes beyond simple retrieval to provide verifiable citations for its synthesized answers",
+   "where": "intro"
+  },
+  {
+   "term": "trilingual agent_writer",
+   "definition": "a Writer able to process three data contracts: 'facts', 'summary' and 'answer_with_sources'",
+   "where": "Chapter 6 test case"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Greshake et al., Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection",
+   "year": 2023,
+   "arxiv": "2302.12173",
+   "relation": "related",
+   "note": "reference list; background on indirect prompt injection",
+   "quote": null
+  },
+  {
+   "work": "Shu et al., RAG-FORENSICS",
+   "year": 2024,
+   "arxiv": "2405.08182",
+   "relation": "related",
+   "note": "reference list; hallucination detection benchmark",
+   "quote": null
+  },
+  {
+   "work": "Kim, Baldi, McAleer, Jailbreaking Safety-Tuned LLMs with Safety-Tuned LLMs",
+   "year": 2024,
+   "arxiv": "2405.10511",
+   "relation": "related",
+   "note": "reference list",
+   "quote": null
+  },
+  {
+   "work": "Rawte, Sheth, Das, A Survey of Hallucination in Large Language Models",
+   "year": 2024,
+   "arxiv": "2311.05232",
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "Rothman, Context Engineering for Multi-Agent Systems, chapters 4-6",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "upgrades the engine and Researcher agent built earlier",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 7.1",
+   "caption": "High-fidelity RAG and defense architecture",
+   "page": 2,
+   "why": "Shows ingestion as a separate Phase 0 and the retrieve, sanitize, synthesize flow"
+  },
+  {
+   "figure": "Figure 7.2",
+   "caption": "Mapping the context engine",
+   "page": 20,
+   "why": "Whole-engine component map"
+  },
+  {
+   "figure": "Figure 7.3",
+   "caption": "Visualizing the components and specific functions used by the NASA research assistant",
+   "page": 22,
+   "why": "Which functions a research query activates"
+  },
+  {
+   "figure": "Figure 7.5",
+   "caption": "Backward compatibility test",
+   "page": 26,
+   "why": "Negative-result flow for Apollo 11"
+  }
+ ],
+ "code": [
+  {
+   "where": "commons/ch7/helpers.py",
+   "snippet": "injection_patterns = [\n        r\"ignore previous instructions\",\n        r\"ignore all prior commands\",\n        r\"you are now in.*mode\",\n        r\"act as\",\n        r\"print your instructions\",\n        r\"sudo|apt-get|yum|pip install\"\n    ]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF is an O'Reilly web print; code lines and the system and user prompts of agent_researcher are truncated at the right edge, so prompt text is not recoverable",
+  "Not a ledger arXiv paper; no method block (book-chapter)"
+ ]
+}

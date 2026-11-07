@@ -1,0 +1,333 @@
+{
+ "schema": 1,
+ "key": "sha1:05d180d59240",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch04-rag-feature-pipeline.pdf",
+ "bib": {
+  "title": "RAG Feature Pipeline (Chapter 4, LLM Engineer's Handbook)",
+  "authors": [
+   "Paul Iusztin",
+   "Maxime Labonne"
+  ],
+  "first_author": "Iusztin",
+  "year": 2024,
+  "venue": "Packt (LLM Engineer's Handbook, ch. 4), read via O'Reilly",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 134066,
+  "chars_total": 134066,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "book-chapter",
+ "question": "How does retrieval-augmented generation work, what can be optimised in it, and how is the LLM Twin's RAG ingestion (feature) pipeline designed and implemented?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains vanilla RAG (ingestion, retrieval, generation), embeddings and vector DBs",
+  "Overview of advanced RAG in pre-retrieval, retrieval and post-retrieval stages",
+  "Batch vs streaming and change data capture for syncing warehouse and feature store",
+  "Implementation of the LLM Twin RAG feature pipeline with ZenML, Pydantic, an OVM over Qdrant, and dispatcher/factory/strategy patterns"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Chunk-and-embed run on the LLM Twin turned 76 documents (three authors) into 2,373 chunks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2,373",
+   "unit": "chunks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM Twin feature pipeline run shown in ZenML metadata (Fig 4.13/4.14); one run, MongoDB data warehouse of the book authors' articles, posts and repos.",
+   "quote": "we transformed 76 documents into 2,373 chunks",
+   "table": null,
+   "note": null,
+   "where": "Chunk and embed section"
+  },
+  {
+   "claim": "Example articles chunking config: chunk_size 500, chunk_overlap 50.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "500/50",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ZenML metadata for the chunking step; defaults of ChunkingDataHandler.metadata and chunk_text().",
+   "quote": "a chunk_size of 500 and a chunk_overlap of 50",
+   "table": null,
+   "note": "Code shows ArticleChunkingHandler uses min_length 1000 / max_length 1000 (characters via len()) instead; chunk_size 500 feeds RecursiveCharacterTextSplitter (characters), chunk_overlap 50 feeds SentenceTransformersTokenTextSplitter (tokens).",
+   "where": "Chunk and embed section"
+  },
+  {
+   "claim": "Batching chunks through the embedding model on GPU can speed inference by 10x or more.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10x",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Embedding handlers; depends on batch size and hardware; no measurement given.",
+   "quote": "by 10x or more, depending on the batch size and hardware we use",
+   "table": null,
+   "note": null,
+   "where": "embedding handlers section"
+  },
+  {
+   "claim": "Cosine distance is given a range of -1 to 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Retrieval pipeline text; defined as 1 minus the cosine of the angle.",
+   "quote": "It ranges from -1 to 1",
+   "table": null,
+   "note": "Range stated is that of cosine similarity, not of 1 - cos (0 to 2).",
+   "where": "Retrieval pipeline"
+  },
+  {
+   "claim": "Batch scheduling every minute is judged acceptable because the warehouse holds thousands of records.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM Twin RAG feature pipeline design rationale.",
+   "quote": "we can schedule the batch pipeline to run every minute",
+   "table": null,
+   "note": null,
+   "where": "Batch versus streaming"
+  },
+  {
+   "claim": "Embedding visualisation dimensionality quoted as typically 64 to 2048.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement about embeddings.",
+   "quote": "usually between 64 and 2048",
+   "table": null,
+   "note": null,
+   "where": "What are embeddings?"
+  },
+  {
+   "claim": "all-MiniLM-L6-v2 yields 384-d embeddings; clip-ViT-B-32 yields 512-d.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "384",
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sentence Transformers snippets in the chapter.",
+   "quote": "# Output: [3, 384]",
+   "table": null,
+   "note": null,
+   "where": "What are embeddings code"
+  }
+ ],
+ "limits": [
+  "No evaluation of any RAG technique; advanced RAG methods are listed for intuition, not measured. Evaluation deferred to Chapter 9.",
+  "Chapter says its list is not exhaustive and text-only.",
+  "Embedding model named in prose (all-mpnet-base-v2) differs from the Settings code default (all-MiniLM-L6-v2), and cross-references 'Figure 8.10/8.12/8.16/8.17' are stale labels for Figures 4.10/4.12/4.16/4.17.",
+  "Naive full-pull sync used; no deletes handled; CDC discussed but not implemented.",
+  "Same clean_text() used for all categories for simplicity.",
+  "Libraries and models (GPT-4o as of summer 2024, langchain.text_splitter imports) date from 2024."
+ ],
+ "practices": [
+  "Process the user query with the same cleaning, chunking and embedding functions and model as the documents, to avoid training-serving skew (Retrieval pipeline).",
+  "Version prompt templates with Git, a DB or a tool such as LangFuse (Generation pipeline).",
+  "Choose the embedding model by MTEB, accuracy or memory footprint; keep it configurable (What are embeddings?).",
+  "Use instructor models instead of fine-tuning an embedder when tailoring to a domain; start retrieval tuning with filtered vector or hybrid search, then fine-tune the embedder (Retrieval).",
+  "Retrieve with bi-encoder similarity, then rerank with a cross-encoder, because the cross-encoder is too costly at first stage (Post-retrieval).",
+  "Pre-retrieval optimisation is experimental: try several methods and iterate (Pre-retrieval).",
+  "Start with a batch pipeline, move to streaming later for cost and experience (Batch versus streaming).",
+  "Prefer log-based CDC for scale: no source I/O overhead, low latency, all CRUD, but needs a queue and streaming pipeline (CDC).",
+  "Keep two snapshots in the feature store: cleaned data (fine-tuning) and chunked and embedded (RAG); do not shape warehouse data per use case (Why two snapshots).",
+  "Use a content hash (MD5) as chunk ID to deduplicate (chunking handlers).",
+  "Wrap third-party packages and use a singleton for the embedding model (embedding handlers).",
+  "Log step metadata to ZenML for monitoring and debugging (Querying the data warehouse)."
+ ],
+ "terms": [
+  {
+   "term": "RAG",
+   "definition": "Retrieval: search for relevant data; Augmented: add the data as context to the prompt; Generation: use the augmented prompt with an LLM",
+   "where": "Understanding RAG"
+  },
+  {
+   "term": "Embeddings",
+   "definition": "dense numerical representations of objects encoded as vectors in a continuous vector space",
+   "where": "What are embeddings?"
+  },
+  {
+   "term": "Hybrid search",
+   "definition": "a vector and keyword-based search blend, with a parameter usually called alpha controlling the weight between the two",
+   "where": "Retrieval"
+  },
+  {
+   "term": "Filtered vector search",
+   "definition": "leverages the metadata index to filter for specific keywords within the metadata, before or after the vector search",
+   "where": "Retrieval"
+  },
+  {
+   "term": "Small-to-big",
+   "definition": "decouples the chunks used for retrieval and the context used in the prompt; a small sequence computes the embedding while the sequence and a wider window are kept in metadata",
+   "where": "Pre-retrieval"
+  },
+  {
+   "term": "Query routing",
+   "definition": "decide what action to take based on the user's input, like if/else statements but in natural language",
+   "where": "Pre-retrieval"
+  },
+  {
+   "term": "Self-query",
+   "definition": "map unstructured queries into structured ones; an LLM extracts entities used as filter parameters",
+   "where": "Pre-retrieval"
+  },
+  {
+   "term": "HyDE",
+   "definition": "an LLM creates a hypothetical response to the query; both the original query and the response are fed into the retrieval stage",
+   "where": "Pre-retrieval"
+  },
+  {
+   "term": "Change data capture (CDC)",
+   "definition": "captures any CRUD operation done on the source DB and replicates it on a target DB",
+   "where": "CDC section"
+  },
+  {
+   "term": "OVM",
+   "definition": "object-vector mapping, inspired by ORM, over embedding and vector DBs",
+   "where": "OVM section"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT (Kenton & Toutanova 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "encoder-only embeddings",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu 2019)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "related",
+   "note": "encoder-only embeddings",
+   "quote": null
+  },
+  {
+   "work": "Word2Vec (Mikolov 2013)",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "related",
+   "note": "early embeddings",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al. 2014)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "early embeddings",
+   "quote": null
+  },
+  {
+   "work": "ResNet (He et al. 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "image embeddings",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "joint text-image space",
+   "quote": null
+  },
+  {
+   "work": "Monigatti 2024, Advanced RAG: From Theory to LlamaIndex Implementation",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "basis for advanced RAG stages",
+   "quote": null
+  },
+  {
+   "work": "Maameri 2024, Routing in RAG-driven applications",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "query routing",
+   "quote": null
+  },
+  {
+   "work": "Schwaber-Cohen, What is a Vector Database (Pinecone)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "vector DB workflow",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4.1",
+   "caption": "Vanilla RAG architecture",
+   "page": 3,
+   "why": "Shows ingestion, retrieval, generation flow"
+  },
+  {
+   "figure": "Fig 4.5",
+   "caption": "The three stages of advanced RAG",
+   "page": 15,
+   "why": "Places pre-retrieval, retrieval, post-retrieval on the pipeline"
+  },
+  {
+   "figure": "Fig 4.9",
+   "caption": "The architecture of the LLM Twin's RAG feature pipeline",
+   "page": 23,
+   "why": "End-to-end batch pipeline layout"
+  },
+  {
+   "figure": "Table 4.1",
+   "caption": "Batch versus streaming pipelines",
+   "page": 24,
+   "why": "Compact comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "chunk_article (p.50)",
+   "snippet": "sentences = re.split(r\"(?<!\\w\\.\\w.)(?<![A-Z][a-z]\\.)(?<=\\.|\\?|\\!)\\s\", text)",
+   "verbatim": true
+  },
+  {
+   "where": "chunk_text (p.50)",
+   "snippet": "token_splitter = SentenceTransformersTokenTextSplitter(chunk_overlap=chunk_overlap, tokens_per_chunk=embedding_model.max_input_length, model_name=embedding_model.model_id)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text-cache lines for some code are truncated at right margin.",
+  "Figure labels 'Figure 8.10/8.12/8.16/8.17' in prose are stale; captions say 4.x."
+ ]
+}

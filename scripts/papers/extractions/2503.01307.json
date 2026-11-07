@@ -1,0 +1,152 @@
+{
+ "schema": 1,
+ "key": "2503.01307",
+ "pdf": "generative-ai/05-RL/sources/gandhi-2025-cognitive-behaviors-that-enable-self.pdf",
+ "bib": {
+  "title": "Cognitive Behaviors that Enable Self-Improving Reasoners, or, Four Habits of Highly Effective STaRs",
+  "authors": ["Kanishk Gandhi", "Ayush Chakravarthy", "Anikait Singh", "Nathan Lile", "Noah D. Goodman"],
+  "first_author": "Gandhi",
+  "year": 2025,
+  "venue": "COLM 2025",
+  "arxiv": "2503.01307",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 69054,
+  "chars_total": 69054,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why do some base language models improve substantially under RL on a verifiable task while others plateau, and which initial properties enable it?",
+ "hypothesis": "Certain reasoning behaviors (verification, backtracking, subgoal setting, backward chaining) in the initial policy are necessary for efficiently using increased test-time compute through RL.",
+ "contributions": [
+  "Framework of four cognitive behaviors with an LLM classifier to count them in model outputs",
+  "Show Qwen-2.5-3B exhibits the behaviors naturally and improves under RL on Countdown while Llama-3.2-3B does not",
+  "Priming Llama with synthetic behavior traces (even incorrect ones) enables RL gains matching Qwen",
+  "Continued pretraining on behavior-filtered OpenWebMath lets Llama match Qwen's RL trajectory"
+ ],
+ "method": {
+  "summary": "PPO (VERL, TinyZero implementation) on the Countdown game with Qwen-2.5-3B and Llama-3.2-3B base models. Llama is first primed by SFT on Claude-3.5-Sonnet-generated Countdown traces with controlled behaviors, or continued-pretrained on 8.3M tokens of behavior-filtered, rewritten OpenWebMath, then RL-trained; behaviors are counted with a GPT-4o-mini classifier.",
+  "task": "Countdown (arithmetic search puzzle) RL; behavior analysis",
+  "trains": true,
+  "datasets": [
+   {"name": "Countdown", "role": "train", "size": "not stated for RL (batch 256 train / 1312 validation)", "split": "50-50 split of 3-digit and 4-digit problems", "source": "Gandhi et al. 2024 / Pan et al. 2025 (TinyZero); numbers and target randomly sampled", "preprocessing": null},
+   {"name": "Priming SFT datasets (5, Claude-generated)", "role": "train", "size": "1,200 unique Countdown games per dataset; 1000 train / 200 validation", "split": "1000 / 200", "source": "claude-3-5-sonnet-20241022 with behavior-specific system prompts", "preprocessing": "Two controls: empty CoT '<think></think>' and length-matched placeholder CoT '<think>. . . . . </think>'; also an incorrect-solutions variant of all-strategies"},
+   {"name": "OpenWebMath (curated and behavior-minimized)", "role": "pretrain", "size": "8.3 million tokens each", "split": null, "source": "OpenWebMath (Paster et al. 2023); classified and rewritten by Qwen-2.5-32B into question-thought-answer XML format, first-person thoughts", "preprocessing": "Binary per-document behavior labels from classifier give a behavior-curated set and a behavior-minimized control"},
+   {"name": "OpenWebMath and FineMath (frequency analysis)", "role": "eval", "size": "200,000 randomly sampled documents", "split": null, "source": "Paster et al. 2023; Allal et al. 2025", "preprocessing": "Qwen-2.5-32B classifier via vLLM, temperature 0, 1024 generation tokens per behavior"},
+   {"name": "GPQA / MATH (transfer)", "role": "eval", "size": "200 questions each", "split": null, "source": "Rein et al. 2024; MATH", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Qwen-2.5-3B", "role": "base", "params": "3B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "256 prompt + 1024 response tokens in RL", "other": {}},
+   {"name": "Llama-3.2-3B", "role": "base", "params": "3B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2048 in SFT; 256 prompt + 1024 response in RL", "other": {}},
+   {"name": "Llama-3.1-70B", "role": "evaluated", "params": "70B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "only baseline behavior counts (Fig 4)"}},
+   {"name": "Qwen-2.5-3B-Instruct and Llama-3.2-3B-Instruct", "role": "evaluated", "params": "3B", "architecture": "decoder-only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "App I"}},
+   {"name": "GPT-4o-mini", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "behavior classifier, 4 questions per trajectory, 512 tokens, temperature 0"}},
+   {"name": "Qwen-2.5-32B", "role": "judge", "params": "32B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "pretraining-data classifier and rewriter"}},
+   {"name": "Claude-3.5-Sonnet (claude-3-5-sonnet-20241022)", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "SFT priming (next-token on traces); PPO on Countdown with outcome reward (correct 1.0, incorrect 0.0, correct-format bonus 0.1); continued pretraining on rewritten OpenWebMath",
+   "optimizer": "SFT: AdamW (Loshchilov & Hutter 2019); PPO optimizer not stated",
+   "lr": "SFT peak 1e-5; PPO actor 1e-6, critic 1e-5",
+   "lr_schedule": "SFT: linear warmup then cosine annealing",
+   "warmup": "SFT: linear, 5% of total steps",
+   "batch_size": "SFT 64 train / 64 validation; PPO 256 train / 1312 validation, PPO mini-batch 128",
+   "steps": "PPO: 250 steps",
+   "epochs": "SFT: 5",
+   "tokens": "continued pretraining: 8.3 million tokens per dataset",
+   "seq_len": "SFT context 2048; PPO 256 prompt + 1024 response tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "PPO KL coefficient 0.001",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"ppo_rollouts_per_prompt": "4", "rollout_temperature": "1.0", "framework": "VERL (Sheng et al. 2024), TinyZero implementation", "continued_pretraining_hyperparameters": "not stated", "algorithm_choice": "PPO chosen over GRPO/REINFORCE for stability across hyperparameters; performance anecdotally similar"}
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1.0 for behavior-evaluation samples; classifier temperature 0",
+   "top_p": null,
+   "max_tokens": "1024 (model samples); 512 (GPT-4o-mini classifier)",
+   "samples": "not stated for score evaluation",
+   "prompting": "Countdown prompt format with query/think/answer tags; MATH comparison used 'our prompt format' and Qwen 4-shot format (text not given in PDF)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"test_time_scaling": "token budget 2^7 (128) to 2^10 (1024), checkpoints 0 to 200 PPO steps (App G)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Countdown score", "definition": "RL reward-based score on Countdown (correct answer 1.0, format bonus 0.1); plotted as 'score'", "unit": "fraction / %", "higher_is_better": true},
+    {"name": "Average behavior count", "definition": "Average number of distinct occurrences per trajectory of verification, backtracking, subgoal setting, backward chaining, counted by GPT-4o-mini", "unit": "count per response", "higher_is_better": null},
+    {"name": "ICC3", "definition": "Intraclass correlation of classifier vs Claude and two humans on 100 trajectories", "unit": "coefficient", "higher_is_better": true}
+   ],
+   "baselines": ["Unprimed Llama-3.2-3B", "Qwen-2.5-3B", "Empty CoT priming", "Length-matched placeholder CoT priming", "Behavior-minimized pretraining control"],
+   "protocol": "Single training curves per condition; no seeds or confidence intervals stated."
+  },
+  "availability": {
+   "code": "https://github.com/kanishkg/cognitive-behaviors (system prompts included)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.other.ppo_rollouts_per_prompt", "quote": "We train models with PPO (Schulman et al., 2017) for 250 steps, sampling 4 trajectories per prompt.", "where": "Sec 3.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Under identical PPO on Countdown, Qwen-2.5-3B reaches about 60% while Llama-3.2-3B reaches about 30%.", "kind": "measured", "source": null, "metric": "Countdown accuracy", "value": 60, "unit": "%", "baseline_value": 30, "n": null, "setup": "Base models, PPO 250 steps, 4 rollouts per prompt, Countdown", "quote": "By the end of training, Qwen achieves approximately 60% accuracy, substantially outperforming", "table": null, "note": "Llama figure (30%) is on the following line of the text; read from Fig 1", "where": "Sec 3.1"},
+  {"claim": "Empty-CoT and length-matched placeholder CoT priming leave Llama near its base performance, so extra tokens alone do not help.", "kind": "measured", "source": null, "metric": "Countdown score", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Llama-3.2-3B primed with empty or length-matched placeholder thoughts, then PPO; about 30-35%", "quote": "the models performance is comparable to the base Llama model", "table": null, "note": "Numeric range (30-35%) is split across a line break in the text", "where": "Sec 3.4"},
+  {"claim": "Llama primed with the right behaviors, even on incorrect solutions, performs identically to Llama primed on correct ones, and priming with backtracking matches Qwen's trajectory.", "kind": "measured", "source": null, "metric": "Countdown score", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Llama-3.2-3B, all-strategies priming data with incorrect answers vs correct answers, then PPO", "quote": "Surprisingly, models primed with incorrect solutions, but", "table": null, "note": "No numeric values stated; shown in Fig 6", "where": "Sec 3.4"},
+  {"claim": "Continued pretraining Llama on behavior-curated OpenWebMath yields RL performance comparable to Qwen, while the behavior-minimized control improves little.", "kind": "measured", "source": null, "metric": "Countdown score", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Llama-3.2-3B, 8.3M-token curated vs control dataset, then PPO", "quote": "the behavior-enriched model achieves performance comparable to Qwen", "table": null, "note": null, "where": "Sec 3.5, Fig 8"},
+  {"claim": "Curated and control pretraining datasets each contain 8.3 million tokens.", "kind": "measured", "source": null, "metric": "dataset size", "value": 8.3, "unit": "million tokens", "baseline_value": null, "n": null, "setup": "Rewritten OpenWebMath subsets", "quote": "a total of 8.3 million tokens.", "table": null, "note": null, "where": "Sec 3.5"},
+  {"claim": "Cognitive behaviors such as backtracking and verification are infrequent in OpenWebMath and FineMath.", "kind": "measured", "source": null, "metric": "documents classified", "value": 200000, "unit": "documents", "baseline_value": null, "n": 200000, "setup": "Qwen-2.5-32B classifier", "quote": "200,000 randomly sampled documents", "table": null, "note": "Average counts read from Fig 7 only", "where": "Sec 3.4"},
+  {"claim": "GPT-4o-mini classifier agrees substantially with Claude and humans on verification.", "kind": "measured", "source": null, "metric": "ICC3 (verification, vs Claude)", "value": 0.70, "unit": "ICC3", "baseline_value": null, "n": 100, "setup": "100 randomly sampled trajectories", "quote": "substantial agreement with both Claude (ICC3 = 0.70) and human raters (ICC3 = 0.66 and", "table": null, "note": "Backward chaining agreement with humans is lower (0.55 and 0.40)", "where": "App F"},
+  {"claim": "Curated-pretrained Llama shows 6.5 subgoal-setting instances per GPQA question vs 0.7 for the control, with no accuracy difference (about 12%).", "kind": "measured", "source": null, "metric": "avg subgoal setting count", "value": 6.5, "unit": "per question", "baseline_value": 0.7, "n": 200, "setup": "200 GPQA questions", "quote": "with an average of 6.5 instances per question in the curated model compared to 0.7 in", "table": null, "note": null, "where": "App H"},
+  {"claim": "Qwen RL-trained on Countdown improves on MATH from 38% to 50% (their prompt format).", "kind": "measured", "source": null, "metric": "MATH accuracy", "value": 50, "unit": "%", "baseline_value": 38, "n": 200, "setup": "Qwen-2.5-3B, 200 MATH questions; 44% 4-shot to 50% zero-shot under Qwen's prompt format", "quote": "we find a performance increase from 38% to 50% with", "table": null, "note": "text calls this 'Surprisingly'", "where": "App H"},
+  {"claim": "Late PPO checkpoints of all-strategies primed Llama score about 0.4 at a 128-token budget, versus near zero for early checkpoints.", "kind": "measured", "source": null, "metric": "score at 128 tokens", "value": 0.4, "unit": "score", "baseline_value": null, "n": null, "setup": "Checkpoints 150-200 steps", "quote": "scores of ≈0.4 with just 128 tokens compared to near-zero performance for early checkpoints", "table": null, "note": null, "where": "App G"},
+  {"claim": "Best checkpoints reach around 0.7 at 1024 tokens with diminishing returns after 512 tokens.", "kind": "measured", "source": null, "metric": "score at 1024 tokens", "value": 0.7, "unit": "score", "baseline_value": null, "n": null, "setup": "All-strategies primed Llama, PPO checkpoints", "quote": "scores around 0.7, with relatively small gaps between checkpoints after 100 training steps.", "table": null, "note": null, "where": "App G"}
+ ],
+ "limits": [
+  "Domain is Countdown only for the main causal tests; authors concede priming data was domain-specific and the set of behaviors is not exhaustive.",
+  "Only two 3B base model families (plus Llama-70B baseline analysis); no seeds or error bars stated.",
+  "Authors say which behaviors matter is likely task-dependent (backtracking and verification mattered most in Countdown) and untested for coding, games, creative writing.",
+  "Behavior counts depend on a GPT-4o-mini classifier; agreement with humans on backward chaining is lower (ICC3 0.55 and 0.40).",
+  "Curated-pretraining Llama shows no accuracy gain on GPQA (about 12% for both) despite behavior transfer.",
+  "Compute, hardware and continued-pretraining hyperparameters are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Backtracking", "definition": "the explicit revision of approaches when errors are detected", "where": "Sec 3.2"},
+  {"term": "Verification", "definition": "the systematic checking of intermediate results", "where": "Sec 3.2"},
+  {"term": "Subgoal setting", "definition": "a complex problem is broken down into manageable steps", "where": "Sec 3.2"},
+  {"term": "Backward chaining", "definition": "in a goal-directed reasoning problem, the solution works backwards from a desired outcome", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "STaR (Zelikman et al.)", "year": 2022, "arxiv": null, "relation": "extends", "note": "Self-taught reasoning; older RL-on-verifiable methods that plateaued", "quote": null},
+  {"work": "DeepSeek-R1", "year": 2025, "arxiv": "2501.12948", "relation": "related", "note": "GRPO-based RL producing in-context search behaviors", "quote": null},
+  {"work": "Stream of Search (Gandhi et al.)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Countdown task setup", "quote": null},
+  {"work": "TinyZero (Pan et al.)", "year": 2025, "arxiv": null, "relation": "uses-method", "note": "PPO Countdown implementation on VERL", "quote": null},
+  {"work": "HybridFlow / VERL (Sheng et al.)", "year": 2024, "arxiv": "2409.19256", "relation": "uses-method", "note": "RL framework", "quote": null},
+  {"work": "PPO (Schulman et al.)", "year": 2017, "arxiv": "1707.06347", "relation": "uses-method", "note": "RL algorithm used", "quote": null},
+  {"work": "LLMs can easily learn to reason from demonstrations (Li et al.)", "year": 2025, "arxiv": "2502.07374", "relation": "extends", "note": "Extends learning from corrupted trajectories", "quote": null},
+  {"work": "Demystifying long chain-of-thought reasoning (Yeo et al.)", "year": 2025, "arxiv": "2502.03373", "relation": "related", "note": "Briefly discusses why some models learn via RL", "quote": null},
+  {"work": "OpenWebMath (Paster et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "Source of curated pretraining data", "quote": null},
+  {"work": "FineMath / SmolLM2 (Allal et al.)", "year": 2025, "arxiv": "2502.02737", "relation": "uses-data", "note": "Behavior frequency analysis", "quote": null},
+  {"work": "GPQA (Rein et al.)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Transfer eval", "quote": null},
+  {"work": "Qwen2.5 technical report", "year": 2025, "arxiv": "2412.15115", "relation": "evaluates", "note": "Base model", "quote": null},
+  {"work": "The Llama 3 herd of models", "year": 2024, "arxiv": "2407.21783", "relation": "evaluates", "note": "Base model", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Comparative analysis of Qwen-2.5-3B and Llama-3.2-3B with RL on Countdown, behavior emergence, priming and curated pretraining", "page": 2, "why": "One-page summary of the whole argument"},
+  {"figure": "Fig 2", "caption": "The effects of priming with different cognitive behaviors", "page": 4, "why": "Shows backtracking-containing priming sets lifting Llama"},
+  {"figure": "Fig 6", "caption": "Effects of Incorrect Chain-of-Thought Priming on Model Performance and Output Characteristics", "page": 8, "why": "Behaviors versus correctness"}
+ ],
+ "code": [],
+ "problems": ["No instructions embedded in the text. Result numbers for primed variants appear only in figures (no table)."]
+}

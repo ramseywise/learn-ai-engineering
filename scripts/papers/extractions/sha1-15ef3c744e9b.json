@@ -1,0 +1,352 @@
+{
+ "schema": 1,
+ "key": "sha1:15ef3c744e9b",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch09-rag-inference-pipeline.pdf",
+ "bib": {
+  "title": "RAG Inference Pipeline (LLM Engineer's Handbook, ch. 9)",
+  "authors": [
+   "Paul Iusztin",
+   "Maxime Labonne"
+  ],
+  "first_author": "Iusztin",
+  "year": 2024,
+  "venue": "Packt, LLM Engineer's Handbook, chapter 9",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 67067,
+  "chars_total": 67067,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build a production RAG inference pipeline (retrieval, prompt augmentation, LLM call) with advanced retrieval techniques?",
+ "hypothesis": null,
+ "contributions": [
+  "Modular ContextRetriever combining self-querying, query expansion, filtered vector search and cross-encoder reranking",
+  "A five-line rag() function gluing retrieval, prompt and a SageMaker-hosted LLM",
+  "Proposed improvements: conversation memory, routing, hybrid search with BM25, multi-index vectors"
+ ],
+ "method": {
+  "summary": "Describes and codes a RAG inference pipeline: self-query metadata extraction, query expansion, filtered Qdrant search per data category, dedupe, cross-encoder rerank, then prompt build and call to a SageMaker-hosted fine-tuned LLM.",
+  "task": "retrieval-augmented generation inference",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LLM Twin vector DB (articles, posts, repositories)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "populated by the chapter 4 feature pipeline",
+    "preprocessing": "cleaned, chunked, embedded in ch. 4"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o-mini",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "query expansion and self-query via OPENAI_MODEL_ID"
+    }
+   },
+   {
+    "name": "cross-encoder reranker (sentence_transformers CrossEncoder)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "cross-encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "model_id": "from settings.RERANKING_CROSS_ENCODER_MODEL_ID, not named"
+    }
+   },
+   {
+    "name": "fine-tuned LLM Twin",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": "fine-tuned in chapters 5-6",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hosting": "AWS SageMaker endpoint"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 (query expansion)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot query expansion prompt; few-shot (3 examples) self-query prompt; final prompt 'You are a content creator...' with User query and Context",
+   "retrieval": "Qdrant filtered vector search, k=3 default, k // 3 per category over 3 categories, expand_to_n_queries=3, rerank to top k",
+   "parameters": {
+    "k": "3",
+    "expand_to_n_queries": "3",
+    "per_category_limit": "k // 3",
+    "separator": "#next-question#"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "none; illustrative runs only"
+  },
+  "availability": {
+   "code": "https://github.com/PacktPublishing/LLM-Engineers-Handbook",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "query expansion",
+    "text": "You are an AI language model assistant. Your task is to genera",
+    "where": "p8"
+   },
+   {
+    "purpose": "final prompt",
+    "text": "You are a content creator. Write what the user asked you to while using the provide",
+    "where": "p21"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Query expansion uses GPT-4o-mini at temperature 0 with a zero-shot prompt; the original query is kept and expand_to_n-1 variants are added.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM Twin retrieval module",
+   "quote": "We initialize the ChatOpenAI model with the specified settings and\nset the temperature to 0 for deterministic output.",
+   "table": null,
+   "note": null,
+   "where": "Implementing, query expansion"
+  },
+  {
+   "claim": "Each of N expanded queries searches three data categories, retrieving k // 3 per category, so at most K chunks per search; results are deduplicated and reranked to top K.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ContextRetriever.search, defaults k=3, expand_to_n_queries=3; _search asserts k >= 3",
+   "quote": "Thus, we retrieve a maximum of K / 3 items for each data category",
+   "table": null,
+   "note": null,
+   "where": "Fig 9.2 text"
+  },
+  {
+   "claim": "Reranking scores (query, chunk) pairs with a cross-encoder from sentence_transformers and keeps keep_top_k; model id comes from settings, not named in the chapter.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reranker class",
+   "quote": "We will leverage a neural cross-encoder model to compute the score, a value between 0\nand 1",
+   "table": null,
+   "note": null,
+   "where": "Pipeline step 6"
+  },
+  {
+   "claim": "The chapter reports no retrieval or answer-quality measurements; the LLM was not tested because deployment comes in chapter 10.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole chapter",
+   "quote": "Unfortunately, we won’t be able to test out the LLM until we finish\nChapter 10",
+   "table": null,
+   "note": null,
+   "where": "Implementing the pipeline"
+  },
+  {
+   "claim": "Filtered vector search narrows the search space with metadata (author_id), claimed to improve both accuracy and latency; no numbers given.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative claim",
+   "quote": "Additionally, filtered vector search improves latency by reducing the\nnumber of comparisons the algorithm needs to perform.",
+   "table": null,
+   "note": null,
+   "where": "Filtered vector search section"
+  },
+  {
+   "claim": "Hybrid search runs vector and BM25 in parallel, normalises scores, merges by weighted sum; proposed as an improvement, not implemented.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "proposal only",
+   "quote": "Score normalization: The results from both searches are assigned rel",
+   "table": null,
+   "note": null,
+   "where": "Improvements section"
+  }
+ ],
+ "limits": [
+  "No evaluation of retrieval quality, latency or answer quality; all techniques are described and coded, not measured.",
+  "Cross-encoder model id, embedding model, and Qdrant settings are in .env/settings and not given in the chapter.",
+  "Chapter notes GPT-4o-mini may be deprecated; model is set via OPENAI_MODEL_ID.",
+  "Router, memory, hybrid search and multi-index are proposals, not implemented (multi-index shown as a Superlinked snippet)."
+ ],
+ "practices": [
+  "Split RAG into retrieval, prompt augmentation and generation; spend most effort on retrieval (intro).",
+  "Use the same embedding class at ingestion and query time (Implementing the retrieval module).",
+  "Run expanded-query searches in a thread pool to cut latency (ContextRetriever.search).",
+  "Deduplicate aggregated results before reranking (Fig 9.3 text).",
+  "Retrieve more than K chunks and rerank to the top K; combine with query expansion (reranking section).",
+  "Keep a mock flag on each RAG step to cut cost while debugging (RAGStep).",
+  "Extract metadata (author) with an LLM and use it as a hard filter (self-querying).",
+  "Add a router to skip categories, hybrid BM25 search, and conversation memory (last K or summary plus last K) as improvements.",
+  "Build an end-to-end solution first, then iterate (closing section)."
+ ],
+ "terms": [
+  {
+   "term": "query expansion",
+   "definition": "Using an LLM to generate multiple queries based on your initial question; also known as multi-query",
+   "where": "Query expansion"
+  },
+  {
+   "term": "self-querying",
+   "definition": "Use an LLM to extract metadata (tags, IDs, etc.) from the query and use it alongside vector search as filters",
+   "where": "Self-querying"
+  },
+  {
+   "term": "filtered vector search",
+   "definition": "Vector search restricted by metadata criteria, reducing the search space before computing similarities",
+   "where": "Filtered vector search"
+  },
+  {
+   "term": "reranking",
+   "definition": "Order all N x K retrieved chunks by relevance to the initial question, keeping the top K",
+   "where": "Reranking"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LLM Engineer's Handbook ch. 4 (RAG feature pipeline)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "This chapter consumes the vector DB the ch. 4 pipeline populates",
+   "quote": null
+  },
+  {
+   "work": "Iusztin, 4 Advanced RAG Algorithms You Must Know (Decoding ML)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Cited reference for the techniques",
+   "quote": null
+  },
+  {
+   "work": "LangChain MultiQueryRetriever",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Query expansion equals multi-query",
+   "quote": null
+  },
+  {
+   "work": "Monigatti, Advanced RAG: From Theory to LlamaIndex Implementation",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Background",
+   "quote": null
+  },
+  {
+   "work": "Superlinked multi-attribute search",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Multi-index example",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9.1",
+   "caption": "RAG inference pipeline architecture",
+   "page": 2,
+   "why": "Eight-step flow from query to answer"
+  },
+  {
+   "figure": "Fig 9.2",
+   "caption": "Search logic of the RAG retrieval module",
+   "page": 17,
+   "why": "Three category searches per query with author filter"
+  },
+  {
+   "figure": "Fig 9.3",
+   "caption": "Processing the results flow of the RAG retrieval module",
+   "page": 18,
+   "why": "Aggregate, deduplicate, rerank"
+  },
+  {
+   "figure": "Fig 9.4",
+   "caption": "Routing and memory examples",
+   "page": 23,
+   "why": "Router and memory improvements"
+  }
+ ],
+ "code": [
+  {
+   "where": "p19 search()",
+   "snippet": "limit=k // 3,",
+   "verbatim": true
+  },
+  {
+   "where": "p7 QueryExpansionTemplate",
+   "snippet": "return \"#next-question#\"",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF is an O'Reilly browser print; code lines are truncated at the right margin and figures are images with no text. Some code blocks appear out of order."
+ ]
+}

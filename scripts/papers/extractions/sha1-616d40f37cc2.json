@@ -1,0 +1,386 @@
+{
+ "schema": 1,
+ "key": "sha1:616d40f37cc2",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch06-gpu-architecture-cuda-programming-maximizing-occupancy.pdf",
+ "bib": {
+  "title": "Chapter 6. GPU Architecture, CUDA Programming, and Maximizing Occupancy (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 84893,
+  "chars_total": 84893,
+  "engine": "pymupdf",
+  "skipped": "References not present; cached text ends with site navigation boilerplate"
+ },
+ "type": "book-chapter",
+ "question": "How do SIMT execution, the thread hierarchy, the memory hierarchy and roofline analysis determine how to launch CUDA kernels that keep a Blackwell GPU occupied?",
+ "hypothesis": null,
+ "contributions": [
+  "Reviews warps, blocks, grids and Blackwell SM limits",
+  "CUDA launch-parameter and async-allocation patterns",
+  "Memory hierarchy with TMEM, Unified Memory and prefetch",
+  "Occupancy tuning (launch bounds, occupancy API), Compute Sanitizer, roofline"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Parallel vector add cuts kernel time about 22x versus a single-thread kernel.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "22x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative worked example, vector add C=A+B, N=1,000,000 floats; add_sequential <<<1,1>>> vs add_parallel 256 threads/block; profiled with Nsight Systems and Nsight Compute; GPU model and clocks not stated; chapter says table numbers are illustrative",
+   "quote": "This reduces the runtime by about 22× from 48.21 ms down to 2.17 ms.",
+   "table": null,
+   "note": null,
+   "where": "Table 6-6, Maintaining High Occupancy"
+  },
+  {
+   "claim": "Achieved occupancy rises from 1.3% to about 38.7% when going from sequential to parallel.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "38.7%",
+   "unit": "achieved occupancy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative worked example, vector add C=A+B, N=1,000,000 floats; add_sequential <<<1,1>>> vs add_parallel 256 threads/block; profiled with Nsight Systems and Nsight Compute; GPU model and clocks not stated; chapter says table numbers are illustrative",
+   "quote": "improves occupancy from 1.3% to ~38.7% on average",
+   "table": null,
+   "note": null,
+   "where": "Table 6-6"
+  },
+  {
+   "claim": "GPU utilization rises from 1.5% to 95%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "95%",
+   "unit": "GPU utilization",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative worked example, vector add C=A+B, N=1,000,000 floats; add_sequential <<<1,1>>> vs add_parallel 256 threads/block; profiled with Nsight Systems and Nsight Compute; GPU model and clocks not stated; chapter says table numbers are illustrative",
+   "quote": "This improves GPU utilization from 1.5% to 95%.",
+   "table": null,
+   "note": null,
+   "where": "Table 6-6"
+  },
+  {
+   "claim": "Warp execution efficiency rises from 3.1% to 100%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "100%",
+   "unit": "warp execution efficiency",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative worked example, vector add C=A+B, N=1,000,000 floats; add_sequential <<<1,1>>> vs add_parallel 256 threads/block; profiled with Nsight Systems and Nsight Compute; GPU model and clocks not stated; chapter says table numbers are illustrative",
+   "quote": "This increases warp execution efficiency from 3.1% to 100%",
+   "table": null,
+   "note": null,
+   "where": "Table 6-6"
+  },
+  {
+   "claim": "Blackwell SM holds at most 64 resident warps (2,048 threads).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "64",
+   "unit": "warps per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell B200 SM-resident limit, Table 6-3",
+   "quote": "Hardware can keep up to 64 warps in flight (64 × 32",
+   "table": null,
+   "note": null,
+   "where": "Table 6-3"
+  },
+  {
+   "claim": "Max 32 resident blocks per SM and 1,024 threads per block.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "32",
+   "unit": "blocks per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell B200, Tables 6-2 and 6-3",
+   "quote": "At most, 32 thread blocks can be simultaneously res-",
+   "table": null,
+   "note": null,
+   "where": "Table 6-3"
+  },
+  {
+   "claim": "Blackwell SM has 64K 32-bit registers (256 KB), at most 255 per thread.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "255",
+   "unit": "registers per thread",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell",
+   "quote": "the hardware exposes at most 255 registers per thread.",
+   "table": null,
+   "note": null,
+   "where": "Memory hierarchy: Registers"
+  },
+  {
+   "claim": "Unified L1/shared is 256 KB per SM; up to 228 KB shared, 227 KB usable per block (1 KB reserved).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "227",
+   "unit": "KB per block",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell",
+   "quote": "The maximum dynamic shared memory per",
+   "table": null,
+   "note": "Chapter also says one place 'up to 228 KB per block' for the carveout, then 227 KB; inconsistent wording.",
+   "where": "Memory hierarchy: Shared memory"
+  },
+  {
+   "claim": "Shared memory/L1 latency is about 20-30 cycles; TMEM about 10 cycles; L2 about 200 cycles.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "20-30",
+   "unit": "cycles",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell, Table 6-5 (shared/L1); TMEM ~10 cycles; L2 ~200 cycles",
+   "quote": "~20–30 cycles",
+   "table": null,
+   "note": null,
+   "where": "Table 6-5"
+  },
+  {
+   "claim": "L2 is 126 MB GPU-wide, ~200 cycles latency.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "126 MB",
+   "unit": "capacity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell",
+   "quote": "a 126 MB GPU-wide buffer that",
+   "table": null,
+   "note": null,
+   "where": "Memory hierarchy: L2 cache"
+  },
+  {
+   "claim": "HBM3e on Blackwell B200 is up to 180 GB at ~8 TB/s (up to ~288 GB on B300); latency 100s to 1,000 cycles.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "180 GB",
+   "unit": "capacity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell B200",
+   "quote": "the HBM3e tier provides up to 180 GB of device-wide storage",
+   "table": null,
+   "note": "Table 6-5 also prints 'Up to 180 GB per Blackwell B200 GPU'.",
+   "where": "Memory hierarchy: Global memory"
+  },
+  {
+   "claim": "Grace Hopper/Blackwell NVLink-C2C delivers up to ~900 GB/s between CPU and GPU memory.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~900 GB/s",
+   "unit": "bandwidth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grace Hopper and Grace Blackwell Superchips, Unified Memory page migration",
+   "quote": "up to ~900 GB/s between the CPU’s HBM and the GPU’s HBM3e",
+   "table": null,
+   "note": null,
+   "where": "Unified Memory"
+  },
+  {
+   "claim": "Roofline ridge point for the example Blackwell GPU is 10 FLOPs/byte (~80 TFLOPs over 8 TB/s).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "FLOPs/byte",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~80 TFLOPs FP32 and ~8 TB/s HBM3e",
+   "quote": "Compare this to a GPU’s ridge point of 10 FLOPs per byte",
+   "table": null,
+   "note": null,
+   "where": "Roofline Model"
+  },
+  {
+   "claim": "FP32 vector add has arithmetic intensity 0.083 FLOPs/byte (1 FLOP per 12 bytes), memory bound.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.083",
+   "unit": "FLOPs/byte",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kernel loads two FP32 and stores one",
+   "quote": "yielding an arithmetic intensity of 0.083",
+   "table": null,
+   "note": null,
+   "where": "Roofline Model"
+  },
+  {
+   "claim": "__launch_bounds__(256,16) requests 4,096 resident threads, above the 2,048 per-SM cap, so the compiler clamps to 8 blocks x 256 and warns.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "2,048",
+   "unit": "threads per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell, launch bounds example",
+   "quote": "2,048 threads (8 blocks × 256 threads per block) per",
+   "table": null,
+   "note": null,
+   "where": "Tuning Occupancy with Launch Bounds"
+  },
+  {
+   "claim": "Recommended starting block size is 256 threads (8 warps); consider 256-512 on Blackwell; target occupancy 80-100% only when parallelism is the limit.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "256",
+   "unit": "threads per block",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell guidance",
+   "quote": "A threadsPerBlock size of 256 (eight warps) is a common starting point",
+   "table": null,
+   "note": null,
+   "where": "Configuring Launch Parameters"
+  },
+  {
+   "claim": "A 33-thread block uses 1/32 of its second warp's lanes.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1/32",
+   "unit": "lane fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Warp size 32",
+   "quote": "use only 1/32 of the second warp’s lanes",
+   "table": null,
+   "note": null,
+   "where": "Choosing Threads-per-Block"
+  }
+ ],
+ "limits": [
+  "Chapter states 'The numeric values in all metrics tables are illustrative to explain the concepts'; Table 6-6 gives no GPU model, clocks or run count.",
+  "Dual-issue (one arithmetic plus one memory instruction per scheduler per cycle) and 16 LD/ST pipelines are asserted; the chapter itself warns exact LD/ST counts are not guaranteed.",
+  "Chapter concedes max occupancy does not guarantee best performance and ILP can win at low occupancy (Conclusion).",
+  "Numbers are Blackwell B200 (and B300 capacity) and dated to 2025."
+ ],
+ "practices": [
+  "Choose block sizes as multiples of 32 (Choosing Threads-per-Block).",
+  "Start with threadsPerBlock=256 and blocksPerGrid=(N+threadsPerBlock-1)/threadsPerBlock, then tune from profiling (Configuring Launch Parameters).",
+  "Always keep the if (idx < N) bounds check (CUDA Programming Refresher).",
+  "Prefer cudaMallocAsync/cudaFreeAsync on non-blocking streams over cudaMalloc/cudaFree (Asynchronous Memory Allocation).",
+  "Prefetch managed memory with cudaMemPrefetchAsync and give cudaMemAdvise hints (Unified Memory).",
+  "Validate occupancy API suggestions by timing kernels at +-1-2 candidate block sizes (Launch Bounds).",
+  "Use Nsight Systems for the timeline and Nsight Compute for per-kernel counters; measure after each change (Roofline section).",
+  "Run Compute Sanitizer in CI with --error-exitcode (Debugging).",
+  "Avoid Python-level loops around GPU ops; use vectorized tensor ops (Maintaining High Occupancy).",
+  "Use lower precision (FP16/FP8/FP4) to raise arithmetic intensity on memory-bound kernels (Roofline)."
+ ],
+ "terms": [
+  {
+   "term": "occupancy",
+   "definition": "the fraction of an SM's capacity actually occupied by active warps",
+   "where": "Maintaining High Occupancy"
+  },
+  {
+   "term": "ridge point",
+   "definition": "Where these lines intersect is called the ridge point.",
+   "where": "Roofline Model"
+  },
+  {
+   "term": "arithmetic intensity",
+   "definition": "the number of FLOPS performed per byte transferred between off-chip global memory and the GPU",
+   "where": "Roofline Model"
+  },
+  {
+   "term": "warp divergence",
+   "definition": "threads of one warp taking different branches so the warp serializes each path",
+   "where": "Threads, Warps, Blocks, and Grids"
+  },
+  {
+   "term": "TMEM",
+   "definition": "dedicated ~256 KB per-SM on-chip memory used by Blackwell's 5th-generation Tensor Core instructions (tcgen05.*), not pointer-addressable from CUDA C++",
+   "where": "Understanding GPU Memory Hierarchy"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "NVIDIA Blackwell tuning guide / CUDA documentation",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "named as the source of exact hardware limits",
+   "quote": null
+  },
+  {
+   "work": "Triton (OpenAI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "mentioned as Python GPU language",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 6-6",
+   "caption": "Comparing a sequential versus parallel CUDA kernel",
+   "page": null,
+   "why": "Shows 22x gain from parallelism"
+  },
+  {
+   "figure": "Fig 6-21",
+   "caption": "Roofline model for a Blackwell-class GPU (~80 TFLOPs/sec FP32, ~8 TB/s HBM3e)",
+   "page": null,
+   "why": "Ridge at 10 FLOPs/byte, vector add far left"
+  },
+  {
+   "figure": "Table 6-5",
+   "caption": "Blackwell memory hierarchy and characteristics",
+   "page": null,
+   "why": "Latency and capacity per level"
+  }
+ ],
+ "code": [
+  {
+   "where": "Launch Bounds",
+   "snippet": "__global__ __launch_bounds__(256, 16)\nvoid myKernel(...) { /* ... */ }",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings are truncated at line ends in the cached text; HTML-entity glitch 'i *lt; N' in addParallel listing.",
+  "Chapter says the compiler would clamp minBlocksPerSM request; Table 6-3 says 32 blocks max but text says 'Remember that we can have only 1,024 threads per block'.",
+  "Cached text ends with unrelated site navigation text; no embedded instructions found."
+ ]
+}

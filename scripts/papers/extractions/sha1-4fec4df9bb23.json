@@ -1,0 +1,299 @@
+{
+ "schema": 1,
+ "key": "sha1:4fec4df9bb23",
+ "pdf": "generative-ai/05-RL/sources/building-ai-agents-llms-rag-kgs/ch08-reinforcement-learning-ai-agents.pdf",
+ "bib": {
+  "title": "Chapter 8: Reinforcement Learning and AI Agents (Building AI Agents with LLMs, RAG, and Knowledge Graphs)",
+  "authors": [
+   "Salvatore Raieli",
+   "Gabriele Iuculano"
+  ],
+  "first_author": "Raieli",
+  "year": 2025,
+  "venue": "Packt book chapter (O'Reilly platform copy, printed 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 138114,
+  "chars_total": 138114,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can an agent learn from interaction with an environment (RL basics, deep RL algorithms, a Super Mario A3C example), and how do LLMs and RL interact?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduces RL fundamentals: bandits, MDPs, Bellman equations, model-free vs model-based, on- vs off-policy.",
+  "Summarises DQN, REINFORCE, PPO, actor-critic, AlphaZero.",
+  "Walks through an A3C Super Mario Bros agent in PyTorch.",
+  "Describes three LLM-RL interaction types: RL-enhanced LLMs, LLM-enhanced RL, combined planning."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In the 10-armed bandit demo, a purely greedy agent picks the optimal action only about a third of the time.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "optimal action fraction",
+   "value": "one-third",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10-armed bandit (k=10), true action values drawn from a normal distribution, 1,000 examples plotted; greedy vs epsilon-greedy; no run count or step count stated for the comparison",
+   "quote": "The greedy method chooses the optimal choice only one-third of the time",
+   "table": null,
+   "note": "Read from Fig 8.8 description; no seeds or number of runs given.",
+   "where": "Multi-armed bandit section"
+  },
+  {
+   "claim": "In the same bandit demo, epsilon-greedy with epsilon=0.1 selects the optimal action 80% of the time.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "optimal action fraction",
+   "value": "80%",
+   "unit": "%",
+   "baseline_value": "one-third (greedy)",
+   "n": null,
+   "setup": "Same 10-armed bandit, epsilon=0.1, constant epsilon",
+   "quote": "while a method that includes some exploration selects the optimal choice 80% of the time (ε=0.1)%",
+   "table": null,
+   "note": "Source prints a stray '%' after '(ε=0.1)'.",
+   "where": "Multi-armed bandit section"
+  },
+  {
+   "claim": "Too high a constant epsilon (0.5) does worse than pure greedy in the bandit demo.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "average reward",
+   "value": "0.5",
+   "unit": "epsilon",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10-armed bandit, constant epsilon, Fig 8.7",
+   "quote": "choosing an ε constant that is too high (ε=0.5) leads to worse results than a pure greedy method",
+   "table": null,
+   "note": null,
+   "where": "Multi-armed bandit section"
+  },
+  {
+   "claim": "PPO clips the policy probability ratio to [1-eps, 1+eps]; eps example 0.2.",
+   "kind": "claim",
+   "source": null,
+   "metric": "clip epsilon",
+   "value": "0.2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Description of PPO clipped objective; 0.2 is given as an example value (e.g., 0.2)",
+   "quote": "where ϵ is a small hyperparameter (e.g., 0.2), the update is clipped",
+   "table": null,
+   "note": null,
+   "where": "PPO section"
+  },
+  {
+   "claim": "RLHF is described as three steps and PPO is the most popular RL algorithm for it, chosen because the aligned model should stay close to the original.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Description, RL-enhanced LLMs section; no experiment",
+   "quote": "collect human feedback data, train a reward model on this data, and conduct fine-tuning of the LLM with RL",
+   "table": null,
+   "note": null,
+   "where": "RL-enhanced LLMs"
+  }
+ ],
+ "limits": [
+  "The Super Mario example reports no quantitative result (no score, stage cleared rate, training steps, hardware or wall-clock); only a screenshot and a video link.",
+  "Bandit figures (8.7-8.11) give no run counts, step counts or seeds in the text.",
+  "LLM-RL section is a summary of Cao et al. 2024 (arXiv 2404.00282); no new experiments.",
+  "Authors concede A3C is non-deterministic, resource intensive, and relies on CPU parallelism; PPO may suit GPUs better.",
+  "Authors concede LLM-enhanced RL inherits LLM bias and hallucination, adds compute and latency cost, and struggles on tasks not in pre-training.",
+  "The RLHF/PPO coverage is a few paragraphs: no DPO, GRPO, reward-model details, or verifiable-reward RL.",
+  "Final summary states later chapters use LLM agents with tools and no training."
+ ],
+ "practices": [
+  "Balance exploration and exploitation; epsilon-greedy, optimistic initial values or UCB beat pure greedy (bandit section).",
+  "Define the reward carefully: agents maximise it literally, so a badly specified reward (eating pieces rather than winning chess) yields unintended behaviour (MDP section).",
+  "Use a replay buffer and a target network to stabilise DQN (DQN section).",
+  "Use PPO's clipped objective to keep policy updates small; tune clip epsilon, learning rate and batch size (PPO section).",
+  "Use actor-critic with GAE to lower variance of policy gradients (Super Mario section).",
+  "Add an entropy bonus to the loss to encourage exploration (Super Mario section).",
+  "Sample actions in training, take the argmax action in evaluation (local_test).",
+  "For RLHF, collect human feedback, train a reward model, then fine-tune with RL, usually PPO (RL-enhanced LLMs).",
+  "To cut LLM cost in LLM-enhanced RL, use quantization, pruning, small models, mixture of experts or caching (limitations paragraph).",
+  "Try PPO or synchronous A2C as easier or more GPU-friendly alternatives to A3C (end of Super Mario section)."
+ ],
+ "terms": [
+  {
+   "term": "Reinforcement learning",
+   "definition": "a branch of machine learning, where a system must make decisions to maximize cumulative rewards in a given situation",
+   "where": "Introduction"
+  },
+  {
+   "term": "Policy",
+   "definition": "defines how an agent behaves at a certain time; maps the state of the system to an action, can be stochastic or parameterized",
+   "where": "Introduction"
+  },
+  {
+   "term": "Value function",
+   "definition": "the total amount of reward that an agent can expect to get in the future, starting from that state",
+   "where": "Introduction"
+  },
+  {
+   "term": "Epsilon-greedy",
+   "definition": "the model almost always selects the greedy action, but with a probability epsilon it selects one of the other actions",
+   "where": "Multi-armed bandit"
+  },
+  {
+   "term": "UCB",
+   "definition": "Upper Confidence Bound: non-greedy actions chosen by potential optimality and uncertainty, with c>0 controlling exploration and N the number of times an action was tested",
+   "where": "Multi-armed bandit"
+  },
+  {
+   "term": "Markov property",
+   "definition": "each state summarizes all the previous information; each state possesses all the information needed to predict the future",
+   "where": "MDPs"
+  },
+  {
+   "term": "Model-free vs model-based",
+   "definition": "whether the agent has access to (or learns) a model of the environment",
+   "where": "Deep RL"
+  },
+  {
+   "term": "On-policy vs off-policy",
+   "definition": "on-policy learns from data of the agent's current policy; off-policy separates behavior policy (collects data) from target policy (learned)",
+   "where": "Deep RL"
+  },
+  {
+   "term": "Actor-critic",
+   "definition": "actor learns the policy; critic estimates the value function and supplies a TD error as feedback",
+   "where": "Actor-critic section"
+  },
+  {
+   "term": "LLM roles in RL",
+   "definition": "information processor, reward designer, decision-maker, generator",
+   "where": "LLM-enhanced RL"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Ghasemi, An Introduction to Reinforcement Learning: Fundamental Concepts and Practical Applications",
+   "year": 2024,
+   "arxiv": "2408.07712",
+   "relation": "related",
+   "note": "Source of Fig 8.4 and recommended reading.",
+   "quote": null
+  },
+  {
+   "work": "Mnih, Playing Atari with Deep Reinforcement Learning",
+   "year": 2013,
+   "arxiv": "1312.5602",
+   "relation": "related",
+   "note": "DQN; Fig 8.17.",
+   "quote": null
+  },
+  {
+   "work": "Schulman, Proximal Policy Optimization Algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "PPO.",
+   "quote": null
+  },
+  {
+   "work": "Silver, Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm",
+   "year": 2017,
+   "arxiv": "1712.01815",
+   "relation": "related",
+   "note": "AlphaZero.",
+   "quote": null
+  },
+  {
+   "work": "Cao, Survey on Large Language Model-Enhanced Reinforcement Learning: Concept, Taxonomy, and Methods",
+   "year": 2024,
+   "arxiv": "2404.00282",
+   "relation": "related",
+   "note": "Basis of the LLM-enhanced RL taxonomy and Figs 8.30-8.34.",
+   "quote": null
+  },
+  {
+   "work": "Kaufmann, A Survey of Reinforcement Learning from Human Feedback",
+   "year": 2024,
+   "arxiv": "2312.14925",
+   "relation": "related",
+   "note": "Further reading for RLHF.",
+   "quote": null
+  },
+  {
+   "work": "Francois-Lavet, An Introduction to Deep Reinforcement Learning",
+   "year": 2018,
+   "arxiv": "1811.12560",
+   "relation": "related",
+   "note": "Fig 8.13 and further reading.",
+   "quote": null
+  },
+  {
+   "work": "Super Mario A3C code, PacktPublishing/Modern-AI-Agents chr8/RL_SuperMario",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Companion code repo.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 8.1-8.4",
+   "caption": "Elements of RL system; agent-environment interaction; positive and negative reward; overview of RL system",
+   "page": 3,
+   "why": "Agent, state, action, reward loop in one picture."
+  },
+  {
+   "figure": "Fig 8.14",
+   "caption": "Model-free versus model-based approaches",
+   "page": 17,
+   "why": "Taxonomy of deep RL."
+  },
+  {
+   "figure": "Fig 8.18",
+   "caption": "Summary table of RL approaches",
+   "page": 21,
+   "why": "On/off-policy and model-free/based per algorithm."
+  },
+  {
+   "figure": "Fig 8.30-8.34",
+   "caption": "LLM-enhanced RL framework; LLM as information processor, reward designer, decision-maker, generator",
+   "page": 42,
+   "why": "Where an LLM plugs into the RL loop."
+  }
+ ],
+ "code": [
+  {
+   "where": "Defining the model",
+   "snippet": "self.lstm = nn.LSTMCell(32 * 6 * 6, 512)",
+   "verbatim": true
+  },
+  {
+   "where": "local_train",
+   "snippet": "total_loss = -actor_loss + critic_loss - opt.beta * entropy_loss",
+   "verbatim": true
+  },
+  {
+   "where": "local_train",
+   "snippet": "gae = gae + reward + opt.gamma * next_value.detach() - value.detach()",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations were lost in text extraction (images); only some inline forms survive.",
+  "Figures are not in the cached text; captions only.",
+  "The chapter text prints 'action-critic' where it means actor-critic, and calls A3C an 'actor-critic variant'."
+ ]
+}

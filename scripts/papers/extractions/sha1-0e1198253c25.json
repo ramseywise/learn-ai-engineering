@@ -1,0 +1,274 @@
+{
+ "schema": 1,
+ "key": "sha1:0e1198253c25",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch07-named-entity-disambiguation.pdf",
+ "bib": {
+  "title": "7 Named entity disambiguation (Knowledge Graphs and LLMs in Action)",
+  "authors": [],
+  "first_author": null,
+  "year": null,
+  "venue": "book chapter, Knowledge Graphs and LLMs in Action (authors, publisher and year not printed in the chapter text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100340,
+  "chars_total": 100340,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can named entity disambiguation against biomedical ontologies be combined with a knowledge graph to support search, interpretability and discovery over heterogeneous EU health documents?",
+ "hypothesis": null,
+ "contributions": [
+  "Three-phase NED model (candidate selection, ranking, ontology integration) with scispaCy and UMLS",
+  "A KG schema and build pipeline (File, Page, EntityMention, MedicalEntity, SnomedEntity, HpoEntity, HpoDiseaseEntity, COOCCURR) in Neo4j",
+  "Four use cases: conceptual search, structured knowledge-based search, interpretability and discovery, uncovering new knowledge"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The Co-occurrence query creates more than 25,000 COOCCURR relationships in the KG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "COOCCURR edges",
+   "value": "more than 25,000",
+   "unit": "relationships",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels",
+   "where": "7.6.5",
+   "note": null,
+   "quote": "This query produces more than 25,000 relationships in the KG"
+  },
+  {
+   "claim": "A full-text search for 'breakbone fever' ranks pages differently from the alias-based conceptual search; the top full-text result sits at position 19 in the conceptual ranking with 17 mentions of C0011311, against 22 for the conceptual top result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank / mentions",
+   "value": "19th position; 17 vs 22 mentions",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels; ranking by number of mentions of the UMLS entity",
+   "where": "7.7.1",
+   "note": "Text says 'the 19th position' in: 'The first result from the full-text query is located at the 19th position in the conceptual search query.'",
+   "quote": "This specific document has 17 mentions of the UMLS entity, whereas the top-scored result of the conceptual search query includes 22 mentions of the C0011311 UMLS entity."
+  },
+  {
+   "claim": "Zika virus co-occurs most often with entity type Geographic Area (255), then Qualitative Concept (132), Disease or Syndrome (125).",
+   "kind": "measured",
+   "source": null,
+   "metric": "co-occurrences",
+   "value": "255",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels; sentence-level co-occurrence of C0318793",
+   "where": "Table 7.5",
+   "note": null,
+   "table": "Table 7.5, row Geographic Area, column Number of co-occurrences"
+  },
+  {
+   "claim": "Communicable Diseases is the top disease co-occurring with Zika virus (606), largely from the repeated bulletin header; Guillain-Barre Syndrome has 195.",
+   "kind": "measured",
+   "source": null,
+   "metric": "occurrences",
+   "value": "606",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels",
+   "where": "Table 7.8",
+   "note": "Guillain-Barre Syndrome row: 195; Zika Virus Infection 520; Dengue Fever 206; Chikungunya Fever 155",
+   "table": "Table 7.8, row Communicable Diseases, column Occurrences"
+  },
+  {
+   "claim": "Zika virus and Guillain-Barre syndrome co-occur 195 times, but SNOMED has no causative-agent link; hub filtering cut shortest paths from 11,185 to 9, and the remainder still pass through generic nodes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "shortest paths",
+   "value": "11,185 -> 9",
+   "unit": "paths",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels; top 350 degree nodes removed (GDS degree); paths up to 8 hops between SNOMED 3928002 and 40956001",
+   "where": "7.7.4, Listing 7.40",
+   "note": null,
+   "quote": "This time, we retrieved a result set of 9 entries, compared to the 11,185 paths detected with the base query."
+  },
+  {
+   "claim": "ChatGPT, asked to disambiguate the Zika passage, returned surface terms without distinguishing virus from infection, and said it could not assign UMLS IDs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One informal prompt to ChatGPT (version and date not stated), single passage; chapter warns responses vary",
+   "where": "7.3",
+   "note": "Qualitative; no metric.",
+   "quote": "As an AI language model, I am not able to assign"
+  },
+  {
+   "claim": "scispaCy (en_core_sci_md, UMLS linker) ranks a distinct UMLS CUI first for each of the three Zika mentions: C0318793, C4546023, C0276289.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "C0318793; C4546023; C0276289",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One 3-sentence ECDC passage, scispaCy en_core_sci_md with UMLS linker, resolve_abbreviations=True",
+   "where": "Listing 7.2",
+   "note": null,
+   "table": "Listing 7.2, first candidate per mention"
+  },
+  {
+   "claim": "SNOMED CT encompasses more than 450,000 concepts.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "450,000",
+   "unit": "concepts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNOMED CT description",
+   "where": "7.2",
+   "note": null,
+   "quote": "encompassing more than 450,000 concepts"
+  },
+  {
+   "claim": "Following a FINDING_SITE edge from Islets of Langerhans retrieves a Hyperglycemia mention in an organ donor-maintenance section that conceptual search would not retrieve.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zika/dengue/SoHO KG built from EU documents (ECDC bulletins, EDQM guides, EC proposals), scispaCy + UMLS 2022AA + SNOMED 2022-09-01 + HPO in Neo4j; one corpus, no gold labels",
+   "where": "7.7.2, Table 7.3",
+   "note": null,
+   "quote": "This critical information would not have been retrieved through the conceptual search mechanism."
+  }
+ ],
+ "limits": [
+  "No gold labels or accuracy figure for NED; scispaCy output shown on one three-sentence passage.",
+  "ChatGPT test is a single informal prompt pair, version not stated; chapter notes responses vary.",
+  "Results vary slightly by environment, Neo4j indexing, ingestion order and scispaCy nondeterminism (7.7 note).",
+  "Co-occurrence counts are inflated by repeated bulletin headers (Communicable Diseases, 606); Table 7.1 to 7.9 are from one corpus.",
+  "Hub filtering threshold (350) and 3-hop Togavirus path are chosen by hand, no sensitivity shown.",
+  "Uncovering-new-knowledge uses co-occurrence only; relation extraction from text is mentioned as the stronger next step, not done."
+ ],
+ "practices": [
+  "Link mentions to a reference knowledge base (NED) rather than stopping at NER when precision matters (7.1).",
+  "Keep both EntityMention and disambiguated MedicalEntity nodes in the graph for flexibility (7.6.3).",
+  "Use UMLS as the entry point and map SNOMED and HPO entities to it via UMLS IDs (7.6.4).",
+  "Propagate semantic types from SNOMED first-level nodes down SNOMED_IS_A to all descendants (7.6.4).",
+  "Collapse SNOMED's hundreds of relation types into one SNOMED_RELATION with a type property to keep the schema simple (7.6.4).",
+  "Store sentence index and character offsets of mentions so results can be debugged and shown in context (7.7.1).",
+  "Filter high-degree hub nodes (top 350 by GDS degree) before interpreting ontology paths (7.7.4).",
+  "Treat entity pairs that co-occur with no meaningful ontology path as candidate new knowledge (7.7.4)."
+ ],
+ "terms": [
+  {
+   "term": "Named entity disambiguation (NED)",
+   "definition": "automatically remove the uncertainty or ambiguity of the meaning of a mention by examining its context and connecting it to an entity in a knowledge base",
+   "where": "7.1"
+  },
+  {
+   "term": "Conceptual search",
+   "definition": "a retrieval method that enables users to find information based on meaning rather than exact keywords",
+   "where": "7.4.2"
+  },
+  {
+   "term": "Structured knowledge-based search",
+   "definition": "retrieves information in the text by using the formalized knowledge structured in the domain ontologies",
+   "where": "7.4.2"
+  },
+  {
+   "term": "Co-occurrence",
+   "definition": "the projection of Page nodes onto Entity nodes",
+   "where": "7.6.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "scispaCy",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NED model for candidate selection and ranking",
+   "quote": null
+  },
+  {
+   "work": "UMLS 2022AA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "reference knowledge base",
+   "quote": null
+  },
+  {
+   "work": "SNOMED CT US edition 2022-09-01",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ontology",
+   "quote": null
+  },
+  {
+   "work": "Human Phenotype Ontology",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "hpo.owl and phenotype.hpoa",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "informal NED test",
+   "quote": null
+  },
+  {
+   "work": "CRISP-DM adapted to KGs (book ch. 2)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "process model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7.2",
+   "caption": "Architecture of the NED system, including the three main phases: candidate selection, candidate ranking, and ontology integration",
+   "page": null,
+   "why": "Shows the NED pipeline in one picture"
+  },
+  {
+   "figure": "Fig 7.9",
+   "caption": "KG schema, including relevant node labels and relationship types, to enable multiple types of analyses",
+   "page": null,
+   "why": "The graph model all queries run against"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 7.1",
+   "snippet": "nlp = spacy.load(\"en_core_sci_md\")\nnlp.add_pipe(\"scispacy_linker\",\n             config={\"resolve_abbreviations\": True, \"linker_name\": \"umls\"})",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Chapter text does not print authors, publisher or year; bib fields left null/empty.",
+  "Tables and listings flattened by extraction; table cells wrapped across lines."
+ ]
+}

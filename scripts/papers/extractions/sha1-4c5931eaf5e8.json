@@ -1,0 +1,374 @@
+{
+ "schema": 1,
+ "key": "sha1:4c5931eaf5e8",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch10-intra-kernel-pipelining-warp-specialization-cooperative.pdf",
+ "bib": {
+  "title": "Chapter 10. Intra-Kernel Pipelining, Warp Specialization, and Cooperative Thread Block Clusters (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 110723,
+  "chars_total": 110723,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do intra-kernel pipelining, warp specialization, persistent and cooperative kernels, and thread block clusters with DSMEM and TMA multicast keep a GPU kernel from idling on memory and synchronization?",
+ "hypothesis": null,
+ "contributions": [
+  "Two-stage cuda::pipeline double-buffered tiling kernel",
+  "Three-role (loader, compute, storer) warp-specialized kernel",
+  "Persistent and cooperative-group kernels with grid.sync()",
+  "Thread block cluster kernel using DSMEM and cluster.sync()",
+  "Metric comparison tables 10-2 to 10-5 (labelled illustrative)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Double-buffered pipeline roughly halves GEMM kernel time versus naive tiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "20.5",
+   "unit": "ms",
+   "baseline_value": "41.3",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "Table 10-3 prints it as 2.01x faster.",
+   "where": "Table 10-2",
+   "table": "Table 10-2, row Kernel execution time, columns Naive tiling and Two-stage"
+  },
+  {
+   "claim": "Warp-specialized pipeline is 10.2% faster than the two-stage double-buffered kernel.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "18.4",
+   "unit": "ms",
+   "baseline_value": "20.5",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "(20.5-18.4)/20.5 = 10.2%.",
+   "where": "Table 10-3",
+   "table": "Table 10-3, row Kernel execution time, column Warp-specialized pipeline"
+  },
+  {
+   "claim": "Thread block cluster warp-specialized kernel is a further 6.5% faster than single-block warp specialization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel execution time",
+   "value": "17.2",
+   "unit": "ms",
+   "baseline_value": "18.4",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "Text says 'another ~1.2 ms (6.5%)'; 1.2/18.4 = 6.5%.",
+   "where": "Table 10-5",
+   "table": "Table 10-5, row Kernel execution time, column Thread block cluster pipeline"
+  },
+  {
+   "claim": "Cluster pair with DSMEM gives a 40% kernel speedup over two independent CTAs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40%",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 10-4, two CTAs sharing one A tile, with versus without DSMEM. Illustrative numbers.",
+   "note": "Table says kernel time 0.6x relative (a 40% reduction in time, which is a 1.67x speedup, not 40% faster).",
+   "where": "Table 10-4",
+   "quote": "Here, we see a 40% speedup in kernel execution when using a thread block pair"
+  },
+  {
+   "claim": "DSMEM pair halves per-CTA DRAM bandwidth.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "150",
+   "unit": "GB/s per CTA",
+   "baseline_value": "300",
+   "n": null,
+   "setup": "Table 10-4, illustrative.",
+   "note": null,
+   "where": "Table 10-4",
+   "quote": "The DRAM bandwidth per thread block drops by 50% from 300 GB/s to 150 GB/s"
+  },
+  {
+   "claim": "L2 hit rate rises with a CTA pair using DSMEM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85%",
+   "unit": "L2 hit rate",
+   "baseline_value": "50%",
+   "n": null,
+   "setup": "Table 10-4, illustrative.",
+   "note": null,
+   "where": "Table 10-4",
+   "quote": "The L2 hit rate jumps from 50% to 85%"
+  },
+  {
+   "claim": "Instruction count falls from naive to double-buffered.",
+   "kind": "measured",
+   "source": null,
+   "metric": "instructions",
+   "value": "1.05 B",
+   "unit": null,
+   "baseline_value": "1.7 B",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "Warp-specialized ~1.00 B (-5% in table; text says 4.76%). Cluster ~0.98 B.",
+   "where": "Table 10-3",
+   "table": "Table 10-3, row Instruction count, column Two-stage"
+  },
+  {
+   "claim": "L2 throughput rises from naive tiling to double buffering.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "155",
+   "unit": "GB/s",
+   "baseline_value": "80",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "Then 165 GB/s warp-specialized, 170 GB/s cluster.",
+   "where": "Table 10-3 text",
+   "quote": "L2 load throughput climbs from 80 GB/s in naive tiling to 155 GB/s in the two-"
+  },
+  {
+   "claim": "SM utilization (SM Active %) rises from 68% to 92% with the double-buffered pipeline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "92%",
+   "unit": "SM Active %",
+   "baseline_value": "68%",
+   "n": null,
+   "setup": "Illustrative table: the chapter says 'The numeric values in all metrics tables are illustrative to explain the concepts.' Tiled GEMM kernels, GPU not named (Blackwell implied), no problem size, no run count.",
+   "note": "Table 10-3 labels the same row 'Warp execution efficiency'; +24 is percentage points, printed as '%'.",
+   "where": "Table 10-2 text",
+   "quote": "SM Active % jumps 24% from 68% to 92%"
+  },
+  {
+   "claim": "Persistent kernel arithmetic: 1,000 tiny kernels add 20 ms launch overhead on 100 ms of work.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "20",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1,000 tasks at 0.1 ms each, 0.02 ms launch each; 132 SMs, 1 block of 256 threads per SM (33,792 threads).",
+   "note": null,
+   "where": "Persistent Kernels and Megakernels",
+   "quote": "would add 20 ms in overhead to the execution time"
+  },
+  {
+   "claim": "Persistent kernels claimed to raise throughput 2-3x over naive kernels.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "No workload or measurement given.",
+   "note": "Text: 'substantially (e.g., 2-3x) compared to naive kernels'.",
+   "where": "Common Workloads for Persistent Kernels",
+   "quote": "(e.g., 2–"
+  },
+  {
+   "claim": "Megakernels reduce latency 1.2x to 6.7x versus per-layer launches.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "1.2x to 6.7x",
+   "unit": "latency reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10-8 vs vLLM and SGLang; model, GPU, batch not stated in the text. Caption calls it 'Decode throughput improvement' while text says latency.",
+   "note": null,
+   "where": "Megakernels for Inference",
+   "quote": "reduce latency by 1.2× to 6.7× versus traditional per-layer launches"
+  },
+  {
+   "claim": "FlashAttention-3 reaches about 75% of peak FP16 FLOPs.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "75%",
+   "unit": "of peak FP16 FLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Source paper not cited here; no head dim or sequence length given.",
+   "note": null,
+   "where": "PyTorch, CUDA Pipeline API, and Warp Specialization",
+   "quote": "Even highly optimized kernels like FlashAttention-3 reach only about ~75% of peak FP16"
+  },
+  {
+   "claim": "Portable max cluster size is 8 blocks; 16 needs the non-portable attribute.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "8",
+   "unit": "blocks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hopper/Blackwell; 16 with cudaFuncAttributeNonPortableClusterSizeAllowed.",
+   "note": null,
+   "where": "Distributed Shared Memory",
+   "quote": "The portable maximum cluster size is 8 blocks."
+  },
+  {
+   "claim": "Persistent kernel (256 of 2,048 threads per SM) has about 12% occupancy while nearly all SMs are active.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "12%",
+   "unit": "occupancy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One block of 256 threads per SM, 2,048 max threads.",
+   "note": "256/2048 = 12.5%.",
+   "where": "Persistent Kernels and Megakernels",
+   "quote": "(256 ÷ 2048 threads.)"
+  }
+ ],
+ "limits": [
+  "All metrics tables are labelled illustrative; actual benchmarks are in the book's GitHub repository, not the chapter.",
+  "No GPU model, problem size, run count or profiler version is given for Tables 10-2 to 10-5.",
+  "Persistent-kernel 2-3x and 35% GPU-use figures are asserted without measurement.",
+  "Megakernel 1.2-6.7x is quoted from a figure source with no model/GPU/batch in the text; caption says throughput, text says latency.",
+  "Prose and code disagree on the warp-specialized compute warp: prose says consumer_release() is called immediately after consumer_wait(), code calls it after compute_full_tile.",
+  "Table 10-3 labels the 68/92/96% row 'Warp execution efficiency' while the text calls it SM utilization / SM Active %."
+ ],
+ "practices": [
+  "Profile with Nsight Compute first; if memory-bound start with a two-stage pipeline, if compute-bound consider warp specialization or clusters (Key Takeaways).",
+  "Add another pipeline stage (STAGES=3) when compute outweighs memory (Key Takeaways; the note flags this as probably backwards).",
+  "Use warp specialization for imbalanced or latency-hiding cases; for small or extremely memory-bound kernels stay with double buffering (Warp Specialization section).",
+  "Size cooperative grids with cudaOccupancyMaxActiveBlocksPerMultiprocessor and check cudaLaunchCooperativeKernel's return status.",
+  "Use grid.sync() sparingly; prefer cluster.sync() and DSMEM for limited cross-block coordination.",
+  "Start with clusters of 2 or 4 blocks; larger clusters reduce occupancy.",
+  "Every block must reach each cluster.sync() or grid.sync() or the kernel deadlocks.",
+  "Use cluster.sync() before map_shared_rank(); choose TMA multicast for large clusters/high reuse, DSMEM sharing for small clusters/tight SMEM.",
+  "Verify compiler-generated pipelines (torch.compile, NVCC) before hand-tuning."
+ ],
+ "terms": [
+  {
+   "term": "Intra-kernel pipelining",
+   "definition": "a set of techniques that overlap memory operations and computations within a single kernel execution",
+   "where": "Intra-Kernel Pipelining Techniques"
+  },
+  {
+   "term": "Warp specialization",
+   "definition": "assigning operations to warps that use different hardware, such as data movement (e.g., TMA) and compute (e.g., Tensor Cores)",
+   "where": "Warp Specialization and the Producer-Consumer Model"
+  },
+  {
+   "term": "Persistent kernel",
+   "definition": "a single, long-running kernel whose threads continually pull work from a shared producer-consumer queue",
+   "where": "Persistent Kernels and Megakernels"
+  },
+  {
+   "term": "Megakernel",
+   "definition": "fuses entire sequences of operations across layers and even across GPUs into a single large kernel",
+   "where": "Megakernels for Inference"
+  },
+  {
+   "term": "Thread block cluster (CTA cluster)",
+   "definition": "a hardware-level hierarchy; a group of thread blocks guaranteed coscheduled on the same GPC, sharing DSMEM",
+   "where": "Thread Block Clusters and Distributed Shared Memory"
+  },
+  {
+   "term": "DSMEM",
+   "definition": "distributed shared memory: extends __shared__ memory across a thread block cluster",
+   "where": "Distributed Shared Memory"
+  },
+  {
+   "term": "Scratch memory",
+   "definition": "on-chip SRAM region used to track coordination metadata such as barrier state for DSMEM and cluster sync",
+   "where": "Scratch Memory"
+  },
+  {
+   "term": "Thread block pair (CTA pair)",
+   "definition": "two thread blocks coscheduled in a cluster across SMs within a GPC",
+   "where": "Thread Block Pair"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FlashAttention-3",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for warp-specialized overlap of GEMM and softmax, ~75% of peak FP16",
+   "quote": null
+  },
+  {
+   "work": "CUTLASS (ping-pong GEMM, 2-SM UMMA)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "exposes warp-specialized ping-pong and CTA-pair kernels",
+   "quote": null
+  },
+  {
+   "work": "Triton / torch.compile",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "generate warp-specialized kernels selectively",
+   "quote": null
+  },
+  {
+   "work": "Megakernel (figure source, unnamed)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "1.2-6.7x latency versus vLLM and SGLang",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10-4",
+   "caption": "Warp-specialized kernel with one set of warps for loading data and all other warps for computations",
+   "page": null,
+   "why": "shows loader versus compute warp split (4 producer, 8 consumer warps)"
+  },
+  {
+   "figure": "Fig 10-17",
+   "caption": "For these four (2 x 2) thread clusters, each tile is loaded once and multicast into the shared memory of all CTAs in each cluster",
+   "page": null,
+   "why": "shows TMA multicast tile sharing"
+  },
+  {
+   "figure": "Table 10-5",
+   "caption": "Comparison of naive tiling, two-stage double buffering, warp-specialized, and thread block cluster pipeline kernels",
+   "page": null,
+   "why": "one table of all four kernels"
+  }
+ ],
+ "code": [
+  {
+   "where": "warp_specialized_pipeline_kernel",
+   "snippet": "if (warp_id == 1) { pipe.consumer_wait(); compute_full_tile(A_tile, B_tile, C_tile, lane_id); pipe.consumer_release(); pipe.producer_acquire(); pipe.producer_commit(); }",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Page numbers not available in the cached text; section names given in 'where'.",
+  "Code listings truncated at line width in the cached text.",
+  "No embedded instructions found."
+ ]
+}

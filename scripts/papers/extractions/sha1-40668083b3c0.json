@@ -1,0 +1,726 @@
+{
+ "schema": 1,
+ "key": "sha1:40668083b3c0",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/huyen-ai-engineering/ch02-understanding-foundation-models.pdf",
+ "bib": {
+  "title": "Chapter 2. Understanding Foundation Models (in AI Engineering: Building Applications with Foundation Models)",
+  "authors": [
+   "Chip Huyen"
+  ],
+  "first_author": "Huyen",
+  "year": 2025,
+  "venue": "O'Reilly Media (book chapter, early-release web copy)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 121460,
+  "chars_total": 121460,
+  "engine": "pymupdf",
+  "skipped": "Tail of cached text (after the footnotes, about line 1980 on) is O'Reilly web-page residue and equation fragments; the equations themselves did not extract."
+ },
+ "type": "book-chapter",
+ "question": "Which design decisions in foundation models (training data, architecture, scale, post-training, sampling) matter for downstream application builders?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains how training data distribution shapes capability, with multilingual and domain-specific cases",
+  "Walks through the transformer, its alternatives, scale measures, scaling laws and bottlenecks",
+  "Describes SFT and preference finetuning (RLHF) as post-training",
+  "Treats sampling (temperature, top-k, top-p, test time compute, structured outputs) and the probabilistic nature of models, including inconsistency and hallucination"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "English is 45.88% of Common Crawl, about eight times Russian (5.97%).",
+   "kind": "reported",
+   "source": "Lai et al. (2023)",
+   "metric": null,
+   "value": "45.88%",
+   "unit": "% of Common Crawl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lai et al. (2023) analysis of Common Crawl",
+   "quote": "English accounts for almost half of the data (45.88%)",
+   "table": null,
+   "note": null,
+   "where": "Training Data / Multilingual Models"
+  },
+  {
+   "claim": "Median token length for the same content in MASSIVE is 7 in English, 32 in Hindi, 72 in Burmese, so Burmese costs about ten times English per API call.",
+   "kind": "reported",
+   "source": "Yennie Jun",
+   "metric": null,
+   "value": "72",
+   "unit": "median tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 tokenizer on MASSIVE (1M short texts, 52 languages), Yennie Jun",
+   "quote": "the median token length in English is 7, but the median length in Hindi is 32, and",
+   "table": null,
+   "note": null,
+   "where": "Multilingual Models"
+  },
+  {
+   "claim": "A 7B-parameter model at 2 bytes per parameter needs at least 14 GB of GPU memory for inference.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "14",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B params, 16-bit, weights only",
+   "quote": "(14 GB)",
+   "table": null,
+   "note": "Footnote: actual memory is higher; Ch. 7 covers it",
+   "where": "Model Size"
+  },
+  {
+   "claim": "Mixtral 8x7B has 46.7B total parameters but 12.9B active per token (two experts per layer), so cost and speed match a 12.9B model.",
+   "kind": "reported",
+   "source": "Mixtral",
+   "metric": null,
+   "value": "12.9 billion",
+   "unit": "parameters active per token",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixtral 8x7B, mixture-of-experts",
+   "quote": "only 12.9 billion parameters are active for each token",
+   "table": null,
+   "note": null,
+   "where": "Model Size"
+  },
+  {
+   "claim": "Llama training tokens: 1.4T (Llama 1), 2T (Llama 2), 15T (Llama 3).",
+   "kind": "reported",
+   "source": "Meta",
+   "metric": null,
+   "value": "15 trillion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Meta Llama family",
+   "quote": "15 trillion tokens for Llama 3",
+   "table": null,
+   "note": null,
+   "where": "Model Size"
+  },
+  {
+   "claim": "GPT-3-175B training takes about 236 days on 256 H100s at peak with no mistakes (7.8 months).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "236",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3.14e23 FLOPs, 256 H100 at 5.2e19 FLOPs/day each (60 TFLOP/s), 100% utilization",
+   "quote": "= ~236 days",
+   "table": null,
+   "note": null,
+   "where": "Model Size"
+  },
+  {
+   "claim": "At 70% utilization and $2/h per H100, training GPT-3-175B would cost over $4 million.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "$4 million",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256 H100, $2/h, 70% utilization",
+   "quote": "would cost over",
+   "table": null,
+   "note": "Page footer formula prints $4,142,81 (truncated)",
+   "where": "Model Size"
+  },
+  {
+   "claim": "Rule of thumb for utilization: 50% is okay, above 70% is great.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "70%",
+   "unit": "utilization",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hardware utilization in training",
+   "quote": "Anything above 70% utilization is considered great.",
+   "table": null,
+   "note": null,
+   "where": "Model Size"
+  },
+  {
+   "claim": "Chinchilla scaling law: compute-optimal training needs about 20 training tokens per parameter; a 3B model needs about 60B tokens; double the model, double the tokens.",
+   "kind": "reported",
+   "source": "Hoffmann et al. 2022 (Training Compute-Optimal Large Language Models)",
+   "metric": null,
+   "value": "20 times",
+   "unit": "tokens per parameter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 models, 70M to over 16B parameters, 5 to 500B tokens",
+   "quote": "the authors trained 400 language models ranging from 70 million to",
+   "table": null,
+   "note": "quote replaced below",
+   "where": "Scaling law"
+  },
+  {
+   "claim": "Chinchilla (70B) was trained on 1.4 trillion tokens versus 300B for GPT-3 (175B).",
+   "kind": "reported",
+   "source": "Hoffmann et al. 2022",
+   "metric": null,
+   "value": "1.4 trillion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2-5",
+   "quote": null,
+   "table": "Table 2-5, row Chinchilla, column Training tokens",
+   "note": null,
+   "where": "Table 2-5"
+  },
+  {
+   "claim": "A drop in cross-entropy loss from about 3.4 to 2.8 nats requires 10 times more training data.",
+   "kind": "reported",
+   "source": "Meta, Beyond Neural Scaling Laws (as cited)",
+   "metric": null,
+   "value": "10 times",
+   "unit": "x training data",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Language modeling",
+   "quote": "requires 10 times more training data",
+   "table": null,
+   "note": null,
+   "where": "Scaling law"
+  },
+  {
+   "claim": "Hyperparameters transferred from a 40M model to a 6.7B model.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "40M to 6.7B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Microsoft and OpenAI 2022 (hyperparameter transfer)",
+   "quote": "from a 40M model to a 6.7B model",
+   "table": null,
+   "note": "Text breaks across a line; see text near 'from a 40M model to a 6.7B model'",
+   "where": "Scaling extrapolation"
+  },
+  {
+   "claim": "Over 28% of the most critical C4 sources fully restricted, 45% of C4 restricted overall, by 2024.",
+   "kind": "reported",
+   "source": "Longpre et al. (2024)",
+   "metric": null,
+   "value": "45%",
+   "unit": "% of C4",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Longpre et al. (2024), 2023 to 2024 changes in ToS and crawling restrictions",
+   "quote": "a full 45% of C4 is now restricted",
+   "table": null,
+   "note": null,
+   "where": "Scaling bottlenecks"
+  },
+  {
+   "claim": "Data centers use 1-2% of global electricity, estimated 4-20% by 2030; growth capped at about 50x.",
+   "kind": "reported",
+   "source": "Patel, Nishball and Ontiveros (2024)",
+   "metric": null,
+   "value": "50 times",
+   "unit": "growth cap",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Patel, Nishball, Ontiveros 2024",
+   "quote": "data centers can grow at most 50 times",
+   "table": null,
+   "note": null,
+   "where": "Scaling bottlenecks"
+  },
+  {
+   "claim": "InstructGPT used 2% of compute for post-training and 98% for pre-training.",
+   "kind": "reported",
+   "source": "Ouyang et al. 2022",
+   "metric": null,
+   "value": "2%",
+   "unit": "% of compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT",
+   "quote": "InstructGPT used only 2% of compute for post-training",
+   "table": null,
+   "note": null,
+   "where": "Post-Training"
+  },
+  {
+   "claim": "InstructGPT demonstration data: 13,000 pairs; at $10 per pair that is $130,000; ~90% of labelers have a college degree.",
+   "kind": "reported",
+   "source": "Ouyang et al. 2022",
+   "metric": null,
+   "value": "13,000",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT SFT data",
+   "quote": "have at least a college degree and more than one-third have a master’s degree",
+   "table": null,
+   "note": null,
+   "where": "Supervised Finetuning"
+  },
+  {
+   "claim": "LAION volunteers (13,500) produced 10,000 conversations, 161,443 messages, 35 languages, 461,292 quality ratings; 90% of labelers male.",
+   "kind": "reported",
+   "source": "Köpf et al. 2023",
+   "metric": null,
+   "value": "161,443",
+   "unit": "messages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAION OpenAssistant",
+   "quote": "10,000 conversations, which consist of 161,443 messages",
+   "table": null,
+   "note": null,
+   "where": "Supervised Finetuning"
+  },
+  {
+   "claim": "Llama 2 comparison cost $3.50 each versus $25 for writing a response.",
+   "kind": "reported",
+   "source": "Scialom (personal communication)",
+   "metric": null,
+   "value": "$3.50",
+   "unit": "USD per comparison",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per Thomas Scialom, Discord talk",
+   "quote": "each comparison cost them $3.50",
+   "table": null,
+   "note": null,
+   "where": "Reward model"
+  },
+  {
+   "claim": "InstructGPT labelers agreed on pairwise rankings about 73% of the time.",
+   "kind": "reported",
+   "source": "Ouyang et al. 2022",
+   "metric": null,
+   "value": "73%",
+   "unit": "inter-labeler agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT comparison data",
+   "quote": "Their inter-labeler agreement is around 73%",
+   "table": null,
+   "note": null,
+   "where": "Reward model"
+  },
+  {
+   "claim": "Manually comparing two responses took three to five minutes on average (LMSYS).",
+   "kind": "reported",
+   "source": "Chiang et al. 2024",
+   "metric": null,
+   "value": "three to five minutes",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LMSYS",
+   "quote": "took on average three to five minutes",
+   "table": null,
+   "note": null,
+   "where": "Reward model"
+  },
+  {
+   "claim": "With logits [1,2], temperature 1 gives [0.27,0.73]; temperature 0.5 gives [0.12,0.88].",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.88",
+   "unit": "probability of B",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-output toy model",
+   "quote": "With temperature = 0.5, the probabilities are [0.12, 0.88].",
+   "table": null,
+   "note": null,
+   "where": "Temperature"
+  },
+  {
+   "claim": "Top-k with k from 50 to 500; top-p commonly 0.9 to 0.95; providers limit temperature to 0 to 2; 0.7 often recommended for creative use.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "0.9 to 0.95",
+   "unit": "top-p",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common practice, author's statement",
+   "quote": "range from 0.9 to 0.95",
+   "table": null,
+   "note": null,
+   "where": "Top-p"
+  },
+  {
+   "claim": "A verifier gave about the same boost as a 30x model-size increase; 100M model with verifier on par with 3B without.",
+   "kind": "reported",
+   "source": "Cobbe et al. 2021",
+   "metric": null,
+   "value": "30×",
+   "unit": "x model size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cobbe et al. 2021, grade-school math",
+   "quote": "approximately the same performance boost as a 30× model size increase",
+   "table": null,
+   "note": null,
+   "where": "Test Time Compute"
+  },
+  {
+   "claim": "OpenAI's verifier experiment saw gains up to 400 sampled outputs, then decline; Monkey Business finds log-linear gains from 1 to 10,000 samples.",
+   "kind": "reported",
+   "source": "Cobbe et al. 2021; Brown et al. 2024",
+   "metric": null,
+   "value": "400",
+   "unit": "outputs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cobbe et al. 2021 vs Brown et al. 2024",
+   "quote": "that point was 400 outputs",
+   "table": null,
+   "note": null,
+   "where": "Test Time Compute"
+  },
+  {
+   "claim": "Google sampled 32 outputs per question and took the most frequent answer when evaluating Gemini on MMLU.",
+   "kind": "reported",
+   "source": "Google Gemini report",
+   "metric": null,
+   "value": "32",
+   "unit": "outputs per question",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemini MMLU",
+   "quote": "They sampled 32 outputs for each question.",
+   "table": null,
+   "note": null,
+   "where": "Test Time Compute"
+  },
+  {
+   "claim": "LinkedIn's defensive YAML parser raised correct YAML outputs from 90% to 99.99%.",
+   "kind": "reported",
+   "source": "Bottaro and Ramgopal 2020",
+   "metric": null,
+   "value": "99.99%",
+   "unit": "% correct YAML",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LinkedIn, GPT-4 as underlying model",
+   "quote": "from 90% to 99.99%",
+   "table": null,
+   "note": null,
+   "where": "Post-processing"
+  },
+  {
+   "claim": "RLHF made hallucination worse for InstructGPT versus SFT alone, though labelers preferred the RLHF model overall.",
+   "kind": "reported",
+   "source": "Ouyang et al. 2022",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT paper, Figure 2-26",
+   "quote": "the InstructGPT paper shows that RLHF made",
+   "table": null,
+   "note": null,
+   "where": "Hallucination"
+  },
+  {
+   "claim": "GPT-4 solved Project Euler problems in English more than three times as often as in Armenian or Farsi; failed all six in Burmese and Amharic.",
+   "kind": "reported",
+   "source": "Yennie Jun",
+   "metric": null,
+   "value": "three times",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six Project Euler math problems, Yennie Jun",
+   "quote": "more than three times as often",
+   "table": null,
+   "note": null,
+   "where": "Multilingual Models"
+  },
+  {
+   "claim": "Gunasekar et al. trained a 1.3B model on 7B tokens of high-quality coding data that beats much larger models on coding benchmarks.",
+   "kind": "reported",
+   "source": "Gunasekar et al. (2023)",
+   "metric": null,
+   "value": "7B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "phi-1 style coding model",
+   "quote": "Using 7B tokens of high-quality",
+   "table": null,
+   "note": null,
+   "where": "Training Data"
+  },
+  {
+   "claim": "Llama 2-7B: hidden 4096, 32 heads, head dim 128, 32 blocks, FFN 11,008, vocab 32K, context 4K.",
+   "kind": "reported",
+   "source": "Touvron et al. 2023",
+   "metric": null,
+   "value": "11,008",
+   "unit": "feedforward dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2-4",
+   "quote": null,
+   "table": "Table 2-4, row Llama 2-7B, column Feedforward dim",
+   "note": null,
+   "where": "Table 2-4"
+  },
+  {
+   "claim": "Mamba-3B outperforms same-size transformers and matches transformers twice its size; Jamba is 52B total, 12B active, context to 256K.",
+   "kind": "reported",
+   "source": "Gu and Dao 2023; Lieber et al. 2024",
+   "metric": null,
+   "value": "256K",
+   "unit": "tokens context",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gu and Dao 2023; Lieber et al. 2024",
+   "quote": "length of 256K tokens",
+   "table": null,
+   "note": null,
+   "where": "Other model architectures"
+  }
+ ],
+ "limits": [
+  "Author states the chapter cannot say how to build a model competing with ChatGPT; training details are confidential or skipped",
+  "Time-bound: prices ($2 to $5 per H100 hour), logprob API availability, and 'as of this writing' claims have dated",
+  "Scaling law is for dense models on mostly human-generated data; sparse and synthetic data adaptation is an open question",
+  "RLHF and DPO covered shallowly; equations for attention and reward loss do not extract from the PDF text",
+  "Many numbers are relayed from other work (Lai 2023, Yennie Jun, Cobbe 2021); the chapter runs no experiments"
+ ],
+ "practices": [
+  "Choose training data to match your task, language and domain; a smaller high-quality set can beat a larger low-quality one (Training Data).",
+  "For non-English applications, check tokenization cost and quality per language rather than translating everything to English (Multilingual Models).",
+  "Budget from compute: pick model size and tokens with the Chinchilla ~20 tokens per parameter rule, then consider inference cost (Scaling law).",
+  "Track three scale numbers: parameters, training tokens, FLOPs (Model Size).",
+  "Use test time compute (best of N, verifier, majority vote) to improve quality, knowing cost scales with N (Test Time Compute).",
+  "Fix temperature, top-p, top-k, and seed for consistency, but expect residual non-determinism (Inconsistency).",
+  "For structured outputs escalate: prompting, post-processing, test time compute, constrained sampling, finetuning (Structured Outputs).",
+  "Set max tokens carefully so JSON is not truncated (Structured Outputs).",
+  "Look at logprobs when debugging a model (Temperature tip)."
+ ],
+ "terms": [
+  {
+   "term": "prefill",
+   "definition": "The model processes the input tokens in parallel, creating the key and value vectors for all input tokens.",
+   "where": "Transformer architecture"
+  },
+  {
+   "term": "decode",
+   "definition": "The model generates one output token at a time.",
+   "where": "Transformer architecture"
+  },
+  {
+   "term": "FLOPs vs FLOP/s",
+   "definition": "FLOPs measure the compute requirement for a task, whereas FLOP/s measures a machine's peak performance.",
+   "where": "Model Size"
+  },
+  {
+   "term": "utilization",
+   "definition": "How much of the maximum compute capacity you can use.",
+   "where": "Model Size"
+  },
+  {
+   "term": "compute-optimal",
+   "definition": "A model that achieves the best performance given a fixed compute budget.",
+   "where": "Scaling law"
+  },
+  {
+   "term": "demonstration data",
+   "definition": "(prompt, response) examples used for SFT; also called behavior cloning.",
+   "where": "Supervised Finetuning"
+  },
+  {
+   "term": "comparison data",
+   "definition": "(prompt, winning_response, losing_response) used to train a reward model.",
+   "where": "Reward model"
+  },
+  {
+   "term": "pointwise evaluation",
+   "definition": "Scoring each sample independently.",
+   "where": "Reward model"
+  },
+  {
+   "term": "greedy sampling",
+   "definition": "Always picking the most likely outcome.",
+   "where": "Sampling Fundamentals"
+  },
+  {
+   "term": "logprobs",
+   "definition": "Probabilities in the log scale, preferred to reduce underflow.",
+   "where": "Temperature"
+  },
+  {
+   "term": "top-p (nucleus)",
+   "definition": "Sum probabilities in descending order and stop when the sum reaches p; consider only those values.",
+   "where": "Top-p"
+  },
+  {
+   "term": "test time compute",
+   "definition": "Generating multiple responses per query to increase the chance of a good one.",
+   "where": "Test Time Compute"
+  },
+  {
+   "term": "hallucination",
+   "definition": "A response that isn't grounded in facts.",
+   "where": "Hallucination"
+  },
+  {
+   "term": "inconsistency",
+   "definition": "A model generates very different responses for the same or slightly different prompts.",
+   "where": "Hallucination / Inconsistency"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "related",
+   "note": "transformer architecture explained",
+   "quote": null
+  },
+  {
+   "work": "Training Compute-Optimal Large Language Models (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "related",
+   "note": "scaling law source",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT, Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "SFT, RLHF, reward model data",
+   "quote": null
+  },
+  {
+   "work": "Training Verifiers to Solve Math Word Problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "related",
+   "note": "verifier equals 30x model size",
+   "quote": null
+  },
+  {
+   "work": "Large Language Monkeys / Monkey Business (Brown et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "log-linear gains in samples",
+   "quote": null
+  },
+  {
+   "work": "Scaling LLM Test-Time Compute (Snell et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "test time compute vs parameters",
+   "quote": null
+  },
+  {
+   "work": "Mamba (Gu and Dao)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative architecture",
+   "quote": null
+  },
+  {
+   "work": "Jamba (Lieber et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hybrid architecture",
+   "quote": null
+  },
+  {
+   "work": "Direct Preference Optimization (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used by Llama 3",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "dimension table, RLHF",
+   "quote": null
+  },
+  {
+   "work": "Lai et al. (2023) Common Crawl language analysis",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Tables 2-1, 2-2",
+   "quote": null
+  },
+  {
+   "work": "Ortega et al. (DeepMind) self-delusion",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hallucination hypothesis 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2-4",
+   "caption": "The dimension values of different Llama models.",
+   "page": null,
+   "why": "Shows how blocks, model dim, FFN dim, vocab and context set size"
+  },
+  {
+   "figure": "Fig 2-10",
+   "caption": "The overall training workflow with pre-training, SFT, and RLHF.",
+   "page": null,
+   "why": "Post-training pipeline at a glance"
+  },
+  {
+   "figure": "Fig 2-16",
+   "caption": "The softmax probabilities for tokens A and B at different temperatures, given their logits being [1, 2].",
+   "page": null,
+   "why": "Temperature effect"
+  }
+ ],
+ "code": [
+  {
+   "where": "Attention mechanism",
+   "snippet": "K = xW_K; V = xW_V; Q = xW_Q (subscripts lost in extraction)",
+   "verbatim": false
+  },
+  {
+   "where": "Test Time Compute",
+   "snippet": "p(I love food) = p(I) × p(I | love) × p(food | I, love)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations (attention, reward-model loss, softmax) and exponent digits (10^22 FLOPs for PaLM 2, 10^23 for GPT-3) lost in text extraction; the PaLM-2 FLOPs value is not recoverable.",
+  "Trailing O'Reilly page chrome ('Table of contents collapsed', 'Subscribe now') ignored.",
+  "No embedded instructions found."
+ ]
+}

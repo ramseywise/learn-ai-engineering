@@ -1,0 +1,191 @@
+{
+ "schema": 1,
+ "key": "sha1:1c7d85381f1c",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/learning-langchain/ch06-agent-architecture.pdf",
+ "bib": {
+  "title": "Chapter 6. Agent Architecture (Learning LangChain)",
+  "authors": [
+   "Mayo Oshin",
+   "Nuno Campos"
+  ],
+  "first_author": "Oshin",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 28616,
+  "chars_total": 28616,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What makes an LLM application agentic, and how is the basic agent loop built and extended in LangGraph?",
+ "hypothesis": null,
+ "contributions": [
+  "Defines the agent architecture as an LLM-controlled loop (plan, execute) mixing tool calling and chain-of-thought",
+  "LangGraph implementation with ToolNode and tools_condition",
+  "Extension: always call a tool first",
+  "Extension: preselect tools with a RAG step when there are many tools"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Planning quality (choosing the right tool) starts to suffer once the LLM is given more than about 10 tools.",
+   "kind": "claim",
+   "source": null,
+   "metric": "tool count threshold",
+   "value": "10",
+   "unit": "tools",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General assertion in the book, no experiment or model named.",
+   "quote": "(say, more than 10)",
+   "table": null,
+   "note": "Hedged with 'say'; no measurement given.",
+   "where": "Dealing with Many Tools"
+  },
+  {
+   "claim": "The book's example agent binds tools to ChatOpenAI at temperature 0.1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "temperature",
+   "value": "0.1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LangGraph example code, search plus calculator tools; model name not given (ChatOpenAI default).",
+   "quote": "ChatOpenAI(temperature=0.1).bind_tools(tools)",
+   "table": null,
+   "note": null,
+   "where": "Building a LangGraph Agent"
+  },
+  {
+   "claim": "In the always-call-search-first example the search result states the age at death as 60.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "age at death",
+   "value": "60",
+   "unit": "years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Query: how old was the 30th US president when he died; DuckDuckGo search, standard agent graph.",
+   "quote": "January 5, 1933 (aged 60)",
+   "table": null,
+   "note": "The model's final answers differ: 60 in the first run, 61 in the always-first and tool-selection runs (born July 4, 1872, died January 5, 1933).",
+   "where": "Building a LangGraph Agent"
+  },
+  {
+   "claim": "The model computes 1933 - 1872 and answers 61, which is off by one from the 60 in the search result.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "age at death",
+   "value": "61",
+   "unit": "years",
+   "baseline_value": "60",
+   "n": null,
+   "setup": "Always-call-search-first and many-tools examples, ChatOpenAI temperature 0.1, same query.",
+   "quote": "Calvin Coolidge was 61 years old when he died.",
+   "table": null,
+   "note": "Chapter does not remark on the discrepancy.",
+   "where": "Always Calling a Tool First"
+  }
+ ],
+ "limits": [
+  "No experiments or benchmarks; examples are single runs of one query.",
+  "The Python calculator tool uses ast.literal_eval, which evaluates literals, not arithmetic (code as printed; chapter does not comment).",
+  "Chapter says the RAG tool-selection step adds latency and should be used only when performance drops with added tools.",
+  "Code uses 2025-era LangChain/LangGraph APIs and may have dated."
+ ],
+ "practices": [
+  "Let the LLM control the loop's stop condition; use a conditional edge to exit (Building a LangGraph Agent).",
+  "Include an 'output' tool as stop signal in prompt-based ReAct loops (Plan-Do Loop).",
+  "Use ToolNode so tool exceptions become ToolMessages the LLM can react to (Building a LangGraph Agent).",
+  "If a tool should always run first, add a node that emits the tool call directly: saves one LLM call and avoids the model skipping it; worse if no such rule exists (Always Calling a Tool First).",
+  "With many tools (say >10), preselect a relevant subset by embedding tool descriptions and retrieving per query; adds latency, so only when performance drops (Dealing with Many Tools).",
+  "Run at temperature 0 with a newline stop sequence to get one CSV-formatted action in the prompt-only demo (Plan-Do Loop)."
+ ],
+ "terms": [
+  {
+   "term": "agent",
+   "definition": "“something that acts” (Russell and Norvig); an agentic LLM application uses an LLM to pick from possible courses of action given context",
+   "where": "Intro"
+  },
+  {
+   "term": "ReAct",
+   "definition": "The architecture of an LLM-controlled plan/execute loop, first proposed by Shunyu Yao et al.",
+   "where": "Plan-Do Loop"
+  },
+  {
+   "term": "ToolNode",
+   "definition": "Graph node that executes tool calls from the latest AI message and returns a ToolMessage per call, handling tool exceptions",
+   "where": "Building a LangGraph Agent"
+  },
+  {
+   "term": "tools_condition",
+   "definition": "Conditional edge function routing to the tools node if the latest AI message has tool calls, otherwise ending the graph",
+   "where": "Building a LangGraph Agent"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Artificial Intelligence (Russell and Norvig, Pearson, 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Definition of agent as 'something that acts'",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Shunyu Yao et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter names ReAct as the origin of the loop architecture; no title or year printed",
+   "quote": null
+  },
+  {
+   "work": "Chapter 5 architectures (same book)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Email assistant example motivates the extensions",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6-1",
+   "caption": "The agent architecture",
+   "page": null,
+   "why": "model/tools loop with conditional edge"
+  },
+  {
+   "figure": "Fig 6-2",
+   "caption": "Modifying the agent architecture to always call a specific tool first",
+   "page": null,
+   "why": "shows first_model node bypassing the LLM"
+  },
+  {
+   "figure": "Fig 6-3",
+   "caption": "Modifying the agent architecture to deal with many tools",
+   "page": null,
+   "why": "shows select_tools node before the loop"
+  }
+ ],
+ "code": [
+  {
+   "where": "Always Calling a Tool First (Python)",
+   "snippet": "def first_model(state: State) -> State:\n    query = state[\"messages\"][-1].content\n    search_tool_call = ToolCall(\n        name=\"duckduckgo_search\", args={\"query\": query}, id=uuid4().hex\n    )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache is truncated at line ends in code and output blocks (right-edge clipping); the first prompt example and its output are missing (placeholder text 'add example prompt and output for tool-calling model').",
+  "Snippets/outputs are interleaved out of order by the PDF layout.",
+  "Book chapter has no abstract or hypothesis; method block null."
+ ]
+}

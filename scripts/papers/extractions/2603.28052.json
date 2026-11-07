@@ -1,19 +1,580 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2603.28052",
  "pdf": "ai-engineering/03-harness-engineering/sources/lee-2026-meta-harness.pdf",
  "bib": {
   "title": "Meta-Harness: End-to-End Optimization of Model Harnesses",
-  "first_author": "Yoonho Lee",
-  "year": "2026",
-  "venue": null,
+  "authors": [
+   "Yoonho Lee",
+   "Roshen Nair",
+   "Qizheng Zhang",
+   "Kangwook Lee",
+   "Omar Khattab",
+   "Chelsea Finn"
+  ],
+  "first_author": "Lee",
+  "year": 2026,
+  "venue": "preprint",
   "arxiv": "2603.28052",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "f3b2dff3-fd08-40e3-95c0-ad1da8b67671"
+  "at": "2026-11-07",
+  "chars_read": 83845,
+  "chars_total": 83845,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Meta-Harness: End-to-End Optimization of Model Harnesses. Yoonho Lee, Roshen Nair, Qizheng Zhang, Kangwook Lee, Omar Khattab, Chelsea Finn. Preprint, arXiv:2603.28052v1, 30 Mar 2026.\n\nCOVERAGE: 83,489 of 83,489 chars, all 26 pages, including appendices A-E and references. Nothing skipped. Quotes join PDF line breaks.\n\nNOTE FIT: 08-maturity-and-failure-modes.md fits better than 02.\n- Its \"Open frontiers\" item 2 reads \"Agents analyzing their own traces to identify and fix harness-level failure modes — automating the ratchet\", and this paper is a direct instance.\n- Its \"Keep discovery and evaluation sets separate\" bullet conflicts with this paper's TerminalBench-2 design. The note should say so.\n- 02 gets a smaller sharpens: the environment bootstrap (Environment subsystem, `init.sh`), the ablation method (Table 3), and the filesystem as an experience store.\n- 05 \"Trace-driven improvement\" is also a candidate for the traces result.\n- Outside this folder, ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md covers GEPA, OPRO and TextGrad, which this paper compares against.\n- No note or references.md in 03-harness-engineering mentions Meta-Harness or TerminalBench.\n\nCLAIMS\n\n- claim: Raw execution traces were the decisive proposer input. Summaries did not recover the signal, and the best summary candidate scored below the best scores-only candidate.\n  number: full 50.0 median / 56.7 best; scores-only 34.6 / 41.3; scores+summary 34.9 / 38.7\n  setup: Online text classification (USPTO-50k, Symptom2Disease, LawBench), GPT-OSS-120B, proposer Opus-4.6. Table 4 labels these 50.0/56.7 values as search-set. Ablation run on this domain only.\n  quote: \"scores-only reaches 34.6 median and 41.3 best accuracy, while scores-plus-summary reaches 34.9 median and 38.7 best. By contrast, Meta-Harness reaches 50.0 median and 56.7 best accuracy\"\n  where: p6-7, Table 3\n\n- claim: On test sets the selected harness beat the hand-designed ACE and MCE while using less context.\n  number: 48.6% vs ACE 40.9 (+7.7) and MCE 40.0 (+8.6); 11.4K vs 50.8K and 28.5K tokens\n  setup: Three datasets above (215, 22 and 180 classes); 20 iterations, 2 candidates each, 40 candidates; seeded with zero-shot, few-shot, ACE, MCE. Per dataset: USPTO 14.0, S2D 86.8, Law 45.0. ACE beats it on USPTO (16.0).\n  quote: \"The selected Meta-Harness2 reaches 48.6% accuracy, outperforming ACE by 7.7 points and MCE by 8.6 points. These gains do not come from using more context: Meta-Harness uses only 11.4K context tokens, versus 50.8K for ACE and 28.5K for MCE.\"\n  where: p7, Table 2 (p6)\n\n- claim: Meta-Harness beat other optimizers given the same evaluation budget and the same proposer, and reached their final accuracy in 4 evaluations.\n  number: best 56.7 vs TTT-Discover 45.6, Best-of-N 44.2, OpenEvolve 43.3, GEPA 40.2 (medians 50.0 / 34.1 / 34.0 / 39.1 / 32.6)\n  setup: Search-set accuracy, not test. Same Opus-4.6 max-reasoning proposer for all.\n  quote: \"Meta-Harness matches the best prior text optimizers (OpenEvolve, TTT-Discover) in0.1 × the evaluations, and its final accuracy surpasses theirs by more than 10 points\"\n  where: p6, Table 4 p7, Figure 4 p15\n\n- claim: On TerminalBench-2 the discovered harness ranked #1 on Haiku 4.5 and #2 on Opus 4.6.\n  number: Opus 76.4% vs Terminus-KIRA 74.7%, ForgeCode 81.8%; Haiku 37.6% vs Goose 35.5%, Terminus-KIRA 33.7%, Claude Code 27.5%\n  setup: 89 tasks. Search and evaluation on the same 89 tasks. Other entries come from the official leaderboard. Search started from Terminus 2 and Terminus-KIRA.\n  quote: \"On Opus 4.6, Meta-Harness discovers a harness achieving 76.4% pass rate, surpassing the hand-engineered Terminus-KIRA (74.7%) and ranking #2 among all Opus 4.6 agents\" / \"Meta-Harness achieves 37.6%, outperforming the next-best reported agent (Goose, 35.5%) by 2.1 points\"\n  where: p9, Table 7\n\n- claim: The winning coding-harness change was a purely additive environment snapshot taken before the first LLM call, about 80 lines on top of Terminus-KIRA.\n  number: ~80 lines; 15-second timeout; 20-entry /app listing; gains on 7 of 89 tasks\n  setup: Compared to Terminus-KIRA. Authors say gaining tasks need domain tooling whose availability cannot be assumed (protein-assembly and path-tracing gained most).\n  quote: \"The full implementation adds roughly 80 lines on top of Terminus-KIRA.\" / \"the discovered harness gains on 7 of 89 tasks\"\n  where: p21\n\n- claim: Six straight edits to prompts, completion flow or observation processing regressed before the additive change won, and the proposer named the shared prompt edit as the confound.\n  number: baseline 64.4%; candidates 58.9% (-5.6pp), 57.8% (-6.7pp), then 63.3% (-1.1pp) after isolating the fix\n  setup: One TerminalBench-2 search log, 10 iterations, Opus 4.6. Quoted text is proposer reasoning, not a measured attribution.\n  quote: \"Prior attempts: evo marker fix (58.9%, -5.6pp), evo single confirm (57.8%, -6.7pp) --- both regressed.Root cause of regressions: Prompt template changes (cleanup directives) caused the agent to delete necessary state before task completion.\"\n  where: p16-17\n\n- claim: A single retrieval harness improved IMO-level math accuracy across five models, with no aggregate model regressing against no retrieval.\n  number: avg 38.8 (+4.7) vs no retriever 34.1; BM25 37.5; dense k=5 38.1. Per model: +8.7, +1.6, +6.3, +3.7, +3.0\n  setup: 200 problems (IMO-AnswerBench 100, IMO-ProofBench 60, ArXivMath Dec 2025 17, Jan 2026 23); pass@1 over 3 samples per problem; 40 iterations, 109 candidates, 250-problem search set (OlympiadBench + Omni-MATH hard); corpus 535,356 problems. Selected on GPT-OSS-20B; also tested on GPT-5.4-nano, GPT-5.4-mini, Gemini-3.1-Flash-Lite, Gemini-3-Flash.\n  quote: \"The discovered retrieval harness outperforms the no-retrieval baseline across all five held-out models, with an average gain of4.7 points.\"\n  where: p8, Table 6, Table 10-11 p24\n\n- claim: The discovered harness generalized to nine unseen classification datasets, best on 6 of 9.\n  number: 73.1% vs ACE 70.2%; context 7.3K vs ACE 11.7K\n  setup: SciCite, FiNER-139, Amazon, FinancialPhraseBank, GoEmotions, Banking77, AG News, SciTail, TweetEval Hate. ACE wins FiNER (74.0 vs 67.0) and FPB (96.7 vs 94.0); Few-shot(32) wins Banking77 (86.0 vs 82.7). MCE not shown.\n  quote: \"The selected Meta-Harness system achieves the best average accuracy (73.1%), outperforming ACE (70.2%) and all few-shot baselines\"\n  where: p7-8, Table 5\n\n- claim: More few-shot examples can hurt.\n  number: 7 of 9 tasks\n  setup: Same nine OOD datasets, adding examples beyond 32.\n  quote: \"naively adding more few-shot examples beyond 32 hurts performance in 7/9 tasks\"\n  where: p7\n\n- claim: The proposer reads widely across history rather than just the latest parent.\n  number: median 82 files per iteration (range 69-99); source 41%, traces 40%, scores 6%, other 13%\n  setup: One TerminalBench-2 run, 10 iterations, Opus 4.6.\n  quote: \"The proposer reads a median of 82 files per iteration (range 69–99), roughly evenly split between prior harness source code (41%) and execution traces (40%)\"\n  where: p15, Table 8\n\n- claim: Harness search handles far more feedback per step than prior text optimizers.\n  number: up to 10.0 MTok/iter vs 0.002-0.026 for prior methods\n  setup: Authors' \"best estimate\" for the largest setting in each paper, not a measurement.\n  quote: \"a single evaluation can produce up to 10,000,000 tokens of diagnostic information, roughly three orders of magnitude beyond the largest feedback budgets\"\n  where: p2-3, Table 1\n\n- claim: Changing only the harness can produce a 6x gap, per a cited paper rather than this one.\n  number: 6x\n  setup: Cited to Tian et al., SWE-bench Mobile [47]. Not measured here.\n  quote: \"Changing the harness around a fixed large language model (LLM) can produce a 6 × performance gap on the same benchmark [47].\"\n  where: p1\n\n- claim: Run shape and cost in time. The authors call their tips engineering lessons, not scientific claims.\n  number: ~60 harnesses over 20 iterations; \"a few hours\"; 3-5 iteration debug runs; ~50 full evaluations per run\n  setup: Each harness is a single-file Python program. Proposer is Claude Code with Opus-4.6, guided by a minimal skill.\n  quote: \"a typical run evaluates roughly 60 harnesses over 20 iterations\" / \"iterating on the skill text had a larger effect on search quality than changing iteration count or population size\"\n  where: p5, p10, p24\n\nLIMITS\n\nConceded by the authors:\n- One proposer only: \"one particularly strong coding-agent proposer (Claude Code); a broader study of how the effect varies across proposer agents remains for future work\" (p10).\n- TerminalBench-2 has no held-out split. They justify this as a \"discovery problem\" and check leakage only by manual inspection and regex audit (p9). The harness is \"specialized to the TerminalBench-2 regime\".\n- They could not reproduce ForgeCode's 81.8% from public code (p9), so the #2 rank rests on an unverified entry above it.\n- Footnote 1: the workflow \"only became practical recently\" (early 2026).\n\nNot shown (my reading of the tables and text):\n- No confidence intervals, standard errors, repeated seeds or significance tests anywhere. Margins are thin: +1.7 and +2.1 points on 89 tasks; +0.7 over dense k=5 and +1.3 over BM25 on math.\n- Test-set sizes for classification are not stated.\n- No dollar or token cost for a run, only \"a few hours\".\n- No ablation of the environment bootstrap. Its turn savings (2-4 turns) are asserted, with no measurement table. Tasks lost against Terminus-KIRA are not reported, only the 7 gains. The trace-access ablation exists only for text classification, which the authors call their smallest-context setting.\n- The causal story in A.2 is one run's narrative. The \"+18pp\" no-cleanup line is proposer text from a separate run, and iteration 9 crashed before evaluation.\n- Appendix C.3 promises a per-benchmark math breakdown that is absent, so the proof, answer and research-style subsets cannot be separated.\n- Meta-Harness is not best on every model: dense k=5 beats it on Gemini-3.1-Flash-Lite (37.1 vs 34.9) and Gemini-3-Flash (47.2 vs 46.3), and BM25 beats it on Gemini-3-Flash (46.6 vs 46.3).\n\nInternal inconsistencies to handle before citing:\n- \"Five held-out models\" is loose: the harness was selected on GPT-OSS-20B, and only four models are \"not seen during search\" (p8).\n- \"IMO-level\" includes 40 ArXivMath problems (Table 11).\n- Math search set is 250 problems on p8 but \"88 problems for math retrieval\" on p24-25.\n- Intro says matched \"after 60 proposals with only four\" (p3), but the classification run has 40 candidates and Figure 1's axis ends at 40; \"0.1×\" fits 4/40.\n- The \">10 points\" and 56.7 figures are search-set. The test-set headline is 48.6. Do not mix them.\n- Terminus-KIRA is 64.4% as the search-log baseline but 74.7% on the leaderboard table. The paper does not explain the gap, so the -5.6pp style deltas are not on the Table 7 scale.\n- Table 1 values imply a floor of 2,000 tokens, while the text says \"100 to 30,000 tokens\".\n- Context units differ: Table 2 gives 11.4 in thousands of tokens, Table 9 gives 45.5 in thousands of characters for the same harness, and Figure 3's axis is chars while its caption says tokens.\n- Table 3's \">ZS\" counts (26/23/39) give no denominator.\n\nIndependence and dating:\n- Co-author Kangwook Lee is at KRAFTON. KRAFTON AI built the Terminus-KIRA baseline and is thanked for API credits. Also supported by OpenAI, KFAS and Schmidt Sciences AI2050.\n- Leaderboard ranks are as of March 2026 and models are of that date. The paper cannot tell us the current standings.\n\nBUILDS ON\n- Credit assignment and meta-learning: Schmidhuber 1993; Thrun & Pratt 1998; Andrychowicz et al. 2016; Finn et al. 2017; Snell et al. 2017.\n- Adaptive access to context: Lewis et al. 2020 (RAG); Trivedi et al. 2023; Packer et al. 2023 (MemGPT); Zhang, Kraska, Khattab 2026 (RLM).\n- Code search: Lehman et al. 2022; Romera-Paredes et al. 2024; Hu et al. 2025 (ADAS); Zhang et al. 2025 (AFlow).\n- Text optimizers: Pryzant et al. 2023 (ProTeGi); Yang et al. 2023 (OPRO); Yuksekgonul et al. 2024 (TextGrad) and 2026 (TTT-Discover); Agrawal et al. 2025 (GEPA); Novikov et al. 2025 (AlphaEvolve); Sharma 2025 (OpenEvolve); Lee et al. 2025 (Feedback Descent).\n- Baselines: Zhang et al. 2025 (ACE); Ye et al. 2026 (MCE); Merrill et al. 2026 (TerminalBench); KRAFTON AI & Ludo Robotics 2026 (Terminus-KIRA).\n- Framing: Sutton 2019; OpenAI Feb 2026; Young (Anthropic) Nov 2025; Böckeler Mar 2026; Bölük Feb 2026.\n\nCODE (Algorithm 1, p5, verbatim from extraction)\n```\n7:fort=1 . . .Ndo\n8:ProposerPqueries filesystemD▷inspects prior harnesses and scores\n9:ProposerPproposesknew harnesses{H 1, . . . ,Hk}\n10:forHin{H 1, . . . ,Hk}do\n11:ifHpasses interface validationthen\n12:D ← D ∪ {(H, EVALUATE(H,M,X))}\n13:returnPareto frontier of harnesses stored inD\n```\nSpaces were lost in extraction, so re-type this from the PDF rather than pasting. Public artifact: https://github.com/stanford-iris-lab/meta-harness-tbench2-artifact\n\nFIGURES\n- Figure 2, p2: \"Meta-Harness search loop.\" Shows the propose, evaluate, log-to-filesystem cycle at a glance. Missing from the captions script output; caption taken from text extraction.\n- Figure 9, p22: \"Discovered TerminalBench-2 harness.\" Colour separates inherited parts from the one discovered component. Best fit for an anatomy or Environment point.\n- Figure 8, p21: \"Discovered math retrieval harness.\" Shows what a discovered policy looks like: a lexical router into four routes.\n- Figure 3, p6: accuracy vs context Pareto frontier. Shows the trade-off better than Table 2. Mind the chars vs tokens mismatch.\n- Figure 7, p20: search-set vs test accuracy per dataset. An overfitting view with a y=x line, directly relevant to the discovery/evaluation-split point.\n- Figure 4, p15: search progress. Search-set only.\n- Figures 1, 5 and 6 (p1, p18, p19) are secondary.\n\nPROBLEMS\n- Extraction is readable. Faults: dropped spaces (\"in0.1 ×\", \"of4.7\"), lost underscores in identifiers (\"evo strip only\", \"draft verificat ion.py\"), and table cells run together (\"Meta-Harness14.086.8 45.0 48.611.4\"). Check table values against the PDF before publishing. I read tables from text only and did not view the page images.\n- The paper's own text prints \"Results or others\" in the Table 7 caption, probably a typo or an extraction fault.\n- Embedded instructions: none aimed at a reader or agent. One leftover author note in C.3 (\"the table in this section should report each benchmark separately\") and the verbatim proposer logs were treated as data."
+ "type": "system",
+ "question": "Can harness engineering (the code that decides what to store, retrieve and show an LLM) be automated by a search that gives a coding agent full access to prior candidates' code, scores and traces?",
+ "hypothesis": "Richer access to prior experience (raw traces via a filesystem) beats compressed feedback (scores, summaries, short templates) for harness optimization.",
+ "contributions": [
+  "Meta-Harness, an outer-loop system with an agentic proposer reading code, scores and execution traces of all prior candidates through a filesystem",
+  "Gains on online text classification, retrieval-augmented IMO-level math, and TerminalBench-2",
+  "Ablation showing raw traces are the key ingredient; practical implementation tips"
+ ],
+ "method": {
+  "summary": "A coding-agent proposer (Claude Code, Opus 4.6) repeatedly inspects a filesystem of every prior harness's source, scores and traces, proposes new single-file Python harnesses, which are validated, evaluated and logged; the Pareto frontier is returned. The base model is frozen and varies by domain.",
+  "task": "automated harness optimization (text classification, retrieval-augmented math, agentic coding)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LawBench (Law)",
+    "role": "both",
+    "size": "215 classes",
+    "split": "search set and test set; sizes not stated",
+    "source": "Fei et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "Symptom2Disease (S2D)",
+    "role": "both",
+    "size": "22 classes",
+    "split": "search/test; sizes not stated",
+    "source": "Gretel AI",
+    "preprocessing": null
+   },
+   {
+    "name": "USPTO-50k",
+    "role": "both",
+    "size": "180 classes",
+    "split": "search/test; sizes not stated",
+    "source": "Schneider et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "OOD classification (SciCite, FiNER-139, Amazon Reviews, Financial PhraseBank, GoEmotions, Banking77, AG News, SciTail, TweetEval Hate)",
+    "role": "eval",
+    "size": "not stated",
+    "split": "test only, unseen in search",
+    "source": "App C.1",
+    "preprocessing": null
+   },
+   {
+    "name": "Math retrieval corpus",
+    "role": "eval",
+    "size": "535,356 problems from 8 datasets (Table 10)",
+    "split": "retrieval corpus",
+    "source": "OpenMathReasoning, DeepMath-103K, NuminaMath-1.5, PolyMath, Omni-MATH, FineProofs-SFT, AIME 1983-2024, Putnam-AXIOM",
+    "preprocessing": "Deduplicated and decontaminated vs eval benchmarks and search set by exact prefix match then Jaccard 0.8; solutions truncated to 5,000 chars; runtime keeps solutions under 4,000 chars, truncated to 3,000 in prompt"
+   },
+   {
+    "name": "Math search set",
+    "role": "dev",
+    "size": "250 problems (OlympiadBench + Omni-MATH hard)",
+    "split": "search",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "IMO-level test set",
+    "role": "eval",
+    "size": "200 problems: 100 IMO-AnswerBench (stratified), 60 IMO-ProofBench, 17 ArXivMath Dec 2025, 23 ArXivMath Jan 2026",
+    "split": "test",
+    "source": "Luong et al. 2025; Balunovic et al. 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "TerminalBench-2",
+    "role": "both",
+    "size": "89 tasks",
+    "split": "search and final evaluation on the same 89 tasks",
+    "source": "Merrill et al. 2026",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Claude Opus 4.6 via Claude Code",
+    "role": "proposed",
+    "params": null,
+    "architecture": "coding agent used as proposer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "reasoning": "max reasoning in text-classification comparison"
+    }
+   },
+   {
+    "name": "GPT-OSS-120B",
+    "role": "evaluated",
+    "params": "120B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "text classifier"
+    }
+   },
+   {
+    "name": "GPT-OSS-20B, GPT-5.4-nano, GPT-5.4-mini, Gemini-3.1-Flash-Lite, Gemini-3-Flash",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "math solvers; GPT-OSS-20B used for search"
+    }
+   },
+   {
+    "name": "Claude Opus 4.6 / Claude Haiku 4.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "TerminalBench-2 base models"
+    }
+   },
+   {
+    "name": "text-embedding-3-small",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "dense retrieval baseline"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Math: pass@1 averaged over three samples per problem. Search: single runs, no repeated seeds stated.",
+   "prompting": "Proposer guided by a minimal domain-specific skill (where to write harnesses, how to inspect history, what files it may edit). Text classification baselines: zero-shot, few-shot N in {4,8,16,32,all}.",
+   "retrieval": "Math: BM25 with math-aware LaTeX tokenizer, four routes (combinatorics BM25@20 dedup to 8 rerank keep 3; geometry 1 hard NuminaMath ref + 2 BM25; number theory BM25@12 rerank keep 3; default BM25@10 adaptive K). Classification: TF-IDF retrieval of past labeled examples.",
+   "parameters": {
+    "text_classification_search": "20 iterations, 2 candidates per iteration, 40 candidates; population seeded with zero-shot, few-shot, ACE, MCE",
+    "math_search": "40 iterations, 109 candidate harnesses; seeded with zero-shot, few-shot, ACE",
+    "terminalbench_search": "10 iterations (Appendix A run); seeded with Terminus 2 and Terminus-KIRA",
+    "typical_run": "roughly 60 harnesses over 20 iterations",
+    "bootstrap": "15-second timeout, /app listing cut to 20 entries, about 80 lines added to Terminus-KIRA",
+    "search_set_size_tip": "50-100 examples in classification, 88 problems for math retrieval"
+   },
+   "other": {
+    "proposer": "Claude Code with Opus-4.6",
+    "harness_size": "100-1000 lines each",
+    "wall_clock": "a search run completes in a few hours"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "test accuracy on classification datasets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Ctx",
+     "definition": "additional input context tokens (thousands); Table 9 uses characters",
+     "unit": "K tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "pass@1",
+     "definition": "accuracy averaged over three samples per problem",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass rate",
+     "definition": "TerminalBench-2 tasks solved of 89",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-shot",
+    "Few-shot (8/32/all)",
+    "ACE",
+    "MCE",
+    "GEPA",
+    "Best-of-N",
+    "OpenEvolve",
+    "TTT-Discover",
+    "No retriever, dense retrieval, random few-shot, BM25",
+    "Terminus 2, Terminus-KIRA, Claude Code, Goose, Mini-SWE-Agent, OpenHands, ForgeCode, others on leaderboard"
+   ],
+   "protocol": "Candidates chosen solely on search-set performance; test sets held out until final evaluation of the Pareto frontier. TerminalBench-2 searched and scored on the same tasks, with manual and regex audits for task-string leakage. No seeds, confidence intervals or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/stanford-iris-lab/meta-harness-tbench2-artifact (optimized TerminalBench-2 harness)",
+   "weights": null,
+   "data": "project page https://yoonholee.com/meta-harness/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.typical_run",
+    "quote": "a typical run evaluates roughly 60 harnesses over 20 iterations",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best discovered harness reaches 48.6% test accuracy on online text classification, 7.7 points above ACE and 8.6 above MCE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg test accuracy",
+   "value": "48.6",
+   "unit": "%",
+   "baseline_value": "40.9 (ACE)",
+   "n": null,
+   "setup": "GPT-OSS-120B classifier; LawBench, Symptom2Disease, USPTO-50k; 20 iterations x 2 candidates; selected on search set, tested on held-out test sets",
+   "quote": "ACE by 7.7 points and MCE by 8.6 points",
+   "table": null,
+   "note": "Table 2 prints ACE 40.9 and MCE 40.0; text gap of 8.6 vs MCE implies 40.0",
+   "where": "Sec 4.1, Table 2"
+  },
+  {
+   "claim": "Meta-Harness uses 11.4K additional context tokens against 50.8K for ACE and 28.5K for MCE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "additional input context",
+   "value": "11.4K",
+   "unit": "tokens",
+   "baseline_value": "50.8K (ACE)",
+   "n": null,
+   "setup": "Same as Table 2",
+   "quote": "Meta-Harness uses only 11.4K context tokens, versus",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "In the proposer-information ablation, full Meta-Harness reaches 50.0 median and 56.7 best accuracy versus 34.6/41.3 for scores-only and 34.9/38.7 for scores plus summary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best accuracy",
+   "value": "56.7",
+   "unit": "%",
+   "baseline_value": "41.3 (scores only)",
+   "n": null,
+   "setup": "Online text classification, search-set; Claude Code Opus 4.6 proposer; one domain, no repeated seeds stated",
+   "quote": null,
+   "table": "Table 3, row Meta-Harness (full), columns Median and Best Acc",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Meta-Harness final accuracy beats other text optimizers on the search set (median 50.0, best 56.7 vs best 45.6 for TTT-Discover, 44.2 Best-of-N, 43.3 OpenEvolve, 40.2 GEPA).",
+   "kind": "measured",
+   "source": null,
+   "metric": "best search-set accuracy",
+   "value": "56.7",
+   "unit": "%",
+   "baseline_value": "45.6 (TTT-Discover)",
+   "n": null,
+   "setup": "Same proposer config (Opus 4.6 max reasoning), same evaluation budget per method, search set",
+   "quote": null,
+   "table": "Table 4, row Meta-Harness, column Best",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Meta-Harness matches OpenEvolve and TTT-Discover final performance with 0.1x the evaluations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "evaluations to match",
+   "value": "0.1x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Online text classification search set",
+   "quote": "Meta-Harness matches the best prior text optimizers (OpenEvolve, TTT-",
+   "table": null,
+   "note": "Fig 1 and Fig 4 captions say within the first 4 evaluations",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "On nine OOD classification datasets the selected harness averages 73.1% vs 70.2% for ACE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "73.1",
+   "unit": "%",
+   "baseline_value": "70.2 (ACE)",
+   "n": null,
+   "setup": "9 datasets unseen in search; Ctx 7.3K vs ACE 11.7K",
+   "quote": null,
+   "table": "Table 5, row Meta-Harness, column Avg Acc",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Retrieval-augmented math: single discovered harness improves average accuracy by 4.7 points over no retriever across five held-out models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 gain",
+   "value": "+4.7",
+   "unit": "points",
+   "baseline_value": "34.1 (no retriever)",
+   "n": "200 problems x 3 samples",
+   "setup": "200 IMO-level problems; GPT-5.4-nano, GPT-5.4-mini, Gemini-3.1-Flash-Lite, Gemini-3-Flash, GPT-OSS-20B; harness searched with GPT-OSS-20B",
+   "quote": null,
+   "table": "Table 6, row Meta-Harness, column Avg.",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "The discovered math harness outperforms BM25 retrieval by 1.3 points overall (38.8 vs 37.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg pass@1 gain over BM25",
+   "value": "1.3",
+   "unit": "points",
+   "baseline_value": "37.5",
+   "n": null,
+   "setup": "Same as Table 6",
+   "quote": "outperforming BM25 retrieval by 1.3",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "On TerminalBench-2 with Opus 4.6 the discovered harness gets 76.4%, above Terminus-KIRA 74.7%, #2 on the leaderboard behind ForgeCode 81.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "76.4",
+   "unit": "%",
+   "baseline_value": "74.7 (Terminus-KIRA)",
+   "n": "89 tasks",
+   "setup": "Search and final evaluation on the same 89 tasks; leaderboard figures for others; authors could not reproduce ForgeCode",
+   "quote": null,
+   "table": "Table 7, row Meta-Harness under Claude Opus 4.6, column Pass (%)",
+   "note": null,
+   "where": "Table 7, Sec 4.3"
+  },
+  {
+   "claim": "On Haiku 4.5 it gets 37.6%, 2.1 points above Goose 35.5%, #1 among Haiku 4.5 agents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "37.6",
+   "unit": "%",
+   "baseline_value": "35.5 (Goose)",
+   "n": "89 tasks",
+   "setup": "Same as above",
+   "quote": "Meta-Harness achieves",
+   "table": "Table 7, row Meta-Harness under Claude Haiku 4.5, column Pass (%)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "The proposer reads a median of 82 files per iteration (range 69-99), about 41% harness code and 40% traces.",
+   "kind": "measured",
+   "source": null,
+   "metric": "files read per iteration",
+   "value": "82",
+   "unit": "files",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TerminalBench-2 run, 10 iterations, Claude Opus 4.6",
+   "quote": "The proposer reads a median of 82 files per iteration",
+   "table": null,
+   "note": null,
+   "where": "App A.1, Table 8"
+  },
+  {
+   "claim": "In the TerminalBench-2 search log, the first six iterations all regressed from the 64.4% Terminus-KIRA baseline and the winning candidate (iteration 7) was purely additive (environment bootstrap).",
+   "kind": "measured",
+   "source": null,
+   "metric": "baseline pass rate in search log",
+   "value": "64.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TerminalBench-2 search run; model of the 64.4% baseline not stated in the log",
+   "quote": "All 6 prior iterations regressed from the 64.4% baseline because they modified the",
+   "table": null,
+   "note": "64.4 differs from 74.7 in Table 7 (leaderboard); paper does not reconcile",
+   "where": "App A.2"
+  },
+  {
+   "claim": "Environment bootstrap harness gains on 7 of 89 tasks versus Terminus-KIRA and adds roughly 80 lines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tasks gained",
+   "value": "7 of 89",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TerminalBench-2 vs Terminus-KIRA; no ablation or list of lost tasks given",
+   "quote": "the discovered harness gains on 7 of 89",
+   "table": null,
+   "note": null,
+   "where": "App B.3"
+  }
+ ],
+ "limits": [
+  "Only one proposer agent (Claude Code with Opus 4.6) tested; authors leave other proposers to future work.",
+  "TerminalBench-2 search and evaluation use the same 89 tasks (treated as a discovery problem), so the coding scores are not held out.",
+  "Trace-ablation (Table 3) is on one domain with no repeated seeds or significance tests reported.",
+  "Bootstrap component has no separate ablation; claimed 2-4 turn saving is asserted.",
+  "Per-benchmark breakdown table for math is referred to but not included (App C.3 text says 'When included...').",
+  "Authors could not reproduce ForgeCode's 81.8% from public code."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "harness",
+   "definition": "the code that determines what to store, retrieve, and show to the model",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Agentic Context Engineering (ACE)",
+   "year": 2025,
+   "arxiv": "2510.04618",
+   "relation": "baseline",
+   "note": "main hand-designed baseline and setup source for online text classification",
+   "quote": null
+  },
+  {
+   "work": "Meta Context Engineering (MCE)",
+   "year": 2026,
+   "arxiv": "2601.21557",
+   "relation": "baseline",
+   "note": "hand-designed baseline and classification setup",
+   "quote": null
+  },
+  {
+   "work": "GEPA",
+   "year": 2025,
+   "arxiv": "2507.19457",
+   "relation": "baseline",
+   "note": "text optimizer comparison",
+   "quote": null
+  },
+  {
+   "work": "OpenEvolve / AlphaEvolve",
+   "year": 2025,
+   "arxiv": "2506.13131",
+   "relation": "baseline",
+   "note": "evolutionary program search comparison",
+   "quote": null
+  },
+  {
+   "work": "Learning to discover at test time (TTT-Discover)",
+   "year": 2026,
+   "arxiv": "2601.16175",
+   "relation": "baseline",
+   "note": "PUCT reuse rule used as comparison",
+   "quote": null
+  },
+  {
+   "work": "Feedback Descent",
+   "year": 2025,
+   "arxiv": "2511.07919",
+   "relation": "related",
+   "note": "same first author; text optimizer",
+   "quote": null
+  },
+  {
+   "work": "TerminalBench",
+   "year": 2026,
+   "arxiv": "2601.11868",
+   "relation": "uses-data",
+   "note": "89-task benchmark and Terminus 2",
+   "quote": null
+  },
+  {
+   "work": "Terminus-KIRA",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "search seed and base of discovered harness",
+   "quote": null
+  },
+  {
+   "work": "OPRO, TextGrad, ProTeGi, Self-Refine",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "text optimization methods",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Meta-Harness search loop",
+   "page": 3,
+   "why": "Shows propose, evaluate, log-to-filesystem loop"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of text optimization methods and their settings",
+   "page": 3,
+   "why": "Shows 10.0 MTok/iter versus 0.002-0.026 for prior methods"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Search-set accuracy over evaluations for all compared text optimizers",
+   "page": 15,
+   "why": "Search progress per method"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Pareto frontier plots and Fig 1 values are partly garbled in text extraction.",
+  "Table 6 and Table 11 per-benchmark breakdown mentioned in App C.3 is not present."
+ ]
 }

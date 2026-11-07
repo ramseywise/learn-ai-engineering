@@ -1,0 +1,283 @@
+{
+ "schema": 1,
+ "key": "sha1:1a04ac6b307e",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf",
+ "bib": {
+  "title": "Graph representation learning and graph neural networks (ch. 11 of Knowledge Graphs and LLMs in Action)",
+  "authors": [
+   "Negro et al."
+  ],
+  "first_author": "Negro",
+  "year": 2025,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 71132,
+  "chars_total": 71132,
+  "engine": "pymupdf",
+  "skipped": "Display equations, figures and the reference list are not in the text layer (no reference list; citations are numbered [1]-[13] only)."
+ },
+ "type": "book-chapter",
+ "question": "How can graph representation learning, and GNNs in particular, replace manual feature engineering so ML on graphs scales to large knowledge graphs?",
+ "hypothesis": null,
+ "contributions": [
+  "Taxonomy of graph embeddings (geometry, positional vs structural, transductive vs inductive, supervised vs unsupervised)",
+  "Encoder-decoder framing of embedding methods, illustrated with Node2Vec on the karate club graph",
+  "Shallow embeddings and their limits; KG embedding loss with negative sampling and multirelational decoders",
+  "Neural message passing, normalisation, attention, and update variants",
+  "Three ways to combine LLMs with GNNs"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The chapter advises about 5-10 negative samples per true relationship when training KG embeddings with negative sampling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5-10",
+   "unit": "negative samples per true relationship",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KG embedding loss with negative sampling and cross-entropy; a practical guideline, no experiment",
+   "quote": "In practice, we may use 5–10 negative samples for each true relationship.",
+   "table": null,
+   "note": null,
+   "where": "11.4.1"
+  },
+  {
+   "claim": "With gamma > 1 the loss emphasises identifying false relationships, because KGs are sparse.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "gamma > 1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Negative-sampling cross-entropy loss for KG embeddings; guideline",
+   "quote": "we typically want γ >\n1 to emphasize correctly identifying false relationships.",
+   "table": null,
+   "note": "Quote spans a line break in the text layer.",
+   "where": "11.4.1"
+  },
+  {
+   "claim": "Scoring all node pairs is infeasible: a 1-million-user network has nearly a trillion potential connections.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1 million users",
+   "unit": "users",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Motivation for negative sampling over MSE on all pairs",
+   "quote": "in a social network with 1 million users, we’d need to\nevaluate nearly a trillion potential connections.",
+   "table": null,
+   "note": null,
+   "where": "11.4.1"
+  },
+  {
+   "claim": "RESCAL needs millions of parameters for relationships alone in a graph of 1,000 entities and 100 relationship types.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "millions",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RESCAL represents each relation as a matrix",
+   "quote": "for a graph with 1,000 entities and\n100 relationship types, we’d need millions of parameters just for the\nrelationships.",
+   "table": null,
+   "note": "Note: the cost depends on relation count and dimension, not entities; the chapter gives no dimension.",
+   "where": "11.4.2"
+  },
+  {
+   "claim": "The karate-club Node2Vec listing uses 16 dimensions, walk length 10, 20 walks, p=q=1, window 5; results are described only qualitatively.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "dimensions=16",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "nx.karate_club_graph(), 34 nodes, node2vec package, workers=4, t-SNE random_state=42",
+   "quote": "dimensions=16,\n    walk_length=10,\n    num_walks=20,",
+   "table": null,
+   "note": "No similarity values or accuracy are printed in the chapter.",
+   "where": "Listing 11.1"
+  },
+  {
+   "claim": "Skip connections counter over-smoothing; GraphSAGE concatenates node state with the aggregate in its update.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conceptual; no experiment",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "11.6"
+  },
+  {
+   "claim": "LLMs combine with GNNs as predictors, encoders or aligners.",
+   "kind": "reported",
+   "source": "[13] (reference list not in text)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 11.7; conceptual taxonomy",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "11.7"
+  }
+ ],
+ "limits": [
+  "No experiments or measured results; all numbers are illustrative or guideline values.",
+  "Display equations (loss, basic GNN update, mean/symmetric normalisation, GAT attention weights) are not in the text layer.",
+  "Listings 11.2-11.7 are sketches (e.g. MultiHeadGraphAttention sets head_dim=input_dim while chunking features) and are not run.",
+  "The GraphSAGE section says attention is integrated in aggregation, which does not match GraphSAGE's aggregators.",
+  "Karate club result is qualitative only."
+ ],
+ "practices": [
+  "Consider non-Euclidean (hyperbolic) embeddings only with strong evidence of hierarchical structure (11.1.1).",
+  "Use inductive methods when new nodes are expected; transductive for static graphs (11.1.1).",
+  "Use negative sampling with cross-entropy, 5-10 negatives per true triple, gamma > 1 (11.4.1).",
+  "Filter accidental true edges from random negatives; prefer type-constrained or adversarial sampling; corrupt head, tail or both (11.4.1).",
+  "Pick the KG decoder by relation patterns: TransE for composition, ComplEx for asymmetry (11.4.2).",
+  "Use normalisation when features matter more than structure or degrees vary widely; it is lossy (11.6.1).",
+  "Use skip connections, gated updates or jumping knowledge to avoid over-smoothing and feature loss (11.6.4)."
+ ],
+ "terms": [
+  {
+   "term": "Graph representation learning (GRL)",
+   "definition": "uses deep learning (DL) techniques to automatically learn optimal representations—called embeddings—directly from the graph structure and node attributes",
+   "where": "intro"
+  },
+  {
+   "term": "Positional embeddings",
+   "definition": "preserving the absolute positions of people in a social network ... capture global properties",
+   "where": "11.1.1"
+  },
+  {
+   "term": "Structural embeddings",
+   "definition": "focus on relative positions or local patterns",
+   "where": "11.1.1"
+  },
+  {
+   "term": "Transductive learning",
+   "definition": "learn embeddings for a fixed set of nodes, optimizing them directly for the known graph structure",
+   "where": "11.1.1"
+  },
+  {
+   "term": "Inductive learning",
+   "definition": "learn embeddings with parametric mappings ... can be applied to any node, even those that were not seen during training",
+   "where": "11.1.1"
+  },
+  {
+   "term": "Shallow embedding",
+   "definition": "the encoder acts as a lookup table, directly mapping each node to its vector representation",
+   "where": "11.3.1"
+  },
+  {
+   "term": "Neural message passing",
+   "definition": "every node collects messages from its neighbors, processes them, and updates its own representation (AGGREGATE and UPDATE)",
+   "where": "11.5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Node2Vec",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Worked example [4]; Grover and Leskovec per the note",
+   "quote": null
+  },
+  {
+   "work": "TransE, RESCAL, DistMult, ComplEx",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Decoders [5]-[8]",
+   "quote": null
+  },
+  {
+   "work": "Kipf and Welling graph convolutional network",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Symmetric normalisation [9]",
+   "quote": null
+  },
+  {
+   "work": "Veličković et al. graph attention network",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Neighborhood attention [10]",
+   "quote": null
+  },
+  {
+   "work": "GraphSAGE",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Skip-connection update [11]",
+   "quote": null
+  },
+  {
+   "work": "Hamilton, graph representation learning text (numbered refs [1]-[3])",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Reference list not printed in the chapter text; the chapter cites [2] and [3] for most framing; author identity not shown",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 11.1",
+   "caption": "The node embedding problem. The goal of the task is to learn an encoding function, encode(x), that maps nodes to a multidimensional embedding space.",
+   "page": null,
+   "why": "Shows the embedding idea"
+  },
+  {
+   "figure": "Fig 11.2",
+   "caption": "Euclidean vs. non-Euclidean space [3].",
+   "page": null,
+   "why": "Regular grid vs irregular neighbourhoods"
+  },
+  {
+   "figure": "Fig 11.4",
+   "caption": "Overview of the encoder–decoder approach.",
+   "page": null,
+   "why": "The unifying frame"
+  },
+  {
+   "figure": "Fig 11.5",
+   "caption": "Example of how a single node aggregates messages from its local neighborhood in the message-passing model.",
+   "page": null,
+   "why": "Unrolled computation tree"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 11.1",
+   "snippet": "node2vec = Node2Vec(G, dimensions=16, walk_length=10, num_walks=20, p=1, q=1, workers=4)\nmodel = node2vec.fit(window=5)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Equations missing from text layer; section map empty (no headings detected).",
+  "Listing code is truncated at line ends in the text layer; listings 11.2-11.7 captions and bodies appear out of order."
+ ]
+}

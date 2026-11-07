@@ -1,0 +1,228 @@
+{
+ "schema": 1,
+ "key": "sha1:4727fd5cadab",
+ "pdf": "ai-engineering/02-context-engineering/sources/context-engineering-multi-agent-systems/ch02-building-multi-agent-system-mcp.pdf",
+ "bib": {
+  "title": "Chapter 2: Building a Multi-Agent System with MCP (Context Engineering for Multi-Agent Systems)",
+  "authors": [
+   "Denis Rothman"
+  ],
+  "first_author": "Rothman",
+  "year": 2025,
+  "venue": "Packt (book chapter, O'Reilly web copy printed 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 54223,
+  "chars_total": 54223,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build a small multi-agent system in which an Orchestrator, Researcher and Writer agent pass engineered context as structured messages, and how do you make it resilient and self-checking?",
+ "hypothesis": "A team of specialist agents with structured message passing, retries, validation and a fact-check loop beats a single general LLM on complex multi-step tasks (asserted, not tested).",
+ "contributions": [
+  "Orchestrator, Researcher and Writer agents exchanging a simplified MCP-style message dict",
+  "call_llm_robust retry wrapper, validate_mcp_message validator, Validator agent with a bounded revision loop"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The revision loop in final_orchestrator is capped at two writing attempts to prevent infinite cycles.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "max_revisions",
+   "value": "2",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter's MAS_MCP_control.ipynb notebook; Writer drafts, Validator returns pass or fail plus feedback, feedback appended to the Writer's next prompt",
+   "quote": "max_revisions = 2",
+   "table": null,
+   "note": "The loop is `for i in range(max_revisions)`, so it is 2 writing attempts, i.e. one revision after the first draft.",
+   "where": "p.18"
+  },
+  {
+   "claim": "call_llm_robust retries a failed API call 3 times with a 5 second delay and returns None if all attempts fail.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "retries",
+   "value": "3",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Default arguments of the chapter's retry wrapper around client.chat.completions.create",
+   "quote": "def call_llm_robust(system_prompt, user_content, retries=3, delay=5):",
+   "table": null,
+   "note": "delay=5 seconds; no error-type filter, every Exception is retried.",
+   "where": "p.14"
+  },
+  {
+   "claim": "The chapter's 'MCP' message is a plain Python dict standing in for JSON-RPC, not the Model Context Protocol itself.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simplified protocol with keys protocol_version, sender, content, metadata; all agents run in one notebook",
+   "quote": "A simple Python dictionary is",
+   "table": null,
+   "note": "Text continues 'more than enough to illustrate this idea. It serves as our stand-in for the formal JSON-RPC object'.",
+   "where": "p.4"
+  },
+  {
+   "claim": "The validator only checks that the message is a dict with the four required keys, not their types or content semantics.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "validate_mcp_message in MAS_MCP_control.ipynb",
+   "quote": "required_keys = [\"protocol_version\", \"sender\", \"content\", \"metadata\"]",
+   "table": null,
+   "note": null,
+   "where": "p.15"
+  },
+  {
+   "claim": "The pass/fail decision is a substring test, 'pass' in the lower-cased validator reply.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "final_orchestrator decision point",
+   "quote": "if \"pass\" in validation_result.lower():",
+   "table": null,
+   "note": "A fail explanation that contains the word 'pass' would be read as a pass.",
+   "where": "p.18"
+  }
+ ],
+ "limits": [
+  "No experiment or measurement; the only output shown is one console run on one topic (Mediterranean diet).",
+  "Researcher reads a hard-coded simulated_database dict; topic is hard-coded in the first Orchestrator; RAG deferred to later chapters.",
+  "Agents run in one process; HTTP/STDIO transports and JSON-RPC are described but not implemented.",
+  "Model name differs between listings: call_llm uses gpt-5, call_llm_robust uses gpt-4.",
+  "Validator checks Writer against the Researcher's summary only, so errors in the summary pass through; no sampling or repeat runs."
+ ],
+ "practices": [
+  "Define a structured message (sender, content, metadata) and use it for every agent hand-off (Defining the protocol).",
+  "Give each agent one narrow role through its system prompt (Building the agents).",
+  "Keep the Orchestrator free of specialist work; it only delegates and chains outputs (Architecting).",
+  "Wrap LLM calls in retries and return None on exhaustion so the Orchestrator decides (Building robust components).",
+  "Validate each message's structure before passing it on and stop the workflow on an invalid or empty message (Validating MCP messages).",
+  "Add a fact-checking Validator agent and cap the revision loop at 2 (final orchestrator).",
+  "Learn to build from scratch before adopting a framework such as autogen, CrewAI or LangGraph (Tools for building agent systems)."
+ ],
+ "terms": [
+  {
+   "term": "MAS",
+   "definition": "a system that can run multiple independent agents, each one specialized in a distinct task such as research, writing, or data analysis",
+   "where": "p.1"
+  },
+  {
+   "term": "MCP (as used in the chapter)",
+   "definition": "a shared language: the rules for how agents pass tasks and information to one another, so every message is structured and reliable",
+   "where": "p.2"
+  },
+  {
+   "term": "Orchestrator",
+   "definition": "the project manager that breaks the goal into steps, delegates, and passes one agent's result as context to the next (context chaining at system level)",
+   "where": "p.2"
+  },
+  {
+   "term": "Resilience / Reliability",
+   "definition": "Resilience: temporary API issues do not crash the system. Reliability: agents always exchange predictable, valid MCP messages",
+   "where": "p.14"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Model Context Protocol specification",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Official protocol (JSON-RPC 2.0, STDIO and HTTP transports, versioning); chapter builds a simplified stand-in",
+   "quote": null
+  },
+  {
+   "work": "Microsoft, Can You Build Agent2Agent Communication on MCP? Yes!",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited to justify using MCP principles for agent-to-agent messaging",
+   "quote": null
+  },
+  {
+   "work": "Yao et al., ReAct",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "Listed in references only",
+   "quote": null
+  },
+  {
+   "work": "Wang et al., A Survey on LLM based Autonomous Agents",
+   "year": 2023,
+   "arxiv": "2308.11432",
+   "relation": "related",
+   "note": "Further reading",
+   "quote": null
+  },
+  {
+   "work": "Weiss (ed.), Multiagent Systems: A Modern Approach; Wooldridge, An Introduction to Multiagent Systems",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MAS background references (1999, 2009)",
+   "quote": null
+  },
+  {
+   "work": "Rothman ch. 1 (semantic blueprint, SRL.ipynb)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter applies chapter 1's semantic blueprint skill at system scale",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2.1",
+   "caption": "The architectural blueprint of our MAS workflow",
+   "page": 2,
+   "why": "Shows Orchestrator, Researcher, Writer roles."
+  },
+  {
+   "figure": "Fig 2.3",
+   "caption": "The Orchestrator of the agents",
+   "page": 10,
+   "why": "Hub-and-spoke message flow."
+  },
+  {
+   "figure": "Fig 2.4",
+   "caption": "The flow of a context-driven MAS",
+   "page": 12,
+   "why": "End-to-end sequence for one goal."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.4 create_mcp_message",
+   "snippet": "def create_mcp_message(sender, content, metadata=None):\n    return {\"protocol_version\": \"1.0\", \"sender\": sender, \"content\": content, \"metadata\": metadata or {}}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text is a printed web page; code lines are truncated at the right edge in places (system prompts cut off), so full prompt texts are unavailable.",
+  "Figure content is not in the text; captions taken from the text body."
+ ]
+}

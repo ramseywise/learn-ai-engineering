@@ -1,0 +1,161 @@
+{
+ "schema": 1,
+ "key": "2601.20802",
+ "pdf": "generative-ai/05-RL/sources/hubotter-2026-reinforcement-learning-self-distillation.pdf",
+ "bib": {
+  "title": "Reinforcement Learning via Self-Distillation",
+  "authors": ["Jonas Hübotter","Frederike Lübeck","Lejs Behric","Anton Baumann","Marco Bagatella","Daniel Marta","Ido Hakimi","Idan Shenfeld","Thomas Kleine Buening","Carlos Guestrin","Andreas Krause"],
+  "first_author": "Hübotter",
+  "year": 2026,
+  "venue": "preprint",
+  "arxiv": "2601.20802",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 135088, "chars_total": 135088, "engine": "pymupdf", "skipped": "reference list skimmed only"},
+ "type": "empirical",
+ "question": "Can an LLM's own in-context use of rich environment feedback (runtime errors, judge text, or sibling successes) be turned into dense token-level credit assignment for RL, without an external teacher?",
+ "hypothesis": "A policy conditioned on feedback (a self-teacher) is more accurate than the unconditioned student, so distilling its next-token predictions into the student gives better credit assignment than scalar-reward GRPO; gains should grow with the base model's in-context learning ability.",
+ "contributions": [
+  "Formalise Reinforcement Learning with Rich Feedback (RLRF), where environments return tokenized feedback beyond a scalar reward",
+  "Introduce Self-Distillation Policy Optimization (SDPO), an on-policy algorithm that distills the feedback-conditioned self-teacher into the policy; a policy-gradient method with advantages swapped for log-ratio of teacher to student",
+  "Show gains over GRPO in science QA, tool use and LiveCodeBench v6, shorter reasoning, and 3x faster discovery on hard questions via test-time self-distillation"
+ ],
+ "method": {
+  "summary": "SDPO samples G rollouts per question from the current policy, gets environment feedback (or uses a successful sibling rollout as feedback), re-scores the original rollout under the same model reprompted with that feedback (the self-teacher), and minimises a stop-gradient top-K logit-level divergence between student and teacher. Compared with an improved GRPO on Qwen3-8B and Olmo3-7B-Instruct.",
+  "task": "RL post-training with verifiable rewards and rich feedback (science QA, tool use, competitive programming); test-time training on single hard questions",
+  "trains": true,
+  "datasets": [
+   {"name": "SciKnowEval L3 reasoning subsets (Chemistry, Physics, Biology, Materials)", "role": "both", "size": null, "split": "train-test split for in-domain generalization; sizes not stated", "source": "Feng et al., 2024a", "preprocessing": null},
+   {"name": "ToolAlpaca", "role": "both", "size": null, "split": "train-test split; sizes not stated", "source": "Tang et al., 2023", "preprocessing": null},
+   {"name": "LiveCodeBench v6 (Feb-May 2025 subset)", "role": "both", "size": "131 questions", "split": "public tests = 50% random subset of private tests; public tests used for evaluation during training, private for validation", "source": "Jain et al., 2025", "preprocessing": "LeetCode-style feedback environment built by the authors"},
+   {"name": "IFEval, ArenaHard-v2 (hard prompt, creative writing), MMLU-Pro", "role": "eval", "size": null, "split": "holdout forgetting check on final LCBv6 checkpoints", "source": "Zhou et al. 2023; Li et al. 2025a; Wang et al. 2024b", "preprocessing": null},
+   {"name": "Hard LCBv6 subset for test-time self-distillation", "role": "eval", "size": "19 hard (Qwen3-8B pass@64<0.5) and 9 very hard (pass@64<0.03) questions", "split": "kept those where best-of-k, multi-turn or SDPO found a solution within 512 steps across 5 seeds", "source": "LCBv6", "preprocessing": "one malformed question (Q9) discarded"}
+  ],
+  "models": [
+   {"name": "Qwen3-8B", "role": "base", "params": "8B", "architecture": "decoder-only transformer", "init_from": "Qwen/Qwen3-8B, thinking mode off", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "40k tokens (stated in Section 5)", "other": {}},
+   {"name": "Olmo3-7B-Instruct", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "allenai/Olmo3-7B-Instruct", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Qwen3 0.6B/1.7B/4B/8B and Qwen2.5-Instruct 1.5B/3B/7B", "role": "base", "params": "0.6B-8B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "scaling studies, Fig 8 and Fig 17; the text mentions Qwen2.5-7B and '8B' while Fig 17 axis shows 1.5, 3, 7"}},
+   {"name": "SDPO self-teacher", "role": "teacher", "params": "same as student", "architecture": "student reprompted with feedback; EMA or trust-region regularised", "init_from": "current policy", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GRPO (improved: asymmetric clip, no std normalisation, rollout TIS)", "role": "baseline", "params": "same as student", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "L_SDPO = sum_t KL(pi_theta(.|x,y<t) || stopgrad(pi_theta(.|x,f,y<t))), approximated with top-K plus tail term; equivalent to policy gradient with advantage A_{i,t}(y)=log pi(y|x,f_i,y<t)/pi(y|x,y<t). Sections 3 uses Jensen-Shannon, Sections 4-5 reverse-KL.",
+   "optimizer": "AdamW",
+   "lr": "1e-5 constant (Section 3); 1e-6 constant (Sections 4 and 5). GRPO: 1e-6 default / 1e-5 on-policy",
+   "lr_schedule": "constant",
+   "warmup": "10 steps (Section 3); 0 (Sections 4, 5)",
+   "batch_size": "question batch 32 (Sec 3, 4), 1 (Sec 5 TTT); rollouts per question 8 (Sec 3, 4), 16 (Sec 5); mini batch 32 (Sec 3, on-policy), 1 (Sec 4 and 5 columns per Table 12 layout)",
+   "steps": "LCBv6 curves to step 80-90; Section 3 budgeted by wall clock (1h and 5h)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max prompt 2048, max response 8192",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": null,
+   "regularisation": "gradient clip norm 1.0; teacher EMA update rate 0.05 (Sec 3) / 0.01 (Sec 4, 5); rollout importance sampling clip 2; advantage clip 5.0 (TTT); top-K distillation K=100 (Sec 3), 20 (Sec 4, 5)",
+   "hardware": "single node, 4x NVIDIA GH200 (378GB VRAM); PyTorch container 25.02-py3, CUDA 12.8, PyTorch 2.7.0, verl, FSDP2, vLLM",
+   "compute": "each Section 3 run approximately 6 hours including initialization and validation",
+   "wall_clock": "~6 h per Section 3 run; SDPO step +5.8% (no code env) / +17.1% (with code env) over GRPO per Fig 5",
+   "seeds": "3 seeds (Sections 3, 4); 5 seeds per question (Section 5)",
+   "other": {"hyperparameter_search_section3": "GRPO grid lr {1e-5,1e-6} x minibatch {8,32}; on-policy GRPO same lr, minibatch 32; SDPO grid over KL variant (forward KL, JS), lr, minibatch; one config per method chosen on 5h validation accuracy across all datasets and models", "grpo_extra": "eps-high 0.28, KL coefficient 0.0, GRPO advantage without std normalisation", "hybrid": "A = lambda*A_GRPO + (1-lambda)*A_SDPO with lambda=0.9 (Fig 11)", "table12_column_ambiguity": "Table 12 has three columns (Section 3, 4, 5) but four model entries; mini batch size row prints 32, 1, 1 so column mapping of Mini batch is as printed"}
+  },
+  "inference": {
+   "decoding": "sampling; vLLM rollouts",
+   "temperature": "1.0 rollout; 0.6 validation",
+   "top_p": "0.95 (validation)",
+   "max_tokens": "8192 response",
+   "samples": "validation avg@16 (Section 3), average over 4 rollouts (LCBv6, Section 4); best-of-k pass@k estimated from 2944 independent rollouts per question (Section 5)",
+   "prompting": "Qwen3 thinking off; multiple-choice system prompt with <reasoning>/<answer> tags and 'Please reason step by step.'; tool-use ReAct style prompt; self-teacher reprompt template in Table 2",
+   "retrieval": null,
+   "parameters": {"top_K_distillation": "100 / 20", "teacher_EMA_alpha": "0.05 / 0.01", "TTT_batch_size": "16 (ablation 8, 16, 32)", "multi_turn_window": "FIFO sliding window, max prompt length 32k tokens within 40k context"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "avg@16 accuracy", "definition": "mean accuracy over 16 validation samples per question; highest within 1h and 5h wall-clock (Table 3)", "unit": "%", "higher_is_better": true},
+    {"name": "LCBv6 accuracy", "definition": "average accuracy over 4 rollouts; reported at/until a training step", "unit": "%", "higher_is_better": true},
+    {"name": "discovery@k", "definition": "P(discovery time <= k), probability that one of the first k attempts receives reward 1", "unit": "probability", "higher_is_better": true},
+    {"name": "average response length", "definition": "mean generated tokens", "unit": "tokens", "higher_is_better": false}
+   ],
+   "baselines": ["GRPO (improved)", "on-policy GRPO", "GSPO", "CISPO", "GRPO on high-entropy tokens only", "SFT on successful self-teacher generations", "best-of-k", "multi-turn sampling", "Claude Sonnet 4 and Claude Opus 4 on LCBv6 leaderboard"],
+   "protocol": "3 seeds with standard errors or std; TTT: 5 seeds per question, mean and bootstrapped 90% CI; no significance tests"
+  },
+  "availability": {"code": "https://github.com/lasgroup/SDPO", "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "Self-teacher reprompt template", "text": "User: prompt / Correct solution: successful_previous_rollout / The following is feedback from your unsuccessful earlier attempt: environment_output / Correctly solve the original question. / Assistant: original_response", "where": "Table 2"},
+   {"purpose": "Multiple-choice system prompt", "text": "Given a question and four options, please select the right answer. Respond in the following format: <reasoning> ... </reasoning> <answer> ... </answer> For the answer, only output the letter corresponding to the correct option (A, B, C, or D), and nothing else.", "where": "Appendix E.3, Listing 1"},
+   {"purpose": "Multiple-choice user prompt", "text": "{question} Please reason step by step.", "where": "Appendix E.3, Listing 2"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "Learning rate 1 × 10−5 (constant) 1 × 10−6 (constant) 1 × 10−6 (constant)", "where": "Table 12"}
+  ]
+ },
+ "results": [
+  {"claim": "On science QA and tool use, SDPO beats the improved GRPO on aggregate final accuracy.", "kind": "measured", "source": null, "metric": "aggregate final accuracy", "value": "70.2", "unit": "%", "baseline_value": "66.6", "n": "3 seeds", "setup": "Qwen3-8B and Olmo3-7B-Instruct, SciKnowEval + ToolAlpaca, strictly on-policy SDPO vs GRPO", "quote": "70.2% vs. 66.6% final accuracy on aggregate", "table": null, "note": null, "where": "Section 1"},
+  {"claim": "SDPO reaches higher final LCBv6 accuracy than GRPO.", "kind": "measured", "source": null, "metric": "LCBv6 accuracy", "value": "48.8", "unit": "%", "baseline_value": "41.2", "n": "3 seeds", "setup": "Qwen3-8B, LiveCodeBench v6, LeetCode-style feedback, step 80", "quote": "SDPO achieves a substantially higher final accuracy (48.8%) than GRPO (41.2%)", "table": null, "note": null, "where": "Section 4, Fig 1, Table 5"},
+  {"claim": "SDPO reaches GRPO's final LCBv6 accuracy in 4x fewer generations.", "kind": "measured", "source": null, "metric": "generations to reach GRPO final accuracy", "value": "4", "unit": "x fewer", "baseline_value": null, "n": "3 seeds", "setup": "Qwen3-8B, LCBv6", "quote": "SDPO reaches the final accuracy of GRPO in 4× fewer generations", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "SDPO outperforms Claude Sonnet 4 on the public LCBv6 leaderboard.", "kind": "measured", "source": null, "metric": "LCBv6 accuracy", "value": "40.5", "unit": "%", "baseline_value": "48.8", "n": null, "setup": "value is Claude Sonnet 4 leaderboard score; Claude Opus 4 is 39.7%", "quote": "Claude Sonnet 4 (40.5%) and Claude Opus 4 (39.7%)", "table": null, "note": "baseline_value field here holds SDPO's own score", "where": "Section 4"},
+  {"claim": "SDPO matches 5h GRPO accuracy in 50 minutes on Chemistry with Olmo3-7B-Instruct.", "kind": "measured", "source": null, "metric": "wall-clock speedup", "value": "6", "unit": "x", "baseline_value": null, "n": "3 seeds", "setup": "Olmo3-7B-Instruct, Chemistry, optimal GRPO hyperparameters for that model and task", "quote": "SDPO achieves the 5h GRPO accuracy in 50 minutes of wall-clock training time, a 6× speedup", "table": null, "note": null, "where": "Section 3.2, Fig 6"},
+  {"claim": "SDPO responses are about 3.2x shorter than GRPO on average.", "kind": "measured", "source": null, "metric": "average response length", "value": "255.8", "unit": "tokens", "baseline_value": "820.8", "n": null, "setup": "Qwen3-8B, averaged across Section 3 tasks, both on-policy", "quote": "Qwen3-8B 820.8 255.8 3.2×", "table": "Table 8, row Qwen3-8B, columns GRPO / SDPO / Reduction", "note": "Olmo3-7B-Instruct: 1095.4 vs 343.9, 3.2x", "where": "Table 8"},
+  {"claim": "On Chemistry with Olmo3-7B-Instruct SDPO shortens responses by 11x while keeping higher accuracy.", "kind": "measured", "source": null, "metric": "response length reduction", "value": "11", "unit": "x", "baseline_value": null, "n": "3 seeds", "setup": "Olmo3-7B-Instruct, Chemistry, vs GRPO", "quote": "SDPO even achieves an 11× reduction in response length relative to GRPO", "table": null, "note": null, "where": "Section 3.3"},
+  {"claim": "SDPO overhead per training step vs GRPO is small.", "kind": "measured", "source": null, "metric": "time per step overhead", "value": "5.8", "unit": "% (without code env); 17.1% with code env", "baseline_value": null, "n": null, "setup": "micro batch size 2", "quote": "+5.8%", "table": null, "note": "Values read from Fig 5; which bar is which is from the legend (solid without code environment, light with)", "where": "Fig 5"},
+  {"claim": "SDPO's gain over GRPO depends on model scale; it underperforms GRPO on Qwen2.5-1.5B.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": "3 seeds", "setup": "Qwen3 0.6B-8B and Qwen2.5-Instruct, LCBv6, step 80 (Qwen2.5 step 65)", "quote": "we find that SDPO underperforms GRPO on Qwen2.5-1.5B", "table": null, "note": null, "where": "Section 4.1, Fig 8, Fig 17"},
+  {"claim": "Logit-level credit assignment beats token-level and sequence-level SDPO, and even sequence-level SDPO beats GRPO.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": "3 seeds", "setup": "Qwen3-8B, LCBv6", "quote": "even sequence-level SDPO outperforms GRPO", "table": null, "note": "ordering read from Fig 10 caption: logit-level > token-level > sequence-level", "where": "Section 4.2, Fig 10"},
+  {"claim": "A non-regularised self-teacher diverges; trust-region and EMA teachers perform best.", "kind": "measured", "source": null, "metric": "best accuracy until step 90", "value": "50.6", "unit": "%", "baseline_value": "36.1", "n": "3 seeds", "setup": "Qwen3-8B LCBv6, trust-region teacher alpha=0.01 (best) vs unregularised q_theta (36.1), frozen initial teacher 48.8, EMA 49.3", "quote": "Trust-region 50.6 ± 0.9", "table": "Table 4, rows q_theta and Trust-region, column Accuracy", "note": null, "where": "Table 4"},
+  {"claim": "SDPO has the best performance-forgetting tradeoff; SFT on self-teacher is worse on forgetting.", "kind": "measured", "source": null, "metric": "average holdout accuracy", "value": "42.4", "unit": "%", "baseline_value": "43.5", "n": null, "setup": "Qwen3-8B after LCBv6 training; base 43.5, GRPO 41.8, SFT on self-teacher 41.4; holdout IFEval, ArenaHard-v2, MMLU-Pro", "quote": "SDPO achieves the best performance–", "table": "Table 5, row SDPO, column Avg. (holdout); row Base 43.5", "note": "SDPO still below base average (43.5)", "where": "Table 5"},
+  {"claim": "SFT on successful self-teacher generations reaches 42.7 on LCBv6, well below SDPO.", "kind": "measured", "source": null, "metric": "LCBv6 accuracy", "value": "42.7", "unit": "%", "baseline_value": "48.8", "n": null, "setup": "Qwen3-8B, off-policy baseline needs 2x generations", "quote": "SFT on self-teacher", "table": "Table 5, row SFT on self-teacher, column LCBv6", "note": null, "where": "Table 5"},
+  {"claim": "Adding the student's own attempt to the teacher prompt reduces teacher/student entropy and student accuracy; environment output plus own solution is best.", "kind": "measured", "source": null, "metric": "student accuracy with SDPO", "value": "48.3", "unit": "%", "baseline_value": "44.5", "n": "3 seeds", "setup": "Qwen3-8B LCBv6, training until step 60; f=output+own solution (48.3) vs f=y+output+own solution (44.5)", "quote": "48.3 ± 1.4", "table": "Table 6, row f = output + own solution, column Student trained with SDPO Acc.", "note": null, "where": "Table 6"},
+  {"claim": "SDPO+GRPO (lambda=0.9) helps on Qwen3-0.6B but slightly underperforms SDPO on stronger models.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": "3 seeds", "setup": "Qwen3 sizes, LCBv6 step 80", "quote": "We use λ = 0.9", "table": null, "note": null, "where": "Section 4.5, Fig 11"},
+  {"claim": "Test-time SDPO discovers a solution in more very-hard questions than best-of-k or multi-turn at 2750 generations.", "kind": "measured", "source": null, "metric": "discovery@2750 (very hard)", "value": "53.2", "unit": "%", "baseline_value": "41.5", "n": "5 seeds per question, 9 questions", "setup": "Qwen3-8B, LCBv6 very hard (pass@64<0.03); multi-turn 35.6%, best-of-k 41.5%", "quote": "whereas SDPO discovers a solution in 53.2% of cases", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "On hard questions SDPO reaches 78% discovery@2750.", "kind": "measured", "source": null, "metric": "discovery@2750 (hard)", "value": "78", "unit": "%", "baseline_value": null, "n": "5 seeds per question, 19 questions", "setup": "Qwen3-8B, pass@64<0.5; 67% discovery with ~2.4x fewer generations than baselines", "quote": "SDPO reaches a 78% discovery@2750 probability", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "SDPO needs ~3x fewer generations than best-of-k and multi-turn for 22% discovery on very hard questions.", "kind": "measured", "source": null, "metric": "generations to 22% discovery", "value": "3", "unit": "x fewer", "baseline_value": null, "n": "5 seeds per question", "setup": "very hard LCBv6 questions, Qwen3-8B", "quote": "SDPO requires approximately 3× fewer", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "The initial self-teacher is at 0% accuracy on most hard questions, yet SDPO still learns.", "kind": "measured", "source": null, "metric": "initial teacher accuracy", "value": "78", "unit": "% of questions at exactly 0%", "baseline_value": null, "n": null, "setup": "Qwen3-8B, single-turn feedback reprompt on 19 hard questions", "quote": "even exactly 0% on 78% of them", "table": null, "note": null, "where": "Section 5.2, Table 11"},
+  {"claim": "SDPO beats GRPO variants GSPO, CISPO and high-entropy-token GRPO on LCBv6.", "kind": "measured", "source": null, "metric": "LCBv6 accuracy at step 80", "value": "48.8", "unit": "%", "baseline_value": "41.2", "n": "3 seeds", "setup": "Qwen3-8B; GSPO 40.1, CISPO 41.2, high-entropy only 37.8", "quote": "SDPO\n48.8 ± 0.6", "table": "Table 9, row SDPO, column Accuracy", "note": null, "where": "Table 9"},
+  {"claim": "SDPO gains over GRPO concentrate on medium and hard LCB questions.", "kind": "measured", "source": null, "metric": "average accuracy until step 80, hard questions", "value": "18.9", "unit": "%", "baseline_value": "11.6", "n": "3 seeds", "setup": "Qwen3-8B LCBv6, medium 46.6 vs 37.8, easy 91.7 vs 90.1", "quote": "SDPO significantly improves over GRPO in solving medium and hard questions", "table": null, "note": "bar values read from Fig 15", "where": "Appendix D.2.1, Fig 15"}
+ ],
+ "limits": [
+  "Depends on the model's in-context learning ability: primarily applicable to stronger base models and can underperform GRPO on weaker models (Qwen2.5-1.5B)",
+  "Depends on quality of environment feedback; uninformative or misleading feedback may not help",
+  "Small compute overhead for log-probs of the teacher, may matter for small models with short generations",
+  "Only tested with at most 8B models, on-policy updates only (off-policy variant left to future work), single node, no agentic or long-horizon tasks",
+  "Hyperparameters in Section 3 selected on validation accuracy at 5h, same data used to report test numbers in Table 3 (validation/test split not detailed)",
+  "Section 3 train/test split sizes and the number of SciKnowEval and ToolAlpaca items are not given",
+  "SDPO advantages are biased with respect to expected reward (Section 4.5)"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "RLRF", "definition": "Reinforcement Learning with Rich Feedback: environments return tokenized feedback beyond a scalar reward", "where": "Section 1"},
+  {"term": "self-teacher", "definition": "the current policy prompted with the question x and rich feedback f, pi_theta(. | x, f)", "where": "Section 2"},
+  {"term": "discovery@k", "definition": "P(discovery time <= k), probability of finding a solution within k attempts", "where": "Section 5, Eq 4"}
+ ],
+ "lineage": [
+  {"work": "GRPO (Shao et al., 2024)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "main baseline; SDPO swaps its advantages", "quote": null},
+  {"work": "On-policy distillation of language models (Agarwal et al.)", "year": 2024, "arxiv": null, "relation": "extends", "note": "source of JS divergence stabilisation and on-policy distillation idea; SDPO removes the external teacher", "quote": null},
+  {"work": "verl (Sheng et al.)", "year": 2025, "arxiv": null, "relation": "uses-method", "note": "training framework", "quote": null},
+  {"work": "Self-distillation (Snell et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "first self-distillation with extra context", "quote": null},
+  {"work": "GSPO (Zheng et al.)", "year": 2025, "arxiv": "2507.18071", "relation": "baseline", "note": "Table 9", "quote": null},
+  {"work": "CISPO / MiniMax-M1 (Chen et al.)", "year": 2025, "arxiv": "2506.13585", "relation": "baseline", "note": "Table 9", "quote": null},
+  {"work": "Self-distilled reasoner (Zhao et al.)", "year": 2026, "arxiv": "2601.18734", "relation": "related", "note": "concurrent SDPO-like work on expert demonstrations", "quote": null},
+  {"work": "Chen et al. 2025c", "year": 2025, "arxiv": null, "relation": "related", "note": "concurrent on-policy self-distillation in grid worlds", "quote": null},
+  {"work": "LiveCodeBench (Jain et al.)", "year": 2025, "arxiv": null, "relation": "uses-data", "note": "LCBv6 subset", "quote": null},
+  {"work": "SciKnowEval (Feng et al.)", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "science QA", "quote": null},
+  {"work": "ToolAlpaca (Tang et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "tool use", "quote": null},
+  {"work": "Qwen3 (Yang et al.) and Olmo3-7B-Instruct (Olmo et al.)", "year": 2025, "arxiv": null, "relation": "evaluates", "note": "base models", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "SDPO substantially outperforms an improved version of GRPO on LCB v6 with Qwen3-8B.", "page": 1, "why": "headline accuracy-vs-generations curve"},
+  {"figure": "Fig 2", "caption": "Comparison of RLVR and RLRF settings.", "page": 2, "why": "shows the scalar-vs-tokenized-feedback distinction"},
+  {"figure": "Fig 4", "caption": "Example of self-teaching with Qwen3-8B.", "page": 4, "why": "per-token teacher/student log-ratio makes dense credit visible"},
+  {"figure": "Fig 10", "caption": "Rich feedback and dense credit assignment are complementary; the self-teacher improves during training.", "page": 11, "why": "ablation of logit/token/sequence-level credit"},
+  {"figure": "Fig 13", "caption": "Self-distillation at test-time solves LiveCodeBench questions that neither the base model nor multi-turn conversations can solve.", "page": 15, "why": "discovery@k curves"}
+ ],
+ "code": [
+  {"where": "Fig 14, Appendix A", "snippet": "def compute_sdpo_loss(batch, teacher_context, loss_mask): ... teacher_batch = reprompt(batch, teacher_context); logprobs_teacher = compute_log_prob(teacher_batch).detach(); per_token_loss = divergence(logprobs_student, logprobs_teacher); return agg_loss(per_token_loss, loss_mask, loss_agg_mode=\"token-mean\")", "verbatim": false},
+  {"where": "Section 2.1", "snippet": "A_SDPO_{i,t}(y_hat) = log [ pi_theta(y_hat | x, f_i, y_{i,<t}) / pi_theta(y_hat | x, y_{i,<t}) ];  A_GRPO_{i,t} = r_i - mean{r_i}", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction scrambles tables 3, 7, 12 and 13 into one value per line; Table 3 cell values were mapped by row order. Table 12 column alignment (Section 3/4/5 vs four model names) is ambiguous.",
+  "Section 4.1 text says 'Qwen2.5-7B ... Qwen2.5-8B' while Fig 17 axis shows 1.5, 3, 7 B.",
+  "Table 3 vs Table 7 print different GRPO numbers (global vs per-task hyperparameters), intended."
+ ]
+}

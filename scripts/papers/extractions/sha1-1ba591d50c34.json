@@ -1,0 +1,549 @@
+{
+ "schema": 1,
+ "key": "sha1:1ba591d50c34",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch15-multinode-inference-parallelism-decoding-routing-optimizations.pdf",
+ "bib": {
+  "title": "Chapter 15. Multinode Inference, Parallelism, Decoding, and Routing Optimizations (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 78916,
+  "chars_total": 78916,
+  "engine": "pymupdf",
+  "skipped": "Trailing web-page navigation text after the Conclusion (collapsed table of contents, site menu) is not chapter content."
+ },
+ "type": "book-chapter",
+ "question": "How should massive (often MoE) LLMs be served across many GPUs and nodes: how to split prefill/decode, which parallelism to combine, how to accelerate decoding and route MoE tokens?",
+ "hypothesis": null,
+ "contributions": [
+  "Disaggregated prefill/decode architecture, KV transfer with NIXL, Kubernetes/llm-d orchestration",
+  "Inference-focused TP/PP/EP/DP/CP strategies and hybrid combinations",
+  "Speculative decoding family (draft-target, EAGLE 1-3, self-speculative, Medusa), interleaved decode, constrained decoding",
+  "MoE dynamic routing: all-to-all optimisation, capacity factor, expert replication, adaptive routing"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "DistServe, by disaggregating prefill and decode, served up to 7.4x more goodput requests within TTFT and TPOT constraints.",
+   "kind": "reported",
+   "source": "DistServe (not cited with a reference)",
+   "metric": "goodput",
+   "value": "7.4",
+   "unit": "x goodput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistServe system, as quoted by the chapter; model, hardware and workload not given",
+   "quote": "The DistServe system, by disaggregating prefill and decode, re-\nported up to 7.4× more goodput requests served within both TTFT and TPOT con-\nstraints (up to 12.6× tighter latency SLOs).",
+   "table": null,
+   "note": null,
+   "where": "Disaggregated PD, Prefill-Decode Interference"
+  },
+  {
+   "claim": "DistServe also reported up to 12.6x tighter latency SLOs.",
+   "kind": "reported",
+   "source": "DistServe",
+   "metric": null,
+   "value": "12.6",
+   "unit": "x tighter SLO",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above",
+   "quote": "(up to 12.6× tighter latency SLOs)",
+   "table": null,
+   "note": null,
+   "where": "Prefill-Decode Interference"
+  },
+  {
+   "claim": "Speculative decoding gives a theoretical k-times speedup but about 2x in practice.",
+   "kind": "reported",
+   "source": null,
+   "metric": "decode speedup",
+   "value": "2",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generic two-model draft/target speculative decoding; no model or hardware",
+   "quote": "In practice, with overhead and occasional speculative-token rejections, the gain is\nmore like a 2× speedup.",
+   "table": null,
+   "note": null,
+   "where": "Two-Model Speculative Decoding"
+  },
+  {
+   "claim": "Empirical speedups of 1.5-2.5x are common for speculative decoding.",
+   "kind": "reported",
+   "source": null,
+   "metric": "decode speedup",
+   "value": "1.5-2.5",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Engines vLLM, SGLang, TensorRT-LLM; no workload given",
+   "quote": "Empirically, speedups around 1.5–\n2.5× are common",
+   "table": null,
+   "note": null,
+   "where": "Two-Model Speculative Decoding"
+  },
+  {
+   "claim": "EAGLE reported up to about 3.5x speedup over vanilla decoding for a 4-token draft, preserving the output distribution.",
+   "kind": "reported",
+   "source": "EAGLE (no reference)",
+   "metric": "decode speedup",
+   "value": "3.5",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EAGLE paper numbers as quoted; 4-token draft; model not given",
+   "quote": "EAGLE reported up to about 3.5× speedup over vanilla decoding for a 4-token\ndraft while preserving the large model’s output distribution.",
+   "table": null,
+   "note": null,
+   "where": "EAGLE"
+  },
+  {
+   "claim": "EAGLE-2 is reported 20%-40% faster than EAGLE depending on task and model.",
+   "kind": "reported",
+   "source": "EAGLE-2",
+   "metric": null,
+   "value": "20%-40%",
+   "unit": "faster than EAGLE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EAGLE-2 paper numbers as quoted",
+   "quote": "EAGLE-2’s approach reported speedups of about 20%–40%\nfaster than EAGLE depending on the task and model.",
+   "table": null,
+   "note": "Key Takeaways say 'EAGLE-2 reports up to 3.5× speedup (20%–40% more than EAGLE-1)', while the body gives 3.5x to EAGLE-1; the two attributions disagree.",
+   "where": "EAGLE-2"
+  },
+  {
+   "claim": "EAGLE-3 reports up to 6.5x speedup over non-optimized baseline variants and up to 1.4x over EAGLE-2.",
+   "kind": "reported",
+   "source": "EAGLE-3",
+   "metric": "decode speedup",
+   "value": "6.5",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EAGLE-3 paper numbers as quoted; 'non-optimized baseline variants' undefined",
+   "quote": "EAGLE-3 reports\nup to 1.4× improvements over EAGLE-2 in certain tasks—and up to 6.5× speedups\nover non-optimized baseline variants.",
+   "table": null,
+   "note": null,
+   "where": "EAGLE-3"
+  },
+  {
+   "claim": "Medusa heads report about 2.2-3.6x speedups in published experiments, but about 2-3x in practice.",
+   "kind": "reported",
+   "source": "Medusa (no reference)",
+   "metric": "decode speedup",
+   "value": "2.2-3.6",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Medusa-1 and Medusa-2 published experiments as quoted; requires retraining",
+   "quote": "Medusa’s multiheaded approach has reported about\n2.2–3.6× speedups in published experiments across both Medusa-1 and Medusa-2.",
+   "table": null,
+   "note": null,
+   "where": "Medusa"
+  },
+  {
+   "claim": "Self-speculative decoding (skipping every other layer for the draft) achieves a similar 2x speedup.",
+   "kind": "reported",
+   "source": null,
+   "metric": "decode speedup",
+   "value": "2",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Target model drafts using half its layers, possibly reduced precision",
+   "quote": "achieves a similar 2× speedup as well.",
+   "table": null,
+   "note": null,
+   "where": "Single-Model Self-Speculative Decoding"
+  },
+  {
+   "claim": "Consistency decoding (one LLM trained to generate and validate multiple tokens) produces about 3x speedup without a draft model.",
+   "kind": "reported",
+   "source": null,
+   "metric": "decode speedup",
+   "value": "3",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter calls it 'consistent decoding'; no source named",
+   "quote": "This single-model approach produces ~3×\nspeedups without a separate draft model.",
+   "table": null,
+   "note": null,
+   "where": "Single-Model Self-Speculative Decoding"
+  },
+  {
+   "claim": "Constrained decoding with compiled grammars can push overhead into the low single-digit percent range at scale for moderate constraints; complex grammars or small batches can still incur double-digit overhead.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simple JSON schemas, compiled grammars, mask computation overlapped with GPU execution",
+   "quote": "modern engines that use\ncompiled grammars and overlap mask computation with GPU execution can push\noverhead into the low single-digit percent range at scale, but complex grammars\nor small batches can still incur double-digit overhead.",
+   "table": null,
+   "note": null,
+   "where": "Constrained Decoding Performance Implications"
+  },
+  {
+   "claim": "Recommended capacity factor is typically 1.2-1.5x the average token load; tokens beyond it go to a second-choice overflow expert or a second pass.",
+   "kind": "reported",
+   "source": "claim",
+   "metric": null,
+   "value": "1.2-1.5",
+   "unit": "x average load",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE serving systems generally; no model or measurement",
+   "quote": "typically set at 1.2–1.5× the average token load, which caps how many\ntokens each expert can process per batch. Tokens beyond that are routed to a sec-\nond-choice overflow expert—or queued for a second pass.",
+   "table": null,
+   "note": null,
+   "where": "Expert Parallelism"
+  },
+  {
+   "claim": "Context parallelism cuts prompt-processing time roughly in half for every doubling of GPUs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Very long inputs, prefill only; no measurement given",
+   "quote": "This reduces prompt-processing time roughly in half for every\ndoubling of GPUs—with only a bit of overhead for cross-segment attention at the\nboundaries.",
+   "table": null,
+   "note": null,
+   "where": "Context (Sequence) Parallelism"
+  },
+  {
+   "claim": "NVLink Switch Systems scale an NVLink fabric across up to 8 racks, 576 GPUs; TP is possible across it but intra-domain TP is recommended.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "576",
+   "unit": "GPUs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GB200/GB300 NVL72 racks",
+   "quote": "NVLink Switch\nSystems can scale an all-to-all, fully connected NVLink fabric across up to 8 racks,\nor 576 GPUs (576 GPUs = 8 racks * 72 GPUs per rack).",
+   "table": null,
+   "note": null,
+   "where": "Tensor Parallelism"
+  },
+  {
+   "claim": "Worked 64-GPU hybrid layout: 60-layer, 64-expert MoE with 4-way PP (15 layers/stage), 2-way TP, EP over 16 experts per group with top-2 gating, two 64-GPU DP replicas.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative cluster of 64 GPUs in 16 groups of 4",
+   "quote": "Using an\nMoE with 60 layers and 64 experts, we can use 4-way pipeline parallelism with 15\nlayers per stage.",
+   "table": null,
+   "note": null,
+   "where": "Hybrid Parallelism"
+  },
+  {
+   "claim": "Composition rule: TP up to diminishing returns (within a node or NVL72), PP minimally to fit, maximise EP, add DP replicas, optionally CP.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative guidance for massive MoE serving",
+   "quote": "You would then\nuse pipeline parallelism minimally—just enough to fit the model in memory.\nThen, you want to maximize EP to distribute MoE parameters across experts and\nGPUs.",
+   "table": null,
+   "note": null,
+   "where": "Hybrid Parallelism"
+  },
+  {
+   "claim": "Data parallelism for inference scales throughput linearly (ideal 10 req/s per GPU x 8 = 80 req/s) at 8x the memory and hardware cost.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "requests/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Idealised: independent requests, 1 GPU = 10 req/s, 8 replicas",
+   "quote": "using 8 GPUs\nwith 8 replicas ideally gives 80 requests per second of throughput",
+   "table": null,
+   "note": null,
+   "where": "Data Parallelism"
+  },
+  {
+   "claim": "A hot expert GPU at 99% utilisation while others average about 60% is the chapter's example of an MoE hotspot.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "99",
+   "unit": "% utilisation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative, not measured",
+   "quote": "utilization hitting 99%\nwhile the other expert GPUs are averaging around 60% utilization",
+   "table": null,
+   "note": null,
+   "where": "Load Balancing, Capacity Factor, and Expert Replication"
+  },
+  {
+   "claim": "In practice a capacity factor of 1.2 with top-2 gating is common.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "1.2",
+   "unit": "capacity factor",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE inference; no measurement",
+   "quote": "In practice, a capacity factor of 1.2 (20% overflow allowance) with top-2 gating is\ncommon.",
+   "table": null,
+   "note": null,
+   "where": "Load Balancing, Capacity Factor, and Expert Replication"
+  },
+  {
+   "claim": "Constrained decoding costs a few milliseconds per token when backtracking is needed.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generic, no measurement",
+   "quote": "often a few milliseconds per token",
+   "table": null,
+   "note": null,
+   "where": "Constrained Decoding Performance Implications"
+  },
+  {
+   "claim": "Draft models should be typically 4x or more faster than the target for speculative decoding to pay off.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-model speculative decoding",
+   "quote": "typically by a factor of 4× or more",
+   "table": null,
+   "note": null,
+   "where": "Two-Model Speculative Decoding"
+  }
+ ],
+ "limits": [
+  "No experiments of its own: every number is reported from other work or is an illustrative example, and most cited works (DistServe, EAGLE, Medusa, GLaM) are not given with references in the text.",
+  "Hardware focus is NVIDIA Blackwell (GB200/GB300 NVL72, ConnectX-8); advice is topology-dependent and the author says to profile.",
+  "Internal inconsistency: body says target verifies draft tokens 'one by one' while also saying it verifies the k-token sequence in a single batch (Fig 15-8 caption: multitoken verification).",
+  "Takeaways attribute 3.5x to EAGLE-2 while the body attributes 3.5x to EAGLE and +20-40% to EAGLE-2.",
+  "Capacity-factor advice reflects training-era MoE practice; chapter does not cover dropless routing or wide-EP.",
+  "Text contains typos ('float global collectives', 'FFP8', 'adaptive export routing', 'torch.nn.attendion')."
+ ],
+ "practices": [
+  "Disaggregate prefill and decode onto separate GPU pools so TTFT and TPOT SLOs can both be met (Disaggregated Prefill and Decode; Key Takeaways).",
+  "Keep prefill and decode on compatible GPU families so KV layout and dtypes match (Disaggregated Prefill and Decode).",
+  "Place prefill/decode workers following the fabric: NVLink/NVSwitch in-node, GPUDirect RDMA across nodes; validate end-to-end KV transfer time (KV Cache Data Transfer and NIXL).",
+  "Deploy 1 NIC per GPU for PD disaggregation and MoE all-to-all (Impact on Latency).",
+  "Use TP within a single NVLink/NVSwitch domain; keep TP groups topology-aware even inside NVL72 (Tensor Parallelism; Hybrid Parallelism).",
+  "Use PP minimally, only to fit the model in memory (Hybrid Parallelism).",
+  "Use DP replicas for throughput, usually combined with TP/PP/EP (Data Parallelism).",
+  "Use CP only for very long contexts (100k+ tokens); for short prompts it adds outsized overhead (Context Parallelism).",
+  "Draft model must share the target's tokenizer and vocabulary (Two-Model Speculative Decoding).",
+  "Validate quality and speed before enabling layer-skipping or reduced-precision draft modes (Two-Model Speculative Decoding).",
+  "Always measure TTFT and tokens/s under your exact constrained-decoding schema; keep grammars compact (Constrained Decoding).",
+  "Use hierarchical two-stage all-to-all, double-buffering, chunked/pipelined exchanges and butterfly schedules for MoE (Expert Communication Optimization).",
+  "Collocate frequently co-activated experts, and compress activations to FP8/NVFP4 before all-to-all (Expert Communication Optimization).",
+  "Use capacity factor and replicate hot experts; alert when a single expert exceeds about 80% utilisation (Load Balancing; Adaptive Expert Routing).",
+  "Weigh complexity against ROI; start with the biggest bottleneck, prefill/decode interference (Key Takeaways)."
+ ],
+ "terms": [
+  {
+   "term": "prefill-decode interference",
+   "definition": "A long prompt prefill occupies the GPU and delays time-sensitive decode work for other requests, and vice versa, when both are colocated.",
+   "where": "Prefill-Decode Interference"
+  },
+  {
+   "term": "goodput",
+   "definition": "Utilization and useful throughput at a given latency target.",
+   "where": "Scaling Prefill and Worker Nodes Independently"
+  },
+  {
+   "term": "disaggregated PD",
+   "definition": "Assigning prefill and decode phases to different GPU pools so each scales independently.",
+   "where": "Disaggregated Prefill and Decode Architecture"
+  },
+  {
+   "term": "NIXL",
+   "definition": "NVIDIA library that moves KV cache, choosing NVLink/NVSwitch, RDMA or host-staged paths automatically.",
+   "where": "KV Cache Data Transfer and NIXL"
+  },
+  {
+   "term": "tensor parallelism",
+   "definition": "Splits computations within each layer across GPUs with an all-reduce to aggregate partial outputs.",
+   "where": "Tensor Parallelism"
+  },
+  {
+   "term": "pipeline parallelism",
+   "definition": "Partitions the model layer-wise across GPUs.",
+   "where": "Pipeline Parallelism"
+  },
+  {
+   "term": "expert parallelism",
+   "definition": "Distributes MoE experts across GPUs with all-to-all token exchange.",
+   "where": "Expert Parallelism"
+  },
+  {
+   "term": "context parallelism",
+   "definition": "Partitions a single sequence of tokens across multiple GPUs, splitting the KV cache.",
+   "where": "Context (Sequence) Parallelism"
+  },
+  {
+   "term": "straggler effect",
+   "definition": "An overloaded expert stalls the pipeline because all expert computations must complete before progress.",
+   "where": "Expert Parallelism"
+  },
+  {
+   "term": "capacity factor",
+   "definition": "Parameter capping tokens per expert per batch relative to average load; excess goes to an overflow expert or second pass.",
+   "where": "Expert Parallelism"
+  },
+  {
+   "term": "speculative decoding",
+   "definition": "A small draft model proposes k tokens that a larger target model validates in one batch.",
+   "where": "Two-Model Speculative Decoding"
+  },
+  {
+   "term": "self-speculative decoding",
+   "definition": "The target model drafts with a fast approximate pass (e.g. half its layers) and verifies with a full pass.",
+   "where": "Single-Model Self-Speculative Decoding"
+  },
+  {
+   "term": "Medusa",
+   "definition": "Attaches multiple lightweight decoding heads to one LLM with tree-based attention to generate and verify several tokens per pass.",
+   "where": "Multitoken Decoding with Medusa"
+  },
+  {
+   "term": "constrained decoding",
+   "definition": "Restricting token selection so only valid tokens are allowed (JSON, grammar, banned sequences).",
+   "where": "Constrained Decoding Performance Implications"
+  },
+  {
+   "term": "expert collocation",
+   "definition": "Placing frequently co-activated experts on the same GPU or node to avoid all-to-all hops.",
+   "where": "Expert Communication Optimization"
+  },
+  {
+   "term": "expert replication",
+   "definition": "Cloning a hot expert onto another GPU so the engine can split its load.",
+   "where": "Load Balancing, Capacity Factor, and Expert Replication"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DistServe",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of the 7.4x goodput / 12.6x SLO figure; named without a reference.",
+   "quote": null
+  },
+  {
+   "work": "EAGLE / EAGLE-2 / EAGLE-3",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Speculative decoding speedups quoted.",
+   "quote": null
+  },
+  {
+   "work": "Medusa",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Multi-head decoding speedups quoted.",
+   "quote": null
+  },
+  {
+   "work": "GLaM (Google)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for load-balancing loss and gating noise.",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA NIXL, Dynamo, TensorRT-LLM, XGrammar",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Systems used for KV transfer and guided decoding.",
+   "quote": null
+  },
+  {
+   "work": "vLLM, SGLang, llm-d, LMCache",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Inference engines and orchestration discussed.",
+   "quote": null
+  },
+  {
+   "work": "AI Systems Performance Engineering ch. 4",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NIXL introduced earlier in the book.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 15-2",
+   "caption": "Disaggregated inference: Prefill pool (hidden state + KV) → KV handoff using NVLink/NVSwitch (intranode) or GPUDirect RDMA (internode) → Decode pool",
+   "page": 1,
+   "why": "Shows where KV moves between pools"
+  },
+  {
+   "figure": "Table 15-1",
+   "caption": "Parallelism strategies for LLM inference",
+   "page": 1,
+   "why": "Side-by-side partition basis, pros and cons of TP, PP, EP, DP, CP"
+  },
+  {
+   "figure": "Fig 15-8",
+   "caption": "Speculative decoding with a draft (small) for decoding and a target (large) model for multitoken verification",
+   "page": 1,
+   "why": "Draft proposes, target verifies in one pass"
+  },
+  {
+   "figure": "Fig 15-12",
+   "caption": "Comparing expert capacity factors of 1.0 versus 1.5",
+   "page": 1,
+   "why": "Capacity-factor overflow behaviour"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache ends with website navigation text (collapsed table of contents, menu); ignored.",
+  "No embedded instructions found.",
+  "Section map found only Table 15-1 and Conclusion; headings located by reading.",
+  "Figure images not viewed; captions from figures.py."
+ ]
+}

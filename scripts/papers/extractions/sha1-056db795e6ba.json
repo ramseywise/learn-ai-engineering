@@ -1,0 +1,191 @@
+{
+ "schema": 1,
+ "key": "sha1:056db795e6ba",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/learning-langchain/ch07-agents-ii.pdf",
+ "bib": {
+  "title": "Chapter 7. Agents II (Learning LangChain)",
+  "authors": [
+   "Mayo Oshin",
+   "Nuno Campos"
+  ],
+  "first_author": "Oshin",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 26910,
+  "chars_total": 26910,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can the Chapter 6 agent architecture be extended with reflection and multi-agent designs, and what LangGraph subgraph machinery supports this?",
+ "hypothesis": null,
+ "contributions": [
+  "Reflection (creator/reviser loop) as a two-node LangGraph graph",
+  "Subgraphs: two ways to attach them to a parent graph",
+  "Multi-agent architectures (network, supervisor, hierarchical, custom) with a worked supervisor example"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The book's reflection example stops after a fixed number of rounds, implemented as ending once the message list exceeds 6 (3 iterations of 2 messages).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Essay-writing generate/reflect graph, ChatOpenAI default model (output metadata shows gpt-3.5-turbo), single example on 'The Little Prince'; no evaluation of quality.",
+   "quote": "End after 3 iterations, each with 2 messages",
+   "table": null,
+   "note": "No measured improvement is reported; the text says only that it 'can sometimes improve performance'.",
+   "where": "Reflection section, code"
+  },
+  {
+   "claim": "Reflection can sometimes improve performance, by giving multiple refinement attempts and letting the reflector adopt a different persona; no data.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unquantified assertion in the reflection section.",
+   "quote": "This simple type of reflection can sometimes improve performance by",
+   "table": null,
+   "note": null,
+   "where": "Reflection section"
+  },
+  {
+   "claim": "The supervisor example uses gpt-4o at temperature 0 with structured output over three choices.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0",
+   "unit": "temperature",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Supervisor node, workers researcher and coder; researcher/coder bodies left as model.invoke(...).",
+   "quote": "model = ChatOpenAI(model=\"gpt-4o\", temperature=0)",
+   "table": null,
+   "note": null,
+   "where": "Supervisor Architecture, code"
+  }
+ ],
+ "limits": [
+  "No experiments or benchmarks: reflection and multi-agent claims are unquantified assertions.",
+  "Reflection demo is one essay; the output shown is truncated.",
+  "Supervisor listing is incomplete: researcher and coder are stubs (model.invoke(...)); the Python AgentState declares only next while nodes return messages, and the conditional edge returns state['next'] without mapping FINISH to END (the JS version maps it).",
+  "Authors caution these extensions 'shouldn't be the first thing you reach for'; start with the Chapter 6 agent.",
+  "Reflection increases latency when appended to an agent."
+ ],
+ "practices": [
+  "Use reflection as a generate/reflect loop, inverting message roles in the reflect node so the critic thinks it grades a user's essay (Reflection).",
+  "Ground the critique with external information where possible, e.g. run code through a linter or compiler before reflect; 'we strongly recommend giving it a try' (TIP, Reflection).",
+  "Terminate after generate in a fixed-iteration loop so the last revisions are applied (Reflection).",
+  "Optionally let the reflect step decide when to finish (Reflection).",
+  "Attach a subgraph directly as a node when parent and subgraph share state keys; use a wrapper function when schemas differ (Subgraphs).",
+  "Give subagents self-explanatory, distinct names, or add descriptions to the supervisor prompt (NOTE, Supervisor Architecture).",
+  "Start with the Chapter 6 agent; do not reach first for reflection or multi-agent (Summary)."
+ ],
+ "terms": [
+  {
+   "term": "Reflection",
+   "definition": "the creation of a loop between a creator prompt and a reviser prompt",
+   "where": "Reflection"
+  },
+  {
+   "term": "Network",
+   "definition": "Each agent can communicate with every other agent. Any agent can decide which other agent is to be executed next.",
+   "where": "Multi-Agent Architectures"
+  },
+  {
+   "term": "Supervisor",
+   "definition": "Each agent communicates with a single agent, called the supervisor, which decides which agent (or agents) should be called next. A special case implements the supervisor agent as an LLM call with tools, as covered in Chapter 6.",
+   "where": "Multi-Agent Architectures"
+  },
+  {
+   "term": "Hierarchical",
+   "definition": "a multi-agent system with a supervisor of supervisors",
+   "where": "Multi-Agent Architectures"
+  },
+  {
+   "term": "Custom multi-agent workflow",
+   "definition": "Each agent communicates with only a subset of agents. Parts of the flow are deterministic, and only select agents can decide which other agents to call next.",
+   "where": "Multi-Agent Architectures"
+  },
+  {
+   "term": "Subgraph",
+   "definition": "graphs that are used as part of another graph",
+   "where": "Subgraphs in LangGraph"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Thinking, Fast and Slow (Kahneman, 2011)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "System 1 / System 2 analogy for reflection",
+   "quote": null
+  },
+  {
+   "work": "Learning LangChain Chapter 6 (agent architecture)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Extends the agent architecture",
+   "quote": null
+  },
+  {
+   "work": "Learning LangChain Chapter 5 (LangGraph)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Nodes, edges, conditional edges",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7-1",
+   "caption": "System 1 and System 2 thinking",
+   "page": 2,
+   "why": "Frames reflection as System 2 behaviour"
+  },
+  {
+   "figure": "Fig 7-2",
+   "caption": "The reflection architecture",
+   "page": 5,
+   "why": "Shows generate/reflect loop"
+  },
+  {
+   "figure": "Fig 7-3",
+   "caption": "Multiple strategies for coordinating multiple agents",
+   "page": 12,
+   "why": "Network, supervisor, hierarchical, custom topologies side by side"
+  }
+ ],
+ "code": [
+  {
+   "where": "Reflection, Python",
+   "snippet": "cls_map = {AIMessage: HumanMessage, HumanMessage: AIMessage}",
+   "verbatim": true
+  },
+  {
+   "where": "Reflection, Python",
+   "snippet": "if len(state[\"messages\"]) > 6:\n        # End after 3 iterations, each with 2 messages\n        return END",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction interleaves Python and JavaScript listings and truncates long lines; figure content (topology diagram) is not in the text.",
+  "Chapter contains no instructions aimed at the reader/agent."
+ ]
+}

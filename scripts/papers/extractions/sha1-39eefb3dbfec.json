@@ -1,0 +1,272 @@
+{
+ "schema": 1,
+ "key": "sha1:39eefb3dbfec",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/appendix-a-intro-to-pytorch.pdf",
+ "bib": {
+  "title": "Build a Large Language Model (From Scratch), Appendix A: Introduction to PyTorch",
+  "authors": [
+   "Sebastian Raschka"
+  ],
+  "first_author": "Raschka",
+  "year": null,
+  "venue": "book appendix (Manning)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 73619,
+  "chars_total": 73619,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What PyTorch fundamentals (tensors, autograd, nn.Module, data loaders, training loop, GPU and DDP use) does a reader need to implement LLMs from scratch?",
+ "hypothesis": null,
+ "contributions": [
+  "A primer on PyTorch tensors, autograd, multilayer networks, Dataset/DataLoader, a training loop, model saving, single-GPU and DDP training, using a toy 2-feature 2-class dataset."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The example MLP (50 inputs, hidden 30 and 20, 3 outputs) has 2213 trainable parameters.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "trainable parameters",
+   "value": 2213,
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing A.4 NeuralNetwork(50, 3), counting params with requires_grad=True",
+   "quote": "Total number of trainable model parameters: 2213",
+   "table": null,
+   "note": null,
+   "where": "A.5"
+  },
+  {
+   "claim": "Autograd gradient of the BCE loss w.r.t. w1 in the one-feature logistic regression example.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "dL/dw1",
+   "value": -0.0898,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "x1=1.1, w1=2.2, b=0.0, y=1.0, sigmoid then binary cross entropy (Listing A.2-A.3)",
+   "quote": "(tensor([-0.0898]),)",
+   "table": null,
+   "note": null,
+   "where": "A.4"
+  },
+  {
+   "claim": "Autograd gradient of the same loss w.r.t. bias b.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "dL/db",
+   "value": -0.0817,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above",
+   "quote": "(tensor([-0.0817]),)",
+   "table": null,
+   "note": null,
+   "where": "A.4"
+  },
+  {
+   "claim": "Toy MLP trained with SGD reaches loss 0.00 within three epochs on 5 examples.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "train loss",
+   "value": 0.0,
+   "unit": "cross-entropy loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NeuralNetwork(2,2), SGD lr=0.5, 3 epochs, batch size 2, drop_last=True, seed 123",
+   "quote": "As we can see, the loss reaches 0 after three epochs, a sign that the model",
+   "table": null,
+   "note": null,
+   "where": "A.7"
+  },
+  {
+   "claim": "Train accuracy of the toy model is 100% (5 of 5).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "accuracy",
+   "value": 100,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "toy dataset, 5 training examples",
+   "quote": "we have five out of",
+   "table": null,
+   "note": null,
+   "where": "A.7"
+  },
+  {
+   "claim": "Author's rule of thumb for DataLoader workers.",
+   "kind": "claim",
+   "source": null,
+   "metric": "num_workers",
+   "value": 4,
+   "unit": "num_workers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "real-world datasets, hardware dependent",
+   "quote": "In my experience, setting num_workers=4 usually leads to optimal per",
+   "table": null,
+   "note": null,
+   "where": "A.6"
+  },
+  {
+   "claim": "Recommended PyTorch version for the book's examples.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2.4.0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "book examples",
+   "quote": "I use PyTorch 2.4.0 for the examples",
+   "table": null,
+   "note": null,
+   "where": "A.1.3"
+  },
+  {
+   "claim": "With DDP, an epoch theoretically takes half the time on two GPUs and one eighth on eight, minus communication overhead.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DistributedDataParallel, data split across GPUs",
+   "quote": "it can theoretically",
+   "table": null,
+   "note": null,
+   "where": "A.9.3"
+  }
+ ],
+ "limits": [
+  "Primer only; explicitly not exhaustive coverage of PyTorch.",
+  "Toy 5-example dataset: no measured speedups, no real training; GPU speedup is asserted not measured (A.9.2 'we probably won't see a speedup').",
+  "Pinned to PyTorch 2.4.0; DDP outputs shown with PyTorch 2.2.1+cu117.",
+  "Multi-GPU section marked not required for the book."
+ ],
+ "practices": [
+  "Subclass torch.nn.Module; define layers in __init__ and the computation in forward (A.5).",
+  "Return logits from the model and let the loss function (cross_entropy) apply softmax internally, for numerical stability (A.5, A.7).",
+  "Use torch.no_grad() for inference to save memory and compute (A.5).",
+  "Call optimizer.zero_grad() each update to avoid gradient accumulation (A.7).",
+  "Call model.train() and model.eval() even when no dropout/batchnorm is present (A.7).",
+  "Seed with torch.manual_seed for reproducible init and shuffling (A.5, A.6).",
+  "Shuffle training loader, not test loader; set drop_last=True to avoid a much smaller last batch (A.6).",
+  "Use a validation set for hyperparameter tuning and the test set once (A.7).",
+  "Write device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') so code runs on CPU too (A.9.2).",
+  "Save and load via state_dict; the architecture must match exactly (A.8).",
+  "Use DDP with DistributedSampler, one process per GPU, NCCL backend; run as a script not in Jupyter (A.9.3).",
+  "Guard prints with rank == 0 in DDP (A.9.3).",
+  "Use Python one or two releases older than latest when installing PyTorch (A.1.3)."
+ ],
+ "terms": [
+  {
+   "term": "tensor",
+   "definition": "mathematical objects that can be characterized by their order (or rank), which provides the number of dimensions",
+   "where": "A.2"
+  },
+  {
+   "term": "autograd",
+   "definition": "PyTorch's automatic differentiation engine, which enables the automatic computation of gradients for tensor operations",
+   "where": "A.1.1"
+  },
+  {
+   "term": "computational graph",
+   "definition": "a directed graph that allows us to express and visualize mathematical expressions",
+   "where": "A.3"
+  },
+  {
+   "term": "gradient",
+   "definition": "a vector containing all of the partial derivatives of a multivariate function",
+   "where": "A.4"
+  },
+  {
+   "term": "logits",
+   "definition": "the outputs of the last layer, before a nonlinear activation",
+   "where": "A.5"
+  },
+  {
+   "term": "training epoch",
+   "definition": "the train_loader iterates over the training dataset, visiting each training example exactly once",
+   "where": "A.6"
+  },
+  {
+   "term": "validation dataset",
+   "definition": "similar to a test set, but used multiple times to tweak model settings, while a test set is used once",
+   "where": "A.7"
+  },
+  {
+   "term": "DistributedDataParallel (DDP)",
+   "definition": "splitting the input data across the available devices and processing these data subsets simultaneously, with gradients averaged and synchronized",
+   "where": "A.9.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Papers With Code trends (PyTorch most used research library since 2019)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for PyTorch popularity",
+   "quote": null
+  },
+  {
+   "work": "Kaggle Data Science and Machine Learning Survey 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "approx. 40% of respondents use PyTorch",
+   "quote": null
+  },
+  {
+   "work": "Raschka, Accelerating PyTorch Model Training: Using Mixed-Precision and Fully Sharded Data Parallelism",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pointer for Fabric",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig A.7",
+   "caption": "A logistic regression forward pass as a computation graph.",
+   "page": null,
+   "why": "shows how a forward pass defines the graph autograd differentiates"
+  },
+  {
+   "figure": "Fig A.8",
+   "caption": "Chain rule applied right to left (reverse-mode autodiff / backpropagation).",
+   "page": null,
+   "why": "backprop in one picture"
+  },
+  {
+   "figure": "Fig A.13",
+   "caption": "Forward/backward passes in DDP run independently per GPU; gradients are synchronized.",
+   "page": null,
+   "why": "DDP mechanics"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing A.9",
+   "snippet": "optimizer = torch.optim.SGD(model.parameters(), lr=0.5)\nfor epoch in range(num_epochs):\n    model.train()\n    for batch_idx, (features, labels) in enumerate(train_loader):\n        logits = model(features)\n        loss = F.cross_entropy(logits, labels)\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code blocks are interleaved with prose in extraction; some outputs appear out of order. No embedded instructions found. Publication year not printed in the appendix."
+ ]
+}

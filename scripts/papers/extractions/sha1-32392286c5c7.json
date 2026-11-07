@@ -1,0 +1,198 @@
+{
+ "schema": 1,
+ "key": "sha1:32392286c5c7",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch03-first-kg-from-ontologies.pdf",
+ "bib": {
+  "title": "Create your first knowledge graph from ontologies (Knowledge Graphs and LLMs in Action, ch. 3)",
+  "authors": [
+   "Negro et al."
+  ],
+  "first_author": "Negro",
+  "year": 2025,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 46550,
+  "chars_total": 46550,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build a first knowledge graph from a reference ontology (HPO) to support clinicians identifying rare diseases, and which KG technology (RDF or LPG) fits?",
+ "hypothesis": null,
+ "contributions": [
+  "A CRISP-DM-based walkthrough of KG construction from the Human Phenotype Ontology and an annotation TSV",
+  "A goal-driven comparison of RDF (n-ary relations, named graphs, RDF-star) and LPG for edge metadata",
+  "Cypher and Neosemantics listings for ingestion, querying and ontology-based inference"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Loading hp.owl through Neosemantics imported 899,558 statements into Neo4j.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "899,558",
+   "unit": "statements",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 3 worked example: HPO hp.owl and phenotype.hpoa loaded into Neo4j 5.20.0 Enterprise (Desktop 1.6.1) with APOC 5.20.0 and Neosemantics 5.20.0; HPO as of February 2025",
+   "quote": "During our tests, this command loaded 899,558 statements into Neo4j.",
+   "table": null,
+   "note": null,
+   "where": "3.3.1"
+  },
+  {
+   "claim": "LPG with Cypher is chosen over RDF because it puts annotation details (source, creator, date) directly on the relationship.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 3 worked example: HPO hp.owl and phenotype.hpoa loaded into Neo4j 5.20.0 Enterprise (Desktop 1.6.1) with APOC 5.20.0 and Neosemantics 5.20.0; HPO as of February 2025",
+   "quote": "For these reasons, we’ll adopt LPG and Cypher as the core tools for building our KG system.",
+   "table": null,
+   "note": null,
+   "where": "3.2.2"
+  },
+  {
+   "claim": "Matching five clinician-identified features, the top disease matched all five.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "features matched",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 3 worked example: HPO hp.owl and phenotype.hpoa loaded into Neo4j 5.20.0 Enterprise (Desktop 1.6.1) with APOC 5.20.0 and Neosemantics 5.20.0; HPO as of February 2025; query listing 3.26, LIMIT 5",
+   "quote": null,
+   "table": "Table 3.2, row OMIM:619269, column num_of_features",
+   "note": null,
+   "where": "Table 3.2"
+  }
+ ],
+ "limits": [
+  "No benchmark or evaluation; one clinical use case with no accuracy, recall or clinician study.",
+  "Table 3.2 matches on exact labels; Table 3.3 shows a subset of diseases chosen for reproducible output.",
+  "Annotation merge keys on (disease, phenotype) pair only; chapter does not discuss multiple annotations per pair.",
+  "Listing 3.18 fails if the full repository ingestion (with final cleaning) is run.",
+  "Dataset is HPO as of February 2025; later HPO versions will differ.",
+  "RDF-star performance is said to need improvement and to require engine support."
+ ],
+ "practices": [
+  "Start KG construction from business and domain understanding, then data understanding, preparation and KG model creation (CRISP-DM), 3.1.",
+  "Adopt one or more ontologies as the reference schema and vocabulary, with mappings from local schemas (intro).",
+  "Choose between RDF and LPG by goal; model edge-specific provenance as LPG relationship properties (3.2.2).",
+  "Create uniqueness constraints on uri and id and indexes on id for HpoPhenotype and HpoDisease before loading (3.3.1).",
+  "Configure Neosemantics to ignore vocabulary namespaces and apply Neo4j naming (uppercase relationship types) (3.3.1).",
+  "Set relationship properties only when the source column is non-null, to avoid overwriting with nulls (3.3.2).",
+  "Add human-readable properties (aspectName, evidenceName, url) to edges and batch updates with apoc.periodic.iterate (3.3.2).",
+  "Delete ontology nodes not needed for the task as a final cleaning step (3.3.2).",
+  "Use n10s.inference.nodesInCategory with SUBCLASSOF to get implicit annotations (3.5)."
+ ],
+ "terms": [
+  {
+   "term": "phenotype",
+   "definition": "the sum of all of the phenotypic features manifested by that individual",
+   "where": "3.1.1"
+  },
+  {
+   "term": "disease",
+   "definition": "an entity characterized by (1) a set of causes for a specific condition, (2) a time course, (3) a group of phenotypic features, and (4) characteristic response to a particular treatment",
+   "where": "3.1.1"
+  },
+  {
+   "term": "RDF",
+   "definition": "a standard framework, defined and regulated by the W3C, for data exchange on the web; each statement is a subject, predicate, object triple",
+   "where": "3.2"
+  },
+  {
+   "term": "LPG",
+   "definition": "graph model with key-value pairs on nodes and relationships; fast query-based traversal and path analysis",
+   "where": "3.2"
+  },
+  {
+   "term": "blank node",
+   "definition": "an unnamed resource used to group related information without assigning it a global identifier",
+   "where": "3.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Human Phenotype Ontology (HPO)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "hp.owl and phenotype.hpoa, version of February 2025",
+   "quote": null
+  },
+  {
+   "work": "Neosemantics (n10s) plugin",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RDF/OWL import and basic inference in Neo4j",
+   "quote": null
+  },
+  {
+   "work": "CRISP-DM adapted to KGs (book ch. 2)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "mental model for the chapter",
+   "quote": null
+  },
+  {
+   "work": "Orlandi et al. [2]",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "quoted on RDF-star needing specific engine implementation",
+   "quote": null
+  },
+  {
+   "work": "RDF-DEV Community Group RDF-star",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "specification adding edge properties to RDF",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.6",
+   "caption": "Data transformation from a table row to a KG edge.",
+   "page": null,
+   "why": "Shows annotation columns becoming edge properties on HAS_PHENOTYPIC_FEATURE."
+  },
+  {
+   "figure": "Fig 3.8",
+   "caption": "A portion of the HPO ontology loaded in the graph database using LPG as a storage model.",
+   "page": null,
+   "why": "Separates ontological from domain-specific information in the loaded graph."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 3.15",
+   "snippet": "CALL n10s.graphconfig.init();\nCALL n10s.graphconfig.set({ handleVocabUris: \"IGNORE\" });\nCALL n10s.graphconfig.set({ applyNeo4jNaming: True });",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 3.12",
+   "snippet": "MATCH (d)-[r:HAS_PHENOTYPIC_FEATURE]->(p)\nWHERE d.id = \"OMIM:222100\" and p.id = \"HP:0410050\"\nRETURN r.source, r.createdBy, r.creationDate",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Listing and figure content is partly flattened in the text layer; figures not captured.",
+  "Hyphenation artifacts in extracted text."
+ ]
+}

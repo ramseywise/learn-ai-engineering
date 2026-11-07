@@ -1,0 +1,264 @@
+{
+ "schema": 1,
+ "key": "sha1:28ebf639e38f",
+ "pdf": "generative-ai/03-agentic-foundations/sources/ai-agents-definitive-guide/ch04-models-behind-agents-capabilities-optimization.pdf",
+ "bib": {
+  "title": "Chapter 4. Models Behind the Agents: Capabilities and Optimization (AI Agents: The Definitive Guide)",
+  "authors": [
+   "Nicole Koenigstein"
+  ],
+  "first_author": "Koenigstein",
+  "year": 2026,
+  "venue": "O'Reilly Early Release (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48399,
+  "chars_total": 48399,
+  "engine": "pymupdf",
+  "skipped": "Figures are images; equations missing from text (attention mask formula, KV formulas). Table of contents collapsed."
+ },
+ "type": "book-chapter",
+ "question": "How should model architecture, open vs closed choice, context/KV-cache strategy and light fine-tuning be matched to agent roles in a multi-agent system?",
+ "hypothesis": null,
+ "contributions": [
+  "Maps encoder-only, decoder-only, MoE and reasoning models to agent roles",
+  "Explains KV caching, GQA, vLLM cache features and thinking budgets",
+  "Builds a LangGraph research team with per-role model choices",
+  "Compares open vs closed models; covers LoRA, adapters, LoRAX, quantization"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Closed-model prices reach $150 input / $600 output per million tokens (o1-pro); open models about $0.3 / $3 via low-cost cloud providers.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "$150 in / $600 out per M tokens (closed)",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prices per million tokens, undated, no provider named; open figure for models over 200B parameters",
+   "quote": "Closed models can cost up to $150 for input and $600 (o1-pro) for output per million tokens, while open models fall around $0.3 for input and about $3 for output per million tokens when used via low-cost cloud providers even for models over 200B parameters.",
+   "table": null,
+   "note": null,
+   "where": "Open vs. Closed, Cost"
+  },
+  {
+   "claim": "Qwen2.5-7B-Instruct-1M uses 28 query heads sharing 4 K/V heads, a 7x grouping and about 7x smaller KV cache memory and bandwidth in decoding.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "7x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GQA, from model.config of Qwen2.5-7B-Instruct-1M",
+   "quote": "Each K/V pair serves 7 query heads. ~7× reduction in KV cache memory and bandwidth during decoding",
+   "table": null,
+   "note": null,
+   "where": "Table 4-2"
+  },
+  {
+   "claim": "Analyst agent uses Qwen3-235B-A22B-Thinking-2507 with a thinking budget of 1536 tokens; other workers use Qwen3-32B with thinking off; supervisor is GPT-4.1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1536",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LangGraph research team via Nebius; temperature 0 for all",
+   "quote": "\"thinking\": {\"type\": \"token\", \"budget\": 1536}",
+   "table": null,
+   "note": null,
+   "where": "Example 4-5/4-7, Table 4-5"
+  },
+  {
+   "claim": "A thinking budget at or above one thousand tokens tends to work for non-trivial reasoning.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Practitioner rule of thumb, no experiment shown",
+   "quote": "values at or above one thousand tokens tend to work well for non-trivial reasoning",
+   "table": null,
+   "note": null,
+   "where": "Thinking budget"
+  },
+  {
+   "claim": "ModernBERT scored a document 0.956 relevance in the analyst output.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.956",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One example run, 2 docs, ModernBERT-base semantic filter",
+   "quote": "score\": 0.956",
+   "table": null,
+   "note": null,
+   "where": "Analyst output example"
+  },
+  {
+   "claim": "NeoBERT / ModernBERT-large have 28 layers; ModernBERT 1024->8192 context; BERT 512.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table of architecture specs, reported from model papers",
+   "quote": "Parameters",
+   "table": null,
+   "note": null,
+   "where": "Table 4-4"
+  }
+ ],
+ "limits": [
+  "Early Release draft, raw and unedited; no experiments, benchmarks or ablations.",
+  "Prices and model choices are undated and will age.",
+  "Code is partial (tools, graph wiring and routing omitted).",
+  "Thinking budget given as 1024 in the Qwen snippet and 1536 in the team setup.",
+  "rope_scaling example loads ModernBERT in vLLM and claims 32k to 128k; ModernBERT natural length is 8192 per Table 4-4, so the example is inconsistent."
+ ],
+ "practices": [
+  "Staff agents by role: fast decoder-only for workers, a reasoning model for the analyst, encoder for scoring, a deliberate LLM as supervisor (Putting It All Together).",
+  "Enable thinking for planning, decomposition, tool selection, verification; disable for short low-risk turns (Thinking modes).",
+  "Set a thinking budget of 1000+ tokens for non-trivial reasoning; raise for math, code, multi-tool plans (Thinking budget).",
+  "Monitor KV cache hit ratio and memory pressure; use paging or trimming (KV caching).",
+  "Any structural context change must trigger selective cache invalidation; preallocate static system prompts to keep partial cache persistence (KV caching).",
+  "Use a sliding window or prefix trimming near max context; also mitigates the haystack problem.",
+  "Start with managed APIs, then move to self-hosted open models as the team and needs mature (Open vs. Closed).",
+  "Combine quantized weights, LoRA/adapters and PEFT for open-model pipelines (Optimizing Open Source Models)."
+ ],
+ "terms": [
+  {
+   "term": "KV caching",
+   "definition": "stores previously computed keys and values from attention layers so the model can reuse them instead of recalculating them from scratch",
+   "where": "KV caching"
+  },
+  {
+   "term": "Grouped-Query Attention",
+   "definition": "groups multiple query heads to share keys and values, reducing KV cache size",
+   "where": "KV caching"
+  },
+  {
+   "term": "Haystack problem",
+   "definition": "As context grows the Softmax denominator becomes very large, flattening the distribution and making it harder to identify key information",
+   "where": "Softmax box"
+  },
+  {
+   "term": "Conditional computation",
+   "definition": "compute is spent only where it's needed (MoE)",
+   "where": "Mixture of Experts"
+  },
+  {
+   "term": "Thinking budget",
+   "definition": "caps the number of tokens allocated to the internal reasoning trace",
+   "where": "Thinking budget"
+  },
+  {
+   "term": "LoRAX",
+   "definition": "LoRA Exchange: dynamic loading and batching of multiple fine-tuned LoRA models on a shared GPU",
+   "where": "LoRA and Adapters"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Raffel et al., T5",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "encoder-decoder background",
+   "quote": null
+  },
+  {
+   "work": "Devlin et al., BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "encoder-only",
+   "quote": null
+  },
+  {
+   "work": "Liu et al., RoBERTa",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "encoder-only",
+   "quote": null
+  },
+  {
+   "work": "Le Breton et al., NeoBERT",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fig 4-3 throughput taken from it",
+   "quote": null
+  },
+  {
+   "work": "Warner et al., ModernBERT",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used as analyst encoder",
+   "quote": null
+  },
+  {
+   "work": "Su et al., RoFormer (RoPE)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "related",
+   "note": "rotary embeddings",
+   "quote": null
+  },
+  {
+   "work": "Hu et al., LoRA",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "PEFT method",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4-2",
+   "caption": "Grouped Query Attention Configuration (Example: Qwen 2.5)",
+   "page": null,
+   "why": "Shows 28/4 head ratio and 7x KV saving"
+  },
+  {
+   "figure": "Table 4-5",
+   "caption": "Agent team at a glance",
+   "page": null,
+   "why": "Role to model to tool mapping for the research team"
+  },
+  {
+   "figure": "Table 4-4",
+   "caption": "Comparison of Encoder Model Architectures",
+   "page": null,
+   "why": "BERT vs ModernBERT vs NeoBERT specs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Example 4-7",
+   "snippet": "\"thinking\": {\"type\": \"token\", \"budget\": 1536}",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations and figures absent from text extraction; some code lines wrapped/truncated.",
+  "Hyphenation artifacts from the PDF (e.g. 'reduc‐ tion')."
+ ]
+}

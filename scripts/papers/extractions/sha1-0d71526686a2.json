@@ -1,0 +1,491 @@
+{
+ "schema": 1,
+ "key": "sha1:0d71526686a2",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch08-occupancy-tuning-warp-efficiency-instruction-level.pdf",
+ "bib": {
+  "title": "Chapter 8. Occupancy Tuning, Warp Efficiency, and Instruction-Level Parallelism (AI Systems Performance Engineering)",
+  "authors": [
+   "Chris Fregly"
+  ],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 109525,
+  "chars_total": 109525,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you diagnose why a CUDA kernel underuses a (Blackwell) GPU and fix it by tuning occupancy, warp efficiency and instruction-level parallelism?",
+ "hypothesis": null,
+ "contributions": [
+  "Profiler-guided workflow (Nsight Systems then Nsight Compute, PyTorch profiler) for classifying a kernel as underutilized, latency bound, memory bound or compute bound",
+  "Occupancy tuning techniques (block size, register/shared-memory limits, __launch_bounds__, Occupancy API)",
+  "Warp divergence causes and fixes, with a predication example",
+  "ILP exposure by unrolling and reordering, and its trade against occupancy and registers"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Hitting 64 warp slots per SM is 2,048 threads on a Blackwell B200 (compute capability 10.0) SM.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 64,
+   "unit": "warps per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B200, compute capability 10.0; same limit stated for Ampere and Hopper",
+   "quote": "there are 64 warp slots, or 2,048 threads, available in each Blackwell B200 (compute",
+   "table": null,
+   "note": null,
+   "where": "Tuning Occupancy"
+  },
+  {
+   "claim": "RTX PRO 6000 and DGX Spark (GB10, compute capability 12.x) allow only 48 warps per SM.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 48,
+   "unit": "warps per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "compute capability 12.x",
+   "quote": "support a higher compute capability (12.x), but only allow 48 warps (1,536 threads)",
+   "table": null,
+   "note": null,
+   "where": "Tuning Occupancy sidebar"
+  },
+  {
+   "claim": "Recommended achieved-occupancy range is about 50%-75% (about 32-48 warps on Blackwell); returns diminish after 60%-70%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50%-75%",
+   "unit": "achieved occupancy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb, no benchmark",
+   "quote": "optimal range—around 50%–75%—and",
+   "table": null,
+   "note": null,
+   "where": "Key Takeaways"
+  },
+  {
+   "claim": "Going from 10% to 50% achieved occupancy can give a huge boost for a severely memory-bound kernel; 50% to 100% only a small gain.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10% to 50%",
+   "unit": "occupancy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Severely memory-bound kernel, qualitative",
+   "quote": "going from 10% to 50% achieved occupancy might give a huge boost because now you have",
+   "table": null,
+   "note": null,
+   "where": "Find the Right Occupancy"
+  },
+  {
+   "claim": "A kernel hitting about 80% or more of memory bandwidth is likely memory bound.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~80%",
+   "unit": "% of peak DRAM bandwidth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Heuristic threshold",
+   "quote": "if a kernel hits ~80% or more of the GPU’s memory bandwidth, it’s",
+   "table": null,
+   "note": null,
+   "where": "Kernel Memory Throughput"
+  },
+  {
+   "claim": "Warp-level optimizations (coalescing, divergence, intrinsics) typically give modest speedups of 5%-30%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5%-30%",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement, no setup",
+   "quote": "These techniques often produce modest speedups (say, 5%–30%)",
+   "table": null,
+   "note": null,
+   "where": "Improving Warp Execution Efficiency"
+  },
+  {
+   "claim": "Removing a 50/50 divergent branch can nearly double throughput (up to ~2x).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~2x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ideal case, 50/50 split branch",
+   "quote": "removing that divergent branch can nearly double throughput up to",
+   "table": null,
+   "note": null,
+   "where": "Causes of Warp Divergence"
+  },
+  {
+   "claim": "Replacing the if/else threshold branch with a predicated max halves kernel time (30 ms to 15 ms).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "gpu__time_elapsed.avg",
+   "value": "30 ms to 15 ms",
+   "unit": "kernel execution time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Threshold kernel, half values positive; Illustrative numbers per the chapter ('The numeric values in all metrics tables are illustrative'), not a measured benchmark.",
+   "quote": null,
+   "table": "Table 8-3, row Kernel execution time, columns Before/After",
+   "note": null,
+   "where": "Table 8-3"
+  },
+  {
+   "claim": "Warp execution efficiency rises from 50% to 99% after predication.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "50% to 99%",
+   "unit": "warp execution efficiency",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same threshold example; Illustrative numbers per the chapter ('The numeric values in all metrics tables are illustrative'), not a measured benchmark.",
+   "quote": null,
+   "table": "Table 8-3, row Warp execution efficiency",
+   "note": "Text says 'nearly 100%'.",
+   "where": "Table 8-3"
+  },
+  {
+   "claim": "Dynamic instruction count falls from 600 M to 300 M after predication.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "600 M to 300 M",
+   "unit": "instructions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same threshold example; Illustrative numbers per the chapter ('The numeric values in all metrics tables are illustrative'), not a measured benchmark.",
+   "quote": null,
+   "table": "Table 8-3, row Dynamic instruction count",
+   "note": null,
+   "where": "Table 8-3"
+  },
+  {
+   "claim": "Branch-resolving stall latency falls from 200 to 100 cycles after predication.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "200 to 100",
+   "unit": "cycles",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same threshold example; Illustrative numbers per the chapter ('The numeric values in all metrics tables are illustrative'), not a measured benchmark.",
+   "quote": null,
+   "table": "Table 8-3, row Average warp branch-resolving stall latency",
+   "note": null,
+   "where": "Table 8-3"
+  },
+  {
+   "claim": "With no ILP a kernel needs about 1,536 active threads (48 warps, 75% occupancy) to saturate an SM.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~1,536",
+   "unit": "threads per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell SM, approximations not hard limits",
+   "quote": "you typically need on the order of 1,536 active threads (~48",
+   "table": null,
+   "note": null,
+   "where": "ILP and Occupancy"
+  },
+  {
+   "claim": "Two-way ILP needs about 1,024 threads (32 warps, 50% occupancy) to saturate a Blackwell SM.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~1,024",
+   "unit": "threads per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell SM, ILP=2; approximate",
+   "quote": null,
+   "table": "Table 8-4, row 2",
+   "note": null,
+   "where": "Table 8-4"
+  },
+  {
+   "claim": "Three-way ILP needs about 768 threads (24 warps, 37.5%) and four-way about 512 threads (16 warps, 25%).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~768 / ~512",
+   "unit": "threads per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell SM, ILP=3 and 4; approximate",
+   "quote": "can saturate with about 768 threads (≈24",
+   "table": null,
+   "note": null,
+   "where": "ILP and Occupancy"
+  },
+  {
+   "claim": "Ideal ILP on Blackwell is often two to four independent operations per thread; five- or six-way gives little and can hurt.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-4",
+   "unit": "independent ops per thread",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kernel and workload dependent",
+   "quote": "the ideal ILP configuration is often between two and four independent oper-",
+   "table": null,
+   "note": null,
+   "where": "ILP and Occupancy"
+  },
+  {
+   "claim": "Example IPC rise from 1.0 to 1.8 per warp scheduler when unrolling indicates near two instructions per cycle.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1.0 to 1.8",
+   "unit": "IPC per warp scheduler",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical unrolling example",
+   "quote": "from 1.0 to 1.8 per warp scheduler when you unroll",
+   "table": null,
+   "note": "Presumes dual issue per scheduler (Fig 8-9).",
+   "where": "Profiling and Mitigating Register Pressure"
+  },
+  {
+   "claim": "Blackwell has a 255 register-per-thread limit.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 255,
+   "unit": "registers per thread",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell",
+   "quote": "Blackwell has a 255",
+   "table": null,
+   "note": null,
+   "where": "Reduce per-thread register usage"
+  },
+  {
+   "claim": "Register file is 256 KB per SM, i.e. 64K 32-bit registers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "256 KB",
+   "unit": "per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Modern GPUs as described",
+   "quote": "The register file per SM is 256 KB, which is 64K 32-bit",
+   "table": null,
+   "note": null,
+   "where": "ILP and Occupancy"
+  },
+  {
+   "claim": "Each Blackwell SM has four warp schedulers, each said to issue up to two independent instructions per cycle (dual issue).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "warp schedulers per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell; dual-issue claim is the chapter's",
+   "quote": "Blackwell SMs have four warp schedulers",
+   "table": null,
+   "note": null,
+   "where": "Warp Scheduling and Dual Issue Instructions"
+  },
+  {
+   "claim": "Blackwell L2 is 126 MB and the two dies connect with a 10 TB/s NV-HBI link.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "126 MB; 10 TB/s",
+   "unit": "L2 size; NV-HBI bandwidth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Blackwell multi-die",
+   "quote": "link and increase L2 to 126 MB",
+   "table": null,
+   "note": null,
+   "where": "Introduction"
+  },
+  {
+   "claim": "__launch_bounds__(256, 8) yields 8 x 256 = 2,048 threads per SM, filling a B200 SM; prose elsewhere says 'e.g., 4'.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "2,048",
+   "unit": "threads per SM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing uses (256, 8)",
+   "quote": "This is a total of 2,048 threads active per SM (8 blocks × 256 threads per block",
+   "table": null,
+   "note": "Prose before listing says 'minimum number of thread blocks ... (e.g., 4)' but the listing and later text use 8.",
+   "where": "Compiler Hints to Optimize Occupancy"
+  }
+ ],
+ "limits": [
+  "Metrics tables (8-3) are stated illustrative; real benchmarks are in the book's GitHub repository, not in the chapter",
+  "Table 8-4 thread counts are labelled approximations, not hard limits",
+  "Chapter asserts Blackwell schedulers dual-issue two instructions per cycle (Fig 8-9); the course note 02 disputes this",
+  "Several recommendations are rules of thumb without measurements (50-75% occupancy, ILP 2-4, 5-30% warp-efficiency gains)",
+  "Inconsistent prose: launch_bounds 'e.g., 4' vs listing 8; 'Stall: Not Selected' described both as healthy and as waiting for memory slots"
+ ],
+ "practices": [
+  "Profile first: Nsight Systems for the timeline, then Nsight Compute on hot kernels; mark phases with NVTX ranges (Profiling and Diagnosing).",
+  "Profile representative workloads, since tiny test kernels have different stall profiles (Analyzing Warp Stall Reasons).",
+  "Classify the kernel as underutilized, latency bound, memory bound or compute bound and apply the matching fix (Table 8-2).",
+  "Read the largest portions of the stall breakdown rather than every stall reason.",
+  "Use occupancy as a means, not a goal; stop around 50%-70% and turn to ILP, locality and warp efficiency.",
+  "Validate the Occupancy Calculator's suggested block size with timing, since slightly lower occupancy can be faster.",
+  "Cap registers (-maxrregcount, __launch_bounds__) only as far as spills allow.",
+  "Make branch conditions warp-uniform, partition data, or use predication for short branches, and benchmark both versions.",
+  "Use warp shuffle intrinsics for intrawarp communication, not shared memory plus __syncthreads.",
+  "Expose 2-4 independent operations per thread by unrolling and reordering; reduce unrolling if Nsight shows 'Limited by Registers'.",
+  "Reprofile after each change and check numerics against an FP32 baseline when lowering precision (Verify and iterate).",
+  "In PyTorch prefer built-in ops, torch.where, and torch.compile; use fused AdamW (fused=True)."
+ ],
+ "terms": [
+  {
+   "term": "Achieved occupancy",
+   "definition": "the average fraction of hardware thread slots, warps, that were occupied on each SM during execution",
+   "where": "Inspecting Achieved Occupancy"
+  },
+  {
+   "term": "Warp execution efficiency",
+   "definition": "the fraction of warp lanes that are active on average",
+   "where": "Improving Warp Execution Efficiency"
+  },
+  {
+   "term": "Predication",
+   "definition": "the compiler converts an if into a boolean mask for each thread and executes both paths for all threads, committing only the results appropriate to each thread's path",
+   "where": "Techniques to Avoid Warp Divergence"
+  },
+  {
+   "term": "Warp-unanimous",
+   "definition": "either all 32 threads in a warp satisfy the condition or none do",
+   "where": "Techniques to Avoid Warp Divergence"
+  },
+  {
+   "term": "Latency bound",
+   "definition": "not sustaining enough concurrent work to hide individual load/store latencies, so warps stall waiting on data",
+   "where": "Table 8-2"
+  },
+  {
+   "term": "Eligible warps per cycle",
+   "definition": "the average number of warps in a ready-to-run state each cycle with no outstanding data or dependency stalls",
+   "where": "Find the Right Occupancy"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 6 (warps, SIMT, occupancy) and Chapter 7 (divergence, memory access) of the same book",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter builds on earlier chapters' fundamentals",
+   "quote": null
+  },
+  {
+   "work": "Nsight Systems, Nsight Compute, PyTorch profiler (Kineto, CUPTI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Profiling toolchain",
+   "quote": null
+  },
+  {
+   "work": "Roofline model",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Used to frame memory vs compute bound; no citation printed",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA Blackwell B200 GPU",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Target hardware for limits and ILP table",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 8-1",
+   "caption": "Common warp stall reasons and optimization hints",
+   "page": null,
+   "why": "Maps each stall reason to its fix"
+  },
+  {
+   "figure": "Table 8-2",
+   "caption": "Memory bound versus latency bound versus compute bound versus underutilizing the GPU",
+   "page": null,
+   "why": "Four-regime classification with profiler indicators and remedies"
+  },
+  {
+   "figure": "Table 8-3",
+   "caption": "Profiling results of removing warp divergence",
+   "page": null,
+   "why": "Before/after predication metrics (illustrative)"
+  },
+  {
+   "figure": "Table 8-4",
+   "caption": "How ILP reduces the threads/occupancy needed to saturate a Blackwell SM",
+   "page": null,
+   "why": "Shows the occupancy-ILP trade in four rows"
+  },
+  {
+   "figure": "Fig 8-9",
+   "caption": "Each warp scheduler can dispatch up to two instructions per cycle called 'dual issue'",
+   "page": null,
+   "why": "The dual-issue claim the course note disputes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Compiler Hints to Optimize Occupancy",
+   "snippet": "__global__ __launch_bounds__(256, 8)\nvoid myKernel(...) { /* ... */ }",
+   "verbatim": true
+  },
+  {
+   "where": "Occupancy API",
+   "snippet": "cudaOccupancyMaxPotentialBlockSize(\n    &minGridSize, &bestBlockSize,\n    myKernel,\n    /* dynamicSmemBytes = */ 0,\n    /* blockSizeLimit = */ 0 );",
+   "verbatim": true
+  },
+  {
+   "where": "Predication example",
+   "snippet": "float val = (x > threshold) ? x : 0.0f;",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Cached text is a web scrape of the O'Reilly page; figures and some code bodies are missing or appear out of order at the end; page numbers unavailable.",
+  "Several code listings in the text are truncated mid-line (comments cut off)."
+ ]
+}
