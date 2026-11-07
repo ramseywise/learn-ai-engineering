@@ -1,0 +1,132 @@
+{
+ "schema": 1,
+ "key": "1812.04948",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/karras-2019-style-based-generator-architecture-generative.pdf",
+ "bib": {"title": "A Style-Based Generator Architecture for Generative Adversarial Networks", "authors": ["Tero Karras", "Samuli Laine", "Timo Aila"], "first_author": "Karras", "year": 2019, "venue": "preprint (arXiv v3, 29 Mar 2019)", "arxiv": "1812.04948", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-07", "chars_read": 50153, "chars_total": 50153, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a generator redesigned around style transfer (AdaIN, learned constant input, per-layer noise) give better image quality and a more controllable, less entangled latent space than the traditional GAN generator?",
+ "hypothesis": "An intermediate latent space W, free from having to follow the training-data density, can be less entangled than the input space Z, and the synthesis network favours a disentangled representation.",
+ "contributions": [
+  "A style-based generator: mapping network Z to W, AdaIN at every convolution, learned constant input, per-layer noise inputs",
+  "Mixing regularization that decorrelates neighbouring styles and enables scale-specific control",
+  "Two automated, encoder-free metrics: perceptual path length and linear separability",
+  "The FFHQ dataset of 70,000 faces at 1024x1024"
+ ],
+ "method": {
+  "summary": "The generator of Progressive GAN is rebuilt: an 8-layer MLP maps z to w, learned affine transforms turn w into per-layer AdaIN scale and bias, synthesis starts from a learned 4x4x512 constant, and Gaussian noise is added after each convolution. Discriminator and loss are unchanged. Quality is measured by FID, latent-space quality by perceptual path length and linear separability.",
+  "task": "unconditional image synthesis with GANs (faces, bedrooms, cars, cats)",
+  "trains": true,
+  "datasets": [
+   {"name": "FFHQ", "role": "train", "size": "70,000 images at 1024x1024", "split": "FID uses 50,000 images drawn randomly from the training set", "source": "crawled from Flickr, permissive licences only, aligned and cropped, filtered with Mechanical Turk; public", "preprocessing": "automatic alignment [31] and cropping; mirror augmentation enabled"},
+   {"name": "CelebA-HQ", "role": "train", "size": null, "split": null, "source": "Karras et al. [30]; also supplies 40 attribute labels for classifiers", "preprocessing": "mirror augmentation enabled"},
+   {"name": "LSUN Bedroom, Cars, Cats", "role": "train", "size": null, "split": null, "source": "LSUN [62]", "preprocessing": "mirror augmentation disabled; Bedroom and Cats at 256x256, Cars at 512x384"}
+  ],
+  "models": [
+   {"name": "Style-based generator (config F)", "role": "proposed", "params": "26.2M", "architecture": "8-layer MLP mapping network (512-d z and w); 18-layer synthesis network, two layers per resolution 4x4 to 1024x1024; AdaIN after each convolution; learned 4x4x512 constant input; per-layer noise; 1x1 conv to RGB", "init_from": null, "tokenizer": null, "vocab": null, "layers": "8 mapping + 18 synthesis", "hidden": "512", "heads": null, "context": null, "other": {"activation": "leaky ReLU alpha=0.2", "feature map counts": "same as Progressive GAN"}},
+   {"name": "Traditional generator (config B / Progressive GAN)", "role": "baseline", "params": "23.1M", "architecture": "latent fed through input layer only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Discriminator", "role": "base", "params": null, "architecture": "same as Progressive GAN [30], unchanged", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Attribute classifiers (40, one per CelebA attribute)", "role": "evaluated", "params": null, "architecture": "discriminator architecture with minibatch standard deviation disabled", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "lr 1e-3, minibatch 8, Adam, 150,000 images, CelebA-HQ"}}
+  ],
+  "training": {
+   "objective": "CelebA-HQ: WGAN-GP; FFHQ: WGAN-GP for config A, non-saturating loss with R1 regularization (gamma = 10) for configs B-F",
+   "optimizer": "Adam, hyperparameters inherited from Progressive GAN [30]; exponential moving average of generator",
+   "lr": "same as Progressive GAN for FFHQ; 0.002 instead of 0.003 for 512^2 and 1024^2 on CelebA-HQ; mapping network lr = 0.01 x lr",
+   "lr_schedule": "inferred: resolution-dependent as in Progressive GAN; not detailed here",
+   "warmup": null,
+   "batch_size": "resolution-dependent minibatch sizes inherited from [30]; values not given",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none",
+   "regularisation": "R1 (gamma 10); mixing regularization (0/50/90/100% of training examples); equalized learning rate; no batch norm, spectral norm, attention or pixelwise feature vector normalization",
+   "hardware": "NVIDIA DGX-1 with 8 Tesla V100 GPUs",
+   "compute": "approximately one week on a DGX-1",
+   "wall_clock": "approximately one week",
+   "seeds": null,
+   "other": {
+    "images seen FFHQ": "25M (up from 12M with WGAN-GP)",
+    "images seen LSUN": "70M for Bedroom and Cats, 46M for Cars",
+    "progressive growing": "starts from 8x8 images instead of 4x4; full 1024 resolution reached at 8.4M images (Fig 9)",
+    "bilinear up/down": "separable 2nd order binomial filter after each upsampling and before each downsampling [64]",
+    "init": "weights N(0,1); constant input initialised to one; biases and noise scaling zero, except biases for y_s set to one",
+    "mapping depth": "deeper mapping made training unstable at high lr, hence 0.01x lr"
+   }
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "FID on 50,000 images, lowest distance during training reported; PPL 100,000 samples; separability 200,000 generated images, least confident half dropped",
+   "prompting": null, "retrieval": null,
+   "parameters": {"truncation psi": "w' = w_bar + psi(w - w_bar); psi=0.7 applied for resolutions 4^2-32^2 in figures only", "perceptual path epsilon": "1e-4", "mixing": "random crossover point between w1 and w2"},
+   "other": {"FID": "all FIDs computed without truncation"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FID", "definition": "Frechet inception distance [25] on 50,000 generated images vs training set; lowest value over training", "unit": "FID", "higher_is_better": false},
+    {"name": "Perceptual path length (full / end)", "definition": "expected VGG16-based perceptual distance [65] between images at t and t+eps along slerp (Z) or lerp (W) interpolation, divided by eps^2; faces cropped; 'end' restricts t to {0,1}", "unit": "distance", "higher_is_better": false},
+    {"name": "Separability", "definition": "exp(sum_i H(Y_i|X_i)) over 40 attributes, X = linear SVM side, Y = classifier label", "unit": "exp of conditional entropy", "higher_is_better": false}
+   ],
+   "baselines": ["Progressive GAN [30] config A", "improved baseline B", "traditional generator with mapping network"],
+   "protocol": "single reported run per config; no seeds or significance tests stated"
+  },
+  "availability": {"code": "https://github.com/NVlabs/stylegan", "weights": "pre-trained networks released; classifier networks to be released", "data": "https://github.com/NVlabs/ffhq-dataset"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Each stage from baseline Progressive GAN to full style-based generator lowers FFHQ FID, 8.04 to 4.40.", "kind": "measured", "source": null, "metric": "FID", "value": "4.40", "unit": "FID", "baseline_value": "8.04", "n": "50,000 images", "setup": "FFHQ 1024^2, config F vs config A", "table": "Table 1, row F + Mixing regularization, column FFHQ; row A column FFHQ 8.04", "quote": null, "note": null, "where": "Table 1"},
+  {"claim": "On CelebA-HQ FID falls from 7.79 (A) to 5.17 (F), best 5.06 at E.", "kind": "measured", "source": null, "metric": "FID", "value": "5.17", "unit": "FID", "baseline_value": "7.79", "n": "50,000 images", "setup": "CelebA-HQ, WGAN-GP", "table": "Table 1, row F, column CelebA-HQ", "quote": null, "note": null, "where": "Table 1"},
+  {"claim": "Style-based generator (E) improves FID over the tuned traditional generator (B) by almost 20%.", "kind": "measured", "source": null, "metric": "relative FID improvement", "value": "almost 20%", "unit": "%", "baseline_value": null, "n": null, "setup": "FFHQ, E (4.42) vs B (5.25)", "quote": "almost 20%", "table": null, "note": null, "where": "Sec 2.1"},
+  {"claim": "Mixing regularization greatly improves FID when several latents are mixed at test time (4 latents: 17.41 without vs 9.03 at 90%).", "kind": "measured", "source": null, "metric": "FID with 4 latents", "value": "9.03", "unit": "FID", "baseline_value": "17.41", "n": null, "setup": "FFHQ, mixing 90% (F) vs 0% (E)", "table": "Table 2, row F 90%, column 4", "quote": null, "note": "Single-latent FID is 4.40 at 90% and 4.42 at 0%; 100% mixing hurts it (4.83).", "where": "Table 2"},
+  {"claim": "Full-path perceptual path length in W is much shorter with noise inputs (200.5) than the traditional generator in Z (412.0).", "kind": "measured", "source": null, "metric": "PPL full", "value": "200.5", "unit": "path length", "baseline_value": "412.0", "n": "100,000 samples", "setup": "FFHQ, config E in W vs B in Z", "table": "Table 3, row E + Add noise inputs, column full", "quote": null, "note": null, "where": "Table 3"},
+  {"claim": "Linear separability is far better in W (3.61) than in Z of the traditional generator (10.78).", "kind": "measured", "source": null, "metric": "separability", "value": "3.61", "unit": "score", "baseline_value": "10.78", "n": "200,000 images, 40 attributes", "setup": "FFHQ, config D in W vs B in Z", "table": "Table 3, row D Style-based generator W, column Separability", "quote": null, "note": "Config F reaches 3.79.", "where": "Table 3"},
+  {"claim": "Adding an 8-layer mapping network to a traditional generator wrecks separability in Z (170.29) but gives 6.52 in W.", "kind": "measured", "source": null, "metric": "separability", "value": "170.29", "unit": "score", "baseline_value": "10.78", "n": null, "setup": "FFHQ, Traditional 8 Z vs B", "table": "Table 4, row Traditional 8 Z, column Separability", "quote": null, "note": "Path length in Z worsens from 412.0 to 896.2; FID 4.87.", "where": "Table 4"},
+  {"claim": "Deeper mapping network improves style-based FID: 4.60 (1 layer), 4.43 (2), 4.40 (8); 5.06 with none.", "kind": "measured", "source": null, "metric": "FID", "value": "4.40", "unit": "FID", "baseline_value": "5.06", "n": null, "setup": "FFHQ, style-based 8 W vs 0 Z", "table": "Table 4, row F Style-based 8 W, column FID", "quote": null, "note": null, "where": "Table 4"},
+  {"claim": "Style-based generator has 26.2M parameters versus 23.1M for the traditional one.", "kind": "measured", "source": null, "metric": "parameters", "value": "26.2M", "unit": "params", "baseline_value": "23.1M", "n": null, "setup": "Fig 1 caption", "quote": "26.2M trainable", "table": null, "note": null, "where": "Fig 1"},
+  {"claim": "FID on other LSUN sets with config F: Bedroom 2.65, Cars 3.27, Cats 8.53.", "kind": "measured", "source": null, "metric": "FID", "value": "2.65", "unit": "FID", "baseline_value": null, "n": "50K images", "setup": "LSUN Bedroom 256^2, trained 70M images", "quote": "FID computed for 50K images was 2.65", "table": null, "note": "Cars 3.27 (512x384, 46M images), Cats 8.53 (256^2, 70M).", "where": "Figs 10-12"},
+  {"claim": "FID keeps decreasing under R1 while path length slowly rises, so FID gains come with a more entangled representation.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "FFHQ, B and F, 25M images", "quote": null, "table": null, "note": null, "where": "Appendix D, Fig 9"}
+ ],
+ "limits": [
+  "Authors note the path-length metric measured over the full path is biased toward Z, since W may have regions off the input manifold.",
+  "Mixing regularization appears to distort W somewhat (path length rises from 200.5 to 234.0).",
+  "FID gains in training come with longer path lengths; whether this is unavoidable is left open.",
+  "LSUN Bedroom limited by compression artifacts in training data; Cats remains hard.",
+  "No seeds, variance, or significance reported; batch sizes and learning rates referenced to Progressive GAN rather than stated.",
+  "Truncation trick used only for figures; FIDs computed without it.",
+  "Dated: GAN-era unconditional synthesis; later diffusion models superseded it for text-to-image."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "AdaIN", "definition": "AdaIN(x_i, y) = y_s,i (x_i - mu(x_i))/sigma(x_i) + y_b,i; each feature map normalized separately then scaled and biased by the style", "where": "Sec 2, Eq 1"},
+  {"term": "Style mixing / mixing regularization", "definition": "generating a fraction of training images from two latent codes, switching w1 to w2 at a random crossover point", "where": "Sec 3.1"},
+  {"term": "Truncation trick in W", "definition": "w' = w_bar + psi(w - w_bar) with psi < 1, where w_bar is the mean of f(z)", "where": "Appendix B"},
+  {"term": "Perceptual path length", "definition": "average perceptual distance between images at nearby points along latent interpolation, scaled by 1/eps^2", "where": "Sec 4.1"},
+  {"term": "Linear separability", "definition": "exp(sum H(Y|X)) of how well a linear SVM in latent space predicts classifier labels", "where": "Sec 4.2"}
+ ],
+ "lineage": [
+  {"work": "Progressive growing of GANs for improved quality, stability, and variation", "year": 2017, "arxiv": "1710.10196", "relation": "extends", "note": "baseline config A; networks and hyperparameters inherited", "quote": null},
+  {"work": "Arbitrary style transfer in real-time with adaptive instance normalization", "year": 2017, "arxiv": "1703.06868", "relation": "uses-method", "note": "source of AdaIN", "quote": null},
+  {"work": "On self modulation for generative adversarial networks", "year": 2018, "arxiv": "1810.01365", "relation": "related", "note": "parallel work using AdaIN, no intermediate latent space or noise", "quote": null},
+  {"work": "Large scale GAN training for high fidelity natural image synthesis", "year": 2018, "arxiv": "1809.11096", "relation": "related", "note": "truncation trick; ImageNet measurements corroborate", "quote": null},
+  {"work": "Which training methods for GANs do actually converge?", "year": 2018, "arxiv": "1801.04406", "relation": "uses-method", "note": "R1 regularization", "quote": null},
+  {"work": "GANs trained by a two time-scale update rule", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "FID", "quote": null},
+  {"work": "The unreasonable effectiveness of deep features as a perceptual metric", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "perceptual distance for path length", "quote": null},
+  {"work": "Improved training of Wasserstein GANs", "year": 2017, "arxiv": "1704.00028", "relation": "uses-method", "note": "WGAN-GP loss", "quote": null},
+  {"work": "Generative Adversarial Networks (Goodfellow et al.)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "non-saturating loss", "quote": null},
+  {"work": "LSUN", "year": 2015, "arxiv": "1506.03365", "relation": "uses-data", "note": "Bedroom, Cars, Cats", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Traditional generator vs style-based generator with mapping network, AdaIN, noise", "page": 2, "why": "shows the architecture in one picture"},
+  {"figure": "Fig 3", "caption": "Style mixing: copying coarse, middle or fine styles from source B", "page": 4, "why": "shows which scale controls pose, features, colour"},
+  {"figure": "Fig 5", "caption": "Effect of noise inputs at different layers", "page": 5, "why": "coarse vs fine stochastic detail"},
+  {"figure": "Fig 6", "caption": "Illustrative example of Z warping vs W unwarping", "page": 6, "why": "explains why W can be less entangled"}
+ ],
+ "code": [
+  {"where": "Eq 1", "snippet": "AdaIN(x_i, y) = y_s,i (x_i - mu(x_i)) / sigma(x_i) + y_b,i", "verbatim": false},
+  {"where": "Appendix B", "snippet": "w' = w_bar + psi (w - w_bar)", "verbatim": false}
+ ],
+ "problems": ["Ligature characters and split hyphenation in the text cache; no embedded instructions found.", "Batch sizes, Adam betas, and base learning rates are not stated (deferred to Progressive GAN)."]
+}

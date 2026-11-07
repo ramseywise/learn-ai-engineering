@@ -1,0 +1,520 @@
+{
+ "schema": 1,
+ "key": "1409.3215",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sutskever-2014-sequence-sequence-learning-neural-networks.pdf",
+ "bib": {
+  "title": "Sequence to Sequence Learning with Neural Networks",
+  "authors": [
+   "Ilya Sutskever",
+   "Oriol Vinyals",
+   "Quoc V. Le"
+  ],
+  "first_author": "Sutskever",
+  "year": 2014,
+  "venue": "preprint (arXiv:1409.3215v3, cs.CL)",
+  "arxiv": "1409.3215",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 33871,
+  "chars_total": 33871,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a straightforward encoder-decoder application of deep LSTMs learn general sequence-to-sequence mapping, tested on English to French machine translation?",
+ "hypothesis": "An LSTM encoding the source into a fixed vector and a second LSTM decoding it can handle sequences with minimal structural assumptions, and reversing source word order shortens time lags and eases optimisation.",
+ "contributions": [
+  "A deep LSTM encoder-decoder that directly translates and beats a phrase-based SMT baseline on WMT'14 En-Fr",
+  "Reversing source sentences (not targets) as a key technical trick",
+  "Good performance on long sentences",
+  "Sentence representations sensitive to word order and fairly invariant to active/passive voice"
+ ],
+ "method": {
+  "summary": "Two 4-layer LSTMs (encoder reads the reversed source into a fixed vector, decoder is a conditional LSTM language model) trained with SGD on 12M WMT'14 En-Fr sentence pairs; decoding by left-to-right beam search, plus rescoring of the baseline SMT 1000-best lists. Ensembles of 5 models differ in random initialisation and minibatch order.",
+  "task": "English to French machine translation (sequence to sequence)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'14 English to French (selected subset)",
+    "role": "train",
+    "size": "12M sentences, 348M French words and 304M English words",
+    "split": "ntst14 test set used for evaluation; no dev set or split sizes stated",
+    "source": "clean 'selected' subset from Schwenk-style baseline reference [29]; tokenized train/test and baseline SMT 1000-best lists publicly available",
+    "preprocessing": "Fixed vocabularies: 160,000 most frequent source words and 80,000 most frequent target words; out-of-vocabulary words replaced by 'UNK'; each sentence ends with <EOS>; source sentences reversed"
+   },
+   {
+    "name": "WMT'14 En-Fr ntst14 test set and baseline SMT 1000-best lists",
+    "role": "eval",
+    "size": null,
+    "split": "ntst14",
+    "source": "[29]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Deep LSTM encoder-decoder (single)",
+    "role": "proposed",
+    "params": "384M (64M pure recurrent: 32M encoder, 32M decoder)",
+    "architecture": "two separate LSTMs (encoder, decoder), LSTM formulation from Graves; naive softmax over 80,000 words",
+    "init_from": "random: uniform(-0.08, 0.08)",
+    "tokenizer": "word-level, fixed vocabulary",
+    "vocab": "160,000 source / 80,000 target",
+    "layers": "4",
+    "hidden": "1000 cells per layer; 1000-dim word embeddings; 8000 real numbers represent a sentence",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Ensemble of 5 deep LSTMs",
+    "role": "proposed",
+    "params": "384M each",
+    "architecture": "same as single model, differing in random initialisation and minibatch order",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4",
+    "hidden": "1000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phrase-based SMT baseline [29]",
+    "role": "baseline",
+    "params": null,
+    "architecture": "phrase-based SMT, unlimited vocabulary",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise average log probability of correct translation T given source S: 1/|S| sum over (T,S) of log p(T|S)",
+   "optimizer": "SGD without momentum",
+   "lr": "0.7 fixed",
+   "lr_schedule": "after 5 epochs, halve the learning rate every half epoch",
+   "warmup": null,
+   "batch_size": "128 sequences (gradient divided by 128); sentences in a minibatch of roughly equal length (2x speedup)",
+   "steps": null,
+   "epochs": "7.5",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "hard gradient norm clipping: s = ||g||2 with g divided by 128; if s > 5, g = 5g/s",
+   "hardware": "8-GPU machine: one GPU per LSTM layer (4), other 4 GPUs parallelise the softmax (each multiplies by a 1000 x 20000 matrix)",
+   "compute": "C++ implementation; 1,700 words/s on a single GPU, 6,300 words/s (English and French) on 8 GPUs at minibatch 128",
+   "wall_clock": "about a ten days",
+   "seeds": "ensemble of 5 models differing in random initialisation and minibatch order",
+   "other": {
+    "deep_vs_shallow": "each additional layer reduced perplexity by nearly 10%"
+   }
+  },
+  "inference": {
+   "decoding": "simple left-to-right beam search; B partial hypotheses; hypotheses completed when <EOS> appended; rescoring: even average of baseline score and LSTM log probability over SMT 1000-best",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ensemble of 5 models; Table 1 beam sizes 1, 2, 12",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_size": "1, 2 or 12 (Table 1)",
+    "rescoring_weights": "even average of the two scores"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "cased BLEU",
+     "definition": "multi-bleu.pl on tokenized predictions and ground truth; consistent with Cho et al. and Bahdanau et al.; reproduces 33.3 of [29]",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "test perplexity",
+     "definition": "LSTM test perplexity (used in the reversal ablation)",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Phrase-based SMT baseline [29]",
+    "Bahdanau et al. [2]",
+    "Cho et al. [5]",
+    "Best WMT'14 result [9]"
+   ],
+   "protocol": "Single test set ntst14; no significance test or repeated runs reported; BLEU penalised on out-of-vocabulary words"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WMT'14 En-Fr tokenized sets and SMT 1000-best lists said to be publicly available"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "After 5 epochs, we begun halving the learning rate every half epoch. We trained our models for a total of 7.5 epochs.",
+    "where": "3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Ensemble of 5 reversed LSTMs with beam 12 reaches 34.81 BLEU, beating the SMT baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 34.81,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text; 5 LSTMs, 80k target vocab",
+   "note": "Abstract prints 34.8 and the baseline 33.3",
+   "where": "Sec 1; Table 1",
+   "quote": "we obtained a BLEU score of 34.81 by directly extracting translations from an ensemble of 5 deep LSTMs"
+  },
+  {
+   "claim": "Rescoring the SMT 1000-best with the ensemble gives 36.5 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 36.5,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text; rescoring baseline 1000-best with ensemble of 5 reversed LSTMs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Rescoring the baseline 1000-best with an ensemble of 5 reversed LSTMs"
+  },
+  {
+   "claim": "Reversing source sentences raised test BLEU from 25.9 to 30.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 30.6,
+   "unit": "BLEU",
+   "baseline_value": 25.9,
+   "n": null,
+   "setup": "WMT'14 En-Fr; LSTM test BLEU with reversed vs raw source",
+   "note": "Table 1 prints single forward 26.17 and single reversed 30.59 at beam 12",
+   "where": "Sec 3.3",
+   "quote": "the test BLEU scores of its decoded translations increased from 25.9 to 30.6"
+  },
+  {
+   "claim": "Reversing source sentences dropped test perplexity from 5.8 to 4.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 4.7,
+   "unit": "perplexity",
+   "baseline_value": 5.8,
+   "n": null,
+   "setup": "WMT'14 En-Fr; single LSTM",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "the LSTM's test perplexity dropped from 5.8 to 4.7"
+  },
+  {
+   "claim": "Single forward LSTM, beam 12",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.17,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Single forward LSTM, beam size 12, column test BLEU score"
+  },
+  {
+   "claim": "Single reversed LSTM, beam 12",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 30.59,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Single reversed LSTM, beam size 12, column test BLEU score"
+  },
+  {
+   "claim": "Ensemble of 5 with beam 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.0,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ensemble of 5 reversed LSTMs, beam size 1"
+  },
+  {
+   "claim": "Ensemble of 5 with beam 2 gives most of the beam-search benefit",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 34.5,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ensemble of 5 reversed LSTMs, beam size 2"
+  },
+  {
+   "claim": "Ensemble of 2 with beam 12",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.27,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ensemble of 2 reversed LSTMs, beam size 12"
+  },
+  {
+   "claim": "Rescoring with a single reversed LSTM",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 35.85,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Rescoring the baseline 1000-best with a single reversed LSTM"
+  },
+  {
+   "claim": "Rescoring with a single forward LSTM",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 35.61,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Rescoring the baseline 1000-best with a single forward LSTM"
+  },
+  {
+   "claim": "Best published WMT'14 result as re-scored by the authors",
+   "kind": "reported",
+   "source": "[9] Durrani et al. (best WMT'14 system), re-evaluated by authors",
+   "metric": "BLEU",
+   "value": 37.0,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English to French, ntst14 test set, cased BLEU via multi-bleu.pl on tokenized text",
+   "note": null,
+   "where": "Sec 3.6",
+   "quote": "we get 37.0, which is greater than the 35.8 reported by"
+  },
+  {
+   "claim": "Deep LSTM has 384M parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": 384,
+   "unit": "M parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 layers, 1000 cells, 160k/80k vocab",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "The resulting LSTM has 384M parameters of which 64M are pure recurrent connections"
+  },
+  {
+   "claim": "Each extra LSTM layer cut perplexity by nearly 10%",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity reduction per layer",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "deep vs shallow LSTMs",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "each additional layer reduced perplexity by nearly 10%"
+  },
+  {
+   "claim": "Training took about ten days on 8 GPUs at 6,300 words/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "words per second",
+   "value": 6300,
+   "unit": "words/s",
+   "baseline_value": 1700,
+   "n": null,
+   "setup": "8-GPU model-parallel, minibatch 128",
+   "note": null,
+   "where": "Sec 3.5",
+   "quote": "achieved a speed of 6,300"
+  },
+  {
+   "claim": "No BLEU degradation on sentences under 35 words and only minor degradation on the longest",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 left plot, LSTM vs baseline by sentence length",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "ences with less than 35 words, there is only a minor degradation on the longest"
+  }
+ ],
+ "limits": [
+  "Fixed vocabulary of 80k target words; BLEU penalised on OOV (UNK) and the model cannot handle out-of-vocabulary words (Sec 3.6; Table 3 shows UNK emitted for a name).",
+  "Authors have no complete explanation for why reversal works; the short-term-dependency account is a belief (Sec 3.3).",
+  "Authors believe a standard RNN would be trainable on reversed sources but did not verify it (Sec 5).",
+  "Pure LSTM ensemble does not beat the best WMT'14 system (37.0).",
+  "Fixed-size 8000-dim sentence vector bottleneck; attention (Bahdanau 2014) is cited as the alternative that addressed long-sentence weakness.",
+  "Single test set and no variance or significance reporting; no code or weights released in the paper.",
+  "Sec 3.5: the 2x speedup from equal-length batching and training times are for 2014 hardware."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "minimal time lag",
+   "definition": "The smallest distance between a source word and its corresponding target word in the concatenated sequence; reversal greatly reduces it while average distance is unchanged.",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Long Short-Term Memory",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Hochreiter and Schmidhuber LSTM [16]; formulation taken from Graves [10]",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "baseline",
+   "note": "Bahdanau et al. attention model, 28.45 BLEU; alternative approach to long sentences",
+   "quote": null
+  },
+  {
+   "work": "Kalchbrenner and Blunsom",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "First to map the whole input sentence to a vector; used convolutional nets that lose word order",
+   "quote": null
+  },
+  {
+   "work": "Cho et al. (RNN encoder-decoder)",
+   "year": 2014,
+   "arxiv": "1406.1078",
+   "relation": "baseline",
+   "note": "LSTM-like RNN mapping sentence to vector and back, used for rescoring; 34.54 BLEU",
+   "quote": null
+  },
+  {
+   "work": "Generating sequences with recurrent neural networks",
+   "year": 2013,
+   "arxiv": "1308.0850",
+   "relation": "uses-method",
+   "note": "LSTM formulation and gradient-norm constraint",
+   "quote": null
+  },
+  {
+   "work": "WMT'14 En-Fr data and SMT baseline [29]",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Baseline 33.30 BLEU and 1000-best lists",
+   "quote": null
+  },
+  {
+   "work": "Pouget-Abadie et al.",
+   "year": 2014,
+   "arxiv": "1409.1257",
+   "relation": "related",
+   "note": "Translating pieces of source; authors suspect reversal would help them",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our model reads an input sentence \"ABC\" and produces \"WXYZ\" as the output sentence. The model stops making predictions after outputting the end-of-sentence token.",
+   "page": 2,
+   "why": "Shows encoder-decoder flow and the reversed input."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "2-dimensional PCA projection of the LSTM hidden states after processing phrases.",
+   "page": 6,
+   "why": "Shows representations cluster by word order and meaning."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance as a function of sentence length (left) and average word frequency rank (right).",
+   "page": 7,
+   "why": "Shows no degradation on long sentences."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Performance of the LSTM on WMT'14 English to French test set (ntst14).",
+   "page": 6,
+   "why": "Beam size and ensemble ablation."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, eq 1",
+   "snippet": "p(y1..yT'|x1..xT) = prod_{t=1}^{T'} p(yt|v, y1..yt-1)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.4",
+   "snippet": "s = ||g||2; if s > 5, g = 5g/s",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Reference text truncated in view; references only skimmed; authors of [9] and [29] not confirmed from the reference list, named in extraction only generically.",
+  "Several equations in the text cache are garbled; code snippets are paraphrased (verbatim false).",
+  "Source says 'about a ten days' (typo in paper)."
+ ]
+}

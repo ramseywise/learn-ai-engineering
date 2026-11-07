@@ -18,9 +18,14 @@ uv run -q --with pymupdf --with pypdf python scripts/papers/extract.py text <pdf
 
 This prints the ledger key, the cached text file, the extraction path, and the character offset of
 every section heading and table it found. If the key is `(no ledger row)`, say so in your report and
-skip step 4 (write nothing). If an extraction already exists at that path with `"schema": 0`, read its
-`legacy_report`: it is an earlier read of the same PDF that lacked the method block. Use it to know
-where to look, but confirm everything against the text yourself.
+skip step 4 (write nothing). If an extraction already exists at that path with `"schema": 1`, run
+`uv run -q --with pymupdf --with pypdf python scripts/papers/extract.py check <key>`. If it passes, do not
+read the PDF again: build your report from that file (claims, numbers, setups and quotes from `results`,
+`limits`, `lineage`), say `COVERAGE: reused extraction <path>`, and write nothing. If you were given a note
+and the file lacks something the note needs, read only the sections that hold it and say which. If the check
+fails, do the full read below and rewrite the file. If an extraction already exists at that path with
+`"schema": 0`, read its `legacy_report`: it is an earlier read of the same PDF that lacked the method block.
+Use it to know where to look, but confirm everything against the text yourself.
 
 ## 2. Read all of it
 

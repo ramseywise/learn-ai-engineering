@@ -75,7 +75,7 @@ IRCoT uses each chain-of-thought sentence as the next BM25 query. With GPT-3 (co
 
 Li runs the two side by side on legal Q&A. A simple question ("rules on self-defense") gives the same quality either way, and the single pass is faster. A compound question (sentencing for negligent serious injury while intoxicated, with a prior theft conviction) separates them. Single-pass retrieval with the wrong first keywords misses the link. The agent searches the three sub-questions in parallel, sees that what joins them is missing (how an unrelated prior conviction affects sentencing), and runs a second, targeted round on recidivism. Use agentic RAG when questions decompose; keep the single pass for narrow ones. Lab: upstream [3-9 agentic-rag](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/agentic-rag).
 
-When it pays, and the checks to run before shipping it, are in [08 § when agentic RAG pays](08-agentic-rag-prince.md#when-agentic-rag-pays).
+When it pays, and the checks to run before shipping it, are in [08 § when agentic RAG pays](08b-routing-sub-agents-and-evaluation.md#when-agentic-rag-pays).
 
 ---
 

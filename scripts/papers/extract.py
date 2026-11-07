@@ -461,11 +461,16 @@ def backlog_rows(rows):
 def cmd_status(args):
     rows = rows_by_key()
     by_home = defaultdict(Counter)
+    rest = Counter()
     for r in backlog_rows(rows):
         home = r.get("pillar") or "none"
         if args.home and home != args.home:
             continue
         x = load(r["key"])
+        if not in_scope(r, args.all):
+            if not (x and x.get("schema") == SCHEMA):
+                rest["v0" if x else "none"] += 1
+            continue
         by_home[home]["v1" if x and x.get("schema") == SCHEMA else "v0" if x else "none"] += 1
     total = Counter()
     print(f"{'home':<18} {'full':>6} {'salvaged':>9} {'none':>6}")
@@ -475,9 +480,27 @@ def cmd_status(args):
         print(f"{home:<18} {c['v1']:>6} {c['v0']:>9} {c['none']:>6}")
     print(f"{'all':<18} {total['v1']:>6} {total['v0']:>9} {total['none']:>6}")
     print("full = schema 1; salvaged = old text report only, still needs a read for its method")
+    if not args.all:
+        print(f"scope: tier 1, tier 2 and book chapters. Not counted: {sum(rest.values())} paper-tier 3-6 readings "
+              f"without a full extraction ({rest['v0']} salvaged); --all includes them")
 
 
-def next_rows(rows, home=None, include_v0=True):
+# Buckets 1-3 are the core backfill: tier 1, tier 2, book chapters. The rest (paper tiers 3-6, buckets 4-7)
+# is backfilled only once the core is empty, with --all: a later /papers read writes those extractions anyway.
+CORE_BUCKET = 3
+
+
+def bucket(r):
+    """tier 1 and 2 first, then book chapters, then the remaining paper tiers."""
+    tier = potw.integration_tier(r)
+    return tier if tier <= 2 else 3 if is_chapter(r) else tier + 1
+
+
+def in_scope(r, everything=False):
+    return everything or bucket(r) <= CORE_BUCKET
+
+
+def next_rows(rows, home=None, include_v0=True, everything=False):
     out = []
     for r in backlog_rows(rows):
         if home and r.get("pillar") != home:
@@ -487,15 +510,17 @@ def next_rows(rows, home=None, include_v0=True):
             continue
         if x and not include_v0:
             continue
-        # tier 1 and 2 first, then book chapters, then the rest; within a tier, the most cited first
-        tier = potw.integration_tier(r)
-        out.append(((tier if tier <= 2 else 3 if is_chapter(r) else tier + 1), -(r.get("citations") or 0), r["key"], r))
+        b = bucket(r)
+        if b > CORE_BUCKET and not everything:
+            continue
+        # within a bucket, the most cited first
+        out.append((b, -(r.get("citations") or 0), r["key"], r))
     return [t[-1] for t in sorted(out, key=lambda t: t[:3])]
 
 
 def cmd_next(args):
     rows = rows_by_key()
-    picked = next_rows(rows, args.home, include_v0=args.include_v0)
+    picked = next_rows(rows, args.home, include_v0=args.include_v0, everything=args.all)
     if args.count:
         print(len(picked))
         return
@@ -700,8 +725,9 @@ def main():
     p.add_argument("--strict", action="store_true", help="treat warnings as failures")
     p.add_argument("--quiet", action="store_true", help="print failures only")
     p.set_defaults(fn=cmd_check)
-    p = sub.add_parser("status", help="extraction coverage per home")
+    p = sub.add_parser("status", help="extraction coverage per home (tier 1, tier 2 and book chapters unless --all)")
     p.add_argument("--home")
+    p.add_argument("--all", action="store_true", help="count paper tiers 3-6 too")
     p.set_defaults(fn=cmd_status)
     p = sub.add_parser("next", help="readings still needing a full extraction, best first: key, pdf, note, state, path")
     p.add_argument("--home")
@@ -709,6 +735,7 @@ def main():
     p.add_argument("--count", action="store_true")
     p.add_argument("--homes", action="store_true", help="print the homes with a backlog")
     p.add_argument("--no-v0", dest="include_v0", action="store_false", help="skip readings that have a salvaged report")
+    p.add_argument("--all", action="store_true", help="include paper tiers 3-6 after the core (tier 1, tier 2, chapters)")
     p.set_defaults(fn=cmd_next)
     p = sub.add_parser("path", help="where a reading's extraction file goes")
     p.add_argument("target")

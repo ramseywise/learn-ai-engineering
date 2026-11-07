@@ -61,7 +61,7 @@ flowchart LR
     KG -->|rows, paths| A[LLM summarises<br/>into an answer]
 ```
 
-LLMs **build** KGs (extraction, [note 10](10-building-kgs-with-llms.md)), **query** them (text-to-Cypher, [note 11](11-kg-rag-and-text-to-cypher.md)) and **summarise** what comes back, turning a table of paths into prose (*KG & LLMs in Action*, ch. 1, fig. 1.4).
+LLMs **build** KGs (extraction, [note 10](10-building-kgs-with-llms.md)), **query** them (text-to-Cypher, [note 11a](11a-structured-lookups-and-text-to-cypher.md)) and **summarise** what comes back, turning a table of paths into prose (*KG & LLMs in Action*, ch. 1, fig. 1.4).
 
 ### Why it pairs with LLMs
 

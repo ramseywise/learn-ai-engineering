@@ -1,0 +1,644 @@
+{
+ "schema": 1,
+ "key": "2005.12872",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/carion-2020-end-end-object-detection-transformers.pdf",
+ "bib": {
+  "title": "End-to-End Object Detection with Transformers",
+  "authors": [
+   "Nicolas Carion",
+   "Francisco Massa",
+   "Gabriel Synnaeve",
+   "Nicolas Usunier",
+   "Alexander Kirillov",
+   "Sergey Zagoruyko"
+  ],
+  "first_author": "Carion",
+  "year": 2020,
+  "venue": "preprint (arXiv v3, 28 May 2020; ECCV 2020 format)",
+  "arxiv": "2005.12872",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 65815,
+  "chars_total": 65815,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can object detection be cast as direct set prediction with a transformer encoder-decoder and bipartite matching loss, removing anchors and NMS, while matching Faster R-CNN on COCO?",
+ "hypothesis": "Self-attention modelling pairwise interactions between all predictions suits set prediction (removing duplicates) so hand-designed components such as NMS and anchors become unnecessary.",
+ "contributions": [
+  "DETR: a set-based global loss via bipartite matching plus a transformer encoder-decoder with non-autoregressive parallel decoding",
+  "Competitive COCO detection vs Faster R-CNN, much better on large objects, worse on small",
+  "Ablations of encoder/decoder depth, FFN, positional encodings and loss terms",
+  "Simple extension to unified panoptic segmentation with a mask head"
+ ],
+ "method": {
+  "summary": "A ResNet backbone feeds a 6+6 layer transformer; N=100 learned object queries are decoded in parallel into class and box by a shared FFN. Training uses Hungarian matching with class NLL, L1 and GIoU box losses plus auxiliary decoder losses. A mask head is added for panoptic segmentation.",
+  "task": "object detection (set prediction) and panoptic segmentation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO 2017 detection and panoptic",
+    "role": "both",
+    "size": "118k training images, 5k validation images; 7 instances per image on average, up to 63",
+    "split": "train / val (also test for 46 PQ)",
+    "source": "COCO [24], panoptic annotations [18] with 53 stuff and 80 things categories",
+    "preprocessing": "Scale augmentation: shortest side 480-800, longest at most 1333; random crop with probability 0.5 then resize to 800-1333; images zero-padded in batch"
+   }
+  ],
+  "models": [
+   {
+    "name": "DETR (R50)",
+    "role": "proposed",
+    "params": "41M (41.3M: 23.5M ResNet-50, 17.8M transformer)",
+    "architecture": "ResNet-50 + encoder-decoder transformer, parallel decoding, 3-layer FFN heads",
+    "init_from": "ImageNet-pretrained torchvision ResNet, frozen batchnorm; transformer Xavier init",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6 encoder, 6 decoder",
+    "hidden": "256",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "N_queries": "100",
+     "GFLOPS/FPS": "86/28"
+    }
+   },
+   {
+    "name": "DETR-DC5",
+    "role": "proposed",
+    "params": "41M",
+    "architecture": "dilated C5 stage, stride removed in first conv of stage",
+    "init_from": "ImageNet ResNet-50",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6/6",
+    "hidden": "256",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "GFLOPS/FPS": "187/12",
+     "note": "16x higher encoder self-attention cost, 2x overall"
+    }
+   },
+   {
+    "name": "DETR-R101",
+    "role": "proposed",
+    "params": "60M",
+    "architecture": "ResNet-101 backbone",
+    "init_from": "ImageNet ResNet-101",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6/6",
+    "hidden": "256",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "GFLOPS/FPS": "152/20"
+    }
+   },
+   {
+    "name": "DETR-DC5-R101",
+    "role": "proposed",
+    "params": "60M",
+    "architecture": "dilated C5, ResNet-101",
+    "init_from": "ImageNet ResNet-101",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6/6",
+    "hidden": "256",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "GFLOPS/FPS": "253/10"
+    }
+   },
+   {
+    "name": "Faster R-CNN (Detectron2, FPN/DC5/R101-FPN, plus '+' variants)",
+    "role": "baseline",
+    "params": "42M / 166M / 60M",
+    "architecture": "two-stage detector",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "+ variant": "GIoU loss, DETR's random crop, 9x schedule (about 109 epochs); loss weights 20 and 1 found by grid search, GIoU only"
+    }
+   },
+   {
+    "name": "Panoptic mask head",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multi-head attention over encoder output (M heads) then FPN-like upsampling to stride 4",
+    "init_from": "frozen trained DETR",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Hungarian loss: class NLL (down-weighted by 10 for no-object) + lambda_L1*L1 + lambda_iou*GIoU, with auxiliary losses after each decoder layer; mask head: DICE/F-1 and Focal loss",
+   "optimizer": "AdamW",
+   "lr": "1e-4 transformer, 1e-5 backbone",
+   "lr_schedule": "drop by factor 10 after epoch 200 (300-epoch ablations) or after epoch 400 (500-epoch schedule)",
+   "warmup": null,
+   "batch_size": "64 (16 V100 x 4 images)",
+   "steps": null,
+   "epochs": "300 (ablation) or 500 (comparison with Faster R-CNN); mask head 25 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4",
+   "dropout": "0.1 after every multi-head attention and FFN",
+   "regularisation": "gradient clipping max norm 0.1; frozen backbone batchnorm; scale and random-crop augmentation",
+   "hardware": "16 V100 GPUs",
+   "compute": "300 epochs on 16 V100 takes 3 days",
+   "wall_clock": "3 days (300 epochs)",
+   "seeds": null,
+   "other": {
+    "lambda_L1": "5",
+    "lambda_iou": "2",
+    "N": "100 decoder query slots",
+    "panoptic": "train DETR for boxes, freeze, then train mask head 25 epochs (joint training gives similar results)",
+    "loss normalisation": "by total number of objects across all GPUs' sub-batches"
+   }
+  },
+  "inference": {
+   "decoding": "single parallel pass of N=100 queries, no NMS; empty-class slots overridden with second-highest class and its confidence",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one forward pass; ablations report median over last 10 epochs' validation results; Faster R-CNN comparison uses last epoch; giraffe test one image; slot-limit test 100 random masks",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "panoptic_confidence_filter": "detections below 85% dropped",
+    "min_mask_pixels": "masks under 4 pixels filtered",
+    "FLOPS": "average over first 100 val images"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bbox AP",
+     "definition": "integral metric over multiple IoU thresholds (COCO); AP50/AP75 at fixed thresholds; APS/APM/APL by object size",
+     "unit": "AP points",
+     "higher_is_better": true
+    },
+    {
+     "name": "PQ (SQ, RQ, PQth, PQst)",
+     "definition": "Panoptic Quality with things/stuff breakdown",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "GFLOPS / FPS",
+     "definition": "Detectron2 flop_count_operators extended for bmm; torchscript models",
+     "unit": "GFLOPS, frames/s",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Faster R-CNN Detectron2 3x",
+    "Faster R-CNN+ (GIoU, crops, 9x)",
+    "UPSNet",
+    "UPSNet-M",
+    "PanopticFPN++ (retrained, 18x schedule)"
+   ],
+   "protocol": "COCO val AP at last epoch for Faster R-CNN comparison; median of last 10 epochs for ablations; single run, no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/detr",
+   "weights": "pretrained models available at same URL",
+   "data": "COCO public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "takes 3 days, with 4 images per GPU",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DETR (ResNet-50) reaches 42.0 AP on COCO val, matching Faster R-CNN-FPN+ (42.0 AP) with the same parameter count",
+   "kind": "measured",
+   "source": null,
+   "metric": "bbox AP",
+   "value": "42.0",
+   "unit": "AP",
+   "baseline_value": "42.0 (Faster RCNN-FPN+)",
+   "n": null,
+   "setup": "COCO 2017 val, 118k train / 5k val images, DETR ResNet-50, 6 enc + 6 dec layers, d=256, 8 heads, N=100, 500-epoch schedule",
+   "note": null,
+   "where": "Table 1, Sec 4.1",
+   "table": "Table 1, row DETR, column AP"
+  },
+  {
+   "claim": "DETR-DC5-R101 is the strongest detector variant at 44.9 AP, vs 44.0 for Faster RCNN-R101-FPN+",
+   "kind": "measured",
+   "source": null,
+   "metric": "bbox AP",
+   "value": "44.9",
+   "unit": "AP",
+   "baseline_value": "44.0",
+   "n": null,
+   "setup": "COCO 2017 val, DC5 ResNet-101 backbone, 500 epochs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row DETR-DC5-R101, column AP"
+  },
+  {
+   "claim": "DETR improves large-object AP over Faster R-CNN but lags on small objects",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP_L / AP_S",
+   "value": "+7.8 APL, -5.5 APS",
+   "unit": "AP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DETR R50 vs Faster R-CNN-FPN, COCO val",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "The way DETR achieves this is by improving APL (+7.8), however note that the model is still lagging behind in APS (-5.5)."
+  },
+  {
+   "claim": "DETR R50 APL 61.1 vs Faster RCNN-FPN+ 53.4; APS 20.5 vs 26.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP_L",
+   "value": "61.1",
+   "unit": "AP",
+   "baseline_value": "53.4",
+   "n": null,
+   "setup": "COCO 2017 val, 118k train / 5k val images, DETR ResNet-50, 6 enc + 6 dec layers, d=256, 8 heads, N=100, 500-epoch schedule",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row DETR, column APL"
+  },
+  {
+   "claim": "Extending to panoptic segmentation, DETR-R101 reaches 45.1 PQ vs 44.1 for PanopticFPN++ R101",
+   "kind": "measured",
+   "source": null,
+   "metric": "PQ",
+   "value": "45.1",
+   "unit": "PQ",
+   "baseline_value": "44.1",
+   "n": null,
+   "setup": "COCO 2017 val panoptic, mask head trained 25 epochs on frozen DETR, R101 backbone",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row DETR-R101, column PQ"
+  },
+  {
+   "claim": "DETR obtains 46 PQ on COCO test",
+   "kind": "measured",
+   "source": null,
+   "metric": "PQ",
+   "value": "46",
+   "unit": "PQ",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO test set panoptic",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "We also evaluated our method on the test set of the COCO dataset, and obtained 46 PQ."
+  },
+  {
+   "claim": "Removing all encoder layers drops AP by 3.9 points, 6.0 on large objects",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "36.7 vs 40.6",
+   "unit": "AP",
+   "baseline_value": "40.6",
+   "n": null,
+   "setup": "Ablation, 300-epoch schedule, 0 vs 6 encoder layers",
+   "note": null,
+   "where": "Table 2, Sec 4.2",
+   "table": "Table 2, row 0, column AP"
+  },
+  {
+   "claim": "Encoder depth raises AP: 12 layers give 41.6 AP at 95 GFLOPS",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "41.6",
+   "unit": "AP",
+   "baseline_value": "40.6",
+   "n": null,
+   "setup": "Ablation, 12 encoder layers, 49.2M params",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 12, column AP"
+  },
+  {
+   "claim": "AP improves after every decoder layer, +8.2 AP (+9.5 AP50) from first to last",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "+8.2/9.5",
+   "unit": "AP / AP50 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Aux losses after each decoder layer, single long-schedule baseline",
+   "note": null,
+   "where": "Sec 4.2, Fig 4",
+   "quote": "totalling into a very signiﬁcant +8.2/9.5 AP improvement between the ﬁrst and the last layer"
+  },
+  {
+   "claim": "Replacing empty-slot predictions with the second-highest class improves AP by 2 points vs filtering empty slots",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "2",
+   "unit": "AP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inference-time override of 'no object' slots",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "This improves AP by 2 points compared to ﬁltering out empty slots."
+  },
+  {
+   "claim": "Removing FFN from transformer layers cuts params 41.3M to 28.7M and costs 2.3 AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "-2.3",
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation of FFN",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "performance drops by 2.3 AP"
+  },
+  {
+   "claim": "No spatial positional encodings loses 7.8 AP (32.8 AP)",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "32.8",
+   "unit": "AP",
+   "baseline_value": "40.6",
+   "n": null,
+   "setup": "Ablation, output encodings learned at input, 300 epochs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row none/none/learned at input, column AP"
+  },
+  {
+   "claim": "Loss ablation: l1 without GIoU gives 35.8 AP; GIoU without l1 gives 39.9 AP; both 40.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "35.8",
+   "unit": "AP",
+   "baseline_value": "40.6",
+   "n": null,
+   "setup": "Ablation of box loss components, 300 epochs",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row class+l1, column AP"
+  },
+  {
+   "claim": "Longer 500-epoch schedule adds 1.5 AP over 300 epochs",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "1.5",
+   "unit": "AP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Schedule 500 epochs with LR drop after 400 vs 300 with drop after 200",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "This schedule adds 1.5 AP compared to the shorter schedule."
+  },
+  {
+   "claim": "Random crop augmentation improves AP by approximately 1 point",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Crop with probability 0.5 then resize to 800-1333",
+   "where": "Sec 4",
+   "note": "Paper says approximately 1 AP; value left null as no verbatim single-line quote."
+  },
+  {
+   "claim": "Training the baseline for 300 epochs takes 3 days on 16 V100 GPUs",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": "3",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 images per GPU, total batch 64",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "takes 3 days, with 4 images per GPU"
+  },
+  {
+   "claim": "DETR detects all instances up to 50 visible, but only about 30 when 100 instances are present",
+   "kind": "measured",
+   "source": null,
+   "metric": "detected instances",
+   "value": "30",
+   "unit": "instances of 100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 10x10 grid of repeated image, 100 random masks per count",
+   "note": null,
+   "where": "App A.5, Fig 12",
+   "quote": "the model only detects 30 on average"
+  },
+  {
+   "claim": "DETR finds all 24 giraffes in a synthetic image though training has at most 13 per image",
+   "kind": "measured",
+   "source": null,
+   "metric": "giraffes found",
+   "value": "24",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One synthetic image",
+   "note": null,
+   "where": "Sec 4.3, Fig 5",
+   "quote": "Our model is able to ﬁnd all 24 giraﬀes on the image"
+  },
+  {
+   "claim": "NMS helps the first decoder layer only; at the last layers it slightly lowers AP",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NMS with Detectron2 default parameters after each decoder layer",
+   "note": null,
+   "where": "Sec 4.2, Fig 4"
+  }
+ ],
+ "limits": [
+  "Requires very long training (300-500 epochs) versus Faster R-CNN; authors note new challenges in training and optimization",
+  "Lower small-object AP (APS) than Faster R-CNN; authors expect FPN-like fixes",
+  "Cannot predict more objects than 100 query slots; detections saturate near 100 instances (only 30 found on average when 100 present)",
+  "Loss ablations use a single fixed weighting; other combinations might differ",
+  "Mask AP for things up to 8 below baselines in panoptic",
+  "Inference listing omits batching and uses simplified positional encodings; no seeds or variance reported",
+  "Paper is vision; relevance to the LLM note is the non-autoregressive parallel decoding contrast"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "object queries",
+   "definition": "learnt positional encodings input to the decoder, N of them, added to the input of each attention layer",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Hungarian loss",
+   "definition": "loss over pairs matched by the optimal bipartite assignment between predictions and ground truth",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "standard transformer; decoded in parallel instead of autoregressively",
+   "quote": null
+  },
+  {
+   "work": "Faster R-CNN (Ren et al.)",
+   "year": 2015,
+   "arxiv": "1506.01497",
+   "relation": "baseline",
+   "note": "main comparison, strengthened with GIoU, crops, long schedule",
+   "quote": null
+  },
+  {
+   "work": "Generalized IoU (Rezatofighi et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "box loss",
+   "quote": null
+  },
+  {
+   "work": "End-to-end people detection in crowded scenes (Stewart et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closest prior set prediction with bipartite loss, RNN based",
+   "quote": null
+  },
+  {
+   "work": "Detectron2 (Wu et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Faster R-CNN model zoo, FLOPS tool",
+   "quote": null
+  },
+  {
+   "work": "Panoptic FPN (Kirillov et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "panoptic baseline, retrained",
+   "quote": null
+  },
+  {
+   "work": "UPSNet (Xiong et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "panoptic baseline",
+   "quote": null
+  },
+  {
+   "work": "COCO (Lin et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "2017 detection and panoptic splits",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Non-autoregressive NMT (Gu et al.); Mask-predict (Ghazvininejad et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parallel decoding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "DETR directly predicts (in parallel) the final set of detections by combining a common CNN with a transformer architecture.",
+   "page": 2,
+   "why": "Shows the whole pipeline: CNN, encoder-decoder, bipartite matching, no-object slots."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "AP and AP50 performance after each decoder layer.",
+   "page": 12,
+   "why": "Shows NMS only helps the first decoder layer, validating parallel decoding with self-attention."
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Analysis of the number of instances missed by DETR vs how many are present.",
+   "page": 25,
+   "why": "Shows the fixed query-slot ceiling."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1, p26",
+   "snippet": "detr = DETR(num_classes=91, hidden_dim=256, nheads=8, num_encoder_layers=6, num_decoder_layers=6)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 1",
+   "snippet": "sigma_hat = argmin_{sigma in S_N} sum_i L_match(y_i, yhat_sigma(i))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No instructions embedded in the PDF found.",
+  "Repo paths said the note is a decoding/inference note; this is a vision paper, relevance is the parallel (non-autoregressive) decoding contrast only; flagged for the caller.",
+  "Conclusion text was cut once in output but read in full by re-reading ranges.",
+  "Paper prints 'DETR 6 transformer and 6 decoder layers' (sic, means encoder)."
+ ]
+}

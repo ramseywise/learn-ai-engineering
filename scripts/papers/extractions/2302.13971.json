@@ -1,0 +1,1026 @@
+{
+ "schema": 1,
+ "key": "2302.13971",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/touvron-2023-llama.pdf",
+ "bib": {
+  "title": "LLaMA: Open and Efficient Foundation Language Models",
+  "authors": [
+   "Hugo Touvron",
+   "Thibaut Lavril",
+   "Gautier Izacard",
+   "Xavier Martinet",
+   "Marie-Anne Lachaux",
+   "Timothee Lacroix",
+   "Baptiste Rozière",
+   "Naman Goyal",
+   "Eric Hambro",
+   "Faisal Azhar",
+   "Aurelien Rodriguez",
+   "Armand Joulin",
+   "Edouard Grave",
+   "Guillaume Lample"
+  ],
+  "first_author": "Touvron",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2302.13971",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 87897,
+  "chars_total": 87897,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can models trained only on publicly available data, for longer than compute-optimal, reach state-of-the-art quality at small sizes that are cheap to serve?",
+ "hypothesis": "For a target performance, a smaller model trained on more tokens is cheaper at inference than a larger compute-optimal one.",
+ "contributions": [
+  "LLaMA, a collection of foundation models from 7B to 65B parameters trained on 1T-1.4T tokens",
+  "Training on publicly available data only",
+  "Release of all models to the research community",
+  "Benchmarks on 20 tasks plus bias, toxicity and carbon footprint analysis"
+ ],
+ "method": {
+  "summary": "Decoder-only transformers (7B, 13B, 33B, 65B) with pre-RMSNorm, SwiGLU and rotary embeddings, pretrained on a 1.4T-token mix of public sources (CommonCrawl, C4, GitHub, Wikipedia, Books, ArXiv, StackExchange) with AdamW and a cosine schedule. Evaluated zero-shot and few-shot on 20 benchmarks against GPT-3, Gopher, Chinchilla, PaLM, OPT and others; one instruction-finetuned variant (LLaMA-I) is tried on MMLU.",
+  "task": "next-token pretraining of foundation LMs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English CommonCrawl",
+    "role": "pretrain",
+    "size": "3.3 TB disk; 67.0% sampling",
+    "split": "1.10 epochs at 1.4T tokens",
+    "source": "five CommonCrawl dumps 2017 to 2020",
+    "preprocessing": "CCNet: line-level dedup, fastText language ID, n-gram LM quality filter; plus a linear classifier keeping Wikipedia-reference-like pages"
+   },
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "783 GB disk; 15.0%",
+    "split": "1.06 epochs",
+    "source": "Raffel et al. 2020",
+    "preprocessing": "dedup, language ID, heuristic quality filter"
+   },
+   {
+    "name": "Github",
+    "role": "pretrain",
+    "size": "328 GB disk; 4.5%",
+    "split": "0.64 epochs",
+    "source": "Google BigQuery public GitHub, Apache/BSD/MIT licences only",
+    "preprocessing": "line-length and alphanumeric heuristics, boilerplate removed by regex, file-level exact dedup"
+   },
+   {
+    "name": "Wikipedia",
+    "role": "pretrain",
+    "size": "83 GB disk; 4.5%",
+    "split": "2.45 epochs",
+    "source": "June-August 2022 dumps, 20 languages (Latin/Cyrillic scripts)",
+    "preprocessing": "hyperlinks, comments and formatting boilerplate removed"
+   },
+   {
+    "name": "Books (Gutenberg and Books3)",
+    "role": "pretrain",
+    "size": "85 GB disk; 4.5%",
+    "split": "2.23 epochs",
+    "source": "Project Gutenberg; Books3 from The Pile",
+    "preprocessing": "book-level dedup, books with more than 90% overlap removed"
+   },
+   {
+    "name": "ArXiv",
+    "role": "pretrain",
+    "size": "92 GB disk; 2.5%",
+    "split": "1.06 epochs",
+    "source": "arXiv LaTeX files",
+    "preprocessing": "text before first section and bibliography removed, comments removed, macros inline-expanded"
+   },
+   {
+    "name": "StackExchange",
+    "role": "pretrain",
+    "size": "78 GB disk; 2.0%",
+    "split": "1.03 epochs",
+    "source": "dump of the 28 largest sites",
+    "preprocessing": "HTML stripped, answers sorted by score"
+   },
+   {
+    "name": "Total pretraining mix",
+    "role": "pretrain",
+    "size": "roughly 1.4T tokens after tokenization",
+    "split": "1.0T tokens for 7B and 13B; 1.4T for 33B and 65B",
+    "source": "public data only",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-7B",
+    "role": "proposed",
+    "params": "6.7B",
+    "architecture": "decoder-only transformer with pre-RMSNorm, SwiGLU, rotary embeddings",
+    "init_from": null,
+    "tokenizer": "BPE (SentencePiece), digits split, byte fallback",
+    "vocab": null,
+    "layers": 32,
+    "hidden": 4096,
+    "heads": 32,
+    "context": null,
+    "other": {
+     "learning_rate": "3.0e-4",
+     "batch_size": "4M tokens",
+     "train_tokens": "1.0T"
+    }
+   },
+   {
+    "name": "LLaMA-13B",
+    "role": "proposed",
+    "params": "13.0B",
+    "architecture": "decoder-only transformer with pre-RMSNorm, SwiGLU, rotary embeddings",
+    "init_from": null,
+    "tokenizer": "BPE (SentencePiece), digits split, byte fallback",
+    "vocab": null,
+    "layers": 40,
+    "hidden": 5120,
+    "heads": 40,
+    "context": null,
+    "other": {
+     "learning_rate": "3.0e-4",
+     "batch_size": "4M tokens",
+     "train_tokens": "1.0T"
+    }
+   },
+   {
+    "name": "LLaMA-33B",
+    "role": "proposed",
+    "params": "32.5B",
+    "architecture": "decoder-only transformer with pre-RMSNorm, SwiGLU, rotary embeddings",
+    "init_from": null,
+    "tokenizer": "BPE (SentencePiece), digits split, byte fallback",
+    "vocab": null,
+    "layers": 60,
+    "hidden": 6656,
+    "heads": 52,
+    "context": null,
+    "other": {
+     "learning_rate": "1.5e-4",
+     "batch_size": "4M tokens",
+     "train_tokens": "1.4T"
+    }
+   },
+   {
+    "name": "LLaMA-65B",
+    "role": "proposed",
+    "params": "65.2B",
+    "architecture": "decoder-only transformer with pre-RMSNorm, SwiGLU, rotary embeddings",
+    "init_from": null,
+    "tokenizer": "BPE (SentencePiece), digits split, byte fallback",
+    "vocab": null,
+    "layers": 80,
+    "hidden": 8192,
+    "heads": 64,
+    "context": null,
+    "other": {
+     "learning_rate": "1.5e-4",
+     "batch_size": "4M tokens",
+     "train_tokens": "1.4T"
+    }
+   },
+   {
+    "name": "LLaMA-I (65B)",
+    "role": "proposed",
+    "params": "65B",
+    "architecture": "LLaMA-65B instruction-finetuned following the protocol of Chung et al. (2022)",
+    "init_from": "LLaMA-65B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "single experiment; finetuning data size and hyperparameters not given"
+    }
+   },
+   {
+    "name": "GPT-3",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "numbers": "from the cited papers"
+    }
+   },
+   {
+    "name": "Chinchilla",
+    "role": "baseline",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM",
+    "role": "baseline",
+    "params": "8B, 62B, 540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gopher",
+    "role": "baseline",
+    "params": "280B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT, GPT-J, GPT-Neo, GPT-NeoX, GLM, LaMDA, Minerva",
+    "role": "baseline",
+    "params": "various",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction (standard language modelling; inferred from the training-loss curve and 'standard optimizer')",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "3.0e-4 (7B, 13B); 1.5e-4 (33B, 65B)",
+   "lr_schedule": "cosine, final learning rate 10% of maximal",
+   "warmup": "2,000 warmup steps",
+   "batch_size": "4M tokens",
+   "steps": null,
+   "epochs": "about 1 epoch for most data; about two epochs on Wikipedia and Books (Table 1: 1.10 CommonCrawl, 1.06 C4, 0.64 Github, 2.45 Wikipedia, 2.23 Books, 1.06 ArXiv, 1.03 StackExchange, at 1.4T tokens)",
+   "tokens": "1.0T (7B, 13B); 1.4T (33B, 65B)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0",
+   "hardware": "2048 A100 80GB GPUs (65B)",
+   "compute": "65B: 1,022,362 GPU-hours, 449 MWh, 173 tCO2eq; 7B 82,432 GPU-h; 13B 135,168; 33B 530,432 (Table 15). Whole development about 2048 A100-80GB for approximately 5 months, 2,638 MWh, 1,015 tCO2eq",
+   "wall_clock": "approximately 21 days for 65B on 1.4T tokens",
+   "seeds": null,
+   "other": {
+    "throughput": "around 380 tokens/sec/GPU on 2048 A100 GPU with 80GB for 65B",
+    "efficiency": "xformers causal attention that skips masked scores and does not store attention weights; manual backward for transformer layers to save expensive activations; model and sequence parallelism; overlap of compute and all_reduce communication",
+    "ffn": "SwiGLU with dimension 2/3 * 4d instead of 4d",
+    "positional": "rotary embeddings at each layer, no absolute positions",
+    "norm": "RMSNorm on sub-layer input (pre-normalization)"
+   }
+  },
+  "inference": {
+   "decoding": "NaturalQuestions/TriviaQA: greedy, answer cut at first line break, final dot or comma; RealToxicityPrompts: greedy; code: sampling",
+   "temperature": "0.1 for pass@1, 0.8 for pass@100 and pass@80",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MATH maj1@k with k=256, GSM8k k=100 (Minerva 540B uses k=64 and 40); pass@k estimated as in Chen et al. 2021",
+   "prompting": "zero-shot: task description plus test example; few-shot: 1 to 64 examples. HumanEval zero-shot, MBPP 3-shot, MMLU 5-shot. QA prompt prefix 'Answer these questions:\\n'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "multiple_choice_scoring": "completion with highest likelihood normalised by characters (Gao et al. 2021); for OpenBookQA and BoolQ, P(completion|context)/P(completion|'Answer:')"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (commonsense, RACE, MMLU, WinoGender)",
+     "definition": "multiple choice by normalised likelihood",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact match (NaturalQuestions, TriviaQA)",
+     "definition": "match to any gold answer after lowercasing and removing articles, punctuation, duplicate whitespace; closed book",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@k",
+     "definition": "unbiased estimator of Chen et al. 2021",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "maj1@k",
+     "definition": "majority vote over k samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Toxicity score",
+     "definition": "PerspectiveAPI score per generation, 0 to 1",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "CrowS-Pairs bias",
+     "definition": "preference for stereotypical sentence by perplexity",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "TruthfulQA Truthful and Truthful*Inf",
+     "definition": "fraction scored by trained models via OpenAI API",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3 175B",
+    "Gopher 280B",
+    "Chinchilla 70B",
+    "PaLM 8B/62B/540B",
+    "Minerva",
+    "LaMDA 137B",
+    "OPT",
+    "GPT-J",
+    "GPT-Neo",
+    "GPT-NeoX 20B",
+    "OPT-IML",
+    "Flan-PaLM",
+    "GLM"
+   ],
+   "protocol": "Single run per model; no seeds or significance tests stated. Baseline numbers are taken from the corresponding papers (some read from figures). TriviaQA uses the filtered dev set (baselines used the unfiltered test set); NaturalQuestions uses the 3610-question open-domain test split."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/llama",
+   "weights": "released to the research community",
+   "data": "public sources only; mixture described, not itself released"
+  },
+  "prompts": [
+   {
+    "purpose": "QA prefix for NaturalQuestions and TriviaQA",
+    "text": "Answer these questions:\\n",
+    "where": "Appendix A, Figure 3"
+   },
+   {
+    "purpose": "RealToxicityPrompts respectful variant",
+    "text": "Complete the following sentence in a polite, respectful, and unbiased manner:",
+    "where": "Table 11 caption"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLaMA-13B beats GPT-3 175B on most benchmarks while 10x smaller",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmarks",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 benchmarks, zero/few-shot",
+   "note": null,
+   "where": "Abstract",
+   "quote": "In particular, LLaMA-13B outperforms GPT-3 (175B) on most benchmarks"
+  },
+  {
+   "claim": "LLaMA-13B on NaturalQuestions 0-shot exact match vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 20.1,
+   "unit": "%",
+   "baseline_value": 14.6,
+   "n": null,
+   "setup": "NaturalQuestions closed-book, 0-shot",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 13B, column 0-shot"
+  },
+  {
+   "claim": "LLaMA-13B 64-shot NaturalQuestions vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 31.9,
+   "unit": "%",
+   "baseline_value": 29.9,
+   "n": null,
+   "setup": "NaturalQuestions, 64-shot",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 13B, column 64-shot"
+  },
+  {
+   "claim": "LLaMA-65B 64-shot NaturalQuestions vs Chinchilla 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 39.9,
+   "unit": "%",
+   "baseline_value": 35.5,
+   "n": null,
+   "setup": "NaturalQuestions, 64-shot",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 65B, column 64-shot"
+  },
+  {
+   "claim": "LLaMA-13B zero-shot TriviaQA vs Chinchilla 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 56.6,
+   "unit": "%",
+   "baseline_value": 55.4,
+   "n": null,
+   "setup": "TriviaQA filtered dev set, 0-shot",
+   "note": "Baselines in other papers used the unfiltered test set.",
+   "where": "Table 5",
+   "table": "Table 5, row LLaMA 13B, column 0-shot"
+  },
+  {
+   "claim": "LLaMA-65B 64-shot TriviaQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 73.0,
+   "unit": "%",
+   "baseline_value": 64.6,
+   "n": null,
+   "setup": "TriviaQA filtered dev, 64-shot",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LLaMA 65B, column 64-shot"
+  },
+  {
+   "claim": "LLaMA-13B BoolQ zero-shot vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.1,
+   "unit": "%",
+   "baseline_value": 60.5,
+   "n": null,
+   "setup": "BoolQ 0-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLaMA 13B, column BoolQ"
+  },
+  {
+   "claim": "LLaMA-13B HellaSwag vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.2,
+   "unit": "%",
+   "baseline_value": 78.9,
+   "n": null,
+   "setup": "HellaSwag 0-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLaMA 13B, column HellaSwag"
+  },
+  {
+   "claim": "LLaMA-65B HellaSwag vs Chinchilla 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.2,
+   "unit": "%",
+   "baseline_value": 80.8,
+   "n": null,
+   "setup": "HellaSwag 0-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLaMA 65B, column HellaSwag"
+  },
+  {
+   "claim": "LLaMA-13B outperforms GPT-3 on most commonsense benchmarks despite being 10x smaller",
+   "kind": "measured",
+   "source": null,
+   "metric": "comparison",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, eight benchmarks zero-shot",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "LLaMA-13B model also outperforms GPT-3 on most benchmarks despite being 10× smaller."
+  },
+  {
+   "claim": "LLaMA-65B MMLU 5-shot average, behind Chinchilla-70B and PaLM-540B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.4,
+   "unit": "%",
+   "baseline_value": 67.5,
+   "n": null,
+   "setup": "MMLU 5-shot, average",
+   "note": "Chinchilla 67.5, PaLM-540B 69.3, GPT-3 175B 43.9",
+   "where": "Table 9",
+   "table": "Table 9, row LLaMA 65B, column Average"
+  },
+  {
+   "claim": "LLaMA-13B MMLU 5-shot vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.9,
+   "unit": "%",
+   "baseline_value": 43.9,
+   "n": null,
+   "setup": "MMLU 5-shot average",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row LLaMA 13B, column Average"
+  },
+  {
+   "claim": "Authors attribute the MMLU gap to limited books and papers in the pretraining data",
+   "kind": "measured",
+   "source": null,
+   "metric": "size",
+   "value": 177,
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ArXiv, Gutenberg and Books3 combined",
+   "note": "Explanation offered, not tested.",
+   "where": "Sec 3.6",
+   "quote": "ArXiv, Gutenberg and Books3, that sums up to only 177GB, while these models were trained on up to 2TB of books."
+  },
+  {
+   "claim": "Instruction-finetuned LLaMA-I 65B MMLU",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 68.9,
+   "unit": "%",
+   "baseline_value": 63.4,
+   "n": null,
+   "setup": "MMLU 5-shot, single instruction finetuning run following Chung et al. 2022",
+   "note": "Base LLaMA-65B 63.4; GPT code-davinci-002 reaches 77.4",
+   "where": "Table 10",
+   "table": "Table 10, row LLaMA-I 65B"
+  },
+  {
+   "claim": "LLaMA-65B GSM8k vs Minerva-62B, no math finetuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.9,
+   "unit": "%",
+   "baseline_value": 52.4,
+   "n": null,
+   "setup": "GSM8k, no majority voting",
+   "note": "Minerva 62B scores 52.4 without voting, so LLaMA-65B is lower here; with maj1@k LLaMA 69.7 vs Minerva 68.5. The text claim of outperforming Minerva-62B holds only under maj1@k.",
+   "where": "Table 7",
+   "table": "Table 7, row LLaMA 65B, column GSM8k"
+  },
+  {
+   "claim": "LLaMA-65B GSM8k with majority voting k=100",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.7,
+   "unit": "%",
+   "baseline_value": 68.5,
+   "n": null,
+   "setup": "GSM8k maj1@k, k=100",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row LLaMA 65B, column +maj1@k (GSM8k)"
+  },
+  {
+   "claim": "LLaMA-65B MATH",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 10.6,
+   "unit": "%",
+   "baseline_value": 8.8,
+   "n": null,
+   "setup": "MATH, no voting",
+   "note": "baseline is PaLM 540B",
+   "where": "Table 7",
+   "table": "Table 7, row LLaMA 65B, column MATH"
+  },
+  {
+   "claim": "LLaMA-13B HumanEval pass@1 vs LaMDA 137B",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 15.8,
+   "unit": "%",
+   "baseline_value": 14.0,
+   "n": null,
+   "setup": "HumanEval zero-shot, temperature 0.1",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row LLaMA 13B, column HumanEval @1"
+  },
+  {
+   "claim": "LLaMA-65B HumanEval pass@1 vs PaLM 62B",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 23.7,
+   "unit": "%",
+   "baseline_value": 15.9,
+   "n": null,
+   "setup": "HumanEval zero-shot",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row LLaMA 65B, column HumanEval @1"
+  },
+  {
+   "claim": "LLaMA-65B MBPP pass@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 37.7,
+   "unit": "%",
+   "baseline_value": 36.8,
+   "n": null,
+   "setup": "MBPP 3-shot",
+   "note": "baseline PaLM 540B",
+   "where": "Table 8",
+   "table": "Table 8, row LLaMA 65B, column MBPP @1"
+  },
+  {
+   "claim": "LLaMA-65B RACE-high vs PaLM 540B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 51.6,
+   "unit": "%",
+   "baseline_value": 49.1,
+   "n": null,
+   "setup": "RACE zero-shot",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row LLaMA 65B, column RACE-high"
+  },
+  {
+   "claim": "Training cost of LLaMA-65B",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU-hours",
+   "value": "1,022,362",
+   "unit": "A100-80GB hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 15, 400W, PUE 1.1, 0.385 kg CO2eq/KWh",
+   "note": "449 MWh, 173 tCO2eq; OPT-175B 809,472 GPU-h 137 tCO2eq; BLOOM-175B 1,082,880 GPU-h 183 tCO2eq",
+   "where": "Table 15",
+   "table": "Table 15, row LLaMA-65B, column GPU-hours"
+  },
+  {
+   "claim": "Training time of LLaMA-65B",
+   "kind": "measured",
+   "source": null,
+   "metric": "days",
+   "value": 21,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2048 A100 80GB, 1.4T tokens",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "takes approximately 21 days"
+  },
+  {
+   "claim": "Total development carbon cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "tCO2eq",
+   "value": 1015,
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2048 A100-80GB for approximately 5 months",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "a total emission of 1,015 tCO2eq"
+  },
+  {
+   "claim": "TruthfulQA: LLaMA-65B truthful fraction vs GPT-3 175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction",
+   "value": 0.57,
+   "unit": "fraction",
+   "baseline_value": 0.28,
+   "n": null,
+   "setup": "TruthfulQA, QA prompt of Ouyang et al. 2022",
+   "note": "Truthful*Inf 0.53 vs 0.25; authors say still low and model likely hallucinates",
+   "where": "Table 14",
+   "table": "Table 14, row LLaMA 65B, column Truthful"
+  },
+  {
+   "claim": "Toxicity increases with model size, especially for respectful prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity score",
+   "value": 0.141,
+   "unit": "score",
+   "baseline_value": 0.081,
+   "n": null,
+   "setup": "RealToxicityPrompts 100k prompts, greedy, LLaMA-65B respectful",
+   "note": "baseline is LLaMA-7B respectful; 65B basic 0.128",
+   "where": "Table 11",
+   "table": "Table 11, row LLaMA 65B, column Respectful"
+  },
+  {
+   "claim": "CrowS-Pairs average bias LLaMA-65B vs OPT-175B",
+   "kind": "measured",
+   "source": null,
+   "metric": "bias score",
+   "value": 66.6,
+   "unit": "%",
+   "baseline_value": 69.5,
+   "n": null,
+   "setup": "CrowS-Pairs zero-shot, higher is more biased",
+   "note": "GPT-3 67.2; religion 79.0 vs OPT 68.6",
+   "where": "Table 12",
+   "table": "Table 12, row Average, column LLaMA"
+  },
+  {
+   "claim": "WinoGender accuracy 65B, their/them/someone vs her/her/she",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.7,
+   "unit": "%",
+   "baseline_value": 78.8,
+   "n": null,
+   "setup": "WinoGender, LLaMA-65B",
+   "note": "gotcha cases lower: her/her/she 75.0, his/him/he 63.3",
+   "where": "Table 13",
+   "table": "Table 13, row their/them/someone, column 65B"
+  },
+  {
+   "claim": "A 7B model's performance keeps improving past 1T tokens, contrary to Chinchilla's 10B-on-200B recommendation",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Introduction",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "we ﬁnd that the performance of a 7B model continues to improve even after 1T tokens"
+  }
+ ],
+ "limits": [
+  "Evaluation ignores held-out contamination analysis; none is reported.",
+  "Baseline numbers come from other papers with different evaluation sets (TriviaQA filtered dev vs unfiltered test) and some are read from figures, so comparisons are indicative.",
+  "Toxicity scores come from a third-party API the authors do not control, so comparison with prior work is difficult.",
+  "Authors concede bias and toxicity benchmarks are not sufficient to understand the risks; model likely hallucinates (TruthfulQA).",
+  "Instruction finetuning is a single experiment on MMLU only; the finetuning data and hyperparameters are not given.",
+  "No ablations of the architecture changes or the data mix; no sequence length, vocabulary size or precision stated.",
+  "Training-cost claims: 65B ran 1.4T tokens for 21 days; smaller models trained 1.0T tokens, so size comparisons confound parameters and tokens.",
+  "Dated: results predate later LLaMA releases and instruction-tuned open models; MMLU 5-shot gap to PaLM-540B and Chinchilla."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Training Compute-Optimal Large Language Models (Chinchilla)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Scaling laws inspire the approach, but LLaMA trains smaller models longer to optimise inference cost",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Pre-normalization, evaluation protocol and main baseline",
+   "quote": null
+  },
+  {
+   "work": "PaLM: Scaling language modeling with pathways",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SwiGLU source and baseline",
+   "quote": null
+  },
+  {
+   "work": "Scaling language models: Gopher",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base transformer architecture",
+   "quote": null
+  },
+  {
+   "work": "Root mean square layer normalization",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RMSNorm",
+   "quote": null
+  },
+  {
+   "work": "GLU variants improve transformer",
+   "year": 2020,
+   "arxiv": "2002.05202",
+   "relation": "uses-method",
+   "note": "SwiGLU",
+   "quote": null
+  },
+  {
+   "work": "RoFormer: rotary position embedding",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "RoPE",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "FlashAttention",
+   "year": 2022,
+   "arxiv": "2205.14135",
+   "relation": "uses-method",
+   "note": "backward pass used in xformers causal attention",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Flan)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "protocol for LLaMA-I",
+   "quote": null
+  },
+  {
+   "work": "CCNet",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CommonCrawl preprocessing",
+   "quote": null
+  },
+  {
+   "work": "C4 (T5)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "The Pile (Books3)",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "baseline",
+   "note": "open-source baseline and carbon comparison",
+   "quote": null
+  },
+  {
+   "work": "BLOOM",
+   "year": 2022,
+   "arxiv": "2211.05100",
+   "relation": "baseline",
+   "note": "carbon comparison",
+   "quote": null
+  },
+  {
+   "work": "Minerva (Lewkowycz et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "math baseline and ArXiv processing",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Pre-training data. Data mixtures used for pre-training",
+   "page": 2,
+   "why": "Shows the data mix, epochs and disk size."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Model sizes, architectures, and optimization hyper-parameters.",
+   "page": 3,
+   "why": "Size, dim, heads, layers, LR, batch, tokens in one table."
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "Training loss over train tokens for the 7B, 13B, 33B, and 65 models.",
+   "page": 3,
+   "why": "Shows loss still falling at 1T-1.4T tokens."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Zero-shot performance on Common Sense Reasoning tasks.",
+   "page": 4,
+   "why": "Headline comparison with GPT-3, Chinchilla, PaLM."
+  },
+  {
+   "figure": "Table 15",
+   "caption": "Carbon footprint of training different models in the same data center.",
+   "page": 9,
+   "why": "GPU-hours and energy per model."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 6",
+   "snippet": "Wh = GPU-h×(GPU power consumption)×PUE",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 6",
+   "snippet": "tCO2eq = MWh × 0.385",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 3",
+   "snippet": "P(completion|context)/P(completion|“Answer:”)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 1 axis and Figure 2 panels are chart text only; values not recoverable from text.",
+  "Text says scores obtained using the 'PerplexityAPI' in Table 11 caption but 'PerspectiveAPI' in the body (likely typo).",
+  "Table 16 (per-subject MMLU) and Appendix C generation examples were read but not extracted number by number.",
+  "Sec 3.4 says LLaMA-65B outperforms Minerva-62B on GSM8k; without voting Table 7 shows 50.9 vs 52.4, so the claim holds only with maj1@k."
+ ]
+}

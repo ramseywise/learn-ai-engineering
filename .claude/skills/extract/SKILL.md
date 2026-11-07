@@ -1,6 +1,6 @@
 ---
 name: extract
-description: "Backfill structured extractions for readings the pipeline already holds: dispatch source-readers on PDFs with no full extraction (or only a salvaged schema-0 report), check each file, and report what the readers found that contradicts the notes. Never edits notes, references.md or the ledger. Usage: /extract (next 9, best first), /extract rag, /extract rag 15, /extract 1706.03762. Run from the learn-ai-engineering repo."
+description: "Backfill structured extractions for readings the pipeline already holds: dispatch source-readers on PDFs with no full extraction (or only a salvaged schema-0 report), check each file, and report what the readers found that contradicts the notes. Never edits notes, references.md or the ledger. Scope is tier 1, tier 2 and book chapters unless all is given. Usage: /extract (next 9, best first), /extract rag, /extract rag 15, /extract all 12, /extract 1706.03762. Run from the learn-ai-engineering repo."
 ---
 
 You are filling `scripts/papers/extractions/` for readings that were integrated, or downloaded, before every
@@ -19,9 +19,11 @@ python3 scripts/papers/extract.py next --n <N> [--home <home>]
 ```
 
 Each line is `key`, `pdf`, `note`, state (`none`, or `salvaged` when an old text report exists), and the
-extraction path. The order is: tier 1 and 2 papers, then book chapters, then the rest, most cited first.
-`$ARGUMENTS` may give a home, a count (default 9) or explicit keys or arXiv ids. Never take more than 15 in
-one session.
+extraction path. The order is: tier 1 and 2 papers, then book chapters, most cited first. That is the whole
+backlog by default. Paper tiers 3-6 come in only with `all` in `$ARGUMENTS` (pass `--all` to `next` and
+`status`): the nightly run reaches them once the core is empty, and a `/papers` read writes their extraction
+anyway. `$ARGUMENTS` may give a home, `all`, a count (default 9) or explicit keys or arXiv ids (explicit keys
+are always in scope). Never take more than 15 in one session.
 
 ## Step 2 — Read
 

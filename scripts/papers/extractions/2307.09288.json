@@ -1,0 +1,1181 @@
+{
+ "schema": 1,
+ "key": "2307.09288",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf",
+ "bib": {
+  "title": "Llama 2: Open Foundation and Fine-Tuned Chat Models",
+  "authors": [
+   "Hugo Touvron",
+   "Louis Martin",
+   "Kevin Stone",
+   "Peter Albert",
+   "Amjad Almahairi",
+   "Yasmine Babaei",
+   "Nikolay Bashlykov",
+   "Soumya Batra",
+   "Prajjwal Bhargava",
+   "Shruti Bhosale",
+   "Dan Bikel",
+   "Lukas Blecher",
+   "Cristian Canton Ferrer",
+   "Moya Chen",
+   "Guillem Cucurull",
+   "David Esiobu",
+   "Jude Fernandes",
+   "Jeremy Fu",
+   "Wenyin Fu",
+   "Brian Fuller",
+   "Cynthia Gao",
+   "Vedanuj Goswami",
+   "Naman Goyal",
+   "Anthony Hartshorn",
+   "Saghar Hosseini",
+   "Rui Hou",
+   "Hakan Inan",
+   "Marcin Kardas",
+   "Viktor Kerkez",
+   "Madian Khabsa",
+   "Isabel Kloumann",
+   "Artem Korenev",
+   "Punit Singh Koura",
+   "Marie-Anne Lachaux",
+   "Thibaut Lavril",
+   "Jenya Lee",
+   "Diana Liskovich",
+   "Yinghai Lu",
+   "Yuning Mao",
+   "Xavier Martinet",
+   "Todor Mihaylov",
+   "Pushkar Mishra",
+   "Igor Molybog",
+   "Yixin Nie",
+   "Andrew Poulton",
+   "Jeremy Reizenstein",
+   "Rashi Rungta",
+   "Kalyan Saladi",
+   "Alan Schelten",
+   "Ruan Silva",
+   "Eric Michael Smith",
+   "Ranjan Subramanian",
+   "Xiaoqing Ellen Tan",
+   "Binh Tang",
+   "Ross Taylor",
+   "Adina Williams",
+   "Jian Xiang Kuan",
+   "Puxin Xu",
+   "Zheng Yan",
+   "Iliyan Zarov",
+   "Yuchen Zhang",
+   "Angela Fan",
+   "Melanie Kambadur",
+   "Sharan Narang",
+   "Aurelien Rodriguez",
+   "Robert Stojnic",
+   "Sergey Edunov",
+   "Thomas Scialom"
+  ],
+  "first_author": "Touvron",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.09288v2",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 240000,
+  "chars_total": 263888,
+  "engine": "pymupdf",
+  "skipped": "Reference list (skimmed only) and the numeric cells of Tables 45-50 (per-group ToxiGen and BOLD sentiment); qualitative example tables 34-43 were read but are not extracted in detail."
+ },
+ "type": "empirical",
+ "question": "Can openly released pretrained LLMs plus a documented SFT, RLHF and safety pipeline match closed 'product' chat models such as ChatGPT in helpfulness and safety?",
+ "hypothesis": "Open, carefully aligned models (high-quality SFT data, iterative RLHF with separate helpfulness and safety reward models, safety context distillation) can be a suitable substitute for closed-source chat models.",
+ "contributions": [
+  "Llama 2 pretrained models at 7B, 13B, 70B (34B trained, not released): 40% more tokens, doubled context, GQA",
+  "Llama 2-Chat fine-tuned models at 7B, 13B, 70B",
+  "Detailed description of SFT, reward modeling, rejection sampling plus PPO RLHF and safety tuning",
+  "Ghost Attention (GAtt) for multi-turn system-message consistency",
+  "Observations: in-context temperature rescaling, temporal organisation of knowledge, zero-shot tool use"
+ ],
+ "method": {
+  "summary": "Llama 2 is a Llama 1 style decoder-only transformer pretrained on 2T tokens with 4k context and GQA on 34B/70B. Llama 2-Chat is produced by SFT on 27,540 annotations, then five iterative RLHF versions using two reward models (helpfulness, safety), rejection sampling (70B only, distilled to smaller) and PPO, plus GAtt and safety context distillation. Evaluation uses academic benchmarks, safety benchmarks, ~4k-prompt human helpfulness and ~2k-prompt human safety evaluations.",
+  "task": "autoregressive pretraining, then dialogue alignment via SFT and RLHF",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Llama 2 pretraining mix",
+    "role": "pretrain",
+    "size": "2.0T tokens",
+    "split": null,
+    "source": "new mix of publicly available online data, no Meta user data, sites with high personal information removed; most factual sources up-sampled; cutoff September 2022",
+    "preprocessing": "more robust data cleaning than Llama 1; no additional toxicity filtering; 89.70% English"
+   },
+   {
+    "name": "SFT data",
+    "role": "train",
+    "size": "27,540 annotations (prompt+answer, vendor-written)",
+    "split": null,
+    "source": "vendor annotation; bootstrapped with public instruction tuning data (Chung et al. 2022); no Meta user data",
+    "preprocessing": "samples concatenated to fill 4096 tokens with a separator token; loss zeroed on user prompt tokens"
+   },
+   {
+    "name": "Meta human preference data",
+    "role": "train",
+    "size": "1,418,091 binary comparisons, 14 weekly batches, 3.9 avg turns, 798.5 tokens/example",
+    "split": "1000 held out per batch as test",
+    "source": "Meta annotators; ratings significantly better/better/slightly better/negligibly better",
+    "preprocessing": "safety bins: 18% preferred safe & other unsafe, 47% both safe, 35% both unsafe"
+   },
+   {
+    "name": "Open-source preference data",
+    "role": "train",
+    "size": "Anthropic Helpful 122,387; Anthropic Harmless 43,966; OpenAI Summarize 176,625; WebGPT 13,333; StackExchange 1,038,480; Stanford SHP 74,882; Synthetic GPT-J 33,139; total with Meta 2,919,326",
+    "split": null,
+    "source": "public datasets",
+    "preprocessing": null
+   },
+   {
+    "name": "Human helpfulness eval prompts",
+    "role": "eval",
+    "size": ">4,000 single and multi-turn prompts (Table 32 per-model counts, e.g. ChatGPT 1917 single, 2256 multi)",
+    "split": null,
+    "source": "annotator-written; no coding or reasoning prompts",
+    "preprocessing": "open-source models: 1000 token context and generation, longer prompts filtered; closed models 2000"
+   },
+   {
+    "name": "Human safety eval prompts",
+    "role": "eval",
+    "size": "~2,000 adversarial (1,351 single-turn, 623 multi-turn)",
+    "split": null,
+    "source": "annotator-written across risk categories and attack vectors",
+    "preprocessing": null
+   },
+   {
+    "name": "Academic benchmarks",
+    "role": "eval",
+    "size": "MMLU, BBH, AGI Eval, HumanEval, MBPP, NQ, TriviaQA, SQuAD, QuAC, BoolQ, PIQA, SIQA, HellaSwag, WinoGrande, ARC, OBQA, CSQA, GSM8K, MATH",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Safety benchmarks",
+    "role": "eval",
+    "size": "TruthfulQA 817 questions; ToxiGen (revised, 13 groups); BOLD 23,679 prompts",
+    "split": null,
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Borderline false-refusal set",
+    "role": "eval",
+    "size": "210 samples",
+    "split": null,
+    "source": "curated, benign prompts with sensitive words",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 2",
+    "role": "proposed",
+    "params": "7B, 13B, 34B, 70B",
+    "architecture": "decoder-only transformer, RMSNorm pre-norm, SwiGLU, RoPE; GQA (8 KV projections) on 34B and 70B",
+    "init_from": "from scratch",
+    "tokenizer": "BPE via SentencePiece, same as Llama 1, digits split, bytes for unknown UTF-8",
+    "vocab": "32k tokens",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k tokens",
+    "other": {
+     "lr": "3.0e-4 (7B,13B), 1.5e-4 (34B,70B)",
+     "tokens": "2.0T",
+     "note": "layers, hidden size and heads are not stated in the paper"
+    }
+   },
+   {
+    "name": "Llama 2-Chat",
+    "role": "proposed",
+    "params": "7B, 13B, 34B (not released), 70B",
+    "architecture": "Llama 2 after SFT and RLHF",
+    "init_from": "Llama 2 pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   },
+   {
+    "name": "Helpfulness RM and Safety RM",
+    "role": "reward",
+    "params": null,
+    "architecture": "same as pretrained LM with regression head for scalar reward",
+    "init_from": "pretrained chat model checkpoints",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 1",
+    "role": "baseline",
+    "params": "7B,13B,33B,65B",
+    "architecture": "as Llama 2 without GQA, 2k context",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k",
+    "other": {}
+   },
+   {
+    "name": "MPT, Falcon, Vicuna, ChatGPT (gpt-3.5-turbo-0301), PaLM chat-bison-001, GPT-4",
+    "role": "baseline",
+    "params": "MPT 7B/30B, Falcon 7B/40B, Vicuna 13B/33B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "pretraining: autoregressive next-token; SFT: autoregressive with loss on answer tokens only; RM: binary ranking loss -log sigma(r(x,yc)-r(x,yr)-m(r)); RLHF: rejection sampling fine-tuning and PPO on R = Rc_tilde - beta*KL(pi||pi0)",
+   "optimizer": "AdamW beta1=0.9 beta2=0.95 eps=1e-5 (pretraining and PPO)",
+   "lr": "pretrain 3.0e-4 (7B,13B), 1.5e-4 (34B,70B); SFT 2e-5; RM 5e-6 (70B) and 1e-5 (others); PPO constant 1e-6",
+   "lr_schedule": "pretrain and RM: cosine decaying to 10% of peak; SFT: cosine; PPO: constant",
+   "warmup": "pretrain 2000 steps; RM 3% of steps, minimum 5",
+   "batch_size": "pretrain 4M tokens global; SFT 64; RM 512 pairs (1024 rows); PPO 512 with mini-batch 64",
+   "steps": "PPO 200-400 iterations; pretraining steps not stated (inferred: about 2T/4M = 500k)",
+   "epochs": "SFT 2; RM 1",
+   "tokens": "2.0T pretraining",
+   "seq_len": "4096 (pretrain 4k context; SFT 4096)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0; PPO KL penalty beta=0.01 (7B,13B) and 0.005 (34B,70B); PPO clip 0.2",
+   "hardware": "NVIDIA A100-80GB on Meta Research Super Cluster (InfiniBand, 400W cap) and internal production cluster (RoCE, 350W cap); both 200 Gbps endpoints",
+   "compute": "3,311,616 GPU hours total pretraining (7B 184,320; 13B 368,640; 34B 1,038,336; 70B 1,720,320); 539 tCO2eq",
+   "wall_clock": "training Jan-Jul 2023 (model card); PPO iteration on 70B about 330 s; RoCE said to scale almost as well as InfiniBand to 2000 GPUs",
+   "seeds": null,
+   "other": {
+    "rlhf_versions": "RLHF-V1 to V5; only rejection sampling to V4, then PPO on top of the rejection sampling checkpoint",
+    "rejection_sampling": "K samples from latest 70B model, best by reward used for SFT-like update; smaller models fine-tuned on 70B samples; from V4 on samples from all prior iterations",
+    "reward_combination": "Rc = Rs if is_safety(prompt) or Rs<0.15 else Rh; threshold 0.15 gives precision 0.89 recall 0.55 on Meta Safety; scores whitened after logit",
+    "rm_mix": "Helpfulness RM: all Meta Helpfulness + equal parts of remaining from Meta Safety and open source; Safety RM: all Meta Safety + Anthropic Harmless, mixed 90/10 with helpfulness data",
+    "margin": "small 1, 2/3, 1/3, 0; large 3, 2, 1, 0 for significantly better to negligibly better",
+    "safety_aux_loss": "auxiliary loss on safe/unsafe label (App A.3.4)",
+    "GAtt": "concatenate instruction to all user turns, sample with latest RLHF model, drop instruction except first turn, zero loss on prior turns; applied after RLHF-V3",
+    "context_distillation": "safety preprompt prefix; kept only if safety RM score improves",
+    "ppo_system": "FSDP; weights consolidated per node before generation to avoid ~20x slowdown",
+    "ablation_budget": "context and attention ablations trained on 150B tokens; GQA ablation at 30B"
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling for benchmark evals",
+   "temperature": "0.1 for safety benchmarks and HumanEval/MBPP pass@1; 0.8 for pass@100/pass@80; rejection sampling explored T 0.6 to 1.5",
+   "top_p": "0.9 (safety benchmarks); 0.95 (HumanEval, MBPP)",
+   "max_tokens": "human eval: 1000 tokens (open-source models), 2000 (closed models)",
+   "samples": "rejection sampling N up to 100 per prompt; temperature study 25 responses per prompt for 10 creative and 10 factual prompts",
+   "prompting": "academic benchmarks few-shot as listed (MMLU 5, BBH 3, GSM8K 8, MATH 4, NQ/TQA 5, CSQA 7, others 0); TruthfulQA 6-shot QA prompt; human evals prepend a system prompt (Table 31)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "benchmark accuracy / pass@k / EM / F1",
+     "definition": "standard per benchmark; grouped categories are averages (Code = HumanEval+MBPP pass@1; Commonsense avg of 8 tasks; World Knowledge = NQ+TriviaQA 5-shot; Reading = SQuAD+QuAC+BoolQ 0-shot; Math = GSM8K+MATH)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "reward model accuracy",
+     "definition": "fraction of held-out pairs where chosen scores above rejected",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human helpfulness win rate",
+     "definition": "7-point side-by-side Likert, three raters per prompt, win/tie/loss",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "safety violation percentage",
+     "definition": "rating 1 or 2 on 5-point scale by majority of three raters",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "TruthfulQA % true and informative",
+     "definition": "GPT-3 curie judges fine-tuned for truthfulness and informativeness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ToxiGen % toxic",
+     "definition": "RoBERTa ToxiGen classifier on generations",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "BOLD sentiment",
+     "definition": "VADER score in [-1,1] on prompt plus generation",
+     "unit": "score",
+     "higher_is_better": null
+    },
+    {
+     "name": "Gwet AC1/2",
+     "definition": "inter-rater reliability",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama 1",
+    "MPT 7B/30B",
+    "Falcon 7B/40B",
+    "Vicuna 13B/33B",
+    "ChatGPT gpt-3.5-turbo-0301",
+    "PaLM chat-bison-001",
+    "GPT-3.5, GPT-4, PaLM 540B, PaLM-2-L (reported numbers)",
+    "SteamSHP-XL, Open Assistant RM, GPT-4 (reward model baselines)"
+   ],
+   "protocol": "MPT and Falcon reproduced internally, best of internal and public score; human evals randomise model order; GPT-4 judge with swapped order; no seeds, repeats or significance tests stated beyond 95% CI of 1-2% for helpfulness evaluation"
+  },
+  "availability": {
+   "code": "inference code and examples at github.com/facebookresearch/llama; training code not released",
+   "weights": "released 7B, 13B, 70B (base and Chat) under custom commercial licence; 34B not released",
+   "data": "pretraining, SFT and preference data not released"
+  },
+  "prompts": [
+   {
+    "purpose": "system prompt for human evals (Llama 2-Chat, ChatGPT, PaLM-chat, Falcon)",
+    "text": "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don’t know the answer to a question, please don’t share false information.",
+    "where": "Table 31"
+   },
+   {
+    "purpose": "GPT-4 as reward model baseline",
+    "text": "Choose the best answer between A and B",
+    "where": "Sec 3.2.2"
+   },
+   {
+    "purpose": "human preference question",
+    "text": "Considering both model responses, which is better (helpful while also being safe and honest), Model A or Model B?",
+    "where": "App A.3.7"
+   },
+   {
+    "purpose": "safety context distillation generic preprompt",
+    "text": "The following is a discussion between a human and a knowledgeable and empathetic assistant. The assistant’s answers should not include any harmful, unethical, or socially biased content, and should move the conversation in a positive direction.",
+    "where": "Table 13, Table 39"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "a global batch-size of 4M tokens",
+    "where": "Table 1 caption"
+   },
+   {
+    "field": "models.layers",
+    "quote": null,
+    "where": "layers/hidden/heads are not given anywhere in the text"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Pretraining all four Llama 2 sizes took 3.3M A100-80GB GPU hours in total.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "3311616",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, pretraining only; 7B 184320, 13B 368640, 34B 1038336, 70B 1720320 GPU hours; TDP power 400 W (350 W for 34B), not counting interconnect, non-GPU server power or cooling",
+   "note": "Text rounds to '3.3M GPU hours'; sum of rows 184320+368640+1038336+1720320 = 3311616",
+   "where": "Sec 2.2.1, Table 2",
+   "table": "Table 2, row Total, column Time (GPU hours)",
+   "quote": "We estimate the total emissions for training to be 539 tCO2eq"
+  },
+  {
+   "claim": "Estimated pretraining emissions were 539 tCO2eq in total, 100% offset by Meta's sustainability program.",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon emitted",
+   "value": "539.00",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimate from TDP-based GPU power and carbon efficiency; per size 31.22 (7B), 62.44 (13B), 153.90 (34B), 291.42 (70B)",
+   "note": null,
+   "where": "Sec 2.2.1, Table 2",
+   "quote": "We estimate the total emissions for training to be 539 tCO2eq"
+  },
+  {
+   "claim": "70B pretraining took 1,720,320 GPU hours and emitted 291.42 tCO2eq at 400 W per GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "1720320",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 70B, A100-80GB, 2.0T tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 70B, column Time (GPU hours)"
+  },
+  {
+   "claim": "7B pretraining took 184,320 GPU hours (31.22 tCO2eq).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "184320",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 7B, A100-80GB, 2.0T tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 7B, column Time (GPU hours)"
+  },
+  {
+   "claim": "13B pretraining took 368,640 GPU hours (62.44 tCO2eq).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "368640",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 13B, A100-80GB, 2.0T tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 13B, column Time (GPU hours)"
+  },
+  {
+   "claim": "34B pretraining took 1,038,336 GPU hours (153.90 tCO2eq) at 350 W per GPU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "1038336",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 34B, A100-80GB, 2.0T tokens, 350 W power figure",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 34B, column Time (GPU hours)"
+  },
+  {
+   "claim": "All Llama 2 sizes were pretrained on 2 trillion tokens, up from 1.0T (7B,13B) and 1.4T (33B,65B) for Llama 1; training loss showed no saturation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pretraining tokens",
+   "value": "2 trillion",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretraining corpus, publicly available data, cutoff Sept 2022",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "We trained on 2 trillion tokens of data"
+  },
+  {
+   "claim": "Llama 2 70B scores 68.9 on 5-shot MMLU, against 63.4 for Llama 1 65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": "68.9",
+   "unit": "% accuracy",
+   "baseline_value": "63.4 (Llama 1 65B)",
+   "n": null,
+   "setup": "Pretrained base model, 5-shot MMLU, internal evaluation library",
+   "note": null,
+   "where": "Sec 2.3, Table 3",
+   "table": "Table 3, row Llama 2 70B, column MMLU"
+  },
+  {
+   "claim": "Llama 2 MMLU by size: 7B 45.3, 13B 54.8, 34B 62.6, 70B 68.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": "45.3 / 54.8 / 62.6 / 68.9",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5-shot MMLU, pretrained models",
+   "note": null,
+   "where": "Table 3, Table 19",
+   "table": "Table 3, rows Llama 2 7B 13B 34B 70B, column MMLU"
+  },
+  {
+   "claim": "Llama 2 70B improves MMLU and BBH by about 5 and 8 points over Llama 1 65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU, BBH delta",
+   "value": "5 and 8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained base models, Table 3",
+   "note": "Quote anchors the sentence start; the text prints 'MMLU and BBH by ≈5 and ≈8 points'",
+   "where": "Sec 2.3",
+   "quote": "Llama 2 70B improves the"
+  },
+  {
+   "claim": "Llama 2 70B Code average (HumanEval, MBPP pass@1) is 37.5; 7B 16.8, 13B 24.5, 34B 27.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Code avg pass@1",
+   "value": "37.5",
+   "unit": "avg pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained models, average of HumanEval 0-shot and MBPP 3-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Llama 2 70B, column Code"
+  },
+  {
+   "claim": "Llama 2 70B GSM8K (8-shot) is 56.8 and MATH 13.5; the Math column average is 35.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K 8-shot",
+   "value": "56.8",
+   "unit": "% (maj@1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained 70B; Table 25 GSM8k 56.8, MATH 13.5; 7B 14.6/2.5, 13B 28.7/3.9, 34B 42.2/6.24",
+   "note": null,
+   "where": "Table 25, Table 3",
+   "table": "Table 25, row Llama 2 70B, column GSM8k"
+  },
+  {
+   "claim": "Llama 2 70B is close to GPT-3.5 on MMLU (68.9 vs 70.0) and GSM8K (56.8 vs 57.1) but far behind on HumanEval (29.9 vs 48.1); GPT-4 is far ahead (MMLU 86.4, GSM8K 92.0, HumanEval 67.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": "68.9 vs 70.0",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4, GPT-3.5/GPT-4 numbers taken from OpenAI (2023), PaLM from Chowdhery et al., PaLM-2-L from Anil et al.",
+   "note": null,
+   "where": "Sec 2.3, Table 4",
+   "table": "Table 4, row MMLU (5-shot), columns GPT-3.5 and Llama 2"
+  },
+  {
+   "claim": "Llama 2 70B matches or beats PaLM 540B on almost all benchmarks in Table 4 (e.g. TriviaQA 85.0 vs 81.4, NQ 33.0 vs 29.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TriviaQA 1-shot",
+   "value": "85.0 vs 81.4",
+   "unit": "% EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-shot TriviaQA, pretrained 70B",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row TriviaQA (1-shot), columns PaLM and Llama 2"
+  },
+  {
+   "claim": "SFT used only 27,540 vendor-written annotations, because a few thousand to tens of thousands of high-quality examples sufficed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SFT examples",
+   "value": "27,540",
+   "unit": "annotations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT stage; millions of third-party examples were set aside",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "We stopped annotating SFT after collecting a total of 27,540 annotations."
+  },
+  {
+   "claim": "Meta collected 1,418,091 binary preference comparisons over 14 weekly batches (3.9 avg turns); with open-source sets the reward-model mix totals 2,919,326 comparisons.",
+   "kind": "measured",
+   "source": null,
+   "metric": "comparisons",
+   "value": "1,418,091",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Safety and helpfulness preference data for reward modeling",
+   "note": null,
+   "where": "Table 6, Table 26",
+   "table": "Table 6, row Meta (Safety & Helpfulness), column Num. of Comparisons"
+  },
+  {
+   "claim": "The Helpfulness RM reaches 63.2% on the Meta Helpful test set and 70.6% average across test sets, above GPT-4 (58.6) and Open Assistant (53.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise accuracy",
+   "value": "63.2",
+   "unit": "% accuracy",
+   "baseline_value": "58.6 (GPT-4)",
+   "n": null,
+   "setup": "Reward model preference accuracy, 1000 held-out examples per batch as test set",
+   "note": null,
+   "where": "Sec 3.2.2, Table 7",
+   "table": "Table 7, row Helpfulness RM, column Meta Helpful."
+  },
+  {
+   "claim": "Reward model accuracy rises with distinctness of the pair: Helpfulness RM 80.7% on 'significantly better' vs 54.7% on 'negligibly better' pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy by rating",
+   "value": "80.7",
+   "unit": "% accuracy",
+   "baseline_value": "54.7 (negligibly better)",
+   "n": null,
+   "setup": "Meta Helpful. test set",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Helpfulness RM (Meta Helpful.), column Significantly Better"
+  },
+  {
+   "claim": "A rating-based margin in the ranking loss lifts accuracy on 'significantly better' pairs (79.1 to 80.7) but average only 62.5 to 62.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg RM accuracy",
+   "value": "62.9",
+   "unit": "% accuracy",
+   "baseline_value": "62.5 (no margin)",
+   "n": null,
+   "setup": "Helpfulness RM ablation, margin large vs no margin",
+   "note": null,
+   "where": "App A.3.3, Table 28",
+   "table": "Table 28, row Margin Large, column Avg"
+  },
+  {
+   "claim": "The safety auxiliary loss lifts unsafe-response recall from 73.0 to 90.4 at a 0.5 reward threshold.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unsafe recall",
+   "value": "90.4",
+   "unit": "% recall",
+   "baseline_value": "73.0",
+   "n": null,
+   "setup": "Safety RM ablation on Meta Safety test set",
+   "note": null,
+   "where": "App A.3.4, Table 29",
+   "table": "Table 29, row + Auxiliary Safety Loss, column Unsafe Response Recall"
+  },
+  {
+   "claim": "Reward model training: one epoch, peak LR 5e-6 for 70B and 1e-5 for others, batch of 512 pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1 epoch",
+   "unit": "epochs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reward models initialised from chat checkpoints",
+   "note": null,
+   "where": "Sec 3.2.2",
+   "quote": "We train for one epoch over the training data."
+  },
+  {
+   "claim": "Optimal sampling temperature for rejection sampling between 10 and 100 outputs shifts to 1.2-1.3 after RLHF.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal temperature",
+   "value": "1.2-1.3",
+   "unit": "temperature",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2-Chat-RLHF, max reward among N samples, N 1..100",
+   "note": null,
+   "where": "Sec 3.2.3, Fig 8",
+   "quote": "For Llama 2-Chat-RLHF, the optimal temperature when sampling between 10"
+  },
+  {
+   "claim": "PPO iteration on the 70B model takes about 330 seconds; FSDP caused about 20x slowdown during generation until weights were consolidated per node.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds/iteration",
+   "value": "330",
+   "unit": "seconds per PPO iteration",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B, batch 512, 200-400 iterations",
+   "note": null,
+   "where": "Sec 3.2.3",
+   "quote": "Each iteration of PPO on the 70B model takes on average ≈330 seconds."
+  },
+  {
+   "claim": "Llama 2-Chat 70B wins 36% and ties 31.5% against ChatGPT in human helpfulness evaluation; win rises to 44% without ChatGPT's system prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "36%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~4,000 single and multi-turn prompts, three raters, gpt-3.5-turbo-0301, 95% CI 1-2%, no coding or reasoning prompts",
+   "note": "App A.3.7: win rate increases from 36% to 44% with no system prompt for ChatGPT",
+   "where": "Sec 3.4.2, Fig 12",
+   "quote": "Llama 2-Chat 70B model has a win rate of 36% and a tie rate of 31.5% relative to ChatGPT."
+  },
+  {
+   "claim": "Llama 2-Chat 34B has more than 75% win rate against Vicuna-33B and Falcon-40B; 7B beats MPT-7B-chat on 60% of prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human helpfulness evaluation",
+   "note": null,
+   "where": "Sec 3.4.2",
+   "quote": "Llama 2-Chat 34B has an overall win rate of more than 75% against"
+  },
+  {
+   "claim": "Inter-rater reliability (Gwet's AC2) on helpfulness comparisons is 0.37 to 0.55; on safety averages 0.92 for Llama 2-Chat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IRR",
+   "value": "0.37-0.55",
+   "unit": "Gwet AC2",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7-point Likert helpfulness comparisons",
+   "note": null,
+   "where": "Sec 3.4.2, 4.4",
+   "quote": "Gwet’s AC2 score varies between 0.37 and 0.55"
+  },
+  {
+   "claim": "Llama 2-Chat exceeds 60% win rate versus ChatGPT with GPT-4 as judge (on 584 helpfulness and 1,586 safety prompts).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "60%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 judge, latest RLHF version, order randomised",
+   "note": null,
+   "where": "Sec 3.4.1, Fig 11",
+   "quote": "obtaining more than a 60% win-rate for our latest Llama 2-Chat"
+  },
+  {
+   "claim": "Fine-tuned Llama 2-Chat 70B improves TruthfulQA (truthful+informative) from 50.18 to 64.14 and ToxiGen toxicity from 24.60 to 0.01.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA",
+   "value": "64.14",
+   "unit": "% truthful and informative",
+   "baseline_value": "50.18 (pretrained 70B, Table 11)",
+   "n": null,
+   "setup": "70B, temperature 0.1, top-p 0.9, GPT-3 curie judges; chat 34B scores 67.20, 13B 62.18, 7B 57.04",
+   "note": null,
+   "where": "Sec 4.4, Table 14",
+   "table": "Table 14, row Llama 2-Chat 70B, column TruthfulQA"
+  },
+  {
+   "claim": "Pretrained Llama 2 does not beat others on toxicity: ToxiGen 21.25 (7B), 26.10 (13B), 21.19 (34B), 24.60 (70B), % toxic generations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ToxiGen toxic %",
+   "value": "24.60",
+   "unit": "% toxic",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained models, ToxiGen",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Llama 2 70B, column ToxiGen"
+  },
+  {
+   "claim": "Pretrained Llama 2 TruthfulQA: 33.29 (7B), 41.86 (13B), 43.45 (34B), 50.18 (70B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA",
+   "value": "50.18",
+   "unit": "% truthful and informative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained models, temperature 0.1, top-p 0.9",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Llama 2 70B, column TruthfulQA"
+  },
+  {
+   "claim": "Safety human evaluation used about 2,000 adversarial prompts (1,351 single-turn, 623 multi-turn), 5-point Likert, violation = rating 1 or 2 by majority of three raters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompts",
+   "value": "1,351",
+   "unit": "single-turn prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Safety human evaluation, Fig 17-19",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "in which 1,351 prompts are single-turn and 623 are multi-turn"
+  },
+  {
+   "claim": "Red teaming robustness gamma on the 7B model improved from 1.8 to 0.45 prompts per person-hour; about 90% of earlier violating prompts were mitigated model over model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gamma",
+   "value": "0.45",
+   "unit": "violating prompts per person per hour",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Over 350 red teamers, several months",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "on our 7B model, we had an evolution of γ : 1.8 →0.45"
+  },
+  {
+   "claim": "False-refusal rate is about 0.05% on the helpfulness set even with 100% safety data, but 15-27% on the 210-sample borderline set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.05%",
+   "unit": "false refusal rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Safety data scaling 0 to 100% (about 0.1M safety samples, 0.9M helpfulness), refusal classifier",
+   "note": null,
+   "where": "Sec 4.2.3, Fig 33",
+   "quote": "false refusal is overall rare—approximately 0.05%—on the helpfulness"
+  },
+  {
+   "claim": "GAtt keeps persona attribute adherence at 100% to turn 20, while the baseline drops from 100% at turn 2 to 10% at turn 4 and 0% by turn 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "attribute recall",
+   "value": "100%",
+   "unit": "% adherence",
+   "baseline_value": "0% (baseline at turn 20)",
+   "n": null,
+   "setup": "Llama 2-Chat after RLHF-V3, human evaluation of attributes (public figures, hobbies), all examples under 4048 tokens",
+   "note": null,
+   "where": "App A.3.5, Table 30",
+   "table": "Table 30, row Dialogue Turn 20, column + GAtt"
+  },
+  {
+   "claim": "With a calculator tool, Llama 2-Chat scores ASDiv 67.1, SVAMP 69.2, MAWPS 82.4, above Toolformer (40.4, 29.4, 44.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASDiv",
+   "value": "67.1",
+   "unit": "% accuracy",
+   "baseline_value": "40.4 (Toolformer)",
+   "n": null,
+   "setup": "Zero-shot tool use emerged without tool-use training; baselines quoted from Schick et al. 2023",
+   "note": null,
+   "where": "Table 15",
+   "table": "Table 15, row Llama 2-Chat, column ASDiv"
+  },
+  {
+   "claim": "Grouped-query attention (8 KV heads) matches MHA on average and beats MQA in a 30B, 150B-token ablation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": "MMLU 26.9 (GQA) vs 28.0 (MHA) vs 26.5 (MQA)",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30B-size ablation, 150B tokens, FFN dim scaled by 1.3 (GQA) and 1.33 (MQA)",
+   "note": null,
+   "where": "App A.2.1, Table 18",
+   "table": "Table 18, row GQA, column MMLU"
+  },
+  {
+   "claim": "Doubling context from 2k to 4k (150B-token ablation) helps SCROLLS (QuALITY acc 26.1 to 29.6) with no loss on SQuAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QuALITY acc",
+   "value": "29.6",
+   "unit": "acc",
+   "baseline_value": "26.1 (2k)",
+   "n": null,
+   "setup": "150B tokens each, only context length varied",
+   "note": null,
+   "where": "App A.2.1, Table 16",
+   "table": "Table 16, row 4k, column QuALITY (acc)"
+  },
+  {
+   "claim": "Contamination analysis (tokenised skipgram match, 10+ tokens, 4-token skip budget, ~7 hours on ~1,500 cores) finds only HellaSwag and MMLU-Humanities boosted; 70B HellaSwag clean subset 80.0 vs not-clean 89.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy on subset",
+   "value": "89.5",
+   "unit": "% accuracy",
+   "baseline_value": "80.0 (clean)",
+   "n": null,
+   "setup": "70B pretrained, HellaSwag L=40, Table 51",
+   "note": null,
+   "where": "App A.6, Table 51",
+   "table": "Table 51, HellaSwag 70B, row Not Clean, column X-bar"
+  },
+  {
+   "claim": "Pretraining data has a cutoff of September 2022; training ran January to July 2023.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Model card",
+   "note": null,
+   "where": "Table 52",
+   "quote": "The pretraining data has a cutoff of September 2022"
+  },
+  {
+   "claim": "Pretraining language mix: 89.70% English, 8.38% unknown (partly code), next language de 0.17%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "language share",
+   "value": "89.70%",
+   "unit": "% of documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fastText langid threshold 0.5",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row en"
+  }
+ ],
+ "limits": [
+  "Human evaluation: 4k prompts with no coding or reasoning prompts; only the final turn of multi-turn conversations is rated; noisy and subjective; Gwet AC2 0.37-0.55",
+  "Safety evaluations use content standards likely biased toward Llama 2-Chat; Falcon looks safe partly because it is terse",
+  "English-focused (89.70% of pretraining data); non-English proficiency fragile",
+  "Cessation of knowledge updates after pretraining; hallucination; overcautious refusals from safety tuning (borderline-set false refusal 15-27%)",
+  "Large gap to GPT-4 and PaLM-2-L on coding and aggregated benchmarks",
+  "Pretraining carbon estimate excludes interconnect, non-GPU server power, cooling and hardware manufacturing; fine-tuning and annotation compute not counted",
+  "Pretraining layers, hidden size, heads, precision, steps, seeds and data composition are not reported, so the pretraining run cannot be rerun",
+  "Reward model accuracy low on near-tied pairs; reward distribution shifts with margin loss, calibration left as future work",
+  "GAtt is described as vanilla; distillation from 70B rejection sampling to smaller models not analysed",
+  "Benchmarks for safety were designed for pretrained LLMs; contamination found for HellaSwag and MMLU-Humanities",
+  "34B was trained and reported but not released because there was no time to red team it"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ghost Attention (GAtt)",
+   "definition": "a method inspired by Context Distillation that hacks the fine-tuning data to help the attention focus in a multi-stage process",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Safety context distillation",
+   "definition": "generating safer responses by prefixing a prompt with a safety preprompt and then fine-tuning the model on the safer responses without the preprompt",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "Rejection Sampling fine-tuning",
+   "definition": "sample K outputs from the model and select the best candidate with our reward, then fine-tune on the selected outputs",
+   "where": "Sec 3.2.3"
+  },
+  {
+   "term": "False refusal",
+   "definition": "the model incorrectly refusing to answer legitimate user prompts due to irrelevant safety concerns",
+   "where": "Sec 4.2.3"
+  },
+  {
+   "term": "Red teaming robustness gamma",
+   "definition": "the average number of created prompts that would trigger a violating response from the model per person per hour",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama 1 (Touvron et al. 2023)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "extends",
+   "note": "architecture and pretraining setup adopted, with more data, 4k context, GQA",
+   "quote": null
+  },
+  {
+   "work": "Grouped-query attention (Ainslie et al. 2023)",
+   "year": 2023,
+   "arxiv": "2305.13245",
+   "relation": "uses-method",
+   "note": "GQA on 34B and 70B",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "uses-method",
+   "note": "binary ranking loss for the reward model, RLHF recipe",
+   "quote": null
+  },
+  {
+   "work": "Stiennon et al. 2020 learning to summarize from human feedback",
+   "year": 2020,
+   "arxiv": "2009.01325",
+   "relation": "uses-method",
+   "note": "RL scheme with reward model and KL penalty",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization (Schulman et al. 2017)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "PPO",
+   "quote": null
+  },
+  {
+   "work": "Bai et al. 2022 (HH-RLHF; Constitutional AI)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-method",
+   "note": "rejection sampling, context distillation, helpfulness/safety tension; Anthropic Helpful/Harmless data",
+   "quote": null
+  },
+  {
+   "work": "Askell et al. 2021 general language assistant",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "uses-method",
+   "note": "context distillation",
+   "quote": null
+  },
+  {
+   "work": "LIMA (Zhou et al. 2023)",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "related",
+   "note": "few clean SFT examples suffice, similar to their finding",
+   "quote": null
+  },
+  {
+   "work": "Toolformer (Schick et al. 2023)",
+   "year": 2023,
+   "arxiv": "2302.04761",
+   "relation": "baseline",
+   "note": "tool-use comparison Table 15",
+   "quote": null
+  },
+  {
+   "work": "Chinchilla (Hoffmann et al. 2022)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "related",
+   "note": "cited for shifting scaling toward tokens",
+   "quote": null
+  },
+  {
+   "work": "Falcon, MPT, Vicuna, ChatGPT, PaLM chat",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open and closed baselines",
+   "quote": null
+  },
+  {
+   "work": "Chung et al. 2022 (Flan)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-data",
+   "note": "public instruction data used to bootstrap SFT",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA, ToxiGen, BOLD",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "safety benchmarks",
+   "quote": null
+  },
+  {
+   "work": "FSDP (Zhao et al. 2023)",
+   "year": 2023,
+   "arxiv": "2304.11277",
+   "relation": "uses-method",
+   "note": "large-batch PPO training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Training of Llama 2-Chat: pretraining, SFT, then iterative RLHF with rejection sampling and PPO",
+   "page": 5,
+   "why": "one-diagram view of the whole pipeline"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Helpfulness human evaluation results for Llama 2-Chat compared to other open-source and closed-source models",
+   "page": 3,
+   "why": "headline win rates"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "RLHF impact of the temperature when sampling N outputs and scoring them with a reward model",
+   "page": 14,
+   "why": "shows best-of-N reward vs temperature and its post-RLHF shift"
+  },
+  {
+   "figure": "Fig 21",
+   "caption": "RLHF learns to adapt the temperature with regard to the type of prompt",
+   "page": 33,
+   "why": "Self-BLEU vs temperature, factual vs creative prompts"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Evolution of Llama 2-Chat versus ChatGPT over SFT and RLHF versions",
+   "page": 18,
+   "why": "progress across iterations judged by reward model and GPT-4"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "CO2 emissions during pretraining",
+   "page": 7,
+   "why": "GPU hours and carbon by size"
+  },
+  {
+   "figure": "Fig 24",
+   "caption": "Multi-query variants enable higher throughput with larger batch sizes",
+   "page": 48,
+   "why": "MHA vs MQA vs GQA inference throughput"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 3.2.2",
+   "snippet": "L_ranking = -log(sigma(r_theta(x, y_c) - r_theta(x, y_r) - m(r)))",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 4, Sec 3.2.3",
+   "snippet": "R(g | p) = R~_c(g | p) - beta * D_KL(pi_theta(g | p) || pi_0(g | p))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction places table cells one per line; tables were reconstructed by row order, so per-row values should be checked against the PDF where it matters",
+  "Bias Tables 45-50 numeric cells were not extracted",
+  "No embedded instructions found",
+  "Paper never states layers, hidden size, heads, training precision, number of steps or seeds"
+ ]
+}

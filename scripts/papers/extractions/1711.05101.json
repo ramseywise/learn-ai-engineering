@@ -1,0 +1,488 @@
+{
+ "schema": 1,
+ "key": "1711.05101",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/loshchilov-2017-decoupled-weight-decay-regularization.pdf",
+ "bib": {
+  "title": "Decoupled Weight Decay Regularization",
+  "authors": [
+   "Ilya Loshchilov",
+   "Frank Hutter"
+  ],
+  "first_author": "Loshchilov",
+  "year": 2019,
+  "venue": "ICLR 2019",
+  "arxiv": "1711.05101",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 47009,
+  "chars_total": 47009,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; figure panels (heatmaps, curves) are images and not readable as text."
+ },
+ "type": "empirical",
+ "question": "Are L2 regularization and weight decay equivalent for adaptive gradient methods such as Adam, and does decoupling weight decay from the gradient update improve generalization and hyperparameter separability?",
+ "hypothesis": "Weight decay and learning rate can be decoupled by applying the decay outside the gradient-based update, and doing so makes Adam generalize better and compete with SGD with momentum.",
+ "contributions": [
+  "Show that L2 regularization and weight decay are not equivalent for Adam (Propositions 1-3).",
+  "Propose decoupled weight decay (SGDW, AdamW) which separates the optimal weight decay from the learning rate.",
+  "Show AdamW generalizes substantially better than Adam with L2 on CIFAR-10 and ImageNet32x32.",
+  "Propose normalized weight decay and warm restarts for Adam (AdamWR) for better anytime performance."
+ ],
+ "method": {
+  "summary": "Algorithms 1 and 2 move the weight decay term lambda*theta out of the gradient (so it is not rescaled by Adam's second-moment estimate) and into the parameter update, giving SGDW and AdamW. They are compared with SGD/Adam with L2 on Shake-Shake-style 26 2x64d and 26 2x96d ResNets on CIFAR-10 and ImageNet32x32, over grids of learning rate and weight decay, three LR schedules, and 100 to 1800 epochs.",
+  "task": "image classification (CIFAR-10, ImageNet32x32); optimizer regularization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": "regular data augmentation procedure for the CIFAR datasets"
+   },
+   {
+    "name": "ImageNet32x32",
+    "role": "both",
+    "size": "1.2 million 32x32 pixel images",
+    "split": null,
+    "source": "Chrabaszcz et al. 2017, downsampled ImageNet",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "26 2x64d ResNet (Shake-Shake setup)",
+    "role": "base",
+    "params": "11.6M",
+    "architecture": "3-branch residual net, depth 26, 2 residual branches, first block width 64",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "26",
+    "hidden": "64 (first residual block width)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "26 2x96d ResNet (Shake-Shake setup)",
+    "role": "base",
+    "params": "25.6M",
+    "architecture": "as above with first block width 96",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "26",
+    "hidden": "96 (first residual block width)",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "classification loss (cross-entropy) plus L2 regularization or decoupled weight decay",
+   "optimizer": "SGD with momentum (SGD, SGDW) and Adam (Adam, AdamW); warm-restart variants SGDWR and AdamWR",
+   "lr": "Adam default alpha=0.001 for the 1800-epoch runs; grids of initial learning rate over powers of 2 (e.g. 1/1024 to 1/2 for SGD) in the 100-epoch runs",
+   "lr_schedule": "fixed, step-drop (drops at epochs 30, 60, 80) and cosine annealing; cosine annealing used for the rest. Warm restarts: eta_t = 0.5+0.5cos(pi*Tcur/Ti), example T0=100, Tmult=2",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "100 (grid and schedule comparison); 1800 (generalization runs); other budgets shown in SuppFig 3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "grids of lambda; normalized weight decay lambda = lambda_norm*sqrt(b/(B*T)); best lambda_norm about 0.025 to 0.05",
+   "dropout": null,
+   "regularisation": "Shake-Shake regularization from Gastaldi (2017) code base, plus L2 or decoupled weight decay",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "adam_defaults": "alpha=0.001, beta1=0.9, beta2=0.999, eps=1e-8 (Algorithm 2)",
+    "code_base": "fb.resnet.torch via Gastaldi shake-shake",
+    "fig3_grid": "12 settings of L2 factor for Adam and 7 settings of normalized weight decay for AdamW, lr fixed to 0.001, 1800 epochs, 26 2x96d",
+    "suppfig2_grid": "4 by 4 logarithmic grid of lr and weight decay for standard Adam, 1800 epochs",
+    "warm_restart_Tmult": "Tmult=2 example; initial Ti 1% to 10% of expected budget suggested"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 test error (CIFAR-10)",
+     "definition": "final test error after training",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Top-5 test error (ImageNet32x32)",
+     "definition": "final test error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "relative improvement in test error",
+     "definition": "AdamW vs Adam at default lr 0.001",
+     "unit": "% relative",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Adam with L2 regularization",
+    "SGD with momentum with L2 regularization",
+    "SGDW",
+    "SGDWR"
+   ],
+   "protocol": "Grid search over learning rate and weight decay per schedule and budget; single reported runs in text, no seeds or error bars stated; heatmaps mark top-10 settings. Gastaldi (2017) setup."
+  },
+  "availability": {
+   "code": "https://github.com/loshchil/AdamW-and-SGDW",
+   "weights": null,
+   "data": "CIFAR-10 and ImageNet32x32 public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We always used a batch size of 128",
+    "where": "Section 4"
+   },
+   {
+    "field": "models.params",
+    "quote": "with 11.6M and 25.6M parameters, respectively",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adam with decoupled weight decay (AdamW) gives 15% relative test-error improvement over Adam with L2 at the default lr 0.001; this is Adam vs AdamW (not SGD), on a 26 2x96d Shake-Shake ResNet, 1800 epochs, and uses Top-1 error on CIFAR-10 but Top-5 on ImageNet32x32.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 15,
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "26 2x96d ResNet, CIFAR-10 and ImageNet32x32, lr 0.001, cosine annealing, 1800 epochs, best settings of each",
+   "quote": "For the default learning rate of 0.001, AdamW achieved 15% relative improvement in test error compared to Adam both on CIFAR-10 (also see SuppFigure 5) and ImageNet32x32 (also see SuppFigure 6).",
+   "table": null,
+   "note": "Intro says 15% holds for CIFAR-10 and ImageNet32x32, training budgets 100 to 1800 epochs, three schedules; actual per-cell error values are only in figures, not text. Not a result for SGD or for ResNets in general.",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Optimal weight decay and learning rate are largely decoupled with decoupled weight decay: SGDW and AdamW have a more separable hyperparameter space than L2 versions (shown qualitatively in heatmaps, no numeric measure).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "26 2x64d ResNet CIFAR-10, 100 epochs, grid of lr and lambda",
+   "quote": "The proposed SGDW and AdamW (right column) have a more separable hyperparameter space.",
+   "table": null,
+   "note": "Text says 'largely decouples' and 'more separable', 'some problem-dependent implicit coupling may of course remain'; not full independence.",
+   "where": "Fig 2 caption; Sec 4.2"
+  },
+  {
+   "claim": "With L2, Adam's best non-zero L2 results were comparable to its best with lambda=0, so Adam did not benefit from L2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2 bottom left, 26 2x64d ResNet CIFAR-10, 100 epochs",
+   "quote": "Adam did not beneﬁt from it at all: its best results ob-tained for non-zero L2 regularization factors were comparable to the best ones obtained without theL2 regularization",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Decoupled weight decay outperforms L2 for all three LR schedules, with larger gaps for better schedules; cosine annealing is best.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "26 2x64d ResNet CIFAR-10, 100 epochs",
+   "quote": "decoupled weight decay outperforms L2 regularization for all learning rate schedules, with larger differences for better learning rate schedules",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Fig 1"
+  },
+  {
+   "claim": "AdamWR sped up AdamW by up to a factor of 10 (at first restart).",
+   "kind": "measured",
+   "source": null,
+   "metric": "anytime speedup",
+   "value": 10,
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 and ImageNet32x32",
+   "quote": "AdamWR greatly sped up AdamW on CIFAR-10 and ImageNet32x32, up to a factor of 10 (see the results at the ﬁrst restart)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Optimal raw weight decay shrinks as the number of epochs grows; sqrt normalization lambda=lambda_norm*sqrt(b/(BT)) makes it transfer across budgets and datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 and ImageNet32x32, 26 2x64d ResNet, AdamW and SGDW",
+   "quote": "the greater the total number of epochs the smaller the values of the weight decay should be",
+   "table": null,
+   "note": "Authors say experiments were not very comprehensive.",
+   "where": "App D"
+  },
+  {
+   "claim": "Without normalization, raw lambda for ImageNet32x32 would have been roughly 5 times too large vs CIFAR-10 at the same epochs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "too-large factor",
+   "value": 5,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet32x32 epoch is 24 times longer than CIFAR-10",
+   "quote": "λ would have been roughly 5 times too large for ImageNet32x32",
+   "table": null,
+   "note": null,
+   "where": "App D"
+  },
+  {
+   "claim": "Best normalized weight decay values were very similar across SGDW and AdamW.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10/ImageNet32x32",
+   "quote": "e.g., λnorm = 0.025 and λnorm = 0.05",
+   "table": null,
+   "note": null,
+   "where": "App D"
+  },
+  {
+   "claim": "Third-party: AdamW vs Adam on Deep4Net EEG, 73.68% vs 71.37% accuracy; on ResNet 72.04% vs 61.34%.",
+   "kind": "reported",
+   "source": "Voelker et al. 2018",
+   "metric": "test accuracy ResNet",
+   "value": 72.04,
+   "unit": "% accuracy",
+   "baseline_value": 61.34,
+   "n": null,
+   "setup": "Voelker et al. 2018 EEG data, same hyperparameters, provided privately to authors",
+   "quote": "AdamW with the same hyperparameter setting as Adam yielded higher test set accuracy on Deep4Net (73.68% versus 71.37%) and statistically signiﬁcantly higher test set accuracy on ResNet (72.04% versus 61.34%).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Standard Adam with L2 for 1800 epochs on a bigger net is at best comparable to AdamW at 18 times fewer epochs and smaller network.",
+   "kind": "measured",
+   "source": null,
+   "metric": "epochs ratio",
+   "value": 18,
+   "unit": "x fewer epochs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4x4 coarse grid, 26 2x96d, 1800 epochs vs 26 2x64d 100 epochs",
+   "quote": "comparable to the ones obtained with AdamW with 18 times less epochs and a smaller network",
+   "table": null,
+   "note": null,
+   "where": "App D"
+  },
+  {
+   "claim": "L2 equals weight decay for SGD only when lambda'=lambda/alpha; for Adam no L2 coefficient makes them equivalent.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Propositions 1 and 2, proofs in App A",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  }
+ ],
+ "limits": [
+  "Experiments only on image classification (CIFAR-10, ImageNet32x32) with Shake-Shake ResNets; authors say results must be verified on a wider range of tasks.",
+  "Belief that results hold for AdaGrad and AMSGrad is untested.",
+  "Square root normalization is based on few experiments; authors say better rules likely exist.",
+  "No seeds, error bars, hardware or compute reported; per-run errors only in figures.",
+  "Language-model use (Radford et al. 2018) only cited, not tested here.",
+  "The 15% figure compares Adam vs AdamW only; AdamW closed most but not all of the gap to SGDWR on CIFAR-10."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "decoupled weight decay",
+   "definition": "theta_{t+1} = (1-lambda) theta_t - alpha grad f_t(theta_t), decay applied separately from the gradient step (Eq 1)",
+   "where": "Sec 2"
+  },
+  {
+   "term": "normalized weight decay",
+   "definition": "lambda = lambda_norm*sqrt(b/(B*T)), b batch size, B training points, T epochs",
+   "where": "App B.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "extends",
+   "note": "modifies Adam to AdamW",
+   "quote": null
+  },
+  {
+   "work": "Hanson & Pratt, Comparing biases for minimal network construction",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "original weight decay",
+   "quote": null
+  },
+  {
+   "work": "SGDR (Loshchilov & Hutter)",
+   "year": 2016,
+   "arxiv": "1608.03983",
+   "relation": "uses-method",
+   "note": "cosine annealing and warm restarts",
+   "quote": null
+  },
+  {
+   "work": "Shake-Shake regularization (Gastaldi)",
+   "year": 2017,
+   "arxiv": "1705.07485",
+   "relation": "uses-method",
+   "note": "experimental setup and code",
+   "quote": null
+  },
+  {
+   "work": "Aitchison, unified theory of adaptive SGD as Bayesian filtering",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "theoretical justification; reference list prints arXiv:1507.02030",
+   "quote": null
+  },
+  {
+   "work": "Wilson et al., marginal value of adaptive gradient methods",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivation: Adam generalizes worse than SGD",
+   "quote": null
+  },
+  {
+   "work": "Chrabaszcz et al., downsampled ImageNet",
+   "year": 2017,
+   "arxiv": "1707.08819",
+   "relation": "uses-data",
+   "note": "ImageNet32x32",
+   "quote": null
+  },
+  {
+   "work": "CIFAR-10 (Krizhevsky)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al., Three mechanisms of weight decay regularization",
+   "year": 2018,
+   "arxiv": "1810.12281",
+   "relation": "related",
+   "note": "independently report decoupled decay beats L2",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used AdamW for Transformer pretraining (cited)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Adam performs better with decoupled weight decay (bottom row, AdamW) than with L2 regularization (top row, Adam). Final test error of a 26 2x64d ResNet on CIFAR-10 after 100 epochs, three LR schedules.",
+   "page": 5,
+   "why": "Heatmaps show the schedule effect and separability."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Top-1 test error of a 26 2x64d ResNet on CIFAR-10 after 100 epochs; SGDW and AdamW have a more separable hyperparameter space.",
+   "page": 6,
+   "why": "Diagonal basin for L2 vs axis-aligned basin for decoupled shows the lr/wd coupling at a glance."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Learning curves and generalization of 26 2x96d ResNet with Adam and AdamW on CIFAR-10.",
+   "page": 7,
+   "why": "Shows better test error at equal training loss."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Top-1 test error on CIFAR-10 (left) and Top-5 on ImageNet32x32 (right).",
+   "page": 8,
+   "why": "Warm restart anytime performance."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 2 line 12",
+   "snippet": "theta_t <- theta_{t-1} - eta_t ( alpha * mhat_t/(sqrt(vhat_t)+eps) + lambda*theta_{t-1} )",
+   "verbatim": false
+  },
+  {
+   "where": "App B.1",
+   "snippet": "lambda = lambda_norm * sqrt(b/(B T))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No instructions embedded in PDF text.",
+  "Task note's line says '15% relative test-error reduction for ResNets on CIFAR-10 and ImageNet 32x32': paper's 15% is Adam-with-L2 vs AdamW at lr 0.001 (Top-1 on CIFAR-10, Top-5 on ImageNet32x32), not a general ResNet claim.",
+  "Note's 'made the best learning rate independent of best weight decay' overstates: paper says 'largely decouples' / 'more separable', shown only in heatmaps.",
+  "Result about Prop 2 has no value; quote omitted because of garbled math text.",
+  "Published ICLR 2019; arXiv v3 text, first posted 2017 (filename says 2017).",
+  "Fig 1-4 panel contents are images; heatmap values not extracted."
+ ]
+}

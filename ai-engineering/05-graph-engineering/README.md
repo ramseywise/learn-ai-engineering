@@ -60,7 +60,7 @@ A second lab serves [note 08](notes/08-governance-and-production.md): one agent 
 ```
 README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
-notes/         01–13 (with 10b, 11b, 13b), the course; figures and code inline
+notes/         01–13 (with 05b, 10b, 11a, 11b, 13b), the course; figures and code inline
 slides/        deck.yaml + graph-engineering.pptx
 practice/      the LangGraph lab in TypeScript and Python, and the multi-tenant lab
 sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
@@ -80,14 +80,16 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify |
 | 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, input and output schemas, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test |
 | 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go |
-| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping |
+| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping, shared vs. isolated context, when multi-agent wins, how teams fail |
+| 5b | [Running multi-agent systems](notes/05b-running-multi-agent-systems.md) | Runtime as an OS, virtual file system, control plane, peer/manager/decentralised in practice, ADAS, transport, labs |
 | 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption |
 | 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check |
 | 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study |
 | 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet |
 | 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals |
 | 10b | [Assembling and maintaining KGs](notes/10b-assembling-and-maintaining-kgs.md) | Deterministic assembly on the SEC filings graph, fusing structured sources, the lifecycle after the load |
-| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes and granularity, graph-to-prompt formats, schema-first text-to-Cypher |
+| 11 | [KG-powered RAG](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes and granularity, graph-to-prompt formats, a Graph RAG agent, hybrid retrieval |
+| 11a | [Structured lookups and text-to-Cypher](notes/11a-structured-lookups-and-text-to-cypher.md) | Full-text and point-distance lookups, schema-first text-to-Cypher, the LLM-ready schema, prompt shape, intent detection, the failure to expect |
 | 11b | [A text-to-Cypher QA agent](notes/11b-text-to-cypher-qa-agent.md) | The LangGraph QA agent: state by node, bounded retry, validate before execute, streaming, a worked investigation |
 | 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost |
 | 13 | [Learning on graphs: tasks and features](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, ReFeX |
@@ -124,7 +126,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | Keep at least one anchor the graph can't edit | [07](notes/07-failure-modes-at-scale.md) |
 | Errors compound per hop: at 85% per hop, a 5-hop answer is ~44% right | [10](notes/10-building-kgs-with-llms.md) |
 | Never merge entities destructively; keep provenance on every edge | [10](notes/10-building-kgs-with-llms.md), [12](notes/12-kg-as-shared-agent-memory.md) |
-| Vector search first, canned traversals for named question shapes, text-to-Cypher only with a validator | [11](notes/11-kg-rag-and-text-to-cypher.md) |
+| Vector search first, canned traversals for named question shapes, text-to-Cypher only with a validator | [11](notes/11-kg-rag-and-text-to-cypher.md), [11a](notes/11a-structured-lookups-and-text-to-cypher.md) |
 | Never execute model-written Cypher as a write: extract structured mentions, assemble with deterministic `MERGE` | [10](notes/10-building-kgs-with-llms.md) |
 | A live KG needs standing pipelines for update, assessment, deletion and access, not a one-off build | [10b](notes/10b-assembling-and-maintaining-kgs.md) |
 | Return the smallest graph unit the question needs: node, triplet, path, then subgraph | [11](notes/11-kg-rag-and-text-to-cypher.md) |

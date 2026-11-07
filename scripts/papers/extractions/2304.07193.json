@@ -1,0 +1,845 @@
+{
+ "schema": 1,
+ "key": "2304.07193",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/oquab-2023-dinov2.pdf",
+ "bib": {
+  "title": "DINOv2: Learning Robust Visual Features without Supervision",
+  "authors": [
+   "Maxime Oquab",
+   "Timothée Darcet",
+   "Théo Moutakanni",
+   "Huy V. Vo",
+   "Marc Szafraniec",
+   "Vasil Khalidov",
+   "Pierre Fernandez",
+   "Daniel Haziza",
+   "Francisco Massa",
+   "Alaaeldin El-Nouby",
+   "Mahmoud Assran",
+   "Nicolas Ballas",
+   "Wojciech Galuba",
+   "Russell Howes",
+   "Po-Yao Huang",
+   "Shang-Wen Li",
+   "Ishan Misra",
+   "Michael Rabbat",
+   "Vasu Sharma",
+   "Gabriel Synnaeve",
+   "Hu Xu",
+   "Hervé Jegou",
+   "Julien Mairal",
+   "Patrick Labatut",
+   "Armand Joulin",
+   "Piotr Bojanowski"
+  ],
+  "first_author": "Oquab",
+  "year": 2024,
+  "venue": "Transactions on Machine Learning Research (01/2024)",
+  "arxiv": "2304.07193",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 105608,
+  "chars_total": 105608,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can self-supervised learning on a large curated image dataset produce general-purpose frozen visual features that match or beat the best weakly-supervised (text-guided) features at image and pixel level?",
+ "hypothesis": "Existing SSL methods, trained on enough curated and diverse data at scale, can produce frozen all-purpose features that rival text-supervised ones.",
+ "contributions": [
+  "An automatic pipeline that builds the curated LVD-142M dataset by retrieval from an uncurated pool, with no metadata or text",
+  "A stabilised and faster discriminative SSL recipe (DINO + iBOT + SwAV centering + KoLeo + high-resolution phase), about 2x faster and 1/3 memory vs iBOT",
+  "Distillation of ViT-g/14 into smaller ViT-S/B/L models",
+  "Release of models and code, evaluation on image, video, retrieval, segmentation and depth, plus fairness and carbon analysis"
+ ],
+ "method": {
+  "summary": "A ViT-g/14 (1.1B params) is trained from scratch on 142M curated images with a combined DINO image-level and iBOT patch-level self-distillation loss, untied heads, Sinkhorn-Knopp centering, KoLeo regulariser and a short 518x518 phase. Smaller ViT-S/B/L are distilled from the ViT-g. Features are evaluated frozen with linear probes, kNN, retrieval and light decoders.",
+  "task": "self-supervised visual representation pretraining; frozen-feature evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LVD-142M",
+    "role": "pretrain",
+    "size": "142,109,386 images",
+    "split": null,
+    "source": "retrieved from an uncurated pool of crawled web images (1.2B unique in Sec 3, 1.3B in App A.3; 744M after self- and relative deduplication) using ViT-H/16 SSL embeddings and cosine similarity to curated sets (ImageNet-22k, ImageNet-1k train, Google Landmarks v2, fine-grained sets, Table 15)",
+    "preprocessing": "PCA hash dedup, NSFW filtering, face blurring; copy-detection dedup (k=64 neighbours, similarity >0.6; relative dedup against eval sets >0.45); retrieval N=4 neighbours (k=4 for GLDv2/IN-22k, k=32 for IN-1k) or cluster-based with 100,000 k-means clusters, 10,000 images per cluster, max 1M per dataset"
+   },
+   {
+    "name": "ImageNet-22k",
+    "role": "pretrain",
+    "size": "14,197,086 images",
+    "split": null,
+    "source": "used as an ablation baseline and part of LVD curated set",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-1k",
+    "role": "eval",
+    "size": "1,281,167 train images",
+    "split": "val for linear/kNN; ReaL and V2 also",
+    "source": "Russakovsky 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Oxford/Paris (Revisiting), Met, AmsterTime",
+    "role": "eval",
+    "size": "Oxford base 4,993; Paris base 6,322; Met train 397,121; AmsterTime 1,231 new+old",
+    "split": "M and H protocols",
+    "source": "Table 15 and 18; their train/base splits are also used as retrieval queries when building LVD-142M",
+    "preprocessing": null
+   },
+   {
+    "name": "ADE20K, Cityscapes, VOC 2012, NYUd, KITTI, SUN RGB-D, iNaturalist 2018/2021, Places205, UCF101, K400, SSv2, Dollar Street, Casual Conversations",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Table 18 lists use as pretraining-retrieval and eval",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DINOv2 ViT-g/14",
+    "role": "proposed",
+    "params": "1.1B",
+    "architecture": "ViT, SwiGLU FFN, embed 1536, 24 heads (64 dim/head), 40 blocks",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 40,
+    "hidden": 1536,
+    "heads": 24,
+    "context": null,
+    "other": {
+     "trained": "from scratch",
+     "patch": 14
+    }
+   },
+   {
+    "name": "DINOv2 ViT-L/14 (distilled)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT, MLP FFN, embed 1024, 16 heads, 24 blocks",
+    "init_from": "distilled from ViT-g/14",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DINOv2 ViT-B/14 (distilled)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT, MLP FFN, embed 768, 12 heads, 18 blocks",
+    "init_from": "distilled from ViT-g/14",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 18,
+    "hidden": 768,
+    "heads": 12,
+    "context": null,
+    "other": {
+     "note": "Table 17 prints 18 blocks for ViT-B, 12 for heads"
+    }
+   },
+   {
+    "name": "DINOv2 ViT-S/14 (distilled)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT, MLP FFN, embed 384, 6 heads, 12 blocks",
+    "init_from": "distilled from ViT-g/14",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenCLIP ViT-G/14 (LAION-2B)",
+    "role": "baseline",
+    "params": "not stated",
+    "architecture": "text-supervised ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "OpenCLIP ViT-H/14, CLIP ViT-L/14, SWAG ViT-H/14, EVA-CLIP ViT-g/14"
+    }
+   },
+   {
+    "name": "SSL baselines: MAE ViT-H/14, DINO ViT-B/8, SEERv2, MSN, EsViT, Mugs, iBOT ViT-L/16",
+    "role": "baseline",
+    "params": null,
+    "architecture": "as released",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "DINO image-level cross-entropy on class token + iBOT masked patch-level cross-entropy + KoLeo (weight 0.1) ; separate (untied) heads; Sinkhorn-Knopp centering (3 iterations) for teacher",
+   "optimizer": "AdamW",
+   "lr": "1e-3 (distilled S/B/L, batch 2048); 3.5e-4 (from scratch ViT-L/g, batch 3072)",
+   "lr_schedule": "cosine weight-decay schedule 0.04 to 0.2; teacher momentum cosine 0.994 to 1; high-res phase reduces base lr",
+   "warmup": "100k iterations learning rate warmup",
+   "batch_size": "2048 (distilled), 3072 (from scratch)",
+   "steps": "625k iterations; plus 10k iterations of high-resolution adaptation at 518x518",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "inferred: 224 global crops and 98 local crops at patch 14",
+   "precision": "float16 (DINO head gradients reduced in float32); FSDP with float32 weight shards",
+   "weight_decay": "cosine 0.04 to 0.2",
+   "dropout": null,
+   "regularisation": "stochastic depth 0.4 (from scratch), LayerScale init 1e-5, KoLeo, none for distilled models",
+   "hardware": "A100 GPUs, PyTorch 2.0, FSDP; data pipeline on 20 nodes of 8 V100-32GB",
+   "compute": "22,016 A100-40GB GPU-hours for ViT-g (9.7 MWh, 3.7 tCO2eq)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ablation_recipe": "Table 1 on ViT-L / ImageNet-22k adds one component at a time, k-NN 72.9 to 82.0",
+    "distillation": "frozen ViT-g teacher, EMA of student as final model, no masking, no stochastic depth, iBOT loss on the two global crops",
+    "teacher_ema": "teacher initialised from student, updated each step",
+    "ViT-g_arch_note": "1536 dim / 24 heads rather than 1408 / 16 of Zhai et al. 2022 for efficiency",
+    "crops": "large 224, small 98",
+    "hparam_table": "Table 16"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": "image retrieval evaluated by cosine similarity ranking of frozen features",
+   "parameters": {},
+   "other": {
+    "linear_probe": "SGD, 12500 iterations, random-resized-crop; grid over lr {0.0001..0.5}, output layers {1,4}, concatenating avg-pooled patch tokens {yes,no}; best validation accuracy reported",
+    "segmentation": "linear layer on patch tokens upsampled to 512x512; +ms: last 4 layers, resolution 640, multiscale test-time augmentation",
+    "depth": "lin.1, lin.4 (layers 3,6,9,12 for S/B; 5,12,18,24 for L; 10,20,30,40 for g), DPT decoder; 256 bins",
+    "video": "8 evenly spaced frames, average features (concat for SSv2)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 accuracy",
+     "definition": "linear probe or kNN on frozen features, ImageNet-1k val",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "mean average precision of cosine-similarity ranking, Oxford/Paris/AmsterTime",
+     "unit": "mAP",
+     "higher_is_better": true
+    },
+    {
+     "name": "GAP",
+     "definition": "global average precision on Met",
+     "unit": "GAP",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "semantic segmentation with frozen features",
+     "unit": "mIoU",
+     "higher_is_better": true
+    },
+    {
+     "name": "RMSE",
+     "definition": "monocular depth estimation",
+     "unit": "RMSE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "OpenCLIP",
+    "CLIP",
+    "SWAG",
+    "EVA-CLIP",
+    "MAE",
+    "DINO",
+    "SEERv2",
+    "MSN",
+    "EsViT",
+    "Mugs",
+    "iBOT"
+   ],
+   "protocol": "Frozen backbone with simple heads; authors re-run all baselines with their own code and report the best of a lr/layers grid on the validation set itself; single run, no significance tests; for non-ImageNet tables only the four best SSL baselines and OpenCLIP-G are shown"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/dinov2 (Apache 2.0)",
+   "weights": "released, Apache 2.0",
+   "data": "LVD-142M pipeline described; the 142M set itself not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "our ViT-g backbone counts 1.1B parameters",
+    "where": "Sec 5"
+   },
+   {
+    "field": "training.steps",
+    "quote": "All models run for 625k iterations with optimizer AdamW",
+    "where": "Table 16 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DINOv2 ViT-g/14 frozen-feature linear probe on ImageNet-1k slightly exceeds OpenCLIP ViT-G/14.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k linear top-1",
+   "value": "86.5",
+   "unit": "% top-1",
+   "baseline_value": "86.2",
+   "n": null,
+   "setup": "ImageNet-1k val, linear probe on frozen features, 224x224, all models evaluated with the authors' own code; DINOv2 ViT-g/14 (LVD-142M, no text) vs OpenCLIP ViT-G/14 (LAION-2B, text-supervised)",
+   "note": "Text says the gap is +0.3%; EVA-CLIP ViT-g/14 is 86.4 (+0.1).",
+   "where": "Sec 7.1, Table 4",
+   "table": "Table 4, row DINOv2 ViT-g/14, column linear val; baseline row OpenCLIP ViT-G/14 = 86.2"
+  },
+  {
+   "claim": "On Oxford-Hard instance retrieval, DINOv2 ViT-L/14 scores 54.0 mAP against 19.7 for OpenCLIP ViT-G/14; the ViT-g/14 scores 52.3, so 54.0 is the ViT-L, not the largest model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oxford-Hard mAP",
+   "value": "54.0",
+   "unit": "mAP",
+   "baseline_value": "19.7",
+   "n": null,
+   "setup": "Revisiting Oxford Hard, non-parametric cosine-similarity ranking of frozen features; DINOv2 ViT-L/14 vs OpenCLIP ViT-G/14 (19.7). Oxford 'base' images were a query set for building LVD-142M",
+   "note": "DINOv2 ViT-g/14 gets 52.3 on Oxford-H (gain 32.6 over OpenCLIP); the text's '+34% mAP on Oxford-Hard' matches the ViT-L number (54.0-19.7=34.3).",
+   "where": "Sec 7.3, Table 9",
+   "table": "Table 9, row DINOv2 ViT-L/14, column Oxford H; baseline row OpenCLIP ViT-G/14 column H = 19.7"
+  },
+  {
+   "claim": "Instance-retrieval gap over weakly-supervised features is reported as +34 mAP on Oxford-Hard (+41 over SSL).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oxford-Hard mAP gain",
+   "value": "+34% mAP",
+   "unit": "mAP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 9, best DINOv2 vs OpenCLIP ViT-G/14 / best SSL baseline",
+   "note": null,
+   "where": "Sec 7.3",
+   "quote": "our features significantly outperform both SSL (+41% mAP on Oxford-Hard), and weakly-supervised (+34% mAP on Oxford-Hard) ones"
+  },
+  {
+   "claim": "DINOv2 ViT-g/14 is far above OpenCLIP on Oxford-M, Paris-H and AmsterTime but not on every retrieval column.",
+   "kind": "measured",
+   "source": null,
+   "metric": "instance retrieval mAP",
+   "value": "73.6 / 92.1 / 82.6 / 46.7",
+   "unit": "mAP",
+   "baseline_value": "50.7 / 79.2 / 60.2 / 24.6",
+   "n": null,
+   "setup": "Table 9 ViT-g/14 row (Oxford M, Paris M, Paris H, AmsterTime mAP); OpenCLIP ViT-G/14 gets 50.7, 79.2, 60.2, 24.6",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row DINOv2 ViT-g/14, columns Oxford M, Paris M, Paris H, AmsterTime mAP"
+  },
+  {
+   "claim": "On the Met artwork benchmark OpenCLIP is far behind SSL baselines, and DINOv2 ViT-g/14 GAP is 36.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Met GAP",
+   "value": "36.8",
+   "unit": "GAP",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "Met, Table 9, DINOv2 ViT-g/14 vs OpenCLIP ViT-G/14 (6.5)",
+   "note": "ViT-L/14 is higher (40.0); GAP- of ViT-g is 73.6.",
+   "where": "Table 9",
+   "table": "Table 9, row DINOv2 ViT-g/14, column GAP"
+  },
+  {
+   "claim": "The new components lift ImageNet-1k linear accuracy by 4.2 points over the previous SSL state of the art (iBOT ViT-L/16 on ImageNet-22k).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k linear gain",
+   "value": "+4.2%",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1k linear probe, frozen features, DINOv2 ViT-g/14 vs iBOT ViT-L/16 INet-22k",
+   "note": null,
+   "where": "Sec 7.1",
+   "quote": "very significant improvement (+4.2%) over the previous state of the art (iBOT ViT-L/16 trained on ImageNet-22k) on linear evaluation"
+  },
+  {
+   "claim": "Linear-probe robustness: DINOv2 ViT-g/14 beats OpenCLIP ViT-G/14 on ImageNet-A but trails on R and Sketch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-A top-1",
+   "value": "75.9",
+   "unit": "% acc",
+   "baseline_value": "63.8",
+   "n": null,
+   "setup": "ImageNet-A, linear classifier trained on ImageNet-1k, 224; OpenCLIP ViT-G/14 = 63.8",
+   "note": "Im-R 78.8 vs 87.8; Sketch 62.5 vs 66.4; Im-C (lower better) 28.2 vs 45.3.",
+   "where": "Table 6",
+   "table": "Table 6, row DINOv2 ViT-g/14, column Im-A"
+  },
+  {
+   "claim": "Frozen ViT-g/14 on iNaturalist 2018 and 2021 beats OpenCLIP by wide margins and lags slightly on Places205.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iNat2018 top-1",
+   "value": "81.6",
+   "unit": "% top-1",
+   "baseline_value": "73.0",
+   "n": null,
+   "setup": "iNaturalist 2018, linear probe with augmentation, OpenCLIP ViT-G/14 = 73.0",
+   "note": "Text: +8.6 and +9.7 for iNat2018/2021, -2.3 on Places205.",
+   "where": "Sec 7.2, Table 7",
+   "table": "Table 7, row DINOv2 ViT-g/14, column iNat2018"
+  },
+  {
+   "claim": "Averaged over 12 fine-grained benchmarks DINOv2 ViT-g/14 beats OpenCLIP ViT-G/14.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "92.1",
+   "unit": "% avg acc",
+   "baseline_value": "91.9",
+   "n": null,
+   "setup": "12 SimCLR transfer classification benchmarks, logistic regression on precomputed features",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row DINOv2 ViT-g/14, column Avg; OpenCLIP ViT-G/14 = 91.9"
+  },
+  {
+   "claim": "Frozen ADE20K linear segmentation: DINOv2 ViT-g/14 reaches 49.0 mIoU vs 39.3 for OpenCLIP ViT-G/14.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20K mIoU (linear)",
+   "value": "49.0",
+   "unit": "mIoU",
+   "baseline_value": "39.3",
+   "n": null,
+   "setup": "ADE20K, linear layer on patch tokens, upsampled to 512x512",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row DINOv2 ViT-g/14, column ADE20k lin."
+  },
+  {
+   "claim": "Frozen ViT-g/14 backbone with ViT-Adapter and Mask2Former head reaches 60.2 mIoU on ADE20K, close to the 62.9 state of the art.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20K mIoU",
+   "value": "60.2",
+   "unit": "mIoU",
+   "baseline_value": "62.9",
+   "n": null,
+   "setup": "ADE20K; adapter and head trained, backbone frozen (66% of weights frozen); segmentation training took 28 hours on 16 V100 GPUs",
+   "note": null,
+   "where": "Sec 7.4",
+   "quote": "we reach 60.2 mIoU on ADE20k, close to the competitive state of the art, standing at 62.9 mIoU"
+  },
+  {
+   "claim": "Depth estimation on NYUd with a DPT decoder over frozen ViT-g/14 gives RMSE 0.279 versus 0.414 for OpenCLIP ViT-G/14.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NYUd RMSE",
+   "value": "0.279",
+   "unit": "RMSE (lower better)",
+   "baseline_value": "0.414",
+   "n": null,
+   "setup": "NYUd, frozen backbone, DPT decoder",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row DINOv2 ViT-g/14, column NYUd DPT"
+  },
+  {
+   "claim": "Fine-tuning ViT-g/14 end to end on ImageNet-1k adds only about 2 points over a linear probe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k top-1 finetuned",
+   "value": "88.5",
+   "unit": "% top-1",
+   "baseline_value": "86.5",
+   "n": null,
+   "setup": "ImageNet-1k, Touvron et al. (2022) fine-tuning pipeline, 224x224; 448 gives 88.9; linear is 86.5 / 86.7",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ViT-g/14 224, column Finetuned"
+  },
+  {
+   "claim": "Training on curated LVD-142M beats uncurated data and ImageNet-22k on most benchmarks (except ImageNet-1k vs INet-22k).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oxford-M mAP",
+   "value": "64.6",
+   "unit": "mAP (Oxford-M)",
+   "baseline_value": "62.5",
+   "n": null,
+   "setup": "ViT-g/14, same number of iterations, shorter than final run, no high-res adaptation; Oxford-M column; uncurated 54.3, INet-22k 62.5",
+   "note": "iNat2018: LVD 82.3 vs uncurated 68.0 vs INet-22k 81.1; INet-1k: LVD 85.8 vs INet-22k 85.9.",
+   "where": "Sec 6.2, Table 2",
+   "table": "Table 2, row LVD-142M, column Oxford-M"
+  },
+  {
+   "claim": "KoLeo regulariser improves Oxford-M retrieval by more than 8 points without hurting other metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Oxford-M mAP",
+   "value": "63.9",
+   "unit": "mAP (with KoLeo)",
+   "baseline_value": "55.6",
+   "n": null,
+   "setup": "Table 3a, Oxford-M: 55.6 without KoLeo, 63.9 with",
+   "note": null,
+   "where": "Table 3a, Sec 6.4",
+   "table": "Table 3a, row check, column Oxford-M"
+  },
+  {
+   "claim": "The iBOT masked-image-modeling term gives almost 3 points of ADE20K mIoU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20K mIoU",
+   "value": "47.1",
+   "unit": "mIoU (with MIM)",
+   "baseline_value": "44.2",
+   "n": null,
+   "setup": "Table 3b, ADE-20k: 44.2 without MIM, 47.1 with",
+   "note": null,
+   "where": "Table 3b, Sec 6.4",
+   "table": "Table 3b, row check, column ADE-20k"
+  },
+  {
+   "claim": "A ViT-L/14 distilled from ViT-g/14 beats the same ViT-L trained from scratch on ImageNet-1k linear.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k linear top-1",
+   "value": "86.3",
+   "unit": "% top-1",
+   "baseline_value": "84.5",
+   "n": null,
+   "setup": "Fig 5; scratch ViT-L/14 = 84.5, teacher ViT-g/14 = 86.5",
+   "note": "Read from a figure; the distilled model beats scratch on all 12 benchmarks.",
+   "where": "Sec 6.5, Fig 5",
+   "table": "Fig 5(a), ViT-L/14 Distill, INet-1k"
+  },
+  {
+   "claim": "Training at 416 resolution costs about 3x the compute of 224; a short 10k-iteration high-resolution phase at the end is almost as good.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative compute",
+   "value": "approximately 3x",
+   "unit": "x compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/16 on ImageNet-1k, 224 vs 416 from scratch",
+   "note": null,
+   "where": "Sec 6.6",
+   "quote": "training at 416 is approximately 3 × more compute-intensive than training at 224"
+  },
+  {
+   "claim": "The implementation runs about 2x faster and uses a third of the memory of the iBOT implementation on the same hardware.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed/memory vs iBOT",
+   "value": "around 2x faster, 1/3 memory",
+   "unit": "relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same hardware vs iBOT code",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "the DINOv2 code runs around 2× faster using only 1/3 of the memory"
+  },
+  {
+   "claim": "Reproducing the DINOv2 ViT-g costs 22,016 A100-40GB GPU-hours, 9.7 MWh and 3.7 tCO2eq.",
+   "kind": "measured",
+   "source": null,
+   "metric": "carbon",
+   "value": "3.7",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100-40GB at 400W, PUE 1.1, 0.385 kg CO2e/kWh; OpenCLIP ViT-L / ViT-G would need 22.4 / 118.9 MWh (text-encoder included)",
+   "note": "Text calls the GPU 'A100-80GB' for the TDP while the table says A100-40GB.",
+   "where": "Table 14, Sec 9",
+   "table": "Table 14, row DINOv2-g, column Carbon emitted"
+  },
+  {
+   "claim": "Geographical fairness gap persists: ViT-g is 25.7% worse on Africa than Europe and 31.7% worse on low- than high-income households.",
+   "kind": "measured",
+   "source": null,
+   "metric": "regional accuracy gap",
+   "value": "25.7%",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dollar Street (16,073 images, 289 households, 54 countries, 94 concepts)",
+   "note": null,
+   "where": "Sec 8.1",
+   "quote": "our model performance drops by 25.7% compared to Europe"
+  },
+  {
+   "claim": "The full project footprint is estimated at 0.5k to 1k tCO2eq, about 200k GPU-days.",
+   "kind": "measured",
+   "source": null,
+   "metric": "project carbon",
+   "value": "0.5k to 1k tCO2eq",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole project, same grid assumptions",
+   "note": null,
+   "where": "Sec 9",
+   "quote": "between 0.5k and 1k tCO2eq"
+  },
+  {
+   "claim": "LVD-142M is 142,109,386 images built in under two days on 20 nodes of 8 V100-32GB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "142,109,386",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "retrieval from an uncurated pool deduplicated to 744M images",
+   "note": "Pool size is printed as 1.2B (Sec 3) and 1.3B (App A.3), 1.1B after self-dedup, 744M after relative dedup.",
+   "where": "Table 15, Sec 3",
+   "table": "Table 15, total row"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests; single runs.",
+  "Linear-probe hyperparameters are picked on the validation set used for reporting, and the authors note SSL methods were developed using ImageNet-1k val as a debugging signal.",
+  "Many evaluation datasets (Oxford, Paris, Met, AmsterTime, ImageNet-1k, ADE20k, etc.) also supply train images as queries to build LVD-142M (Table 18, Table 15), so the data is tuned to those domains; near-duplicates of eval sets are removed.",
+  "Fairness: significant bias toward wealthy Western households remains (Africa -25.7% vs Europe; low vs high income -31.7%); authors say a more thorough bias evaluation may reveal flaws.",
+  "Comparison with OpenCLIP is on frozen features and linear heads; OpenCLIP trains a text encoder too, so the carbon comparison is acknowledged as unfair.",
+  "Training time, epochs and wall clock are not stated; epochs null."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LVD-142M",
+   "definition": "Curated 142M-image pretraining dataset assembled by retrieving uncurated images close to curated sets",
+   "where": "Sec 3"
+  },
+  {
+   "term": "KoLeo regularizer",
+   "definition": "Kozachenko-Leonenko entropy estimator based loss that encourages uniform span of features within a batch",
+   "where": "Sec 4"
+  },
+  {
+   "term": "sequence packing",
+   "definition": "concatenate crops of different lengths into one sequence with a block-diagonal attention mask",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DINO (Caron et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "image-level objective",
+   "quote": "Image-level objective (Caron et al., 2021)"
+  },
+  {
+   "work": "iBOT (Zhou et al., 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "patch-level objective and base recipe",
+   "quote": "we build on top of Zhou et al. (2022a)"
+  },
+  {
+   "work": "SwAV (Caron et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sinkhorn-Knopp centering",
+   "quote": null
+  },
+  {
+   "work": "KoLeo (Sablayrolles et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "feature spreading regulariser",
+   "quote": null
+  },
+  {
+   "work": "Ruan et al. 2023 Weighted ensemble SSL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "recommends SK centering",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "own variant",
+   "quote": null
+  },
+  {
+   "work": "Duval et al. 2023 simple recipe low-compute SSL",
+   "year": 2023,
+   "arxiv": "2301.09451",
+   "relation": "uses-method",
+   "note": "distillation close to theirs",
+   "quote": null
+  },
+  {
+   "work": "Zhai et al. 2022 Scaling vision transformers",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ViT-g architecture adapted",
+   "quote": null
+  },
+  {
+   "work": "Pizzi et al. 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "copy detection for dedup",
+   "quote": null
+  },
+  {
+   "work": "CCNet (Wenzek et al., 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "text curation pipeline that inspired data pipeline",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP (Ilharco et al., 2021; Cherti et al., 2023)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main weakly-supervised baseline",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "text-guided baseline",
+   "quote": null
+  },
+  {
+   "work": "EVA-CLIP (Fang et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on ImageNet linear",
+   "quote": null
+  },
+  {
+   "work": "MAE (He et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SSL baseline",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformer (Dosovitskiy et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "architecture",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-22k, ImageNet-1k, Google Landmarks v2",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "curated retrieval sources",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Visualization of the first PCA components of patch features",
+   "page": 2,
+   "why": "shows part-level correspondence emerging without supervision"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Evolution of performance when scaling in parameters on eight task types, SSL vs WSL vs DINOv2",
+   "page": 3,
+   "why": "summarises claim that DINOv2 reaches weakly-supervised level"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of our data processing pipeline",
+   "page": 4,
+   "why": "curation by dedup then retrieval"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Model scale versus data scale: ImageNet-22k vs LVD-142M",
+   "page": 9,
+   "why": "data matters more as model grows"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Effectiveness of knowledge distillation",
+   "page": 10,
+   "why": "distilled ViT-L beats scratch on all 12 benchmarks"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Role of resolution",
+   "page": 10,
+   "why": "short high-res phase nearly matches full high-res training"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4",
+   "snippet": "Lkoleo = -1/n sum_i log(d_{n,i}), d_{n,i} = min_{j != i} ||x_i - x_j||",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4",
+   "snippet": "L_DINO = - sum p_t log p_s",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table and figure data came out of the PDF as one value per line; columns were assigned by position, checked against text claims (e.g. +34 mAP, +8.6/+9.7 iNat).",
+  "Pool size is 1.2B (Sec 3) vs 1.3B (App A.3). Text says A100-80GB for TDP but Table 14 says A100-40GB.",
+  "Published TMLR version (v2, Feb 2024) used; arXiv first posted April 2023, so year is recorded as 2024 for this version, 2023 for first posting.",
+  "No embedded instructions found.",
+  "Hypothesis is implied, not stated in a sentence."
+ ]
+}

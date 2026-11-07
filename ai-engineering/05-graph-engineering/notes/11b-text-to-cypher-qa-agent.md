@@ -16,7 +16,7 @@ A text-to-Cypher prompt alone leaves a user staring at one failed query or at a 
 
 ## Where it sits
 
-[Note 11](11-kg-rag-and-text-to-cypher.md#text-to-cypher) built the expert prompt and named the failure it can't remove. This note wires that prompt into a graph using the primitives of [note 02](02-graph-primitives.md), [note 03](03-state-and-reducers.md) and [note 04](04-durable-execution-and-interrupts.md). The running mistake is L7's: summing `value` on `Company`, when `value` lives on the edge ([note 11](11-kg-rag-and-text-to-cypher.md#the-failure-to-expect)).
+[Note 11a](11a-structured-lookups-and-text-to-cypher.md#text-to-cypher) built the expert prompt and named the failure it can't remove. This note wires that prompt into a graph using the primitives of [note 02](02-graph-primitives.md), [note 03](03-state-and-reducers.md) and [note 04](04-durable-execution-and-interrupts.md). The running mistake is L7's: summing `value` on `Company`, when `value` lives on the edge ([note 11a](11a-structured-lookups-and-text-to-cypher.md#the-failure-to-expect)).
 
 ---
 
@@ -32,7 +32,7 @@ Ch15 implements the expert pipeline in LangGraph (*KG & LLMs in Action*, ch. 15)
 Around the graph sit three components:
 
 - **A configuration provider.** One YAML file holds the prompt templates (Jinja2), the KG notes and the few-shot examples, each example with its question, Cypher and optional reasoning. Prompts and annotations are then tuned and versioned without touching code, and the file is reloaded on every request so edits apply immediately. The KG notes carry domain definitions the schema can't ("a previous offender or known offender is defined by the fact that the node is connected to crimes") and traversal advice ("do not expand ANPRCameraEvent unless you need to connect it to both Vehicle and ANPRCamera"). Check the examples as carefully as code, because the model copies them. Two in the printed config are wrong: the March 14 example's answer, `MATCH (c:Crime) WHERE c.date starts with "2025-03-14"`, has no `RETURN` and won't run, and the "male known offender" example filters `person.sex CONTAINS 'MALE'`, which also matches `'FEMALE'`.
-- **A schema provider.** The skip-and-describe transformation [from note 11](11-kg-rag-and-text-to-cypher.md#give-the-model-an-llm-ready-schema).
+- **A schema provider.** The skip-and-describe transformation [from note 11a](11a-structured-lookups-and-text-to-cypher.md#give-the-model-an-llm-ready-schema).
 - **A question-processing interface.** A generator that turns the pipeline run into an event stream for the front end ([below](#streaming-it-to-a-ui)).
 
 ### State, node by node

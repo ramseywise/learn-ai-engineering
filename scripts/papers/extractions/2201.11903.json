@@ -1,0 +1,823 @@
+{
+ "schema": 1,
+ "key": "2201.11903",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf",
+ "bib": {
+  "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+  "authors": [
+   "Jason Wei",
+   "Xuezhi Wang",
+   "Dale Schuurmans",
+   "Maarten Bosma",
+   "Brian Ichter",
+   "Fei Xia",
+   "Ed H. Chi",
+   "Quoc V. Le",
+   "Denny Zhou"
+  ],
+  "first_author": "Wei",
+  "year": 2022,
+  "venue": "NeurIPS 2022 (36th Conference on Neural Information Processing Systems)",
+  "arxiv": "2201.11903",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 135712,
+  "chars_total": 135712,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Tables 8, 10, 11 example text skimmed."
+ },
+ "type": "empirical",
+ "question": "Can few-shot prompting with intermediate natural-language reasoning steps (a chain of thought) elicit multi-step reasoning in sufficiently large language models without finetuning?",
+ "hypothesis": "Generating a chain of thought in the few-shot exemplars lets large models decompose multi-step problems and improves arithmetic, commonsense and symbolic reasoning, with the effect emerging only at large scale.",
+ "contributions": [
+  "Chain-of-thought prompting: few-shot exemplars of <input, chain of thought, output> triples",
+  "Evaluation on arithmetic, commonsense and symbolic reasoning across LaMDA, GPT-3, PaLM, UL2, Codex",
+  "Ablations (equation only, variable compute, CoT after answer) and robustness to annotators, exemplars, order, count",
+  "New SOTA on GSM8K with PaLM 540B using 8 exemplars"
+ ],
+ "method": {
+  "summary": "Eight (or four/six) hand-written exemplars with chains of thought are placed in the prompt of off-the-shelf LLMs and answers are decoded greedily; accuracy is compared with standard few-shot prompting across 5 arithmetic, 5 commonsense and 2 symbolic benchmarks. Ablations and annotator/exemplar robustness runs are done mainly on LaMDA 137B.",
+  "task": "multi-step reasoning: arithmetic word problems, commonsense QA, symbolic manipulation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1,319 examples",
+    "split": "test",
+    "source": "Cobbe et al. 2021, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1,000 examples",
+    "split": "eval",
+    "source": "Patel et al. 2021, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv",
+    "role": "eval",
+    "size": "2,096 examples",
+    "split": "eval",
+    "source": "Miao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": "254 examples",
+    "split": "eval; 4 exemplars from training set",
+    "source": "Ling et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "MAWPS (SingleOp 562, SingleEq 508, AddSub 395, MultiArith 600)",
+    "role": "eval",
+    "size": "inferred: 2,065 from the four subset sizes in Table 12",
+    "split": "eval",
+    "source": "Koncel-Kedziorski et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "CSQA",
+    "role": "eval",
+    "size": null,
+    "split": "exemplars randomly drawn from training set",
+    "source": "Talmor et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": "open-domain question-only set from BIG-bench; exemplars from training set",
+    "source": "Geva et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Date Understanding / Sports Understanding (BIG-bench)",
+    "role": "eval",
+    "size": null,
+    "split": "first ten eval examples used as exemplars, rest evaluated",
+    "source": "BIG-bench collaboration 2021, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "SayCan",
+    "role": "eval",
+    "size": "120 examples",
+    "split": "6 exemplars from the SayCan training set",
+    "source": "Ahn et al. 2022, CC BY 4.0",
+    "preprocessing": null
+   },
+   {
+    "name": "Last letter concatenation",
+    "role": "eval",
+    "size": null,
+    "split": "in-domain 2 words; OOD 3 and 4 words",
+    "source": "synthetic: top one-thousand first and last names from namecensus.com",
+    "preprocessing": null
+   },
+   {
+    "name": "Coin flip",
+    "role": "eval",
+    "size": null,
+    "split": "in-domain 2 flips; OOD 3 and 4 flips",
+    "source": "synthetic",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 (text-ada-001, babbage-001, curie-001, davinci-002)",
+    "role": "evaluated",
+    "params": "350M, 1.3B, 6.7B, 175B (presumed InstructGPT sizes)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LaMDA",
+    "role": "evaluated",
+    "params": "422M, 2B, 8B, 68B, 137B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM",
+    "role": "evaluated",
+    "params": "8B, 62B, 540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UL2",
+    "role": "evaluated",
+    "params": "20B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy decoding",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy output per item; LaMDA averaged over 5 random seeds (each a different shuffled exemplar order); other models a single exemplar order",
+   "prompting": "few-shot, 8 chain-of-thought exemplars for math word problems (same set for all but AQuA, which uses 4); 6 for StrategyQA (Table 25), 6 for Date, 8 for Sports, 7 for CSQA (counted in Table 24), 6 for SayCan per text (Table 28 shows 7), 4 for last letter, 8 for coin flip; format 'Q: ... A: ... The answer is X.'; baseline is the same exemplars with answer only",
+   "retrieval": null,
+   "parameters": {
+    "external_calculator": "post-hoc Python eval on equations in generated chain, results propagated by string matching (Appendix B)",
+    "exemplar_authorship": "Annotator A wrote main set; B and C (co-authors) wrote alternates; GSM8K-train alpha/beta/gamma sets ≤60 tokens and ≤2 steps"
+   },
+   "other": {
+    "hardware": "LaMDA 137B inference on TPU v3 (8x8, 64 chips / 128 cores); PaLM 540B on TPU v4 (4x4x12, 192 chips / 384 cores); GPT-3 via public API",
+    "no_finetuning": "No language models were finetuned",
+    "exemplar_count_study": "Fig 11 varies number of exemplars on five datasets (values only in figure)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "solve rate / accuracy",
+     "definition": "percentage of test items whose final answer (after 'The answer is') is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "standard few-shot prompting (Brown et al. 2020)",
+    "prior supervised best (finetuned GPT-3 + verifier on GSM8K, etc.)",
+    "human (CSQA/StrategyQA/Sports)"
+   ],
+   "protocol": "Greedy decoding; LaMDA mean±std over 5 exemplar orders; no significance tests; ablations run on LaMDA 137B only (SayCan ablations on PaLM)."
+  },
+  "availability": {
+   "code": null,
+   "weights": "proprietary models (LaMDA, PaLM); GPT-3 via API",
+   "data": "Exact prompts in Appendix G Tables 20-28; LaMDA 137B inputs, targets and predictions in supplementary zip; coin flip and last letter datasets in supplement"
+  },
+  "prompts": [
+   {
+    "purpose": "Math word problems CoT exemplar (first of 8)",
+    "text": "Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?\nA: There are 15 trees originally. Then there were 21 trees after some more were planted. So there must have been 21 - 15 = 6. The answer is 6.",
+    "where": "Appendix G, Table 20"
+   },
+   {
+    "purpose": "Last letter concatenation exemplar",
+    "text": "Q: Take the last letters of the words in \"Elon Musk\" and concatenate them.\nA: The last letter of \"Elon\" is \"n\". The last letter of \"Musk\" is \"k\". Concatenating them is \"nk\". The answer is nk.",
+    "where": "Table 22"
+   },
+   {
+    "purpose": "Coin flip exemplar",
+    "text": "Q: A coin is heads up. Maybelle flips the coin. Shalonda does not flip the coin. Is the coin still heads up?\nA: The coin was flipped by Maybelle. So the coin was flipped 1 time, which is an odd number. The coin started heads up, so after an odd number of flips, it will be tails up. So the answer is no.",
+    "where": "Table 23"
+   },
+   {
+    "purpose": "SayCan prompt header",
+    "text": "Locations = [counter, table, user, trash, bowl]. Objects = [7up, apple, kettle chips, tea, multigrain chips, coke, lime soda, jalapeno chips, rice chips, orange, grapefruit soda, pepsi, redbull, energy bar, sponge, water]. The robot can pick up items with pick(object) and put down items with put(object) as well as find objects or locations with find(). The robot can only understand the explicit locations and objects listed.",
+    "where": "Table 28"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PaLM 540B with 8 CoT exemplars reaches new SOTA on GSM8K, above finetuned GPT-3 175B with verifier (prior best 55).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 56.9,
+   "unit": "%",
+   "baseline_value": "17.9",
+   "n": null,
+   "setup": "PaLM 540B, 8 manual CoT exemplars, greedy decoding, GSM8K test (1,319 problems)",
+   "note": "Fig 2 plots rounded 57 vs 18 standard and prior best 55.",
+   "where": "Table 1 / Fig 2",
+   "table": "Table 1, row PaLM 540B Chain of thought, column GSM8K (56.9); standard 17.9; prior best 55"
+  },
+  {
+   "claim": "CoT gain on GSM8K for GPT-3 175B (text-davinci-002).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 46.9,
+   "unit": "%",
+   "baseline_value": "15.6",
+   "n": null,
+   "setup": "GPT-3 175B text-davinci-002, 8 exemplars, greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GPT-3 175B Chain of thought, column GSM8K (46.9, +31.3); standard 15.6"
+  },
+  {
+   "claim": "Codex (code-davinci-002) with CoT on GSM8K, the largest gain reported.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 63.1,
+   "unit": "%",
+   "baseline_value": "19.7",
+   "n": null,
+   "setup": "Codex code-davinci-002, 8 exemplars, greedy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Codex Chain of thought, column GSM8K (63.1, +43.4); standard 19.7"
+  },
+  {
+   "claim": "CoT is emergent: it hurts or does nothing for small models (LaMDA 420M GSM8K 2.6 standard vs 0.4 CoT) and helps only around 100B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate, small LaMDA",
+   "value": 0.4,
+   "unit": "%",
+   "baseline_value": "2.6",
+   "n": null,
+   "setup": "LaMDA 420M, 8 exemplars",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "chain-of-thought prompting does not positively\nimpact performance for small models, and only yields performance gains when used with models of\n∼100B parameters",
+   "table": "Table 2, row LaMDA 420M, column GSM8K CoT (0.4); standard 2.6"
+  },
+  {
+   "claim": "LaMDA 137B on GSM8K, CoT vs standard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 14.3,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B, 8 exemplars, mean of 5 exemplar orders (std 0.4)",
+   "note": null,
+   "where": "Table 2 / Table 6",
+   "table": "Table 2, row LaMDA 137B, column GSM8K CoT (14.3); standard 6.5"
+  },
+  {
+   "claim": "PaLM 540B with CoT on MAWPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MAWPS solve rate",
+   "value": 93.3,
+   "unit": "%",
+   "baseline_value": "79.2",
+   "n": null,
+   "setup": "PaLM 540B, 8 exemplars",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row PaLM 540B Chain of thought, column MAWPS (93.3); standard 79.2; prior best 88.4"
+  },
+  {
+   "claim": "PaLM 540B with CoT on SVAMP (standard already beat prior best 57.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "SVAMP solve rate",
+   "value": 79.0,
+   "unit": "%",
+   "baseline_value": "69.4",
+   "n": null,
+   "setup": "PaLM 540B, 8 exemplars",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row PaLM 540B Chain of thought, column SVAMP (79.0); standard 69.4"
+  },
+  {
+   "claim": "PaLM 540B on AQuA with CoT (4 exemplars), within 2% of prior best 37.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AQuA accuracy",
+   "value": 35.8,
+   "unit": "%",
+   "baseline_value": "25.2",
+   "n": null,
+   "setup": "PaLM 540B, 4 exemplars from training set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row PaLM 540B Chain of thought, column AQuA (35.8); standard 25.2"
+  },
+  {
+   "claim": "Small or no gain on easy one-step problems: PaLM 540B on SingleOp.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SingleOp solve rate",
+   "value": 94.1,
+   "unit": "%",
+   "baseline_value": "94.1",
+   "n": null,
+   "setup": "PaLM 540B, CoT = standard",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row PaLM 540B, column SingleOp CoT (94.1); standard 94.1"
+  },
+  {
+   "claim": "Equation-only prompting does not help on GSM8K (LaMDA 137B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 5.4,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row equation only, column GSM8K (5.4); standard 6.5, CoT 14.3"
+  },
+  {
+   "claim": "Variable-compute-only (dots) is about the baseline on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 6.4,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row variable compute only, column GSM8K (6.4)"
+  },
+  {
+   "claim": "Reasoning after the answer is about the baseline on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 6.1,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row reasoning after answer, column GSM8K (6.1)"
+  },
+  {
+   "claim": "Another annotator (C) gives higher GSM8K accuracy than annotator A; all CoT variants beat standard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 17.6,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B, annotator C, 5 orders",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row different annotator (C), column GSM8K (17.6); B 15.5; concise 11.1"
+  },
+  {
+   "claim": "Exemplars sampled from GSM8K training set also beat standard (alpha).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 12.6,
+   "unit": "%",
+   "baseline_value": "6.5",
+   "n": null,
+   "setup": "LaMDA 137B, 3 sets of 8 GSM8K exemplars",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row exemplars from GSM8K (alpha), column GSM8K (12.6); beta 12.7; gamma 12.6"
+  },
+  {
+   "claim": "PaLM 540B on StrategyQA beats prior SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "StrategyQA accuracy",
+   "value": 75.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B CoT, 6 exemplars; prior SOTA 69.4",
+   "note": "Table 4 prints 77.8 for PaLM 540B CoT StrategyQA; text prints 75.6.",
+   "where": "Sec 4 vs Table 4",
+   "quote": "outperforming the prior state of the art on StrategyQA (75.6% vs\n69.4%)"
+  },
+  {
+   "claim": "PaLM 540B on Sports Understanding beats an unaided sports enthusiast.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sports accuracy",
+   "value": 95.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B CoT, 8 exemplars (first 10 eval items used as exemplars per text); human 84%",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "outperforming an unaided sports enthusiast on sports understanding (95.4% vs 84%)"
+  },
+  {
+   "claim": "Gain on CSQA is minimal for PaLM 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CSQA accuracy",
+   "value": 79.9,
+   "unit": "%",
+   "baseline_value": "78.1",
+   "n": null,
+   "setup": "PaLM 540B, CoT vs standard 78.1",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PaLM 540B, column CSQA CoT (79.9)"
+  },
+  {
+   "claim": "GPT-3 175B CoT does not help on CSQA or StrategyQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CSQA accuracy",
+   "value": 73.5,
+   "unit": "%",
+   "baseline_value": "79.5",
+   "n": null,
+   "setup": "GPT-3 175B CoT vs standard 79.5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-3 175B, column CSQA CoT (73.5)"
+  },
+  {
+   "claim": "PaLM 540B on SayCan with CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SayCan accuracy",
+   "value": 91.7,
+   "unit": "%",
+   "baseline_value": "80.8",
+   "n": null,
+   "setup": "PaLM 540B, 6 training exemplars, 120-example eval",
+   "note": null,
+   "where": "Table 4 / Table 7",
+   "table": "Table 4, row PaLM 540B, column SayCan CoT (91.7); standard 80.8"
+  },
+  {
+   "claim": "Last-letter concatenation, in-domain (2 words), PaLM 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 99.4,
+   "unit": "%",
+   "baseline_value": "7.6",
+   "n": null,
+   "setup": "PaLM 540B, exemplars have 2 words",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM 540B, column Last Letter 2 CoT (99.4); standard 7.6"
+  },
+  {
+   "claim": "Last-letter concatenation OOD 4 words, PaLM 540B: length generalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.0,
+   "unit": "%",
+   "baseline_value": "0.0",
+   "n": null,
+   "setup": "PaLM 540B, 4-word names, exemplars have only 2 words",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM 540B, column Last Letter OOD 4 CoT (63.0); standard 0.0"
+  },
+  {
+   "claim": "Coin flip OOD 4 flips, PaLM 540B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.2,
+   "unit": "%",
+   "baseline_value": "54.8",
+   "n": null,
+   "setup": "PaLM 540B, 4 flips, exemplars 2 flips",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PaLM 540B, column Coin Flip OOD 4 CoT (90.2); standard 54.8"
+  },
+  {
+   "claim": "Coin flip is sensitive to annotator: annotator A 99.6 vs annotator C 71.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coin flip accuracy",
+   "value": 71.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA 137B, annotator C",
+   "note": null,
+   "where": "Appendix A.2 / Table 7",
+   "quote": "the coin\nﬂip task, the performance varied from 99.6% for Annotator A to 71.4% for Annotator C"
+  },
+  {
+   "claim": "Manual error analysis of 50 incorrect LaMDA 137B GSM8K chains: 46% almost correct, 54% major errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share almost correct",
+   "value": 46,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA 137B, 50 random wrong answers on GSM8K",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "46% of the\nchains of thought were almost correct"
+  },
+  {
+   "claim": "Of 50 correct LaMDA 137B GSM8K answers, 49 had correct reasoning (one correct by chance).",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct reasoning",
+   "value": 49,
+   "unit": "of 50",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA 137B GSM8K",
+   "note": null,
+   "where": "App D.1",
+   "quote": "Of these 50, only one arrived at the correct answer through\nincorrect reasoning"
+  },
+  {
+   "claim": "Scaling PaLM 62B to 540B fixed 6/20 semantic, 12/18 one-step-missing, 4/7 other errors (45 errors).",
+   "kind": "measured",
+   "source": null,
+   "metric": "errors fixed (one step missing)",
+   "value": 12,
+   "unit": "of 18",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 62B errors on GSM8K, 45 read",
+   "note": null,
+   "where": "Fig 9",
+   "quote": "One step missing \n(62B made 18 errors of this type, \n540B fixes 12 of them)"
+  },
+  {
+   "claim": "External calculator on LaMDA 137B GSM8K lifts CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K solve rate",
+   "value": 17.8,
+   "unit": "%",
+   "baseline_value": "14.3",
+   "n": null,
+   "setup": "LaMDA 137B CoT + Python eval calculator",
+   "note": "App D.2 text says 17.3 for the same number; Table 1 prints 17.8.",
+   "where": "Table 1 vs App D.2",
+   "table": "Table 1, row LaMDA 137B + ext. calc, column GSM8K (17.8)"
+  },
+  {
+   "claim": "Going from 8 to 16 exemplars did not let standard prompting catch up with CoT.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "preliminary experiments, unspecified model/datasets",
+   "note": null,
+   "where": "App A.2"
+  }
+ ],
+ "limits": [
+  "Authors: chain of thought emulates human reasoning but this does not show the network is actually reasoning.",
+  "Annotation cost is small for few-shot but could be prohibitive for finetuning.",
+  "No guarantee of correct reasoning paths; correct answers can come from wrong chains (1 of 50) and wrong ones from near-correct chains.",
+  "Emerges only at large scale (~100B), so costly to serve; CoT hurts most models under 10B.",
+  "Gains did not transfer to all models: GPT-3 175B drops on CSQA and StrategyQA.",
+  "Prompt engineering still matters: coin flip varies 99.6% to 71.4% across annotators; a list-reversal task could not be prompted by two of three co-authors.",
+  "Only greedy decoding; ablations and robustness only on LaMDA 137B due to cost; exemplar-count study on five datasets only.",
+  "Model scale is confounded with training compute; GPT-3 sizes are presumed InstructGPT mappings; no compute total estimated.",
+  "Dated: arithmetic SOTA and 2022 models (LaMDA, PaLM, text-davinci-002); follow-up work (self-consistency, Wang et al. 2022a) improves on greedy decoding."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "chain of thought",
+   "definition": "a series of intermediate natural language reasoning steps that lead to the final output",
+   "where": "Sec 1"
+  },
+  {
+   "term": "chain-of-thought prompting",
+   "definition": "few-shot prompting with triples <input, chain of thought, output>",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "standard few-shot prompting baseline",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "baseline",
+   "note": "GSM8K and finetuned GPT-3 + verifier prior best",
+   "quote": null
+  },
+  {
+   "work": "Program induction by rationale generation (Ling et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "natural-language rationales for math; AQuA",
+   "quote": null
+  },
+  {
+   "work": "Show your work: scratchpads (Nye et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "step-by-step prediction for programs",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "related",
+   "note": "follow-up: majority vote over sampled chains",
+   "quote": null
+  },
+  {
+   "work": "Emergent abilities of large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2206.07682",
+   "relation": "related",
+   "note": "CoT is cited as an emergent ability",
+   "quote": null
+  },
+  {
+   "work": "Calibrate before use (Zhao et al.)",
+   "year": 2021,
+   "arxiv": "2102.09690",
+   "relation": "related",
+   "note": "exemplar order sensitivity",
+   "quote": null
+  },
+  {
+   "work": "LaMDA (Thoppilan et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model; cited as anonymised in the submission",
+   "quote": null
+  },
+  {
+   "work": "UL2 (Tay et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "20B model",
+   "quote": null
+  },
+  {
+   "work": "Codex (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "code-davinci-002",
+   "quote": null
+  },
+  {
+   "work": "SVAMP, ASDiv, MAWPS, CSQA, StrategyQA, BIG-bench, SayCan",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks (Patel 2021; Miao 2020; Koncel-Kedziorski 2016; Talmor 2019; Geva 2021; Ahn 2022)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Chain-of-thought prompting enables large language models to tackle complex arithmetic, commonsense, and symbolic reasoning tasks.",
+   "page": 1,
+   "why": "Shows the Roger tennis-ball exemplar with and without the reasoning chain."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Chain-of-thought prompting enables large language models to solve challenging math problems. Notably, chain-of-thought reasoning is an emergent ability of increasing model scale.",
+   "page": 5,
+   "why": "Scaling curves: CoT flat or worse below ~100B, rising above."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation study for different variations of prompting using LaMDA 137B and PaLM 540B.",
+   "page": 6,
+   "why": "Equation-only, dots, CoT-after-answer all near baseline on GSM8K."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Examples of input, chain of thought, output triples for arithmetic, commonsense, and symbolic reasoning benchmarks.",
+   "page": 4,
+   "why": "One exemplar per task type."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1/2 SVAMP LaMDA CoT 37.5 but Table 6 prints 36.7 for the same cell.",
+  "StrategyQA PaLM 540B CoT: text says 75.6, Table 4 says 77.8.",
+  "LaMDA GSM8K with calculator: App D.2 says 17.3, Table 1 says 17.8.",
+  "Exemplar counts for CSQA (7), StrategyQA (6), Date (6), Sports (8), last letter (4), coin flip (8) come from counting Tables 22-27, not from prose; text says six SayCan exemplars but Table 28 lists seven.",
+  "App E.3 says symbolic datasets described in Section 4 but they are in Section 5.",
+  "Figure data (Fig 4, 7, 8, 11) not tabulated except via appendix tables.",
+  "No embedded instructions found."
+ ]
+}

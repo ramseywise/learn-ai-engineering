@@ -70,7 +70,7 @@ Each advanced-RAG module exists to fix one failure of the naive pipeline. Raieli
 | Collection and indexing | Data-type issues, missing content | One chunker applied to PDFs, HTML and tables alike; the answer was never indexed, or the index is stale |
 | Search | Missed top ranks | The answer chunk exists but ranks below k. Often the embedder is too small or was trained on another domain |
 | Context | Not in context | Retrieval found every relevant chunk, but too many to fit the window |
-| Generation | Failed extraction | The answer is in the prompt, but noise or conflicting chunks hide it (*contextual hallucination*, [06](06-generation-for-rag.md#hallucinations-and-citations)) |
+| Generation | Failed extraction | The answer is in the prompt, but noise or conflicting chunks hide it (*contextual hallucination*, [06](06b-hallucinations-evaluation-and-fine-tuning.md#hallucinations-and-citations)) |
 | Generation | Wrong format, incorrect specificity, incomplete | A table was asked for and prose came back; too general or too detailed; only part of a multi-part answer |
 | System | Redundancy, scale, flexibility | Near-duplicate chunks crowd out others; latency grows with volume; one component can't be swapped |
 
@@ -374,7 +374,7 @@ Bayer's PRINCE platform ([Martin Fowler article](https://martinfowler.com/articl
 1. **Keyword extraction and filter generation, concurrently.** One LLM pass pulls search keywords out of the question (domain terms like `piloerection`, `ataxia`); a second generates a structured metadata filter (`eq(study_id, T123456-2)`) via few-shot prompting over permutation examples.
 2. **Query expansion, n=5.** A smaller, faster model rewrites the question into five semantically similar variants, covering phrasing and terminology drift.
 3. **Metadata pre-filtering.** The generated filter is applied *inside* the vector database query, not after it, cutting the search space from millions of vectors to tens or hundreds before any similarity math runs.
-4. **Parallel hybrid search, weighted 0.7/0.3.** Each expanded query runs its own hybrid search over the filtered space: kNN vector similarity (weight **0.7**) plus keyword search (weight **0.3**). The split was found by experiment, not derived. For a new corpus the right prior is "measure it", not "use 0.7". (OpenClaw's memory search lands on the same 70/30, [02-context 06](../../../ai-engineering/02-context-engineering/notes/06-memory.md#production-memory-designs).)
+4. **Parallel hybrid search, weighted 0.7/0.3.** Each expanded query runs its own hybrid search over the filtered space: kNN vector similarity (weight **0.7**) plus keyword search (weight **0.3**). The split was found by experiment, not derived. For a new corpus the right prior is "measure it", not "use 0.7". (OpenClaw's memory search lands on the same 70/30, [02-context 06](../../../ai-engineering/02-context-engineering/notes/06b-memory-architectures.md#production-memory-designs).)
 5. **Aggregate and rank, k≈20.** Union the chunks across all five searches, score each by its *highest* weighted score across the runs, keep the top ~20.
 6. **Cross-encoder rerank, k=20 → 7.** A `bge-reranker-large` cross-encoder scores each candidate against the *original* question and keeps the top 7.
 

@@ -1,0 +1,786 @@
+{
+ "schema": 1,
+ "key": "2005.11401",
+ "pdf": "generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf",
+ "bib": {
+  "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+  "authors": [
+   "Patrick Lewis",
+   "Ethan Perez",
+   "Aleksandra Piktus",
+   "Fabio Petroni",
+   "Vladimir Karpukhin",
+   "Naman Goyal",
+   "Heinrich Küttler",
+   "Mike Lewis",
+   "Wen-tau Yih",
+   "Tim Rocktäschel",
+   "Sebastian Riedel",
+   "Douwe Kiela"
+  ],
+  "first_author": "Lewis",
+  "year": 2021,
+  "venue": "preprint (arXiv v4, 12 Apr 2021; NeurIPS 2020 format)",
+  "arxiv": "2005.11401",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 69096,
+  "chars_total": 69096,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; all body, tables and appendices A-I read."
+ },
+ "type": "empirical",
+ "question": "Can a general-purpose fine-tuning recipe that combines a pre-trained seq2seq generator (parametric memory) with a dense Wikipedia index accessed by a pre-trained retriever (non-parametric memory) improve knowledge-intensive NLP tasks?",
+ "hypothesis": "Hybrid parametric plus non-parametric memory, trained end-to-end with retrieved documents as latent variables, beats parametric-only seq2seq models and task-specific retrieve-and-extract systems, and gives updatable, inspectable knowledge.",
+ "contributions": [
+  "RAG, a general fine-tuning recipe combining pre-trained parametric (BART) and non-parametric (DPR + Wikipedia index) memory for generation",
+  "Two formulations, RAG-Sequence (one document per output) and RAG-Token (different document per token)",
+  "State of the art on open-domain QA (NQ, WQ, CT; TQA on the T5-comparable split) and more factual, specific, diverse generation than BART",
+  "Retrieval ablations and index hot-swapping showing the knowledge can be updated without retraining"
+ ],
+ "method": {
+  "summary": "The retriever (DPR bi-encoder, BERT-base query and document encoders) returns top-K Wikipedia passages by MIPS; BART-large conditions on input concatenated with each passage; outputs are marginalised over passages (per sequence or per token). Query encoder and generator are fine-tuned end-to-end by negative marginal log-likelihood while the document encoder and index stay fixed.",
+  "task": "knowledge-intensive NLP: open-domain QA, abstractive QA (MS-MARCO), Jeopardy question generation, FEVER fact verification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia dump December 2018 (non-parametric memory)",
+    "role": "eval",
+    "size": "21M documents of disjoint 100-word chunks; 21M 728-dim vectors (15.3B values)",
+    "split": "n/a",
+    "source": "Lee et al. / Karpukhin et al. dump",
+    "preprocessing": "articles split into disjoint 100-word chunks; FAISS MIPS index with HNSW approximation"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "both",
+    "size": "79169 train / 8758 dev / 3611 test",
+    "split": "DPR splits",
+    "source": "Kwiatkowski et al. [29]",
+    "preprocessing": "each (q,a) pair of multiple annotations trained separately"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": "78786 / 8838 / 11314",
+    "split": "DPR splits; test = public TriviaQA Web dev split; also official TQA-Wiki test",
+    "source": "[24]",
+    "preprocessing": "answer candidates dropped if not in top 1000 documents for the query"
+   },
+   {
+    "name": "WebQuestions",
+    "role": "both",
+    "size": "3418 / 362 / 2033",
+    "split": "DPR splits",
+    "source": "[3]",
+    "preprocessing": "model initialised from NQ RAG model"
+   },
+   {
+    "name": "CuratedTrec",
+    "role": "both",
+    "size": "635 / 134 / 635",
+    "split": "DPR splits",
+    "source": "[2]",
+    "preprocessing": "regex answers: top 1000 docs retrieved, most frequent regex match used as target, else permutation heuristic; initialised from NQ RAG model"
+   },
+   {
+    "name": "Jeopardy question generation (SearchQA splits)",
+    "role": "both",
+    "size": "97392 / 13714 / 26849 (Table 7); text says 100K train, 14K dev, 27K test",
+    "split": "SearchQA splits",
+    "source": "[10]",
+    "preprocessing": null
+   },
+   {
+    "name": "MS-MARCO NLG v2.1",
+    "role": "both",
+    "size": "153726 / 12468 / 101093 (hidden subset used for eval)",
+    "split": "questions and answers only, gold passages not used",
+    "source": "[43]",
+    "preprocessing": "treated as open-domain abstractive QA"
+   },
+   {
+    "name": "FEVER",
+    "role": "both",
+    "size": "3-way 145450 / 10000 / 10000; 2-way 96966 / 6666 / 6666",
+    "split": "standard",
+    "source": "[56]",
+    "preprocessing": "labels mapped to single output tokens; no retrieval supervision"
+   }
+  ],
+  "models": [
+   {
+    "name": "RAG-Sequence",
+    "role": "proposed",
+    "params": "626M trainable (110M query encoder + 406M BART-large + 110M document encoder not trained; paper's own sum)",
+    "architecture": "DPR bi-encoder retriever + BART-large, sequence-level marginalisation",
+    "init_from": "pre-trained DPR bi-encoder, pre-trained BART-large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "text states BART-large as 400M in 2.3 and 406M in Appendix G"
+    }
+   },
+   {
+    "name": "RAG-Token",
+    "role": "proposed",
+    "params": "626M trainable",
+    "architecture": "same, token-level marginalisation",
+    "init_from": "pre-trained DPR, BART-large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DPR retriever",
+    "role": "retriever",
+    "params": "110M per BERT-base encoder",
+    "architecture": "bi-encoder, p(z|x) proportional to exp(d(z)^T q(x))",
+    "init_from": "DPR trained on TriviaQA and Natural Questions",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BART-large",
+    "role": "baseline",
+    "params": "406M",
+    "architecture": "seq2seq transformer",
+    "init_from": "pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "trained by the authors as parametric-only baseline for generation tasks"
+    }
+   },
+   {
+    "name": "T5-11B / T5-11B+SSM",
+    "role": "baseline",
+    "params": "11B",
+    "architecture": "closed-book seq2seq",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "REALM, DPR (QA system)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "retrieve-and-extract",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "minimise negative marginal log-likelihood sum_j -log p(y_j|x_j); no supervision on which document to retrieve",
+   "optimizer": "Adam (stochastic gradient descent with Adam)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "mixed precision floating point",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 x 32GB NVIDIA V100 GPUs (training and inference can run on one GPU)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "frozen": "document encoder BERT_d and index kept fixed; only query encoder BERT_q and BART generator fine-tuned",
+    "k_train": "k in {5,10} documents retrieved during training; k at test chosen on dev",
+    "framework": "Fairseq; later ported to HuggingFace Transformers with equivalent performance",
+    "index_memory": "~100 GB CPU memory for all of Wikipedia; 36GB after FAISS compression",
+    "init": "CT and WQ models initialised from the NQ RAG model"
+   }
+  },
+  "inference": {
+   "decoding": "QA: greedy decoding; MS-MARCO and Jeopardy: beam size four. RAG-Token: standard beam decoder on marginalised token distribution. RAG-Sequence: Thorough Decoding (QA) or Fast Decoding (generation)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model reported; no seeds or variance stated",
+   "prompting": "input x concatenated with retrieved passage z as BART input",
+   "retrieval": "top-k by MIPS over FAISS HNSW index. QA test: 15 docs RAG-Token, 50 docs RAG-Sequence; MS-MARCO and Jeopardy: 10 docs for both",
+   "parameters": {
+    "k_test_QA_token": "15",
+    "k_test_QA_sequence": "50",
+    "k_test_generation": "10",
+    "beam": "4"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "open-domain QA exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bleu-1 / Rouge-L",
+     "definition": "MS-MARCO NLG; Jeopardy uses B-1",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Q-BLEU-1",
+     "definition": "SQuAD-tuned variant of BLEU weighting entity matches",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Label accuracy",
+     "definition": "FEVER 3-way and 2-way",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human pairwise factuality/specificity",
+     "definition": "annotators see answer and two questions (BART vs RAG) and pick A, B, both good, neither good",
+     "unit": "% of 452 pairs",
+     "higher_is_better": true
+    },
+    {
+     "name": "Distinct/total tri-grams",
+     "definition": "ratio of distinct to total tri-grams",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "T5-11B",
+    "T5-11B+SSM",
+    "REALM",
+    "DPR",
+    "BART-large",
+    "task SotA (PALM for MS-MARCO, FEVER-3 Zhong et al., FEVER-2 Thorne and Vlachos)"
+   ],
+   "protocol": "Single reported runs; no significance tests stated. Human eval: 452 pairs, random A/B order, annotators may research online, gold sentences used and two poor annotators removed."
+  },
+  "availability": {
+   "code": "https://github.com/huggingface/transformers/blob/master/examples/rag/",
+   "weights": "HuggingFace demo at https://huggingface.co/rag/ (weights not explicitly stated)",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RAG-Sequence reaches 44.5 EM on Natural Questions test, above DPR 41.5 and T5-11B+SSM 36.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 44.5,
+   "unit": "%",
+   "baseline_value": 41.5,
+   "n": null,
+   "setup": "NQ test, RAG-Sequence, 50 docs, thorough decoding",
+   "quote": null,
+   "table": "Table 1, row RAG-Seq., column NQ",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RAG-Token reaches 44.1 EM on NQ test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 44.1,
+   "unit": "%",
+   "baseline_value": 41.5,
+   "n": null,
+   "setup": "NQ test, RAG-Token, 15 docs",
+   "quote": null,
+   "table": "Table 1, row RAG-Token, column NQ",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RAG-Sequence gets 68.0 EM on the TQA-Wiki test set (T5-11B+SSM 60.5) and 56.8 on the standard TQA test (DPR 57.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 68.0,
+   "unit": "%",
+   "baseline_value": 60.5,
+   "n": null,
+   "setup": "TriviaQA, RAG-Sequence, TQA-Wiki test",
+   "quote": null,
+   "table": "Table 1, row RAG-Seq., column TQA (right value 68.0; left 56.8)",
+   "note": "On the standard TQA test RAG-Seq 56.8 is below DPR 57.9; SotA claim only for T5-comparable split.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "RAG-Sequence scores 52.2 EM on CuratedTrec and 45.2 on WebQuestions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 52.2,
+   "unit": "%",
+   "baseline_value": 50.6,
+   "n": null,
+   "setup": "CT test, init from NQ RAG model",
+   "quote": null,
+   "table": "Table 1, row RAG-Seq., column CT",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RAG generates a correct NQ answer 11.8% of the time when the answer is in no retrieved document, where an extractive model scores 0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 11.8,
+   "unit": "%",
+   "baseline_value": 0,
+   "n": null,
+   "setup": "NQ, answers absent from all retrieved documents",
+   "quote": "achieving 11.8% accuracy in such\ncases for NQ, where an extractive model would score 0%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "RAG-Sequence outperforms BART on Open MS-MARCO NLG by 2.6 Bleu points and 2.6 Rouge-L points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bleu/Rouge-L gain",
+   "value": 2.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-MARCO NLG v2.1 without gold passages, test",
+   "quote": "RAG-Sequence outperforms BART on Open MS-MARCO NLG by 2.6 Bleu\npoints and 2.6 Rouge-L points",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "On Jeopardy generation RAG-Token gets Q-BLEU-1 22.2 vs BART 19.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q-BLEU-1",
+   "value": 22.2,
+   "unit": "points",
+   "baseline_value": 19.7,
+   "n": null,
+   "setup": "Jeopardy test, 10 docs, beam 4",
+   "quote": null,
+   "table": "Table 2, row RAG-Tok., column QB-1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "In human evaluation of 452 pairs, RAG-Token was more factual than BART in 42.7% of cases and BART more factual in 7.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RAG better (factuality)",
+   "value": 42.7,
+   "unit": "%",
+   "baseline_value": 7.1,
+   "n": null,
+   "setup": "Jeopardy question generation, RAG-Token vs BART, pairwise",
+   "quote": "BART was more factual than RAG in only 7.1% of cases, while RAG was more factual in 42.7% of cases",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 4"
+  },
+  {
+   "claim": "RAG was judged more specific in 37.4% of pairs vs BART 16.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RAG better (specificity)",
+   "value": 37.4,
+   "unit": "%",
+   "baseline_value": 16.8,
+   "n": null,
+   "setup": "same human evaluation",
+   "quote": null,
+   "table": "Table 4, row RAG better, column Specificity",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "FEVER 3-way: RAG-Token 72.5 label accuracy vs BART 64.0, within 4.3% of pipeline SotA 76.8 which uses retrieval supervision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "label accuracy",
+   "value": 72.5,
+   "unit": "%",
+   "baseline_value": 64.0,
+   "n": null,
+   "setup": "FEVER 3-way test, no retrieval supervision",
+   "quote": null,
+   "table": "Table 2, row RAG-Tok., column FVR3",
+   "note": "Text says 'within 4.3%' (76.8 - 72.5).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "FEVER 2-way: RAG-Token 89.5, within 2.7% of RoBERTa given gold evidence (92.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "label accuracy",
+   "value": 89.5,
+   "unit": "%",
+   "baseline_value": 92.2,
+   "n": null,
+   "setup": "FEVER 2-way test",
+   "quote": null,
+   "table": "Table 2, row RAG-Tok., column FVR2",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Top retrieved document is from a gold FEVER article in 71% of cases and a gold article is in the top 10 in 90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gold article in top-1",
+   "value": 71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FEVER, article-title overlap with gold evidence",
+   "quote": "the top retrieved document is from a gold article\nin 71% of cases, and a gold article is present in the top 10 retrieved articles in 90% of cases",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Jeopardy distinct tri-gram ratio: RAG-Sequence 53.8% and RAG-Token 46.8% vs BART 32.4% (gold 90.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct/total tri-grams",
+   "value": 53.8,
+   "unit": "%",
+   "baseline_value": 32.4,
+   "n": null,
+   "setup": "Jeopardy QGen generations",
+   "quote": null,
+   "table": "Table 5, row RAG-Seq., column Jeopardy QGen",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Freezing the retriever lowers NQ dev EM from 44.0 to 41.2 for RAG-Sequence; BM25 gives 31.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 41.2,
+   "unit": "%",
+   "baseline_value": 44.0,
+   "n": null,
+   "setup": "dev set ablation, RAG-Sequence-Frozen",
+   "quote": null,
+   "table": "Table 6, row RAG-Sequence-Frozen, column NQ",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "BM25 beats learned dense retrieval on FEVER-3 (75.1 vs 74.5 for RAG-Token), but dense is better on other tasks, especially open-domain QA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "label accuracy",
+   "value": 75.1,
+   "unit": "%",
+   "baseline_value": 74.5,
+   "n": null,
+   "setup": "dev set, RAG-Token-BM25 vs RAG-Token, FVR-3",
+   "quote": null,
+   "table": "Table 6, row RAG-Token-BM25, column FVR-3",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Index hot-swap: with matched indices RAG answers 70% (2016 index, 2016 leaders) and 68% (2018 index, 2018 leaders) of 82 world-leader questions correctly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ RAG model, template 'Who is {position}?', DrQA Dec 2016 vs Dec 2018 index",
+   "quote": "RAG answers 70% correctly using the 2016 index for\n2016 world leaders and 68% using the 2018 index for 2018 world leaders",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Mismatched indices give 12% (2018 index, 2016 leaders) and 4% (2016 index, 2018 leaders).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 12,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same hot-swap test",
+   "quote": "Accuracy with mismatched\nindices is low (12% with the 2018 index and 2016 leaders, 4% with the 2016 index and 2018 leaders)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "T5-large (770M) gets 28.9 EM on NQ versus 44.5 for RAG-Sequence (626M trainable parameters).",
+   "kind": "reported",
+   "source": null,
+   "metric": "EM",
+   "value": 28.9,
+   "unit": "%",
+   "baseline_value": 44.5,
+   "n": null,
+   "setup": "NQ, parameter-count comparison",
+   "quote": "which achieves a score of 28.9 EM on Natural Questions [52],\nsubstantially below the 44.5 that RAG-Sequence achieves",
+   "table": null,
+   "note": null,
+   "where": "Appendix G"
+  },
+  {
+   "claim": "Retrieving more docs at test time monotonically improves open-domain QA for RAG-Sequence, while RAG-Token peaks at 10.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, K retrieved docs varied, Fig 3 (left)",
+   "quote": null,
+   "table": null,
+   "note": "Values only in a figure.",
+   "where": "Sec 4.5, Fig 3"
+  },
+  {
+   "claim": "Retrieval collapse: on tasks such as story generation the retriever learned to return the same documents regardless of input and RAG matched BART.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "preliminary experiments, no numbers",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix H"
+  }
+ ],
+ "limits": [
+  "Learning rate, schedule, batch size, steps/epochs, dropout, seeds and wall-clock are not stated; training is not reproducible from the paper alone.",
+  "Single runs, no variance or significance tests; MS-MARCO test is a hidden subset.",
+  "Retriever initialised from DPR trained with retrieval supervision on NQ and TriviaQA; document encoder and index frozen.",
+  "Wikipedia (Dec 2018) is not entirely factual or bias-free; misuse risks conceded in Broader Impact.",
+  "Retrieval collapse on some tasks (story generation); null-document mechanisms tried and dropped.",
+  "FEVER evidence-retrieval sub-task not tackled; RAG-Token and RAG-Sequence need different k and decoding.",
+  "TriviaQA SotA only on the T5-comparable split; official Wiki test set is easier.",
+  "Joint pre-training of both components left as future work.",
+  "Human factuality measured by annotators allowed to research online; 20.8% of pairs had no majority."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RAG-Sequence",
+   "definition": "the model uses the same retrieved document to generate the complete sequence, marginalised via top-K approximation",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "RAG-Token",
+   "definition": "a different latent document can be drawn for each target token and marginalised",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Parametric memory / non-parametric memory",
+   "definition": "the BART generator parameters theta; the document index",
+   "where": "Sec 2.3, 2.2"
+  },
+  {
+   "term": "Thorough Decoding / Fast Decoding",
+   "definition": "RAG-Sequence decoding with extra forward passes per document vs approximating p(y|x,z)=0 where y not in the beam",
+   "where": "Sec 2.5"
+  },
+  {
+   "term": "Index hot-swapping",
+   "definition": "replacing the document index at test time to update the model's knowledge without retraining",
+   "where": "Sec 4.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dense Passage Retriever (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "retriever initialisation and index, also QA baseline and data splits",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "REALM (Guu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "latent-retrieval masked LM, expensive pre-training",
+   "quote": null
+  },
+  {
+   "work": "ORQA (Lee et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "differentiable retriever, extractive; Wikipedia dump source",
+   "quote": null
+  },
+  {
+   "work": "How much knowledge can you pack into the parameters of a language model? (Roberts et al.)",
+   "year": 2020,
+   "arxiv": "2002.08910",
+   "relation": "baseline",
+   "note": "closed-book T5 baselines",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "related",
+   "note": "unified seq2seq",
+   "quote": null
+  },
+  {
+   "work": "PALM (Bi et al.)",
+   "year": 2020,
+   "arxiv": "2004.07159",
+   "relation": "baseline",
+   "note": "MS-MARCO SotA",
+   "quote": null
+  },
+  {
+   "work": "Reasoning over semantic-level graph for fact checking (Zhong et al.)",
+   "year": 2019,
+   "arxiv": "1909.03745",
+   "relation": "baseline",
+   "note": "FEVER-3 SotA",
+   "quote": null
+  },
+  {
+   "work": "Thorne and Vlachos, EWC for sentence-pair classification",
+   "year": 2020,
+   "arxiv": "2004.14366",
+   "relation": "baseline",
+   "note": "FEVER-2 RoBERTa with gold evidence",
+   "quote": null
+  },
+  {
+   "work": "FAISS (Johnson et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MIPS index with HNSW",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions, TriviaQA, WebQuestions, CuratedTrec, MS-MARCO, SearchQA, FEVER",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation datasets",
+   "quote": null
+  },
+  {
+   "work": "BM25 (Robertson and Zaragoza)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieval ablation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of our approach. We combine a pre-trained retriever (Query Encoder + Document Index) with a pre-trained seq2seq model (Generator) and fine-tune end-to-end.",
+   "page": 2,
+   "why": "shows query encoder, MIPS, top-K docs, generator and marginalisation in one diagram"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "RAG-Token document posterior for each generated token for input Hemingway",
+   "page": 7,
+   "why": "shows per-token document attribution and posterior flattening after the first title token"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Left: NQ performance as more documents are retrieved. Center: retrieval recall in NQ. Right: MS-MARCO Bleu-1 and Rouge-L as more documents are retrieved.",
+   "page": 8,
+   "why": "effect of test-time K"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Ablations on the dev set (BM25, frozen retriever, full)",
+   "page": 8,
+   "why": "quantifies value of learned retrieval"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "p_RAG-Sequence(y|x) ≈ Σ_{z∈top-k(p(·|x))} p_η(z|x) Π_i p_θ(y_i|x,z,y_{1:i-1})",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.1",
+   "snippet": "p_RAG-Token(y|x) ≈ Π_i Σ_{z∈top-k(p(·|x))} p_η(z|x) p_θ(y_i|x,z,y_{1:i-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "PDF text extraction flattens tables; table cells were matched by row/column order.",
+  "Paper prints BART-large as 400M (Sec 2.3) and 406M (Appendix G); Jeopardy sizes as 100K/14K/27K (text) and 97392/13714/26849 (Table 7)."
+ ]
+}

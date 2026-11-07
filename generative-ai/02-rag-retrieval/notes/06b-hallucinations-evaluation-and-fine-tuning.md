@@ -174,7 +174,7 @@ One LLM call can be split into several specialised ones. The course's support-bo
 | Iterative | Writer and evaluator loop N times |
 | Parallel | Orchestrator fans out; synthesiser merges |
 
-Build simple ones by hand; reach for a framework as they grow. These are Anthropic's *Building Effective Agents* shapes; the house treatment is [ai-engineering 05 — graph vs loop](../../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md) and [01 § agentic vs single-pass](01-rag-pipeline.md#agentic-vs-single-pass-li-experiment-3-9).
+Build simple ones by hand; reach for a framework as they grow. These are Anthropic's *Building Effective Agents* shapes; the house treatment is [ai-engineering 05 — graph vs loop](../../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md) and [01 § agentic vs single-pass](01b-index-structures-and-agentic-rag.md#agentic-vs-single-pass-li-experiment-3-9).
 
 Assignment 4 builds exactly this for a clothing store ("Fashion Forward Hub"):
 

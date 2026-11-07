@@ -178,13 +178,15 @@ A third use sits between them: a graph *of the procedure*, handed to a loop as a
 | 03 | [State and reducers](03-state-and-reducers.md) | A | What do nodes share, and what happens when two write at once? |
 | 04 | [Durable execution and interrupts](04-durable-execution-and-interrupts.md) | A | How does a graph pause, resume, and survive a crash? |
 | 05 | [Topology patterns](05-topology-patterns.md) | A | Which shapes recur, and how do they map onto Claude Code? |
+| 05b | [Running multi-agent systems](05b-running-multi-agent-systems.md) | A | What does a team of agents need at run time? |
 | 06 | [When not to build a graph](06-when-not-to-build-a-graph.md) | A | When is the graph overhead not worth it? |
 | 07 | [Failure modes at scale](07-failure-modes-at-scale.md) | A | How do graphs fail where single loops don't? |
 | 08 | [Governance and production](08-governance-and-production.md) | A | How do you operate a graph, not just demo one? |
 | 09 | [KG fundamentals and Cypher](09-kg-fundamentals-and-cypher.md) | B | What is a knowledge graph and how do you query it? |
 | 10 | [Building KGs with LLMs](10-building-kgs-with-llms.md) | B | How do you turn text into a graph you can trust? |
 | 10b | [Assembling and maintaining KGs](10b-assembling-and-maintaining-kgs.md) | B | How do you load the graph and keep it correct? |
-| 11 | [KG-RAG and text-to-Cypher](11-kg-rag-and-text-to-cypher.md) | B | How do you retrieve from a graph in natural language? |
+| 11 | [KG-powered RAG](11-kg-rag-and-text-to-cypher.md) | B | What does a graph add to retrieval, and which mode fits the question? |
+| 11a | [Structured lookups and text-to-Cypher](11a-structured-lookups-and-text-to-cypher.md) | B | How do you query a graph from natural language reliably? |
 | 11b | [A text-to-Cypher QA agent](11b-text-to-cypher-qa-agent.md) | A + B | What does text-to-Cypher look like as a bounded graph? |
 | 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
 | 13 | [Learning on graphs: tasks and features](13-graph-ml-and-gnns.md) | B | What can you predict from structure, and with which hand-built features? |

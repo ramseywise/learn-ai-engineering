@@ -1,0 +1,467 @@
+{
+ "schema": 1,
+ "key": "1310.4546",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mikolov-2013-distributed-representations-words-phrases-their.pdf",
+ "bib": {
+  "title": "Distributed Representations of Words and Phrases and their Compositionality",
+  "authors": [
+   "Tomas Mikolov",
+   "Ilya Sutskever",
+   "Kai Chen",
+   "Greg Corrado",
+   "Jeffrey Dean"
+  ],
+  "first_author": "Mikolov",
+  "year": 2013,
+  "venue": "preprint",
+  "arxiv": "1310.4546",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 30164,
+  "chars_total": 30164,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can the Skip-gram word-vector model be made faster and more accurate, and extended from words to idiomatic phrases?",
+ "hypothesis": "Subsampling frequent words and a simplified NCE (negative sampling) speed up training and improve vectors, and treating phrases as single tokens captures non-compositional meanings.",
+ "contributions": [
+  "Subsampling of frequent words: faster training and better rare-word vectors",
+  "Negative sampling, a simple alternative to hierarchical softmax",
+  "Data-driven phrase finding and phrase vectors, with a phrase analogy test set",
+  "Additive compositionality of vectors (element-wise addition)",
+  "Open-source word2vec code"
+ ],
+ "method": {
+  "summary": "Skip-gram trained with hierarchical softmax (Huffman tree), NCE or negative sampling, with optional frequent-word subsampling, on a 1B-word news corpus; phrases are found by a bigram score and merged into single tokens. Evaluated on word and phrase analogy tasks and by nearest-neighbour inspection.",
+  "task": "learning word and phrase embeddings (Skip-gram)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "internal Google news dataset",
+    "role": "pretrain",
+    "size": "one billion words (about 1B; 33B and 6B-word variants for the best phrase model)",
+    "split": null,
+    "source": "internal Google dataset, not released",
+    "preprocessing": "words occurring less than 5 times discarded, vocabulary 692K; phrases merged into single tokens for phrase experiments"
+   },
+   {
+    "name": "word analogy task (questions-words.txt)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Mikolov et al. [8]",
+    "preprocessing": null
+   },
+   {
+    "name": "phrase analogy task (questions-phrases.txt)",
+    "role": "eval",
+    "size": "3218 examples, five categories",
+    "split": null,
+    "source": "new, publicly available",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Skip-gram (NEG-5, NEG-15, NCE-5, HS-Huffman)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Skip-gram with input and output vectors v_w, v'_w, no dense matrix multiplication",
+    "init_from": null,
+    "tokenizer": "word-level; phrases merged into tokens",
+    "vocab": "692K",
+    "layers": null,
+    "hidden": "300 (1000 for best phrase model)",
+    "heads": null,
+    "context": "5 (entire sentence for best phrase model)",
+    "other": {}
+   },
+   {
+    "name": "Collobert and Weston, Turian et al., Mnih and Hinton vectors",
+    "role": "baseline",
+    "params": null,
+    "architecture": "published neural word vectors (50d, 200d, 100d)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximize average log p(w_{t+j}|w_t) over window c; p via full softmax, hierarchical softmax (Huffman tree) or negative sampling log sigma(v'_wO^T v_wI) + sum_k E log sigma(-v'_wi^T v_wI)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "about 1B words (33B for best phrase model, 6B for the smaller one)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "subsampling of frequent words, discard probability 1 - sqrt(t/f(w)), t typically around 10^-5",
+   "hardware": "optimized single-machine implementation",
+   "compute": null,
+   "wall_clock": "Table 1 times in minutes (38 min NEG-5 without subsampling); over 100 billion words in one day on one machine",
+   "seeds": null,
+   "other": {
+    "negative_samples_k": "5-20 for small datasets, 2-5 for large",
+    "noise_distribution": "unigram U(w)^(3/4)/Z",
+    "phrase_score": "(count(wi wj) - delta) / (count(wi) x count(wj)); delta discount, threshold not stated",
+    "phrase_passes": "2-4 passes with decreasing threshold",
+    "context_size_c": "5 in experiments; best phrase model uses entire sentence",
+    "vector_dim": "300 (1000 for best phrase model)",
+    "min_count": 5
+   }
+  },
+  "inference": {
+   "decoding": "nearest neighbour by cosine distance, input words excluded",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "analogy accuracy (syntactic, semantic, total)",
+     "definition": "analogy a:b::c:? correct if nearest vector (cosine) to vec(b)-vec(a)+vec(c) is the answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "training time",
+     "definition": "minutes for training run",
+     "unit": "min",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "hierarchical softmax",
+    "NCE",
+    "Collobert and Weston",
+    "Turian et al.",
+    "Mnih and Hinton"
+   ],
+   "protocol": "single runs, no seeds or variance reported; qualitative nearest neighbour tables for rare words"
+  },
+  "availability": {
+   "code": "code.google.com/p/word2vec (open source)",
+   "weights": null,
+   "data": "analogy test sets public; training corpus internal"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.vocab",
+    "quote": "which resulted in a vocabulary of size 692K",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Negative sampling with k=15 and 10^-5 subsampling gives best word analogy total accuracy, tied with k=15 NEG at 61%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total accuracy",
+   "value": 61,
+   "unit": "%",
+   "baseline_value": 47,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, internal Google news dataset of one billion words, vocab 692K, analogical reasoning task of Mikolov et al. [8], NEG-15 with 10^-5 subsampling",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row NEG-15 (10^-5 subsampling), column Total accuracy"
+  },
+  {
+   "claim": "Subsampling cut NEG-5 training time from 38 to 14 minutes while total accuracy rose from 59 to 60.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": 14,
+   "unit": "min",
+   "baseline_value": 38,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, internal Google news dataset of one billion words, vocab 692K, analogical reasoning task of Mikolov et al. [8], NEG-5, 10^-5 subsampling",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row NEG-5 (10^-5 subsampling), column Time [min]"
+  },
+  {
+   "claim": "HS-Huffman improves from 47% to 55% total with subsampling, and time falls from 41 to 21 min.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total accuracy",
+   "value": 55,
+   "unit": "%",
+   "baseline_value": 47,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, internal Google news dataset of one billion words, vocab 692K, analogical reasoning task of Mikolov et al. [8], HS-Huffman, 10^-5 subsampling",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row HS-Huffman (10^-5 subsampling), column Total accuracy"
+  },
+  {
+   "claim": "NEG-5 beats NCE-5 without subsampling (total 59 vs 53) and HS-Huffman (47).",
+   "kind": "measured",
+   "source": null,
+   "metric": "total accuracy",
+   "value": 59,
+   "unit": "%",
+   "baseline_value": 53,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, internal Google news dataset of one billion words, vocab 692K, analogical reasoning task of Mikolov et al. [8], no subsampling",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row NEG-5, column Total accuracy"
+  },
+  {
+   "claim": "On phrase analogies HS with 10^-5 subsampling is best of the 300-dim models at 47%, versus 19% without subsampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "phrase analogy accuracy",
+   "value": 47,
+   "unit": "%",
+   "baseline_value": 19,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, context 5, ~1B-word news corpus with phrases, phrase analogy set (3218 examples)",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row HS-Huffman, column 10^-5 subsampling"
+  },
+  {
+   "claim": "NEG-15 phrase accuracy rises from 27% to 42% with subsampling; NEG-5 only 24% to 27%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "phrase analogy accuracy",
+   "value": 42,
+   "unit": "%",
+   "baseline_value": 27,
+   "n": null,
+   "setup": "Skip-gram, 300-dim, context 5, ~1B-word news corpus with phrases, phrase analogy set (3218 examples)",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row NEG-15, column 10^-5 subsampling"
+  },
+  {
+   "claim": "Best phrase model (HS, 1000-d, entire sentence as context, ~33B words) reaches 72% phrase analogy accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "phrase analogy accuracy",
+   "value": 72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hierarchical softmax, 1000 dimensions, whole sentence context, about 33 billion words",
+   "where": "Sec 4.1",
+   "note": "Quote shortened; the 72% appears in the same sentence and in Table 2 caption: 'Our best model achieved an accuracy of 72% on this dataset.'",
+   "quote": "This resulted in a model that reached an accuracy"
+  },
+  {
+   "claim": "Reducing training data to 6B words lowers phrase accuracy to 66%, so data size is crucial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "phrase analogy accuracy",
+   "value": 66,
+   "unit": "%",
+   "baseline_value": 72,
+   "n": null,
+   "setup": "same model as the 72% result, 6B words",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "We achieved lower accuracy 66% when we reduced the size of the training dataset to 6B words"
+  },
+  {
+   "claim": "Subsampling of frequent words gives roughly a 2x to 10x training speedup (stated in text; value not recorded as a single number).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Skip-gram, subsampling threshold around 10^-5",
+   "where": "Sec 1",
+   "note": null
+  },
+  {
+   "claim": "Single-machine optimized Skip-gram trains on more than 100 billion words in one day.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "optimized single-machine implementation (claim from intro, about the original Skip-gram)",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "an optimized single-machine implementation can train on more than 100 billion words in one day"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or variance; accuracies are on the authors' own analogy sets",
+  "Training corpus (internal Google news) is not public, so the 1B and 33B-word results cannot be rerun exactly",
+  "Optimizer, learning rate, schedule, subsampling per-run details and phrase threshold and delta are not stated",
+  "Subsampling formula and U^(3/4) noise distribution chosen heuristically; the NEG vs HS ranking flips with subsampling and hyperparameters are task specific",
+  "Noise distribution comparison is 'not reported here'",
+  "Phrase detection by bigram score only; other phrase-finding techniques not compared",
+  "Nearest-neighbour comparisons with older models (Table 6) are qualitative, and the Skip-gram model used 2-3 orders of magnitude more data",
+  "Static word vectors: no context-dependent meaning (dated by later contextual models)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Negative sampling (NEG)",
+   "definition": "a simplified NCE objective that distinguishes the target word from k draws of a noise distribution using logistic regression, using only samples",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Subsampling of frequent words",
+   "definition": "each word w_i in the training set is discarded with probability P(w_i)=1-sqrt(t/f(w_i))",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Hierarchical softmax",
+   "definition": "binary tree over the output layer with words as leaves, needing about log2(W) node evaluations; Huffman tree used",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Efficient estimation of word representations in vector space (Mikolov, Chen, Corrado, Dean)",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "extends",
+   "note": "introduced Skip-gram and the analogy task",
+   "quote": null
+  },
+  {
+   "work": "Noise-contrastive estimation (Gutmann and Hyvarinen)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "negative sampling simplifies NCE",
+   "quote": null
+  },
+  {
+   "work": "Hierarchical probabilistic neural network language model (Morin and Bengio)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "hierarchical softmax",
+   "quote": null
+  },
+  {
+   "work": "A scalable hierarchical distributed language model (Mnih and Hinton)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "published vectors compared in Table 6",
+   "quote": null
+  },
+  {
+   "work": "Collobert and Weston, unified architecture for NLP",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "published vectors compared in Table 6",
+   "quote": null
+  },
+  {
+   "work": "Turian et al., word representations",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "published vectors compared in Table 6",
+   "quote": null
+  },
+  {
+   "work": "Linguistic regularities in continuous space word representations (Mikolov, Yih, Zweig)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "vector offsets encode relations",
+   "quote": null
+  },
+  {
+   "work": "Rumelhart, Hinton, Williams",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earliest distributed word representations",
+   "quote": null
+  },
+  {
+   "work": "Socher et al., recursive matrix-vector spaces",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "complementary phrase representation approach",
+   "quote": null
+  },
+  {
+   "work": "Mnih and Teh, fast and simple algorithm for neural probabilistic LMs",
+   "year": 2012,
+   "arxiv": "1206.6426",
+   "relation": "related",
+   "note": "NCE applied to language modelling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The Skip-gram model architecture. The training objective is to learn word vector representations that are good at predicting the nearby words.",
+   "page": 2,
+   "why": "shows input word predicting surrounding words"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Two-dimensional PCA projection of the 1000-dimensional Skip-gram vectors of countries and their capital cities.",
+   "page": 4,
+   "why": "shows country-capital offsets are near-parallel without supervision"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Vector compositionality using element-wise addition.",
+   "page": 7,
+   "why": "Russian + river gives Volga River"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "log σ(v'_wO^T v_wI) + Σ_{i=1..k} E_{wi~Pn(w)} [log σ(-v'_wi^T v_wI)]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5",
+   "snippet": "P(w_i) = 1 - sqrt(t / f(w_i))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 6",
+   "snippet": "score(wi,wj) = (count(wi wj) - δ) / (count(wi) × count(wj))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations garbled in text extraction; transcribed from reading. No embedded instructions found. Optimizer and learning rate not stated."
+ ]
+}

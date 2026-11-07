@@ -1,0 +1,594 @@
+{
+ "schema": 1,
+ "key": "1611.07004",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/isola-2017-image-image-translation-conditional-adversarial.pdf",
+ "bib": {
+  "title": "Image-to-Image Translation with Conditional Adversarial Networks",
+  "authors": [
+   "Phillip Isola",
+   "Jun-Yan Zhu",
+   "Tinghui Zhou",
+   "Alexei A. Efros"
+  ],
+  "first_author": "Isola",
+  "year": 2017,
+  "venue": "preprint (arXiv v3, 26 Nov 2018; CVPR 2017 paper)",
+  "arxiv": "1611.07004",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 53108,
+  "chars_total": 53108,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a conditional GAN with a learned loss serve as a general-purpose solution to image-to-image translation (pixels to pixels) across many tasks without per-task loss engineering?",
+ "hypothesis": "A discriminator-learned loss penalises structure that hand-designed per-pixel losses (L1/L2) miss and avoids blur; L1 handles low frequencies while a patch-level GAN handles high frequencies.",
+ "contributions": [
+  "Demonstrate that on a wide variety of problems, conditional GANs produce reasonable results.",
+  "Present a simple framework sufficient to achieve good results, and analyze the effects of several important architectural choices."
+ ],
+ "method": {
+  "summary": "A conditional GAN (pix2pix): a U-Net generator G and a 70x70 PatchGAN discriminator D that sees (input, output) pairs, trained with the cGAN loss plus lambda*L1 on paired data. The same architecture and objective are retrained on each dataset; ablations cover loss, generator architecture and patch size, evaluated by AMT real-vs-fake tests and an FCN-score on Cityscapes.",
+  "task": "paired image-to-image translation (labels to photo, map to aerial, colorization, edges to photo, day to night, thermal to color, inpainting, photo to labels)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Cityscapes labels<->photo",
+    "role": "both",
+    "size": "2975 training images",
+    "split": "Cityscapes training set for training, validation set for testing",
+    "source": "Cordts et al. 2016",
+    "preprocessing": "256x256; random jitter (resize to 286x286, random crop 256x256) and mirroring"
+   },
+   {
+    "name": "CMP Facades",
+    "role": "both",
+    "size": "400 training images",
+    "split": "random train/test split",
+    "source": "Radim Tylecek 2013",
+    "preprocessing": "random jitter and mirroring"
+   },
+   {
+    "name": "Maps<->aerial (Google Maps, NYC)",
+    "role": "both",
+    "size": "1096 training images",
+    "split": "split about the median latitude of the sampling region, with a buffer so no training pixel appears in test",
+    "source": "scraped from Google Maps in and around New York City",
+    "preprocessing": "256x256 train, tested at 512x512; random jitter and mirroring"
+   },
+   {
+    "name": "BW->color (ImageNet)",
+    "role": "both",
+    "size": "1.2 million training images",
+    "split": "subset of ImageNet val set, following protocol of Zhang et al. 2016 and Larsson et al. 2016",
+    "source": "ImageNet (Russakovsky et al. 2015)",
+    "preprocessing": "mirroring only, no random jitter; 256x256"
+   },
+   {
+    "name": "Edges->shoes (UT Zappos50K)",
+    "role": "both",
+    "size": "50k training images",
+    "split": "random train/test",
+    "source": "Yu and Grauman 2014; edges by HED plus postprocessing",
+    "preprocessing": null
+   },
+   {
+    "name": "Edges->handbags",
+    "role": "both",
+    "size": "137K Amazon Handbag images",
+    "split": "random train/test",
+    "source": "Zhu et al. 2016 (iGAN)",
+    "preprocessing": "HED edges"
+   },
+   {
+    "name": "Day->night",
+    "role": "both",
+    "size": "17823 training images from 91 webcams",
+    "split": "91 webcams train, 10 webcams test",
+    "source": "Laffont et al. 2014",
+    "preprocessing": "random jitter and mirroring"
+   },
+   {
+    "name": "Thermal->color",
+    "role": "both",
+    "size": "36609 training images",
+    "split": "sets 00-05 train, sets 06-11 test",
+    "source": "Hwang et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Paris StreetView inpainting",
+    "role": "both",
+    "size": "14900 training images",
+    "split": "100 held-out test images following Pathak et al.",
+    "source": "Doersch et al. 2012",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "pix2pix generator, U-Net",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder with skip connections between layer i and n-i (concatenation); 4x4 convs stride 2; dropout 50% in decoder",
+    "init_from": "trained from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8 encoder, 7 decoder",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "encoder": "C64-C128-C256-C512-C512-C512-C512-C512",
+     "decoder": "CD512-CD1024-CD1024-C1024-C1024-C512-C256-C128",
+     "output": "conv to 3 channels (2 for colorization) then Tanh; no BatchNorm on first C64; leaky ReLU 0.2 in encoder, plain ReLU in decoder"
+    }
+   },
+   {
+    "name": "Encoder-decoder generator",
+    "role": "baseline",
+    "params": null,
+    "architecture": "U-Net with skip connections severed",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "encoder": "C64-C128-C256-C512-C512-C512-C512-C512",
+     "decoder": "CD512-CD512-CD512-C512-C256-C128-C64"
+    }
+   },
+   {
+    "name": "PatchGAN discriminator 70x70",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully convolutional, classifies each NxN patch, responses averaged",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "layers": "C64-C128-C256-C512 then conv to 1-d output and Sigmoid",
+     "variants": "1x1: C64-C128 (1x1 convs); 16x16: C64-C128; 286x286: C64-C128-C256-C512-C512-C512",
+     "note": "no BatchNorm on first C64; leaky ReLU 0.2"
+    }
+   },
+   {
+    "name": "FCN-8s (Cityscapes)",
+    "role": "judge",
+    "params": null,
+    "architecture": "FCN-8s semantic segmentation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "scores synthesized photos by segmentation accuracy against the labels they came from"
+    }
+   }
+  ],
+  "training": {
+   "objective": "G* = arg min_G max_D L_cGAN(G,D) + lambda*L_L1(G), lambda=100; G trained to maximise log D(x,G(x,z)) rather than minimise log(1-D); D objective divided by 2",
+   "optimizer": "Adam, minibatch SGD, alternating one D step then one G step",
+   "lr": "0.0002",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1 to 10 depending on experiment (1 Cityscapes objective experiments, 10 for U-Net vs encoder-decoder; 4 for BW->color, edges->shoes/handbags, day->night, thermal, inpainting)",
+   "steps": null,
+   "epochs": "200 (Cityscapes, facades, maps); ~6 (BW->color); 15 (edges->shoes, handbags); 17 (day->night); 10 (thermal->color); 25 (inpainting)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "50% in decoder CD layers, kept on at test time (the only noise source)",
+   "regularisation": "random jitter and mirroring; no explicit noise z",
+   "hardware": "single Pascal Titan X GPU",
+   "compute": "facade results (Fig 14) took less than two hours of training",
+   "wall_clock": "less than two hours for the 400-image facade set",
+   "seeds": null,
+   "other": {
+    "adam_betas": "beta1=0.5, beta2=0.999",
+    "init": "Gaussian mean 0, std 0.02",
+    "batchnorm_at_test": "test-batch statistics (instance norm when batch size 1)",
+    "errata": "with batch size 1 the BatchNorm zeroes the bottleneck activations, effectively skipping the innermost layer; public code removes BatchNorm there"
+   }
+  },
+  "inference": {
+   "decoding": "deterministic forward pass of G in training mode: dropout on, BatchNorm with test-batch statistics",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per input; only minor stochasticity from dropout",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "lambda": "100",
+    "patch_size": "70x70 default",
+    "test_resolution": "fully convolutional: train 256x256, test 512x512 on maps<->aerial"
+   },
+   "other": {
+    "time": "all models run in well under a second on a Pascal Titan X"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AMT real vs fake",
+     "definition": "Turkers see a real and a generated image for 1 second each, then pick the fake; 40 main trials after 10 practice trials with feedback; ~50 Turkers per algorithm; one algorithm per session; no vigilance trials",
+     "unit": "% Turkers labeled real (mean +/- bootstrap error)",
+     "higher_is_better": true
+    },
+    {
+     "name": "FCN-score",
+     "definition": "FCN-8s trained on Cityscapes classifies synthesized photos; accuracy against the labels they were generated from",
+     "unit": "per-pixel acc., per-class acc., class IOU (fractions 0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Histogram intersection of Lab colour marginals vs ground truth",
+     "definition": "overlap of output colour distributions with ground-truth distributions",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "L1 regression",
+    "unconditional GAN",
+    "L1+GAN",
+    "encoder-decoder generator",
+    "1x1, 16x16, 286x286 discriminators",
+    "L2 regression from Zhang et al. 2016",
+    "Zhang et al. 2016 full method",
+    "Pathak et al. 2016 context encoders (inpainting, qualitative)"
+   ],
+   "protocol": "Single training run per configuration; no seeds or confidence intervals for FCN-scores. Bootstrap test for AMT significance. Colorization AMT real and fake generated from the same grayscale input; map<->aerial real and fake from different inputs. FCN-scores recomputed in v2 with scripts at phillipi/pix2pix scripts/eval_cityscapes commit d7e7b8b."
+  },
+  "availability": {
+   "code": "https://github.com/phillipi/pix2pix",
+   "weights": null,
+   "data": "public datasets; maps data scraped from Google Maps (release not stated)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we use batch sizes between 1 and 10 depending on the experiment",
+    "where": "Sec 3.3"
+   },
+   {
+    "field": "training.hardware",
+    "quote": "took less than two hours of training on a single Pascal Titan X GPU",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On Cityscapes labels->photo, L1+cGAN gives the best FCN per-pixel accuracy among objectives, close to ground truth 0.80.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FCN per-pixel accuracy",
+   "value": 0.66,
+   "unit": "fraction",
+   "baseline_value": 0.42,
+   "n": null,
+   "setup": "Cityscapes labels->photo, 256x256, 200 epochs, batch size 1, lambda=100",
+   "quote": null,
+   "table": "Table 1, row L1+cGAN, column Per-pixel acc.",
+   "note": "baseline 0.42 is L1 alone; unconditional GAN 0.22, cGAN 0.57, L1+GAN 0.64",
+   "where": "Table 1"
+  },
+  {
+   "claim": "An unconditional discriminator (GAN) collapses to near-identical outputs regardless of input and scores poorly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FCN per-pixel accuracy",
+   "value": 0.22,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cityscapes labels->photo, GAN loss without conditioning",
+   "quote": null,
+   "table": "Table 1, row GAN, column Per-pixel acc.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "U-Net beats encoder-decoder under L1+cGAN; the encoder-decoder gets worse when the cGAN term is added.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FCN per-pixel accuracy",
+   "value": 0.55,
+   "unit": "fraction",
+   "baseline_value": 0.29,
+   "n": null,
+   "setup": "Cityscapes labels->photo, batch size 10",
+   "quote": null,
+   "table": "Table 2, row U-net (L1+cGAN), column Per-pixel acc.",
+   "note": "baseline 0.29 is encoder-decoder (L1+cGAN); U-net (L1) 0.48, encoder-decoder (L1) 0.35. Caption notes U-net (L1+cGAN) scores differ from other tables (batch size 10 vs 1, run-to-run variation).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "A 70x70 PatchGAN reaches the best FCN per-pixel accuracy; the full 286x286 ImageGAN is much worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FCN per-pixel accuracy",
+   "value": 0.66,
+   "unit": "fraction",
+   "baseline_value": 0.42,
+   "n": null,
+   "setup": "Cityscapes labels->photo, L1+cGAN, 256x256 inputs",
+   "quote": null,
+   "table": "Table 3, row 70x70, column Per-pixel acc.",
+   "note": "baseline 0.42 is the 286x286 ImageGAN; 1x1 0.39, 16x16 0.65",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Adversarial loss helps aerial-photo generation from maps: 18.9% of trials fooled Turkers versus nearly none for L1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Turkers labeled real",
+   "value": 18.9,
+   "unit": "%",
+   "baseline_value": 0.8,
+   "n": null,
+   "setup": "Maps->aerial, trained 256x256, tested 512x512, AMT ~50 Turkers",
+   "quote": "The aerial photos generated by our method fooled participants on 18.9% of trials",
+   "table": "Table 4, row L1+cGAN, column Map->Photo",
+   "note": "L1 baseline 0.8% +/- 0.3%; cGAN 18.9% +/- 2.5%",
+   "where": "Sec 4.5, Table 4"
+  },
+  {
+   "claim": "In the photo->map direction cGAN is not significantly different from L1 (bootstrap test).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Turkers labeled real",
+   "value": 6.1,
+   "unit": "%",
+   "baseline_value": 2.8,
+   "n": null,
+   "setup": "Aerial photo->map, AMT",
+   "quote": "in the photo→map direction our method only fooled participants on 6.1% of tri-",
+   "table": "Table 4, row L1+cGAN, column Photo->Map",
+   "note": "L1 2.8% +/- 1.0%; text splits '6.1%' across a hyphenated line break",
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "For colorization, L1+cGAN fooled 22.5% of trials, similar to the L2 variant of Zhang et al. but below their full method (27.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Turkers labeled real",
+   "value": 22.5,
+   "unit": "%",
+   "baseline_value": 27.8,
+   "n": null,
+   "setup": "ImageNet colorization, 256x256, AMT",
+   "quote": null,
+   "table": "Table 5, row Ours",
+   "note": "L2 regression from Zhang et al. 16.3% +/- 2.4%; Zhang et al. 27.8% +/- 2.7%; ours 22.5% +/- 1.6%; ours vs L2 variant difference insignificant by bootstrap",
+   "where": "Table 5"
+  },
+  {
+   "claim": "For photo->labels, plain L1 beats cGAN and L1+cGAN, so reconstruction losses suffice when the output is less ambiguous.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FCN per-pixel accuracy",
+   "value": 0.86,
+   "unit": "fraction",
+   "baseline_value": 0.74,
+   "n": null,
+   "setup": "Cityscapes photo->labels",
+   "quote": null,
+   "table": "Table 6, row L1, column Per-pixel acc.",
+   "note": "baseline 0.74 is cGAN alone; L1+cGAN 0.83",
+   "where": "Table 6"
+  },
+  {
+   "claim": "L1 narrows the output colour distribution; cGAN pushes it closer to ground truth (Lab histogram intersection, b channel).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Histogram intersection (b)",
+   "value": 0.84,
+   "unit": "fraction",
+   "baseline_value": 0.7,
+   "n": null,
+   "setup": "Cityscapes, Lab marginals",
+   "quote": null,
+   "table": "Figure 7(d), row cGAN, column b",
+   "note": "baseline 0.70 is L1; L1+cGAN 0.82, PixelGAN 0.78. Table appears in Fig 7 panel (d).",
+   "where": "Fig 7"
+  }
+ ],
+ "limits": [
+  "Requires paired training data; no unpaired setting is explored.",
+  "Output is only mildly stochastic: noise z was ignored by G, so dropout is the only noise; capturing the full conditional entropy is left open.",
+  "cGANs hallucinate small objects in segmentation and L1 alone scores better on photo->labels.",
+  "Colorization falls short of the task-specific method of Zhang et al. (22.5% vs 27.8%); photo->map not significantly better than L1.",
+  "Common failure modes: artifacts where input is sparse, unusual inputs, grayscale or desaturated colorizations (Figs 9, 21).",
+  "Single training runs and no seeds reported for FCN-scores; the authors note run-to-run variation (Table 2 caption).",
+  "Batch-size-1 BatchNorm zeroes the bottleneck layer (errata); the authors left experiments as is.",
+  "Community applications (Sec 4.7) are uncontrolled and may rely on modified code.",
+  "FCN-score and AMT are weak proxies; FID and later metrics did not exist."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PatchGAN",
+   "definition": "a discriminator that tries to classify if each NxN patch in an image is real or fake, run convolutionally across the image with responses averaged",
+   "where": "Sec 3.2.2"
+  },
+  {
+   "term": "FCN-score",
+   "definition": "accuracy of an FCN-8s segmenter trained on real Cityscapes, scored on synthesized photos against the labels they were generated from",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "structured loss",
+   "definition": "losses that penalize the joint configuration of the output rather than treating pixels as conditionally independent",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generative adversarial nets (Goodfellow et al.)",
+   "year": 2014,
+   "arxiv": "1406.2661",
+   "relation": "extends",
+   "note": "base GAN framework and the non-saturating G loss",
+   "quote": null
+  },
+  {
+   "work": "Conditional generative adversarial nets (Mirza and Osindero)",
+   "year": 2014,
+   "arxiv": "1411.1784",
+   "relation": "extends",
+   "note": "conditioning GANs",
+   "quote": null
+  },
+  {
+   "work": "DCGAN (Radford, Metz, Chintala)",
+   "year": 2016,
+   "arxiv": "1511.06434",
+   "relation": "uses-method",
+   "note": "generator and discriminator modules adapted from it",
+   "quote": null
+  },
+  {
+   "work": "U-Net (Ronneberger et al.)",
+   "year": 2015,
+   "arxiv": "1505.04597",
+   "relation": "uses-method",
+   "note": "skip-connected generator",
+   "quote": null
+  },
+  {
+   "work": "Markovian GAN (Li and Wand)",
+   "year": 2016,
+   "arxiv": "1604.04382",
+   "relation": "extends",
+   "note": "PatchGAN architecture previously proposed for local style statistics",
+   "quote": null
+  },
+  {
+   "work": "Context encoders (Pathak et al.)",
+   "year": 2016,
+   "arxiv": "1604.07379",
+   "relation": "baseline",
+   "note": "inpainting comparison; L2+GAN formulation",
+   "quote": null
+  },
+  {
+   "work": "Colorful image colorization (Zhang et al.)",
+   "year": 2016,
+   "arxiv": "1603.08511",
+   "relation": "baseline",
+   "note": "colorization AMT baseline and protocol",
+   "quote": null
+  },
+  {
+   "work": "Mathieu et al. video prediction",
+   "year": 2016,
+   "arxiv": "1511.05440",
+   "relation": "related",
+   "note": "consistent with finding that generator ignores noise",
+   "quote": null
+  },
+  {
+   "work": "FCN (Long et al.)",
+   "year": 2015,
+   "arxiv": "1411.4038",
+   "relation": "evaluates",
+   "note": "FCN-8s used for FCN-score",
+   "quote": null
+  },
+  {
+   "work": "Cityscapes (Cordts et al.)",
+   "year": 2016,
+   "arxiv": "1604.01685",
+   "relation": "uses-data",
+   "note": "labels<->photo",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2015,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization (Ioffe and Szegedy)",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "conv-BN-ReLU modules",
+   "quote": null
+  },
+  {
+   "work": "Instance normalization (Ulyanov et al.)",
+   "year": 2016,
+   "arxiv": "1607.08022",
+   "relation": "related",
+   "note": "test-batch BN with batch size 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Training a conditional GAN to map edges->photo.",
+   "page": 3,
+   "why": "Shows D sees (x, y) pairs, which is the conditioning."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Two choices for the architecture of the generator: encoder-decoder vs U-Net.",
+   "page": 3,
+   "why": "Skip connections between mirrored layers."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Different losses induce different quality of results (L1, cGAN, L1+cGAN).",
+   "page": 5,
+   "why": "Blur under L1, artifacts under cGAN alone."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Patch size variations: L1, 1x1, 16x16, 70x70, 286x286.",
+   "page": 6,
+   "why": "Tiling artifacts at 16x16 and the sweet spot at 70x70."
+  },
+  {
+   "figure": "Table 1-3, 4-6",
+   "caption": "FCN-score and AMT tables",
+   "page": null,
+   "why": "All quantitative evidence."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 4",
+   "snippet": "G* = arg min_G max_D L_cGAN(G, D) + lambda * L_L1(G)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Appendix (architectures, training details, errata, change log) follows the references and was read.",
+  "Figure 7(d) histogram-intersection numbers are in a figure panel but extracted as text."
+ ]
+}

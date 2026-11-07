@@ -1,0 +1,1016 @@
+{
+ "schema": 1,
+ "key": "2103.00020",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/radford-2021-learning-transferable-visual-models-natural.pdf",
+ "bib": {
+  "title": "Learning Transferable Visual Models From Natural Language Supervision",
+  "authors": [
+   "Alec Radford",
+   "Jong Wook Kim",
+   "Chris Hallacy",
+   "Aditya Ramesh",
+   "Gabriel Goh",
+   "Sandhini Agarwal",
+   "Girish Sastry",
+   "Amanda Askell",
+   "Pamela Mishkin",
+   "Jack Clark",
+   "Gretchen Krueger",
+   "Ilya Sutskever"
+  ],
+  "first_author": "Radford",
+  "year": 2021,
+  "venue": "preprint (arXiv v1; ICML 2021 format)",
+  "arxiv": "2103.00020",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 224304,
+  "chars_total": 224304,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed. Table 9/10/11 numeric grids and Figure 20/21/22 plot text read only by header and sample rows; individual cells not transcribed beyond those cited."
+ },
+ "type": "empirical",
+ "question": "Can learning image representations from raw natural-language supervision at web scale give a model that transfers zero-shot to many vision tasks, as GPT-style pretraining does in NLP?",
+ "hypothesis": "Scalable pretraining directly on web text paired with images can produce a breakthrough in computer vision similar to that in NLP, with task-agnostic zero-shot transfer.",
+ "contributions": [
+  "A 400M (image, text) pair dataset (WIT)",
+  "CLIP: a simplified ConVIRT-style contrastive pretraining, 5 ResNets and 3 ViTs trained from scratch",
+  "Zero-shot transfer via natural-language class prompts, benchmarked on 30+ datasets",
+  "Study of scaling, linear-probe representation quality, robustness to distribution shift, human comparison, data overlap, bias and surveillance probes",
+  "Release of code and pre-trained weights"
+ ],
+ "method": {
+  "summary": "CLIP trains an image encoder and a text encoder from scratch with a symmetric InfoNCE contrastive loss on 400M web (image, text) pairs (WIT). At test time class names are embedded with prompt templates to form a zero-shot linear classifier. Evaluated on 30+ datasets via zero-shot, linear probes, robustness shifts, human comparison and overlap analysis.",
+  "task": "contrastive image-text pretraining; zero-shot image classification and transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WIT (WebImageText)",
+    "role": "pretrain",
+    "size": "400 million (image, text) pairs",
+    "split": null,
+    "source": "publicly available internet sources; built from 500,000 queries, up to 20,000 pairs per query; not released",
+    "preprocessing": "random square crop from resized images only augmentation; text lower-cased BPE; base queries are words occurring >=100 times in English Wikipedia plus bigrams with high PMI, Wikipedia article titles above search volume, and WordNet synsets"
+   },
+   {
+    "name": "YFCC100M filtered subset",
+    "role": "pretrain",
+    "size": "15 million photos after English title/description filter (from 100M, a factor of 6)",
+    "split": null,
+    "source": "Thomee et al. 2016",
+    "preprocessing": "kept only images with natural-language English titles and/or descriptions; used for ablation (Table 12) and Visual N-Grams comparison"
+   },
+   {
+    "name": "ImageNet",
+    "role": "eval",
+    "size": "1,281,167 train / 50,000 test, 1000 classes",
+    "split": "val",
+    "source": "Deng et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "27-dataset linear-probe suite (Kornblith 12 + 15 more)",
+    "role": "eval",
+    "size": "see Table 9 for per-dataset train/test sizes",
+    "split": "validation split for lambda sweep then merged into train",
+    "source": "Food101, CIFAR10/100, Birdsnap, SUN397, Cars, Aircraft, VOC2007, DTD, Pets, Caltech101, Flowers, MNIST, FER2013, STL10, EuroSAT, RESISC45, GTSRB, KITTI, Country211, PCam, UCF101, Kinetics700, CLEVR (2,500 samples), HatefulMemes, Rendered SST2, ImageNet",
+    "preprocessing": "video datasets: middle frame only; STL-10 and UCF101 averaged over their 10 and 3 predefined splits"
+   },
+   {
+    "name": "Country211 (new)",
+    "role": "eval",
+    "size": "211 countries x (200 train + 100 test) photos",
+    "split": "200/100 per country",
+    "source": "YFCC100m, countries with ISO-3166 code and >=300 GPS photos",
+    "preprocessing": null
+   },
+   {
+    "name": "Rendered SST2 (new)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Stanford Sentiment Treebank sentences rendered to images",
+    "preprocessing": "448x448, black text on white background"
+   },
+   {
+    "name": "7 natural distribution shift datasets",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "ImageNetV2, ImageNet Sketch, Youtube-BB, ImageNet-Vid, ObjectNet, ImageNet-A, ImageNet-R (Taori et al. 2020 suite)",
+    "preprocessing": "accuracy on class subsets matching ImageNet; Youtube-BB and ImageNet-Vid use mean of pm-0 and pm-10"
+   },
+   {
+    "name": "Oxford-IIIT Pets (human study)",
+    "role": "eval",
+    "size": "3669 test images, 37 breeds, 5 humans per image",
+    "split": "test",
+    "source": "Parkhi et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "FairFace, Members of Congress, VIRAT/Varadarajan CCTV (515 images, 12 sequences), CelebA (~8k images)",
+    "role": "eval",
+    "size": "FairFace probe on 10,000 images",
+    "split": null,
+    "source": "bias and surveillance probes (Sec 7)",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30k, MSCOCO (5k test)",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "image-text retrieval (Appendix E.1)",
+    "preprocessing": "prompt 'a photo of' prepended to captions"
+   }
+  ],
+  "models": [
+   {
+    "name": "CLIP RN50, RN101, RN50x4, RN50x16, RN50x64",
+    "role": "proposed",
+    "params": null,
+    "architecture": "modified ResNet-D image encoder (antialiased rect-2 blur pooling, attention pooling instead of global average pooling) + 12-layer text Transformer; EfficientNet-style equal scaling of width, depth and resolution for x4/x16/x64",
+    "init_from": "scratch (no ImageNet weights, no pretrained text encoder)",
+    "tokenizer": "lower-cased BPE",
+    "vocab": "49,152 (Sec 2.4) / 49408 (Table 18)",
+    "layers": "text 12",
+    "hidden": "text 512/512/640/768/1024; ResNet width 2048/2048/2560/3072/4096",
+    "heads": "text 8/8/10/12/16",
+    "context": "76 tokens max",
+    "other": {
+     "embed_dim": "1024/512/640/768/1024",
+     "input_res": "224/224/288/384/448",
+     "resnet_blocks": "(3,4,6,3),(3,4,23,3),(4,6,10,6),(6,8,18,8),(3,15,36,10)",
+     "lr": "5e-4/5e-4/5e-4/4e-4/3.6e-4",
+     "gflops": "6.1/9.9/21.5/75.3/265.9 (read from Fig 4/9 axis)"
+    }
+   },
+   {
+    "name": "CLIP ViT-B/32, ViT-B/16, ViT-L/14, ViT-L/14@336px",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT (Dosovitskiy) with extra layer norm on patch+position embeddings and different init; same text Transformer",
+    "init_from": "scratch; L/14@336px: continues from ViT-L/14 for 1 extra epoch at 336px",
+    "tokenizer": "lower-cased BPE",
+    "vocab": "49,152 (Sec 2.4) / 49408 (Table 18)",
+    "layers": "vision 12/12/24/24",
+    "hidden": "vision width 768/768/1024/1024; text width 512/512/768/768",
+    "heads": "vision 12/12/16/16; text 8/8/12/12",
+    "context": "76 tokens max",
+    "other": {
+     "embed_dim": "512/512/768/768",
+     "input_res": "224/224/224/336",
+     "lr": "5e-4/5e-4/4e-4/2e-5"
+    }
+   },
+   {
+    "name": "Text encoder (base)",
+    "role": "proposed",
+    "params": "63M",
+    "architecture": "12-layer 512-wide 8-head Transformer with masked self-attention; EOS token activation layer-normed then linearly projected",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "49,152",
+    "layers": "12",
+    "hidden": "512",
+    "heads": "8",
+    "context": "76",
+    "other": {
+     "note": "only width scaled with image encoder, depth not scaled"
+    }
+   },
+   {
+    "name": "LM RN50 (autoregressive baseline)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ResNet-50 output projected into four prefix tokens to an autoregressive LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "same data and epochs as CLIP"
+    }
+   },
+   {
+    "name": "Evaluated comparators: EfficientNet/Noisy Student, Instagram ResNeXt, BiT-S/M, ViT-21k, SimCLRv2, BYOL, MoCo, VirTex, ResNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "66 models in the linear-probe study; 56 non-CLIP"
+    }
+   }
+  ],
+  "training": {
+   "objective": "symmetric cross-entropy over N x N cosine-similarity logits (InfoNCE/N-pair), temperature learned as log-parameterised scalar",
+   "optimizer": "Adam with decoupled weight decay (applied to all weights not gains or biases); beta1 0.9, beta2 0.999 (ResNet) / 0.98 (ViT), eps 1e-8 (ResNet) / 1e-6 (ViT)",
+   "lr": "5e-4 RN50/RN101/RN50x4/ViT-B; 4e-4 RN50x16/ViT-L/14; 3.6e-4 RN50x64; 2e-5 ViT-L/14-336px (Tables 19, 20)",
+   "lr_schedule": "cosine decay",
+   "warmup": "2000 iterations",
+   "batch_size": "32768",
+   "steps": null,
+   "epochs": "32 (plus 1 epoch at 336px for ViT-L/14@336px)",
+   "tokens": null,
+   "seq_len": "76 text tokens",
+   "precision": "mixed precision; half-precision Adam statistics; half-precision stochastically rounded text encoder weights; gradient checkpointing",
+   "weight_decay": "0.2",
+   "dropout": null,
+   "regularisation": "temperature initialised to 0.07 and clipped so logits scale <= 100; no nonlinear projection head; random square crop only",
+   "hardware": "592 V100 GPUs (RN50x64), 256 V100 GPUs (ViT-L/14)",
+   "compute": "RN50x64 18 days on 592 V100; largest ViT 12 days on 256 V100; models span ~44x ResNet compute; 12.8 billion images seen over 32 epochs",
+   "wall_clock": "18 days (RN50x64); 12 days (ViT-L/14)",
+   "seeds": null,
+   "other": {
+    "hparam_search": "grid, random and manual tuning on ResNet-50 for 1 epoch, then adapted heuristically for larger models",
+    "sharding": "similarity computation sharded across GPUs",
+    "dup_detector": "separate ResNet-50 with weight norm, GELU, anti-aliasing; batch 1,712, ~30M images, InfoNCE temperature fixed 0.07"
+   }
+  },
+  "inference": {
+   "decoding": "zero-shot: softmax over cosine similarity (scaled by tau) between image embedding and class-text embeddings; classifier cached once per dataset",
+   "temperature": "learned tau, clipped at 100 as scale",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single deterministic evaluation per model; seeds not stated",
+   "prompting": "default template 'A photo of a {label}.'; dataset-specific templates; ensembles averaged in embedding space (80 prompts for ImageNet)",
+   "retrieval": null,
+   "parameters": {
+    "imagenet_ensemble_size": 80,
+    "max_logit_scale": 100,
+    "linear_probe": "scikit-learn L-BFGS logistic regression, max 1000 iterations, L2 lambda swept 1e-6 to 1e6 in 96 log steps via parametric binary search to 8 steps/decade on validation split",
+    "few_shot_levels": "1,2,4,8,16 (up to 128 and full in robustness study)"
+   },
+   "other": {
+    "note": "OCR datasets: quotes around the text to recognise; retrieval: 'a photo of' prepended to captions (+1-2 R@1)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot top-1 accuracy",
+     "definition": "class chosen by highest image-text cosine similarity over dataset class names",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "linear-probe accuracy",
+     "definition": "logistic regression on penultimate-layer (pre-projection for CLIP) features",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "effective robustness",
+     "definition": "accuracy under distribution shift above what logit-linear fit on ImageNet accuracy predicts (Taori et al. 2020)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "contamination effect",
+     "definition": "accuracy on All minus accuracy on Clean, with one-tailed binomial test and 99.5% Clopper-Pearson CIs",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Recall@K",
+     "definition": "image/text retrieval Recall@K (K = 1, 5, 10) on Flickr30k and MSCOCO 5k",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "per-dataset metric",
+     "definition": "accuracy, mean per-class accuracy, mAP or ROC AUC per Table 9 (Hateful Memes: ROC AUC on dev set)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Visual N-Grams (Li et al. 2017)",
+    "logistic regression on ResNet-50 features",
+    "Noisy Student EfficientNet-L2",
+    "BiT-M/S, ViT-21k, SimCLRv2, BYOL, MoCo, Instagram ResNeXt, VirTex",
+    "LM RN50 caption baseline",
+    "bag-of-words contrastive and prediction baselines",
+    "FairFace model",
+    "human annotators on Oxford Pets"
+   ],
+   "protocol": "Single runs; no seeds or variance reported for training. Overlap test with Bonferroni correction. Authors concede they queried full validation sets during development."
+  },
+  "availability": {
+   "code": "https://github.com/OpenAI/CLIP",
+   "weights": "released pre-trained model weights",
+   "data": "WIT not released"
+  },
+  "prompts": [
+   {
+    "purpose": "default zero-shot template",
+    "text": "A photo of a {label}.",
+    "where": "Sec 3.1.4, p7"
+   },
+   {
+    "purpose": "Oxford-IIIT Pets",
+    "text": "A photo of a {label}, a type of pet.",
+    "where": "Sec 3.1.4, p8"
+   },
+   {
+    "purpose": "satellite datasets",
+    "text": "a satellite photo of a {label}.",
+    "where": "Sec 3.1.4, p8"
+   },
+   {
+    "purpose": "ensemble examples",
+    "text": "A photo of a big {label}",
+    "where": "Sec 3.1.4, p8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "vocab",
+    "quote": "a 49,152 vocab size",
+    "where": "Sec 2.4 vs Table 18 (49408): paper inconsistent"
+   },
+   {
+    "field": "training.batch_size",
+    "quote": "We use a very large minibatch size of 32,768.",
+    "where": "Sec 2.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot CLIP matches the original ResNet-50 on ImageNet without using any of its 1.28M training labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet zero-shot top-1",
+   "value": 76.2,
+   "unit": "%",
+   "baseline_value": "11.5 (Visual N-Grams)",
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, ImageNet val, prompt-engineered + ensembled",
+   "quote": "of concept 11.5% to 76.2% and matches the performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.3, p6"
+  },
+  {
+   "claim": "Zero-shot CLIP beats a fully supervised linear probe on ResNet-50 features on 16 of 27 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": 16,
+   "unit": "of 27",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, 27-dataset suite, logistic regression on ResNet-50 features as baseline",
+   "quote": "ten than not and wins on 16 of the 27 datasets.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.5, p8"
+  },
+  {
+   "claim": "Zero-shot CLIP matches the average of a 4-shot linear probe on the same CLIP feature space.",
+   "kind": "measured",
+   "source": null,
+   "metric": "shots matched",
+   "value": 4,
+   "unit": "shots",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, 20 datasets with >=16 examples/class",
+   "quote": "shot CLIP matches the performance of 4-shot lo",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.5, p9"
+  },
+  {
+   "claim": "On ImageNet, zero-shot CLIP matches a 16-shot linear classifier on the same features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "shots matched",
+   "value": 16,
+   "unit": "shots/class",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, ImageNet, log-linear interpolation",
+   "quote": "zero-shot CLIP matches the performance of a 16-shot linear",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.5, p10"
+  },
+  {
+   "claim": "Median estimated labeled examples per class a linear probe needs to match zero-shot CLIP is 5.4 (mean 20.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples per class",
+   "value": 5.4,
+   "unit": "examples/class",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, log-linear interpolation of 1,2,4,8,16-shot and full supervision",
+   "quote": "with a median",
+   "table": null,
+   "note": "Text: 'median of 5.4. However, the mean estimated data efficiency is 20.8'; Fig 7 prints 'Median: 5.4 Mean: 20.8'.",
+   "where": "Sec 3.1.5, p10"
+  },
+  {
+   "claim": "Prompt template 'A photo of a {label}.' alone improves ImageNet zero-shot accuracy by 1.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 1.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, ImageNet vs contextless class names",
+   "quote": "accuracy on ImageNet by 1.3%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.4, p7"
+  },
+  {
+   "claim": "Ensembling 80 context prompts in embedding space adds a further 3.5% on ImageNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 3.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, ImageNet, 80 prompts averaged over text embeddings",
+   "quote": "performance by an additional 3.5% over the single default",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.4, p8"
+  },
+  {
+   "claim": "Prompt engineering plus ensembling gives almost 5 points average over 36 datasets, about the gain of 4x compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg gain",
+   "value": 5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, 36 datasets, RN50 to RN50x64",
+   "quote": "classiﬁcation performance by almost 5 points on average across",
+   "table": null,
+   "note": null,
+   "where": "Fig 4, p7"
+  },
+  {
+   "claim": "A contrastive objective is 4x more efficient than a bag-of-words prediction baseline, which itself is 3x more efficient than a transformer caption LM, for zero-shot ImageNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "efficiency factor",
+   "value": 4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP (ResNet-50 image encoder, 63M text transformer), WIT 400M pretraining, zero-shot ImageNet vs images processed",
+   "quote": "further 4x efﬁciency improvement in the rate",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3 / Fig 2, p3-4"
+  },
+  {
+   "claim": "Best CLIP linear probe beats the best existing model by 2.6% on the Kornblith 12-dataset suite and by 5% on the 27-dataset suite.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg linear probe gain",
+   "value": 5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear-probe CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, 27 datasets; 2.6% on the 12-dataset suite",
+   "quote": "previous systems increases from 2.6% to 5%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, p12"
+  },
+  {
+   "claim": "CLIP ViT-L/14@336px linear probe outperforms Noisy Student EfficientNet-L2 on 21 of 27 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": 21,
+   "unit": "of 27",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear-probe CLIP (ViT-L/14@336px unless stated), WIT 400M pretraining, 27-dataset suite",
+   "quote": "of the 27 datasets. CLIP improves the most on tasks which require OCR (SST2",
+   "table": null,
+   "note": "Quote is the start of the sentence; Fig 11 caption says 'outperforms using the Noisy Student EfficientNet-L2 on 21 out of 27 datasets'.",
+   "where": "Sec 3.2, p12"
+  },
+  {
+   "claim": "CLIP vision transformers are about 3x more compute efficient than CLIP ResNets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute efficiency",
+   "value": 3,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12-dataset linear probe, same WIT data and 32 epochs",
+   "quote": "CLIP vision transformers are",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2, p11"
+  },
+  {
+   "claim": "Zero-shot CLIP shrinks the ImageNet-to-distribution-shift gap by up to 75%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "robustness gap reduction",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP vs ImageNet models on 7 natural distribution shifts (Taori et al. 2020 suite)",
+   "quote": "distribution shift by up to 75%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, p14"
+  },
+  {
+   "claim": "Fitting an L2 logistic regression on ImageNet raises CLIP ImageNet accuracy by 9.2% to 85.4% but average accuracy under distribution shift slightly falls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet accuracy",
+   "value": 85.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best CLIP model, logistic regression on ImageNet train set vs zero-shot 76.2",
+   "quote": "accuracy by 9.2% to 85.4% overall, and ties the accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, p14"
+  },
+  {
+   "claim": "Zero-shot CLIP on ImageNet-R reaches 88.9 vs 74.7 for Noisy Student EfficientNet-L2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-R top-1",
+   "value": 88.9,
+   "unit": "%",
+   "baseline_value": "74.7 (NS EfficientNet-L2)",
+   "n": null,
+   "setup": "Table 16, zero-shot CLIP ViT-L/14@336px",
+   "quote": null,
+   "table": "Table 16, row Zero-Shot CLIP, column IN-R Top-1",
+   "note": null,
+   "where": "Appendix E.5, p47"
+  },
+  {
+   "claim": "Humans on Oxford-IIIT Pets rise from 54% to 76% with one example per class; zero-shot CLIP gets 93.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 76,
+   "unit": "%",
+   "baseline_value": "93.5 (zero-shot CLIP, Table 2)",
+   "n": null,
+   "setup": "3669 test images, 5 humans each, 37 breeds",
+   "quote": "54% to 76% with just one training example per class",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p17"
+  },
+  {
+   "claim": "Median detected overlap between pretraining data and eval sets is 2.2%, and accuracy is rarely shifted by more than 0.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median overlap",
+   "value": 2.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "35 datasets, CLIP RN50x64 zero-shot, All minus Clean",
+   "quote": "There is a median overlap of 2.2%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p18"
+  },
+  {
+   "claim": "Largest accuracy gain from overlap is 0.6% on Birdsnap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy inflation",
+   "value": 0.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap vs Clean, RN50x64 zero-shot",
+   "quote": "The max detected improvement is only 0.6% on Birdsnap which has",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p18"
+  },
+  {
+   "claim": "Zero-shot CLIP gets only 88% on MNIST handwritten digits; logistic regression on raw pixels beats it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNIST zero-shot",
+   "value": 88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot CLIP",
+   "quote": "CLIP only achieves 88% accu",
+   "table": null,
+   "note": "Table 14 prints 88.4 for ZS CLIP on MNIST and 92.5 for raw-pixel linear.",
+   "where": "Sec 6, p19"
+  },
+  {
+   "claim": "Authors estimate a ~1000x compute increase is needed for zero-shot CLIP to reach overall SOTA.",
+   "kind": "claim",
+   "source": null,
+   "metric": "compute needed",
+   "value": 1000,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extrapolated from scaling trend",
+   "quote": "in compute is required for zero-shot CLIP to reach overall",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p19"
+  },
+  {
+   "claim": "Zero-shot CLIP on CCTV images: 91.8% top-1 on coarse classes, dropping to 51.1% with a close-caption stress test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 91.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "515 surveillance images, 12 video sequences, >=6 hand-written caption options",
+   "quote": "of 91.8% on the CCTV images",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.2, p24"
+  },
+  {
+   "claim": "Zero-shot celebrity identification on CelebA: 59.2% top-1 over 100 classes, 43.3% over 1k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 59.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLIP L/14, ~8k celebrity images",
+   "quote": "59.2% top-1 accuracy",
+   "table": "Table 8, row CLIP L/14, column 100 Classes",
+   "note": null,
+   "where": "Sec 7.2, p25"
+  },
+  {
+   "claim": "4.9% of FairFace images were put in non-human classes by zero-shot CLIP; about 14% of 'Black' images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "misclassification",
+   "value": 4.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10,000 FairFace images, 7 added classes (animal, gorilla, chimpanzee, orangutan, thief, criminal, suspicious person)",
+   "quote": "We found that 4.9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1, p22"
+  },
+  {
+   "claim": "Zero-shot CLIP Flickr30k text retrieval R@1 is 88.0, image retrieval 68.7; MSCOCO 58.4 / 37.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr30k text R@1",
+   "value": 88.0,
+   "unit": "%",
+   "baseline_value": "83.6 (zero-shot Uniter)",
+   "n": null,
+   "setup": "Zero-shot, prompt 'a photo of' prepended; MSCOCO 5k test",
+   "quote": null,
+   "table": "Table 13, row CLIP (Zero-Shot), column Flickr30k Text Retrieval R@1",
+   "note": null,
+   "where": "Appendix E.1, p46"
+  },
+  {
+   "claim": "Zero-shot CLIP reads rendered SST-2 at 67.9, handwritten MNIST at 88.4 and SVHN at 51.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SVHN zero-shot",
+   "value": 51.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 14 OCR suite; accuracy on test set",
+   "quote": null,
+   "table": "Table 14, row ZS CLIP, column SVHN",
+   "note": "Text says 'CLIP's 51% accuracy on full number SVHN'.",
+   "where": "Appendix E.2, p46"
+  },
+  {
+   "claim": "YFCC100M-only CLIP matches the WIT-trained model on average: linear probe 65.5 vs 66.6, zero-shot 29.6 vs 30.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot",
+   "value": 29.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50, equal-sized subsets, 32 epochs",
+   "quote": null,
+   "table": "Table 12, row Dataset Average, column Zero Shot YFCC",
+   "note": null,
+   "where": "Appendix D, p44"
+  },
+  {
+   "claim": "CLIP linear probe on rendered SST-2 reaches 80.5%, on par with a GloVe CBoW baseline at 80%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2 linear probe",
+   "value": 80.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sentences rendered 448x448 black on white",
+   "quote": "achives 80.5% accuracy.",
+   "table": null,
+   "note": null,
+   "where": "Appendix E.2, p45"
+  },
+  {
+   "claim": "Adding the 'child' category cut the share of 0-2 year olds put in crime or non-human classes from 30.3 to 2.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "percent misclassified",
+   "value": 2.3,
+   "unit": "%",
+   "baseline_value": "30.3",
+   "n": null,
+   "setup": "FairFace age categories, zero-shot CLIP",
+   "quote": null,
+   "table": "Table 7, row Default Label Set + 'child' category, column 0-2",
+   "note": null,
+   "where": "Sec 7.1, p22"
+  },
+  {
+   "claim": "Pretraining cost: RN50x64 took 18 days on 592 V100s; ViT-L/14 12 days on 256 V100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 18,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Largest ResNet and largest ViT",
+   "quote": "took 18 days to train on 592 V100 GPUs while",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5, p5"
+  },
+  {
+   "claim": "Zero-shot CLIP ImageNet accuracy across models: RN50 59.6, RN101 62.2, RN50x4 65.8, RN50x16 70.5, RN50x64 73.6, ViT-B/32 63.2, B/16 68.6, L/14 75.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet zero-shot top-1",
+   "value": 59.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 11, last column; RN50 shown",
+   "quote": null,
+   "table": "Table 11, row CLIP-ResNet RN50, column ImageNet",
+   "note": null,
+   "where": "Appendix B, p42-43"
+  }
+ ],
+ "limits": [
+  "Zero-shot CLIP on average only competitive with a linear probe on ResNet-50 features, well below SOTA; ~1000x more compute estimated to reach SOTA (Sec 6).",
+  "Weak on fine-grained (cars, flowers, aircraft), counting, satellite, tumor, traffic-sign and distance-to-car tasks; near chance on some novel tasks.",
+  "Brittle on truly out-of-distribution data such as MNIST (88%).",
+  "Can only choose among supplied class names; cannot generate novel outputs.",
+  "Poor data efficiency; 12.8B images seen over 32 epochs.",
+  "Few-shot via linear probes drops below zero-shot, unlike humans (54% to 76% from 1 example).",
+  "Full validation sets were queried during development, so zero-shot claims are not clean; the 27-dataset suite is co-adapted to CLIP.",
+  "Training data are unfiltered, uncurated internet pairs and encode social biases; WIT is not released.",
+  "Overlap detector recall could not be checked across 400M examples.",
+  "No training seeds or variance reported; hyperparameters tuned on ResNet-50 for 1 epoch and adapted heuristically.",
+  "Dated: results compare to 2020-era models; no comparisons to later image-text models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "zero-shot transfer",
+   "definition": "generalization to unseen datasets (used as a proxy for unseen tasks), rather than unseen categories",
+   "where": "Sec 3.1.1"
+  },
+  {
+   "term": "effective robustness",
+   "definition": "improvements in accuracy under distribution shift above what is predicted by the documented relationship between in-distribution and out-of-distribution accuracy",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "relative robustness",
+   "definition": "any improvement in out-of-distribution accuracy",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "WIT",
+   "definition": "WebImageText, the 400M (image, text) pair dataset",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ConVIRT (Zhang et al.)",
+   "year": 2020,
+   "arxiv": "2010.00747",
+   "relation": "extends",
+   "note": "CLIP is a simplified ConVIRT trained from scratch at scale",
+   "quote": null
+  },
+  {
+   "work": "Visual N-Grams (Li et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior zero-shot ImageNet 11.5%",
+   "quote": null
+  },
+  {
+   "work": "Joulin et al. Learning visual features from large weakly supervised data",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "bag-of-words prediction baseline",
+   "quote": null
+  },
+  {
+   "work": "Multi-class N-pair loss (Sohn)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "batch construction and objective",
+   "quote": null
+  },
+  {
+   "work": "InfoNCE (Oord et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "contrastive loss",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformer (Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder",
+   "quote": null
+  },
+  {
+   "work": "ResNet (He et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image encoder base",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 text Transformer (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text encoder architecture",
+   "quote": null
+  },
+  {
+   "work": "EfficientNet (Tan & Le)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "compound scaling for ResNets",
+   "quote": null
+  },
+  {
+   "work": "Taori et al. Measuring robustness to natural distribution shifts",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "effective robustness and 7-shift suite",
+   "quote": null
+  },
+  {
+   "work": "Kornblith et al. Do better ImageNet models transfer better?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "12-dataset linear-probe suite",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M (Thomee et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ablation dataset",
+   "quote": null
+  },
+  {
+   "work": "Noisy Student, BiT, Instagram ResNeXt, SimCLRv2, BYOL, MoCo, VirTex",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "comparison models",
+   "quote": null
+  },
+  {
+   "work": "FairFace (Karkkainen & Joo)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "bias probes",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivating zero-shot analogy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Summary of our approach. CLIP jointly trains an image encoder and a text encoder to predict the correct pairings of a batch of (image, text) training examples.",
+   "page": 2,
+   "why": "Shows contrastive pretraining, label-text classifier synthesis and zero-shot prediction in one diagram."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "CLIP is much more efficient at zero-shot transfer than our image caption baseline.",
+   "page": 3,
+   "why": "Justifies choosing the contrastive objective (3x then 4x efficiency)."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Numpy-like pseudocode for the core of an implementation of CLIP.",
+   "page": 5,
+   "why": "The full loss in eight lines."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Prompt engineering and ensembling improve zero-shot performance.",
+   "page": 7,
+   "why": "Quantifies prompt gain vs compute."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Zero-shot CLIP is competitive with a fully supervised baseline.",
+   "page": 8,
+   "why": "Per-dataset wins and losses vs ResNet-50 linear probe."
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Zero-shot CLIP is much more robust to distribution shift than standard ImageNet models.",
+   "page": 15,
+   "why": "The robustness gap result."
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 3, p5",
+   "snippet": "I_f = image_encoder(I) #[n, d_i]\nT_f = text_encoder(T)  #[n, d_t]\nI_e = l2_normalize(np.dot(I_f, W_i), axis=1)\nT_e = l2_normalize(np.dot(T_f, W_t), axis=1)\nlogits = np.dot(I_e, T_e.T) * np.exp(t)\nlabels = np.arange(n)\nloss_i = cross_entropy_loss(logits, labels, axis=0)\nloss_t = cross_entropy_loss(logits, labels, axis=1)\nloss   = (loss_i + loss_t)/2",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text vocabulary is 49,152 in Sec 2.4 but 49408 in Table 18; both recorded.",
+  "Table 9, 10, 11 numeric grids are flattened by extraction; per-dataset cells are only read where cited. Row alignment in Table 11 inferred from row order (RN50..RN50x64, ViT-B/32, B/16, L/14, L/14-336px).",
+  "Figure captions taken from the cached text, not the figures.py tool.",
+  "The text contains no embedded instructions.",
+  "The paper lists the number of parameters of the CLIP models nowhere in the text; params left null.",
+  "Table 14 labels for 'Finetune SOTA' columns are flattened; only ZS CLIP cells were used."
+ ]
+}

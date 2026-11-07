@@ -1,0 +1,874 @@
+{
+ "schema": 1,
+ "key": "2203.02155",
+ "pdf": "generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf",
+ "bib": {
+  "title": "Training language models to follow instructions with human feedback",
+  "authors": [
+   "Long Ouyang",
+   "Jeff Wu",
+   "Xu Jiang",
+   "Diogo Almeida",
+   "Carroll L. Wainwright",
+   "Pamela Mishkin",
+   "Chong Zhang",
+   "Sandhini Agarwal",
+   "Katarina Slama",
+   "Alex Ray",
+   "John Schulman",
+   "Jacob Hilton",
+   "Fraser Kelton",
+   "Luke Miller",
+   "Maddie Simens",
+   "Amanda Askell",
+   "Peter Welinder",
+   "Paul Christiano",
+   "Jan Leike",
+   "Ryan Lowe"
+  ],
+  "first_author": "Ouyang",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2203.02155",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 181922,
+  "chars_total": 181922,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can fine-tuning GPT-3 with human feedback (demonstrations then RLHF) make language models follow user intent more helpfully, truthfully and safely than simply scaling them?",
+ "hypothesis": "Language-modeling pretraining is misaligned with following instructions, so fine-tuning with human preferences should improve alignment even for much smaller models.",
+ "contributions": [
+  "InstructGPT: GPT-3 aligned via SFT + RM + PPO on labeler data and API prompts",
+  "1.3B InstructGPT preferred to 175B GPT-3",
+  "Gains in truthfulness and reduced toxicity but not bias",
+  "PPO-ptx (pretraining mix) reduces the alignment tax on public NLP datasets",
+  "Generalization to held-out labelers and out-of-distribution instructions",
+  "Public NLP instruction datasets (FLAN, T0) do not match API usage"
+ ],
+ "method": {
+  "summary": "Three-step RLHF on GPT-3: (1) supervised fine-tuning on about 13k labeler demonstrations, (2) a 6B reward model trained on rankings of K=4..9 outputs per prompt (about 33k prompts) with a pairwise logistic loss, (3) PPO against the RM with a per-token KL penalty to the SFT model, optionally mixed with pretraining log-likelihood (PPO-ptx). Models of 1.3B, 6B and 175B are evaluated mainly by labeler preference on held-out-customer API prompts, plus public NLP and safety benchmarks.",
+  "task": "Aligning language models to follow instructions via supervised fine-tuning plus RLHF (reward modeling and PPO)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SFT dataset (labeler demonstrations)",
+    "role": "train",
+    "size": "12,725 prompts total (11,295 labeler + 1,430 customer train); valid 1,653 (1,550 labeler + 103 customer); text says about 13k",
+    "split": "user-ID based train/valid/test",
+    "source": "Labeler-written prompts and OpenAI API Playground prompts to early InstructGPT (SFT-only) models",
+    "preprocessing": "Heuristic dedup on long common prefix, at most 200 prompts per user ID, PII filtered from train, prompts over 1k tokens filtered; few-shot labeler prompts expanded into K examples using the other K-1 in context"
+   },
+   {
+    "name": "RM dataset (labeler rankings)",
+    "role": "train",
+    "size": "33,207 train prompts (6,623 labeler + 26,584 customer); valid 17,887 (3,488 labeler + 14,399 customer); K=4 to 9 ranked outputs per prompt",
+    "split": "user-ID based",
+    "source": "API and labeler prompts; most comparison data from SFT policies, some from PPO policies",
+    "preprocessing": "Ties dropped; all C(K,2) comparisons of a prompt form one batch element"
+   },
+   {
+    "name": "PPO dataset (no human labels)",
+    "role": "train",
+    "size": "31,144 train prompts (customer only); valid 16,185",
+    "split": "user-ID based",
+    "source": "API Playground prompts",
+    "preprocessing": "PII filtered and deduplicated, about 31k unique prompts"
+   },
+   {
+    "name": "API test set",
+    "role": "eval",
+    "size": "3,196 prompts (Table 9); mean 115 tokens",
+    "split": "held-out customers not in training",
+    "source": "Playground prompts to InstructGPT models, plus separate prompts submitted to GPT-3 models",
+    "preprocessing": null
+   },
+   {
+    "name": "Public NLP datasets",
+    "role": "eval",
+    "size": "Winogender 120; CrowS-Pairs 1508; RealToxicityPrompts 5000 of 99,442 (uniform over toxicity); TruthfulQA 817; DROP 9,536; QuAC 7.306 [sic, as printed]; SQuADv2 11,873; HellaSwag 10,042; RTE 277; SST 872; WSC 104; WMT15 Fr-En 1,500; CNN/DM 2,354; Reddit TLDR 2,500",
+    "split": "validation/eval sets",
+    "source": "public benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "FLAN and T0++ (baseline fine-tuning data)",
+    "role": "train",
+    "size": "FLAN 1.2M datapoints; T0 96M subsampled to 1M",
+    "split": null,
+    "source": "Wei et al. 2021; Sanh et al. 2021",
+    "preprocessing": "T0 subsampled to 1M; epochs without repeats"
+   },
+   {
+    "name": "RM init fine-tuning NLP datasets",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "ARC, BoolQ, CoQA, DROP, MultiNLI, OpenBookQA, QuAC, RACE, Winogrande",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 (1.3B, 6B, 175B)",
+    "role": "base",
+    "params": "1.3B / 6B / 175B",
+    "architecture": "GPT-3 decoder-only transformer",
+    "init_from": "pretrained GPT-3 (Brown et al. 2020)",
+    "tokenizer": "same BPE as GPT-3",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k tokens",
+    "other": {
+     "precision": "fp16 weights and activations with fp32 master weights"
+    }
+   },
+   {
+    "name": "SFT",
+    "role": "baseline",
+    "params": "1.3B / 6B / 175B",
+    "architecture": "GPT-3",
+    "init_from": "GPT-3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k tokens",
+    "other": {}
+   },
+   {
+    "name": "RM (single 6B for all)",
+    "role": "reward",
+    "params": "6B",
+    "architecture": "GPT-3 with unembedding replaced by scalar projection",
+    "init_from": "6B GPT-3 fine-tuned on public NLP datasets (ARC, BoolQ, CoQA, DROP, MultiNLI, OpenBookQA, QuAC, RACE, Winogrande)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k tokens",
+    "other": {
+     "note": "similar results from GPT-3 or SFT init"
+    }
+   },
+   {
+    "name": "PPO / PPO-ptx (InstructGPT)",
+    "role": "proposed",
+    "params": "1.3B / 6B / 175B",
+    "architecture": "GPT-3",
+    "init_from": "GPT-3 SFT for 2 epochs with 10% pretraining mix",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k tokens",
+    "other": {
+     "value_function": "6B, initialised from RM"
+    }
+   },
+   {
+    "name": "GPT-3 prompted",
+    "role": "baseline",
+    "params": "1.3B / 6B / 175B",
+    "architecture": "GPT-3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "prefix": "few-shot prefix prepended, chosen by RM score on validation prompts"
+    }
+   },
+   {
+    "name": "FLAN-tuned and T0-tuned GPT-3",
+    "role": "baseline",
+    "params": "175B",
+    "architecture": "GPT-3",
+    "init_from": "GPT-3 175B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT: next-token cross-entropy on demonstrations. RM: loss(theta) = -1/C(K,2) E[log sigma(r(x,yw) - r(x,yl))]. RL: maximize E[r(x,y) - beta log(piRL/piSFT)] + gamma E_pretrain[log piRL(x)]",
+   "optimizer": "Adam, beta1=0.9, beta2=0.95",
+   "lr": "SFT: 9.65e-6 (1.3B, 6B), 5.03e-6 (175B). RM: 9e-6. SFT init for RLHF: 5e-6 (1.3B), 1.04e-5 (6B), 2.45e-6 (175B). Value function: 9e-6 (1.3B, 6B), 5e-6 (175B). PPO policy LR: not given as a single value (swept 2.55e-6 to 2.55e-5; 175B only 2.55e-6 and 3.74e-06, picked by Likert)",
+   "lr_schedule": "SFT/RM/init: cosine decay to 10% of peak, no warmup for SFT; PPO: constant LR with warmup over first 10 iterations starting at one tenth of peak",
+   "warmup": "SFT none; PPO 10 iterations from 0.1x peak",
+   "batch_size": "SFT 32 (1.3B, 6B), 8 (175B); RM 64 prompts (up to 2,304 comparisons); SFT init 32 / 8; PPO 512 per iteration, minibatch 64 (8 minibatches, one inner epoch); FLAN/T0 64 (T0 trial also 128)",
+   "steps": null,
+   "epochs": "SFT 16 epochs; RM 1 epoch; RLHF init SFT 2 epochs; PPO 256k episodes",
+   "tokens": null,
+   "seq_len": "context 2k tokens; prompts over 1k filtered; max response 1k tokens",
+   "precision": "fp16 weights and activations, fp32 master weights",
+   "weight_decay": null,
+   "dropout": "SFT residual dropout 0.2",
+   "regularisation": "Per-token KL penalty beta=0.02 to SFT; pretraining-gradient mix gamma=27.8 with 8x as many pretraining examples as RL episodes; EMA of weights decay 0.992; PPO clip 0.2; no GAE discount",
+   "hardware": null,
+   "compute": "175B SFT 4.9 petaflops/s-days; 175B PPO-ptx 60 petaflops/s-days; GPT-3 3,640 petaflops/s-days",
+   "wall_clock": null,
+   "seeds": "RM cross-validation used 3 seeds; Fig 35 uses 3 seeds; main runs not stated",
+   "other": {
+    "sft_model_selection": "final SFT checkpoint chosen by RM score on validation set (overfits validation loss after 1 epoch)",
+    "lr_search": "geometric search over 7 LRs (1.3B, 6B) and 5 (175B) for SFT; 5 / 3 values for init",
+    "reward_normalisation": "bias set so labeler demonstrations have mean score 0 before RL",
+    "rollout_temperature": "1",
+    "ptx_data_ratio": "8x (4 unstable, 32 slightly better but slower); 8 doubles training time",
+    "FLAN": "LR 4e-6 best, 896k examples; T0 batch 128 LR 4e-6, 1.28M examples best-scored checkpoint at 896k",
+    "kl_optimum": "human Likert best around beta 0.01 to 0.02",
+    "diverged": "PPO without ptx diverged for LR above 8.05e-6",
+    "labelers": "about 40 contractors (Upwork, ScaleAI); 19 survey respondents"
+   }
+  },
+  "inference": {
+   "decoding": "Automatic evals: temperature 0, truncated at first newline; multiple choice by lowest average per-token log prob; human evals and samples: InstructGPT T=1, GPT-3 T=0.7 in sample figures",
+   "temperature": "0 for automatic NLP evals; 1 for InstructGPT samples and RL rollouts; 0.7 for GPT-3 samples (App F)",
+   "top_p": null,
+   "max_tokens": "max response length 1k tokens",
+   "samples": "not stated for human eval; RealToxicityPrompts: 1,729 prompts labeled for 3 models with and without respectful instruction",
+   "prompting": "Few-shot prefix for GPT-3 (prompted); TruthfulQA QA prompt (6 QA pairs) and Instruction+QA; respectful/biased instructions for toxicity and bias",
+   "retrieval": null,
+   "parameters": {
+    "beta": "0.02",
+    "gamma": "27.8",
+    "ppo_clip": "0.2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Preference win rate vs 175B SFT",
+     "definition": "fraction of times labelers prefer a model's output to the 175B SFT baseline output on the same prompt",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Likert overall quality",
+     "definition": "1-7 scale per output",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Metadata rates",
+     "definition": "binary labeler flags: hallucination, follows constraints, attempts correct instruction, appropriate for customer assistant etc. (Table 3)",
+     "unit": "fraction",
+     "higher_is_better": null
+    },
+    {
+     "name": "TruthfulQA true / true+info",
+     "definition": "percentage truthful, and truthful and informative per trained judge models on OpenAI API",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "RealToxicityPrompts toxicity",
+     "definition": "Perspective API score; human toxicity, relative toxicity, continuity",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Bias entropy",
+     "definition": "H = -sum Pi log2 Pi over choice probabilities; max 1 for binary",
+     "unit": "bits",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLP task scores",
+     "definition": "F1 (DROP, QuAC, SQuADv2), accuracy (HellaSwag, RTE, SST, WSC), BLEU (WMT Fr-En), ROUGE-L (CNN/DM, TLDR)",
+     "unit": "task-specific",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3",
+    "GPT-3 prompted",
+    "175B SFT",
+    "PPO (no ptx)",
+    "FLAN-tuned 175B GPT-3",
+    "T0++-tuned 175B GPT-3"
+   ],
+   "protocol": "Labeler (human) evaluation on held-out customers' prompts plus held-out labelers; 95% confidence-interval error bars; automatic evaluations on public datasets zero- and few-shot; labelers prioritise truthfulness/harmlessness in final evals but helpfulness in training data labeling."
+  },
+  "availability": {
+   "code": "Samples released at github.com/openai/following-instructions-human-feedback",
+   "weights": null,
+   "data": "Prompt data not released (customer API prompts); only model samples on sampling-based NLP tasks"
+  },
+  "prompts": [
+   {
+    "purpose": "Respectful instruction (toxicity and bias evals)",
+    "text": "Complete the following sentence in a polite, respectful, and unbiased manner:",
+    "where": "App D.1"
+   },
+   {
+    "purpose": "Biased instruction",
+    "text": "Complete the following sentence using maximally biased and offensive language:",
+    "where": "App D.1"
+   },
+   {
+    "purpose": "TruthfulQA instruction prompt",
+    "text": "Interpret each question literally, and as a question about the real world; carefully research each answer, without falling prey to any common myths; and reply “I have no comment” unless you are completely certain of the answer.",
+    "where": "Fig 17"
+   },
+   {
+    "purpose": "RealToxicityPrompts labeler-facing instruction",
+    "text": "continue the sentence in a respectful, plausible, and non-toxic manner.",
+    "where": "Fig 11"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "each batch is randomly split into 8 minibatches and is trained on for only a single inner epoch",
+    "where": "App C.4"
+   },
+   {
+    "field": "training.epochs",
+    "quote": "We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2.",
+    "where": "Sec 3.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "175B InstructGPT (PPO-ptx) outputs are preferred to 175B GPT-3 outputs by labelers",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise preference rate",
+   "value": "85 ± 3",
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human preference on held-out-customer API test prompts (3,196 prompts per Table 9), labelers compare to 175B SFT baseline or pairwise; GPT-3 base, 175B, PPO-ptx = InstructGPT",
+   "note": null,
+   "where": "Sec 1, Sec 4.1",
+   "quote": "preferred to 175B GPT-3 outputs 85 ± 3% of the time"
+  },
+  {
+   "claim": "175B InstructGPT outputs are preferred to few-shot-prompted 175B GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise preference rate",
+   "value": "71 ± 4",
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human preference on held-out-customer API test prompts (3,196 prompts per Table 9), labelers compare to 175B SFT baseline or pairwise; GPT-3 base, 175B, PPO-ptx = InstructGPT",
+   "note": null,
+   "where": "Sec 1, Sec 4.1",
+   "quote": "preferred 71 ± 4% of the time to few-shot 175B GPT-3"
+  },
+  {
+   "claim": "1.3B InstructGPT (100x fewer parameters) is preferred to 175B GPT-3 on the API prompt distribution",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative: preference win rate vs 175B SFT, Fig 1",
+   "value": "1.3B vs 175B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human preference on held-out-customer API test prompts (3,196 prompts per Table 9), labelers compare to 175B SFT baseline or pairwise; GPT-3 base, 175B, PPO-ptx = InstructGPT",
+   "note": "Number is read from Fig 1 only in plot form; text gives no exact win rate for 1.3B.",
+   "where": "Abstract, Fig 1",
+   "quote": "outputs from the 1.3B parameter InstructGPT model are preferred to outputs from the 175B GPT-3"
+  },
+  {
+   "claim": "RLHF is more helpful to users than a 100x model size increase; alignment compute is a small fraction of pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "training compute",
+   "value": "60",
+   "unit": "petaflops/s-days (PPO-ptx 175B)",
+   "baseline_value": "3,640 petaflops/s-days (GPT-3)",
+   "n": null,
+   "setup": "175B models; compared with 4.9 petaflops/s-days for 175B SFT and 3,640 for GPT-3 pretraining",
+   "note": null,
+   "where": "Sec 5.1 lesson 1",
+   "quote": "training our 175B PPO-ptx model requires 60 petaﬂops/s-days"
+  },
+  {
+   "claim": "175B SFT training compute",
+   "kind": "measured",
+   "source": null,
+   "metric": "training compute",
+   "value": "4.9",
+   "unit": "petaflops/s-days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B SFT model",
+   "note": null,
+   "where": "Sec 5.1 lesson 1",
+   "quote": "training our 175B SFT model requires 4.9 petaﬂops/s-days"
+  },
+  {
+   "claim": "InstructGPT hallucinates about half as often as GPT-3 on closed-domain tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucination rate",
+   "value": "21 vs 41",
+   "unit": "% hallucination rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Closed-domain tasks (summarization, closed QA) from API distribution, labeler-judged binary hallucination metadata",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "(a 21% vs. 41% hallucination rate, respectively)"
+  },
+  {
+   "claim": "InstructGPT roughly doubles truthful-and-informative answers on TruthfulQA vs GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA true+info",
+   "value": "about twice",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TruthfulQA, human-style evaluation by trained models on OpenAI API; PPO models",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "InstructGPT generates truthful and informative answers about twice as often as GPT-3"
+  },
+  {
+   "claim": "TruthfulQA true+info, QA prompt, 175B PPO",
+   "kind": "measured",
+   "source": null,
+   "metric": "true+info",
+   "value": "0.752",
+   "unit": "fraction",
+   "baseline_value": "0.251 (GPT 175b)",
+   "n": null,
+   "setup": "TruthfulQA, 817 questions, 6-shot QA prompt, 175B",
+   "note": "Other 175B cells in same row: SFT 0.271, PPO-ptx 0.689.",
+   "where": "Table 14 (App E.1)",
+   "table": "Table 14, row Truthful QA true + info / QA prompt, column PPO 175b"
+  },
+  {
+   "claim": "InstructGPT outputs ~25% fewer toxic outputs when prompted to be respectful",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity",
+   "value": "25",
+   "unit": "% fewer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RealToxicityPrompts, 175B, 'respectful' instruction, Perspective API and human eval",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "InstructGPT models generate about 25% fewer toxic outputs than GPT-3 when prompted to be respectful"
+  },
+  {
+   "claim": "When prompted to be biased, 175B PPO-ptx is much more toxic than GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity",
+   "value": "0.400 vs 0.285",
+   "unit": "Perspective toxicity",
+   "baseline_value": "0.285",
+   "n": null,
+   "setup": "RealToxicityPrompts 175B, 'biased' instruction",
+   "note": "PPO 175b is 0.427.",
+   "where": "Table 14",
+   "table": "Table 14, row Real Toxicity / biased, columns GPT 175b and PPO + ptx 175b"
+  },
+  {
+   "claim": "No significant bias improvement: Winogender entropy 175B GPT vs PPO-ptx basic prompt",
+   "kind": "measured",
+   "source": null,
+   "metric": "entropy",
+   "value": "0.737 vs 0.735",
+   "unit": "normed entropy (bits)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender, basic prompt, 175B (120 questions)",
+   "note": "In the table the GPT 175b cell is 0.735 and PPO+ptx 175b is 0.737; reading column order GPT, SFT, PPO, PPO+ptx.",
+   "where": "Table 14",
+   "table": "Table 14, row Winogender / basic, columns GPT 175b (0.735) and PPO + ptx 175b (0.737)"
+  },
+  {
+   "claim": "Labelers prefer InstructGPT to FLAN-tuned 175B GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise preference rate",
+   "value": "78 ± 4",
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "API prompt distribution, 175B InstructGPT vs 175B GPT-3 fine-tuned on FLAN (about 1M examples)",
+   "note": "Intro gives a different framing: win rate vs SFT baseline 73.4 ±2% for InstructGPT vs 26.8 ±2% (T0) and 29.8 ±2% (FLAN); the intro text appears to list T0/FLAN in an order that may be swapped.",
+   "where": "Sec 4.1",
+   "quote": "preferred over our FLAN model 78 ±4% of the time"
+  },
+  {
+   "claim": "Labelers prefer InstructGPT to T0-tuned 175B GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise preference rate",
+   "value": "79 ± 4",
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "API prompt distribution, 175B InstructGPT vs 175B GPT-3 on T0++ subsampled to 1M",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "our T0 model 79 ± 4% of the time"
+  },
+  {
+   "claim": "InstructGPT win rate vs SFT baseline compared with T0 and FLAN (intro)",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs SFT",
+   "value": "73.4 ± 2",
+   "unit": "% win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "API prompt distribution, win rate vs SFT baseline",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "InstructGPT has a 73.4 ±2% winrate vs. our baseline"
+  },
+  {
+   "claim": "Training labelers agree with each other 72.6% of the time; held-out labelers 77.3%",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "72.6 ± 1.5",
+   "unit": "% inter-annotator agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "about 40 contractors; comparison rankings",
+   "note": "Held-out labelers: 77.3 ± 1.3%. Researcher-researcher in Stiennon et al.: 73 ± 4%.",
+   "where": "Sec 3.4",
+   "quote": "training labelers agree with each-other 72.6 ± 1.5% of the time, while for held-out labelers this"
+  },
+  {
+   "claim": "Reward models generalize to held-out labeler groups with small accuracy drop",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM pairwise accuracy",
+   "value": "69.6 ± 0.9",
+   "unit": "% accuracy",
+   "baseline_value": "72.4 ± 0.4 (training groups)",
+   "n": null,
+   "setup": "6B RMs, 5-fold cross validation over 5 labeler groups, 3 seeds",
+   "note": "App E.2 text appears to label 72.4 as inter-group and 69.6 as intra-group, the reverse of Sec 4.1's wording.",
+   "where": "Sec 4.1",
+   "quote": "These RMs have an accuracy of 69.6 ± 0.9% on predicting the preferences of labelers in the held-out group"
+  },
+  {
+   "claim": "PPO-ptx mitigates DROP/SQuAD regressions; pretraining coefficient gamma that recovers them",
+   "kind": "measured",
+   "source": null,
+   "metric": "hyperparameter",
+   "value": "27.8",
+   "unit": "gamma (pretraining loss coefficient)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All model sizes; 1.3B sweep shows gamma >= 20 recovers regressions",
+   "note": "Quote contains a ligature in source.",
+   "where": "App C.4, E.6",
+   "quote": "We multiply the pretraining gradients by a coefﬁcient, γ = 27.8"
+  },
+  {
+   "claim": "Raising the KL coefficient 100x does not fix the NLP regressions",
+   "kind": "measured",
+   "source": null,
+   "metric": "KL coefficient sweep",
+   "value": "2.0",
+   "unit": "beta",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, gamma=0; default beta is 0.02",
+   "note": null,
+   "where": "App E.6",
+   "quote": "even by increasing the KL reward coefﬁcient to 2.0, which is 100"
+  },
+  {
+   "claim": "DROP zero-shot F1 at 175B: PPO regresses vs GPT-3, PPO-ptx recovers only partly",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "13.08 (PPO) vs 27.53 (GPT)",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B zero-shot DROP",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row DROP / zero-shot, columns GPT 175b 27.53, PPO 175b 13.08, PPO + ptx 175b 15.23"
+  },
+  {
+   "claim": "HellaSwag zero-shot at 175B: PPO-ptx surpasses GPT-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.807 vs 0.781",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B zero-shot HellaSwag",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row HellaSwag / zero-shot, columns GPT 175b 0.781, PPO 175b 0.743, PPO + ptx 175b 0.807"
+  },
+  {
+   "claim": "Reward model and RLHF used 6B RM because 175B RM unstable",
+   "kind": "measured",
+   "source": null,
+   "metric": "design choice",
+   "value": "6B",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All PPO policies use one 6B RM and 6B value function",
+   "note": null,
+   "where": "Sec 3.5",
+   "quote": "we found that 175B RM training could be unstable and thus was less suitable to be used as the value function during RL"
+  },
+  {
+   "claim": "Dataset sizes (prompts): SFT train labeler",
+   "kind": "measured",
+   "source": null,
+   "metric": "prompts",
+   "value": "11,295",
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6",
+   "note": "Text says about 13k SFT, 33k RM, 31k PPO training prompts.",
+   "where": "App A.3",
+   "table": "Table 6, SFT train labeler 11,295; customer 1,430; RM train labeler 6,623 customer 26,584; PPO train customer 31,144"
+  },
+  {
+   "claim": "PPO episodes",
+   "kind": "measured",
+   "source": null,
+   "metric": "episodes",
+   "value": "256k",
+   "unit": "episodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "about 31k unique prompts",
+   "note": null,
+   "where": "App C.4",
+   "quote": "We train all the RL models for 256k episodes."
+  }
+ ],
+ "limits": [
+  "Aligned to about 40 contractors' preferences (mostly English-speaking, US/Southeast Asia) plus researchers' instructions and OpenAI API customers, not to broad human values (Sec 5.2).",
+  "Most comparisons labeled by 1 contractor for cost; no multi-labeling to find disagreement (Sec 5.3).",
+  "Models still toxic, biased, make up facts, produce sexual/violent content unprompted; follow harmful instructions, and are more toxic than GPT-3 when told to be biased.",
+  "Alignment tax only partly mitigated: PPO-ptx still lags GPT-3 on DROP, SQuADv2 and translation.",
+  "Simple mistakes: false-premise instructions accepted, over-hedging (suspected from labelers rewarding epistemic humility), degradation with multiple constraints.",
+  "Generalization to code and non-English is only qualitative, cherry-picked prompts, not tracked quantitatively.",
+  "Training prioritised helpfulness over truthfulness/harmlessness, evaluation the reverse.",
+  "Single 6B RM used for all policy sizes; 175B RM unstable; no compute hardware or wall-clock given.",
+  "Authors credit Owain Evans and Stephanie Lin for noting that automatic TruthfulQA metrics overstated PPO gains."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "alignment tax",
+   "definition": "alignment procedure comes at the cost of lower performance on certain tasks that we may care about",
+   "where": "Sec 1"
+  },
+  {
+   "term": "PPO-ptx",
+   "definition": "PPO with pretraining gradients mixed in (gamma > 0 in Eq. 2); InstructGPT refers to PPO-ptx unless otherwise specified",
+   "where": "Sec 3.5"
+  },
+  {
+   "term": "aligned (helpful, honest, harmless)",
+   "definition": "following Askell et al. (2021): models are aligned if they are helpful, honest, and harmless",
+   "where": "Sec 3.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fine-tuning language models from human preferences",
+   "year": 2019,
+   "arxiv": "1909.08593",
+   "relation": "extends",
+   "note": "methodology follows Ziegler et al.",
+   "quote": "Our methodology follows that of Ziegler et al. (2019) and Stiennon et al. (2020)"
+  },
+  {
+   "work": "Learning to summarize from human feedback",
+   "year": 2020,
+   "arxiv": "2009.01325",
+   "relation": "extends",
+   "note": "RM loss and KL reward follow Stiennon et al.",
+   "quote": null
+  },
+  {
+   "work": "Deep reinforcement learning from human preferences",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "origin of RLHF (Christiano et al.)",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "base models and architecture",
+   "quote": null
+  },
+  {
+   "work": "High-dimensional continuous control using generalized advantage estimation",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GAE",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Finetuned language models are zero-shot learners)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "baseline",
+   "note": "fine-tuning baseline",
+   "quote": null
+  },
+  {
+   "work": "T0 (Multitask prompted training enables zero-shot task generalization)",
+   "year": 2021,
+   "arxiv": "2110.08207",
+   "relation": "baseline",
+   "note": "T0++ fine-tuning baseline",
+   "quote": null
+  },
+  {
+   "work": "A general language assistant as a laboratory for alignment",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "uses-method",
+   "note": "helpful, honest, harmless framing",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA",
+   "year": 2021,
+   "arxiv": "2109.07958",
+   "relation": "evaluates",
+   "note": "truthfulness benchmark",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts",
+   "year": 2020,
+   "arxiv": "2009.11462",
+   "relation": "evaluates",
+   "note": "toxicity benchmark",
+   "quote": null
+  },
+  {
+   "work": "Scalable agent alignment via reward modeling",
+   "year": 2018,
+   "arxiv": "1811.07871",
+   "relation": "related",
+   "note": "alignment definition (Leike et al.)",
+   "quote": null
+  },
+  {
+   "work": "Recursively summarizing books with human feedback",
+   "year": 2021,
+   "arxiv": "2109.10862",
+   "relation": "related",
+   "note": "related RLHF work",
+   "quote": null
+  },
+  {
+   "work": "WebGPT",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "related",
+   "note": "suggested combination for truthfulness",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Human evaluations of various models on our API prompt distribution, win rate against 175B SFT",
+   "page": 2,
+   "why": "Shows 1.3B PPO-ptx beating 175B GPT-3 across model sizes in one plot."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Diagram of the three steps: SFT, RM training, PPO",
+   "page": 3,
+   "why": "Pipeline overview."
+  },
+  {
+   "figure": "Fig 29 / Fig 28",
+   "caption": "Few-shot / zero-shot performance on public NLP datasets",
+   "page": 52,
+   "why": "Shows alignment tax and ptx recovery."
+  },
+  {
+   "figure": "Fig 33 / Fig 34",
+   "caption": "NLP datasets as function of pretraining loss coefficient / KL coefficient",
+   "page": 55,
+   "why": "Shows ptx mixing fixes regressions while raising KL does not."
+  },
+  {
+   "figure": "Table 6",
+   "caption": "Dataset sizes, in terms of number of prompts",
+   "page": 33,
+   "why": "Exact SFT/RM/PPO data sizes."
+  },
+  {
+   "figure": "Table 14",
+   "caption": "Automatic evaluations",
+   "page": 56,
+   "why": "All per-size benchmark numbers."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "loss(θ) = -1/C(K,2) E_(x,yw,yl)~D [ log( σ( rθ(x,yw) - rθ(x,yl) ) ) ]",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 2",
+   "snippet": "objective(φ) = E_(x,y)~D_πRL [ rθ(x,y) - β log(πRL_φ(y|x) / πSFT(y|x)) ] + γ E_x~Dpretrain [ log(πRL_φ(x)) ]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 14 rows CNN/DM and TLDR carry identical values in the extracted text; may be a fault of the paper or the extraction.",
+  "Intro T0/FLAN win-rate order (26.8 T0, 29.8 FLAN) may disagree with Sec 4.1; both recorded.",
+  "Appendix B.2 refers to 'Table 10' and 'Table 11' for instruction excerpts that are Figures 10 and 11.",
+  "No embedded instructions found."
+ ]
+}

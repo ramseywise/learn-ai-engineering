@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "1801.03924",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zhang-2018-unreasonable-effectiveness-deep-features-as.pdf",
+ "bib": {
+  "title": "The Unreasonable Effectiveness of Deep Features as a Perceptual Metric",
+  "authors": [
+   "Richard Zhang",
+   "Phillip Isola",
+   "Alexei A. Efros",
+   "Eli Shechtman",
+   "Oliver Wang"
+  ],
+  "first_author": "Zhang",
+  "year": 2018,
+  "venue": "CVPR 2018 (arXiv v2 camera ready)",
+  "arxiv": "1801.03924",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 58598,
+  "chars_total": 58598,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "benchmark",
+ "question": "How well do deep network features (supervised, self-supervised, unsupervised, random) agree with human perceptual similarity judgments compared with classic metrics such as L2, SSIM and FSIM?",
+ "hypothesis": "Perceptual similarity is an emergent property shared across deep visual representations, not a special function of its own.",
+ "contributions": [
+  "A large-scale, highly varied perceptual similarity dataset with 484k human judgments, including real algorithm outputs and JND tests",
+  "Deep features from supervised, self-supervised and unsupervised objectives model low-level perceptual similarity well, outperforming widely used metrics",
+  "Network architecture alone does not account for performance: untrained nets do much worse",
+  "Performance can be improved by calibrating feature responses of a pretrained network with the data"
+ ],
+ "method": {
+  "summary": "The authors collect BAPPS, 64x64 patch triplets with 2AFC human judgments and a JND test, and score distances from deep features (unit-normalised per-channel, squared l2, spatial mean, summed over layers) by agreement with humans. They also learn per-channel weights (lin), fine-tune (tune) or train from scratch (scratch) with a small judgment-prediction net, giving LPIPS.",
+  "task": "perceptual image patch similarity (2AFC agreement with humans)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BAPPS 2AFC-Distort train",
+    "role": "train",
+    "size": "151.4k patch triplets (Table 3); 300k judgments",
+    "split": "MIT-Adobe 5k patches; 2 judgments per example",
+    "source": "MIT-Adobe 5k [7]; Amazon Mechanical Turk",
+    "preprocessing": "64x64 patches, two distortions applied per reference (traditional: 20 distortions + 308 composed; CNN-based: 96 denoising autoencoders trained 1 epoch on 1.3M ImageNet)"
+   },
+   {
+    "name": "BAPPS 2AFC-Distort val",
+    "role": "eval",
+    "size": "9.4k",
+    "split": "RAISE1k patches; 5 judgments each (traditional 4.7k, CNN-based 4.7k)",
+    "source": "RAISE1k [10]",
+    "preprocessing": null
+   },
+   {
+    "name": "BAPPS 2AFC-Real Alg val",
+    "role": "eval",
+    "size": "26.9k",
+    "split": "superres 10.9k, frame interp, video deblur, colorization; 5 judgments each",
+    "source": "NTIRE 2017/Div2K, Davis Middlebury, video deblurring dataset, ImageNet",
+    "preprocessing": "random scales for frame interp and colorization"
+   },
+   {
+    "name": "BAPPS JND-Distort val",
+    "role": "eval",
+    "size": "9.6k (4.8k traditional + 4.8k CNN-based)",
+    "split": "3 observations each; same/not same",
+    "source": "RAISE1k",
+    "preprocessing": "patches shown 1 s each with 250 ms gap"
+   }
+  ],
+  "models": [
+   {
+    "name": "AlexNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "conv1-conv5 features",
+    "init_from": "ImageNet classification",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 5,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "conv_size": "9.1 MB (conv only)",
+     "channels": "conv1-5 have 64, 192, 384, 256, and 256 channels (1152 total)"
+    }
+   },
+   {
+    "name": "VGG",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "5 conv layers used",
+    "init_from": "ImageNet classification",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 5,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "conv_size": "58.9 MB (conv only)",
+     "lin_params": "1472"
+    }
+   },
+   {
+    "name": "SqueezeNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "first conv + fire modules",
+    "init_from": "ImageNet classification",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "conv_size": "2.8 MB"
+    }
+   },
+   {
+    "name": "Self-supervised/unsupervised AlexNet variants (BiGAN, Puzzle, Split-Brain, Watching, k-means) and random Gaussian net",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "AlexNet variants",
+    "init_from": "public weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LPIPS (lin/tune/scratch) over Squeeze/Alex/VGG",
+    "role": "proposed",
+    "params": null,
+    "architecture": "backbone plus channel weights w and a small net G (two 32-channel FC-ReLU, 1-channel FC, sigmoid)",
+    "init_from": "lin: pretrained frozen; tune: pretrained, all weights trained; scratch: random Gaussian",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "binary cross-entropy of G(d(x,x0),d(x,x1)) against human preference h (Eq 2); ranking loss tried in preliminary experiments and was worse",
+   "optimizer": null,
+   "lr": "1e-4 for 5 epochs, then linear decay over 5 epochs",
+   "lr_schedule": "5 epochs at initial lr, 5 epochs linear decay",
+   "warmup": null,
+   "batch_size": "50",
+   "steps": null,
+   "epochs": "5 + 5 (linear decay)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "channel weights w constrained non-negative by projection every iteration; split judgments give soft target 0.5",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "inferred": "inferred: training uses 64x64 patch triplets from the 2AFC-Distort train set"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 human judgments per val triplet; 2 per train triplet; single run reported, no seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "distance": "d(x,x0)=sum_l 1/(HlWl) sum_hw ||wl*(yhat_l - yhat0_l)||_2^2 on channel-unit-normalised features",
+    "w": "1 for off-the-shelf nets (cosine distance)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "2AFC score",
+     "definition": "agreement with all human judgments per triplet (e.g. 4 of 5 votes for x0 gives 80% credit); human score p^2+(1-p)^2",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "JND mAP",
+     "definition": "patch pairs ordered by metric, precision-recall AUC for same/different",
+     "unit": "mAP %",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman correlation on TID2013",
+     "definition": "rank correlation with MOS at resolutions 128-512",
+     "unit": "coefficient",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "L2/PSNR",
+    "SSIM",
+    "FSIMc",
+    "HDR-VDP",
+    "Human"
+   ],
+   "protocol": "Mechanical Turk, sentinels (approx. 90% of Turkers passed at least 14 of 15). Per-subset and All scores in Table 5. No significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "https://www.github.com/richzhang/PerceptualSimilarity",
+   "weights": "same URL",
+   "data": "same URL (BAPPS)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We train with 5 epochs at initial learning rate 10−4, 5 epochs with linear decay, and batch size 50.",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Humans are 73.9% consistent on the 2AFC task averaged over all 6 test sets (the ceiling).",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score (human)",
+   "value": "73.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BAPPS validation sets (traditional, CNN-based, 4 real-algorithm sets), 5 judgments per triplet; human score = expected agreement p^2+(1-p)^2",
+   "quote": "Averaged across all 6 test sets, humans are 73.9% consistent.",
+   "table": "Table 5, row Human, column All",
+   "note": "Per-subset: 82.6 distortions, 69.5 real algorithms.",
+   "where": "Sec 4.1; Table 5"
+  },
+  {
+   "claim": "Out-of-the-box supervised nets (SqueezeNet, AlexNet, VGG) score 68.6, 68.9 and 67.0 on 2AFC across all six sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score",
+   "value": "67.0-68.9",
+   "unit": "%",
+   "baseline_value": "63.1-63.8 (L2/SSIM/FSIMc)",
+   "n": null,
+   "setup": "ImageNet-supervised nets, mean of 5 conv layers' unit-normalised features, cosine distance (w=1), no calibration; all 6 test sets",
+   "quote": "the supervised networks perform at about the same level to each other, at 68.6%, 68.9%, and 67.0%",
+   "table": "Table 5, rows SqueezeNet/AlexNet/VGG, column All",
+   "note": "Text order is Squeeze, Alex, VGG.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "L2, SSIM and FSIMc score 63.2, 63.1 and 63.8 on 2AFC across all six sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score",
+   "value": "63.1-63.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same test sets; low-level metrics",
+   "quote": "63.2%, 63.1%, 63.8%, respectively",
+   "table": "Table 5, rows L2, SSIM, FSIMc, column All",
+   "note": "HDR-VDP is 61.4 in Table 5.",
+   "where": "Sec 4.1; Table 5"
+  },
+  {
+   "claim": "Learned (LPIPS) variants reach 69.2-70.2 on all six sets, only about 1-2 points above uncalibrated supervised nets and still below the human 73.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score",
+   "value": "70.2",
+   "unit": "%",
+   "baseline_value": "73.9 (human)",
+   "n": null,
+   "setup": "Best LPIPS row, Alex-scratch; trained on traditional+CNN distortions of BAPPS, evaluated on all 6 sets",
+   "quote": null,
+   "table": "Table 5, row Alex – scratch, column All (second All)",
+   "note": "Squeeze-lin 70.0, VGG-scratch 70.0, Alex-lin 69.8, VGG-tune 69.8, VGG-lin 69.2. These LPIPS rows have an advantage on the in-distribution distortion columns.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "On real algorithm outputs, off-the-shelf nets start at 64.0, 65.0 and 62.6; linear calibration improved 11 of 12 scores (+1.1, +0.3, +1.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score, real algorithms",
+   "value": "64.0, 65.0, 62.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "Squeeze/Alex/VGG on superres, frame interp, deblur, colorization",
+   "quote": "The SqueezeNet, AlexNet, and VGG architectures start at 64.0%, 65.0%, and 62.6%, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Fine-tuning all weights from a pretrained net improves distortion-set accuracy (VGG-tune 81.4, near human 82.6) but lowers transfer to real algorithms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score, distortions",
+   "value": "81.4",
+   "unit": "%",
+   "baseline_value": "82.6 (human)",
+   "n": null,
+   "setup": "VGG-tune on BAPPS traditional+CNN val sets",
+   "quote": "(80.6% and 81.4% for Alex – tune and VGG – tune, respectively), is almost equal to human performance of 82.6%",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "2AFC and JND scores correlate at rho 0.928 across methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Correlation of 2AFC vs JND",
+   "value": "0.928",
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet-like architectures, averaged over traditional and CNN-based distortions; JND scored as mAP",
+   "quote": "ρ = .928 when",
+   "table": "Table 4",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "2AFC perceptual score correlates .640 with PASCAL classification and .363 with detection across methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Correlation",
+   "value": "0.640 / 0.363",
+   "unit": "correlation",
+   "baseline_value": "0.429 (classification vs detection)",
+   "n": null,
+   "setup": "AlexNet-like architectures; PASCAL results from Zhang et al. 2017",
+   "quote": "is .640 and .363, respectively",
+   "table": "Table 4",
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Random Gaussian-weight network gets 64.3 overall, only 1.2 above L2-ish baselines; unsupervised k-means gets 66.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score",
+   "value": "64.3",
+   "unit": "%",
+   "baseline_value": "66.6 (k-means)",
+   "n": null,
+   "setup": "Table 5 All column",
+   "quote": null,
+   "table": "Table 5, row Net (Random) Gaussian, column All",
+   "note": "Text says random nets 'do not yield much improvement'.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "On traditional distortions FSIMc gets 61.4 and L2 59.9 while classification nets get 73.3, 70.6, 70.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2AFC score, traditional",
+   "value": "73.3, 70.6, 70.1",
+   "unit": "%",
+   "baseline_value": "61.4 (FSIMc)",
+   "n": null,
+   "setup": "BAPPS traditional distortions, Squeeze/Alex/VGG out of box",
+   "quote": null,
+   "table": "Table 5, column Traditional",
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "Linear calibration learns only 1472 parameters for VGG; for Alex-lin about half of the 1152 weights are zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": "learned parameters",
+   "value": "1472",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VGG lin config",
+   "quote": "1472 parameters are learned",
+   "table": null,
+   "note": "Alex: 79.7/71.4/56.8/46.5/27.7% zero in conv1-5.",
+   "where": "Sec 3; Appendix A"
+  }
+ ],
+ "limits": [
+  "Judgments are on 64x64 patches, low-level similarity only; high-level semantic similarity not covered.",
+  "2AFC is cognitively penetrable; JND used as a check.",
+  "Humans collected in the wild on AMT, only 2 judgments per train triplet.",
+  "LPIPS gains over uncalibrated nets are small on real algorithms (+0.3 to +1.5) and fine-tuning hurts transfer.",
+  "SSIM not designed for geometric distortions, which the dataset includes, which may inflate the deep-vs-classic gap.",
+  "Directly fitting a function to human judgments failed to generalize (negative result)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "2AFC",
+   "definition": "two alternative forced choice: which of two distortions is closer to a reference",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "JND",
+   "definition": "just noticeable difference: whether a reference and a distorted patch look the same or different",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "LPIPS",
+   "definition": "Learned Perceptual Image Patch Similarity: deep-feature distance with learned channel weights",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "VGG",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Simonyan and Zisserman",
+   "quote": null
+  },
+  {
+   "work": "AlexNet",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Krizhevsky et al.",
+   "quote": null
+  },
+  {
+   "work": "SqueezeNet",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Iandola et al.",
+   "quote": null
+  },
+  {
+   "work": "SSIM",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wang et al.",
+   "quote": null
+  },
+  {
+   "work": "FSIM",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zhang et al.",
+   "quote": null
+  },
+  {
+   "work": "Perceptual losses (Johnson et al.; Gatys style transfer)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "asks how perceptual VGG-feature losses are",
+   "quote": null
+  },
+  {
+   "work": "TID2013",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Ponomarenko et al.; Appendix C",
+   "quote": null
+  },
+  {
+   "work": "MIT-Adobe 5k; RAISE1k; Div2K",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source images",
+   "quote": null
+  },
+  {
+   "work": "Split-brain autoencoders",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "authors' own self-supervised net",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Computing distance from a network",
+   "page": 6,
+   "why": "shows normalise, scale by w, l2, average pipeline and the judgment-predicting net G"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Quantitative comparison across metrics",
+   "page": 6,
+   "why": "bar chart of 2AFC scores for all metric families"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Correlating perceptual tests (2AFC vs JND)",
+   "page": 7,
+   "why": "shows the two tests agree"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "d(x, x0) = sum_l 1/(Hl Wl) sum_{h,w} ||wl ⊙ (yhat_l_hw − yhat0_l_hw)||_2^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Unattended run; no instructions found in PDF.",
+  "Fig 4 values are read in Table 5, not read from the figure.",
+  "Frame Interp, Video Deblur, Colorization counts in Table 3 print as 1.9, 9.4, 4.7 (missing k) in text; likely extraction/print fault.",
+  "Text says 'Table 5' for the task correlation but it is Table 4; Sec 4.1 refers to Figure 11 for the traditional-distortion comparison which is Figure 6."
+ ]
+}

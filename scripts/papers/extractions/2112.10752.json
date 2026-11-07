@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "2112.10752",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rombach-2021-high-resolution-image-synthesis-latent.pdf",
+ "bib": {
+  "title": "High-Resolution Image Synthesis with Latent Diffusion Models",
+  "authors": [
+   "Robin Rombach",
+   "Andreas Blattmann",
+   "Dominik Lorenz",
+   "Patrick Esser",
+   "Björn Ommer"
+  ],
+  "first_author": "Rombach",
+  "year": 2022,
+  "venue": "preprint (arXiv v2, 13 Apr 2022; CVPR 2022 version)",
+  "arxiv": "2112.10752",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 100765,
+  "chars_total": 100765,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can diffusion models be trained and sampled at far lower compute, while keeping quality, by running them in the latent space of a pretrained perceptual autoencoder?",
+ "hypothesis": "Splitting perceptual compression (autoencoder) from semantic generation (diffusion) with only mild downsampling (f=4-8) reaches a near-optimal complexity/detail trade-off.",
+ "contributions": [
+  "Scales better to high-dimensional data than transformer-based two-stage approaches; mild compression gives more faithful reconstructions and megapixel synthesis",
+  "Competitive results on unconditional synthesis, inpainting, stochastic super-resolution at much lower compute, including lower inference cost",
+  "No delicate weighting of reconstruction vs generative loss (unlike LSGM); little latent regularization",
+  "Convolutional application to densely conditioned tasks, ~1024^2 px images",
+  "General cross-attention conditioning for class, text and layout-to-image",
+  "Release of pretrained latent diffusion and autoencoding models"
+ ],
+ "method": {
+  "summary": "Stage 1 trains an adversarial+perceptual autoencoder (KL- or VQ-regularized, downsampling f) once. Stage 2 trains a time-conditional UNet diffusion model with epsilon-prediction loss in the latent space, with domain encoders tau_theta feeding cross-attention (or channel concatenation for spatial conditions).",
+  "task": "image synthesis (unconditional, class/text/layout/semantic-map conditional, super-resolution, inpainting)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CelebA-HQ / FFHQ / LSUN-Churches / LSUN-Bedrooms",
+    "role": "both",
+    "size": null,
+    "split": "256x256; FID against entire training set",
+    "source": "cited datasets",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": "class-conditional 256x256; SR follows SR3 pipeline (images with shorter side <256 removed), eval on validation split",
+    "source": "Deng et al. 2009",
+    "preprocessing": "SR low-res via bicubic interpolation with anti-aliasing"
+   },
+   {
+    "name": "LAION-400M",
+    "role": "train",
+    "size": "400M",
+    "split": null,
+    "source": "Schuhmann/LAION [78]",
+    "preprocessing": "BERT tokenizer, 77 tokens"
+   },
+   {
+    "name": "MS-COCO",
+    "role": "eval",
+    "size": "30000 val samples for FID/IS (text-to-image); 2048 unaugmented COCO-Stuff challenge-split examples for layout FID",
+    "split": "validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "OpenImages",
+    "role": "train",
+    "size": null,
+    "split": "autoencoder zoo trained here; layout-to-image trained here then finetuned on COCO; layout eval 2048 center-cropped val images",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Places",
+    "role": "both",
+    "size": "2k validation, 30k test",
+    "split": "train on random 256x256 crops, test on 512x512 crops",
+    "source": "Zhou et al. 2018",
+    "preprocessing": "synthetic masks from LaMa code"
+   },
+   {
+    "name": "Flickr-Landscapes with semantic maps",
+    "role": "train",
+    "size": null,
+    "split": "256x256 crops from 384x384",
+    "source": "[23]",
+    "preprocessing": "downsampled semantic maps concatenated with latent"
+   }
+  ],
+  "models": [
+   {
+    "name": "Autoencoder (KL or VQ-reg), e.g. f=4 |Z|=8192 c=3",
+    "role": "proposed",
+    "params": "55M (VQGAN-f-4 first stage), 68M (f-8), per Table 18",
+    "architecture": "convolutional encoder/decoder, patch-based discriminator; VQ layer absorbed into decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "|Z| codebook 64 to 16384",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "latent_reg": "KL weight ~1e-6 or codebook",
+     "downsampling_factors": "f in {1,2,4,8,16,32}"
+    }
+   },
+   {
+    "name": "LDM UNet (ablated UNet from ADM, self-attn replaced by transformer blocks with cross-attn)",
+    "role": "proposed",
+    "params": "169M to 1.45B (Table 15): text-to-image 1.45B, class ImageNet LDM-4 395M, LDM-4 inpainting 215M, SR 169M, uncond LSUN/FFHQ/CelebA 274M",
+    "architecture": "time-conditional UNet, 1000 diffusion steps, linear noise schedule",
+    "init_from": "trained from scratch on frozen first-stage latents",
+    "tokenizer": "BERT tokenizer (text)",
+    "vocab": null,
+    "layers": "Depth 2 (UNet); text transformer tau_theta depth N=32",
+    "hidden": "tau_theta dim 1280 (text)",
+    "heads": "8 (text-to-image), head channels 32 elsewhere",
+    "context": "77 tokens (text), 92 (layout)",
+    "other": {
+     "layout_tau": "depth 16, dim 512, seq 92",
+     "class_tau": "single learnable embedding, dim 512",
+     "text_to_image_z_shape": "32x32x4 (f=8)"
+    }
+   },
+   {
+    "name": "Baselines: ADM/ADM-G, SR3, LaMa, StyleGAN2, ProjectedGAN, BigGAN-deep, GLIDE, Make-A-Scene, CogView, VQGAN+T",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_LDM = E[||eps - eps_theta(z_t,t,tau_theta(y))||^2] (Eq 3); autoencoder: reconstruction (perceptual) + adversarial + small KL/VQ reg (Eq 25)",
+   "optimizer": null,
+   "lr": "per model, 1e-6 to 1.3e-4 (Tables 12-15); text-to-image 1.0e-4, ImageNet LDM-4 1.0e-4, inpainting 1.0e-6 (as printed)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "per model: text-to-image 680, class ImageNet LDM-4 1200, LDM-8 64, SR 64, inpainting 128, layout COCO 48, landscapes 48 (Table 15)",
+   "steps": "text-to-image 390K; class LDM-4 178K; LDM-8 2.9M-4.8M; SR 860K; inpainting 360K; analysis runs 2M (ImageNet) / 500k (CelebA); CelebA-HQ 410k, FFHQ 635k, Churches 500k, Bedrooms 1.9M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "77 text tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 for the layout-to-image COCO row only",
+   "regularisation": "autoencoder KL weight ~1e-6 or VQ codebook; latent rescaled by component-wise std from first batch for KL spaces",
+   "hardware": "single NVIDIA A100 for all models except inpainting (eight V100)",
+   "compute": "Table 18, in V100-days (A100 days x2.2): LDM-4-G ImageNet 271; LDM-8-G 91 overall; LSUN-Bedrooms LDM-4 60; CelebA-HQ 14.4; FFHQ 26; LSUN-Churches LDM-8 18",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "learning_rates_maximised": "learning rates were maximised per model while still stable, so they vary between runs",
+    "best_checkpoint": "CelebA analysis: best checkpoint used if converged before 500k"
+   }
+  },
+  "inference": {
+   "decoding": "DDIM sampler, 10-500 steps depending on experiment; classifier-free guidance for ImageNet and text-to-image",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50k samples for FID/Precision/Recall (Tables 1, 10); 30000 for COCO text-to-image; 5k for efficiency plots (Fig 6, 7, 17)",
+   "prompting": "text prompt via BERT tokenizer into transformer tau_theta, cross-attention",
+   "retrieval": null,
+   "parameters": {
+    "text_to_image_figs": "200 DDIM steps, eta=1.0, cfg s=10.0 (Fig 5)",
+    "table2": "250 DDIM steps; guided s=1.5",
+    "imagenet_table3": "250 DDIM steps, cfg s=1.5 (also 1.25 in Table 10)",
+    "fig6": "100 DDIM steps, kappa=0",
+    "convolutional_sampling": "model trained at 256^2 applied convolutionally to 512^2-1024^2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet inception distance via torch-fidelity, cross-checked with Dhariwal & Nichol script (7.76 vs 7.77 on ImageNet; 2.95 vs 3.0 on Bedrooms)",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "R-FID",
+     "definition": "reconstruction FID of autoencoder vs ImageNet-val",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception Score",
+     "definition": "IS via torch-fidelity",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall",
+     "definition": "Kynkaanniemi et al. via Dhariwal & Nichol script",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "PSNR / SSIM / LPIPS(PSIM)",
+     "definition": "pixel/perceptual fidelity",
+     "unit": "dB / 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "User preference",
+     "definition": "2-alternative forced choice, 3 s viewing",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ADM / ADM-G",
+    "BigGAN-deep",
+    "StyleGAN / StyleGAN2",
+    "ProjectedGAN",
+    "SR3",
+    "LaMa",
+    "GLIDE",
+    "Make-A-Scene",
+    "CogView",
+    "LAFITE",
+    "VQGAN+T",
+    "LSGM",
+    "pixel-space LDM-1"
+   ],
+   "protocol": "Single runs; no seeds or confidence intervals reported except +/- on IS and per-image std for PSNR/SSIM/LPIPS. FID on 50k samples for headline tables, 5k for efficiency plots."
+  },
+  "availability": {
+   "code": "https://github.com/CompVis/latent-diffusion",
+   "weights": "pretrained latent diffusion and autoencoding models released at same URL",
+   "data": "public datasets only"
+  },
+  "prompts": [
+   {
+    "purpose": "user study question, super-resolution",
+    "text": "Which of the two images is a better high quality version of the low resolution image in the middle?",
+    "where": "App E.3.6"
+   },
+   {
+    "purpose": "user study question, inpainting",
+    "text": "Which of the two images contains more realistic inpainted regions of the image in the middle?",
+    "where": "App E.3.6"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "All models trained on a single NVIDIA A100 except for the inpainting model which was trained on eight V100.",
+    "where": "Table 15 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Class-conditional ImageNet LDM-4 with classifier-free guidance reaches FID 3.60 at 400M parameters, beating ADM-G (4.59, 608M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "3.60",
+   "unit": "FID",
+   "baseline_value": "4.59 (ADM-G)",
+   "n": "50k samples",
+   "setup": "ImageNet 256x256 class-conditional, LDM-4-G, 250 DDIM steps, cfg scale 1.5, 178K train steps, batch 1200",
+   "table": "Table 3, row LDM-4-G (ours), column FID",
+   "quote": null,
+   "note": "Table 10 also lists 3.95 at cfg scale 1.25.",
+   "where": "Table 3 / Table 10"
+  },
+  {
+   "claim": "LDM-8 beats pixel-based LDM-1 by an FID gap of 38 after 2M training steps on class-conditional ImageNet under equal compute.",
+   "kind": "measured",
+   "metric": "FID gap",
+   "value": "38",
+   "unit": "FID points",
+   "setup": "Class-conditional ImageNet, single A100, same steps and parameter count, 100 DDIM steps, FID on 5k samples",
+   "quote": "niﬁcant FID [29] gap of 38 between pixel-based diffusion",
+   "note": "Source text has a ligature: 'significant FID [29] gap of 38 between pixel-based diffusion (LDM-1) and LDM-8 after 2M training steps'.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Unconditional CelebA-HQ 256x256 LDM-4 sets FID 5.11 (500 DDIM steps), reported as new state of the art over likelihood-based models and GANs.",
+   "kind": "measured",
+   "metric": "FID",
+   "value": "5.11",
+   "unit": "FID",
+   "setup": "CelebA-HQ 256x256, LDM-4, 500 DDIM steps, 50k samples",
+   "quote": "On CelebA-HQ, we report a new state-of-the-art FID of 5.11",
+   "note": "Table 1 lists ProjectedGAN 3.08 for FFHQ, not CelebA-HQ; 200-step LDM-4 is 4.98 on CelebA-HQ in the table (and FFHQ 4.98 in Table 18).",
+   "where": "Sec 4.2, Table 1"
+  },
+  {
+   "claim": "Latent inpainting gives at least 2.7x speed-up and at least 1.6x better FID than pixel-based diffusion at fixed parameters.",
+   "kind": "measured",
+   "metric": "speed-up / FID factor",
+   "value": "2.7",
+   "unit": "x",
+   "setup": "Places inpainting, LDM-1 (pixel) vs LDM-4, FID after six epochs, same parameter count",
+   "quote": "we observe a speed-up of at least 2.7× between pixel- and latent-based diffusion models",
+   "note": "FID improvement factor 1.6x stated in same sentence.",
+   "where": "Sec 4.5, Table 6"
+  },
+  {
+   "claim": "Big inpainting LDM-4 with 512 fine-tuning reaches FID 1.50 on all samples, vs LaMa 2.23 (recomputed).",
+   "kind": "measured",
+   "metric": "FID (all samples)",
+   "value": "1.50",
+   "unit": "FID",
+   "baseline_value": "2.23 (LaMa recomputed)",
+   "setup": "Places, 30k crops of 512x512, LDM-4 big w/ ft",
+   "table": "Table 7, row LDM-4 (ours, big, w/ ft), column All samples FID",
+   "quote": null,
+   "note": "On 40-50% masked: 9.39 vs LaMa 12.31.",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Text-to-image 1.45B LDM-KL-8-G reaches zero-shot MS-COCO FID 12.63 with classifier-free guidance s=1.5, versus 23.31 unguided.",
+   "kind": "measured",
+   "metric": "FID",
+   "value": "12.63",
+   "unit": "FID",
+   "baseline_value": "23.31 (unguided)",
+   "setup": "LAION-400M-trained 1.45B model, MS-COCO 256x256 val, 30000 samples, 250 DDIM steps",
+   "table": "Table 2, row LDM-KL-8-G, column FID",
+   "quote": null,
+   "note": "Compare GLIDE 12.24 (6B), Make-A-Scene 11.84 (4B).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Autoencoder f=4 (8192 codes, c=3) reconstructs ImageNet-val at R-FID 0.58 and PSNR 27.43, vs DALL-E f=8 R-FID 32.01 and VQGAN f=16 4.98.",
+   "kind": "measured",
+   "metric": "R-FID",
+   "value": "0.58",
+   "unit": "R-FID",
+   "baseline_value": "32.01 (DALL-E f=8); 4.98 (VQGAN f=16)",
+   "setup": "Autoencoders trained on OpenImages, evaluated on ImageNet-Val",
+   "table": "Table 8, row 4 / 8192 / 3, column R-FID",
+   "quote": "PSNR: 27.4 R-FID: 0.58",
+   "note": null,
+   "where": "Fig 1, Table 8"
+  },
+  {
+   "claim": "LDM-4 for 4x super-resolution reaches FID 2.8 (val features) / 4.8 (train features) vs SR3 5.2, but lower PSNR 24.4 vs 26.4 and IS 166.3 vs 180.1.",
+   "kind": "measured",
+   "metric": "FID",
+   "value": "2.8",
+   "unit": "FID",
+   "baseline_value": "5.2 (SR3)",
+   "setup": "ImageNet-Val 64 to 256, 100 DDIM steps, 169M parameters",
+   "table": "Table 5, row LDM-4 (ours, 100 steps), column FID",
+   "quote": null,
+   "note": "Image regression gets highest PSNR 27.9 and SSIM 0.801.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Compute: LDM-4-G ImageNet uses 271 V100-days training vs 962 for ADM-G; LSUN-Bedrooms LDM-4 60 vs ADM 232 V100-days.",
+   "kind": "measured",
+   "metric": "training compute",
+   "value": "271",
+   "unit": "V100-days",
+   "baseline_value": "962 (ADM-G)",
+   "setup": "A100 days converted to V100 days with an assumed x2.2 speedup",
+   "table": "Table 18, row LDM-4-G (ours, 250 ddim steps 178K...), column Overall Compute",
+   "quote": null,
+   "note": "ADM-G overall 962 = 916 generator + 46 classifier.",
+   "where": "Table 18, App F"
+  },
+  {
+   "claim": "User study: humans prefer LDM-4 over pixel-DM (70.6% vs 29.4%) for super-resolution and over LaMa (68.1% vs 31.9%) for inpainting in head-to-head choice.",
+   "kind": "measured",
+   "metric": "Task 2 preference score",
+   "value": "70.6%",
+   "unit": "%",
+   "setup": "2-alternative forced choice following SR3, 3 s viewing; sample size of raters not stated",
+   "table": "Table 4, row Task 2: Preference Score, column LDM-4 (SR)",
+   "quote": null,
+   "note": "Task 1 preference vs ground truth: 30.4% (LDM-4) vs 16.0% (Pixel-DM); inpainting 21.0% vs 13.6%.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "LDM-4 and LDM-8 give the best balance; LDM-1/2 train slowly and LDM-32 stalls from too much compression.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "Class-conditional ImageNet, f in {1,2,4,8,16,32}, 2M steps, single A100",
+   "quote": "In summary, LDM-4 and -8 offer the best conditions for achieving high-quality synthesis results.",
+   "note": null,
+   "where": "Sec 4.1, Fig 6-7"
+  }
+ ],
+ "limits": [
+  "Sequential sampling is still slower than GANs (authors).",
+  "Autoencoder reconstruction can bottleneck tasks needing pixel-level precision; super-resolution assumed to be affected (authors).",
+  "Optimizer, warmup, schedule, precision and seeds not stated; single runs.",
+  "Learning rates differ per model in the f-comparison (maximised per model), a confound the authors note.",
+  "Compute comparison to ADM uses an assumed x2.2 A100-to-V100 conversion and numbers copied from Dhariwal & Nichol.",
+  "User-study rater count not stated.",
+  "Bicubic-trained SR does not generalize to other degradations; needed LDM-BSR.",
+  "Societal: deepfakes, training-data leakage, bias amplification (authors)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Latent Diffusion Models (LDMs)",
+   "definition": "diffusion models trained in the latent space of a pretrained autoencoder",
+   "where": "Sec 1"
+  },
+  {
+   "term": "LDM-f",
+   "definition": "LDM with spatial downsampling factor f; LDM-1 is a pixel-based DM",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "perceptual compression / semantic compression",
+   "definition": "first stage removes high-frequency detail; second stage learns semantic composition",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dhariwal & Nichol, Diffusion models beat GANs on image synthesis (ADM)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "baseline",
+   "note": "UNet backbone, classifier guidance, main comparison",
+   "quote": null
+  },
+  {
+   "work": "Ho et al., Denoising Diffusion Probabilistic Models",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reweighted objective [30]",
+   "quote": null
+  },
+  {
+   "work": "Esser et al., Taming Transformers (VQGAN)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "first-stage autoencoder with perceptual+patch adversarial loss",
+   "quote": null
+  },
+  {
+   "work": "Song et al., DDIM",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sampler",
+   "quote": null
+  },
+  {
+   "work": "Ho & Salimans, Classifier-free diffusion guidance",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "guidance",
+   "quote": null
+  },
+  {
+   "work": "Saharia et al., SR3",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "super-resolution protocol and user study",
+   "quote": null
+  },
+  {
+   "work": "Suvorov et al., LaMa",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "inpainting protocol",
+   "quote": null
+  },
+  {
+   "work": "Ramesh et al., DALL-E",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "f=8 discrete autoencoder comparison",
+   "quote": null
+  },
+  {
+   "work": "Vahdat et al., LSGM",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "joint training of autoencoder and score prior needs delicate weighting; LDM outperforms",
+   "quote": null
+  },
+  {
+   "work": "Nichol et al., GLIDE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "text-to-image comparison",
+   "quote": null
+  },
+  {
+   "work": "Vaswani et al., Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cross-attention",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "text-to-image training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustrating perceptual and semantic compression",
+   "page": 2,
+   "why": "Rate-distortion plot motivating the two-stage split."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "We condition LDMs either via concatenation or by a more general cross-attention mechanism.",
+   "page": 4,
+   "why": "The architecture: autoencoder, latent diffusion, cross-attention conditioning."
+  },
+  {
+   "figure": "Fig 6/7",
+   "caption": "Training progress and quality vs sampling speed for different f",
+   "page": 6,
+   "why": "Shows the f=4-8 sweet spot."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "L_LDM := E_{E(x),y,eps~N(0,1),t} [ ||eps - eps_theta(z_t, t, tau_theta(y))||_2^2 ]",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.3",
+   "snippet": "Attention(Q,K,V) = softmax(QK^T / sqrt(d)) . V, Q = W_Q phi_i(z_t), K = W_K tau_theta(y), V = W_V tau_theta(y)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction has ligature characters (fi, ff) and flattened table layout; table values were read from the flattened text.",
+  "No embedded instructions found.",
+  "Table 15 inpainting lr printed as 1.0e-6 (possibly a typo in paper; recorded as printed).",
+  "Fig 5 caption: 200 DDIM steps eta=1.0, s=10.0 but Table 2 uses 250 steps and s=1.5."
+ ]
+}

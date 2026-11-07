@@ -1,0 +1,578 @@
+{
+ "schema": 1,
+ "key": "1911.05722",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/he-2020-momentum-contrast-unsupervised-visual-representation.pdf",
+ "bib": {
+  "title": "Momentum Contrast for Unsupervised Visual Representation Learning",
+  "authors": [
+   "Kaiming He",
+   "Haoqi Fan",
+   "Yuxin Wu",
+   "Saining Xie",
+   "Ross Girshick"
+  ],
+  "first_author": "He",
+  "year": 2020,
+  "venue": "preprint (arXiv v3, 23 Mar 2020; CVPR 2020 not printed in text)",
+  "arxiv": "1911.05722",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 59429,
+  "chars_total": 59429,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a large and consistent dictionary for contrastive learning, built with a queue and a momentum-averaged key encoder, give unsupervised visual representations that match or beat ImageNet supervised pre-training when transferred?",
+ "hypothesis": "Good features can be learned by a large dictionary covering many negatives, while the key encoder is kept as consistent as possible despite its evolution.",
+ "contributions": [
+  "MoCo: dictionary as a queue plus momentum-updated key encoder, decoupling dictionary size from mini-batch size",
+  "Shuffling BN to stop intra-batch statistics leaking the positive key",
+  "Competitive ImageNet linear classification and transfer that beats ImageNet supervised pre-training on 7 detection/segmentation tasks, including at Instagram-1B scale"
+ ],
+ "method": {
+  "summary": "Instance-discrimination pretext task with InfoNCE loss; query encoder trained by SGD, key encoder updated as a moving average of the query encoder, keys held in a queue of K entries. Evaluated by ImageNet linear classification on frozen features and by fine-tuning on detection/segmentation tasks against ImageNet supervised pre-training.",
+  "task": "unsupervised visual representation learning (contrastive, instance discrimination)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1M (IN-1M)",
+    "role": "pretrain",
+    "size": "~1.28 million images, 1000 classes (labels not used)",
+    "split": "train set for pre-training; val set for linear classification",
+    "source": "ImageNet",
+    "preprocessing": "224x224 crop from randomly resized image, random color jitter, horizontal flip, random grayscale"
+   },
+   {
+    "name": "Instagram-1B (IG-1B)",
+    "role": "pretrain",
+    "size": "~1 billion (940M) public Instagram images",
+    "split": null,
+    "source": "~1500 hashtags related to ImageNet categories, following [44]; uncurated, long-tailed",
+    "preprocessing": "same augmentation as IN-1M"
+   },
+   {
+    "name": "PASCAL VOC trainval07+12 / trainval2007 / test2007",
+    "role": "both",
+    "size": "~16.5k images (07+12), ~5k (2007)",
+    "split": "fine-tune on trainval, eval on test2007",
+    "source": "PASCAL VOC",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO",
+    "role": "both",
+    "size": "train2017 ~118k images",
+    "split": "eval on val2017",
+    "source": "COCO",
+    "preprocessing": null
+   },
+   {
+    "name": "LVIS v0.5, Cityscapes, VOC semantic seg (train_aug2012), iNaturalist 2018",
+    "role": "both",
+    "size": "Cityscapes fine 2975 train images; VOC aug 10582 images; iNat ~437k images, 8142 classes",
+    "split": "val sets for eval",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MoCo ResNet-50",
+    "role": "proposed",
+    "params": "24M (feature extractor)",
+    "architecture": "ResNet-50, final FC outputs 128-D, L2-normalised",
+    "init_from": "random init (unsupervised)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": "128-D output",
+    "heads": null,
+    "context": null,
+    "other": {
+     "variants": "RX50 (ResNeXt-50-32x8d) 46M; R50w2x 94M; R50w4x 375M",
+     "shuffle_bn": "key encoder batch shuffled across GPUs"
+    }
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE (Eqn 1), tau=0.07, one positive and K negatives from queue; positives are two random augmented views of same image",
+   "optimizer": "SGD, momentum 0.9",
+   "lr": "IN-1M: 0.03 (batch 256); IG-1B: 0.12 (batch 1024)",
+   "lr_schedule": "IN-1M: x0.1 at epochs 120 and 160; IG-1B: exponentially decayed by 0.9x every 62.5k iterations (64M images)",
+   "warmup": null,
+   "batch_size": "IN-1M: 256 on 8 GPUs; IG-1B: 1024 on 64 GPUs",
+   "steps": "IG-1B: 1.25M iterations",
+   "epochs": "IN-1M: 200; IG-1B: ~1.4 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001",
+   "dropout": null,
+   "regularisation": "shuffling BN",
+   "hardware": "IN-1M: 8 GPUs (8 Volta 32GB mentioned as high-end machine); IG-1B: 64 GPUs",
+   "compute": "IN-1M ResNet-50 ~53 hours; IG-1B ResNet-50 ~6 days",
+   "wall_clock": "~53 hours (IN-1M), ~6 days (IG-1B)",
+   "seeds": "downstream results averaged over 5 trials; pre-training seeds not stated",
+   "other": {
+    "momentum_m": "0.999 default",
+    "queue_K": "65536 default for Table 1; 4096 in momentum ablation",
+    "temperature": "0.07",
+    "embedding_dim": "128",
+    "linear_classifier": "100 epochs, grid-searched lr 30, weight decay 0, on global-average-pool features",
+    "detection_finetune": "BN tuned (synchronised across GPUs), BN also in FPN; same hyperparameters as supervised counterpart; VOC 24k iterations (~23 epochs), image scale [480,800] train / 800 test; COCO scale [640,800]/800, 1x (~12 epochs) or 2x schedules, 6x (~72 epochs) in appendix"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1-crop evaluation; downstream averaged over 5 trials",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ImageNet linear top-1 accuracy",
+     "definition": "unsupervised pre-train on IN-1M, freeze, train linear classifier, 1-crop top-1 on val",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP50 / AP / AP75",
+     "definition": "detection AP at IoU 50% (VOC default), COCO-style AP, and IoU 75%; APbb box, APmk mask",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "mIoU",
+     "definition": "semantic segmentation",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ImageNet supervised pre-training (same architecture and schedule)",
+    "random init",
+    "end-to-end and memory bank contrastive mechanisms (own implementations)",
+    "Exemplar, RelPos, Jigsaw, Rotation, Colorization, DeepCluster, BigBiGAN, InstDisc, LocalAgg, CPC v1/v2, CMC, AMDIM"
+   ],
+   "protocol": "Fine-tuning uses the same settings as the supervised counterpart with no extra hyperparameter search; downstream numbers averaged over 5 trials."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/moco",
+   "weights": null,
+   "data": "IG-1B is Facebook-internal following [44]; not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "an initial learning rate of 0.03",
+    "where": "Sec 4 Training"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Momentum m=0.999 (default) gives 59.0% linear accuracy at K=4096, versus 55.2% at m=0.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 59.0,
+   "unit": "%",
+   "baseline_value": 55.2,
+   "n": null,
+   "setup": "ResNet-50, IN-1M pre-training, K=4096, linear classification",
+   "note": null,
+   "where": "Sec 4.1 Ablation: momentum",
+   "table": "Section 4.1 momentum ablation table, m=0.999 vs m=0.9 (55.2)"
+  },
+  {
+   "claim": "With no momentum (m=0, key encoder copied from query encoder) training fails to converge.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50, K=4096",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "at the extreme\nof no momentum"
+  },
+  {
+   "claim": "MoCo R50 reaches 60.6% linear accuracy, beating all competitors of similar size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 60.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50 (24M), IN-1M, K=65536, m=0.999",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MoCo R50, column accuracy"
+  },
+  {
+   "claim": "MoCo with R50w4x reaches 68.6% linear accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "R50w4x (375M), IN-1M",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MoCo R50w4x"
+  },
+  {
+   "claim": "MoCo v2 (small augmentation and projection head changes) reaches 71.1% with R50.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "reported as extension [8]",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "achieves 71.1% accuracy"
+  },
+  {
+   "claim": "Memory bank is 2.6% worse than MoCo at the same K; memory bank result is 58.0% vs MoCo 60.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.0,
+   "unit": "%",
+   "baseline_value": 60.6,
+   "n": null,
+   "setup": "ResNet-50, K=65536, InfoNCE, linear protocol",
+   "note": null,
+   "where": "Fig 3, Sec 4.1",
+   "table": "Figure 3 data (values 58.0 and 60.6) and Sec 4.1 text"
+  },
+  {
+   "claim": "On VOC R50-C4 (trainval07+12), MoCo IG-1B beats supervised IN-1M by 3.7 AP (IN-1M pre-trained MoCo: +2.4 AP).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.7,
+   "unit": "AP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Faster R-CNN R50-C4, fine-tuned 24k iterations, test2007, 5 trials",
+   "note": "Note's claim of up to 3.7 AP on VOC with IG-1B and 2.4 from ImageNet is confirmed for R50-C4 only; with R50-dilated-C5 the gains are +0.6 (IN-1M) and +1.5 (IG-1B) AP and AP50 for IN-1M is -0.3.",
+   "where": "Table 2b",
+   "table": "Table 2b, row MoCo IG-1B, column AP (+3.7); row MoCo IN-1M (+2.4)"
+  },
+  {
+   "claim": "On VOC trainval07+12 R50-C4, MoCo gains reach +0.9 AP50, +3.7 AP and +4.9 AP75 over supervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.9,
+   "unit": "AP75 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Faster R-CNN R50-C4",
+   "note": null,
+   "where": "Sec 4.2.1",
+   "quote": "up to +0.9 AP50, +3.7 AP, and +4.9 AP75"
+  },
+  {
+   "claim": "On VOC trainval2007 (C4), MoCo IG-1B gains +5.2 AP and +9.0 AP75 over supervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.0,
+   "unit": "AP75 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tune 9k iterations, 5 trials",
+   "note": null,
+   "where": "Sec 4.2.1, Table 4",
+   "quote": "up to +5.2 AP and +9.0 AP75"
+  },
+  {
+   "claim": "COCO R50-FPN 2x: MoCo IG-1B APbb 41.1 vs supervised 40.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 41.1,
+   "unit": "APbb",
+   "baseline_value": 40.6,
+   "n": null,
+   "setup": "Mask R-CNN R50-FPN, 2x schedule",
+   "note": null,
+   "where": "Table 5b",
+   "table": "Table 5b, row MoCo IG-1B, column APbb"
+  },
+  {
+   "claim": "COCO R50-FPN 1x: MoCo IN-1M slightly below supervised (38.5 vs 38.9 APbb); IG-1B equal (38.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 38.5,
+   "unit": "APbb",
+   "baseline_value": 38.9,
+   "n": null,
+   "setup": "Mask R-CNN R50-FPN 1x",
+   "note": null,
+   "where": "Table 5a",
+   "table": "Table 5a, row MoCo IN-1M, column APbb"
+  },
+  {
+   "claim": "COCO 6x schedule: MoCo IG-1B 42.8 APbb vs supervised 41.9 (+0.9), random init 41.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 42.8,
+   "unit": "APbb",
+   "baseline_value": 41.9,
+   "n": null,
+   "setup": "Mask R-CNN R50-FPN 6x (~72 epochs)",
+   "note": null,
+   "where": "Table A.1",
+   "table": "Table A.1b, row MoCo IG-1B"
+  },
+  {
+   "claim": "MoCo is worse than supervised on VOC semantic segmentation by at least 0.8 mIoU (IG-1B 73.6 vs 74.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73.6,
+   "unit": "mIoU",
+   "baseline_value": 74.4,
+   "n": null,
+   "setup": "FCN R50, train_aug2012, 30k iterations",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MoCo IG-1B, column VOC"
+  },
+  {
+   "claim": "COCO dense pose APdp75 +3.7 for MoCo IG-1B over supervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 54.3,
+   "unit": "APdp75",
+   "baseline_value": 50.6,
+   "n": null,
+   "setup": "DensePose R-CNN R50-FPN",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MoCo IG-1B, column APdp75"
+  },
+  {
+   "claim": "iNaturalist 2018 R50: MoCo IN-1M 65.6, IG-1B 65.8 vs supervised 66.1, random 61.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 65.8,
+   "unit": "%",
+   "baseline_value": 66.1,
+   "n": null,
+   "setup": "fine-tuned 100 epochs",
+   "note": null,
+   "where": "Appendix A.6",
+   "quote": "61.8\n66.1\n65.6\n65.8"
+  },
+  {
+   "claim": "End-to-end mechanism limited by batch size (1024 max on 8 Volta 32GB); without linear lr scaling accuracy drops ~2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4.1",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "the largest mini-batch a high-end machine (8 Volta"
+  },
+  {
+   "claim": "Without shuffling BN, pretext training accuracy rises above 99.9% and kNN validation accuracy drops (cheating).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoCo and end-to-end variants",
+   "note": null,
+   "where": "Appendix A.9",
+   "quote": "training accuracy of\nthe pretext task"
+  }
+ ],
+ "limits": [
+  "IG-1B gain over IN-1M is small, suggesting larger data not fully exploited (authors)",
+  "Only simple instance discrimination pretext task explored; no linear-probe parity with supervised",
+  "Fine-tuning reuses supervised-counterpart hyperparameters; VOC semantic segmentation is a negative case, iNaturalist comparable only",
+  "Pre-training seeds and warmup not stated; IG-1B not public",
+  "Linear protocol requires lr 30, implying feature magnitudes differ from supervised features, so BN is tuned in fine-tuning",
+  "Linear accuracy later superseded by MoCo v2 (71.1%)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "InfoNCE",
+   "definition": "log loss of a (K+1)-way softmax classifier that classifies q as k+",
+   "where": "Eqn 1"
+  },
+  {
+   "term": "Shuffling BN",
+   "definition": "shuffle the key mini-batch order across GPUs before the key encoder then shuffle back, so query and positive key use BN statistics from different subsets",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Unsupervised feature learning via non-parametric instance discrimination (InstDisc / memory bank)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pretext task, tau 0.07, 128-D, augmentation, memory bank baseline [61]",
+   "quote": null
+  },
+  {
+   "work": "Contrastive predictive coding (CPC)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "InfoNCE loss [46]",
+   "quote": null
+  },
+  {
+   "work": "Contrastive multiview coding (CMC)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "[56]",
+   "quote": null
+  },
+  {
+   "work": "AMDIM",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "[2]",
+   "quote": null
+  },
+  {
+   "work": "Dimensionality reduction by learning an invariant mapping (Hadsell et al.)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "contrastive loss [29]",
+   "quote": null
+  },
+  {
+   "work": "Rethinking ImageNet pre-training (He et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "schedules and normalization issues [31]",
+   "quote": null
+  },
+  {
+   "work": "Accurate large minibatch SGD (Goyal et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "linear lr scaling rule [25]",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of weakly supervised pretraining (Mahajan et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Instagram hashtag dataset [44]",
+   "quote": null
+  },
+  {
+   "work": "Detectron2",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "detection implementations [60]",
+   "quote": null
+  },
+  {
+   "work": "ImageNet",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "IN-1M [11]",
+   "quote": null
+  },
+  {
+   "work": "MoCo v2 (Chen et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "extension of this manuscript [8]",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "MoCo trains an encoder by matching a query to a queue dictionary of keys encoded by a momentum encoder.",
+   "page": 1,
+   "why": "Shows queue plus momentum encoder architecture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Conceptual comparison of end-to-end, memory bank and MoCo mechanisms.",
+   "page": 4,
+   "why": "Shows how keys are maintained in each"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of three contrastive loss mechanisms under linear protocol vs K.",
+   "page": 5,
+   "why": "Shows accuracy rising with K and MoCo ahead"
+  },
+  {
+   "figure": "Algorithm 1",
+   "caption": "Pseudocode of MoCo",
+   "page": 4,
+   "why": "Whole method in about 20 lines"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqn 2",
+   "snippet": "θk ←mθk + (1 −m)θq.",
+   "verbatim": true
+  },
+  {
+   "where": "Algorithm 1",
+   "snippet": "f_k.params = m*f_k.params+(1-m)*f_q.params",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Chosen unattended: the note says 7 tasks incl. VOC; this reading confirms 7 tasks per the paper footnote",
+  "Ligatures (fi/fl) present in cached text",
+  "CVPR 2020 venue not printed in text; recorded as preprint",
+  "No ledger problem; no embedded instructions found"
+ ]
+}

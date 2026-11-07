@@ -1,0 +1,586 @@
+{
+ "schema": 1,
+ "key": "1503.02531",
+ "pdf": "generative-ai/05-RL/sources/hinton-2015-distilling-knowledge-neural-network.pdf",
+ "bib": {
+  "title": "Distilling the Knowledge in a Neural Network",
+  "authors": [
+   "Geoffrey Hinton",
+   "Oriol Vinyals",
+   "Jeff Dean"
+  ],
+  "first_author": "Hinton",
+  "year": 2015,
+  "venue": "preprint",
+  "arxiv": "1503.02531",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 33740,
+  "chars_total": 33740,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the knowledge in a large, cumbersome model or ensemble be transferred to a single small model that is cheap to deploy, and can ensembles of specialists cut ensemble training cost on very large datasets?",
+ "hypothesis": "A small model trained to match the softened class probabilities of a cumbersome model generalizes much better than the same small model trained on hard labels alone.",
+ "contributions": [
+  "Distillation: train a small model on soft targets from a high-temperature softmax of a cumbersome model, showing logit matching is a special case",
+  "Distilling a 10-model ensemble into one model for a commercial speech acoustic model",
+  "A new ensemble of one generalist plus many specialist models trained in parallel, evaluated on JFT",
+  "Soft targets as regularizers: recovering most of full-data accuracy from 3% of the data"
+ ],
+ "method": {
+  "summary": "Soft targets from a cumbersome model (ensemble or regularized net) at temperature T train a small model with a weighted sum of soft-target cross-entropy (scaled by T^2) and hard-label cross-entropy; the small model uses T=1 at test time. Tested on MNIST, an Android-voice-search-like acoustic model, and JFT specialist ensembles.",
+  "task": "knowledge distillation / model compression (classification: MNIST digits, speech frame classification, image classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "60,000 training cases",
+    "split": null,
+    "source": null,
+    "preprocessing": "inputs jittered by up to two pixels in any direction for the large net"
+   },
+   {
+    "name": "Internal speech data (English, Android voice search)",
+    "role": "both",
+    "size": "about 2000 hours, about 700M training examples",
+    "split": "dev set for frame accuracy and WER; WER test set of 23K words",
+    "source": "Google internal",
+    "preprocessing": "26 frames of 40 Mel-scaled filterbank coefficients, 10ms advance, predicting HMM state of 21st frame; labels from forced alignment"
+   },
+   {
+    "name": "JFT",
+    "role": "both",
+    "size": "100 million labeled images, 15,000 labels",
+    "split": "development set (Table 3) and test set (Table 4, per-row counts); sizes not otherwise stated",
+    "source": "internal Google dataset",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MNIST large net",
+    "role": "teacher",
+    "params": null,
+    "architecture": "MLP, 2 hidden layers of 1200 ReLU units, dropout and weight constraints",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": 1200,
+    "heads": null,
+    "context": null,
+    "other": {
+     "test_errors": "67"
+    }
+   },
+   {
+    "name": "MNIST small net",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP, 2 hidden layers of 800 ReLU units, no regularization; also 300+ and 30 units per layer variants",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": 800,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hard_label_test_errors": "146",
+     "distilled_T20_test_errors": "74"
+    }
+   },
+   {
+    "name": "Speech DNN acoustic model (baseline, each ensemble member, and distilled model)",
+    "role": "baseline",
+    "params": "about 85M",
+    "architecture": "8 hidden layers of 2560 ReLU units, softmax over 14,000 HMM-target labels; slightly outdated version of Android voice search model",
+    "init_from": "random; ensemble members differ in random initialization",
+    "tokenizer": null,
+    "vocab": "14,000 labels",
+    "layers": 8,
+    "hidden": 2560,
+    "heads": null,
+    "context": "26 frames",
+    "other": {}
+   },
+   {
+    "name": "JFT generalist",
+    "role": "base",
+    "params": null,
+    "architecture": "deep convolutional neural network, trained about six months with asynchronous SGD",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "15,000 labels",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "JFT specialists",
+    "role": "proposed",
+    "params": null,
+    "architecture": "generalist copy with softmax over its 300 special classes plus one dustbin class",
+    "init_from": "weights of the generalist",
+    "tokenizer": null,
+    "vocab": "300 classes + dustbin",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "61"
+    }
+   }
+  ],
+  "training": {
+   "objective": "weighted average of cross-entropy with soft targets (teacher and student both at temperature T, gradient multiplied by T^2) and cross-entropy with correct labels at T=1, with considerably lower weight on the hard-label term; specialists: half examples from special subset, half random, dustbin logit corrected by log of oversampling proportion",
+   "optimizer": "distributed stochastic gradient descent (speech); asynchronous SGD with sharded parameter server (JFT baseline)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "large MNIST net strongly regularized with dropout",
+   "regularisation": "MNIST large net: dropout and weight constraints; early stopping used for 3% hard-label speech baseline",
+   "hardware": "large number of cores with model and data parallelism (JFT baseline)",
+   "compute": "JFT baseline about six months; specialists a few days",
+   "wall_clock": "JFT baseline about six months; specialists a few days instead of many weeks",
+   "seeds": null,
+   "other": {
+    "temperatures_tried_speech": "[1, 2, 5, 10]",
+    "hard_target_weight_speech": "0.5 relative weight on hard-target cross-entropy",
+    "mnist_temperature": "20 for 800-unit student; 8 or above similar for 300+ units; 2.5 to 4 best for 30 units",
+    "transfer_set": "original training set used for speech; MNIST transfer sets with digit 3 omitted, or only 7s and 8s",
+    "ensemble_size_speech": "10 models, same architecture and procedure, different random init",
+    "ensemble_soft_targets": "arithmetic or geometric mean of members' distributions",
+    "specialist_clustering": "online K-means on columns of covariance matrix of generalist predictions",
+    "3pct_experiment": "3% of data is about 20M examples"
+   }
+  },
+  "inference": {
+   "decoding": "distilled model uses temperature 1 after training; speech decoder searches HMM path with language model",
+   "temperature": "1 at test time",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds or repeats reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "specialist_selection_n": "n = 1 most probable generalist classes",
+    "active_specialists": "those whose class subset intersects the top-n set",
+    "combination": "find q minimizing KL(pg,q)+sum over active specialists KL(pm,q) by gradient descent on logits z, q=softmax(z), T=1, per image"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Frame accuracy",
+     "definition": "frame-level classification accuracy of HMM state",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "WER",
+     "definition": "word error rate on 23K-word test set",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Top-1 accuracy / conditional test accuracy (JFT)",
+     "definition": "conditional = accuracy considering only examples in specialist classes and restricting predictions to that subset",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MNIST test errors",
+     "definition": "count of misclassified test images",
+     "unit": "errors",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Same architecture trained on hard labels",
+    "10-model ensemble",
+    "JFT generalist alone",
+    "Li et al. 2014 distillation at T=1 with unlabeled data"
+   ],
+   "protocol": "Single reported numbers; no variance, seeds or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "internal Google data (JFT, speech); MNIST public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.hard_target_weight_speech",
+    "quote": "used a relative weight of 0.5 on the cross-entropy for the hard targets",
+    "where": "Section 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Distilled single speech model recovers most of the ensemble's frame-accuracy gain (60.8% vs 61.1% ensemble vs 58.9% baseline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test frame accuracy",
+   "value": 60.8,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames; 10-model ensemble distilled at best of T in [1,2,5,10], hard weight 0.5",
+   "quote": null,
+   "table": "Table 1, row Distilled Single model, column Test Frame Accuracy",
+   "note": "Gain recovered (60.8-58.9)/(61.1-58.9)=86% by my arithmetic; paper says 'More than 80%' for frame accuracy, not WER.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "More than 80% of the ensemble's frame-accuracy improvement transfers to the distilled model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of ensemble gain",
+   "value": 80,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames",
+   "quote": "More than 80% of the improvement in frame classiﬁcation accuracy achieved by using an ensemble of 10 models is trans-\nferred to the distilled model",
+   "table": null,
+   "note": "Applies to frame accuracy; WER gain is small (10.9 -> 10.7 for both).",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "10-model ensemble frame accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test frame accuracy",
+   "value": 61.1,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames",
+   "quote": null,
+   "table": "Table 1, row 10xEnsemble, column Test Frame Accuracy",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Distilled model and ensemble both reach 10.7% WER vs 10.9% baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 10.7,
+   "unit": "%",
+   "baseline_value": 10.9,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames; dev set",
+   "quote": null,
+   "table": "Table 1, row Distilled Single model, column WER",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "With 3% of the speech data, hard-label training overfits to 44.5% test frame accuracy (early stopping).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test frame accuracy",
+   "value": 44.5,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames; 3% of training set (~20M examples), hard targets",
+   "quote": "the accuracy drops sharply after reaching 44.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Table 5"
+  },
+  {
+   "claim": "With 3% of the data, soft targets from the full-data model give 57.0% test frame accuracy without early stopping.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test frame accuracy",
+   "value": 57.0,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames; 3% of training set, soft targets from model trained on full set",
+   "quote": null,
+   "table": "Table 5, row Soft Targets (3% of training set), column Test Frame Accuracy",
+   "note": "Text says 'converged to 57%' and 'about 2% shy' of full-data 58.9%.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Full-data baseline test frame accuracy (train 63.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test frame accuracy",
+   "value": 58.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "85M-parameter DNN acoustic model (8x2560 ReLU, 14,000 HMM-state softmax), ~2000 h English speech, ~700M frames",
+   "quote": "This system achieves a frame accuracy of 58.9%, and a Word Error Rate (WER) of 10.9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "MNIST: small net distilled at T=20 gets 74 test errors vs 146 without and 67 for the large regularized net.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test errors",
+   "value": 74,
+   "unit": "errors",
+   "baseline_value": 146,
+   "n": null,
+   "setup": "MNIST 60,000 train; teacher 2x1200 ReLU with dropout; student 2x800 ReLU, no regularization other than soft targets",
+   "quote": "it achieved 74 test errors",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "MNIST with no 3s in transfer set: 206 errors, 109 after raising 3's bias by 3.5; 98.6% of test 3s correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test 3s correct",
+   "value": 98.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST distilled model never shown a 3; bias for class 3 raised by 3.5 to optimize test set",
+   "quote": "the distilled model gets 98.6% of the test 3s correct",
+   "table": null,
+   "note": "Bias tuned on the test set.",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "JFT: 61 specialists give 4.4% relative improvement in top-1 accuracy (25.0% to 26.1%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative top-1 improvement",
+   "value": 4.4,
+   "unit": "% relative",
+   "baseline_value": 0,
+   "n": null,
+   "setup": "JFT dev set, 100M images/15,000 classes, generalist + 61 specialists of 300 classes each",
+   "quote": "With 61 specialist models, there is a 4.4% relative improvement in test ac-\ncuracy overall.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.5, Table 3"
+  },
+  {
+   "claim": "JFT conditional accuracy rises from 43.1% to 45.9% with specialists.",
+   "kind": "measured",
+   "source": null,
+   "metric": "conditional test accuracy",
+   "value": 45.9,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "JFT, 61 specialists",
+   "quote": null,
+   "table": "Table 3, row + 61 Specialist models, column Conditional Test Accuracy",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "JFT: relative accuracy gain grows with number of specialists covering the class (+3.4% with 1 to +16.6% with 9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative accuracy change",
+   "value": 16.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT test set, classes covered by 9 specialists",
+   "quote": null,
+   "table": "Table 4, row 9, column relative accuracy change",
+   "note": "10 or more: +14.1%, so not monotone at the end.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Specialists train in a few days from the generalist versus about six months for the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT",
+   "quote": "the specialists train extremely fast (a few days in-\nstead of many weeks for JFT)",
+   "table": null,
+   "note": "Sec 5.1 says baseline took about six months; Sec 5.5 says 'many weeks'.",
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Speech: Li et al. distilling at T=1 on unlabeled data closes only 28% of the error gap.",
+   "kind": "reported",
+   "source": null,
+   "metric": "gap closed",
+   "value": 28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Related work on small acoustic model",
+   "quote": "only reduces the error\nrate of the small model by 28% of the gap",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "Specialists were not distilled back into a single net: 'We have not yet shown that we can distill the knowledge in the specialists back into the single large net.'",
+  "No seeds, variance or significance tests; hyperparameters (lr, batch size, steps) not given; JFT and speech data are internal.",
+  "Ensemble WER gain is small (10.9 to 10.7), attributed to objective mismatch.",
+  "MNIST bias corrections tuned on the test set.",
+  "Using specialists with a full softmax and soft targets to prevent overfitting was only proposed, still being explored."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "distillation",
+   "definition": "raise the temperature of the final softmax until the cumbersome model produces a suitably soft set of targets, then use the same high temperature when training the small model",
+   "where": "Sec 1"
+  },
+  {
+   "term": "soft targets",
+   "definition": "class probabilities produced by the cumbersome model used as training targets for the small model",
+   "where": "Sec 1"
+  },
+  {
+   "term": "transfer set",
+   "definition": "the set used to train the distilled model, unlabeled data or the original training set",
+   "where": "Sec 1"
+  },
+  {
+   "term": "dustbin class",
+   "definition": "a single class combining all classes a specialist does not care about",
+   "where": "Sec 5.2"
+  },
+  {
+   "term": "conditional test accuracy",
+   "definition": "accuracy considering only examples belonging to the specialist classes, restricting predictions to that subset",
+   "where": "Sec 5.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Model compression (Bucilua, Caruana, Niculescu-Mizil)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Compressing an ensemble into one model by matching logits; shown to be a special case of distillation",
+   "quote": null
+  },
+  {
+   "work": "Li et al., Learning small-size DNN with output-distribution-based criteria",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Acoustic model distillation at T=1 on unlabeled data",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al., Improving neural networks by preventing co-adaptation (dropout)",
+   "year": 2012,
+   "arxiv": "1207.0580",
+   "relation": "uses-method",
+   "note": "Regularization of MNIST teacher",
+   "quote": null
+  },
+  {
+   "work": "Jacobs et al., Adaptive mixtures of local experts",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Contrasted with parallel-trainable specialists",
+   "quote": null
+  },
+  {
+   "work": "Dean et al., Large scale distributed deep networks",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Distributed training of JFT baseline",
+   "quote": null
+  },
+  {
+   "work": "Krizhevsky et al., ImageNet classification with deep CNNs",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "JFT baseline architecture type",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al., Deep neural networks for acoustic modeling in speech recognition",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DNN-HMM acoustic modelling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Frame classification accuracy and WER showing that the distilled single model performs about as well as the averaged predictions of 10 models that were used to create the soft targets.",
+   "page": 5,
+   "why": "Core ensemble-to-single result"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Soft targets allow a new model to generalize well from only 3% of the training set. The soft targets are obtained by training on the full training set.",
+   "page": 8,
+   "why": "Shows soft targets as regularizer"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Top 1 accuracy improvement by # of specialist models covering correct class on the JFT test set.",
+   "page": 7,
+   "why": "Gain grows with specialist coverage"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "q_i = exp(z_i/T) / sum_j exp(z_j/T)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2",
+   "snippet": "dC/dz_i = (1/T)(q_i - p_i)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "dC/dz_i ~ (1/(N T^2)) (z_i - v_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Section numbers 2-3 headings missing from the section map but text read in full.",
+  "The JFT test-set size is not stated directly; the dataset 'split' field gives only the Table 4 row counts.",
+  "Equation text garbled by PDF extraction; snippets rewritten, marked verbatim false."
+ ]
+}

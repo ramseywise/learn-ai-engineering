@@ -14,7 +14,8 @@
 # Stops starting new runs at STOP_HOUR (STOP_HOUR=24 never stops), or as soon as a run hits
 # the usage limit, whichever pass it is in.
 # After the integration tiers, an /extract pass backfills structured extractions for PDFs read before
-# every read left one (scripts/papers/extractions/). EXTRACT=0 skips it.
+# every read left one (scripts/papers/extractions/): tier 1, tier 2 and book chapters first, paper tiers
+# 3-6 once those are done. EXTRACT=0 skips it.
 # PAPERS=0 skips the /papers and /chapter passes: PAPERS=0 STOP_HOUR=24 runs the backfill alone.
 
 set -uo pipefail
@@ -103,15 +104,21 @@ papers() {
 }
 
 # Backfill extractions, best first, until the backlog stops shrinking. Notes are not touched.
+# The core (tier 1, tier 2, book chapters) goes first; paper tiers 3-6 only once the core is empty.
+# Papers the /papers passes above read already left their extraction, so they are not in either count.
 extractions() {
-    local n left
-    while ! stop_now; do
-        n="$(python3 scripts/papers/extract.py next --count)"
-        [ "$n" -gt 0 ] || { echo "$(date '+%F %T') /extract: nothing left"; return; }
-        echo "$(date '+%F %T') /extract ($n left)"
-        session "/extract" "/extract 12"
-        left="$(python3 scripts/papers/extract.py next --count)"
-        [ "$left" -lt "$n" ] || break  # no progress: what's left needs a person
+    local n left scope flag
+    for scope in core all; do
+        flag=""; [ "$scope" = "all" ] && flag="--all"
+        while ! stop_now; do
+            n="$(python3 scripts/papers/extract.py next --count $flag)"
+            [ "$n" -gt 0 ] || { echo "$(date '+%F %T') /extract $scope: nothing left"; break; }
+            echo "$(date '+%F %T') /extract $scope ($n left)"
+            session "/extract $scope" "/extract ${flag:+all }12"
+            left="$(python3 scripts/papers/extract.py next --count $flag)"
+            [ "$left" -lt "$n" ] || return  # no progress: what's left needs a person
+        done
+        [ "$n" -gt 0 ] && return  # stopped inside the core: don't start on the rest
     done
 }
 

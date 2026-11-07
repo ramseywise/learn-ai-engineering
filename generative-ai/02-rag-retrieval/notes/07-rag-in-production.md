@@ -25,7 +25,7 @@ cleaned: 2026-11-01
 ---
 # 7 — RAG in production
 
-On a Tuesday, Tallybook's support bot tells a customer about the manual refund override, a procedure in an internal runbook that says never to share it. No test caught this, because the test questions never reached that document and nobody checked who could retrieve what. A day later someone asks why the bill doubled, and nobody can say which step spent the money, because nothing was traced. Production failures look like these far more often than like a low score on a benchmark. They are about what you can see, what you can afford, and who can read what.
+On a Tuesday, Tallybook's support bot tells a customer about the manual refund override, a procedure in an internal runbook that says never to share it. No test caught this, because the test questions never reached that document and nobody checked who could retrieve what. A day later someone asks why the bill doubled, and nobody can say which step spent the money, because nothing was traced. Production failures look like these more often than like a low benchmark score. They are about what you can see, what you can afford, and who can read what.
 
 > A RAG system that works on a laptop meets scale, odd prompts, messy data and privacy rules in production. The course's answer: evaluate each component as well as the whole, trace every request (Phoenix + OpenTelemetry), build custom datasets from real traffic, then trade quality against cost and latency with quantization, smaller prompts and caching, and lock down the knowledge base.
 
@@ -348,7 +348,7 @@ For reasoning models the question becomes when in the chain to retrieve. ReaLM-R
 
 Verification against retrieved text buys accuracy at a steep token price. RARE runs a tree search over reasoning steps with extra retrieval actions, then scores each candidate path by the share of its statements that retrieved passages support. With LLaMA 3.1 8B on 250 MedQA questions, accuracy went from 70.0 for the search without retrieval to 74.8 with retrieval actions and the scorer, and a 70B model scored 87.43 against GPT-4o's 85.55 on MedQA. It used about 119.9k tokens per example against about 400 for chain-of-thought, averaged over three commonsense tasks, and the paper gives no latency or dollar figures. These are mostly multiple-choice benchmarks, the tables show means with no variance, and the scorer is the generator's own model ([arXiv:2412.02830](https://arxiv.org/abs/2412.02830), Tran et al., 2024, preprint). Price a verifier in tokens per answer before adding it.
 
-Add up the budget for one request before removing anything. The three component figures are the course's estimates above, and the generation time is an assumed placeholder, since generation is what "most of the latency" refers to:
+Add up one request's budget before removing anything. The component figures are the course's estimates above; the generation time is an assumed placeholder:
 
 ```python
 budget_ms = {"router": 200, "query rewriter": 300, "reranker": 50, "generation": 2_000}
@@ -366,7 +366,7 @@ generation        2000 ms   78%
 total             2550 ms
 ```
 
-The reranker is the cheapest item here and often the one people cut first. Removing a component only makes sense once you have its effect on your metrics next to its cost.
+The reranker is the cheapest item here and often the first cut. Cut a component only once its effect on your metrics sits next to its cost.
 
 That 50 ms assumes a cross-encoder. A listwise LLM reranker costs more calls but can be distilled: RankZephyr, an open 7B model distilled from RankGPT, matched RankGPT4 on TREC DL19/DL20 (nDCG@10 0.7816 and 0.8159 vs 0.7464 and 0.7076; SPLADE++ ED top 100, window 20) and trailed it on DL22 (0.6692 vs 0.7175). On DL19 shuffling the candidates cost it 0.015 nDCG@10 against 0.15 for GPT-3.5 listwise. English passage ranking, no latency reported ([arXiv:2312.02724](https://arxiv.org/abs/2312.02724), Pradeep et al., 2023-12, preprint).
 
@@ -568,12 +568,9 @@ Tracing tells you about one request. These tell you about the system over time, 
 
 | Rule | Why |
 |---|---|
-| Trace from day one | You can't debug a RAG answer without the retrieved chunks and final prompt |
 | Evaluate components and the system | A good system score can hide a broken router |
 | Build eval sets from real traffic | Users ask what you didn't plan for |
 | Cut prompt tokens before changing models | Usually the cheapest win |
-| Price every component in ms and $ | Remove those that don't move metrics |
-| Filter by user permission at retrieval time | Prompt instructions are not access control |
 | Put the as-of date in the query for text that changes by legal effect | Recall can't see a wrong version sitting beside the right one |
 
 ---

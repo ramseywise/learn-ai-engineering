@@ -33,23 +33,26 @@ The whole pillar follows one running example. Tallybook is a small invoicing pro
 
 ## Reading order
 
-1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) for the map.
-2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module.
-3. Read 08–12 as case studies: Bayer's PRINCE stack, then the production support agent's store comparison, cache, ablations and managed backends.
+1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) and [01b](notes/01b-index-structures-and-agentic-rag.md) for the map.
+2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module (06 runs over two parts, 06 and 06b).
+3. Read 08–12 as case studies: Bayer's PRINCE stack (08 and 08b), then the production support agent's store comparison, cache, ablations and managed backends.
 4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary, and the [deck](slides/rag-retrieval.pptx) for review.
 
-Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are production write-ups that apply it.
+Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 are production write-ups that apply it.
 
 | # | Note | Covers |
 |---|---|---|
-| 1 | [The RAG pipeline](notes/01-rag-pipeline.md) | Nine named architectures, pre-retrieval order, ingestion and parser tiers, chunking, hybrid retrieval, BM25 from scratch, PRINCE, RAPTOR and GraphRAG, agentic and multi-turn RAG, monitoring |
+| 1 | [The RAG pipeline](notes/01-rag-pipeline.md) | Nine named architectures, pre-retrieval order, ingestion and parser tiers, chunking, hybrid retrieval, BM25 from scratch, PRINCE, monitoring |
+| 1b | [Index-time structures, agentic and conversational RAG](notes/01b-index-structures-and-agentic-rag.md) | RAPTOR, GraphRAG and filesystems, embed one thing and return another, agentic vs. single-pass RAG, multi-turn RAG, a similarity floor |
 | 2 | [Why RAG, and the augmented prompt](notes/02-why-rag-and-the-augmented-prompt.md) | The knowledge gap, retriever vs. LLM, why not stuff the prompt, the smallest RAG as an f-string, Assignment 1 news RAG |
 | 3 | [Keyword, semantic and hybrid search](notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 (k1, b), embeddings and cosine, metadata filters, RRF, Recall@k / MRR / nDCG with worked numbers |
 | 4 | [Vector databases and ANN](notes/04-vector-databases-and-ann.md) | KNN vs. ANN, NSW and HNSW, the Weaviate API: collections, `near_text`, `bm25`, `hybrid`, rerank |
 | 5 | [Chunking, query parsing and reranking](notes/05-chunking-query-parsing-and-reranking.md) | Chunking strategies and overlap, query rewriting, GLiNER, HyDE, bi- vs. cross-encoder vs. ColBERT, over-retrieve and rerank |
-| 6 | [Generation for RAG](notes/06-generation-for-rag.md) | Sampling (temperature, top-p), choosing an LLM, grounded prompts, structured output, hallucinations and citations, RAGAS, agentic routing, RAG vs. fine-tuning |
+| 6 | [Generation for RAG](notes/06-generation-for-rag.md) | Sampling (temperature, top-p), choosing an LLM, grounded prompts, structured output, passage order and count |
+| 6b | [Hallucinations, evaluation and fine-tuning](notes/06b-hallucinations-evaluation-and-fine-tuning.md) | Hallucinations and citations, RAGAS, agentic routing, RAG vs. fine-tuning |
 | 7 | [RAG in production](notes/07-rag-in-production.md) | Failure stories, the scope × evaluator matrix, Phoenix tracing, quantization, cost and latency budgets, security, text that changes by legal effect, multimodal RAG |
-| 8 | [Agentic RAG: the PRINCE stack](notes/08-agentic-rag-prince.md) | Intent clarification, ingestion, the query-time pipeline, Text-to-SQL, domain sub-agents, NER metadata repair, evaluation |
+| 8 | [Agentic RAG: the PRINCE stack](notes/08-agentic-rag-prince.md) | Intent clarification, ingestion, the query-time pipeline, Text-to-SQL |
+| 8b | [Routing, sub-agents and evaluation](notes/08b-routing-sub-agents-and-evaluation.md) | The router, domain sub-agents, context discipline, NER metadata repair, evaluation, when agentic RAG pays |
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
 | 10 | [Semantic cache](notes/10-semantic-cache.md) | A three-tier cache for support agents: offline index, runtime module, routing, eval and merge criteria |
 | 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, prioritised research items |

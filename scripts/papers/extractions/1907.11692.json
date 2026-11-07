@@ -1,0 +1,572 @@
+{
+ "schema": 1,
+ "key": "1907.11692",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2019-roberta.pdf",
+ "bib": {
+  "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+  "authors": [
+   "Yinhan Liu",
+   "Myle Ott",
+   "Naman Goyal",
+   "Jingfei Du",
+   "Mandar Joshi",
+   "Danqi Chen",
+   "Omer Levy",
+   "Mike Lewis",
+   "Luke Zettlemoyer",
+   "Veselin Stoyanov"
+  ],
+  "first_author": "Liu",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1907.11692",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 48727,
+  "chars_total": 48727,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Which BERT pretraining design choices (masking, NSP, batch size, encoding, data size, training length) matter, and was BERT undertrained?",
+ "hypothesis": "BERT was significantly undertrained and, with a better recipe, can match or exceed all post-BERT models.",
+ "contributions": [
+  "A set of BERT design choices and training strategies that give better downstream performance",
+  "New dataset CC-NEWS; more pretraining data further improves downstream tasks",
+  "Shows MLM pretraining under the right design choices is competitive with other recent methods",
+  "Release of model, pretraining and finetuning code in PyTorch"
+ ],
+ "method": {
+  "summary": "Replication study of BERT pretraining in fairseq: ablates masking, input format/NSP, batch size, byte-level BPE, data size and training length, then combines the best into RoBERTa and evaluates on GLUE, SQuAD and RACE.",
+  "task": "masked language model pretraining, then finetuning on NLU tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BOOKCORPUS + English WIKIPEDIA",
+    "role": "pretrain",
+    "size": "16GB uncompressed",
+    "split": "all",
+    "source": "Zhu et al. 2015; Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "CC-NEWS",
+    "role": "pretrain",
+    "size": "76GB after filtering; 63 million English news articles",
+    "split": "Sept 2016 to Feb 2019",
+    "source": "English portion of CommonCrawl News, collected with news-please",
+    "preprocessing": null
+   },
+   {
+    "name": "OPENWEBTEXT",
+    "role": "pretrain",
+    "size": "38GB",
+    "split": "all",
+    "source": "open recreation of WebText; Reddit-shared URLs with at least 3 upvotes",
+    "preprocessing": null
+   },
+   {
+    "name": "STORIES",
+    "role": "pretrain",
+    "size": "31GB",
+    "split": "all",
+    "source": "Trinh and Le 2018, CommonCrawl subset filtered to Winograd-like style",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE (9 tasks)",
+    "role": "both",
+    "size": "9 datasets",
+    "split": "dev for Sec 4 and single-task results; test via leaderboard",
+    "source": "Wang et al. 2019b",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD v1.1 and v2.0",
+    "role": "both",
+    "size": null,
+    "split": "dev and test (v2.0 leaderboard)",
+    "source": "Rajpurkar et al. 2016, 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "RACE",
+    "role": "both",
+    "size": "more than 28,000 passages, nearly 100,000 questions",
+    "split": "test",
+    "source": "Lai et al. 2017",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa-large",
+    "role": "proposed",
+    "params": "355M",
+    "architecture": "transformer encoder (BERT-large config), MLM only",
+    "init_from": "random (GLUE RTE/STS/MRPC test: from MNLI model)",
+    "tokenizer": "byte-level BPE (Radford et al. 2019)",
+    "vocab": "50K",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "512 tokens",
+    "other": {
+     "ffn": 4096,
+     "head_size": 64
+    }
+   },
+   {
+    "name": "RoBERTa-base",
+    "role": "proposed",
+    "params": "inferred: 110M plus about 15M for larger vocab (Sec 4.4); not stated directly",
+    "architecture": "transformer encoder",
+    "init_from": null,
+    "tokenizer": "byte-level BPE",
+    "vocab": "50K",
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "512 tokens",
+    "other": {
+     "ffn": 3072,
+     "head_size": 64
+    }
+   },
+   {
+    "name": "BERT-base reimplementation (Sec 4 ablations)",
+    "role": "base",
+    "params": "110M",
+    "architecture": "L=12,H=768,A=12",
+    "init_from": null,
+    "tokenizer": "BERT 30K character-level BPE in the original",
+    "vocab": "30K",
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "BERT-large",
+    "role": "baseline",
+    "params": "inferred: 355M (RoBERTa matches this architecture)",
+    "architecture": "L=24,H=1024,A=16",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "30K",
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "XLNet-large",
+    "role": "baseline",
+    "params": null,
+    "architecture": "permutation-LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "data": "126GB, bsz 2K, 500K steps"
+    }
+   }
+  ],
+  "training": {
+   "objective": "masked LM cross-entropy on 15% of tokens (80% [MASK], 10% unchanged, 10% random), dynamic masking regenerated each time a sequence is fed; no NSP",
+   "optimizer": "Adam, beta1 0.9, beta2 0.98, eps 1e-6",
+   "lr": "peak 4e-4 (large), 6e-4 (base); 1e-4 / 7e-4 / 1e-3 for bsz 256 / 2K / 8K in Table 3 ablation",
+   "lr_schedule": "linear warmup then linear decay",
+   "warmup": "30k steps (large), 24k (base)",
+   "batch_size": "8k sequences",
+   "steps": "500K (final); 100K / 300K / 500K in Table 4",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 (full-length only)",
+   "precision": "mixed precision",
+   "weight_decay": "0.01",
+   "dropout": "0.1 (attention dropout 0.1)",
+   "regularisation": "gradient clipping 0.0",
+   "hardware": "DGX-1 machines, 8x 32GB V100 GPUs each, Infiniband; 1024 V100 for the 100K-step run",
+   "compute": "inferred: 1024 V100s for about one day for the 100K-step run; 500K-step runs not stated",
+   "wall_clock": "about one day for 100K steps (Sec 5)",
+   "seeds": "5 random initialisations, median reported",
+   "other": {
+    "static_vs_dynamic": "original BERT duplicated data 10x for 40 epochs, each mask seen 4 times",
+    "finetune": "RACE lr 1e-5 bsz 16 wd 0.1 4 epochs; SQuAD lr 1.5e-5 bsz 48 wd 0.01 2 epochs; GLUE lr {1e-5,2e-5,3e-5} bsz {16,32} wd 0.1 10 epochs; warmup ratio 0.06, linear decay (Table 10)",
+    "glue_test": "ensembles of 5-7 models per task; RTE/STS/MRPC start from MNLI model; QNLI pairwise ranking; WNLI margin ranking loss with SuperGLUE format",
+    "racel": "candidate+question+passage, [CLS] to FC layer, QA truncated at 128 tokens, total 512",
+    "squad2": "binary answerable classifier trained jointly, losses summed",
+    "Adam_eps_note": "training very sensitive to Adam epsilon; beta2 0.98 for stability with large batches"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "median of 5 seeds on dev; ensembles of 5-7 for test",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "MNLI-m, SST-2, RACE, per-task GLUE metrics",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 / EM",
+     "definition": "SQuAD span overlap",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "held-out training data MLM ppl",
+     "unit": "ppl",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BERT-base/large (Devlin et al. 2019)",
+    "XLNet-base/large (Yang et al. 2019)",
+    "ALICE",
+    "MT-DNN"
+   ],
+   "protocol": "Dev: median of 5 seeds, single task, no ensembling. Test: GLUE leaderboard ensembles; SQuAD 2.0 leaderboard; RACE test."
+  },
+  "availability": {
+   "code": "https://github.com/pytorch/fairseq",
+   "weights": "released (fairseq)",
+   "data": "CC-NEWS collected by authors; release not stated in text"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": null,
+    "where": "Sec 3.1 and Table 9: beta2 = 0.98, eps 1e-6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RoBERTa-large pretrained 500K steps on 160GB reaches 90.2 MNLI-m dev accuracy vs BERT-large 86.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m acc",
+   "value": "90.2",
+   "unit": "% acc",
+   "baseline_value": "86.6",
+   "n": null,
+   "setup": "Dev set, RoBERTa-large (24L, 355M), BOOKS+WIKI+CC-NEWS+OPENWEBTEXT+STORIES 160GB, bsz 8K, 500K steps; BERT-large from Devlin et al.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + pretrain even longer 500K, column MNLI-m"
+  },
+  {
+   "claim": "RoBERTa gets 88.5 on the public GLUE leaderboard, matching XLNet's 88.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE test avg",
+   "value": "88.5",
+   "unit": "GLUE avg score",
+   "baseline_value": "88.4",
+   "n": null,
+   "setup": "Test set, ensembles of 5-7 single-task models per task, leaderboard as of July 25, 2019, no multi-task finetuning",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RoBERTa (ensembles on test), column Avg"
+  },
+  {
+   "claim": "More data (16GB to 160GB) at fixed 100K steps and 8K batch raises MNLI-m from 89.0 to 89.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m acc",
+   "value": "89.3",
+   "unit": "% acc",
+   "baseline_value": "89.0",
+   "n": null,
+   "setup": "RoBERTa-large dev, 100K steps, bsz 8K",
+   "note": "Authors say data size and diversity are conflated (footnote 9).",
+   "where": "Table 4",
+   "table": "Table 4, row + additional data (§3.2), column MNLI-m"
+  },
+  {
+   "claim": "Longer pretraining (100K to 300K steps) on 160GB raises MNLI-m from 89.3 to 90.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m acc",
+   "value": "90.0",
+   "unit": "% acc",
+   "baseline_value": "89.3",
+   "n": null,
+   "setup": "RoBERTa-large dev, 160GB, bsz 8K",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + pretrain longer 300K, column MNLI-m"
+  },
+  {
+   "claim": "Dynamic masking is comparable or slightly better than static: SQuAD 2.0 F1 78.7 vs 78.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD 2.0 F1",
+   "value": "78.7",
+   "unit": "F1",
+   "baseline_value": "78.3",
+   "n": null,
+   "setup": "BERT-base reimplementation, BOOKCORPUS+WIKIPEDIA, median of 5 seeds",
+   "note": "MNLI-m 84.0 dynamic vs 84.3 static; SST-2 92.9 vs 92.5.",
+   "where": "Table 1",
+   "table": "Table 1, row dynamic, column SQuAD 2.0"
+  },
+  {
+   "claim": "SENTENCE-PAIR+NSP hurts vs SEGMENT-PAIR+NSP on MNLI-m (82.9 vs 84.0)",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI-m acc",
+   "value": "82.9",
+   "unit": "% acc",
+   "baseline_value": "84.0",
+   "n": null,
+   "setup": "BERT-base reimplementation, 1M steps, bsz 256, median of 5 seeds",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SENTENCE-PAIR, column MNLI-m"
+  },
+  {
+   "claim": "Removing NSP (DOC-SENTENCES) matches or slightly improves: SQuAD 2.0 F1 79.7 vs 78.7 with NSP segment-pair",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD 2.0 F1",
+   "value": "79.7",
+   "unit": "F1",
+   "baseline_value": "78.7",
+   "n": null,
+   "setup": "BERT-base reimplementation, 1M steps, bsz 256, median of 5 seeds",
+   "note": "DOC-SENTENCES RACE 65.6 vs 64.2.",
+   "where": "Table 2",
+   "table": "Table 2, row DOC-SENTENCES, column SQuAD 1.1/2.0"
+  },
+  {
+   "claim": "Larger batches with fixed epochs: bsz 2K, 125K steps, lr 7e-4 lowers held-out perplexity to 3.68 from 3.99 at bsz 256",
+   "kind": "measured",
+   "source": null,
+   "metric": "held-out ppl",
+   "value": "3.68",
+   "unit": "perplexity",
+   "baseline_value": "3.99",
+   "n": null,
+   "setup": "BERT-base, BOOKCORPUS+WIKIPEDIA, same compute and epochs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 2K, column ppl"
+  },
+  {
+   "claim": "RoBERTa SQuAD 2.0 dev F1 89.4 without extra data, above XLNet-large 88.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD 2.0 F1",
+   "value": "89.4",
+   "unit": "F1",
+   "baseline_value": "88.8",
+   "n": null,
+   "setup": "Single model, dev, only provided SQuAD data",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row RoBERTa, column SQuAD 2.0 F1"
+  },
+  {
+   "claim": "RoBERTa SQuAD 1.1 dev F1 94.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQuAD 1.1 F1",
+   "value": "94.6",
+   "unit": "F1",
+   "baseline_value": "94.5",
+   "n": null,
+   "setup": "Single model, dev, w/o data augmentation",
+   "note": "XLNet-large 94.5; BERT-large 90.9.",
+   "where": "Table 6",
+   "table": "Table 6, row RoBERTa, column SQuAD 1.1 F1"
+  },
+  {
+   "claim": "RoBERTa RACE test accuracy 83.2 vs XLNet-large 81.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "RACE acc",
+   "value": "83.2",
+   "unit": "% acc",
+   "baseline_value": "81.7",
+   "n": null,
+   "setup": "Single model, test",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row RoBERTa, column Accuracy"
+  },
+  {
+   "claim": "Pretraining RoBERTa-large for the 100K-step BOOKS+WIKI run used 1024 V100 GPUs for about one day",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1024 V100 GPUs, about one day",
+   "unit": "compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100K steps, 16GB",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "We pretrain our model using 1024 V100 GPUs for approximately one day."
+  },
+  {
+   "claim": "RoBERTa dev GLUE results state of the art on all 9 tasks with the same architecture and objective as BERT-large",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "all 9 tasks",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-task single models, dev, median of 5 seeds",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "RoBERTa achieves state-of-the-art results on all 9 of the GLUE task development sets."
+  }
+ ],
+ "limits": [
+  "Data size and diversity are conflated (footnote 9).",
+  "Even the 500K-step model does not appear to overfit and would likely benefit from more training.",
+  "Architecture changes and larger models are left to future work.",
+  "Byte-level BPE vs character BPE comparison only from early experiments; slightly worse on some tasks.",
+  "Other methods (XLNet) might also improve with more tuning (footnote 2).",
+  "Possible that original BERT's no-NSP ablation kept the SEGMENT-PAIR input format (Sec 4.2).",
+  "Dev results use single-task finetuning; test GLUE uses task-specific tricks (QNLI ranking, WNLI), not comparable to BERT."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dynamic masking",
+   "definition": "generate the masking pattern every time a sequence is fed to the model",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "FULL-SENTENCES",
+   "definition": "inputs packed with full sentences sampled contiguously from one or more documents, up to 512 tokens, may cross document boundaries, no NSP",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "DOC-SENTENCES",
+   "definition": "like FULL-SENTENCES but may not cross document boundaries; no NSP",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "replicates",
+   "note": "replication study of BERT pretraining",
+   "quote": null
+  },
+  {
+   "work": "XLNet (Yang et al.)",
+   "year": 2019,
+   "arxiv": "1906.08237",
+   "relation": "baseline",
+   "note": "main comparison",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "transformer architecture",
+   "quote": null
+  },
+  {
+   "work": "fairseq (Ott et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation framework",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "byte-level BPE",
+   "quote": null
+  },
+  {
+   "work": "Scaling neural machine translation (Ott et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "large-batch training",
+   "quote": null
+  },
+  {
+   "work": "Large batch optimization for deep learning / LAMB (You et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BERT with batches up to 32K",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT (Joshi et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "questions NSP",
+   "quote": null
+  },
+  {
+   "work": "GLUE, SQuAD, RACE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4",
+   "caption": "Development set results for RoBERTa as we pretrain over more data (16GB to 160GB of text) and pretrain for longer (100K to 300K to 500K steps).",
+   "page": 5,
+   "why": "Shows each increment of data and steps on MNLI/SQuAD/SST-2 against BERT-large and XLNet-large"
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Hyperparameters for pretraining RoBERTa-large and RoBERTa-base.",
+   "page": 13,
+   "why": "The full pretraining recipe in one place"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No figures in the paper; only tables.",
+  "Table cell text is flattened one value per line by the extractor; rows were reassembled by hand.",
+  "RoBERTa-base parameter count is not printed.",
+  "Compute for 500K-step runs is not stated."
+ ]
+}

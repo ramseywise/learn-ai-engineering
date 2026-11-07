@@ -1,0 +1,429 @@
+{
+ "schema": 1,
+ "key": "1409.0473",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/bahdanau-2014-neural-machine-translation-jointly-learning.pdf",
+ "bib": {
+  "title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+  "authors": [
+   "Dzmitry Bahdanau",
+   "KyungHyun Cho",
+   "Yoshua Bengio"
+  ],
+  "first_author": "Bahdanau",
+  "year": 2015,
+  "venue": "ICLR 2015 (arXiv v7, 19 May 2016)",
+  "arxiv": "1409.0473",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-07",
+  "chars_read": 51096,
+  "chars_total": 51096,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "Does letting an encoder-decoder translator soft-search over source annotations for each target word, instead of compressing the source into one fixed-length vector, improve neural machine translation, especially on long sentences?",
+ "hypothesis": "A fixed-length context vector is a bottleneck, especially for long sentences; a model that attends to relevant source positions will cope better with long sentences.",
+ "contributions": [
+  "An extension of the encoder-decoder that learns to align and translate jointly, using a bidirectional RNN encoder and a decoder that computes a soft-alignment-weighted context vector per target word.",
+  "English-to-French results with a single model comparable to the phrase-based Moses system on sentences with known words.",
+  "Qualitative analysis showing the soft-alignments agree with intuition."
+ ],
+ "method": {
+  "summary": "RNNsearch: a bidirectional gated-RNN encoder produces annotations h_j; at each decoder step an MLP alignment model scores each annotation against the previous decoder state, a softmax gives weights, and the weighted sum is the context vector c_i. Trained jointly with RNNencdec (Cho et al. 2014a) as baseline on WMT'14 En-Fr, with sentence-length caps of 30 and 50 words.",
+  "task": "English-to-French machine translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'14 English-French parallel corpora (Europarl, news commentary, UN, two crawled corpora)",
+    "role": "train",
+    "size": "850M words total (Europarl 61M, news commentary 5.5M, UN 421M, crawled 90M and 272.5M); reduced to 348M words",
+    "split": "training; sentences up to 30 or 50 words per model",
+    "source": "ACL WMT '14 translation task; data selection of Axelrod et al. (2011)",
+    "preprocessing": "Moses tokenization script; 30,000-word shortlist per language, others mapped to [UNK]; no lowercasing or stemming"
+   },
+   {
+    "name": "news-test-2012 + news-test-2013",
+    "role": "dev",
+    "size": null,
+    "split": "concatenated as development set",
+    "source": "WMT'14",
+    "preprocessing": null
+   },
+   {
+    "name": "news-test-2014",
+    "role": "eval",
+    "size": "3003 sentences",
+    "split": "test, not in training data",
+    "source": "WMT'14",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RNNsearch-30 / RNNsearch-50 / RNNsearch-50*",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bidirectional gated-RNN encoder, gated-RNN decoder with additive attention, single maxout hidden layer output",
+    "init_from": null,
+    "tokenizer": "Moses tokenization, word level",
+    "vocab": "30,000 words per language",
+    "layers": "inferred: single recurrent layer per direction",
+    "hidden": "1000 hidden units per RNN (forward, backward, decoder); embedding 620; maxout layer 500; alignment model 1000",
+    "heads": null,
+    "context": "trained on sentences up to 30 (or 50) words",
+    "other": {
+     "RNNsearch-50*": "trained much longer until dev performance stopped improving",
+     "alignment_model": "a(s_{i-1},h_j)=v_a^T tanh(W_a s_{i-1}+U_a h_j)",
+     "state_size": "n=1000, m=620, l=500, n'=1000"
+    }
+   },
+   {
+    "name": "RNNencdec-30 / RNNencdec-50",
+    "role": "baseline",
+    "params": null,
+    "architecture": "RNN Encoder-Decoder (Cho et al. 2014a), fixed-length context",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "30,000 words per language",
+    "layers": null,
+    "hidden": "1000 hidden units each in encoder and decoder",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Moses",
+    "role": "baseline",
+    "params": null,
+    "architecture": "phrase-based statistical MT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "extra_data": "uses a separate monolingual corpus of 418M words"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximize conditional log-probability of target given source (sentence NLL)",
+   "optimizer": "minibatch SGD with Adadelta (epsilon=1e-6, rho=0.95)",
+   "lr": "adapted per parameter by Adadelta",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "80 sentences",
+   "steps": "Table 2 updates (x10^5): RNNenc-30 8.46, RNNenc-50 6.00, RNNsearch-30 4.71, RNNsearch-50 2.88, RNNsearch-50* 6.67",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "sentences up to 30 or 50 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient L2 norm clipped to threshold 1",
+   "hardware": "NVIDIA TITAN BLACK (-30 models), Quadro K-6000 (-50 models), per Table 2",
+   "compute": null,
+   "wall_clock": "approximately 5 days per model",
+   "seeds": null,
+   "other": {
+    "init": "recurrent matrices random orthogonal; W_a, U_a Gaussian mean 0 variance 0.001^2; v_a and biases zero; other weights Gaussian mean 0 variance 0.01^2",
+    "batching": "every 20th update fetch 1600 sentence pairs, sort by length, split into 20 minibatches; data shuffled once",
+    "table2": "Columns Updates(x10^5), Epochs, Hours, Train NLL, Dev NLL are in Table 2 but extracted text order is scrambled; not recorded"
+   }
+  },
+  "inference": {
+   "decoding": "beam search (beam width not stated)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model, one translation per sentence; no ensemble",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "unk": "models disallowed from generating [UNK] when evaluating on sentences without unknown words"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "BLEU on news-test-2014; reported on all sentences and on sentences with no unknown word in source or reference",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RNNencdec-30",
+    "RNNencdec-50",
+    "Moses"
+   ],
+   "protocol": "Single trained model per row; no seeds or significance test reported."
+  },
+  "availability": {
+   "code": "https://github.com/lisa-groundhog/GroundHog",
+   "weights": null,
+   "data": "WMT'14 (statmt.org/wmt14/translation-task.html)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RNNsearch-50 scores 26.75 BLEU on all test sentences versus 17.82 for RNNencdec-50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.75,
+   "unit": "BLEU",
+   "baseline_value": 17.82,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 English-to-French, news-test-2014 test set, all sentences incl. unknown words",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-50, column All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNNsearch-50* trained longer reaches 28.45 BLEU on all sentences.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 28.45,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 English-to-French, news-test-2014 test set, all sentences incl. unknown words; baseline value is Moses",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-50*, column All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Moses scores 33.30 BLEU on all sentences, above every neural model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.3,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 English-to-French, news-test-2014 test set, all sentences incl. unknown words",
+   "quote": null,
+   "table": "Table 1, row Moses, column All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On sentences without unknown words RNNsearch-50* reaches 36.15 BLEU versus 35.63 for Moses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 36.15,
+   "unit": "BLEU",
+   "baseline_value": 35.63,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 En-Fr news-test-2014, sentences without unknown words",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-50*, column No UNK",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNNsearch-50 gets 34.16 BLEU on known-word sentences versus 26.71 for RNNencdec-50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 34.16,
+   "unit": "BLEU",
+   "baseline_value": 26.71,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 En-Fr news-test-2014, sentences without unknown words",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-50, column No UNK",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNNsearch-30 scores 21.50 BLEU on all sentences versus 13.93 for RNNencdec-30.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 21.5,
+   "unit": "BLEU",
+   "baseline_value": 13.93,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 English-to-French, news-test-2014 test set, all sentences incl. unknown words",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-30, column All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNNsearch-30 outperforms RNNencdec-50 (21.50 vs 17.82 on all sentences).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 21.5,
+   "unit": "BLEU",
+   "baseline_value": 17.82,
+   "n": "3003 test sentences",
+   "setup": "WMT'14 English-to-French, news-test-2014 test set, all sentences incl. unknown words",
+   "quote": null,
+   "table": "Table 1, row RNNsearch-30, column All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RNNsearch-50 shows no performance deterioration with sentences of length 50 or more, unlike RNNencdec.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLEU against sentence length on full test set (Fig 2), read from figure",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 2"
+  }
+ ],
+ "limits": [
+  "Unknown/rare words are left as an open problem; models trail Moses on all-sentence BLEU (28.45 vs 33.30).",
+  "Attention computes weights for every source word for every target word, quadratic cost; authors say this may limit applicability beyond translation (sentences of 15-40 words).",
+  "Baseline RNNencdec is Cho et al. (2014a) with 1000 hidden units, not the larger Sutskever LSTM.",
+  "Moses uses an extra 418M-word monolingual corpus, so comparison is not like-for-like.",
+  "Single run per model, no seeds or significance tests; beam width not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "annotation",
+   "definition": "concatenation of forward and backward hidden states h_j of the BiRNN for source word x_j",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "alignment model",
+   "definition": "feedforward network a(s_{i-1},h_j) scoring how well inputs around position j and output at position i match",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Cho et al. 2014a, RNN Encoder-Decoder",
+   "year": 2014,
+   "arxiv": "1406.1078",
+   "relation": "extends",
+   "note": "baseline and architecture base; gated hidden unit",
+   "quote": null
+  },
+  {
+   "work": "Sutskever et al. 2014, Sequence to sequence learning with neural networks",
+   "year": 2014,
+   "arxiv": "1409.3215",
+   "relation": "related",
+   "note": "LSTM encoder-decoder with fixed vector",
+   "quote": null
+  },
+  {
+   "work": "Cho et al. 2014b",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "showed basic encoder-decoder deteriorates with sentence length",
+   "quote": null
+  },
+  {
+   "work": "Graves 2013, handwriting synthesis",
+   "year": 2013,
+   "arxiv": "1308.0850",
+   "relation": "related",
+   "note": "monotonic Gaussian-mixture alignment; this work allows reordering",
+   "quote": null
+  },
+  {
+   "work": "Schuster and Paliwal 1997, BiRNN",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "bidirectional encoder",
+   "quote": null
+  },
+  {
+   "work": "Zeiler 2012, ADADELTA",
+   "year": 2012,
+   "arxiv": "1212.5701",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Goodfellow et al. 2013, maxout",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "output layer",
+   "quote": null
+  },
+  {
+   "work": "WMT'14 English-French",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train/dev/test",
+   "quote": null
+  },
+  {
+   "work": "Moses phrase-based system",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Koehn et al. 2003",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The graphical illustration of the proposed model trying to generate the t-th target word y_t given a source sentence (x_1,...,x_T).",
+   "page": 3,
+   "why": "Shows the attention weights alpha feeding a sum over BiRNN annotations."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The BLEU scores of the generated translations on the test set with respect to the lengths of the sentences.",
+   "page": 5,
+   "why": "Shows RNNencdec degrading with length while RNNsearch-50 does not."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Alignment matrices of example sentences (soft-alignment weights).",
+   "page": 6,
+   "why": "Shows monotonic diagonal plus reordering (zone economique europeenne)."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1, Eqs 5-6",
+   "snippet": "c_i = sum_j alpha_ij h_j; alpha_ij = exp(e_ij)/sum_k exp(e_ik); e_ij = a(s_{i-1}, h_j)",
+   "verbatim": false
+  },
+  {
+   "where": "App A.1.2",
+   "snippet": "a(s_{i-1}, h_j) = v_a^T tanh(W_a s_{i-1} + U_a h_j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 row/column alignment in the cached text is scrambled; epochs, hours and NLL per model are not stated reliably so left out of numeric fields (see training.other, which holds placeholders).",
+  "Table 1 column headers 'All' and 'No UNK' inferred from the caption; first header partly lost in text.",
+  "Figure 3 caption not captured from text; summarised."
+ ]
+}

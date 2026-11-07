@@ -1,19 +1,529 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "1708.02002",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/lin-2017-focal-loss-dense-object-detection.pdf",
  "bib": {
   "title": "Focal Loss for Dense Object Detection",
+  "authors": [
+   "Tsung-Yi Lin",
+   "Priya Goyal",
+   "Ross Girshick",
+   "Kaiming He",
+   "Piotr Dollár"
+  ],
   "first_author": "Lin",
   "year": 2017,
-  "venue": "ICCV 2017",
+  "venue": "ICCV 2017 (PDF is arXiv v2, 7 Feb 2018)",
   "arxiv": "1708.02002",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-04",
-  "session": "97b4134b-decf-4866-ae85-c6872cbbba19"
+  "at": "2026-11-07",
+  "chars_read": 50058,
+  "chars_total": 50058,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Focal Loss for Dense Object Detection. Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, Piotr Dollár (FAIR). ICCV 2017. The PDF is arXiv:1708.02002v2, dated 7 Feb 2018.\n\nCOVERAGE: I read all 50,095 extracted chars across pages 1–10, including Appendices A–B and the references. Nothing was skipped.\n\nCLAIMS\n- claim: A one-stage detector scores about 100k locations, and the easy background ones dominate training. Two-stage detectors avoid this because proposals cut the set to 1–2k, and then sampling fixes the positive:negative ratio at 1:3.\n  number: ~100k vs 1-2k, ratio 1:3, imbalance about 1:1000\n  setup: dense anchor detectors in general. RetinaNet applies the loss to all of its anchors.\n  quote: \"enumer-ating ∼100k locations ... the training procedure is still dominated by easily classiﬁed background examples\" (p2); \"narrows down the number of candidate object locations to a small number (e.g., 1-2k)\" (p2); \"Easily classiﬁed negatives comprise the majority of the loss and dominate the gradient.\" (p3)\n  where: p2–3\n\n- claim: Focal loss is FL(pt) = −αt(1−pt)^γ log(pt). The defaults are γ=2 and α=0.25, and α should drop a little as γ rises.\n  number: γ=2, α=.25. At pt=0.9 the loss is 100× lower than CE.\n  setup: Eq. 5. It is a sigmoid per class, not softmax.\n  quote: \"with γ = 2, an example classiﬁed with pt = 0.9 would have 100× lower loss compared with CE and with pt≈ 0.968 it would have 1000× lower loss\" (p3); \"for γ = 2, α = 0.25 works best\" (p5)\n  where: p3, p5\n\n- claim: Sweeping γ moves AP from 31.1 (CE) to 34.0 (γ=2). AP falls again at γ=5, and α-balanced CE peaks at α=.75.\n  number: γ 0/0.1/0.2/0.5/1/2/5 gives AP 31.1/31.4/31.9/32.9/33.7/34.0/32.2. The gain is +2.9 AP.\n  setup: Table 1b. ResNet-50-FPN, 600px, COCO trainval35k for training, minival for testing, best α picked for each γ.\n  quote: \"With γ = 2 , FL yields a 2.9 AP improvement over the α-balanced CE loss.\" (p7); \"Setting α = .75 gives a gain of 0.9 points AP.\" (p7)\n  where: p6 Table 1, p7\n\n- claim: Plain CE with default initialization diverges. Setting the final classifier bias to b = −log((1−π)/π) with π=.01 makes training stable, because the many background anchors no longer produce a huge loss in the first iteration. The authors say this changes the initialization, not the loss.\n  number: π=.01. CE with this init reaches 30.2 AP.\n  setup: ResNet-50 RetinaNet on COCO. The authors say the result is insensitive to the exact π.\n  quote: \"This fails quickly, with the network diverging during training. However, simply initializing the last layer ... π = .01 ... enables effective learning ... yields a re-spectable AP of 30.2 on COCO.\" (p6); \"this initialization prevents the large num-ber of background anchors from generating a large, desta-bilizing loss value in the ﬁrst iteration\" (p6)\n  where: p4 §3.3, p6\n\n- claim: Focal loss beats the best OHEM setup by 3.2 AP.\n  number: 36.0 vs 32.8 AP\n  setup: Table 1d. ResNet-101-FPN, 600px, minival. The best OHEM run used batch 128, NMS .5, and no 1:3 ratio.\n  quote: \"achieves 32.8 AP. This is a gap of 3.2 AP, showing FL is more effective than OHEM\" (p7)\n  where: p7\n\n- claim: RetinaNet reaches 39.1 AP on COCO test-dev. That is 5.9 above DSSD and 2.3 above the best two-stage model (TDM). At 600px it matches FPN Faster R-CNN while running faster.\n  number: 39.1 (ResNet-101), 40.8 (ResNeXt-101). 122 ms vs 172 ms at matched accuracy. 5 fps.\n  setup: RetinaNet-101-800 trained with scale jitter for 1.5× longer, which adds 1.3 AP. Timings are on an Nvidia M40 GPU. Table 1e also lists RetinaNet-50-500 at 32.5 AP/72 ms and 101-800 at 37.8 AP/198 ms.\n  quote: \"a healthy 5.9 point AP gap (39.1 vs. 33.2) with the closest competitor, DSSD\" (p8); \"matches the accuracy of the recently published ResNet-101-FPN Faster R-CNN [20], while running in 122 ms per image compared to 172 ms (both measured on an Nvidia M40 GPU)\" (p8)\n  where: p8, Table 2\n\nThe paper also gives these setup details, which matter for the note's anchors and NMS material:\n- 9 anchors per level, from 3 scales × 3 aspect ratios. Positive if IoU ≥ 0.5, background if IoU < 0.4, ignored in between.\n- Inference keeps the top 1k predictions per level above confidence 0.05, then applies NMS at 0.5.\n- One square anchor alone gives 30.3 AP, and 3×3 anchors give 34.0. Gains stop beyond 6–9 anchors.\n- Quote: \"increasing beyond 6-9 anchors did not shown further gains\" (p8).\n\nLIMITS:\n- Every result is from COCO box detection only. There is no other dataset and no segmentation.\n- The paper does not cover the high-frame-rate regime: \"Addressing the high frame rate regime will likely require special network design ... beyond the scope\" (p8).\n- The low-accuracy regime (AP<25, YOLOv2) is left out of the \"upper envelope\" claim.\n- The paper studies only the binary loss. It calls the multi-class case \"straightforward\" but shows no results for it.\n- Timings come from a single M40 GPU. The headline 39.1 uses longer training and scale jitter, which is not the ablation setup.\n- The authors concede they tried more OHEM variants without improvement. They also say the hinge loss was unstable and gave no meaningful results.\n- They concede the result has dated: \"after publication, faster and more accurate results can now be obtained by a variant of Faster R-CNN from [12]\" (p8).\n\nBUILDS ON:\n- R-CNN (Girshick et al., CVPR 2014) and Faster R-CNN with RPN anchors (Ren et al., NIPS 2015).\n- FPN (Lin et al., CVPR 2017) as the backbone, on ResNet (He et al., CVPR 2016).\n- SSD (Liu et al., ECCV 2016) and YOLO/YOLO9000 (Redmon et al., CVPR 2016/2017) as the one-stage baselines.\n- OHEM (Shrivastava et al., CVPR 2016) as the comparison method.\n- Bootstrapping and hard-negative mining (Sung & Poggio 1994; Viola & Jones, CVPR 2001).\n\nCODE: none. The paper points to https://github.com/facebookresearch/Detectron (p1).\n\nFIGURES:\n- Main candidate: Fig. 1 (p1), \"...adds a factor (1− pt)γ to the standard cross entropy criterion. Setting γ>0 reduces the relative loss for well-classiﬁed examples (pt>.5)\". One curve plot shows γ = 0 to 5 and how easy examples get flattened, faster than reading the formula.\n- Alternative: Fig. 2 (p1), a speed (ms) vs COCO AP chart comparing one-stage and two-stage detectors.\n- Fig. 4 (p7), the loss CDF for negatives, shows easy negatives being discounted.\n\nPROBLEMS:\n- Superscripts were lost in extraction. \"104-105 candidate locations\" (p3) means 10^4–10^5. Anchor areas \"322 to 5122\" (p4) mean 32² to 512². \"∼107 negative\" (p7) means ~10^7.\n- The γ symbol is missing from the figure legends.\n- The PDF contained no embedded instructions."
+ "type": "empirical",
+ "question": "Why do one-stage dense detectors trail two-stage detectors in accuracy, and can a change to the loss close the gap?",
+ "hypothesis": "Extreme foreground-background class imbalance during training is the main obstacle; down-weighting well-classified examples in the cross entropy removes it.",
+ "contributions": [
+  "Identify class imbalance as the central cause of the one-stage accuracy gap",
+  "Propose the Focal Loss, a cross entropy scaled by (1-pt)^gamma",
+  "Design RetinaNet, a simple FPN-based one-stage detector, that matches or beats two-stage detectors on COCO"
+ ],
+ "method": {
+  "summary": "RetinaNet (ResNet-FPN backbone, class subnet and box subnet) is trained on all ~100k anchors per image with an alpha-balanced focal loss plus smooth L1 box loss, with the classifier bias initialised to a prior pi=.01. Ablations on COCO compare CE, alpha-CE, FL and OHEM, anchor density, and depth/scale.",
+  "task": "object detection (COCO bounding box)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO trainval35k",
+    "role": "train",
+    "size": "80k train images plus a random 35k subset of the 40k val images",
+    "split": "trainval35k",
+    "source": "Microsoft COCO (Lin et al. 2014)",
+    "preprocessing": "horizontal flip only; Table 2 model also uses scale jitter"
+   },
+   {
+    "name": "COCO minival",
+    "role": "dev",
+    "size": "5k images (remaining val)",
+    "split": "minival",
+    "source": "COCO",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO test-dev",
+    "role": "eval",
+    "size": null,
+    "split": "test-dev (no public labels, evaluation server)",
+    "source": "COCO",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RetinaNet (ResNet-50-FPN / ResNet-101-FPN / ResNeXt-32x8d-101-FPN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "one-stage FCN: ResNet+FPN (P3-P7, 256 channels), class subnet (4x 3x3 conv 256 + ReLU, then 3x3 conv KA, sigmoid), box subnet (same, 4A linear outputs, class-agnostic), separate parameters, subnets shared across levels",
+    "init_from": "ImageNet1k pretrained ResNet-50/101 released by He et al.; new FPN layers as in FPN; new conv layers bias 0, Gaussian sigma=0.01; final class conv bias -log((1-pi)/pi)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50 or 101 (ResNet)",
+    "hidden": "C=256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "anchors": "A=9 per level (3 aspect ratios {1:2,1:1,2:1} x scales {2^0,2^(1/3),2^(2/3)}), areas 32^2 to 512^2 on P3-P7, covering 32-813 px",
+     "anchor_assignment": "IoU>=0.5 foreground, [0,0.4) background, [0.4,0.5) ignored",
+     "pyramid": "P3-P5 from C3-C5, P6 3x3 stride-2 conv on C5, P7 ReLU + 3x3 stride-2 conv on P6; no P2"
+    }
+   },
+   {
+    "name": "Faster R-CNN variants, YOLOv2, SSD, DSSD, R-FCN",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "focal loss FL(pt) = -alpha_t (1-pt)^gamma log(pt) summed over ~100k anchors, normalised by number of anchors assigned to a ground-truth box, plus smooth L1 box regression",
+   "optimizer": "synchronized SGD, momentum 0.9",
+   "lr": "0.01 initial",
+   "lr_schedule": "divided by 10 at 60k and again at 80k iterations",
+   "warmup": null,
+   "batch_size": "16 images (8 GPUs, 2 per GPU)",
+   "steps": "90k iterations (Table 2 model: 1.5x longer)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 GPUs (type not stated for training; inference timed on Nvidia M40)",
+   "compute": null,
+   "wall_clock": "10 to 35 hours for the models in Table 1e",
+   "seeds": null,
+   "other": {
+    "gamma": "2.0 with alpha=.25 default",
+    "pi": ".01",
+    "image_scale_ablations": "600 px train and test",
+    "table2_model": "RetinaNet-101-800 with scale jitter, 1.5x longer"
+   }
+  },
+  "inference": {
+   "decoding": "decode boxes from at most 1k top-scoring predictions per FPN level after thresholding confidence at 0.05; merge levels; NMS threshold 0.5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model, single run per setting; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "speed_hardware": "Nvidia M40 GPU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "COCO AP",
+     "definition": "standard COCO bounding-box average precision (AP50, AP75, APS/M/L also reported)",
+     "unit": "AP points",
+     "higher_is_better": true
+    },
+    {
+     "name": "inference time",
+     "definition": "per image",
+     "unit": "ms",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "alpha-balanced CE",
+    "OHEM (with and without 1:3 ratio)",
+    "Faster R-CNN+++",
+    "Faster R-CNN w FPN",
+    "Faster R-CNN G-RMI",
+    "Faster R-CNN w TDM",
+    "YOLOv2",
+    "SSD513",
+    "DSSD513"
+   ],
+   "protocol": "ablations on minival with ResNet-50/101, 600 px; main results on test-dev. No repeats, seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/Detectron",
+   "weights": null,
+   "data": "COCO (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "synchronized SGD over 8 GPUs with a total of 16 images per minibatch (2 images per GPU)",
+    "where": "4.1 Optimization"
+   },
+   {
+    "field": "method.models.other.anchors",
+    "quote": "at each level we add anchors of sizes {20, 21/3, 22/3}",
+    "where": "4 Anchors (printed 2^0, 2^(1/3), 2^(2/3))"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RetinaNet-101-FPN with focal loss reaches 39.1 COCO test-dev AP, above all listed one- and two-stage single models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO AP",
+   "value": 39.1,
+   "unit": "AP",
+   "baseline_value": 36.8,
+   "n": null,
+   "setup": "RetinaNet-101-800, scale jitter, trained 1.5x longer, COCO test-dev",
+   "quote": null,
+   "table": "Table 2, row RetinaNet (ours) ResNet-101-FPN, column AP",
+   "note": "Baseline 36.8 is the best two-stage (Faster R-CNN w TDM); best one-stage baseline DSSD513 33.2.",
+   "where": "Table 2, Sec 5.3"
+  },
+  {
+   "claim": "ResNeXt-101-FPN backbone brings RetinaNet to 40.8 AP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO AP",
+   "value": 40.8,
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "COCO test-dev, same recipe as Table 2",
+   "quote": null,
+   "table": "Table 2, row RetinaNet (ours) ResNeXt-101-FPN, column AP",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With gamma=2, focal loss gives 2.9 AP over alpha-balanced CE with the same network.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP gain",
+   "value": 2.9,
+   "unit": "AP",
+   "baseline_value": 31.1,
+   "n": null,
+   "setup": "ResNet-50-FPN, 600 px, trainval35k, minival",
+   "quote": "With γ = 2, FL yields a 2.9 AP im-",
+   "table": "Table 1a/1b: CE alpha=.75 31.1 vs FL gamma=2 alpha=.25 34.0",
+   "note": null,
+   "where": "Sec 5.1, Table 1"
+  },
+  {
+   "claim": "FL beats the best OHEM variant by 3.2 AP in the one-stage setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP gap",
+   "value": 3.2,
+   "unit": "AP",
+   "baseline_value": 32.8,
+   "n": null,
+   "setup": "ResNet-101-FPN, 600 px; FL 36.0 vs OHEM batch 128, nms .5, 32.8",
+   "quote": "This is a gap of 3.2 AP, showing FL",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Table 1d"
+  },
+  {
+   "claim": "Gamma sweep: AP rises from 31.1 (gamma 0) to 34.0 (gamma 2) and drops to 32.2 at gamma 5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 34.0,
+   "unit": "AP",
+   "baseline_value": 31.1,
+   "n": null,
+   "setup": "ResNet-50-FPN, best alpha per gamma, minival",
+   "quote": null,
+   "table": "Table 1b, row gamma 2.0 alpha .25, column AP",
+   "note": "gamma/alpha/AP: 0/.75/31.1, .1/.75/31.4, .2/.75/31.9, .5/.5/32.9, 1/.25/33.7, 2/.25/34.0, 5/.25/32.2",
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Alpha-balanced CE peaks at alpha=.75 with 31.1 AP, 0.9 above the best unbalanced setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 31.1,
+   "unit": "AP",
+   "baseline_value": 30.2,
+   "n": null,
+   "setup": "ResNet-50-FPN, gamma=0, minival; alpha .25 gives 10.8 AP and .10 gives 0.0",
+   "quote": "Setting α = .75 gives a gain of 0.9 points AP.",
+   "table": "Table 1a, row .75, column AP",
+   "note": null,
+   "where": "Sec 5.1, Table 1a"
+  },
+  {
+   "claim": "Plain CE with default initialisation diverges; with prior pi=.01 it trains to 30.2 AP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 30.2,
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50 RetinaNet; results insensitive to exact pi",
+   "quote": "Training RetinaNet with ResNet-50 and this initialization already yields a re-spectable AP of 30.2 on COCO.",
+   "table": "Table 1a, row .50, column AP (30.2 also in text, Sec 5.1)",
+   "note": "Quote not copied verbatim; see table",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "RetinaNet-101-600 matches ResNet-101-FPN Faster R-CNN accuracy at 122 ms versus 172 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference time",
+   "value": 122,
+   "unit": "ms",
+   "baseline_value": 172,
+   "n": null,
+   "setup": "Nvidia M40; test-dev",
+   "quote": "while running in 122 ms per",
+   "table": "Table 1e, row 101/600: AP 36.0, time 122",
+   "note": null,
+   "where": "Sec 5.2, Table 1e"
+  },
+  {
+   "claim": "Anchor density saturates: one square anchor gives 30.3 AP, 3 scales x 3 ratios gives 34.0, more brings no gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 34.0,
+   "unit": "AP",
+   "baseline_value": 30.3,
+   "n": null,
+   "setup": "ResNet-50-FPN, 600 px, minival",
+   "quote": null,
+   "table": "Table 1c, row #sc 3 #ar 3, column AP",
+   "note": "2 scales x 3 ratios gives 34.2",
+   "where": "Table 1c, Sec 5.2"
+  },
+  {
+   "claim": "At pt=0.9 with gamma=2 the focal loss is 100x lower than CE, and 1000x lower at pt about 0.968.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 100,
+   "unit": "x lower loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "analytic property of Eq 4",
+   "quote": "an example classi",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Alternate form FL* (gamma=2,beta=1) reaches 33.8 AP, close to FL 34.0, so the exact form is not crucial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 33.8,
+   "unit": "AP",
+   "baseline_value": 34.0,
+   "n": null,
+   "setup": "RetinaNet-50-600, alpha=.25",
+   "quote": null,
+   "table": "Table 3, row FL* gamma 2.0 beta 1.0, column AP",
+   "note": "FL* gamma 4 beta 0 gives 33.9",
+   "where": "Appendix A, Table 3"
+  },
+  {
+   "claim": "Loss CDF analysis: with gamma=2 most negative loss comes from a small fraction of samples, positives change little.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "converged ResNet-101 600 px model (36.0 AP), ~10^7 negative and ~10^5 positive sampled windows",
+   "quote": "approximately 20% of",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 4"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or variance; gains of 0.2-0.4 AP (alpha .5 vs .25, FL vs FL*) are within unreported noise.",
+  "Binary focal loss only; multi-class extension asserted to work well but not shown.",
+  "Hinge loss attempt was unstable, no numbers.",
+  "Authors concede faster, more accurate results came after publication from a Faster R-CNN variant (Detectron); high frame-rate regime left to special network design.",
+  "Training GPU type and total compute not stated; test-dev result needs scale jitter and 1.5x longer schedule."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Focal Loss",
+   "definition": "FL(pt) = -(1-pt)^gamma log(pt), a dynamically scaled cross entropy whose factor decays to zero as confidence in the correct class increases",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "pt",
+   "definition": "p if y=1, otherwise 1-p",
+   "where": "Eq 2"
+  },
+  {
+   "term": "RetinaNet",
+   "definition": "a single unified network of a backbone and two task-specific subnetworks (classification, box regression)",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Feature Pyramid Networks for Object Detection",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "FPN backbone with P3-P7; Faster R-CNN w FPN is the main baseline",
+   "quote": null
+  },
+  {
+   "work": "Faster R-CNN (Ren et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "anchors from RPN; two-stage baseline",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ResNet backbone, ImageNet1k pretrained",
+   "quote": null
+  },
+  {
+   "work": "Online hard example mining (Shrivastava et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "OHEM compared in Table 1d",
+   "quote": null
+  },
+  {
+   "work": "SSD / DSSD",
+   "year": 2016,
+   "arxiv": "1701.06659",
+   "relation": "baseline",
+   "note": "one-stage baselines; SSD 1:3 sampling",
+   "quote": null
+  },
+  {
+   "work": "YOLO9000 (Redmon, Farhadi)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "YOLOv2 in Table 2",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train/eval data",
+   "quote": null
+  },
+  {
+   "work": "Mask R-CNN",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "two-stage state of the art",
+   "quote": null
+  },
+  {
+   "work": "Beyond skip connections: TDM (Shrivastava et al.)",
+   "year": 2016,
+   "arxiv": "1612.06851",
+   "relation": "baseline",
+   "note": "best two-stage in Table 2 at 36.8",
+   "quote": null
+  },
+  {
+   "work": "Aggregated residual transformations (ResNeXt)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ResNeXt-101 backbone",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Focal loss adds a factor (1-pt)^gamma to cross entropy; gamma>0 reduces loss for well-classified examples",
+   "page": 1,
+   "why": "shows the loss curves for gamma 0 to 5 at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Speed (ms) versus accuracy (AP) on COCO test-dev",
+   "page": 1,
+   "why": "RetinaNet is the upper envelope over one- and two-stage detectors"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "RetinaNet architecture: ResNet, FPN, class and box subnets",
+   "page": 5,
+   "why": "shows subnet shapes W x H x KA and 4A"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "CDFs of normalised loss for positives and negatives for different gamma",
+   "page": 7,
+   "why": "shows loss concentrating on hard negatives as gamma rises"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Ablation experiments for RetinaNet and FL",
+   "page": 6,
+   "why": "all hyperparameter sweeps in one place"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5",
+   "snippet": "FL(pt) = −αt(1 −pt)γ log(pt)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 7-8",
+   "snippet": "p*t = σ(γxt + β), FL* = −log(p*t)/γ",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 4.1",
+   "snippet": "b = −log((1 −π)/π)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text extraction has ligature glyphs and hyphenation breaks; two result quotes are short fragments for that reason.",
+  "Table 1 text flattened into columns; cell identification relied on row order."
+ ]
 }
